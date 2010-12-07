@@ -17,10 +17,13 @@ import os
 
 def write_feed_to_file(gd_client):
     jsonFile = open('my/{0}.contacts.json'.format(GetUIDHash(gd_client)), 'w')
-    feed = gd_client.GetContactsFeed()
+    query = gdata.contacts.service.ContactsQuery()
+    query.max_results = 3000
+    feed = gd_client.GetContactsFeed(query.ToUri())
     for i, entry in enumerate(feed.entry):
         jsonObject = {}
-        jsonObject["id"] = entry.id.text[-16:]
+        indexOfSlash = entry.id.text.rfind("/")
+        jsonObject["id"] = entry.id.text[indexOfSlash:]
         print '%s %s' % (i+1, entry.title.text)
         
         jsonObject["name"] = entry.title.text
