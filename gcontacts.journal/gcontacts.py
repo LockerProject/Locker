@@ -23,7 +23,7 @@ def write_feed_to_file(gd_client):
     for i, entry in enumerate(feed.entry):
         jsonObject = {}
         indexOfSlash = entry.id.text.rfind("/")
-        jsonObject["id"] = entry.id.text[indexOfSlash:]
+        jsonObject["id"] = entry.id.text[indexOfSlash+1:]
         print '%s %s' % (i+1, entry.title.text)
         
         jsonObject["name"] = entry.title.text
