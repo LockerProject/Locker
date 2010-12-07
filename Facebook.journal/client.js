@@ -11,6 +11,7 @@ if(!appID || !appSecret)
 	process.exit(1);	
 }
 
+var fs = require('fs');
 var express = require('express'),
     connect = require('connect'),
     facebookClient = require('facebook-js')(
@@ -26,6 +27,16 @@ var express = require('express'),
 app.set('views', __dirname);
 
 app.get('/', function (req, res) {
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	fs.readFile("access.token",function (err, data){
+		if(err)
+			res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
+		else
+			res.end("found a token, <a href='/friends'>load friends</a>");
+	});
+});
+
+app.get('/gofb', function (req, res) {
   res.redirect(facebookClient.getAuthorizeUrl({
     client_id: appID,
     redirect_uri: 'http://localhost:3003/auth',
@@ -35,6 +46,7 @@ app.get('/', function (req, res) {
 
 app.get('/auth', function (req, res) {
   console.log("incoming auth "+req.param('code'));
+	res.writeHead(200, {'Content-Type': 'text/html'});
 var OAuth = require("oauth").OAuth2;
 var oa = new OAuth(appID, appSecret, 'https://graph.facebook.com');
 
@@ -44,13 +56,15 @@ var oa = new OAuth(appID, appSecret, 'https://graph.facebook.com');
       function (error, access_token, refresh_token) {
         if (error) {
           console.log(error);
+		res.end("uhoh "+error);
+
         } else {
 		console.log("a "+access_token+" r "+refresh_token)
+		res.end("too legit to quit: "+access_token+" so now <a href='/friends'>load friends</a>");
+		fs.writeFile("access.token",access_token);
         }
       }
     );
-	res.writeHead(200, {'Content-Type': 'text/plain'});
-	res.end("thx");
 //  facebookClient.getAccessToken({redirect_uri: 'http://localhost:3003/auth', code: req.param('code')}, function (error, token) {
 //	console.log("got token "+token);
 //	res.end("got token "+token);
@@ -58,17 +72,30 @@ var oa = new OAuth(appID, appSecret, 'https://graph.facebook.com');
 });
 
 app.get('/friends', function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  facebookClient.apiCall(
-    'GET',
-    '/me/friends',
-    {access_token: req.param('access_token')},
-    function (error, result) {
-      console.log(error);
-      console.log(result);
-	  res.end("got result "+result);
-    }
-  );
+  res.writeHead(200, {'Content-Type': 'text/html'});
+	fs.readFile("access.token","utf-8",function (err, token){
+		console.log("loaded token "+JSON.stringify(token));
+		if(err)
+			res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
+		else
+	  facebookClient.apiCall(
+	    'GET',
+	    '/me/friends',
+	    {access_token: token},
+	    function (error, result) {
+	      console.log(error);
+	      console.log(result);
+		  res.end("got result "+JSON.stringify(result));
+			var stream = fs.createWriteStream("my/contacts.json");
+		  for(var i=0; i < result.data.length; i++)
+			{
+				stream.write(JSON.stringify(result.data[i])+"\n");
+			}
+			stream.end();
+	    }
+	  );
+	});
+
 });
 
 console.log("http://localhost:3003/");

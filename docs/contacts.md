@@ -9,6 +9,7 @@ Common attributes of a contact
         address:array({type:string, value:string}),
         birthday:date,
         groups:array(string),
-        avatar:array(string-urls)
+        avatar:array(string-urls),
+        id:string
     }
 
