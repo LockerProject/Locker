@@ -77,12 +77,15 @@ def write_feed_to_file(gd_client):
         
         #print json.dumps(jsonObject)
         jsonFile.write(json.dumps(jsonObject) + '\n')
-        hosted_image_binary = gd_client.GetPhoto(entry)
-        #print hosted_image_binary
-        if hosted_image_binary:
-            image_file = open('my/photos/{0}.jpg'.format(jsonObject["id"]), 'wb')
-            image_file.write(hosted_image_binary)
-            image_file.close()
+        try:
+            hosted_image_binary = gd_client.GetPhoto(entry)
+            #print hosted_image_binary
+            if hosted_image_binary:
+                image_file = open('my/photos/{0}.jpg'.format(jsonObject["id"]), 'wb')
+                image_file.write(hosted_image_binary)
+                image_file.close()
+        except gdata.service.RequestError:
+            pass
 
 def write_groups_feed_to_file(gd_client):
     feed = gd_client.GetGroupsFeed()
