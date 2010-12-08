@@ -1,0 +1,15 @@
+.contact {
+    background-color:#ddd;
+    border-radius: 4px 4px;
+    height:50px;
+    -webkit-box-shadow: #888 2px 2px 4px;
+    margin:10px;
+    padding:10px ;
+    width:480px;
+}
+
+.info {
+    height:50px;
+    white-space:nowrap;
+    overflow:hidden;
+}
