@@ -92,7 +92,9 @@ def write_groups_feed_to_file(gd_client):
     jsonFile = open('my/{0}.groups.json'.format(GetUIDHash(gd_client)), 'w')
     for i, entry in enumerate(feed.entry):
         jsonObject = {}
-        jsonObject["id"] = entry.id.text[-16:]
+        indexOfSlash = entry.id.text.rfind("/")
+        jsonObject["id"] = entry.id.text[indexOfSlash+1:]
+        #jsonObject["id"] = entry.id.text[-16:]
         jsonObject["name"] = entry.title.text
         jsonFile.write(json.dumps(jsonObject) + '\n')
 

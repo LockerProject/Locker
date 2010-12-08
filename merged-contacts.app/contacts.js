@@ -77,7 +77,7 @@ http.createServer(function(req, res) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.write('<html><head><title>Contacts!</title>\n' +
                   '<link rel="stylesheet" href="contacts.css">\n</head>\n\n<body>');
-        var groups = readGroups();
+//        var groups = readGroups();
         var contacts = readContacts();
         for (var i in contacts) {
             var filename = path.join('cb/my/photos/', contacts[i].id + '.jpg');
