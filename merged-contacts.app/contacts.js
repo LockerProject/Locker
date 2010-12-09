@@ -49,28 +49,28 @@ var http = require('http');
 http.createServer(function(req, res) {
     
     var uri = url.parse(req.url).pathname;  
-//    console.log("uri = " + uri);
+    console.log("uri = " + uri);
     if(uri != '/') {
         var filename = path.join(process.cwd(), uri);  
         path.exists(filename, function(exists) { 
             if(!exists) {  
-                res.sendHeader(404, {"Content-Type": "text/plain"});  
+                res.writeHead(404, {"Content-Type": "text/plain"});  
                 res.write("404 Not Found\n");  
-                res.close();  
+                res.end();  
                 return;  
             }  
   
             fs.readFile(filename, "binary", function(err, file) {  
                 if(err) {  
-                    res.sendHeader(500, {"Content-Type": "text/plain"});  
+                    res.writeHead(500, {"Content-Type": "text/plain"});  
                     res.write(err + "\n");  
-                    res.close();  
+                    res.end();  
                     return;  
                 }  
   
-                res.sendHeader(200);  
+                res.writeHead(200);  
                 res.write(file, "binary");  
-                res.close();  
+                res.end();  
             });  
         });
     } else {
@@ -78,15 +78,19 @@ http.createServer(function(req, res) {
         res.write('<html><head><title>Contacts!</title>\n' +
                   '<link rel="stylesheet" href="contacts.css">\n</head>\n\n<body>');
 //        var groups = readGroups();
+        console.log('reading contacts...');
         var contacts = readContacts();
+        console.log('read contacts');
         for (var i in contacts) {
-            var filename = path.join('cb/my/photos/', contacts[i].id + '.jpg');
+            var filename = null;
+            if(contacts[i].pic && contacts[i].pic.length > 0)
+                filename = path.join('cb/my/photos/', contacts[i].pic[0]);
 //            console.log("filename = " + filename);
             res.write('<div class="contact">');
             try {
                 var stats = fs.statSync(filename);
                 res.write('<img style="float:left; margin-right:5px" width="50px" height="50px"' + 
-                          ' src="/cb/my/photos/' + contacts[i].id + '.jpg">');
+                          ' src="' + filename + '">');
             } catch(err) {
                 res.write('<div style="float:left; margin-right:5px; width:50px; height:50px;"></div>');
             }
