@@ -54,23 +54,23 @@ http.createServer(function(req, res) {
         var filename = path.join(process.cwd(), uri);  
         path.exists(filename, function(exists) { 
             if(!exists) {  
-                res.sendHeader(404, {"Content-Type": "text/plain"});  
+                res.writeHead(404, {"Content-Type": "text/plain"});  
                 res.write("404 Not Found\n");  
-                res.close();  
+                res.end();  
                 return;  
             }  
   
             fs.readFile(filename, "binary", function(err, file) {  
                 if(err) {  
-                    res.sendHeader(500, {"Content-Type": "text/plain"});  
+                    res.writeHead(500, {"Content-Type": "text/plain"});  
                     res.write(err + "\n");  
-                    res.close();  
+                    res.end();  
                     return;  
                 }  
   
-                res.sendHeader(200);  
+                res.writeHead(200);  
                 res.write(file, "binary");  
-                res.close();  
+                res.end();  
             });  
         });
     } else {
