@@ -17,6 +17,10 @@ import os
 
 def write_feed_to_file(gd_client):
 	uid = GetUIDHash(gd_client)
+    try:
+        os.makedirs("my/photos/{0}".format(uid))
+    except OSError:
+        pass
     jsonFile = open('my/{0}.contacts.json'.format(uid), 'w')
     query = gdata.contacts.service.ContactsQuery()
     query.max_results = 3000
