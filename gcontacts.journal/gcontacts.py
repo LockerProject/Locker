@@ -16,7 +16,8 @@ import sys
 import os
 
 def write_feed_to_file(gd_client):
-    jsonFile = open('my/{0}.contacts.json'.format(GetUIDHash(gd_client)), 'w')
+    uid = GetUIDHash(gd_client)
+    jsonFile = open('my/{0}.contacts.json'.format(uid), 'w')
     query = gdata.contacts.service.ContactsQuery()
     query.max_results = 3000
     feed = gd_client.GetContactsFeed(query.ToUri())
@@ -81,7 +82,7 @@ def write_feed_to_file(gd_client):
             hosted_image_binary = gd_client.GetPhoto(entry)
             #print hosted_image_binary
             if hosted_image_binary:
-                image_file = open('my/photos/{0}.jpg'.format(jsonObject["id"]), 'wb')
+                image_file = open('my/photos/{0}/{1}.jpg'.format(uid, jsonObject["id"]), 'wb')
                 image_file.write(hosted_image_binary)
                 image_file.close()
         except gdata.service.RequestError:
