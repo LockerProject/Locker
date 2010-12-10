@@ -1,7 +1,9 @@
 // merge contacts from journals
-var fs = require('fs');
+var fs = require('fs'),
+    crypto = require('crypto');
 
 var fb_json = "../Facebook.journal/my/contacts.json";
+var fb_dir = "../Facebook.journal/my/";
 var gc_dir = "../gcontacts.journal/my/";
 var ab_json = "../osxAddressBook.journal/my/contacts.json";
 
@@ -10,8 +12,21 @@ var contacts = {};
 var debug = false;
 
 function cadd(c, source) {
+    if(!c)
+        return;
+        
     morphContact(c, source);
-    var key = c.name.replace(/[A-Z]\./g, '').toLowerCase().replace(/\s/g, '');
+    var key;
+    if(c.name)
+        key= c.name.replace(/[A-Z]\./g, '').toLowerCase().replace(/\s/g, '');
+    else if(c.email && c.email.length > 0)
+        key = c.email[0].value;
+    else {
+        var m = crypto.createHash('sha1');
+        m.update(JSON.stringify(c));
+        key = m.digest('base64');
+    }
+    console.log('key = ' + key);
     if (contacts[key]) {
         // merge
         mergeContacts(contacts[key], c);
@@ -22,32 +37,33 @@ function cadd(c, source) {
 }
 
 function morphContact(c, source) {
-    if(source.type == 'google_contacts') {
+    if(source.type == 'google_contacts' || source.type == 'facebook') {
+        console.log('adding pic ' + c.id);
         c.pic = [source.account + '/' + c.id + '.jpg'];
     }
 }
 
-function copyPhotos(sourceDir, subdir) {
-    var sourceSub = sourceDir + '/' + subdir;
-    var newSub = 'my/photos/' + subdir;
+function linkPhotos(sourceDir, accountID) {
     try {
-        fs.mkdirSync(process.cwd() + '/my/photos', 0777);
+        fs.mkdirSync(process.cwd() + '/my/photos', 0755);
     } catch (err) {}
     try {
-        var files = fs.readdirSync(sourceSub);
+        var files = fs.readdirSync(sourceDir);
     } catch(err) {
         return;
     }
     if(!files)
         return null;
     try {
-        fs.mkdirSync(newSub, 0777);
-    } catch(err) { return; }
-    for(var i = 0; i < files.length; i++) {
-        fs.linkSync(sourceSub + '/' + files[i], newSub + '/' + files[i]);
+        fs.mkdirSync('my/photos/' + accountID, 0755);
+    } catch(err) {
+        return;
     }
-    
+    for(var i = 0; i < files.length; i++) {
+        fs.linkSync(sourceDir + '/' + files[i], 'my/photos/' + accountID + '/' + files[i]);
+    }
 }
+
 
 /**
  * name
@@ -118,12 +134,8 @@ function parseLinesOfJSONFile(path) {
 /**
  * Read in files from Facebook.journal
  */
-if (fs.statSync(fb_json)) {
-    var cs = parseLinesOfJSONFile(fb_json);
-    for (var i = 0; i < cs.length; i++) {
-        cadd(cs[i], {type: 'facebook', account: ''});
-    }
-}
+addAccountsFromDirectory(fb_dir, 'facebook');
+
 
 /**
  * Read in files from osxAddressBook.journal
@@ -135,28 +147,31 @@ if (fs.statSync(ab_json)) {
     }
 }
 
+function addContactsFromFile(path, type, account) {
+    if (fs.statSync(path)) {
+        var cs = parseLinesOfJSONFile(path);
+        for (var i = 0; i < cs.length; i++) {
+            cadd(cs[i], {type: type, account: account});
+        }
+    }
+}
+
+function addAccountsFromDirectory(base_dir, type) {
+    var files = fs.readdirSync(base_dir);
+    for (var i = 0; i < files.length; i++) {
+        var fullPath = base_dir + '/' + files[i];
+        var stats = fs.statSync(fullPath);
+        if(!stats.isDirectory())
+            continue;
+        addContactsFromFile(fullPath + '/contacts.json', type, files[i]);
+        linkPhotos(fullPath + '/photos', files[i]);
+    }
+}
+
 /**
  * Read in files from gcontacts.journal
  */
-var gcfiles = fs.readdirSync(gc_dir);
-for (var i = 0; i < gcfiles.length; i++) {
-    if (gcfiles[i].indexOf(".contacts.json") <= 0) continue;
-    var id = gcfiles[i].substr(0, gcfiles[i].length - 14);
-    var filename = gc_dir + "/" + gcfiles[i];
-    var cs = parseLinesOfJSONFile(filename);
-    for (var j = 0; j < cs.length; j++) {
-        var cj = cs[j];
-        if (cj.name == null) {
-            if (cj.email && cj.email.length > 0)
-                cj.name = cj.email[0].value;
-            else
-                cj.name = cj.id;
-            if(debug) console.log("name reassigned to " + cj.name);
-        }
-        cadd(cj, {type: 'google_contacts', account: id});
-    }
-    copyPhotos(gc_dir + 'photos', id);
-}
+ addAccountsFromDirectory(gc_dir, 'google_contacts');
 
 var stream = fs.createWriteStream("my/contacts.json");
 for (var c in contacts) {

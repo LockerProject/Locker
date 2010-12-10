@@ -16,12 +16,8 @@ import sys
 import os
 
 def write_feed_to_file(gd_client):
-	uid = GetUIDHash(gd_client)
-    try:
-        os.makedirs("my/photos/{0}".format(uid))
-    except OSError:
-        pass
-    jsonFile = open('my/{0}.contacts.json'.format(uid), 'w')
+    uid = GetUIDHash(gd_client)
+    jsonFile = open('my/{0}/contacts.json'.format(uid), 'w')
     query = gdata.contacts.service.ContactsQuery()
     query.max_results = 3000
     feed = gd_client.GetContactsFeed(query.ToUri())
@@ -31,7 +27,8 @@ def write_feed_to_file(gd_client):
         jsonObject["id"] = entry.id.text[indexOfSlash+1:]
         print '%s %s' % (i+1, entry.title.text)
         
-        jsonObject["name"] = entry.title.text
+        if entry.title.text:
+            jsonObject["name"] = entry.title.text
         if entry.nickname:
             jsonObject["nickname"] = entry.nickname
             
@@ -86,7 +83,7 @@ def write_feed_to_file(gd_client):
             hosted_image_binary = gd_client.GetPhoto(entry)
             #print hosted_image_binary
             if hosted_image_binary:
-                image_file = open('my/photos/{0}/{1}.jpg'.format(uid, jsonObject["id"]), 'wb')
+                image_file = open('my/{0}/photos/{1}.jpg'.format(uid, jsonObject["id"]), 'wb')
                 image_file.write(hosted_image_binary)
                 image_file.close()
         except gdata.service.RequestError:
@@ -94,7 +91,7 @@ def write_feed_to_file(gd_client):
 
 def write_groups_feed_to_file(gd_client):
     feed = gd_client.GetGroupsFeed()
-    jsonFile = open('my/{0}.groups.json'.format(GetUIDHash(gd_client)), 'w')
+    jsonFile = open('my/{0}/groups.json'.format(GetUIDHash(gd_client)), 'w')
     for i, entry in enumerate(feed.entry):
         jsonObject = {}
         indexOfSlash = entry.id.text.rfind("/")
@@ -110,19 +107,25 @@ def GetUIDHash(gd_client):
     
 
 def main():
-    try:
-        os.makedirs("my/photos")
-    except OSError:
-        pass
-    
-    gd_client = gdata.contacts.service.ContactsService()
     if len(sys.argv) != 3:
         print "usage: python gcontacts.py <username> <password>"
         exit()
+    
+    gd_client = gdata.contacts.service.ContactsService()
     gd_client.email = sys.argv[1]
     gd_client.password = sys.argv[2]
     gd_client.source = 'locker-0.1'
     gd_client.ProgrammaticLogin()
+    
+    uid = GetUIDHash(gd_client)
+    try:
+        os.makedirs("my/{0}".format(uid))
+    except OSError:
+        pass        
+    try:
+        os.makedirs("my/{0}/photos".format(uid))
+    except OSError:
+        pass
     write_groups_feed_to_file(gd_client)
     write_feed_to_file(gd_client)
 

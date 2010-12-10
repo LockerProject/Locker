@@ -11,7 +11,8 @@ if (!appID || !appSecret)
     process.exit(1);
 }
 
-var fs = require('fs');
+var fs = require('fs'),
+    http = require('http');
 var express = require('express'),
     connect = require('connect'),
     facebookClient = require('facebook-js')(
@@ -23,6 +24,10 @@ var express = require('express'),
         connect.cookieDecoder(),
         connect.session()
         );
+        
+        
+var wwwdude = require('wwwdude'), sys = require('sys');
+var wwwdude_client = wwwdude.createClient({encoding: 'binary'});
 
 app.set('views', __dirname);
 
@@ -81,6 +86,65 @@ function(req, res) {
     //    });
 });
 
+
+var photoQueue = [];
+var photoIndex = 0;
+function downloadPhotos(userID) {
+    fs.mkdir('my/'+ userID + '/photos/', 0755);
+    downloadNextPhoto();
+}
+function downloadNextPhoto() {
+    if(photoIndex >= photoQueue.length) return;
+    
+    var userID = photoQueue[photoIndex].userID;
+    var friendID = photoQueue[photoIndex].friendID;
+    photoIndex++;
+    try {
+       // console.log('http://graph.facebook.com/' + id + '/picture');
+        wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
+            .addListener('error', function (err) {
+                sys.puts('Network Error: ' + sys.inspect(err));
+                downloadNextPhoto();
+              })
+            .addListener('http-error', function (data, resp) {
+                sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
+                downloadNextPhoto();
+              })
+            .addListener('redirect', function (data, resp) {
+             //   sys.puts('Redirecting to: ' + resp.headers['location']);
+              //  sys.puts('Headers: ' + sys.inspect(resp.headers));
+              })
+          .addListener('success', function (data, resp) {
+              try {
+                  fs.writeFileSync('my/'+ userID + '/photos/' + friendID + '.jpg', data, 'binary');
+                  downloadNextPhoto();
+              } catch(err) {
+//                  console.lo
+              }
+            }).send();
+    } catch (err) {
+        
+    }
+}
+
+function doFQLQuery(access_token, query, callback) {
+    var fb = http.createClient(443, 'api.facebook.com', true);
+    var request = fb.request('GET', '/method/fql.query?format=json&access_token=' + access_token +  
+                                                    '&query=' + escape(query),
+      {'host': 'api.facebook.com'});
+    request.end();
+    var data = '';
+    request.on('response', function (response) {
+      response.setEncoding('utf8');
+      response.on('data', function (chunk) {
+          data += chunk;
+      });
+      response.on('end', function() {
+          callback(data);
+      });
+    });
+}
+
 app.get('/friends',
 function(req, res) {
     res.writeHead(200, {
@@ -91,22 +155,42 @@ function(req, res) {
         console.log("loaded token " + JSON.stringify(token));
         if (err)
             res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
-        else
-            facebookClient.apiCall(
-                'GET',
-                '/me/friends',
-                {access_token: token},
+        else {
+            facebookClient.apiCall('GET', '/me', {access_token: token},
                 function(error, result) {
-                    console.log(error);
-                    console.log(result);
-                    res.end("got result " + JSON.stringify(result));
-                    var stream = fs.createWriteStream("my/contacts.json");
-                    for (var i = 0; i < result.data.length; i++) {
-                        stream.write(JSON.stringify(result.data[i]) + "\n");
-                        console.log('http://graph.facebook.com/' + result.data[i].id + '/picture');
-                    }
-                    stream.end();
-                });
+                    res.write('for user ' + result.name + ' with id ' + result.id + ': \n\n');
+                    var userID = result.id;
+                    fs.mkdir('my/'+ userID, 0755);
+                    facebookClient.apiCall(
+                        'GET',
+                        '/me/friends',
+                        {access_token: token},
+                        function(error, result) {
+                            console.log(error);
+                            //console.log(result);
+                            res.end("got result " + JSON.stringify(result));
+                            fs.mkdir('my/' + userID, 0755);
+                            var stream = fs.createWriteStream('my/' + userID + '/contacts.json');
+                            for (var i = 0; i < result.data.length; i++) {
+                                if(result.data[i]) {
+                                    stream.write(JSON.stringify(result.data[i]) + "\n");
+                                   // console.log(JSON.stringify(result.data[i]));
+                                    if(result.data[i].id) {
+                                        photoQueue.push({'userID': userID, 'friendID': result.data[i].id});
+//                                        downloadPhoto(userID, result.data[i].id);
+                                    }
+                                }
+                            }
+                            stream.end();
+                            downloadPhotos(userID);
+                        });    
+                    });
+                    console.log('doing fql query');
+            //doFQLQuery(token, 'SELECT name FROM user WHERE uid = me()', function(data) {
+            //    console.log('FQL got ' + data);
+           // });
+        }
+            
     });
 
 });
