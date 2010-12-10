@@ -4,8 +4,7 @@
 
 var appKey = process.argv[2];
 var appSecret = process.argv[3];
-if (!appKey || !appSecret)
- {
+if (!appKey || !appSecret) {
     console.log("node client.js appkey appsecret");
     console.log("create one at https://foursquare.com/oauth/");
     process.exit(1);
@@ -20,12 +19,7 @@ var express = require('express'),
         connect.session()
         );
 
-var OAuth= require("oauth").OAuth;
-// Construct the internal OAuth client
-var oa= new OAuth("http://foursquare.com/oauth/request_token",
-	                         "http://foursquare.com/oauth/access_token", 
-	                         appKey,  appSecret, 
-	                         "1.0", "http://localhost:3004/auth", "HMAC-SHA1");
+var http = require('http');
 
 app.set('views', __dirname);
 
@@ -46,90 +40,62 @@ function(req, res) {
 var oaTokenSecret = "";
 app.get('/go4sq',
 function(req, res) {
-    oa.getOAuthRequestToken(function(error, oauth_token, oauth_token_secret, oauth_authorize_url, additionalParameters ) {
-        if (error) {
-	        res.writeHead(500);
-	        res.end(error);
-        } else {
-            console.log(oauth_token);
-            console.log(oauth_token_secret);
-            console.log(oauth_authorize_url);
-            console.log(additionalParameters);
-            oaTokenSecret=oauth_token_secret;
-            res.redirect("http://foursquare.com/oauth/authorize?oauth_token=" + oauth_token);
-        }
-    });
+    res.writeHead(302);
+    res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + appKey + '&response_type=code&redirect_uri=http://127.0.0.1:3004/auth');
+    res.end();
 });
+
+function get(host, url, callback) {
+    var httpClient = http.createClient(443, host, true);
+    var request = httpClient.request('GET', url, {host: host});
+    request.end();
+    request.on('response', function (response) {
+        var data = '';
+        response.on('data', function (chunk) {
+            data += chunk;
+        });
+        response.on('end', function() {
+            callback(data);
+        });
+    });
+}
 
 app.get('/auth',
 function(req, res) {
-    console.log("incoming auth " + req.param('oauth_token'));
+    console.log("incoming code " + req.param('code'));
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    oa.getOAuthAccessToken(
-        req.param('oauth_token'),
-        oaTokenSecret,
-        req.param('oauth_verifier'),
-      function (error, token, secret, additionalParameters) {
-        if (error) {
-            console.log(error);
-            res.end("uhoh " + error);
-        } else {
-            console.log("t " + token + " s " + secret + " a " + JSON.stringify(additionalParameters));
-            res.end("too legit to quit: " + token + " " + secret + " so now <a href='/friends'>load friends</a>");
-            fs.writeFile("access.token", token);
-            fs.writeFile("access.secret", secret);
-        }
-      }
-    );
+    var url = '/oauth2/access_token' +
+      '?client_id=' + appKey + 
+      '&client_secret=' + appSecret +
+      '&grant_type=authorization_code' +
+      '&redirect_uri=http://127.0.0.1:3004/auth' +
+      '&code=' + req.param('code');
+    console.log('url = ' + url);
+    get('foursquare.com', url, function(data) {
+        var responseObject = JSON.parse(data);
+        console.log('access_token = ' + responseObject.access_token);  
+        fs.writeFile("access.token", responseObject.access_token);
+        res.end("too legit to quit: " + responseObject.access_token + " so now <a href='/friends'>load friends</a>");
+    });
 });
+
 
 app.get('/friends',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    fs.readFile("access.token", "utf-8",
-    function(err, token) {
-        console.log("loaded token " + JSON.stringify(token));
-        if (err)
-            res.end("no token you need to <a href='/gofb'>auth w/ fb</a> yet");
-        else
-            fs.readFile("access.secret", "utf-8", function(err, secret){
-                console.log("loaded secret " + JSON.stringify(secret));
-                if (err)
-                    res.end("no secret you need to <a href='/gofb'>auth w/ fb</a> yet");
-                else{
-                    console.log(oa.signUrl('https://api.foursquare.com/v2/users/72937.json', token, secret));
-                    oa.getProtectedResource('https://api.foursquare.com/v2/users/self/friends.json', "GET", token, secret, function(error, data, response){
-                        if(error)
-                            res.end("failed? "+ JSON.stringify(error));
-                        else{
-                            res.end("got result " + JSON.stringify(data));                            
-                        }
-                    });
-                }
-                    
-            });
-/*            facebookClient.apiCall(
-                'GET',
-                '/me/friends',
-                {access_token: token},
-                function(error, result) {
-                    console.log(error);
-                    console.log(result);
-                    res.end("got result " + JSON.stringify(result));
-                    var stream = fs.createWriteStream("my/contacts.json");
-                    for (var i = 0; i < result.data.length; i++) {
-                        stream.write(JSON.stringify(result.data[i]) + "\n");
-                        console.log('http://graph.facebook.com/' + result.data[i].id + '/picture');
-                    }
-                    stream.end();
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    fs.readFile("access.token", "utf-8", function(err, token) {
+            console.log("loaded token " + token);
+            if (err)
+                res.end("no token you need to <a href='/go4sq'>auth w/ 4sq</a> yet");
+            else {
+                get('api.foursquare.com', '/v2/users/self/friends.json?oauth_token=' + token, function(data) {
+                    res.write(data);
+                    res.end();
                 });
-*/
-    });
-
+            }
+        });
 });
 
 console.log("http://localhost:3004/");
