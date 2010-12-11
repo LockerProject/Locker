@@ -2,9 +2,9 @@
 var fs = require('fs'),
     crypto = require('crypto');
 
-var fb_json = "../Facebook.journal/my/contacts.json";
 var fb_dir = "../Facebook.journal/my/";
 var gc_dir = "../gcontacts.journal/my/";
+var fsq_dir = "../foursquare.journal/my/";
 var ab_json = "../osxAddressBook.journal/my/contacts.json";
 
 var ccount = 0;
@@ -26,7 +26,7 @@ function cadd(c, source) {
         m.update(JSON.stringify(c));
         key = m.digest('base64');
     }
-    console.log('key = ' + key);
+    console.log(source.type + ' key = ' + key);
     if (contacts[key]) {
         // merge
         mergeContacts(contacts[key], c);
@@ -37,9 +37,15 @@ function cadd(c, source) {
 }
 
 function morphContact(c, source) {
-    if(source.type == 'google_contacts' || source.type == 'facebook') {
-        console.log('adding pic ' + c.id);
+    // should just check for photo somehow?
+    if(source.type == 'google_contacts' || source.type == 'facebook' || source.type == 'foursquare') {
+        console.log(source.type + ' adding pic ' + c.id);
         c.pic = [source.account + '/' + c.id + '.jpg'];
+    }
+    if(source.type == 'foursquare')
+    {
+        if(c.contact.email) c.email = [{'value':c.contact.email}];
+        if(c.contact.phone) c.phone = [{'value':c.contact.phone}];
     }
 }
 
@@ -135,6 +141,11 @@ function parseLinesOfJSONFile(path) {
  * Read in files from Facebook.journal
  */
 addAccountsFromDirectory(fb_dir, 'facebook');
+
+/**
+ * Read in files from foursquare.journal
+ */
+addAccountsFromDirectory(fsq_dir, 'foursquare');
 
 
 /**
