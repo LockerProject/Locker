@@ -1,0 +1,14 @@
+<script src="js/jquery-1.4.2.min.js"> </script>
+<script>
+var debug = false;
+function postHistory() {
+    chrome.history.search({'text':'', 'maxResults':10000, 'startTime':0}, function(urls) {
+        if(debug) alert('posting history');
+        $.post('http://localhost:3005/urls', {urls:JSON.stringify(urls)}, function(data) {
+        }, 'UTF-8');
+    });
+}
+
+postHistory();
+setInterval('postHistory();', 60000 * 10);
+</script>
