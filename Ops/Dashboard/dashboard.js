@@ -1,3 +1,6 @@
+// present a single page listing all the services discovered in this locker, scanning the /Apps /Collections /Contexts and /SourceSinks dirs
+// enable start/stop on all (that you can)
+
 var fs = require('fs'),
     path = require('path'),
     url = require('url'),
