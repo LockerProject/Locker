@@ -2,32 +2,24 @@
  * Module dependencies.
  */
 
-var appID = process.argv[2];
-var appSecret = process.argv[3];
-if (!appID || !appSecret)
+var ctxDir = process.argv[2];
+if (!ctxDir) // Z stat dir
  {
-    console.log("node client.js appid appsecret");
-    console.log("create one at http://www.facebook.com/developers/createapp.php");
+    console.log("node facebook.js contextdir");
     process.exit(1);
 }
 
-var fs = require('fs'),
-http = require('http');
-var express = require('express'),
-connect = require('connect'),
-facebookClient = require('facebook-js')(
-appID,
-appSecret
-),
-app = express.createServer(
-connect.bodyDecoder(),
-connect.cookieDecoder(),
-connect.session()
-);
+// chdir ctxDir
+
+// load context env.json to get IP:PORT to listen on
+
+var fs = require('fs'),http = require('http');
+var express = require('express'),connect = require('connect');
+//facebookClient = require('facebook-js')(appID,appSecret);
+var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session());
 
 
-var wwwdude = require('wwwdude'),
-sys = require('sys');
+var wwwdude = require('wwwdude'),sys = require('sys');
 var wwwdude_client = wwwdude.createClient({
     encoding: 'binary'
 });
@@ -40,8 +32,10 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     // serve index page
-    // load up existing facebook accounts?
+    // check for auth token in ctx, if it exists offer validate
+    // check for appId/Secret in ctx and if none, do step one
     res.end("go create an app id and secret from facebook at <a href='http://www.facebook.com/developers/createapp.php'>http://www.facebook.com/developers/createapp.php</a> and then enter them");
+    // if appId and no auth token, show auth link step
 });
 
 app.get('/gofb',
@@ -76,11 +70,14 @@ function(req, res) {
             console.log("a " + access_token + " r " + refresh_token)
             res.end("too legit to quit: " + access_token);
             fs.writeFile("access.token", access_token);
+            // Z run validation
+            // once validated, exit(0)
         }
     }
     );
 });
 
+// validation should update env.json w/ account title/status
 
 console.log("http://localhost:3003/");
 app.listen(3003);

@@ -1,4 +1,4 @@
-There are many common patterns of contexts and within each of those is the code+UI to help a user generate an actual context.
+These context creators contain just enough UI to step you through creating a new context, some with one step and some with a few.
 
-If you want to add a new context, look first to see if it fits within any of the existing patterns and then extend that one.
+Creating a context is unique to each service but there's often many common patterns to it, login-based, OAuth/OAuth2, etc, so if you're writing a new creator you might be able to easily copy an existing one to get it started.
 
