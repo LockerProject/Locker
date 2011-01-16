@@ -2,6 +2,7 @@
  * Module dependencies.
  */
 
+ 
 var appKey = process.argv[2];
 var appSecret = process.argv[3];
 if (!appKey || !appSecret) {
@@ -18,6 +19,12 @@ connect.bodyDecoder(),
 connect.cookieDecoder(),
 connect.session()
 );
+
+try { 
+    fs.mkdir('my', 0755);
+} catch(err) {
+    console.log(err);
+}
 
 var http = require('http');
 var wwwdude = require('wwwdude');
@@ -128,22 +135,32 @@ function(req, res) {
                     res.end();
                     downloadNextUser(users);
                 });
-                get('api.foursquare.com', '/v2/users/self/checkins.json?oauth_token=' + token,
-                function(data) {
-                    var stream = fs.createWriteStream('my/' + userID + '/places.json');
-                    var checkins = JSON.parse(data).response.checkins.items;
-                    for (var i = 0; i < checkins.length; i++) {
-                        if (checkins[i]) {
-                            stream.write(JSON.stringify(checkins[i]) + "\n");
-                        }
-                    }
-                    stream.end()
+                getCheckins(userID, token, 0, function() {
+                    res.end();
                 });
-
             })
         }
     });
 });
+
+var checkins_limit = 500;
+function getCheckins(userID, token, offset, callback) {
+    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token,
+    function(data) {
+        var stream = fs.createWriteStream('my/' + userID + '/places.json', {'flags' : 'a'});
+        var checkins = JSON.parse(data).response.checkins.items;
+        for (var i = 0; i < checkins.length; i++) {
+            if (checkins[i]) {
+                stream.write(JSON.stringify(checkins[i]) + "\n");
+            }
+        }
+        stream.end();
+        if(checkins.length == checkins_limit) 
+            getCheckins(userID, token, offset + checkins_limit, callback);
+        else
+            callback();
+    });
+}
 
 function downloadNextUser(users) {
     if (users.queue.length == 0)
