@@ -26,7 +26,7 @@ function(req, res) {
     twitterClient.getAccessToken(req, res,
     function(error, token) {
         if (error)
-        console.log(JSON.stringify(error));
+            console.log(JSON.stringify(error));
         res.writeHead(200, {
             'Content-Type': 'text/html'
         });

@@ -118,6 +118,7 @@ function waitForAllCompleted(total) {
 
 app.get('/friends',
 function(req, res) {
+    console.log('/friends');
     getFriendsIDs(screen_name, function(ids) {
         var j = 0;
         var ids_temp = [];
@@ -135,9 +136,9 @@ function(req, res) {
         }
         waitForAllCompleted(ids.length);
         console.log('got all ' + ids.length + ' users');
-        for(var i = 0; i < users.length; i++) {
-            console.log(JSON.stringify(users[i]));
-        }
+//        for(var i = 0; i < users.length; i++) {
+  //          console.log(JSON.stringify(users[i]));
+    //    }
     });    
 });
 
