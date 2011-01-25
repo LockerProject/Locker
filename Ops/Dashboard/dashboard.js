@@ -1,6 +1,14 @@
 // present a single page listing all the services discovered in this locker, scanning the /Apps /Collections /Contexts and /SourceSinks dirs
 // enable start/stop on all (that you can)
 
+var rootHost = process.argv[2];
+var rootPort = process.argv[3];
+if (!rootHost || !rootPort)
+ {
+    process.stderr.write("missing host and port arguments\n");
+    process.exit(1);
+}
+
 var fs = require('fs'),
     path = require('path'),
     url = require('url'),
@@ -56,6 +64,6 @@ app.get('/*', function (req, res) {
     });
 });
 
-console.log('Server running at http://127.0.0.1:3002/');
+console.log('http://'+rootHost+':'+rootPort+'/');
 
-app.listen(3002);
+app.listen(rootPort);
