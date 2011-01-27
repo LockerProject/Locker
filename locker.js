@@ -14,16 +14,31 @@ if first time
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');
+var crypto = require('crypto');
 
 var dashHost = process.argv[2]||"localhost";
 var dashPort = process.argv[3]||8042;
 var lockerPort = parseInt('1'+dashPort);
 var map = new Object();
+var exist = new Object();
 
+// look for available things
 mapDir('Contexts');
 mapDir('Connectors');
 mapDir('Collections');
 mapDir('Apps');
+
+// look for existing things
+var dirs = fs.readdirSync('Me');
+for (var i = 0; i < dirs.length; i++)
+{
+    var dir =  'Me/' + dirs[i];
+    if(!fs.statSync(dir).isDirectory()) continue;
+    if(!fs.statSync(dir+'/me.json').isFile()) continue;
+    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+    insertSafe(map,"existing",js);
+    exist[js.id] = js;
+}
 
 // start our internal service
 var express = require('express'),
@@ -61,15 +76,21 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end("{}");
+    res.end(JSON.stringify(map.available));
 });
 
-locker.get('/install',
+locker.post('/install',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end("{}");
+    var js = JSON.parse(req.rawBody);
+    var hash = crypto.createHash('md5');
+    hash.update(Math.random());
+    js.id = hash.digest('hex');
+    fs.mkdirSync('Me/'+js.id,0755);
+    fs.writeFileSync('Me/'+js.id+'/me.json',JSON.stringify(js));
+    res.end(JSON.stringify(js));
 });
 
 locker.get('/existing',
@@ -77,7 +98,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end("{}");
+    res.end(JSON.stringify(map.existing));
 });
 
 locker.get('/connect',
@@ -87,6 +108,8 @@ function(req, res) {
     });
     res.end("{}");
 });
+
+locker.listen(lockerPort);
 
 // scan to load local map of stuff
 function mapDir(dir) {
