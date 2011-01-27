@@ -1,0 +1,248 @@
+html, body {
+    width: 100%; 
+    height: 100%;
+    margin: 0; 
+    padding: 0;
+    background: #505964;
+    color: #ffffff;
+    font-family: Palatino Linotype, Book Antiqua, Palatino, serif;
+    overflow: hidden;
+}
+h1, h1 img, h2, p {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+a img {
+    border: 0;
+}
+a, a:link, a:visited {
+    color: #fff;
+    text-decoration: none;
+}
+a:hover, a:active {
+    color: #fff;
+    text-decoration: underline;
+}
+h1 a:hover, h1 a:active,
+h2 a:hover, h2 a:active {
+    text-decoration: none;
+}
+
+#about {
+    position: relative;
+    display: none;
+    background: rgba(60,66,75,0.75);
+    width: 410px;
+    top: 10px;
+    left: 10px;    
+    margin: 0;
+    padding: 0;
+    border-radius: 16px;    
+    -moz-border-radius: 16px; 
+    -webkit-border-radius: 16px;
+    -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.75);
+}
+
+#about h1 {
+    line-height: 1.0;
+    display: inline-block;
+    text-align: left;
+    font-weight: normal;
+    font-size: 96px;
+    padding: 10px 0 0 20px;
+    margin: 0;
+}
+#about h2 {
+    line-height: 1.0;
+    display: inline-block;
+    text-align: left;
+    vertical-align: baseline;
+    font-size: 24px;
+    padding: 10px 0 0 10px;
+    margin: 0;
+}
+#authbits p {
+    font-size: 16px;
+    line-height: 1.25;
+    font-weight: bold;
+    text-align: left;
+    padding: 0;
+    margin: -10px 0 15px 0;
+}
+
+#authbits {
+    padding: 20px;
+}
+
+#userinfo {
+    position: absolute;
+    display: none;
+    left: 0;
+    top: 0;
+    margin: 10px;
+    padding: 10px;
+    width: 225px;
+    background: rgba(60,66,75,0.75);
+    border-radius: 6px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.75);
+    font-size: 13px;
+}
+#userinfo img.user {
+    float: left;
+    margin-right: 10px;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+#bug {
+    position: absolute;
+    display: block;
+    right: 6px;
+    top: 6px;
+}
+#bug a, #bug img {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+#bug a:link img, #bug a:visited img {
+    opacity: 0.5;
+}
+#bug a:hover img, #bug a:active img {
+    opacity: 1.0;
+}
+
+#widget {
+    background: #505964;    
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0; border: 0;
+}
+canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#fb-root {
+    display: none;
+}
+
+#search {
+    display: none;
+    margin: 0; padding: 0;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+}
+#search input[type=search] {
+    border-radius: 10px;    
+	-moz-border-radius: 10px; 
+	-webkit-border-radius: 10px;
+	-moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+	-webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+	background: #fff;
+	border: 0;
+    padding: 4px 10px 4px 10px;
+    margin-right: 10px;
+    font-size: 12px;
+    font-family: 'Lucida Grande', sans-serif;
+}
+#search button {
+    border-radius: 10px;    
+    padding: 3px 10px;
+	-moz-border-radius: 10px; 
+	-webkit-border-radius: 10px;
+}
+
+#footer {
+    position: absolute;
+    font-size: 11px;
+    font-weight: normal;
+    text-align: right;
+    color: #ccc;
+    right: 6px;
+    bottom: 6px;
+}
+
+#hovercard {
+    position: absolute;
+    background: rgba(60,66,75,0.75);
+    border-radius: 6px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.75);
+    padding: 0;
+    margin: 0;
+    display: none;
+    min-width: 300px;
+}
+#hovercard div {
+    color: #fff;
+    margin: 10px;
+    font-size: 16px;
+    width: 300px;
+}
+#hovercard .user {
+    font-weight: bold;
+    font-size: 18px;
+}
+#hovercard .date, #hovercard .date a {
+    color: #ddd;
+    font-size: 14px;
+}
+
+#loginfb {
+    margin-right: 10px;
+}
+
+/* http://www.zurb.com/blog_uploads/0000/0617/buttons-03.html */
+
+.awesome, .awesome:visited {
+    font-family: 'Lucida Grande', sans-serif;
+	background-color: #2daebf;
+	display: inline-block; 
+	border: 0;
+	margin: 0;
+	text-align: left;
+	padding: 5px 10px 6px; 
+	color: #fff; 
+	text-decoration: none;
+	-moz-border-radius: 5px; 
+	-webkit-border-radius: 5px;
+	-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+	-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
+	border-bottom: 1px solid rgba(0,0,0,0.25);
+	position: relative;
+	cursor: pointer;
+}
+.awesome:active {
+    top: 1px;
+}
+.awesome {
+	font-size: 13px;
+	font-weight: bold;
+	line-height: 1;
+    text-shadow: rgba(0, 0, 0, 0.246094) 0px -1px 1px;
+}
+.awesome:hover {
+    background-color: #007d9a;
+    color: white;
+}
+

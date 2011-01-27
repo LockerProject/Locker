@@ -209,7 +209,6 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     lfs.readObjectsFromFile('feed.json', function(data) {
-        console.log(data.length);
         var obj = {};
         obj.data = data;
         res.write(JSON.stringify(obj));
