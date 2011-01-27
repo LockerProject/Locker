@@ -1,30 +1,15 @@
 /**
  * Module dependencies.
  */
-
-var appID = process.argv[2];
-var appSecret = process.argv[3];
-if (!appID || !appSecret)
- {
-    console.log("node client.js appid appsecret");
-    console.log("create one at http://www.facebook.com/developers/createapp.php");
-    process.exit(1);
-}
-
 var fs = require('fs'),
-http = require('http');
-var express = require('express'),
-connect = require('connect'),
-facebookClient = require('facebook-js')(
-appID,
-appSecret
-),
-app = express.createServer(
-connect.bodyDecoder(),
-connect.cookieDecoder(),
-connect.session()
-);
-
+    http = require('http'),
+    express = require('express'),
+    connect = require('connect'),
+    app = express.createServer(
+                    connect.bodyDecoder(),
+                    connect.cookieDecoder(),
+                    connect.session()),
+    lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude'),
 sys = require('sys');
@@ -32,20 +17,24 @@ var wwwdude_client = wwwdude.createClient({
     encoding: 'binary'
 });
 
-app.set('views', __dirname);
+var meta = lfs.readMetadata();
 
+var context = JSON.parse(fs.readFileSync("context.json"));
+var token = context.token;
+var facebookClient = require('facebook-js')();
+//var facebookClient = require('facebook-js')(context.appID, context.appSecret);
+
+
+app.set('views', __dirname);
 app.get('/',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    fs.readFile("access.token",
-    function(err, data) {
-        if (err)
+    if(!token)
         res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
-        else
+    else
         res.end("found a token, <a href='/friends'>load friends</a>");
-    });
 });
 
 app.get('/gofb',
@@ -68,9 +57,7 @@ function(req, res) {
 
     oa.getOAuthAccessToken(
     req.param('code'),
-    {
-        redirect_uri: 'http://localhost:3003/auth'
-    },
+    {redirect_uri: 'http://localhost:3003/auth'},
     function(error, access_token, refresh_token) {
         if (error) {
             console.log(error);
@@ -81,19 +68,14 @@ function(req, res) {
             res.end("too legit to quit: " + access_token + " so now <a href='/friends'>load friends</a>");
             fs.writeFile("access.token", access_token);
         }
-    }
-    );
-    //  facebookClient.getAccessToken({redirect_uri: 'http://localhost:3003/auth', code: req.param('code')}, function (error, token) {
-    //	console.log("got token "+token);
-    //	res.end("got token "+token);
-    //    });
+    });
 });
 
 
 var photoQueue = [];
 var photoIndex = 0;
 function downloadPhotos(userID) {
-    fs.mkdir('my/' + userID + '/photos/', 0755);
+    fs.mkdir('photos/', 0755);
     downloadNextPhoto();
 }
 function downloadNextPhoto() {
@@ -103,7 +85,6 @@ function downloadNextPhoto() {
     var friendID = photoQueue[photoIndex].friendID;
     photoIndex++;
     try {
-        // console.log('http://graph.facebook.com/' + id + '/picture');
         wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
         .addListener('error',
         function(err) {
@@ -123,24 +104,21 @@ function downloadNextPhoto() {
         .addListener('success',
         function(data, resp) {
             try {
-                fs.writeFileSync('my/' + userID + '/photos/' + friendID + '.jpg', data, 'binary');
+                fs.writeFileSync('photos/' + friendID + '.jpg', data, 'binary');
                 downloadNextPhoto();
             } catch(err) {
                 //                  console.lo
                 }
         }).send();
     } catch(err) {
-
-        }
+    }
 }
 
 function doFQLQuery(access_token, query, callback) {
     var fb = http.createClient(443, 'api.facebook.com', true);
     var request = fb.request('GET', '/method/fql.query?format=json&access_token=' + access_token +
-    '&query=' + escape(query),
-    {
-        'host': 'api.facebook.com'
-    });
+                            '&query=' + escape(query),
+                            {'host': 'api.facebook.com'});
     request.end();
     var data = '';
     request.on('response',
@@ -162,69 +140,123 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    fs.readFile("access.token", "utf-8",
-    function(err, token) {
-        console.log("loaded token " + JSON.stringify(token));
-        if (err)
+    console.log("loaded token " + token);
+    if (!token)
         res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
-        else {
-            facebookClient.apiCall('GET', '/me', {
-                access_token: token
-            },
+    else {
+        facebookClient.apiCall('GET', '/me', {access_token: token},
+        function(error, result) {
+            res.write('for user ' + result.name + ' with id ' + result.id + ': \n\n');
+            var userID = result.id;
+            facebookClient.apiCall(
+            'GET',
+            '/me/friends',
+            {access_token: token},
             function(error, result) {
-                res.write('for user ' + result.name + ' with id ' + result.id + ': \n\n');
-                var userID = result.id;
-                fs.mkdir('my/' + userID, 0755);
-
-                facebookClient.apiCall(
-                'GET',
-                '/me/friends',
-                {
-                    access_token: token
-                },
-                function(error, result) {
-                    console.log(error);
-                    //console.log(result);
-                    res.end("got result " + JSON.stringify(result));
-                    fs.mkdir('my/' + userID, 0755);
-                    var stream = fs.createWriteStream('my/' + userID + '/contacts.json');
-                    for (var i = 0; i < result.data.length; i++) {
-                        if (result.data[i]) {
-                            stream.write(JSON.stringify(result.data[i]) + "\n");
-                            // console.log(JSON.stringify(result.data[i]));
-                            if (result.data[i].id) {
-                                photoQueue.push({
-                                    'userID': userID,
-                                    'friendID': result.data[i].id
-                                });
-                            }
+                console.log(error);
+                res.end("got result " + JSON.stringify(result));
+                var stream = fs.createWriteStream('contacts.json');
+                for (var i = 0; i < result.data.length; i++) {
+                    if (result.data[i]) {
+                        stream.write(JSON.stringify(result.data[i]) + "\n");
+                        // console.log(JSON.stringify(result.data[i]));
+                        if (result.data[i].id) {
+                            photoQueue.push({
+                                'userID': userID,
+                                'friendID': result.data[i].id
+                            });
                         }
                     }
-                    stream.end();
-                    downloadPhotos(userID);
-                });
-
-                facebookClient.apiCall(
-                'GET',
-                '/me/checkins',
-                {
-                    access_token: token
-                },
-                function(error, result) {
-                    console.log(error);
-                    //console.log(result);
-                    var stream = fs.createWriteStream('my/' + userID + '/places.json');
-                    for (var i = 0; i < result.data.length; i++) {
-                        if (result.data[i]) {
-                            stream.write(JSON.stringify(result.data[i]) + "\n");
-                        }
-                    }
-                    stream.end();
-                });
+                }
+                stream.end();
+                downloadPhotos(userID);
             });
-        }
+
+            facebookClient.apiCall(
+            'GET',
+            '/me/checkins',
+            {access_token: token},
+            function(error, result) {
+                console.log(error);
+                //console.log(result);
+                var stream = fs.createWriteStream('places.json');
+                for (var i = 0; i < result.data.length; i++) {
+                    if (result.data[i]) {
+                        stream.write(JSON.stringify(result.data[i]) + "\n");
+                    }
+                }
+                stream.end();
+            });
+        });
+    }
+});
+
+
+app.get('/feed',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    pullNewsFeed(function() {
+        res.end();
     });
 });
+
+
+app.get('/getfeed',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    lfs.readObjectsFromFile('feed.json', function(data) {
+        console.log(data.length);
+        var obj = {};
+        obj.data = data;
+        res.write(JSON.stringify(obj));
+        res.end();
+    });
+});
+
+function pullNewsFeed(callback) {
+    if(!meta.feed)
+        meta.feed = {};
+    var items = [];
+    pullNewsFeedPage(null, meta.feed.latest, items, function() {
+        items.reverse();
+        lfs.appendObjectsToFile('feed.json', items);
+        callback();
+    });
+}
+
+function pullNewsFeedPage(until, since, items, callback) {
+    var params = {access_token: token, limit: 1000};
+    if(until)
+        params.until = until;
+    if(since)
+        params.since = since;
+    facebookClient.apiCall('GET', '/me/home', params, 
+        function(error, result) {
+            if(error) {
+                console.log(JSON.stringify(error));
+                return;
+            }
+            if(result.data.length > 0) {
+                var t = result.data[0].updated_time;
+                if(!meta.feed.latest || t > meta.feed.latest)
+                    meta.feed.latest = t;
+                console.log(JSON.stringify(meta));
+                for(var i = 0; i < result.data.length; i++)
+                    items.push(result.data[i]);
+                var next = result.paging.next;
+                var until = unescape(next.substring(next.lastIndexOf("&until=") + 7));
+                pullNewsFeedPage(until, since, items, callback);
+            } else if(callback) {
+                lfs.writeMetadata(meta);
+                callback();
+            }
+        });
+}
+
 
 console.log("http://localhost:3003/");
 app.listen(3003);

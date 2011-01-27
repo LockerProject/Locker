@@ -1,3 +1,9 @@
+var context = JSON.parse(fs.readFileSync("context.json"));
+var token = context.token;
+
+var facebookClient = require('facebook-js')();
+
+
 var userID = process.argv[2];
 if (!userID) {
     console.log("node feed.js userID");
