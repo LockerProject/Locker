@@ -34,7 +34,10 @@ function readJSON(res,file) {
 
 app.get('/', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write('<html><head><title>Locker Dashboard</title></head>\n\n<body>');
+    res.write('<html><head><title>Locker Dashboard</title>' +
+                '<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script></head>\n\n<body>');
+    //res.write('launch <a onclick="javascript:$.get(\'http:localhost:1' + rootPort + '/launchapp\', {name:\'Fizz\'})">Fizz!</a>');
+    
     res.end("</body></html>");
 });
 

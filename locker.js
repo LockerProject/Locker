@@ -109,7 +109,43 @@ function(req, res) {
     res.end("{}");
 });
 
+
+locker.get('/launchapp', function(req, res) {
+    var paramsString = req.param('params');
+    console.log('params: ' + params);
+    var params = [];
+    if(paramsString)
+        params = JSON.parse(paramsString);
+    var port = spawnApp(req.param('name'), params);
+    res.writeHead(200, {
+        'Content-Type': 'text/javascript'
+    });
+    res.end('http://localhost:' + port + '/');
+});
+
 locker.listen(lockerPort);
+console.log('locker running at http://localhost:' + lockerPort + '/');
+
+
+//the least intelligent way of avoiding port conflicts
+var appPortCounter = 4000;
+function spawnApp(name, params) {
+    appPortCounter++;
+    var passedParams = ['server.js', appPortCounter];
+    if(params) {
+        for(var i = 0; i < params.length; i++)
+            passedParams.push(params[i]);
+    }
+    app = spawn('node', passedParams, {cwd: 'Apps/' + name});
+    console.log('Spawned app ' + name + ', pid: ' + app.pid);
+    app.stderr.on('data',function (data){
+        console.log('Error in app ' + name + ': '+data);
+    });
+    app.stdout.on('data',function (data){
+        console.log('Contact ' + name + ' at: '+ data);
+    });
+    return appPortCounter;
+}
 
 // scan to load local map of stuff
 function mapDir(dir) {
