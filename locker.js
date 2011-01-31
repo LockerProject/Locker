@@ -66,7 +66,8 @@ dashboard.on('exit', function (code) {
 locker.get('/',
 function(req, res) {
     res.writeHead(200, {
-        'Content-Type': 'text/html'
+        'Content-Type': 'text/html',
+        'Access-Control-Allow-Origin' : '*'
     });
     res.end("Why hello there, pleased to meet you, I'm the locker service.");
 });
@@ -116,11 +117,13 @@ locker.get('/launchapp', function(req, res) {
     var params = [];
     if(paramsString)
         params = JSON.parse(paramsString);
-    var port = spawnApp(req.param('name'), params);
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
+    var port = spawnApp(req.param('name'), params, function() {        
+        res.writeHead(200, {
+            'Content-Type': 'text/html',
+            'Access-Control-Allow-Origin' : '*'
+        });
+        res.end('http://localhost:' + port + '/');
     });
-    res.end('http://localhost:' + port + '/');
 });
 
 locker.listen(lockerPort);
@@ -129,7 +132,7 @@ console.log('locker running at http://localhost:' + lockerPort + '/');
 
 //the least intelligent way of avoiding port conflicts
 var appPortCounter = 4000;
-function spawnApp(name, params) {
+function spawnApp(name, params, callback) {
     appPortCounter++;
     var passedParams = ['server.js', appPortCounter];
     if(params) {
@@ -143,6 +146,7 @@ function spawnApp(name, params) {
     });
     app.stdout.on('data',function (data){
         console.log('Contact ' + name + ' at: '+ data);
+        callback();
     });
     return appPortCounter;
 }

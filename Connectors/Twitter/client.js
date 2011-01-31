@@ -1,9 +1,9 @@
 var consumerKey = process.argv[2];
 var consumerSecret = process.argv[3];
+var port = process.argv[4];
 
 
-var oauth_token_secret,
-oauth_token;
+var oauth_token_secret, oauth_token;
 
 if (!consumerKey || !consumerSecret)
  {
@@ -14,15 +14,15 @@ if (!consumerKey || !consumerSecret)
 var express = require('express'),
 connect = require('connect');
 
-var twitterClient = require('twitter-js')(consumerKey, consumerSecret, 'http://127.0.0.1:3003/'),
+var twitterClient = require('twitter-js')(consumerKey, consumerSecret, 'http://127.0.0.1:' + port + '/'),
 app = express.createServer(
 connect.bodyDecoder(),
 connect.cookieDecoder(),
 connect.session()
 );
 
-app.get('/',
-function(req, res) {
+app.get('/', function(req, res) {
+    console.log('serving /');
     twitterClient.getAccessToken(req, res,
     function(error, token) {
         if (error)
@@ -40,8 +40,18 @@ function(req, res) {
     });
 });
 
-    
+app.get('/home_timeline', function(req, res) {
+    twitterClient.apiCall('GET','/statuses/home_timeline.json', 
+        { token: { oauth_token: oauth_token, oauth_token_secret: oauth_token_secret} }, 
+        function(error, result) {
+            console.log('\n\n\n\nERROR:\n\n' + JSON.stringify(error));
+            console.log('\n\n\n\nRESULT:\n\n' + JSON.stringify(result));
+            res.end();
+        });
+});
 
+    
+/*
 app.post('/message',
 function(req, res) {
     twitterClient.apiCall('POST', '/statuses/update.json',
@@ -53,9 +63,11 @@ function(req, res) {
         }
     },
     function(error, result) {
-        res.render('done.jade');
+        console.log(JSON.stringify(error));
+        console.log(JSON.stringify(result));
     }
     );
-});
+});*/
 
-app.listen(3003);
+console.log('http://localhost:' + port + '/');
+app.listen(port);
