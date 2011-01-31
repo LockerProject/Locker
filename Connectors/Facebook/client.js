@@ -66,7 +66,8 @@ function(req, res) {
         } else {
             console.log("a " + access_token + " r " + refresh_token)
             res.end("too legit to quit: " + access_token + " so now <a href='/friends'>load friends</a>");
-            fs.writeFile("access.token", access_token);
+            context.token = access_token;
+            fs.writeFile("context.json", JSON.stringify(context));
         }
     });
 });
