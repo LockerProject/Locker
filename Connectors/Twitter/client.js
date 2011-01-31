@@ -43,6 +43,17 @@ app.get('/', function(req, res) {
     });
 });
 
+app.get('/get_home_timeline', function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/javascript'
+    });
+    lfs.readObjectsFromFile('feed.json', function(data) {
+        data.reverse();
+        res.write(JSON.stringify(data));
+        res.end();
+    });
+});
+
 app.get('/home_timeline', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'

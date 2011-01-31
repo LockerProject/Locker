@@ -113,7 +113,7 @@ function(req, res) {
 
 locker.get('/launchapp', function(req, res) {
     var paramsString = req.param('params');
-    console.log('params: ' + params);
+    console.log('params: ' + paramsString);
     var params = [];
     if(paramsString)
         params = JSON.parse(paramsString);

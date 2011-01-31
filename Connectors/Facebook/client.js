@@ -1,6 +1,15 @@
 /**
  * Module dependencies.
  */
+var port = process.argv[2]; 
+//console.log("feedSourcePort: " + feedSourcePort);
+if(isNaN(port)) {
+    console.log("node server.js <port number>");
+    process.exit(1);
+} else if(port <= 1024) {
+    console.log("port number must be greater than 1024.");
+    process.exit(1);
+}
 var fs = require('fs'),
     http = require('http'),
     express = require('express'),
@@ -57,7 +66,7 @@ function(req, res) {
 
     oa.getOAuthAccessToken(
     req.param('code'),
-    {redirect_uri: 'http://localhost:3003/auth'},
+    {redirect_uri: 'http://localhost:' + port + '/auth'},
     function(error, access_token, refresh_token) {
         if (error) {
             console.log(error);
@@ -258,5 +267,5 @@ function pullNewsFeedPage(until, since, items, callback) {
 }
 
 
-console.log("http://localhost:3003/");
-app.listen(3003);
+console.log("http://localhost:" + port + '/');
+app.listen(port);
