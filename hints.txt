@@ -1,0 +1,25 @@
+First run this:
+
+> node locker.js
+
+It starts a background "manager" process on 18042, and spawns a dashboard on 8042 (which doesn't do much yet), but to keep playing you can see what services are available:
+
+> curl http://localhost:18042/available
+[{"title":"Facebook Account","action":"Connect to a Facebook account","desc":"Collect and sync my data from my Facebook account using Facebook Connect and a Facebook 'app' that I create just for myself.","run":"node facebook.js","srcdir":"Contexts","is":"context"},{"title":"Hello World","action":"not much","desc":"just sayin hi and all","run":"node hello.js","srcdir":"Apps/HelloWorld","is":"app"}]
+
+Most testing stuff right now, but you can "install" any of these things (which gives them a workspace and knows how to start them up inside it):
+
+> curl localhost:18042/install -d '{"title":"Hello World","action":"not much","desc":"just sayin hi and all","run":"node hello.js","srcdir":"Apps/HelloWorld","is":"app"}'
+{"title":"Hello World","action":"not much","desc":"just sayin hi and all","run":"node hello.js","srcdir":"Apps/HelloWorld","is":"app","id":"5eb327707a5b9feea736a52170547459","me":"/Users/jer/Locker/Me/5eb327707a5b9feea736a52170547459"}
+
+Echos it back mostly, but also creates that working space in the Me dir, now you can connect to the service you just installed:
+
+> curl localhost:18042/connect?id=5eb327707a5b9feea736a52170547459
+{"title":"Hello World","action":"not much","desc":"just sayin hi and all","run":"node hello.js","srcdir":"Apps/HelloWorld","is":"app","id":"5eb327707a5b9feea736a52170547459","me":"/Users/jer/Locker/Me/5eb327707a5b9feea736a52170547459","pid":30590,"port":4001,"uri":"http://localhost:4001/"}
+
+Again mostly just echos it back, but with even more data now, and that process is spawned and available:
+
+> curl http://localhost:4001/
+yeah, hello world, and stuff
+
+Nifty... 

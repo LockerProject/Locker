@@ -19,8 +19,8 @@ var crypto = require('crypto');
 var dashHost = process.argv[2]||"localhost";
 var dashPort = process.argv[3]||8042;
 var lockerPort = parseInt('1'+dashPort);
+var lockerDir = process.cwd();
 var map = new Object();
-var exist = new Object();
 
 // look for available things
 mapDir('Contexts');
@@ -36,8 +36,8 @@ for (var i = 0; i < dirs.length; i++)
     if(!fs.statSync(dir).isDirectory()) continue;
     if(!fs.statSync(dir+'/me.json').isFile()) continue;
     var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+    map[js.id] = js;
     insertSafe(map,"existing",js);
-    exist[js.id] = js;
 }
 
 // start our internal service
@@ -89,8 +89,11 @@ function(req, res) {
     var hash = crypto.createHash('md5');
     hash.update(Math.random());
     js.id = hash.digest('hex');
-    fs.mkdirSync('Me/'+js.id,0755);
-    fs.writeFileSync('Me/'+js.id+'/me.json',JSON.stringify(js));
+    js.me = lockerDir+'/Me/'+js.id;
+    map[js.id] = js;
+    insertSafe(map,"existing",js);
+    fs.mkdirSync(js.me,0755);
+    fs.writeFileSync(js.me+'/me.json',JSON.stringify(js));
     res.end(JSON.stringify(js));
 });
 
@@ -104,11 +107,31 @@ function(req, res) {
 
 locker.get('/connect',
 function(req, res) {
+    var id = req.param('id');
+    if(!map[id]) // make sure it exists before it can be connected
+    {
+        res.writeHead(404);
+        res.end();
+        return;
+    }
+    if(!map[id].pid) // spawn if it hasn't been
+    {
+        spawnMe(map[id],function(){
+            connected(map[id],res);
+        });
+    }else{
+        connected(map[id],res);
+    }
+});
+
+function connected(svc, res)
+{
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end("{}");
-});
+    res.end(JSON.stringify(svc)); // will contain conn URI
+    
+}
 
 
 locker.get('/launchapp', function(req, res) {
@@ -149,6 +172,26 @@ function spawnApp(name, params, callback) {
         callback();
     });
     return appPortCounter;
+}
+function spawnMe(svc, callback) {
+    appPortCounter++;
+    var run = svc.run.split(" "); // node foo.js
+    run.push(svc.me); // pass in it's working director
+    run.push(appPortCounter); // pass in it's assigned port
+    console.log(run);
+    app = spawn(run.shift(), run, {cwd: svc.srcdir});
+    svc.pid = app.pid;
+    svc.port = appPortCounter;
+    svc.uri = "http://localhost:"+svc.port+"/";
+    console.log('Spawned app ' + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
+    app.stderr.on('data',function (data){
+        svc.error = data;
+        console.log('Error in app ' + svc.id + ': '+data);
+    });
+    app.stdout.on('data',function (data){
+        console.log('Started ' + svc.id + ' at: '+ data);
+        callback();
+    });
 }
 
 // scan to load local map of stuff
