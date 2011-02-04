@@ -3,7 +3,7 @@ Locker - the "me" platform
 
 This is an open source project that helps me collect all of my social data from wherever it is online into one place, and then lets me do really awesome stuff with it.
 
-STATUS: eager-developer-friendly only at this point (devs check out the Docs dir), we're working hard to make it usable for early adopters soon, keep an eye on http://twitter.com/jeremie for progress! 
+STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on http://twitter.com/lockerproject for progress! 
 
 * Contexts - A context is a place where I have data about myself, such as an account on a site or service, or in some desktop app, on my phone, or even from a device.
 * Sources / Sinks - The source is the bit of code that fetches/syncs my data from a given context, the sink is the code that knows how to publish data back into a context.
