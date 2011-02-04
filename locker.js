@@ -51,7 +51,7 @@ connect.session()
 );
 
 // start dashboard
-dashboard  = spawn('node', ['Ops/Dashboard/dashboard.js', dashHost, dashPort]);
+dashboard  = spawn('node', ['dashboard.js', dashHost, dashPort], {cwd: 'Ops/Dashboard'});
 console.log('Spawned dashboard pid: ' + dashboard.pid);
 dashboard.stdout.on('data',function (data){
     console.log('Contact dashboard at: '+data);
@@ -72,6 +72,14 @@ function(req, res) {
     res.end("Why hello there, pleased to meet you, I'm the locker service.");
 });
 
+locker.get('/map',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/javascript'
+    });
+    res.end(JSON.stringify(map));
+});
+
 locker.get('/available',
 function(req, res) {
     res.writeHead(200, {
@@ -85,6 +93,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
+    console.log("installing "+req.rawBody);
     var js = JSON.parse(req.rawBody);
     var hash = crypto.createHash('md5');
     hash.update(Math.random());
@@ -105,10 +114,10 @@ function(req, res) {
     res.end(JSON.stringify(map.existing));
 });
 
-locker.get('/connect',
+locker.get('/open',
 function(req, res) {
     var id = req.param('id');
-    if(!map[id]) // make sure it exists before it can be connected
+    if(!map[id]) // make sure it exists before it can be opened
     {
         res.writeHead(404);
         res.end();
@@ -117,14 +126,14 @@ function(req, res) {
     if(!map[id].pid) // spawn if it hasn't been
     {
         spawnMe(map[id],function(){
-            connected(map[id],res);
+            opened(map[id],res);
         });
     }else{
-        connected(map[id],res);
+        opened(map[id],res);
     }
 });
 
-function connected(svc, res)
+function opened(svc, res)
 {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
@@ -176,7 +185,7 @@ function spawnApp(name, params, callback) {
 function spawnMe(svc, callback) {
     appPortCounter++;
     var run = svc.run.split(" "); // node foo.js
-    run.push(svc.me); // pass in it's working director
+    run.push(svc.me); // pass in it's working directory
     run.push(appPortCounter); // pass in it's assigned port
     console.log(run);
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
@@ -248,6 +257,7 @@ function mapApp(file)
 // make sure the value of the key is an array and insert the item
 function insertSafe(obj,key,item)
 {
+    console.log("inserting into "+key+": "+JSON.stringify(item))
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);
 }

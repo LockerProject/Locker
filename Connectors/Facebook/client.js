@@ -1,15 +1,16 @@
 /**
- * Module dependencies.
+ * web server/service to wrap interactions w/ FB open graph
  */
-var port = process.argv[2]; 
-//console.log("feedSourcePort: " + feedSourcePort);
-if(isNaN(port)) {
-    console.log("node server.js <port number>");
-    process.exit(1);
-} else if(port <= 1024) {
-    console.log("port number must be greater than 1024.");
+
+var cwd = process.argv[2];
+var port = process.argv[3];
+if (!cwd || !port)
+{
+    process.stderr.write("missing dir and port arguments\n");
     process.exit(1);
 }
+process.chdir(cwd);
+
 var fs = require('fs'),
     http = require('http'),
     express = require('express'),
@@ -26,10 +27,7 @@ var wwwdude_client = wwwdude.createClient({
     encoding: 'binary'
 });
 
-var meta = lfs.readMetadata();
-
-var context = JSON.parse(fs.readFileSync("context.json"));
-var token = context.token;
+var me = lfs.loadMeData();
 var facebookClient = require('facebook-js')();
 //var facebookClient = require('facebook-js')(context.appID, context.appSecret);
 
@@ -40,7 +38,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!token)
+    if(!me.token)
         res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
     else
         res.end("found a token, <a href='/friends'>load friends</a>");
@@ -75,8 +73,8 @@ function(req, res) {
         } else {
             console.log("a " + access_token + " r " + refresh_token)
             res.end("too legit to quit: " + access_token + " so now <a href='/friends'>load friends</a>");
-            context.token = access_token;
-            fs.writeFile("context.json", JSON.stringify(context));
+            me.token = access_token;
+            syncMeData(me);
         }
     });
 });
@@ -150,18 +148,18 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    console.log("loaded token " + token);
-    if (!token)
+    console.log("loaded token " + me.token);
+    if (!me.token)
         res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
     else {
-        facebookClient.apiCall('GET', '/me', {access_token: token},
+        facebookClient.apiCall('GET', '/me', {access_token: me.token},
         function(error, result) {
             res.write('for user ' + result.name + ' with id ' + result.id + ': \n\n');
             var userID = result.id;
             facebookClient.apiCall(
             'GET',
             '/me/friends',
-            {access_token: token},
+            {access_token: me.token},
             function(error, result) {
                 console.log(error);
                 res.end("got result " + JSON.stringify(result));
@@ -185,7 +183,7 @@ function(req, res) {
             facebookClient.apiCall(
             'GET',
             '/me/checkins',
-            {access_token: token},
+            {access_token: me.token},
             function(error, result) {
                 console.log(error);
                 //console.log(result);
@@ -238,7 +236,7 @@ function pullNewsFeed(callback) {
 }
 
 function pullNewsFeedPage(until, since, items, callback) {
-    var params = {access_token: token, limit: 1000};
+    var params = {access_token: me.token, limit: 1000};
     if(until)
         params.until = until;
     if(since)
@@ -267,5 +265,5 @@ function pullNewsFeedPage(until, since, items, callback) {
 }
 
 
-console.log("http://localhost:" + port + '/');
 app.listen(port);
+console.log("http://localhost:" + port + '/');
