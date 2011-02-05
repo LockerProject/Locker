@@ -30,6 +30,8 @@ var wwwdude_client = wwwdude.createClient({
 var me = lfs.loadMeData();
 var facebookClient = require('facebook-js')();
 //var facebookClient = require('facebook-js')(context.appID, context.appSecret);
+var appID = '--INSERT-APP-ID-HERE--';
+var appSecret = '--INSERT-APP-SECRET-HERE--';
 
 
 app.set('views', __dirname);
@@ -48,7 +50,7 @@ app.get('/gofb',
 function(req, res) {
     res.redirect(facebookClient.getAuthorizeUrl({
         client_id: appID,
-        redirect_uri: 'http://localhost:3003/auth',
+        redirect_uri: 'http://localhost:' + port + '/auth',
         scope: 'offline_access,read_stream'
     }));
 });
@@ -74,7 +76,7 @@ function(req, res) {
             console.log("a " + access_token + " r " + refresh_token)
             res.end("too legit to quit: " + access_token + " so now <a href='/friends'>load friends</a>");
             me.token = access_token;
-            syncMeData(me);
+            lfs.syncMeData(me);
         }
     });
 });
