@@ -14,7 +14,7 @@ process.chdir(cwd);
 
 var fs = require('fs'),http = require('http');
 var express = require('express'),connect = require('connect');
-var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session());
+var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session({secret : "locker"}));
 
 app.set('views', __dirname);
 

@@ -17,7 +17,7 @@ connect = require('connect'),
 app = express.createServer(
 connect.bodyDecoder(),
 connect.cookieDecoder(),
-connect.session()
+connect.session({secret : "locker"})
 );
 
 try { 

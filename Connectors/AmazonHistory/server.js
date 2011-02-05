@@ -8,7 +8,7 @@ var fs = require('fs'),
 var app = express.createServer(
                 connect.bodyDecoder(),
                 connect.cookieDecoder(),
-                connect.session()
+                connect.session({secret : "locker"})
             );
 
 

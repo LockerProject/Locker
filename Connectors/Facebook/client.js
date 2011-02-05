@@ -18,7 +18,7 @@ var fs = require('fs'),
     app = express.createServer(
                     connect.bodyDecoder(),
                     connect.cookieDecoder(),
-                    connect.session()),
+                    connect.session({secret : "locker"})),
     lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude'),

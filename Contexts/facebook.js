@@ -16,7 +16,7 @@ if (!ctxDir) // Z stat dir
 var fs = require('fs'),http = require('http');
 var express = require('express'),connect = require('connect');
 //facebookClient = require('facebook-js')(appID,appSecret);
-var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session());
+var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session({secret : "locker"}));
 
 
 var wwwdude = require('wwwdude'),sys = require('sys');
