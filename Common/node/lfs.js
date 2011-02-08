@@ -50,17 +50,17 @@ exports.readObjectsFromFile = function(path, callback) {
 /**
  * Writes the metadata object to the metadata file (meta.json) for the specified account
  */
-exports.writeMetadata = function(metadata) {
-    fs.writeFileSync('meta.json', JSON.stringify(metadata));
+exports.syncMeData = function(metadata) {
+    fs.writeFileSync('me.json', JSON.stringify(metadata)); // write this back to locker service?
 }
 
 /**
  * Reads the metadata file (meta.json) from the specificed account, or the first one found
  * if no account is specified
  */
-exports.readMetadata = function() {
+exports.loadMeData = function() {
     try {
-        return JSON.parse(fs.readFileSync('meta.json'));
+        return JSON.parse(fs.readFileSync('me.json'));
     } catch(err) {
         return {};
     }

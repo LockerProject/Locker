@@ -16,7 +16,7 @@ var crypto = require('crypto'),
     app = express.createServer(
             connect.bodyDecoder(),
             connect.cookieDecoder(),
-            connect.session());
+            connect.session({secret : "locker"}));
 
 var lfs = require('../common/node/lfs');
 

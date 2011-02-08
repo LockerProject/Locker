@@ -8,7 +8,7 @@ connect = require('connect'),
 app = express.createServer(
     connect.bodyDecoder(),
     connect.cookieDecoder(),
-    connect.session());
+    connect.session({secret : "locker"}));
 
 app.post('/urls',
     function(req, res) {

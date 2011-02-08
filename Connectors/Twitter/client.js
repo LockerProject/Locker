@@ -18,7 +18,7 @@ var twitterClient = require('twitter-js')(consumerKey, consumerSecret, 'http://1
     app = express.createServer(
         connect.bodyDecoder(),
         connect.cookieDecoder(),
-        connect.session()
+        connect.session({secret : "locker"})
     );
     
 var meta = lfs.readMetadata();
