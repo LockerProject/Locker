@@ -30,8 +30,6 @@ var wwwdude_client = wwwdude.createClient({
 var me = lfs.loadMeData();
 var facebookClient = require('facebook-js')();
 //var facebookClient = require('facebook-js')(context.appID, context.appSecret);
-var appID = '--INSERT-APP-ID-HERE--';
-var appSecret = '--INSERT-APP-SECRET-HERE--';
 
 
 app.set('views', __dirname);
@@ -40,17 +38,38 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
+    if(!me.appID)
+    {
+        res.end("Enter your personal FaceBook app info that will be used to sync your data (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>http://www.facebook.com/developers/createapp.php</a> using the callback url of "+me.proxied['auth']+") <form method='get' action='/save'>App ID: <input name='appID'><br>App Secret: <input name='appSecret'><br><input type='submit' value='Save'></form>");
+        return;
+    }
     if(!me.token)
         res.end("you need to <a href='/gofb'>auth w/ fb</a> yet");
     else
         res.end("found a token, <a href='/friends'>load friends</a>");
 });
 
+app.get('/save',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    if(!req.param('appID') || !req.param('appSecret'))
+    {
+        res.end("missing field(s)?");
+        return;
+    }
+    me.appID = req.param('appID');
+    me.appSecret = req.param('appSecret');
+    lfs.syncMeData(me);
+    req.end("thanks, now we need to <a href='/gofb'>auth that app to your account</a>.");
+});
+
 app.get('/gofb',
 function(req, res) {
     res.redirect(facebookClient.getAuthorizeUrl({
-        client_id: appID,
-        redirect_uri: 'http://localhost:' + port + '/auth',
+        client_id: me.appID,
+        redirect_uri: me.proxied['auth'],
         scope: 'offline_access,read_stream'
     }));
 });
@@ -62,11 +81,11 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     var OAuth = require("oauth").OAuth2;
-    var oa = new OAuth(appID, appSecret, 'https://graph.facebook.com');
+    var oa = new OAuth(me.appID, me.appSecret, 'https://graph.facebook.com');
 
     oa.getOAuthAccessToken(
     req.param('code'),
-    {redirect_uri: 'http://localhost:' + port + '/auth'},
+    {redirect_uri: me.proxied['auth']},
     function(error, access_token, refresh_token) {
         if (error) {
             console.log(error);

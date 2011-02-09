@@ -1,6 +1,6 @@
 /* random notes:
 on startup scan all folders
-    Apps Collections Contexts SourceSinks - generate lists of "available"
+    Apps Collections Connectors - generate lists of "available"
     Me/* - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
@@ -17,13 +17,17 @@ var path = require('path');
 var crypto = require('crypto');
 
 var dashHost = process.argv[2]||"localhost";
+if(dashHost != "localhost" || dashHost != "127.0.0.1")
+{
+    console.log("WARNING: if you're running this on a public IP it needs to have password protection, which you can hack locker.js and add since it's apparently still not implemented :)"); // uniquely self (de?)referential? lolz!
+}
 var dashPort = process.argv[3]||8042;
+var dashBase = "http://"+dashHost+":"+dashPort+"/";
 var lockerPort = parseInt('1'+dashPort);
 var lockerDir = process.cwd();
 var map = new Object();
 
 // look for available things
-mapDir('Contexts');
 mapDir('Connectors');
 mapDir('Collections');
 mapDir('Apps');
@@ -143,55 +147,41 @@ function opened(svc, res)
 }
 
 
-locker.get('/launchapp', function(req, res) {
-    var paramsString = req.param('params');
-    console.log('params: ' + paramsString);
-    var params = [];
-    if(paramsString)
-        params = JSON.parse(paramsString);
-    var port = spawnApp(req.param('name'), params, function() {        
-        res.writeHead(200, {
-            'Content-Type': 'text/html',
-            'Access-Control-Allow-Origin' : '*'
-        });
-        res.end('http://localhost:' + port + '/');
-    });
-});
-
 locker.listen(lockerPort);
 console.log('locker running at http://localhost:' + lockerPort + '/');
 
 
 //the least intelligent way of avoiding port conflicts
 var appPortCounter = 4000;
-function spawnApp(name, params, callback) {
-    appPortCounter++;
-    var passedParams = ['server.js', appPortCounter];
-    if(params) {
-        for(var i = 0; i < params.length; i++)
-            passedParams.push(params[i]);
-    }
-    app = spawn('node', passedParams, {cwd: 'Apps/' + name});
-    console.log('Spawned app ' + name + ', pid: ' + app.pid);
-    app.stderr.on('data',function (data){
-        console.log('Error in app ' + name + ': '+data);
-    });
-    app.stdout.on('data',function (data){
-        console.log('Contact ' + name + ' at: '+ data);
-        callback();
-    });
-    return appPortCounter;
-}
 function spawnMe(svc, callback) {
     appPortCounter++;
     var run = svc.run.split(" "); // node foo.js
     run.push(svc.me); // pass in it's working directory
     run.push(appPortCounter); // pass in it's assigned port
     console.log(run);
-    app = spawn(run.shift(), run, {cwd: svc.srcdir});
-    svc.pid = app.pid;
     svc.port = appPortCounter;
     svc.uri = "http://localhost:"+svc.port+"/";
+    svc.proxied = {};
+    for(var p in svc.proxy)
+    {
+        var orig = dashBase+p;
+        var dest = svc.uri+svc.proxy[p];
+        console.log("proxying /"+orig+" to "+dest);
+        svc.proxied[svc.proxy[p]] = orig;
+        locker.get(p, function(req, res) {
+            res.writeHead(200, {
+                'Content-Type': 'text/html'
+            });
+            wwwdude_client.get(dest)
+            .addListener('success', function(data, resp) {
+                res.write(data);
+                res.end();
+            }).send();
+        });
+    }
+    fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+    app = spawn(run.shift(), run, {cwd: svc.srcdir});
+    svc.pid = app.pid;
     console.log('Spawned app ' + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
     app.stderr.on('data',function (data){
         svc.error = data;
@@ -200,6 +190,10 @@ function spawnMe(svc, callback) {
     app.stdout.on('data',function (data){
         console.log('Started ' + svc.id + ' at: '+ data);
         callback();
+    });
+    app.on('exit', function (code) {
+      console.log('exited with code ' + code);
+      delete svc.pid;
     });
 }
 
@@ -216,7 +210,6 @@ function mapDir(dir) {
         }
         if(/\.collection$/.test(fullPath)) mapCollection(fullPath);
         if(/\.connector$/.test(fullPath)) mapConnector(fullPath);
-        if(/\.context$/.test(fullPath)) mapContext(fullPath);
         if(/\.app$/.test(fullPath)) mapApp(fullPath);
     }
 }
@@ -234,14 +227,6 @@ function mapConnector(file)
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "connector";
-    insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
-}
-function mapContext(file)
-{
-    var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    js.srcdir = path.dirname(file);
-    js.is = "context";
     insertSafe(map,"available",js);
     insertSafe(map,js.type,js);
 }

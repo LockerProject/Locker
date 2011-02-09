@@ -48,6 +48,7 @@ app.get('/', function (req, res) {
         res.write('<h2>available things to install in my locker</h2>');
         if(map.available) for(var i=0;i<map.available.length;i++)
         {
+            // TODO: check .needs which gives a service-type and ask which installed matching service should be used
             // just using array offset as unique id for now as shortcut, should be our own id to the "template" to be installed
             res.write('<li><input type="button" onclick="install('+i+')" value="install"> '+JSON.stringify(map.available[i]));
         }
