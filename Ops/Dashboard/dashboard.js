@@ -8,7 +8,7 @@ if (!rootHost || !rootPort)
     process.stderr.write("missing host and port arguments\n");
     process.exit(1);
 }
-var lockerPort = '1'+rootPort;
+var lockerPort = rootPort.substring(1);
 var lockerBase = 'http://'+rootHost+':'+lockerPort;
 
 var fs = require('fs'),
@@ -31,7 +31,7 @@ var app = express.createServer(
 
 var map;
 app.get('/', function (req, res) {    
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     res.write('<html><head><title>Locker Dashboard</title>' +
                 '<script src="util.js"></script></head>\n\n<body>' +
                 '<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script></head>\n\n<body>');
@@ -43,7 +43,7 @@ app.get('/', function (req, res) {
         res.write('<h2>my stuff</h2>');
         if(map.existing) for(var i=0;i<map.existing.length;i++)
         {
-            res.write('<li><a href="/open?id='+map.existing[i].id+'">open</a> '+JSON.stringify(map.existing[i]));
+            res.write('<li><a href="'+map.existing[i].uri+'">open</a> '+JSON.stringify(map.existing[i]));
         }
         res.write('<h2>available things to install in my locker</h2>');
         if(map.available) for(var i=0;i<map.available.length;i++)
@@ -56,20 +56,21 @@ app.get('/', function (req, res) {
     }).send();
 });
 
-app.get('/open', function(req, res){
-    wwwdude_client.get(lockerBase + '/open?id='+req.param('id'))
-    .addListener('success', function(data, resp) {
-        var js = JSON.parse(data);
-        res.writeHead(301,{'Location': js.uri});
-        res.end();
-    }).send();    
-});
+//app.get('/open', function(req, res){
+//    wwwdude_client.get(lockerBase + '/open?id='+req.param('id'))
+//    .addListener('success', function(data, resp) {
+//        var js = JSON.parse(data);
+//        res.writeHead(301,{'Location': js.uri});
+//        res.end();
+//    }).send();    
+//});
 
-app.get('/install', function(req, res){
+app.get('/post2install', function(req, res){
     var httpClient = http.createClient(lockerPort);
     var request = httpClient.request('POST', '/install', {'Content-Type':'application/x-www-form-urlencoded'});
     request.write(JSON.stringify(map.available[req.param('id')]));
     request.end();
+    console.log(request);
     request.on('response',
     function(response) {
         var data = '';
