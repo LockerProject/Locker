@@ -1,6 +1,6 @@
 /* random notes:
 on startup scan all folders
-    Apps Collections Contexts SourceSinks - generate lists of "available"
+    Apps Collections Connectors - generate lists of "available"
     Me/* - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
@@ -15,15 +15,22 @@ var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
+var url = require("url");
+var wwwdude = require('wwwdude'),
+    wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
-var dashHost = process.argv[2]||"localhost";
-var dashPort = process.argv[3]||8042;
-var lockerPort = parseInt('1'+dashPort);
+
+var lockerHost = process.argv[2]||"localhost";
+if(lockerHost != "localhost" || lockerHost != "127.0.0.1")
+{
+    console.log("WARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked locker.js and add since it's apparently still not implemented :)"); // uniquely self (de?)referential? lolz!
+}
+var lockerPort = process.argv[3]||8042;
+var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
 var map = new Object();
 
 // look for available things
-mapDir('Contexts');
 mapDir('Connectors');
 mapDir('Collections');
 mapDir('Apps');
@@ -51,7 +58,10 @@ connect.session({secret : "locker"})
 );
 
 // start dashboard
-dashboard  = spawn('node', ['dashboard.js', dashHost, dashPort], {cwd: 'Ops/Dashboard'});
+var lockerPortNext = "1"+lockerPort;
+dashboard  = spawn('node', ['dashboard.js', "localhost", lockerPortNext], {cwd: 'Ops/Dashboard'});
+dashboard.uriLocal = "http://localhost:"+lockerPortNext+"/";
+lockerPortNext++;
 console.log('Spawned dashboard pid: ' + dashboard.pid);
 dashboard.stdout.on('data',function (data){
     console.log('Contact dashboard at: '+data);
@@ -63,14 +73,6 @@ dashboard.on('exit', function (code) {
   if(code > 0) console.log('dashboard died with code ' + code);
 });
 
-locker.get('/',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html',
-        'Access-Control-Allow-Origin' : '*'
-    });
-    res.end("Why hello there, pleased to meet you, I'm the locker service.");
-});
 
 locker.get('/map',
 function(req, res) {
@@ -99,6 +101,7 @@ function(req, res) {
     hash.update(Math.random());
     js.id = hash.digest('hex');
     js.me = lockerDir+'/Me/'+js.id;
+    js.uri = lockerBase+"Me/"+js.id+"/";
     map[js.id] = js;
     insertSafe(map,"existing",js);
     fs.mkdirSync(js.me,0755);
@@ -114,84 +117,73 @@ function(req, res) {
     res.end(JSON.stringify(map.existing));
 });
 
-locker.get('/open',
-function(req, res) {
-    var id = req.param('id');
+locker.get('/Me/*', function(req,res){
+    var id = req.url.substring(4,36);
+    var ppath = req.url.substring(37);
     if(!map[id]) // make sure it exists before it can be opened
     {
         res.writeHead(404);
-        res.end();
+        res.end("so sad, couldn't find "+id);
         return;
     }
     if(!map[id].pid) // spawn if it hasn't been
     {
         spawnMe(map[id],function(){
-            opened(map[id],res);
+            proxied(map[id],ppath,req,res);
         });
     }else{
-        opened(map[id],res);
+        proxied(map[id],ppath,req,res);
     }
 });
 
-function opened(svc, res)
+// fallback everything to the dashboard
+locker.get('/*',
+function(req, res) {
+    proxied(dashboard,req.url.substring(1),req,res);
+});
+locker.get('/',
+function(req, res) {
+    proxied(dashboard,"",req,res);
+});
+
+
+function proxied(svc, ppath, req, res)
 {
+    console.log("proxying to "+svc.uriLocal+" request "+ppath)
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end(JSON.stringify(svc)); // will contain conn URI
-    
+    wwwdude_client.get(svc.uriLocal+ppath)
+    .addListener('success', function(data, resp) {
+        res.writeHead(200,resp.headers);
+        res.end(data);
+    })
+    .addListener('error', function(err) {
+        res.end("eRr0r :( "+err);
+    })
+    .addListener('http-error', function(data, resp) {
+        res.writeHead(resp.statusCode);
+        res.end(data);
+    })
+    .send();
 }
 
-
-locker.get('/launchapp', function(req, res) {
-    var paramsString = req.param('params');
-    console.log('params: ' + paramsString);
-    var params = [];
-    if(paramsString)
-        params = JSON.parse(paramsString);
-    var port = spawnApp(req.param('name'), params, function() {        
-        res.writeHead(200, {
-            'Content-Type': 'text/html',
-            'Access-Control-Allow-Origin' : '*'
-        });
-        res.end('http://localhost:' + port + '/');
-    });
-});
 
 locker.listen(lockerPort);
-console.log('locker running at http://localhost:' + lockerPort + '/');
+console.log('locker running at ' + lockerBase);
 
 
-//the least intelligent way of avoiding port conflicts
-var appPortCounter = 4000;
-function spawnApp(name, params, callback) {
-    appPortCounter++;
-    var passedParams = ['server.js', appPortCounter];
-    if(params) {
-        for(var i = 0; i < params.length; i++)
-            passedParams.push(params[i]);
-    }
-    app = spawn('node', passedParams, {cwd: 'Apps/' + name});
-    console.log('Spawned app ' + name + ', pid: ' + app.pid);
-    app.stderr.on('data',function (data){
-        console.log('Error in app ' + name + ': '+data);
-    });
-    app.stdout.on('data',function (data){
-        console.log('Contact ' + name + ' at: '+ data);
-        callback();
-    });
-    return appPortCounter;
-}
 function spawnMe(svc, callback) {
-    appPortCounter++;
+    lockerPortNext++; //the least intelligent way of avoiding port conflicts
     var run = svc.run.split(" "); // node foo.js
     run.push(svc.me); // pass in it's working directory
-    run.push(appPortCounter); // pass in it's assigned port
+    run.push(lockerPortNext); // pass in it's assigned port
     console.log(run);
+    svc.port = lockerPortNext;
+    svc.uriLocal = "http://localhost:"+svc.port+"/";
+    fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     svc.pid = app.pid;
-    svc.port = appPortCounter;
-    svc.uri = "http://localhost:"+svc.port+"/";
     console.log('Spawned app ' + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
     app.stderr.on('data',function (data){
         svc.error = data;
@@ -200,6 +192,10 @@ function spawnMe(svc, callback) {
     app.stdout.on('data',function (data){
         console.log('Started ' + svc.id + ' at: '+ data);
         callback();
+    });
+    app.on('exit', function (code) {
+      console.log('exited with code ' + code);
+      delete svc.pid;
     });
 }
 
@@ -216,7 +212,6 @@ function mapDir(dir) {
         }
         if(/\.collection$/.test(fullPath)) mapCollection(fullPath);
         if(/\.connector$/.test(fullPath)) mapConnector(fullPath);
-        if(/\.context$/.test(fullPath)) mapContext(fullPath);
         if(/\.app$/.test(fullPath)) mapApp(fullPath);
     }
 }
@@ -234,14 +229,6 @@ function mapConnector(file)
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "connector";
-    insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
-}
-function mapContext(file)
-{
-    var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    js.srcdir = path.dirname(file);
-    js.is = "context";
     insertSafe(map,"available",js);
     insertSafe(map,js.type,js);
 }

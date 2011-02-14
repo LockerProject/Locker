@@ -1,4 +1,4 @@
 function install(i)
 {
-    document.location = "/install?id="+i;
+    document.location = "/post2install?id="+i;
 }

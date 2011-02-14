@@ -16,17 +16,11 @@ NOTES
 
 Very raw braindump notes:
 
-- appFoo.json, sourceBar.json, etc, any dir can have any number of each, scanned upon discovery/update
+- Foo.app, Bar.connector, etc, any dir can have any number of each, scanned upon discovery/update
 
-"types" system, mimic mime types for collections/contexts that sources+sinks require, sources list what they require and produce, collections are notified of possible sources.
+A "service types" system, mimic mime types for collections/connectors, connectors list what they require and produce, apps can list what types they need to work
 
-Contexts - sources/sinks list what they require, each type has a spec on what details will be provided to the source/sink
-	account/facebook
-	account/twitter
-	desktop/osx
-	phone/iphone
-
-Collections - a source advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)
+Collections - a connector advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)
 	place/facebook
 	place/foursquare
 	photo/flickr
