@@ -38,12 +38,13 @@ exports.readObjectsFromFile = function(path, callback) {
         var itemStrings = data.split('\n');
         var items = [];
         for(var i = 0; i < itemStrings.length; i++) {
-//            console.log(itemStrings[i] + '\n\n\n');
             if(itemStrings[i])
                 items.push(JSON.parse(itemStrings[i]));
         }
         callback(items);
-//        stream.end();
+    });
+    stream.on('error', function(err) {
+        callback([]);
     });
 }
 

@@ -21,9 +21,8 @@ var wwwdude = require('wwwdude'),
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" || lockerHost != "127.0.0.1")
-{
-    console.log("WARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked locker.js and add since it's apparently still not implemented :)"); // uniquely self (de?)referential? lolz!
+if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+    console.log("\nWARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked into locker.js and added since it's apparently still not implemented :)\n\n"); // uniquely self (de?)referential? lolz!
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
@@ -37,8 +36,7 @@ mapDir('Apps');
 
 // look for existing things
 var dirs = fs.readdirSync('Me');
-for (var i = 0; i < dirs.length; i++)
-{
+for (var i = 0; i < dirs.length; i++) {
     var dir =  'Me/' + dirs[i];
     if(!fs.statSync(dir).isDirectory()) continue;
     if(!fs.statSync(dir+'/me.json').isFile()) continue;
@@ -120,18 +118,16 @@ function(req, res) {
 locker.get('/Me/*', function(req,res){
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
-    if(!map[id]) // make sure it exists before it can be opened
-    {
+    if(!map[id]) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
         return;
     }
-    if(!map[id].pid) // spawn if it hasn't been
-    {
+    if(!map[id].pid) { // spawn if it hasn't been
         spawnMe(map[id],function(){
             proxied(map[id],ppath,req,res);
         });
-    }else{
+    } else {
         proxied(map[id],ppath,req,res);
     }
 });
@@ -141,14 +137,14 @@ locker.get('/*',
 function(req, res) {
     proxied(dashboard,req.url.substring(1),req,res);
 });
+
 locker.get('/',
 function(req, res) {
     proxied(dashboard,"",req,res);
 });
 
 
-function proxied(svc, ppath, req, res)
-{
+function proxied(svc, ppath, req, res) {
     console.log("proxying to "+svc.uriLocal+" request "+ppath)
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
@@ -164,6 +160,9 @@ function proxied(svc, ppath, req, res)
     .addListener('http-error', function(data, resp) {
         res.writeHead(resp.statusCode);
         res.end(data);
+    })
+    .addListener('redirect', function(data, resp) {
+        res.redirect(resp.headers['location']);
     })
     .send();
 }
@@ -205,8 +204,7 @@ function mapDir(dir) {
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
         var stats = fs.statSync(fullPath);
-        if(stats.isDirectory())
-        {
+        if(stats.isDirectory()) {
             mapDir(fullPath);
             continue;
         }
@@ -216,24 +214,21 @@ function mapDir(dir) {
     }
 }
 
-function mapCollection(file)
-{
+function mapCollection(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "collection";
     insertSafe(map,"available",js);
     insertSafe(map,js.type,js);
 }
-function mapConnector(file)
-{
+function mapConnector(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "connector";
     insertSafe(map,"available",js);
     insertSafe(map,js.type,js);
 }
-function mapApp(file)
-{
+function mapApp(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "app";
@@ -242,8 +237,7 @@ function mapApp(file)
 }
 
 // make sure the value of the key is an array and insert the item
-function insertSafe(obj,key,item)
-{
+function insertSafe(obj,key,item) {
     console.log("inserting into "+key+": "+JSON.stringify(item))
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);

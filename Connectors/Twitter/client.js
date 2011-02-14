@@ -3,8 +3,7 @@ var consumerSecret = process.argv[3];
 var port = process.argv[4];
 
 
-if (!consumerKey || !consumerSecret)
- {
+if (!consumerKey || !consumerSecret) {
     console.log("node client.js consumerKey consumerSecret");
     console.log("create one at http://dev.twitter.com/apps/new");
     process.exit(1);

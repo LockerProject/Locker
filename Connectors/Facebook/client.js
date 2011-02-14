@@ -63,7 +63,7 @@ function(req, res) {
     me.appID = req.param('appID');
     me.appSecret = req.param('appSecret');
     lfs.syncMeData(me);
-    req.end("thanks, now we need to <a href='gofb'>auth that app to your account</a>.");
+    res.end("thanks, now we need to <a href='gofb'>auth that app to your account</a>.");
 });
 
 app.get('/gofb',
@@ -73,6 +73,7 @@ function(req, res) {
         redirect_uri: me.uri+"auth",
         scope: 'offline_access,read_stream'
     }));
+    res.end();
 });
 
 app.get('/auth',
@@ -189,7 +190,6 @@ function(req, res) {
                 for (var i = 0; i < result.data.length; i++) {
                     if (result.data[i]) {
                         stream.write(JSON.stringify(result.data[i]) + "\n");
-                        // console.log(JSON.stringify(result.data[i]));
                         if (result.data[i].id) {
                             photoQueue.push({
                                 'userID': userID,
@@ -208,7 +208,6 @@ function(req, res) {
             {access_token: me.token},
             function(error, result) {
                 console.log(error);
-                //console.log(result);
                 var stream = fs.createWriteStream('places.json');
                 for (var i = 0; i < result.data.length; i++) {
                     if (result.data[i]) {
@@ -247,10 +246,10 @@ function(req, res) {
 });
 
 function pullNewsFeed(callback) {
-    if(!meta.feed)
-        meta.feed = {};
+    if(!me.feed)
+        me.feed = {};
     var items = [];
-    pullNewsFeedPage(null, meta.feed.latest, items, function() {
+    pullNewsFeedPage(null, me.feed.latest, items, function() {
         items.reverse();
         lfs.appendObjectsToFile('feed.json', items);
         callback();
@@ -271,16 +270,16 @@ function pullNewsFeedPage(until, since, items, callback) {
             }
             if(result.data.length > 0) {
                 var t = result.data[0].updated_time;
-                if(!meta.feed.latest || t > meta.feed.latest)
-                    meta.feed.latest = t;
-                console.log(JSON.stringify(meta));
+                if(!me.feed.latest || t > me.feed.latest)
+                    me.feed.latest = t;
+                console.log(JSON.stringify(me));
                 for(var i = 0; i < result.data.length; i++)
                     items.push(result.data[i]);
                 var next = result.paging.next;
                 var until = unescape(next.substring(next.lastIndexOf("&until=") + 7));
                 pullNewsFeedPage(until, since, items, callback);
             } else if(callback) {
-                lfs.writeMetadata(meta);
+                lfs.syncMeData(me);
                 callback();
             }
         });
