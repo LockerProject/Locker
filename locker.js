@@ -16,13 +16,15 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var url = require("url");
+var sys = require('sys');
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
 
 var lockerHost = process.argv[2]||"localhost";
 if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
-    console.log("\nWARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked into locker.js and added since it's apparently still not implemented :)\n\n"); // uniquely self (de?)referential? lolz!
+    console.log('\nWARNING: if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
+                'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n'); 
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
@@ -47,13 +49,12 @@ for (var i = 0; i < dirs.length; i++) {
 
 // start our internal service
 var express = require('express'),
-connect = require('connect');
-
-locker = express.createServer(
-connect.bodyDecoder(),
-connect.cookieDecoder(),
-connect.session({secret : "locker"})
-);
+    connect = require('connect'),
+    locker = express.createServer(
+        connect.bodyDecoder(),
+        connect.cookieDecoder(),
+        connect.session({secret : "locker"})
+    );
 
 // start dashboard
 var lockerPortNext = "1"+lockerPort;
@@ -116,6 +117,7 @@ function(req, res) {
 });
 
 locker.get('/Me/*', function(req,res){
+    console.log('req for /Me/*');
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
     if(!map[id]) { // make sure it exists before it can be opened
@@ -145,34 +147,109 @@ function(req, res) {
 
 
 function proxied(svc, ppath, req, res) {
-    console.log("proxying to "+svc.uriLocal+" request "+ppath)
-    res.writeHead(200, {
+    console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
+    console.log('req.session = ' + req.session);
+//    if(!req.session.simon)
+ //       req.session.simon = 's' + Math.random(10);
+    /*res.writeHead(200, {
         'Content-Type': 'text/javascript'
-    });
-    wwwdude_client.get(svc.uriLocal+ppath)
+    });*/
+    
+    
+    sys.debug('req.session from browser:\n\n' + sys.inspect(req.session));
+    sys.debug('req.cookies from browser:\n\n' + sys.inspect(req.cookies));
+    var host = url.parse(svc.uriLocal).host;
+    var cookies;
+    if(!req.session.cookies) {
+        req.session.cookies = {};
+    } else {
+        cookies = req.session.cookies[host];
+    }
+    sys.debug('cookies[' + host + '] = ' + sys.inspect(cookies));
+    var headers = req.headers;
+//    headers.cookies = cookies;
+    if(cookies && cookies['connect.sid'])
+        headers.cookie = 'connect.sid=' + cookies['connect.sid'];
+    var client = wwwdude.createClient({headers:headers});
+    client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
-        res.writeHead(200,resp.headers);
+        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
+        
+        var newCookies = getCookies(resp.headers);
+        sys.debug('newCookies for ' + host + ' = ' + sys.inspect(newCookies));
+        req.session.cookies[host] = newCookies;
+        
+        var cookies = getCookies(resp.headers);
+        req.session.cookies[host] = cookies;
+        res.writeHead(200);
         res.end(data);
     })
     .addListener('error', function(err) {
+//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
+        res.writeHead(500);
+        sys.debug("eRr0r :( "+err);
         res.end("eRr0r :( "+err);
     })
     .addListener('http-error', function(data, resp) {
+        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
+        
+        var newCookies = getCookies(resp.headers);
+        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
+        req.session.cookies[host] = newCookies;
         res.writeHead(resp.statusCode);
         res.end(data);
     })
     .addListener('redirect', function(data, resp) {
+//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
+//        sys.debug(JSON.stringify(resp.headers));
+        for (key in resp.headers) {
+            res.header(key, resp.headers[key]);
+        }
+        sys.debug('redirect: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
+        
+        var newCookies = getCookies(resp.headers);
+        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
+        req.session.cookies[host] = newCookies;
+        /*if(resp.headers && resp.headers['set-cookie']) {
+            var cookies = {};
+            resp.headers['set-cookie'].split(';').forEach(function( cookie ) {
+                var parts = cookie.split('=');
+                var key = parts[ 0 ].trim();
+                var value = ( parts[ 1 ] || '' ).trim();
+                cookies[key] = value;
+                res.cookie(key, value);
+            });
+            sys.debug('resp.cookies = ' + sys.inspect(cookies));
+        }
+        console.log('redirecting to ' + resp.headers['location'])*/;
         res.redirect(resp.headers['location']);
     })
     .send();
 }
 
+function getCookies(headers) {
+    var cookies = {};
+    if(headers && headers['set-cookie']) {
+        var splitCookies = headers['set-cookie'].split(';');
+        for(var i = 0; i < splitCookies.length; i++) {
+            var cookie = splitCookies[i];
+            var parts = cookie.split('=');
+            var key = parts[ 0 ].trim();
+            if(key != 'path' && key != 'httpOnly' && key != 'expires') {
+                var value = ( parts[ 1 ] || '' ).trim();
+                cookies[key] = value;
+            }
+        }
+    }
+    return cookies;
+}
 
 locker.listen(lockerPort);
 console.log('locker running at ' + lockerBase);
 
 
 function spawnMe(svc, callback) {
+    console.log('spawnMe');
     lockerPortNext++; //the least intelligent way of avoiding port conflicts
     var run = svc.run.split(" "); // node foo.js
     run.push(svc.me); // pass in it's working directory
@@ -189,7 +266,7 @@ function spawnMe(svc, callback) {
         console.log('Error in app ' + svc.id + ': '+data);
     });
     app.stdout.on('data',function (data){
-        console.log('Started ' + svc.id + ' at: '+ data);
+        console.log('recieved from ' + svc.id + ': '+ data);
         callback();
     });
     app.on('exit', function (code) {
