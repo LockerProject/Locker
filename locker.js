@@ -21,7 +21,7 @@ var wwwdude = require('wwwdude'),
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
     console.log("\nWARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked into locker.js and added since it's apparently still not implemented :)\n\n"); // uniquely self (de?)referential? lolz!
 }
 var lockerPort = process.argv[3]||8042;
@@ -42,7 +42,7 @@ for (var i = 0; i < dirs.length; i++) {
     if(!fs.statSync(dir+'/me.json').isFile()) continue;
     var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
     map[js.id] = js;
-    insertSafe(map,"existing",js);
+    insertSafe(map,"existing",js.id);
 }
 
 // start our internal service
@@ -62,7 +62,7 @@ dashboard.uriLocal = "http://localhost:"+lockerPortNext+"/";
 lockerPortNext++;
 console.log('Spawned dashboard pid: ' + dashboard.pid);
 dashboard.stdout.on('data',function (data){
-    console.log('Contact dashboard at: '+data);
+console.log('dashboard stdout: '+data);
 });
 dashboard.stderr.on('data',function (data){
     console.log('Error dashboard: '+data);
@@ -80,14 +80,6 @@ function(req, res) {
     res.end(JSON.stringify(map));
 });
 
-locker.get('/available',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
-    res.end(JSON.stringify(map.available));
-});
-
 locker.post('/install',
 function(req, res) {
     res.writeHead(200, {
@@ -101,18 +93,10 @@ function(req, res) {
     js.me = lockerDir+'/Me/'+js.id;
     js.uri = lockerBase+"Me/"+js.id+"/";
     map[js.id] = js;
-    insertSafe(map,"existing",js);
+    insertSafe(map,"existing",js.id);
     fs.mkdirSync(js.me,0755);
     fs.writeFileSync(js.me+'/me.json',JSON.stringify(js));
     res.end(JSON.stringify(js));
-});
-
-locker.get('/existing',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
-    res.end(JSON.stringify(map.existing));
 });
 
 locker.get('/Me/*', function(req,res){
@@ -189,7 +173,7 @@ function spawnMe(svc, callback) {
         console.log('Error in app ' + svc.id + ': '+data);
     });
     app.stdout.on('data',function (data){
-        console.log('Started ' + svc.id + ' at: '+ data);
+        console.log('STDOUT from ' + svc.id + ': '+ data);
         callback();
     });
     app.on('exit', function (code) {

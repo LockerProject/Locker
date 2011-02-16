@@ -166,6 +166,22 @@ function doFQLQuery(access_token, query, callback) {
     });
 }
 
+app.get('/getfriends',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/plain'
+    });
+    fs.readFile("contacts.json", "binary", function(err, file) {  
+        if(err) {  
+            res.write("[]");  
+            res.end();  
+            return;  
+        }  
+        res.write(file, "binary");  
+        res.end();
+    });
+});
+
 app.get('/friends',
 function(req, res) {
     res.writeHead(200, {

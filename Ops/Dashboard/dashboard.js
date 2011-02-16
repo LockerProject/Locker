@@ -43,12 +43,12 @@ app.get('/', function (req, res) {
         res.write('<h2>my stuff</h2>');
         if(map.existing) for(var i=0;i<map.existing.length;i++)
         {
-            res.write('<li><a href="'+map.existing[i].uri+'">open</a> '+JSON.stringify(map.existing[i]));
+            var id = map.existing[i];
+            res.write('<li><a href="'+map[id].uri+'">open</a> '+JSON.stringify(map[id]));
         }
         res.write('<h2>available things to install in my locker</h2>');
         if(map.available) for(var i=0;i<map.available.length;i++)
         {
-            // TODO: check .needs which gives a service-type and ask which installed matching service should be used
             // just using array offset as unique id for now as shortcut, should be our own id to the "template" to be installed
             res.write('<li><input type="button" onclick="install('+i+')" value="install"> '+JSON.stringify(map.available[i]));
         }
@@ -56,16 +56,56 @@ app.get('/', function (req, res) {
     }).send();
 });
 
-//app.get('/open', function(req, res){
-//    wwwdude_client.get(lockerBase + '/open?id='+req.param('id'))
-//    .addListener('success', function(data, resp) {
-//        var js = JSON.parse(data);
-//        res.writeHead(301,{'Location': js.uri});
-//        res.end();
-//    }).send();    
-//});
+// doesn't this exist somewhere? was easier to write than find out, meh!
+function intersect(a,b)
+{
+    if(!a || !b) return false;
+    for(var i=0;i<a.length;i++)
+    {
+        for(var j=0;j<b.length;j++)
+        {
+            if(a[i] == b[j]) return a[i];
+        }
+    }
+    return false;
+}
 
 app.get('/post2install', function(req, res){
+    var id = req.param('id');
+    var js = map.available[id];
+    // if this service being installed depends on another service, present a list before installing
+    if(js.takes)
+    {
+        if(!req.param('use'))
+        {
+            var opts = [];
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.write('Please select one of the following to be used:<form method="get"><input type="hidden" name="id" value="'+id+'"><select name="use" rows="5" multiple="1">');
+            for(var i=0;i<map.existing.length;i++)
+            {
+                var e = map[map.existing[i]];
+                if(intersect(e.provides,js.takes)) res.write('<option value="'+e.id+'">'+e.title+'</option>');
+            }
+            res.write('<input type="submit" value="install"></form>');
+            res.write('<br>You may also need to install one of these:<ul>');
+            for(var i=0;i<map.available.length;i++)
+            {
+                if(intersect(map.available[i].provides,js.takes)) res.write('<li>'+map.available[i].title);
+            }
+            res.end();
+            return;
+        }else{
+            var use = req.param("use");
+            js.use = {};
+            // teh lame!!
+            if(typeof use == 'object')
+            {
+                for(var i=0;i<use.length;i++) js.use[use[i]] = intersect(js.takes,map[use[i]].provides);
+            }else{
+                js.use[use] = intersect(js.takes,map[use].provides);
+            }
+        }
+    }
     var httpClient = http.createClient(lockerPort);
     var request = httpClient.request('POST', '/install', {'Content-Type':'application/x-www-form-urlencoded'});
     request.write(JSON.stringify(map.available[req.param('id')]));
