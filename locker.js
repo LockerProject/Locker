@@ -117,7 +117,6 @@ function(req, res) {
 });
 
 locker.get('/Me/*', function(req,res){
-    console.log('req for /Me/*');
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
     if(!map[id]) { // make sure it exists before it can be opened
@@ -148,16 +147,6 @@ function(req, res) {
 
 function proxied(svc, ppath, req, res) {
     console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
-    console.log('req.session = ' + req.session);
-//    if(!req.session.simon)
- //       req.session.simon = 's' + Math.random(10);
-    /*res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });*/
-    
-    
-    sys.debug('req.session from browser:\n\n' + sys.inspect(req.session));
-    sys.debug('req.cookies from browser:\n\n' + sys.inspect(req.cookies));
     var host = url.parse(svc.uriLocal).host;
     var cookies;
     if(!req.session.cookies) {
@@ -165,69 +154,40 @@ function proxied(svc, ppath, req, res) {
     } else {
         cookies = req.session.cookies[host];
     }
-    sys.debug('cookies[' + host + '] = ' + sys.inspect(cookies));
     var headers = req.headers;
-//    headers.cookies = cookies;
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     var client = wwwdude.createClient({headers:headers});
     client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
-        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
-        
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies for ' + host + ' = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
-        
-        var cookies = getCookies(resp.headers);
-        req.session.cookies[host] = cookies;
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null) 
+            req.session.cookies[host] = {'connect.sid' : newCookie};
         res.writeHead(200);
         res.end(data);
     })
     .addListener('error', function(err) {
-//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
         res.writeHead(500);
-        sys.debug("eRr0r :( "+err);
+        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
         res.end("eRr0r :( "+err);
     })
     .addListener('http-error', function(data, resp) {
-        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
-        
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
         res.writeHead(resp.statusCode);
         res.end(data);
     })
     .addListener('redirect', function(data, resp) {
-//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
-//        sys.debug(JSON.stringify(resp.headers));
-        for (key in resp.headers) {
+        for (key in resp.headers)
             res.header(key, resp.headers[key]);
-        }
-        sys.debug('redirect: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
         
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
-        /*if(resp.headers && resp.headers['set-cookie']) {
-            var cookies = {};
-            resp.headers['set-cookie'].split(';').forEach(function( cookie ) {
-                var parts = cookie.split('=');
-                var key = parts[ 0 ].trim();
-                var value = ( parts[ 1 ] || '' ).trim();
-                cookies[key] = value;
-                res.cookie(key, value);
-            });
-            sys.debug('resp.cookies = ' + sys.inspect(cookies));
-        }
-        console.log('redirecting to ' + resp.headers['location'])*/;
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null)
+            req.session.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
     })
     .send();
 }
 
-function getCookies(headers) {
+function getCookie(headers) {
     var cookies = {};
     if(headers && headers['set-cookie']) {
         var splitCookies = headers['set-cookie'].split(';');
@@ -235,13 +195,11 @@ function getCookies(headers) {
             var cookie = splitCookies[i];
             var parts = cookie.split('=');
             var key = parts[ 0 ].trim();
-            if(key != 'path' && key != 'httpOnly' && key != 'expires') {
-                var value = ( parts[ 1 ] || '' ).trim();
-                cookies[key] = value;
-            }
+            if(key == 'connect.sid') 
+                return ( parts[ 1 ] || '' ).trim();
         }
     }
-    return cookies;
+    return null;
 }
 
 locker.listen(lockerPort);
