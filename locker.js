@@ -28,6 +28,7 @@ var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
 var map = new Object();
+var ats = new Object();
 
 // look for available things
 mapDir('Connectors');
@@ -71,7 +72,7 @@ dashboard.on('exit', function (code) {
   if(code > 0) console.log('dashboard died with code ' + code);
 });
 
-
+// return the known map of our world
 locker.get('/map',
 function(req, res) {
     res.writeHead(200, {
@@ -80,6 +81,21 @@ function(req, res) {
     res.end(JSON.stringify(map));
 });
 
+// let any service schedule to be called, it can only have one per uri
+locker.get('/at',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/javascript'
+    });
+    res.end("true");
+    ats[req.param[uri]] = req.param[at];
+    var now = new Date().getTime();
+    var when = 
+    setTimeout(function(){attaboy(req.param[uri]);},(req.param[at]-now)*1000);
+    console.log("scheduled "+req.param[uri]+" "+(req.param[at]-now)+" seconds from now");
+});
+
+// given a bunch of json describing a service, make a home for it on disk and add it to our map
 locker.post('/install',
 function(req, res) {
     res.writeHead(200, {
@@ -203,21 +219,18 @@ function mapCollection(file) {
     js.srcdir = path.dirname(file);
     js.is = "collection";
     insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
 }
 function mapConnector(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "connector";
     insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
 }
 function mapApp(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "app";
     insertSafe(map,"available",js);
-    if(js.type) insertSafe(map,js.type,js);
 }
 
 // make sure the value of the key is an array and insert the item
@@ -225,4 +238,14 @@ function insertSafe(obj,key,item) {
     console.log("inserting into "+key+": "+JSON.stringify(item))
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);
+}
+
+// our hackney scheduler
+function attaboy(uri)
+{
+    var now = new Date().getTime();
+    // temporal displacement?
+    if(!ats[uri] || abs(ats[uri] - now) > 10) return;
+    console.log("attaboy running "+uri);
+    wwwdude_client.get(uri).send();
 }
