@@ -89,11 +89,14 @@ function(req, res) {
         'Content-Type': 'text/javascript'
     });
     res.end("true");
-    ats[req.param[uri]] = req.param[at];
+    var uri = req.param('uri'), at = req.param('at');
+    ats[uri] = at;
     var now = new Date().getTime();
+    sys.debug('now = ' + now);
+    sys.debug('at = ' + at);
     var when = 
-    setTimeout(function(){attaboy(req.param[uri]);},(req.param[at]-now)*1000);
-    console.log("scheduled "+req.param[uri]+" "+(req.param[at]-now)+" seconds from now");
+    setTimeout(function(){attaboy(uri);},at-now);
+    console.log("scheduled "+ uri +" "+ (at - now)/1000 +" seconds from now");
 });
 
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
@@ -225,7 +228,8 @@ function spawnMe(svc, callback) {
     });
     app.stdout.on('data',function (data){
         console.log('STDOUT from ' + svc.id + ': '+ data);
-        callback();
+        if(data && data.toString().trim() == svc.uriLocal)
+            callback();
     });
     app.on('exit', function (code) {
       console.log('exited with code ' + code);
@@ -280,7 +284,7 @@ function attaboy(uri)
 {
     var now = new Date().getTime();
     // temporal displacement?
-    if(!ats[uri] || abs(ats[uri] - now) > 10) return;
+    if(!ats[uri] || Math.abs(ats[uri] - now) > 10) return;
     console.log("attaboy running "+uri);
     wwwdude_client.get(uri).send();
 }

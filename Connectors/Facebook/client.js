@@ -19,6 +19,7 @@ var fs = require('fs'),
                     connect.bodyDecoder(),
                     connect.cookieDecoder(),
                     connect.session({secret : "locker"})),
+    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude'),
@@ -249,6 +250,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     pullNewsFeed(function() {
+        locker.at(me.uri + 'feed', 10);
         res.end();
     });
 });
