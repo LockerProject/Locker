@@ -86,17 +86,15 @@ function(req, res) {
 locker.get('/at',
 function(req, res) {
     res.writeHead(200, {
-        'Content-Type': 'text/javascript'
+        'Content-Type': 'text/html'
     });
-    res.end("true");
     var uri = req.param('uri'), at = req.param('at');
     ats[uri] = at;
     var now = new Date().getTime();
-    sys.debug('now = ' + now);
-    sys.debug('at = ' + at);
     var when = 
     setTimeout(function(){attaboy(uri);},at-now);
     console.log("scheduled "+ uri +" "+ (at - now)/1000 +" seconds from now");
+    res.end("true");
 });
 
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
@@ -280,8 +278,7 @@ function insertSafe(obj,key,item) {
 }
 
 // our hackney scheduler
-function attaboy(uri)
-{
+function attaboy(uri) {
     var now = new Date().getTime();
     // temporal displacement?
     if(!ats[uri] || Math.abs(ats[uri] - now) > 10) return;
