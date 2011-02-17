@@ -4,8 +4,7 @@
 
 var cwd = process.argv[2];
 var port = process.argv[3];
-if (!cwd || !port)
-{
+if (!cwd || !port) {
     process.stderr.write("missing dir and port arguments\n");
     process.exit(1);
 }
@@ -39,9 +38,16 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!me.appID)
-    {
-        res.end("Enter your personal FaceBook app info that will be used to sync your data (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>http://www.facebook.com/developers/createapp.php</a> using the callback url of http://"+url.parse(me.uri).host+"/) <form method='get' action='save'>App ID: <input name='appID'><br>App Secret: <input name='appSecret'><br><input type='submit' value='Save'></form>");
+    if(!me.appID) {
+        res.end("Enter your personal FaceBook app info that will be used to sync your data" + 
+                " (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>" + 
+                "http://www.facebook.com/developers/createapp.php</a> using the callback url of " +
+                "http://"+url.parse(me.uri).host+"/) " +
+                "<form method='get' action='save'>" +
+                    "App ID: <input name='appID'><br>" +
+                    "App Secret: <input name='appSecret'><br>" +
+                    "<input type='submit' value='Save'>" +
+                "</form>");
         return;
     }
     if(!me.token)

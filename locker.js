@@ -16,13 +16,15 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var url = require("url");
+var sys = require('sys');
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
 
 var lockerHost = process.argv[2]||"localhost";
 if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
-    console.log("\nWARNING: if I'm running on a public IP I needs to have password protection, which if so inclined can be hacked into locker.js and added since it's apparently still not implemented :)\n\n"); // uniquely self (de?)referential? lolz!
+    console.log('\nWARNING: if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
+                'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n'); 
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
@@ -48,13 +50,12 @@ for (var i = 0; i < dirs.length; i++) {
 
 // start our internal service
 var express = require('express'),
-connect = require('connect');
-
-locker = express.createServer(
-connect.bodyDecoder(),
-connect.cookieDecoder(),
-connect.session({secret : "locker"})
-);
+    connect = require('connect'),
+    locker = express.createServer(
+        connect.bodyDecoder(),
+        connect.cookieDecoder(),
+        connect.session({secret : "locker"})
+    );
 
 // start dashboard
 var lockerPortNext = "1"+lockerPort;
@@ -145,16 +146,29 @@ function(req, res) {
 
 
 function proxied(svc, ppath, req, res) {
-    console.log("proxying to "+svc.uriLocal+" request "+ppath)
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
-    wwwdude_client.get(svc.uriLocal+ppath)
+    console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
+    var host = url.parse(svc.uriLocal).host;
+    var cookies;
+    if(!req.session.cookies) {
+        req.session.cookies = {};
+    } else {
+        cookies = req.session.cookies[host];
+    }
+    var headers = req.headers;
+    if(cookies && cookies['connect.sid'])
+        headers.cookie = 'connect.sid=' + cookies['connect.sid'];
+    var client = wwwdude.createClient({headers:headers});
+    client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
-        res.writeHead(200,resp.headers);
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null) 
+            req.session.cookies[host] = {'connect.sid' : newCookie};
+        res.writeHead(200);
         res.end(data);
     })
     .addListener('error', function(err) {
+        res.writeHead(500);
+        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
         res.end("eRr0r :( "+err);
     })
     .addListener('http-error', function(data, resp) {
@@ -162,17 +176,38 @@ function proxied(svc, ppath, req, res) {
         res.end(data);
     })
     .addListener('redirect', function(data, resp) {
+        for (key in resp.headers)
+            res.header(key, resp.headers[key]);
+        
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null)
+            req.session.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
     })
     .send();
 }
 
+function getCookie(headers) {
+    var cookies = {};
+    if(headers && headers['set-cookie']) {
+        var splitCookies = headers['set-cookie'].split(';');
+        for(var i = 0; i < splitCookies.length; i++) {
+            var cookie = splitCookies[i];
+            var parts = cookie.split('=');
+            var key = parts[ 0 ].trim();
+            if(key == 'connect.sid') 
+                return ( parts[ 1 ] || '' ).trim();
+        }
+    }
+    return null;
+}
 
 locker.listen(lockerPort);
 console.log('locker running at ' + lockerBase);
 
 
 function spawnMe(svc, callback) {
+    console.log('spawnMe');
     lockerPortNext++; //the least intelligent way of avoiding port conflicts
     var run = svc.run.split(" "); // node foo.js
     run.push(svc.me); // pass in it's working directory
