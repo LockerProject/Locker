@@ -130,42 +130,31 @@ app.get('/friends',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
-    });/*
-    fs.readFile("access.token", "utf-8",
-    function(err, token) {
-        sys.debug("loaded token " + token);
-        if (err)
-        res.end("no token you need to <a href='/go4sq'>auth w/ 4sq</a> yet");
-        else {*/
-            get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + me.access_token, function(data) {
-                var self = JSON.parse(data).response.user;
-                res.write('for user ' + self.firstName + ' with id ' + self.id + ': <br>');
-                var userID = self.id;
-//                fs.mkdir('my/' + userID, 0755);
-                fs.mkdir('photos', 0755);
-                get('api.foursquare.com', '/v2/users/self/friends.json?oauth_token=' + me.access_token, function(data) {
-                    var friends = JSON.parse(data).response.friends.items;
-                   // var stream = fs.createWriteStream('my/' + userID + '/contacts.json');
-                    var queue = [];
-                    var users = {
-                        'id': userID,
-                      //  'stream': stream,
-                        'queue': queue,
-                        'token': me.access_token
-                    };
-                    for (var i = 0; i < friends.length; i++) {
-                        res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
-                        queue.push(friends[i]);
-                    }
-                    res.end();
-                    downloadNextUser(users);
-                });
-                //getCheckins(userID, token, 0, function() {
-                    res.end();
-                //});
-            });
-        //}
-    //});
+    });
+    get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + me.access_token, function(data) {
+        var self = JSON.parse(data).response.user;
+        res.write('for user ' + self.firstName + ' with id ' + self.id + ': <br>');
+        var userID = self.id;
+        fs.mkdir('photos', 0755);
+        get('api.foursquare.com', '/v2/users/self/friends.json?oauth_token=' + me.access_token, function(data) {
+            var friends = JSON.parse(data).response.friends.items;
+            var queue = [];
+            var users = {
+                'id': userID,
+                'queue': queue,
+                'token': me.access_token
+            };
+            for (var i = 0; i < friends.length; i++) {
+                res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
+                queue.push(friends[i]);
+            }
+            res.end();
+            downloadNextUser(users);
+        });
+        //getCheckins(userID, token, 0, function() {
+            res.end();
+        //});
+    });
 });
 
 var checkins_limit = 500;
@@ -188,27 +177,20 @@ function getCheckins(userID, token, offset, callback) {
 }
 
 function downloadNextUser(users) {
-    if (users.queue.length == 0) {
-//        sys.debug("done with user " + users.id);
-       // users.stream.end();
+    if (users.queue.length == 0)
         return;
-    }
-
+    
     var friend = users.queue.pop();
-//    sys.debug("fetching user " + friend.id);
-
+    
     // get extra juicy contact info plz
     get('api.foursquare.com', '/v2/users/' + friend.id + '.json?oauth_token=' + users.token,
     function(data) {
         var js = JSON.parse(data).response.user;
         js.name = js.firstName + " " + js.lastName;        
         lfs.appendObjectsToFile('friends.json', [js]);
-//        users.stream.write(JSON.stringify(js) + "\n");
-
-        if (friend.photo.indexOf("userpix") < 0) {
+        if (friend.photo.indexOf("userpix") < 0)
             return downloadNextUser(users);
-        }
-
+        
         // fetch photo
         wwwdude_client.get(friend.photo)
         .addListener('error',
@@ -229,5 +211,5 @@ function downloadNextUser(users) {
     });
 }
 
-sys.debug("http://localhost:3004/");
+sys.debug("http://localhost:" + port + "/");
 app.listen(port);
