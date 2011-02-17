@@ -8,9 +8,8 @@ var wwwdude = require('wwwdude');
  */
 exports.appendObjectsToFile = function(path, objects) {
     var stream = fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf-8'});
-    for(i in objects) {
+    for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
-    }
     stream.end();
 }
 
@@ -19,9 +18,8 @@ exports.appendObjectsToFile = function(path, objects) {
  */
 exports.writeObjectsToFile = function(path, objects) {
     var stream = fs.createWriteStream(path, {'encoding': 'utf-8'});
-    for(i in objects) {
+    for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
-    }
     stream.end();
 }
 

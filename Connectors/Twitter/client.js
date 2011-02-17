@@ -12,6 +12,8 @@ var express = require('express'),
     http = require('http'),
     url = require('url'),
     sys = require('sys'),
+    wwwdude = require('wwwdude'),
+    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
 var me = lfs.loadMeData();
@@ -27,6 +29,12 @@ var app = express.createServer(
     
 var me = lfs.loadMeData();
 
+Array.prototype.addAll = function(anotherArray) {
+    if(!anotherArray || !anotherArray.length)
+        return;
+    for(var i = 0; i < anotherArray.length; i++)
+        this.push(anotherArray[i]);
+}
 
 app.get('/', function(req, res) {
     if(!(me.consumerKey && me.consumerSecret)) {
@@ -105,6 +113,7 @@ app.get('/home_timeline', function(req, res) {
         'Content-Type': 'text/html'
     });
     pullTimeline(function() {
+        locker.at(me.uri + 'home_timeline', 20);
         res.end();
     });
 });
@@ -140,7 +149,6 @@ function pullTimelinePage(max_id, since_id, page, items, callback) {
                 var id = result[0].id;
                 if(!me.home_timeline.latest || id > me.home_timeline.latest)
                     me.home_timeline.latest = id;
-                    sys.debug(JSON.stringify(me));
                 for(var i = 0; i < result.length; i++)
                     items.push(result[i]);
 
@@ -180,6 +188,83 @@ function(req, res) {
     }
     );
 });*/
+
+app.get('/friends',
+function(req, res) {
+    sys.debug('/friends');
+    getUserInfo(function(userInfo) {
+        me.user_info = userInfo;
+        lfs.syncMeData(me);
+        getFriendsIDs(me.user_info.screen_name, function(ids) {
+            getUsersExtendedInfo(ids, function(usersInfo) {
+                sys.debug('got ' + usersInfo.length + ' friends');
+                lfs.writeObjectsToFile('friends.json', usersInfo);
+                locker.at(me.uri + 'friends', 3600);
+                res.writeHead(200);
+                res.end();
+            });
+        });
+    });
+});
+
+app.get('/profile',
+function(req, res) {
+    getUserInfo(function(userInfo) {
+        me.user_info = userInfo;
+        lfs.syncMeData(me);
+        res.writeHead(200);
+        res.end();
+    })
+});
+
+function getUserInfo(callback) {
+    if(!getTwitterClient())
+        return;
+    twitterClient.apiCall('GET', '/account/verify_credentials.json', { token: { oauth_token_secret: me.token.oauth_token_secret,
+                                                                                oauth_token: me.token.oauth_token},
+                                                                       include_entities : true},
+        function(error, result) {
+            if(error)
+                sys.debug('verify_credentials error: ' + sys.inspect(error));
+            else
+                callback(result);
+        });
+}
+
+function getFriendsIDs(screenName, callback) {
+    wwwdude.createClient().get('http://api.twitter.com/1/friends/ids.json?screen_name=' + screenName + '&cursor=-1')
+    .addListener('success', function(data, resp) {
+       callback(JSON.parse(data).ids);
+    }).send();
+}
+
+function getUsersExtendedInfo(userIDs, callback) {
+    _getUsersExtendedInfo(userIDs, [], callback);
+}
+function _getUsersExtendedInfo(userIDs, userInfo, callback) {
+    if(!userInfo)
+        userInfo = [];
+    var id_str = "";
+    for(var i = 0; i < 100 && userIDs.length > 0; i++) {
+        id_str += userIDs.pop();
+        if(i < 99) id_str += ',';
+    }
+    twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: me.token.oauth_token_secret,
+                                                                  oauth_token: me.token.oauth_token}, 
+                                                         user_id: id_str,
+                                                         include_entities : true },
+        function(error, result) {
+            if(error) {
+                sys.debug('error! ' + JSON.stringify(error));
+                return;
+            }
+            userInfo.addAll(result.reverse());
+            if(userIDs.length > 0) 
+                _getUsersExtendedInfo(userIDs, userInfo, callback);
+            else if(callback)
+                callback(userInfo);
+        });
+}
 
 function getTwitterClient() {
     if(!twitterClient && me && me.consumerKey && me.consumerSecret && me.uri)
