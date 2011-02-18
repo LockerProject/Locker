@@ -275,9 +275,23 @@ function _getUsersExtendedInfo(userIDs, userInfo, callback) {
             userInfo.addAll(result.reverse());
             if(userIDs.length > 0) 
                 _getUsersExtendedInfo(userIDs, userInfo, callback);
-            else if(callback)
+            else if(callback) {
+                getPhotos(userInfo);
                 callback(userInfo);
+            }
         });
+}
+
+function getPhotos(users) {
+    try {
+        fs.mkdirSync('photos', 0755);
+    } catch(err) {
+    }
+    for(var i = 0; i < users.length; i++) {
+        var user = users[i];
+        var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('.'));
+        lfs.writeContentsOfURLToFile(user.profile_image_url, 'photos/' + user.id_str + photoExt, 3, 'binary');
+    }
 }
 
 function getTwitterClient() {
