@@ -23,6 +23,7 @@ var express = require('express'),
     ),
     http = require('http'),
     wwwdude = require('wwwdude'),
+    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
 var wwwdude_client = wwwdude.createClient({
@@ -153,6 +154,7 @@ function(req, res) {
                 res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
                 queue.push(friends[i]);
             }
+            locker.at('friends', 3600);
             res.end();
             downloadNextUser(users);
         });
@@ -167,6 +169,7 @@ function(req, res) {
         lfs.syncMeData(me);
         getCheckins(me.user_info.id, me.access_token, 0, function(newCheckins) {
             lfs.appendObjectsToFile('places.json', newCheckins);
+            locker.at('checkins', 600);
             res.writeHead(200, {
                 'Content-Type': 'text/html'
             });
