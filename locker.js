@@ -184,8 +184,7 @@ function proxied(svc, ppath, req, res) {
         if(newCookie != null)
             req.session.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
-    })
-    .send();
+    });
 }
 
 function getCookie(headers) {
@@ -283,5 +282,5 @@ function attaboy(uri) {
     // temporal displacement?
     if(!ats[uri] || Math.abs(ats[uri] - now) > 10) return;
     console.log("attaboy running "+uri);
-    wwwdude_client.get(uri).send();
+    wwwdude_client.get(uri);
 }

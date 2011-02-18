@@ -90,7 +90,7 @@ function writeURLContentsToFile(accountID, url, filename, encoding, retryCount) 
     .addListener('success',
     function(data, resp) {
         fs.writeFileSync('my/' + accountID + '/' + filename, data, encoding);
-    }).send();
+    });
 }
 /*exports.writeURLContentsToFile = function(accountID, url, filename, encoding, retryCount) {
     if(!retryCount)
@@ -127,7 +127,7 @@ function writeContentsOfURLToFile(url, filename, retryCount, encoding) {
     .addListener('success',
     function(data, resp) {
         fs.writeFileSync(filename, data, encoding);
-    }).send();
+    });
 }
 
 exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding) {

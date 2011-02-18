@@ -77,7 +77,7 @@ function pullTracks(user, page, limit, to, from) {
             } catch(err) {
                 //                  console.lo
                 }
-        }).send();
+        });
     } catch(err) {    
         sys.puts('Error: ' + sys.inspect(err));
     }

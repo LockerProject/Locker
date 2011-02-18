@@ -138,7 +138,7 @@ function downloadNextPhoto() {
                 downloadNextPhoto();
             } catch(err) {
             }
-        }).send();
+        });
     } catch(err) {
     }
 }

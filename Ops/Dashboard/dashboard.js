@@ -53,7 +53,7 @@ app.get('/', function (req, res) {
             res.write('<li><input type="button" onclick="install('+i+')" value="install"> '+JSON.stringify(map.available[i]));
         }
         res.end("</body></html>");
-    }).send();
+    });
 });
 
 // doesn't this exist somewhere? was easier to write than find out, meh!

@@ -249,7 +249,7 @@ function getFriendsIDs(screenName, callback) {
     wwwdude.createClient().get('http://api.twitter.com/1/friends/ids.json?screen_name=' + screenName + '&cursor=-1')
     .addListener('success', function(data, resp) {
        callback(JSON.parse(data).ids);
-    }).send();
+    });
 }
 
 function getUsersExtendedInfo(userIDs, callback) {

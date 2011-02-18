@@ -207,7 +207,7 @@ function downloadNextUser(users) {
         function(data, resp) {
             fs.writeFileSync('photos/' + friend.id + '.jpg', data, 'binary');
             downloadNextUser(users);
-        }).send();
+        });
     });
 }
 

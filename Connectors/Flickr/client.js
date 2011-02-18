@@ -18,7 +18,7 @@ var crypto = require('crypto'),
             connect.cookieDecoder(),
             connect.session({secret : "locker"}));
 
-var lfs = require('../common/node/lfs');
+var lfs = require('../Common/node/lfs');
 
 var wwwdude = require('wwwdude');
 var wwwdude_client = wwwdude.createClient({
@@ -84,7 +84,7 @@ function getTokenFromFrob(frob) {
             json.auth.state.newest = 0;
         meta = json.auth;
         lfs.writeMetadata(json.auth.user.username, meta);
-    }).send();
+    });
 }
 
 
@@ -156,7 +156,7 @@ function(req, res) {
             var json = JSON.parse(data);
             lfs.writeObjectsToFile('my/' + meta.user.username + '/contacts.json', json.contacts.contact);
             res.end();
-        }).send();
+        });
     } catch(err) {
     }
 });
@@ -208,7 +208,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
             }
             if((json.photos.pages - json.photos.page) > 0)
                 getPhotos(auth_token, username, user_id, page + 1, oldest, newest);
-        }).send();
+        });
     } catch(err) { console.log(JSON.stringify(err)); }
     
 }
