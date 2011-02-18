@@ -104,6 +104,15 @@ app.get('/get_home_timeline', function(req, res) {
 });
 
 app.get('/home_timeline', function(req, res) {
+    pullStatuses('home_timeline', 60, res);
+});
+
+
+app.get('/mentions', function(req, res) {
+    pullStatuses('mentions', 120, res);
+});
+
+function pullStatuses(endpoint, repeatAfter, res) {
     if(!getTwitterClient()) {
         sys.debug('could not get twitterClient, redirecting...');
         res.redirect('./');
@@ -112,43 +121,48 @@ app.get('/home_timeline', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    pullTimeline(function() {
-        locker.at(me.uri + 'home_timeline', 20);
+    pullTimeline(endpoint, function() {
+        locker.at(me.uri + endpoint, repeatAfter);
         res.end();
     });
-});
+    
+}
 
-
-function pullTimeline(callback) {
-    if(!me.home_timeline)
-        me.home_timeline = {};
+function pullTimeline(endpoint, callback) {
+    if(!me[endpoint])
+        me[endpoint] = {};
     var items = [];
-    pullTimelinePage(null, me.home_timeline.latest, null, items, function() {
+    pullTimelinePage(endpoint, null, me[endpoint].latest, null, items, function() {
         items.reverse();
-        lfs.appendObjectsToFile('feed.json', items);
+        lfs.appendObjectsToFile(endpoint + '.json', items);
         callback();
     });
 }
 
-function pullTimelinePage(max_id, since_id, page, items, callback) {
+function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     if(!page)
         page = 1;
-    var params = {token: me.token, count: 200, page: page};
+    var params = {token: me.token, count: 200, page: page, include_entities:true};
     if(max_id)
         params.max_id = max_id;
     if(since_id)
         params.since_id = since_id;
     requestCount++;
-    twitterClient.apiCall('GET', '/statuses/home_timeline.json', params, 
+    sys.debug('getting endpoint: ' + endpoint + '...');
+    twitterClient.apiCall('GET', '/statuses/' + endpoint + '.json', params, 
         function(error, result) {
             if(error) {
+                if(error.statusCode == 502 || error.statusCode == 503) { //failz-whalez
+                    setTimeout(function(){pullTimelinePage(endpoint, max_id, since_id, page, items, callback);}, 10000);
+                }
                 sys.debug('error from twitter:' + sys.inspect(error));
                 return;
             }
+            sys.debug('got endpoint: ' + endpoint);
             if(result.length > 0) {
                 var id = result[0].id;
-                if(!me.home_timeline.latest || id > me.home_timeline.latest)
-                    me.home_timeline.latest = id;
+                if(!me[endpoint].latest || id > me[endpoint].latest)
+                    me[endpoint].latest = id;
                 for(var i = 0; i < result.length; i++)
                     items.push(result[i]);
 
@@ -158,10 +172,10 @@ function pullTimelinePage(max_id, since_id, page, items, callback) {
                 if(requestCount > 300) {
                     sys.debug('sleeping a bit...');
                     setTimeout(function() {
-                        pullTimelinePage(max_id, since_id, page, items, callback);
+                        pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                     }, 30000);
                 } else {
-                    pullTimelinePage(max_id, since_id, page, items, callback);
+                    pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                 }
             } else if(callback) {
                 lfs.syncMeData(me);
@@ -278,5 +292,5 @@ function clearCount() {
 }
 clearCount();
 
-console.log('http://localhost:' + port + '/');
 app.listen(port);
+console.log('http://localhost:' + port + '/');
