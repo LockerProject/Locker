@@ -31,7 +31,14 @@ var wwwdude_client = wwwdude.createClient({
 
 var me = lfs.loadMeData();
 
-app.set('views', __dirname);
+Array.prototype.addAll = function(anotherArray) {
+    if(!anotherArray || !anotherArray.length)
+        return;
+    for(var i = 0; i < anotherArray.length; i++)
+        this.push(anotherArray[i]);
+}
+
+//app.set('views', __dirname);
 
 app.get('/',
 function(req, res) {
@@ -41,7 +48,7 @@ function(req, res) {
     if(!me.access_token)
         res.end("<html>you need to <a href='go4sq'>auth w/ foursquare</a> yet</html>");
     else
-        res.end("<html>found a token, <a href='friends'>load friends</a></html>");
+        res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");
 });
 
 var oaTokenSecret = "";
@@ -88,7 +95,6 @@ function get(host, url, callback) {
 
 app.get('/auth',
 function(req, res) {
-    sys.debug("incoming code " + req.param('code'));
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
@@ -98,14 +104,11 @@ function(req, res) {
     '&grant_type=authorization_code' +
     '&redirect_uri=' + me.uri + 'auth' +
     '&code=' + req.param('code');
-    sys.debug('url = ' + url);
     get('foursquare.com', url, function(data) {
-        sys.debug('responseObject from foursquare.com/oauth2/... ' + responseObject);
         var responseObject = JSON.parse(data);
-        sys.debug('access_token = ' + responseObject.access_token);
         me.access_token = responseObject.access_token;
         lfs.syncMeData(me);
-        res.end("too legit to quit: " + responseObject.access_token + " so now <a href='/friends'>load friends</a>");
+        res.end("<html>too legit to quit: " + responseObject.access_token + " so now <a href='/friends'>load friends</a>or <a href='checkins'>checkins</a></html>");
     });
 });
 
@@ -131,8 +134,10 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + me.access_token, function(data) {
+    getMe(me.access_token, function(data) {
         var self = JSON.parse(data).response.user;
+        me.user_info = self;
+        lfs.syncMeData(me);
         res.write('for user ' + self.firstName + ' with id ' + self.id + ': <br>');
         var userID = self.id;
         fs.mkdir('photos', 0755);
@@ -151,28 +156,51 @@ function(req, res) {
             res.end();
             downloadNextUser(users);
         });
-        //getCheckins(userID, token, 0, function() {
-            res.end();
-        //});
     });
 });
 
+app.get('/checkins', 
+function(req, res) {
+    getMe(me.access_token, function(data) {
+        var self = JSON.parse(data).response.user;
+        me.user_info = self;
+        lfs.syncMeData(me);
+        getCheckins(me.user_info.id, me.access_token, 0, function(newCheckins) {
+            lfs.appendObjectsToFile('places.json', newCheckins);
+            res.writeHead(200, {
+                'Content-Type': 'text/html'
+            });
+            res.end();
+        });
+    });
+})
+
+function getMe(token, callback) {
+    get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + token, callback);
+}
+
 var checkins_limit = 500;
-function getCheckins(userID, token, offset, callback) {
-    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token,
+function getCheckins(userID, token, offset, callback, checkins) {
+    if(!checkins)
+        checkins = [];
+    var latest = '';
+    if(me.checkins && me.checkins.latest)
+        latest = '&afterTimestamp=' + me.checkins.latest;
+    else if(!me.checkins)
+        me.checkins = {};
+    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token + latest,
     function(data) {
-        var stream = fs.createWriteStream('my/' + userID + '/places.json', {'flags' : 'a'});
-        var checkins = JSON.parse(data).response.checkins.items;
-        for (var i = 0; i < checkins.length; i++) {
-            if (checkins[i]) {
-                stream.write(JSON.stringify(checkins[i]) + "\n");
+        var newCheckins = JSON.parse(data).response.checkins.items;
+        checkins.addAll(newCheckins);
+        if(newCheckins && newCheckins.length == checkins_limit) 
+            getCheckins(userID, token, offset + checkins_limit, callback, checkins);
+        else {
+            if(checkins[0]) {
+                me.checkins.latest = checkins[0].createdAt;
+                lfs.syncMeData(me);
             }
+            callback(checkins.reverse());
         }
-        stream.end();
-        if(checkins.length == checkins_limit) 
-            getCheckins(userID, token, offset + checkins_limit, callback);
-        else
-            callback();
     });
 }
 
@@ -211,5 +239,5 @@ function downloadNextUser(users) {
     });
 }
 
-sys.debug("http://localhost:" + port + "/");
 app.listen(port);
+console.log("http://localhost:" + port + "/");
