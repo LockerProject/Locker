@@ -3,5 +3,5 @@
 	"action":"Connect to a Foursquare account",
 	"desc":"Collect and sync my data from my Foursquare account using the Frousquare API and a Foursquare 'app' that I create just for myself.",
 	"run":"node client.js",
-	"services":["contact/foursquare", "checkin/foursquare"]
+	"provides":["contact/foursquare", "checkin/foursquare"]
 }

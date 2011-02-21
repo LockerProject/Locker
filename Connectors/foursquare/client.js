@@ -161,6 +161,21 @@ function(req, res) {
     });
 });
 
+app.get('/getfriends',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/plain'
+    });
+    fs.readFile("friends.json", "binary", function(err, file) {  
+        if(err) {  
+            res.end();  
+            return;  
+        }  
+        res.write(file, "binary");  
+        res.end();
+    });
+});
+
 app.get('/checkins', 
 function(req, res) {
     getMe(me.access_token, function(data) {
