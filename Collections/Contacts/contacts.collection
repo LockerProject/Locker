@@ -1,0 +1,6 @@
+{
+	"title":"All Your Contacts Are Belong To Us",
+	"desc":"A collection of contacts from many places.",
+	"run":"node contacts.js",
+	"takes":["contact/facebook","contact/foursquare", "contact/osx-addressbook", "contact/twitter", "contact/google"]
+}

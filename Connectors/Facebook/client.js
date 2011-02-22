@@ -19,6 +19,7 @@ var fs = require('fs'),
                     connect.bodyDecoder(),
                     connect.cookieDecoder(),
                     connect.session({secret : "locker"})),
+    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude'),
@@ -61,8 +62,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!req.param('appID') || !req.param('appSecret'))
-    {
+    if(!req.param('appID') || !req.param('appSecret')) {
         res.end("missing field(s)?");
         return;
     }
@@ -96,12 +96,10 @@ function(req, res) {
     {redirect_uri: me.uri+"auth"},
     function(error, access_token, refresh_token) {
         if (error) {
-            console.log(error);
+            sys.debug(error);
             res.end("uhoh " + error);
-
         } else {
-            console.log("a " + access_token + " r " + refresh_token)
-            res.end("too legit to quit: " + access_token + " so now <a href='friends'>load friends</a>");
+            res.end("<html>too legit to quit: " + access_token + " so now <a href='friends'>load friends</a></html>");
             me.token = access_token;
             lfs.syncMeData(me);
         }
@@ -125,28 +123,22 @@ function downloadNextPhoto() {
         wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
         .addListener('error',
         function(err) {
-            sys.puts('Network Error: ' + sys.inspect(err));
+            sys.debug('Network error getting fb photo for friendID ' + friendID + ': ' + sys.inspect(err));
             downloadNextPhoto();
         })
         .addListener('http-error',
         function(data, resp) {
-            sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
+            sys.debug('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
             downloadNextPhoto();
         })
-        .addListener('redirect',
-        function(data, resp) {
-            //   sys.puts('Redirecting to: ' + resp.headers['location']);
-            //  sys.puts('Headers: ' + sys.inspect(resp.headers));
-            })
         .addListener('success',
         function(data, resp) {
             try {
                 fs.writeFileSync('photos/' + friendID + '.jpg', data, 'binary');
                 downloadNextPhoto();
             } catch(err) {
-                //                  console.lo
-                }
-        }).send();
+            }
+        });
     } catch(err) {
     }
 }
@@ -172,18 +164,32 @@ function doFQLQuery(access_token, query, callback) {
     });
 }
 
+app.get('/getfriends',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/plain'
+    });
+    fs.readFile("contacts.json", "binary", function(err, file) {  
+        if(err) {  
+            res.write("[]");  
+            res.end();  
+            return;  
+        }  
+        res.write(file, "binary");  
+        res.end();
+    });
+});
+
 app.get('/friends',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    console.log("loaded token " + me.token);
     if (!me.token)
-        res.end("you need to <a href='gofb'>auth w/ fb</a> yet");
+        res.end("<html>you need to <a href='gofb'>auth w/ fb</a> yet</html>");
     else {
         facebookClient.apiCall('GET', '/me', {access_token: me.token},
         function(error, result) {
-            res.write('for user ' + result.name + ' with id ' + result.id + ': \n\n');
             var userID = result.id;
             facebookClient.apiCall(
             'GET',
@@ -191,7 +197,6 @@ function(req, res) {
             {access_token: me.token},
             function(error, result) {
                 console.log(error);
-                res.end("got result " + JSON.stringify(result));
                 var stream = fs.createWriteStream('contacts.json');
                 for (var i = 0; i < result.data.length; i++) {
                     if (result.data[i]) {
@@ -206,6 +211,8 @@ function(req, res) {
                 }
                 stream.end();
                 downloadPhotos(userID);
+                locker.at(me.uri + 'friends', 3600);
+                res.end();
             });
 
             facebookClient.apiCall(
@@ -233,6 +240,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     pullNewsFeed(function() {
+        locker.at(me.uri + 'feed', 10);
         res.end();
     });
 });

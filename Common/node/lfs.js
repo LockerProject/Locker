@@ -8,9 +8,8 @@ var wwwdude = require('wwwdude');
  */
 exports.appendObjectsToFile = function(path, objects) {
     var stream = fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf-8'});
-    for(i in objects) {
+    for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
-    }
     stream.end();
 }
 
@@ -19,9 +18,8 @@ exports.appendObjectsToFile = function(path, objects) {
  */
 exports.writeObjectsToFile = function(path, objects) {
     var stream = fs.createWriteStream(path, {'encoding': 'utf-8'});
-    for(i in objects) {
+    for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
-    }
     stream.end();
 }
 
@@ -92,13 +90,50 @@ function writeURLContentsToFile(accountID, url, filename, encoding, retryCount) 
     .addListener('success',
     function(data, resp) {
         fs.writeFileSync('my/' + accountID + '/' + filename, data, encoding);
-    }).send();
+    });
 }
-exports.writeURLContentsToFile = function(accountID, url, filename, encoding, retryCount) {
+/*exports.writeURLContentsToFile = function(accountID, url, filename, encoding, retryCount) {
     if(!retryCount)
         retryCount = 0;
     writeURLContentsToFile(accountID, url, filename, encoding, retryCount);
+}*/
+
+function writeContentsOfURLToFile(url, filename, retryCount, encoding) {
+    if(!url || !filename)
+        return;
+    if(!retryCount)
+        retryCount = 0;
+    var wwwdude_client;
+    if(encoding)
+        wwwdude_client = wwwdude.createClient({
+            encoding: encoding
+        });
+    else
+        wwwdude_client = wwwdude.createClient();
+        
+    wwwdude_client.get(url)
+    .addListener('error',
+    function(err) {
+        sys.puts('Network Error: ' + sys.inspect(err));
+        if(retryCount > 0)
+            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding);
+    })
+    .addListener('http-error',
+    function(data, resp) {
+        sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
+        if(retryCount > 0)
+            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding);
+    })
+    .addListener('success',
+    function(data, resp) {
+        fs.writeFileSync(filename, data, encoding);
+    });
 }
+
+exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding) {
+    writeContentsOfURLToFile(url, filename, retryCount, encoding);
+}
+    
 
 /**
  * Lists the subdirectories at the specified path

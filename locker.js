@@ -32,6 +32,7 @@ var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
 var map = new Object();
+var ats = new Object();
 
 // look for available things
 mapDir('Connectors');
@@ -46,7 +47,7 @@ for (var i = 0; i < dirs.length; i++) {
     if(!fs.statSync(dir+'/me.json').isFile()) continue;
     var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
     map[js.id] = js;
-    insertSafe(map,"existing",js);
+    insertSafe(map,"existing",js.id);
 }
 
 // start our internal service
@@ -65,7 +66,7 @@ dashboard.uriLocal = "http://localhost:"+lockerPortNext+"/";
 lockerPortNext++;
 console.log('Spawned dashboard pid: ' + dashboard.pid);
 dashboard.stdout.on('data',function (data){
-    console.log('Contact dashboard at: '+data);
+console.log('dashboard stdout: '+data);
 });
 dashboard.stderr.on('data',function (data){
     console.log('Error dashboard: '+data);
@@ -74,7 +75,7 @@ dashboard.on('exit', function (code) {
   if(code > 0) console.log('dashboard died with code ' + code);
 });
 
-
+// return the known map of our world
 locker.get('/map',
 function(req, res) {
     res.writeHead(200, {
@@ -83,14 +84,22 @@ function(req, res) {
     res.end(JSON.stringify(map));
 });
 
-locker.get('/available',
+// let any service schedule to be called, it can only have one per uri
+locker.get('/at',
 function(req, res) {
     res.writeHead(200, {
-        'Content-Type': 'text/javascript'
+        'Content-Type': 'text/html'
     });
-    res.end(JSON.stringify(map.available));
+    var uri = req.param('uri'), at = req.param('at');
+    ats[uri] = at;
+    var now = new Date().getTime();
+    var when = 
+    setTimeout(function(){attaboy(uri);},at-now);
+    console.log("scheduled "+ uri +" "+ (at - now)/1000 +" seconds from now");
+    res.end("true");
 });
 
+// given a bunch of json describing a service, make a home for it on disk and add it to our map
 locker.post('/install',
 function(req, res) {
     res.writeHead(200, {
@@ -104,22 +113,13 @@ function(req, res) {
     js.me = lockerDir+'/Me/'+js.id;
     js.uri = lockerBase+"Me/"+js.id+"/";
     map[js.id] = js;
-    insertSafe(map,"existing",js);
+    insertSafe(map,"existing",js.id);
     fs.mkdirSync(js.me,0755);
     fs.writeFileSync(js.me+'/me.json',JSON.stringify(js));
     res.end(JSON.stringify(js));
 });
 
-locker.get('/existing',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
-    res.end(JSON.stringify(map.existing));
-});
-
 locker.get('/Me/*', function(req,res){
-    console.log('req for /Me/*');
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
     if(!map[id]) { // make sure it exists before it can be opened
@@ -150,16 +150,6 @@ function(req, res) {
 
 function proxied(svc, ppath, req, res) {
     console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
-    console.log('req.session = ' + req.session);
-//    if(!req.session.simon)
- //       req.session.simon = 's' + Math.random(10);
-    /*res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });*/
-    
-    
-    sys.debug('req.session from browser:\n\n' + sys.inspect(req.session));
-    sys.debug('req.cookies from browser:\n\n' + sys.inspect(req.cookies));
     var host = url.parse(svc.uriLocal).host;
     var cookies;
     if(!req.session.cookies) {
@@ -167,69 +157,39 @@ function proxied(svc, ppath, req, res) {
     } else {
         cookies = req.session.cookies[host];
     }
-    sys.debug('cookies[' + host + '] = ' + sys.inspect(cookies));
     var headers = req.headers;
-//    headers.cookies = cookies;
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     var client = wwwdude.createClient({headers:headers});
     client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
-        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
-        
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies for ' + host + ' = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
-        
-        var cookies = getCookies(resp.headers);
-        req.session.cookies[host] = cookies;
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null) 
+            req.session.cookies[host] = {'connect.sid' : newCookie};
         res.writeHead(200);
         res.end(data);
     })
     .addListener('error', function(err) {
-//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
         res.writeHead(500);
-        sys.debug("eRr0r :( "+err);
+        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
         res.end("eRr0r :( "+err);
     })
     .addListener('http-error', function(data, resp) {
-        sys.debug('success: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
-        
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
         res.writeHead(resp.statusCode);
         res.end(data);
     })
     .addListener('redirect', function(data, resp) {
-//        sys.debug('success: resp.headers = ' + sys.inspect(resp.headers));
-//        sys.debug(JSON.stringify(resp.headers));
-        for (key in resp.headers) {
+        for (key in resp.headers)
             res.header(key, resp.headers[key]);
-        }
-        sys.debug('redirect: resp.headers[\'set-cookie\'] = ' + sys.inspect(resp.headers['set-cookie']));
         
-        var newCookies = getCookies(resp.headers);
-        sys.debug('newCookies[' + host + '] = ' + sys.inspect(newCookies));
-        req.session.cookies[host] = newCookies;
-        /*if(resp.headers && resp.headers['set-cookie']) {
-            var cookies = {};
-            resp.headers['set-cookie'].split(';').forEach(function( cookie ) {
-                var parts = cookie.split('=');
-                var key = parts[ 0 ].trim();
-                var value = ( parts[ 1 ] || '' ).trim();
-                cookies[key] = value;
-                res.cookie(key, value);
-            });
-            sys.debug('resp.cookies = ' + sys.inspect(cookies));
-        }
-        console.log('redirecting to ' + resp.headers['location'])*/;
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null)
+            req.session.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
-    })
-    .send();
+    });
 }
 
-function getCookies(headers) {
+function getCookie(headers) {
     var cookies = {};
     if(headers && headers['set-cookie']) {
         var splitCookies = headers['set-cookie'].toString().split(';');
@@ -237,13 +197,11 @@ function getCookies(headers) {
             var cookie = splitCookies[i];
             var parts = cookie.split('=');
             var key = parts[ 0 ].trim();
-            if(key != 'path' && key != 'httpOnly' && key != 'expires') {
-                var value = ( parts[ 1 ] || '' ).trim();
-                cookies[key] = value;
-            }
+            if(key == 'connect.sid') 
+                return ( parts[ 1 ] || '' ).trim();
         }
     }
-    return cookies;
+    return null;
 }
 
 locker.listen(lockerPort);
@@ -268,8 +226,9 @@ function spawnMe(svc, callback) {
         console.log('Error in app ' + svc.id + ': '+data);
     });
     app.stdout.on('data',function (data){
-        console.log('recieved from ' + svc.id + ': '+ data);
-        callback();
+        console.log('STDOUT from ' + svc.id + ': '+ data);
+        if(data && data.toString().trim() == svc.uriLocal)
+            callback();
     });
     app.on('exit', function (code) {
       console.log('exited with code ' + code);
@@ -298,21 +257,18 @@ function mapCollection(file) {
     js.srcdir = path.dirname(file);
     js.is = "collection";
     insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
 }
 function mapConnector(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "connector";
     insertSafe(map,"available",js);
-    insertSafe(map,js.type,js);
 }
 function mapApp(file) {
     var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
     js.srcdir = path.dirname(file);
     js.is = "app";
     insertSafe(map,"available",js);
-    if(js.type) insertSafe(map,js.type,js);
 }
 
 // make sure the value of the key is an array and insert the item
@@ -320,4 +276,13 @@ function insertSafe(obj,key,item) {
     console.log("inserting into "+key+": "+JSON.stringify(item))
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);
+}
+//
+// our hackney scheduler
+function attaboy(uri) {
+    var now = new Date().getTime();
+    // temporal displacement?
+    if(!ats[uri] || Math.abs(ats[uri] - now) > 10) return;
+    console.log("attaboy running "+uri);
+    wwwdude_client.get(uri);
 }

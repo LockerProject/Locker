@@ -3,6 +3,11 @@ Locker - the "me" platform
 
 This is an open source project that helps me collect all of my social data from wherever it is online into one place, and then lets me do really awesome stuff with it.
 
+To install dependencies (from the Locker directory):
+
+    npm install
+
+
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress! 
 
 * Connectors - Code that knows how to connect to and sync data with a place where I have data about myself, such as an account on a site or service, or in some desktop app, on my phone, or even from a device.
