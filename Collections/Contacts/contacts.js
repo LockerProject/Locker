@@ -47,6 +47,10 @@ for(var conn in me.use)
     {
         addContactsFromConn(conn,'/getfriends','contact/facebook');
     }
+    if(me.use[conn] == "contact/foursquare")
+    {
+        addContactsFromConn(conn,'/getfriends','contact/foursquare');
+    }
 }
 
 
