@@ -11,20 +11,22 @@ if first time
     pick a port
 */
 
+require.paths.push(__dirname + "/Common/node");
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var url = require("url");
 var sys = require('sys');
+var lconsole = require("lconsole");
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
-    console.log('\nWARNING: if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n'); 
+if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+    console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
+                'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n');
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
@@ -217,7 +219,7 @@ function proxied(svc, ppath, req, res) {
 function getCookie(headers) {
     var cookies = {};
     if(headers && headers['set-cookie']) {
-        var splitCookies = headers['set-cookie'].split(';');
+        var splitCookies = headers['set-cookie'].toString().split(';');
         for(var i = 0; i < splitCookies.length; i++) {
             var cookie = splitCookies[i];
             var parts = cookie.split('=');
@@ -302,7 +304,7 @@ function insertSafe(obj,key,item) {
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);
 }
-
+//
 // our hackney scheduler
 function attaboy(uri) {
     var now = new Date().getTime();
