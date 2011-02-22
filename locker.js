@@ -32,6 +32,33 @@ var lockerDir = process.cwd();
 var map = new Object();
 var ats = new Object();
 
+// load up private key or create if none, just KISS for now
+var idKey,idKeyPub;
+function loadKeys()
+{
+    idKey = fs.readFileSync('Me/key','utf-8');
+    idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
+    console.log("id keys loaded");
+}
+path.exists('Me/key',function(exists){
+    if(exists)
+    {
+        loadKeys();
+    }else{
+        openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
+        console.log('generating id private key');
+//        openssl.stdout.on('data',function (data){console.log(data);});
+//        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
+        openssl.on('exit', function (code) {
+            console.log('generating id public key');
+            openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+            openssl.on('exit', function (code) {
+                loadKeys();
+            });
+        });
+    }
+});
+
 // look for available things
 mapDir('Connectors');
 mapDir('Collections');

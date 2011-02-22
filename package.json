@@ -7,7 +7,7 @@
         "lib": ""
     },
     "engines": {
-        "node": ">= 0.2.5"
+        "node": ">= 0.4.0"
     },
     "dependencies": {
         "connect" : ">=0.5.0",
