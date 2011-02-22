@@ -24,7 +24,7 @@ var wwwdude = require('wwwdude'),
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
                 'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n');
 }

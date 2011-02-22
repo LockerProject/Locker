@@ -26,5 +26,5 @@ function(req, res) {
     res.end("yeah, hello world, and stuff");
 });
 
-console.log("http://localhost:"+port+"/");
 app.listen(port);
+console.log("http://localhost:"+port+"/");
