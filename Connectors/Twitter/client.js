@@ -16,6 +16,7 @@ var express = require('express'),
 
 var me = lfs.loadMeData();
 
+var requestCount;
 var twitterClient;// = require('twitter-js')();
 
 var app = express.createServer(
@@ -25,20 +26,12 @@ var app = express.createServer(
     );
     
 var me = lfs.loadMeData();
-//var me = JSON.parse(fs.readFileSync("context.json"));
 
 
 app.get('/', function(req, res) {
-//    console.log('serving /');
-
-    sys.debug('req.cookies to twitter client.js:' + sys.inspect(req.cookies));
-//    sys.debug('req.headers to twitter client.js:' + sys.inspect(req.headers));
-    sys.debug('req.session.simon = ' + req.session.simon);
-    req.session.simon = 'Helooo!';
     if(!(me.consumerKey && me.consumerSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-//        console.log('no keys!!!');
-        res.end("Enter your personal Twitter app info that will be used to sync your data" + 
+        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>" + 
                 "here</a> using the callback url of " +
                 "http://"+url.parse(me.uri).host+"/) " +
@@ -46,36 +39,31 @@ app.get('/', function(req, res) {
                     "Consumer Key: <input name='consumerKey'><br>" +
                     "Consumer Secret: <input name='consumerSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form>");
+                "</form></html>");
         return;
     } else if(!me.token) {
-       // sys.debug('!me.token')
-        if(!twitterClient) {
-            sys.debug('!twitterClient');
+        if(!twitterClient) 
             twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);   
-        }
-     //   sys.debug('req.param(\'oauth_token\') = ' + req.param('oauth_token'));
-      //  sys.debug('req.param(\'oauth_verifier\') = ' + req.param('oauth_verifier'));
 
-        sys.debug('twitter req.session: ' + sys.inspect(req.session));
         twitterClient.getAccessToken(req, res,
             function(error, newToken) {
                 if (error)
-                    console.log(JSON.stringify(error));
+                    sys.debug(JSON.stringify(error));
                 if (newToken != null) {  
-                    sys.debug('writing 200!');
                     res.writeHead(200, {
                         'Content-Type': 'text/html'
                     });
-                    sys.debug(JSON.stringify(newToken));
                     me.token = newToken;
                     lfs.syncMeData(me);
-                    res.end();
+                    res.end("<html>great! now you can <a href='home_timeline'> download your timeline</a></html>");
                 }
             });    
     } else {
+        if(!twitterClient) {
+            twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);   
+        }
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end();
+        res.end("<html>great! now you can <a href='home_timeline'> download your timeline</a></html>");
     }
 });
 
@@ -93,7 +81,7 @@ function(req, res) {
     me.consumerSecret = req.param('consumerSecret');
 
     lfs.syncMeData(me);
-    res.end("thanks, now we need to <a href='./'>auth that app to your account</a>.");
+    res.end("<html>thanks, now we need to <a href='./'>auth that app to your account</a>.</html>");
 });
 
 app.get('/get_home_timeline', function(req, res) {
@@ -108,27 +96,25 @@ app.get('/get_home_timeline', function(req, res) {
 });
 
 app.get('/home_timeline', function(req, res) {
+    if(!getTwitterClient()) {
+        sys.debug('could not get twitterClient, redirecting...');
+        res.redirect('./');
+        return;
+    }
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
     pullTimeline(function() {
         res.end();
     });
-    /*twitterClient.apiCall('GET','/statuses/home_timeline.json', 
-        { token: { oauth_token: token.oauth_token, oauth_token_secret: token.oauth_token_secret} }, 
-        function(error, result) {
-            console.log('\n\n\n\nERROR:\n\n' + JSON.stringify(error));
-            console.log('\n\n\n\nRESULT:\n\n' + JSON.stringify(result));
-            res.end();
-        });*/
 });
 
 
 function pullTimeline(callback) {
-    if(!meta.home_timeline)
-        meta.home_timeline = {};
+    if(!me.home_timeline)
+        me.home_timeline = {};
     var items = [];
-    pullTimelinePage(null, meta.home_timeline.latest, null, items, function() {
+    pullTimelinePage(null, me.home_timeline.latest, null, items, function() {
         items.reverse();
         lfs.appendObjectsToFile('feed.json', items);
         callback();
@@ -136,7 +122,6 @@ function pullTimeline(callback) {
 }
 
 function pullTimelinePage(max_id, since_id, page, items, callback) {
-//    console.log(page);
     if(!page)
         page = 1;
     var params = {token: me.token, count: 200, page: page};
@@ -144,27 +129,34 @@ function pullTimelinePage(max_id, since_id, page, items, callback) {
         params.max_id = max_id;
     if(since_id)
         params.since_id = since_id;
-//    console.log('calling api with params: ' + JSON.stringify(params));
+    requestCount++;
     twitterClient.apiCall('GET', '/statuses/home_timeline.json', params, 
         function(error, result) {
             if(error) {
-                console.log(JSON.stringify(error));
+                sys.debug('error from twitter:' + sys.inspect(error));
                 return;
             }
             if(result.length > 0) {
                 var id = result[0].id;
-                if(!meta.home_timeline.latest || id > meta.home_timeline.latest)
-                    meta.home_timeline.latest = id;
-                console.log(JSON.stringify(meta));
+                if(!me.home_timeline.latest || id > me.home_timeline.latest)
+                    me.home_timeline.latest = id;
+                    sys.debug(JSON.stringify(me));
                 for(var i = 0; i < result.length; i++)
                     items.push(result[i]);
 
                 if(!max_id)
                     max_id = result[0].id;
                 page++;
-                pullTimelinePage(max_id, since_id, page, items, callback);
+                if(requestCount > 300) {
+                    sys.debug('sleeping a bit...');
+                    setTimeout(function() {
+                        pullTimelinePage(max_id, since_id, page, items, callback);
+                    }, 30000);
+                } else {
+                    pullTimelinePage(max_id, since_id, page, items, callback);
+                }
             } else if(callback) {
-                lfs.writeMetadata(meta);
+                lfs.syncMeData(me);
                 callback();
             }
         });
@@ -188,6 +180,18 @@ function(req, res) {
     }
     );
 });*/
+
+function getTwitterClient() {
+    if(!twitterClient && me && me.consumerKey && me.consumerSecret && me.uri)
+        twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);
+    return twitterClient;
+}
+
+function clearCount() {
+    requestCount = 0;
+    setTimeout(clearCount, 3600000);
+}
+clearCount();
 
 console.log('http://localhost:' + port + '/');
 app.listen(port);
