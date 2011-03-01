@@ -24,7 +24,7 @@ var wwwdude = require('wwwdude'),
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
                 'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n');
 }
@@ -33,8 +33,34 @@ var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
 var map = new Object();
 var ats = new Object();
-
 var shuttingDown_ = false;
+
+// load up private key or create if none, just KISS for now
+var idKey,idKeyPub;
+function loadKeys()
+{
+    idKey = fs.readFileSync('Me/key','utf-8');
+    idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
+    console.log("id keys loaded");
+}
+path.exists('Me/key',function(exists){
+    if(exists)
+    {
+        loadKeys();
+    }else{
+        openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
+        console.log('generating id private key');
+//        openssl.stdout.on('data',function (data){console.log(data);});
+//        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
+        openssl.on('exit', function (code) {
+            console.log('generating id public key');
+            openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+            openssl.on('exit', function (code) {
+                loadKeys();
+            });
+        });
+    }
+});
 
 // look for available things
 mapDir('Connectors');
