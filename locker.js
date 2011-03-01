@@ -34,6 +34,8 @@ var lockerDir = process.cwd();
 var map = new Object();
 var ats = new Object();
 
+var shuttingDown_ = false;
+
 // look for available things
 mapDir('Connectors');
 mapDir('Collections');
@@ -128,7 +130,7 @@ locker.get('/Me/*', function(req,res){
         return;
     }
     if(!map[id].pid) { // spawn if it hasn't been
-        spawnMe(map[id],function(){
+        spawnService(map[id],function(){
             proxied(map[id],ppath,req,res);
         });
     } else {
@@ -207,33 +209,80 @@ function getCookie(headers) {
 locker.listen(lockerPort);
 console.log('locker running at ' + lockerBase);
 
+function checkForShutdown() {
+    if (!shuttingDown_) return;
+    for(var mapEntry in map) {
+        var svc = map[mapEntry];
+        if (svc.pid)  return;
+    }
+    process.exit(0);
+}
 
-function spawnMe(svc, callback) {
-    console.log('spawnMe');
-    lockerPortNext++; //the least intelligent way of avoiding port conflicts
+//! Spawn a service instance
+/**
+* \param svc The service description to start
+* \param callback Completion callback
+*
+* The service will be spanwed as described in its configuration file.  The service can
+* read its environment description from stdin which will consist of one JSON object.  The
+* object will have a mandatory port and workingDirectory field, but the rest is optional.
+* \code
+*   {
+*     port:18044,
+*     workingDirectory:"/some/path/"
+*   }
+* \endcode
+* Once the service has completed its startup it will write out to stdout a single JSON object
+* with the used port and any other environment information.  The port must be the actual
+* port the service is listening on.
+* \code
+*   {
+*     port:18044
+*   }
+* \encode
+*/
+function spawnService(svc, callback) {
     var run = svc.run.split(" "); // node foo.js
-    run.push(svc.me); // pass in it's working directory
-    run.push(lockerPortNext); // pass in it's assigned port
-    console.log(run);
-    svc.port = lockerPortNext;
-    svc.uriLocal = "http://localhost:"+svc.port+"/";
-    fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+
+    var processInformation = {
+        port: ++lockerPortNext, // This is just a suggested port
+        workingDirectory: svc.me, // A path into the me directory
+    };
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
-    svc.pid = app.pid;
-    console.log('Spawned app ' + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
-    app.stderr.on('data',function (data){
-        svc.error = data;
-        console.log('Error in app ' + svc.id + ': '+data);
+    app.stderr.on('data', function (data) {
+        var mod = console.outputModule
+        console.outputModule = svc.title
+        console.error(data);
+        console.outputModule = mod
     });
-    app.stdout.on('data',function (data){
-        console.log('STDOUT from ' + svc.id + ': '+ data);
-        if(data && data.toString().trim() == svc.uriLocal)
-            callback();
+    app.stdout.on('data',function (data) {
+        console.log("Got " + data);
+        var mod = console.outputModule
+        console.outputModule = svc.title
+        try {
+            var returnedProcessInformation = JSON.parse(data);
+
+            console.log(svc.title + " is now running.");
+            svc.pid = app.pid;
+            svc.port = returnedProcessInformation.port;
+            svc.uriLocal = "http://localhost:"+svc.port+"/";
+            fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+            if (callback) callback();
+        } catch(error) {
+            console.error("The process did not return valid startup information.");
+            app.kill();
+        }
+        console.outputModule = mod;
+        
     });
     app.on('exit', function (code) {
-      console.log('exited with code ' + code);
-      delete svc.pid;
+        console.log('exited with code ' + code);
+        delete svc.pid;
+        fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+        checkForShutdown();
     });
+    app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
+    console.log('Spawning app ' + svc.title + " with id " + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
 }
 
 // scan to load local map of stuff
@@ -286,3 +335,21 @@ function attaboy(uri) {
     console.log("attaboy running "+uri);
     wwwdude_client.get(uri);
 }
+
+process.on("SIGINT", function() {
+    shuttingDown_ = true;
+    console.log("Starting shutdown...");
+    for(var mapEntry in map) {
+        var svc = map[mapEntry];
+        console.log("Checking " + svc.title + "...");
+        if (svc.pid) {
+            console.log("Ending " + svc.title);
+            try {
+                process.kill(svc.pid);
+            } catch(e) {
+            }
+        }
+    }
+    checkForShutdown();
+});
+
