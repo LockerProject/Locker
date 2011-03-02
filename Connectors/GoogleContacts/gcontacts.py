@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
-
 """
-test.py
+Basic google data interface for contacts
 
-Created by Simon Murtha-Smith on 2010-12-06.
+12-06-2010 Simon Murtha-Smith 
+    * Original creation
+3-1-2011 Thomas "temas" Muldowney
+    * Moved it into a class for use by the Connector
 """
 
 import atom
@@ -14,23 +16,69 @@ import json
 import hashlib
 import sys
 import os
+import lockerfs
+from datetime import datetime
+import time
 
-def write_feed_to_file(gd_client):
-    uid = GetUIDHash(gd_client)
-    jsonFile = open('my/{0}/contacts.json'.format(uid), 'w')
-    query = gdata.contacts.service.ContactsQuery()
-    query.max_results = 3000
-    feed = gd_client.GetContactsFeed(query.ToUri())
-    for i, entry in enumerate(feed.entry):
+def testCredentials(username, password):
+    me = lockerfs.loadMeData()
+    gd_client = gdata.contacts.service.ContactsService()
+    gd_client.email = username
+    gd_client.password = password
+    gd_client.source = 'locker-0.1'
+    try:
+        gd_client.ProgrammaticLogin()
+        return True
+    except Exception:
+        return False
+
+
+class GoogleDataContacts:
+    def __init__(self):
+        me = lockerfs.loadMeData()
+        statusData = lockerfs.loadJsonFile("status.json")
+        if "lastUpdate" in statusData:
+            self.lastUpdate = datetime.fromtimestamp(int(statusData["lastUpdate"]))
+        else:
+            self.lastUpdate = datetime.fromtimestamp(0)
+        self.gd_client = gdata.contacts.service.ContactsService()
+        self.gd_client.email = me["consumerKey"]
+        self.gd_client.password = me["consumerSecret"]
+        self.gd_client.source = 'locker-0.1'
+        m = hashlib.sha1()
+        m.update(self.gd_client.email)
+        self.uid = m.hexdigest()
+
+    def updateAll(self):
+        try:
+            os.makedirs("photos")
+        except OSError:
+            pass
+        sys.stdout.write("Checking for udpates since %s" % (str(self.lastUpdate)))
+        sys.stdout.flush()
+        self.gd_client.ProgrammaticLogin()
+        self.write_groups_feed_to_file()
+        self.write_feed_to_file()
+
+    def write_groups_feed_to_file(self):
+        feed = self.gd_client.GetGroupsFeed()
+        jsonFile = open('groups.json', 'w')
+        for i, entry in enumerate(feed.entry):
+            jsonObject = {}
+            indexOfSlash = entry.id.text.rfind("/")
+            jsonObject["id"] = entry.id.text[indexOfSlash+1:]
+            #jsonObject["id"] = entry.id.text[-16:]
+            jsonObject["name"] = entry.title.text
+            jsonFile.write(json.dumps(jsonObject) + '\n')
+
+    def write_entry_to_file(self, i, entry):
         jsonObject = {}
         indexOfSlash = entry.id.text.rfind("/")
         jsonObject["id"] = entry.id.text[indexOfSlash+1:]
         print '%s %s' % (i+1, entry.title.text)
         
-        if entry.title.text:
-            jsonObject["name"] = entry.title.text
-        if entry.nickname:
-            jsonObject["nickname"] = entry.nickname
+        if entry.title.text: jsonObject["name"] = entry.title.text
+        if entry.nickname: jsonObject["nickname"] = entry.nickname
             
         # Display the primary email address for the contact.
         if entry.email:
@@ -41,8 +89,7 @@ def write_feed_to_file(gd_client):
                 label = email.rel or email.label
                 indexOfHash = label.find("#")
                 label = label[indexOfHash+1:]
-                if label != 'other':
-                    jsonEmail["type"] = label
+                if label != 'other': jsonEmail["type"] = label
                 jsonObject["email"].append(jsonEmail)
             
         if entry.phone_number:
@@ -53,8 +100,7 @@ def write_feed_to_file(gd_client):
                 label = phone.rel or phone.label
                 indexOfHash = label.find("#")
                 label = label[indexOfHash+1:]
-                if label != 'other':
-                    jsonPhone["type"] = label
+                if label != 'other': jsonPhone["type"] = label
                 jsonObject["phone"].append(jsonPhone)
                 
         if entry.postal_address:
@@ -65,8 +111,7 @@ def write_feed_to_file(gd_client):
                 label = postalAddress.rel or postalAddress.label
                 indexOfHash = label.find("#")
                 label = label[indexOfHash+1:]
-                if label != 'other':
-                    jsonAddress["type"] = label
+                if label != 'other': jsonAddress["type"] = label
                 jsonObject["address"].append(jsonAddress)
                 
 #        if entry.birthday:
@@ -78,58 +123,26 @@ def write_feed_to_file(gd_client):
                 jsonObject["groups"].append(group.href[-16:])
         
         #print json.dumps(jsonObject)
-        jsonFile.write(json.dumps(jsonObject) + '\n')
+        self.jsonFile.write(json.dumps(jsonObject) + '\n')
         try:
-            hosted_image_binary = gd_client.GetPhoto(entry)
+            hosted_image_binary = self.gd_client.GetPhoto(entry)
             #print hosted_image_binary
             if hosted_image_binary:
-                image_file = open('my/{0}/photos/{1}.jpg'.format(uid, jsonObject["id"]), 'wb')
+                image_file = open('photos/{0}.jpg'.format(jsonObject["id"]), 'wb')
                 image_file.write(hosted_image_binary)
                 image_file.close()
         except gdata.service.RequestError:
             pass
-
-def write_groups_feed_to_file(gd_client):
-    feed = gd_client.GetGroupsFeed()
-    jsonFile = open('my/{0}/groups.json'.format(GetUIDHash(gd_client)), 'w')
-    for i, entry in enumerate(feed.entry):
-        jsonObject = {}
-        indexOfSlash = entry.id.text.rfind("/")
-        jsonObject["id"] = entry.id.text[indexOfSlash+1:]
-        #jsonObject["id"] = entry.id.text[-16:]
-        jsonObject["name"] = entry.title.text
-        jsonFile.write(json.dumps(jsonObject) + '\n')
-
-def GetUIDHash(gd_client):
-    m = hashlib.sha1()
-    m.update(gd_client.email)
-    return m.hexdigest()
-    
-
-def main():
-    if len(sys.argv) != 3:
-        print "usage: python gcontacts.py <username> <password>"
-        exit()
-    
-    gd_client = gdata.contacts.service.ContactsService()
-    gd_client.email = sys.argv[1]
-    gd_client.password = sys.argv[2]
-    gd_client.source = 'locker-0.1'
-    gd_client.ProgrammaticLogin()
-    
-    uid = GetUIDHash(gd_client)
-    try:
-        os.makedirs("my/{0}".format(uid))
-    except OSError:
-        pass        
-    try:
-        os.makedirs("my/{0}/photos".format(uid))
-    except OSError:
-        pass
-    write_groups_feed_to_file(gd_client)
-    write_feed_to_file(gd_client)
-
-
-if __name__ == '__main__':
-	main()
+        
+    def write_feed_to_file(self):
+        self.jsonFile = open('contacts.json', 'w')
+        query = gdata.contacts.service.ContactsQuery()
+        #query.updated_min = self.lastUpdate.isoformat()
+        query.max_results = 3000
+        feed = self.gd_client.GetContactsFeed(query.ToUri())
+        for i, entry in enumerate(feed.entry):
+            self.write_entry_to_file(i, entry)
+        self.jsonFile.close()
+        self.lastUpdate = datetime.now()
+        lockerfs.saveJsonFile("status.json", {"lastUpdate":time.mktime(self.lastUpdate.timetuple())})
 
