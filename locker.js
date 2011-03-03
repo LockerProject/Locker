@@ -19,6 +19,7 @@ var crypto = require('crypto');
 var url = require("url");
 var sys = require('sys');
 var lconsole = require("lconsole");
+var http = require('http');
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
@@ -31,8 +32,9 @@ if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
-var map = new Object();
-var ats = new Object();
+var map = new Object(); // all services and their metadata
+var ats = new Object(); // scheduled calls
+var listeners = new Object(); // listeners for events
 var shuttingDown_ = false;
 
 // load up private key or create if none, just KISS for now
@@ -147,6 +149,7 @@ function(req, res) {
     res.end(JSON.stringify(js));
 });
 
+// all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
@@ -161,6 +164,54 @@ locker.get('/Me/*', function(req,res){
         });
     } else {
         proxied(map[id],ppath,req,res);
+    }
+});
+
+// anybody can listen into any service's events
+locker.get('/listen',
+function(req, res) {
+    var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
+    if(!map[id] || !map[from]) {
+        res.writeHead(404);
+        res.end(id+" doesn't exist, but does anything really? ");
+        return;
+    }
+    if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
+    res.writeHead(200);
+    res.end("OKTHXBI");
+    // really simple datastructure for now: listeners["5e99c869b5fbe2be1f66e17894e92364=contact/facebook"][0]="241a4b440371069305c340bed2cf69ec/cb/path"
+    insertSafe(listeners,id+"="+type,from+cb);
+    console.log("new listener "+id+" "+type+" at "+id+cb);
+});
+
+// publish an event to any listeners
+locker.post('/event',
+function(req, res) {
+    var id = req.param('id'), type = req.param('type');
+    res.writeHead(200);
+    res.end();
+    console.log("new event from "+id+" "+type);
+    var list = listeners[id+'='+type];
+    if(!list || list.length == 0) return;
+    for(var i in list)
+    {
+        var to = list[i].substr(0,32);
+        var path = list[i].substr(32);
+        console.log("publishing new event to "+id+" at "+path);
+        if(!map[id]) continue;
+        if(!map[id].pid) continue; // start up?? probably?
+        var uri = uri.parse(map[id].uriLocal);
+        // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
+        if(uri.host == "localhost" || uri.host == "127.0.0.1")
+        {
+            var httpClient = http.createClient(uri.port);            
+        }else{
+            var httpClient = http.createClient(uri.port,uri.host);            
+        }
+        var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
+        request.write(req.rawBody);
+        // !!!! need to catch errors and remove this from the list
+        request.end();
     }
 });
 
