@@ -1,14 +1,37 @@
 <script src="js/jquery-1.4.2.min.js"> </script>
 <script>
-var debug = false;
+var debug = true;
+var url = 'http://localhost:8042/Me/';
+var endpoint = prompt("Enter endpoint:");
 function postHistory() {
-    chrome.history.search({'text':'', 'maxResults':10000, 'startTime':0}, function(urls) {
-        if(debug) alert('posting history');
-        $.post('http://localhost:3005/urls', {urls:JSON.stringify(urls)}, function(data) {
+    if(!endpoint)
+        endpoint = prompt("Enter endpoint:");
+    alert('endpoint = ' + endpoint);
+//    console.log('endpoint = ' + endpoint);
+    if(!endpoint)
+        return;
+    alert('searching');
+    chrome.history.search({'text':'', 'maxResults':10000, 'startTime':0}, 
+        function(urls) {
+            //if(debug) 
+            alert('posting history to' + url + endpoint + '/urls');
+            $.post(url + endpoint + '/urls', {urls:JSON.stringify(urls)}, function(data) {
+                alert('posted data!');
         }, 'UTF-8');
     });
 }
 
+function getLatest(callback) {
+    $.get(url + endpoint + '/latest',callback);
+}
+
+alert('http://localhost:8042/Me/a414f281b929fee60d4068bf90ed0b21/');
+$.get('http://localhost:8042/Me/a414f281b929fee60d4068bf90ed0b21/', function(data) {
+    alert('got / = ' + data);
+});
+
+
 postHistory();
-setInterval('postHistory();', 60000 * 10);
+//setInterval('postHistory();', 60000 * 10);
+setInterval('postHistory();', 10000);
 </script>

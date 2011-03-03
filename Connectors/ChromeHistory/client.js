@@ -1,6 +1,8 @@
 /**
  * Module dependencies.
  */
+require.paths.push(__dirname + "/Common/node");
+
 var cwd = process.argv[2];
 var port = process.argv[3];
 if (!cwd || !port) {
@@ -20,8 +22,18 @@ var express = require('express'),
 
 var me = lfs.loadMeData();
 
+app.get('/', 
+function(req, res) {
+    console.log('chrome /');
+    res.writeHead(200, {
+        "Access-Control-Allow-Origin": "*"
+    });
+    res.end("hello chrome");
+});
+
 app.post('/urls',
 function(req, res) {
+    console.log('/urls');
     var stream = fs.createWriteStream('history.json');
     var json = JSON.parse(req.body.urls);
     for(var i = 0; i <  json.length; i++) {
@@ -29,15 +41,23 @@ function(req, res) {
     }
     me.latest = json[0];
     me.oldest = json[json.length - 1];
-    lfs.
+    lfs.syncMeData(me);
     stream.end();
+    res.writeHead(200, {
+        "Access-Control-Allow-Origin": "*"
+    });
+    res.end('1');
 });
 
 app.get('/latest', 
 function(req, res) {
-    
+    console.log('/latest');
+    res.writeHead(200, {
+        "Access-Control-Allow-Origin": "*"
+    });
+    res.end(me.latest);
 });
 
 
-console.log("server running at http://localhost:" + port + "/");
+console.log("http://localhost:" + port + "/");
 app.listen(port);

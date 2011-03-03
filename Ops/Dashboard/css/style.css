@@ -2,18 +2,22 @@ table {
     border-spacing:0;
     border-width: 0 0 1px 1px;
     border-style: solid;
-    width:1000px;
+    width:1600px;
 }
 
 td {
     border-width: 1px 1px 0px 0px;
     border-style: solid;
     margin: 0;
-    padding: 4px;
+    padding: 3px;
     overflow:hidden;
-    display:block;
-    width:100px;
+    width:10px;
 }
-#desc {
-    width:200px;
+
+td.desc {
+    width:6000px;
+}
+
+td.action {
+    width:3000px;
 }

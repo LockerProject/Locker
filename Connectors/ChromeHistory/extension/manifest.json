@@ -4,7 +4,7 @@
   "description": "Locker Chrome browser history post",
   "background_page" : "background.html",
   "permissions": [
-    "http://localhost:3005/",
+    "http://localhost:8042/",
 	"history"
   ]
 }
