@@ -1,0 +1,19 @@
+table {
+    border-spacing:0;
+    border-width: 0 0 1px 1px;
+    border-style: solid;
+    width:1000px;
+}
+
+td {
+    border-width: 1px 1px 0px 0px;
+    border-style: solid;
+    margin: 0;
+    padding: 4px;
+    overflow:hidden;
+    display:block;
+    width:100px;
+}
+#desc {
+    width:200px;
+}

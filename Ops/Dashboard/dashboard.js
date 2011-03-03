@@ -34,18 +34,34 @@ app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     res.write('<html><head><title>Locker Dashboard</title>' +
                 '<script src="util.js"></script></head>\n\n<body>' +
-                '<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script></head>\n\n<body>');
+                '<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script>' + 
+                '<link rel="stylesheet" href="css/style.css" type="text/css"></link></head>\n\n<body>');
     //res.write('launch <a onclick="javascript:$.get(\'http:localhost:1' + rootPort + '/launchapp\', {name:\'Fizz\'})">Fizz!</a>');
     res.write('Welcome! Reading JSON is fun, right? :) ...requesting map from '+lockerBase+'/map');
     wwwdude_client.get(lockerBase + '/map')
     .addListener('success', function(data, resp) {
         map = JSON.parse(data);
         res.write('<h2>my stuff</h2>');
-        if(map.existing) for(var i=0;i<map.existing.length;i++)
-        {
+        res.write('<table>');
+        res.write('<tr><td>Title</td><td id="desc">Description</td><td>Type</td>' + /*'<td>Me</td><td>URI</td>' */'<td>Action</td><td>ID</td><td>Run</td><td>Services</td><td>Source Dir</td></tr>');
+        if(map.existing) for(var i=0;i<map.existing.length;i++) {
             var id = map.existing[i];
-            res.write('<li><a href="'+map[id].uri+'">open</a> '+JSON.stringify(map[id]));
+            var item = map[id];
+            res.write('<tr>');
+            res.write('<td><a href="'+map[id].uri+'">' + item.title + '</a></td>');
+            res.write('<td id="desc">' + item.desc + '</td>');
+            res.write('<td>' + item.is + '</td>');
+         //   res.write('<td>' + item.me + '</td>');
+          //  res.write('<td>' + item.uri + '</td>');
+            res.write('<td>' + item.action + '</td>');
+            res.write('<td>' + item.id + '</td>');
+            res.write('<td>' + item.run + '</td>');
+            res.write('<td>' + item.services + '</td>');
+            res.write('<td>' + item.srcdir + '</td>');
+         //   res.write('<a href="'+map[id].uri+'">open</a> '+JSON.stringify(map[id]));
+            res.write('</tr>');
         }
+        res.write('</table>');
         res.write('<h2>available things to install in my locker</h2>');
         if(map.available) for(var i=0;i<map.available.length;i++)
         {
