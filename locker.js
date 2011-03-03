@@ -19,20 +19,50 @@ var crypto = require('crypto');
 var url = require("url");
 var sys = require('sys');
 var lconsole = require("lconsole");
+var http = require('http');
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 
 
 var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" || lockerHost != "127.0.0.1") {
+if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
                 'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n');
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
 var lockerDir = process.cwd();
-var map = new Object();
-var ats = new Object();
+var map = new Object(); // all services and their metadata
+var ats = new Object(); // scheduled calls
+var listeners = new Object(); // listeners for events
+var shuttingDown_ = false;
+
+// load up private key or create if none, just KISS for now
+var idKey,idKeyPub;
+function loadKeys()
+{
+    idKey = fs.readFileSync('Me/key','utf-8');
+    idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
+    console.log("id keys loaded");
+}
+path.exists('Me/key',function(exists){
+    if(exists)
+    {
+        loadKeys();
+    }else{
+        openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
+        console.log('generating id private key');
+//        openssl.stdout.on('data',function (data){console.log(data);});
+//        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
+        openssl.on('exit', function (code) {
+            console.log('generating id public key');
+            openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+            openssl.on('exit', function (code) {
+                loadKeys();
+            });
+        });
+    }
+});
 
 // look for available things
 mapDir('Connectors');
@@ -119,6 +149,7 @@ function(req, res) {
     res.end(JSON.stringify(js));
 });
 
+// all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
@@ -128,11 +159,59 @@ locker.get('/Me/*', function(req,res){
         return;
     }
     if(!map[id].pid) { // spawn if it hasn't been
-        spawnMe(map[id],function(){
+        spawnService(map[id],function(){
             proxied(map[id],ppath,req,res);
         });
     } else {
         proxied(map[id],ppath,req,res);
+    }
+});
+
+// anybody can listen into any service's events
+locker.get('/listen',
+function(req, res) {
+    var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
+    if(!map[id] || !map[from]) {
+        res.writeHead(404);
+        res.end(id+" doesn't exist, but does anything really? ");
+        return;
+    }
+    if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
+    res.writeHead(200);
+    res.end("OKTHXBI");
+    // really simple datastructure for now: listeners["5e99c869b5fbe2be1f66e17894e92364=contact/facebook"][0]="241a4b440371069305c340bed2cf69ec/cb/path"
+    insertSafe(listeners,id+"="+type,from+cb);
+    console.log("new listener "+id+" "+type+" at "+id+cb);
+});
+
+// publish an event to any listeners
+locker.post('/event',
+function(req, res) {
+    var id = req.param('id'), type = req.param('type');
+    res.writeHead(200);
+    res.end();
+    console.log("new event from "+id+" "+type);
+    var list = listeners[id+'='+type];
+    if(!list || list.length == 0) return;
+    for(var i in list)
+    {
+        var to = list[i].substr(0,32);
+        var path = list[i].substr(32);
+        console.log("publishing new event to "+id+" at "+path);
+        if(!map[id]) continue;
+        if(!map[id].pid) continue; // start up?? probably?
+        var uri = uri.parse(map[id].uriLocal);
+        // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
+        if(uri.host == "localhost" || uri.host == "127.0.0.1")
+        {
+            var httpClient = http.createClient(uri.port);            
+        }else{
+            var httpClient = http.createClient(uri.port,uri.host);            
+        }
+        var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
+        request.write(req.rawBody);
+        // !!!! need to catch errors and remove this from the list
+        request.end();
     }
 });
 
@@ -209,33 +288,80 @@ function getCookie(headers) {
 locker.listen(lockerPort);
 console.log('locker running at ' + lockerBase);
 
+function checkForShutdown() {
+    if (!shuttingDown_) return;
+    for(var mapEntry in map) {
+        var svc = map[mapEntry];
+        if (svc.pid)  return;
+    }
+    process.exit(0);
+}
 
-function spawnMe(svc, callback) {
-    console.log('spawnMe');
-    lockerPortNext++; //the least intelligent way of avoiding port conflicts
+//! Spawn a service instance
+/**
+* \param svc The service description to start
+* \param callback Completion callback
+*
+* The service will be spanwed as described in its configuration file.  The service can
+* read its environment description from stdin which will consist of one JSON object.  The
+* object will have a mandatory port and workingDirectory field, but the rest is optional.
+* \code
+*   {
+*     port:18044,
+*     workingDirectory:"/some/path/"
+*   }
+* \endcode
+* Once the service has completed its startup it will write out to stdout a single JSON object
+* with the used port and any other environment information.  The port must be the actual
+* port the service is listening on.
+* \code
+*   {
+*     port:18044
+*   }
+* \encode
+*/
+function spawnService(svc, callback) {
     var run = svc.run.split(" "); // node foo.js
-    run.push(svc.me); // pass in it's working directory
-    run.push(lockerPortNext); // pass in it's assigned port
-    console.log(run);
-    svc.port = lockerPortNext;
-    svc.uriLocal = "http://localhost:"+svc.port+"/";
-    fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+
+    var processInformation = {
+        port: ++lockerPortNext, // This is just a suggested port
+        workingDirectory: svc.me, // A path into the me directory
+    };
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
-    svc.pid = app.pid;
-    console.log('Spawned app ' + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
-    app.stderr.on('data',function (data){
-        svc.error = data;
-        console.log('Error in app ' + svc.id + ': '+data);
+    app.stderr.on('data', function (data) {
+        var mod = console.outputModule
+        console.outputModule = svc.title
+        console.error(data);
+        console.outputModule = mod
     });
-    app.stdout.on('data',function (data){
-        console.log('STDOUT from ' + svc.id + ': '+ data);
-        if(data && data.toString().trim() == svc.uriLocal)
-            callback();
+    app.stdout.on('data',function (data) {
+        console.log("Got " + data);
+        var mod = console.outputModule
+        console.outputModule = svc.title
+        try {
+            var returnedProcessInformation = JSON.parse(data);
+
+            console.log(svc.title + " is now running.");
+            svc.pid = app.pid;
+            svc.port = returnedProcessInformation.port;
+            svc.uriLocal = "http://localhost:"+svc.port+"/";
+            fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+            if (callback) callback();
+        } catch(error) {
+            console.error("The process did not return valid startup information.");
+            app.kill();
+        }
+        console.outputModule = mod;
+        
     });
     app.on('exit', function (code) {
-      console.log('exited with code ' + code);
-      delete svc.pid;
+        console.log('exited with code ' + code);
+        delete svc.pid;
+        fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+        checkForShutdown();
     });
+    app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
+    console.log('Spawning app ' + svc.title + " with id " + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
 }
 
 // scan to load local map of stuff
@@ -288,3 +414,21 @@ function attaboy(uri) {
     console.log("attaboy running "+uri);
     wwwdude_client.get(uri);
 }
+
+process.on("SIGINT", function() {
+    shuttingDown_ = true;
+    console.log("Starting shutdown...");
+    for(var mapEntry in map) {
+        var svc = map[mapEntry];
+        console.log("Checking " + svc.title + "...");
+        if (svc.pid) {
+            console.log("Ending " + svc.title);
+            try {
+                process.kill(svc.pid);
+            } catch(e) {
+            }
+        }
+    }
+    checkForShutdown();
+});
+
