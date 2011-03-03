@@ -282,21 +282,26 @@ function spawnService(svc, callback) {
         console.outputModule = mod
     });
     app.stdout.on('data',function (data) {
-        console.log("Got " + data);
         var mod = console.outputModule
         console.outputModule = svc.title
-        try {
-            var returnedProcessInformation = JSON.parse(data);
+        if (svc.pid) {
+            // We're already running so just log it for them
+            console.log(data);
+        } else {
+            // Process the startup json info
+            try {
+                var returnedProcessInformation = JSON.parse(data);
 
-            console.log(svc.title + " is now running.");
-            svc.pid = app.pid;
-            svc.port = returnedProcessInformation.port;
-            svc.uriLocal = "http://localhost:"+svc.port+"/";
-            fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
-            if (callback) callback();
-        } catch(error) {
-            console.error("The process did not return valid startup information.");
-            app.kill();
+                console.log(svc.title + " is now running.");
+                svc.pid = app.pid;
+                svc.port = returnedProcessInformation.port;
+                svc.uriLocal = "http://localhost:"+svc.port+"/";
+                fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+                if (callback) callback();
+            } catch(error) {
+                console.error("The process did not return valid startup information.");
+                app.kill();
+            }
         }
         console.outputModule = mod;
         
