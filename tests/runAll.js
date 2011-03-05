@@ -9,5 +9,14 @@ console.outputModule = "Test Run";
 
 // The tests to include
 require("lconsole.test.js");
+require("lscheduler.test.js");
+require("lservicemanager.test.js");
 
 ltest.testSuite.runTests();
+
+process.on("uncaughtException", function(E) {
+    process.stdout.write("\n\n");
+    console.error("\nUncaught Exception:\n" + E.toString());
+    console.trace();
+    process.stdout.write("\n\n");
+});
