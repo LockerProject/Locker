@@ -16,10 +16,9 @@ var express = require('express'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
-var me = lfs.loadMeData();
 
 var requestCount;
-var twitterClient;// = require('twitter-js')();
+var twitterClient;
 
 var app = express.createServer(
         connect.bodyDecoder(),
@@ -27,7 +26,8 @@ var app = express.createServer(
         connect.session({secret : "locker"})
     );
     
-var me;
+
+var me, auth, latests, userInfo;
 
 Array.prototype.addAll = function(anotherArray) {
     if(!anotherArray || !anotherArray.length)
@@ -37,7 +37,7 @@ Array.prototype.addAll = function(anotherArray) {
 }
 
 app.get('/', function(req, res) {
-    if(!(me.consumerKey && me.consumerSecret)) {
+    if(!(auth.consumerKey && auth.consumerSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>" + 
@@ -49,9 +49,9 @@ app.get('/', function(req, res) {
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
         return;
-    } else if(!me.token) {
+    } else if(!auth.token) {
         if(!twitterClient) 
-            twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);   
+            twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);
 
         twitterClient.getAccessToken(req, res,
             function(error, newToken) {
@@ -61,9 +61,8 @@ app.get('/', function(req, res) {
                     res.writeHead(200, {
                         'Content-Type': 'text/html'
                     });
-                    me.token = newToken;
-                    console.log('me:\n' + JSON.stringify(me));
-                    lfs.syncMeData(me);
+                    auth.token = newToken;
+                    lfs.writeObjectToFile('auth.json', auth);
                     res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                                          "<li><a href='mentions'>sync your mentions</a></li>" + 
                                                          "<li><a href='friends'>sync your friends</a></li>" + 
@@ -72,9 +71,9 @@ app.get('/', function(req, res) {
                 }
             });    
     } else {
-        if(!twitterClient) {
-            twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);   
-        }
+        if(!twitterClient)
+            twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);   
+
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                              "<li><a href='mentions'>sync your mentions</a></li>" + 
@@ -94,10 +93,10 @@ function(req, res) {
         res.end("missing field(s)?");
         return;
     }
-    me.consumerKey = req.param('consumerKey');
-    me.consumerSecret = req.param('consumerSecret');
+    auth.consumerKey = req.param('consumerKey');
+    auth.consumerSecret = req.param('consumerSecret');
 
-    lfs.syncMeData(me);
+    lfs.writeObjectToFile('auth.json', auth);
     res.end("<html>thanks, now we need to <a href='./'>auth that app to your account</a>.</html>");
 });
 
@@ -148,10 +147,10 @@ function pullStatuses(endpoint, repeatAfter, res) {
 }
 
 function pullTimeline(endpoint, callback) {
-    if(!me[endpoint])
-        me[endpoint] = {};
+    if(!latests[endpoint])
+        latests[endpoint] = {};
     var items = [];
-    pullTimelinePage(endpoint, null, me[endpoint].latest, null, items, function() {
+    pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
         lfs.appendObjectsToFile(endpoint + '.json', items);
         callback();
@@ -161,27 +160,25 @@ function pullTimeline(endpoint, callback) {
 function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     if(!page)
         page = 1;
-    var params = {token: me.token, count: 200, page: page, include_entities:true};
+    var params = {token: auth.token, count: 200, page: page, include_entities:true};
     if(max_id)
         params.max_id = max_id;
     if(since_id)
         params.since_id = since_id;
     requestCount++;
-    sys.debug('getting endpoint: ' + endpoint + '...');
     twitterClient.apiCall('GET', '/statuses/' + endpoint + '.json', params, 
         function(error, result) {
             if(error) {
-                if(error.statusCode == 502 || error.statusCode == 503) { //failz-whalez
+                if(error.statusCode == 502 || error.statusCode == 503) { //failz-whalez, hang out for a bit
                     setTimeout(function(){pullTimelinePage(endpoint, max_id, since_id, page, items, callback);}, 10000);
                 }
                 sys.debug('error from twitter:' + sys.inspect(error));
                 return;
             }
-            sys.debug('got endpoint: ' + endpoint);
             if(result.length > 0) {
                 var id = result[0].id;
-                if(!me[endpoint].latest || id > me[endpoint].latest)
-                    me[endpoint].latest = id;
+                if(!latests[endpoint].latest || id > latests[endpoint].latest)
+                    latests[endpoint].latest = id;
                 for(var i = 0; i < result.length; i++)
                     items.push(result[i]);
 
@@ -197,7 +194,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                 }
             } else if(callback) {
-                lfs.syncMeData(me);
+                lfs.writeObjectToFile('latests.json', latests);
                 callback();
             }
         });
@@ -225,41 +222,12 @@ function(req, res) {
 app.get('/friends',
 function(req, res) {
     syncUsersInfo('friends', req, res);
-/*    getUserInfo(function(userInfo) {
-        lfs.writeObjectsToFile('profile.json', [userInfo]);
-        getFriendsIDs(userInfo.screen_name, function(ids) {    
-            getUsersExtendedInfo(ids, function(usersInfo) {
-                sys.debug('got ' + usersInfo.length + ' friends');
-                lfs.writeObjectsToFile('friends.json', usersInfo);
-                locker.at(me.uri + 'friends', 3600);
-                res.writeHead(200);
-                res.end();
-            });
-        });
-    });*/
 });
 
 
 app.get('/followers',
 function(req, res) {
     syncUsersInfo('followers', req, res);
-/*    getUserInfo(function(userInfo) {
-        lfs.writeObjectsToFile('profile.json', [userInfo]);
-        getIDs('followers', userInfo.screen_name, function(ids) {
-            if(!ids || ids.length < 1) {
-                locker.at(me.uri + 'followers', 3600);
-                res.writeHead(200);
-                res.end();
-            }
-            getUsersExtendedInfo(ids, function(usersInfo) {
-                sys.debug('got ' + usersInfo.length + ' friends');
-                lfs.writeObjectsToFile('followers.json', usersInfo);
-                locker.at(me.uri + 'followers', 3600);
-                res.writeHead(200);
-                res.end();
-            });
-        });
-    });*/
 });
 
 function syncUsersInfo(friendsOrFollowers, req, res) {
@@ -271,8 +239,9 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
         res.writeHead(200);
         res.end();
     }
-    getUserInfo(function(userInfo) {
-        lfs.writeObjectsToFile('profile.json', [userInfo]);
+    getUserInfo(function(newUserInfo) {
+        userInfo = newUserInfo;
+        lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(ids) {
             if(!ids || ids.length < 1)
                 done();
@@ -288,9 +257,9 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
 
 app.get('/profile',
 function(req, res) {
-    getUserInfo(function(userInfo) {
-        me.user_info = userInfo;
-        lfs.syncMeData(me);
+    getUserInfo(function(newUserInfo) {
+        userInfo = newUserInfo;
+        lfs.writeObjectToFile('userInfo.json', userInfo);
         res.writeHead(200);
         res.end();
     })
@@ -299,8 +268,8 @@ function(req, res) {
 function getUserInfo(callback) {
     if(!getTwitterClient())
         return;
-    twitterClient.apiCall('GET', '/account/verify_credentials.json', { token: { oauth_token_secret: me.token.oauth_token_secret,
-                                                                                oauth_token: me.token.oauth_token},
+    twitterClient.apiCall('GET', '/account/verify_credentials.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
+                                                                                oauth_token: auth.token.oauth_token},
                                                                        include_entities : true},
         function(error, result) {
             if(error)
@@ -390,17 +359,18 @@ function getRateLimitStatus(callback) {
 function getUsersExtendedInfo(userIDs, callback) {
     _getUsersExtendedInfo(userIDs, [], callback);
 }
-function _getUsersExtendedInfo(userIDs, userInfo, callback) {
-    if(!userInfo)
-        userInfo = [];
+
+function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
+    if(!usersInfo)
+        usersInfo = [];
     var id_str = "";
     for(var i = 0; i < 100 && userIDs.length > 0; i++) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
     console.log('user_id:' + id_str);
-    twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: me.token.oauth_token_secret,
-                                                                  oauth_token: me.token.oauth_token}, 
+    twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
+                                                                  oauth_token: auth.token.oauth_token}, 
                                                          user_id: id_str,
                                                          include_entities : true },
         function(error, result) {
@@ -408,12 +378,12 @@ function _getUsersExtendedInfo(userIDs, userInfo, callback) {
                 sys.debug('error! ' + JSON.stringify(error));
                 return;
             }
-            userInfo.addAll(result.reverse());
+            usersInfo.addAll(result.reverse());
             if(userIDs.length > 0) 
-                _getUsersExtendedInfo(userIDs, userInfo, callback);
+                _getUsersExtendedInfo(userIDs, usersInfo, callback);
             else if(callback) {
-                getPhotos(userInfo);
-                callback(userInfo);
+                getPhotos(usersInfo);
+                callback(usersInfo);
             }
         });
 }
@@ -431,8 +401,8 @@ function getPhotos(users) {
 }
 
 function getTwitterClient() {
-    if(!twitterClient && me && me.consumerKey && me.consumerSecret && me.uri)
-        twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);
+    if(!twitterClient && auth && auth.consumerKey && auth.consumerSecret && me && me.uri)
+        twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);
     return twitterClient;
 }
 
@@ -445,11 +415,19 @@ clearCount();
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
-//  process.stderr.write('data: ' + chunk);
-  var processInfo = JSON.parse(chunk);
-  process.chdir(processInfo.workingDirectory);
-  me = lfs.loadMeData();
-  app.listen(processInfo.port);
-  var returnedInfo = {port: processInfo.port};
-  console.log(JSON.stringify(returnedInfo));
+    var processInfo = JSON.parse(chunk);
+    process.chdir(processInfo.workingDirectory);
+    lfs.readObjectFromFile('auth.json', function(newAuth) {
+        auth = newAuth;
+        lfs.readObjectFromFile('latests.json', function(newLatests) {
+            latests = newLatests;
+            lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
+                userInfo = newUserInfo;
+                me = lfs.loadMeData();
+                app.listen(processInfo.port);
+                var returnedInfo = {port: processInfo.port};
+                console.log(JSON.stringify(returnedInfo));
+            });
+        });
+    });
 });

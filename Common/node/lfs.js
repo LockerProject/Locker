@@ -47,7 +47,33 @@ exports.readObjectsFromFile = function(path, callback) {
 }
 
 /**
- * Writes the metadata object to the metadata file (meta.json) for the specified account
+ * Reads an array of objects as lined-delimited JSON from the file at the specified path
+ */
+exports.readObjectFromFile = function(path, callback) {
+    var stream = fs.createReadStream(path, {'encoding': 'utf-8'});
+    var data = "";
+    stream.on('data', function(newData) {
+        data += newData;
+    });
+    stream.on('end', function() {
+        var item = {};
+        try {
+            item = JSON.parse(data);
+        } catch(err) {
+        }
+        callback(item);
+    });
+    stream.on('error', function(err) {
+        callback({});
+    });
+}
+
+exports.writeObjectToFile = function(path, object) {
+    fs.writeFileSync(path, JSON.stringify(object));
+}
+
+/**
+ * Writes the me object to the me file (me.json)
  */
 exports.syncMeData = function(metadata) {
     fs.writeFileSync('me.json', JSON.stringify(metadata)); // write this back to locker service?
