@@ -9,8 +9,8 @@ console.outputModule = "Test Run";
 
 // The tests to include
 require("lconsole.test.js");
-require("lscheduler.test.js");
 require("lservicemanager.test.js");
+require("lscheduler.test.js");
 
 ltest.testSuite.runTests();
 
