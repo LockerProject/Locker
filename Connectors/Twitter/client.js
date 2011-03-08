@@ -62,8 +62,13 @@ app.get('/', function(req, res) {
                         'Content-Type': 'text/html'
                     });
                     me.token = newToken;
+                    console.log('me:\n' + JSON.stringify(me));
                     lfs.syncMeData(me);
-                    res.end("<html>great! now you can <a href='home_timeline'> download your timeline</a></html>");
+                    res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
+                                                         "<li><a href='mentions'>sync your mentions</a></li>" + 
+                                                         "<li><a href='friends'>sync your friends</a></li>" + 
+                                                          "<li><a href='followers'>sync your followers</a></li>" +
+                                                         "<li><a href='profile'>sync your profile</a></li>" +"</html>");
                 }
             });    
     } else {
@@ -74,6 +79,7 @@ app.get('/', function(req, res) {
         res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                              "<li><a href='mentions'>sync your mentions</a></li>" + 
                                              "<li><a href='friends'>sync your friends</a></li>" + 
+                                              "<li><a href='followers'>sync your followers</a></li>" +
                                              "<li><a href='profile'>sync your profile</a></li>" +"</html>");
     }
 });
@@ -218,10 +224,10 @@ function(req, res) {
 
 app.get('/friends',
 function(req, res) {
-    getUserInfo(function(userInfo) {
-        me.user_info = userInfo;
-        lfs.syncMeData(me);
-        getFriendsIDs(me.user_info.screen_name, function(ids) {    
+    syncUsersInfo('friends', req, res);
+/*    getUserInfo(function(userInfo) {
+        lfs.writeObjectsToFile('profile.json', [userInfo]);
+        getFriendsIDs(userInfo.screen_name, function(ids) {    
             getUsersExtendedInfo(ids, function(usersInfo) {
                 sys.debug('got ' + usersInfo.length + ' friends');
                 lfs.writeObjectsToFile('friends.json', usersInfo);
@@ -230,8 +236,55 @@ function(req, res) {
                 res.end();
             });
         });
-    });
+    });*/
 });
+
+
+app.get('/followers',
+function(req, res) {
+    syncUsersInfo('followers', req, res);
+/*    getUserInfo(function(userInfo) {
+        lfs.writeObjectsToFile('profile.json', [userInfo]);
+        getIDs('followers', userInfo.screen_name, function(ids) {
+            if(!ids || ids.length < 1) {
+                locker.at(me.uri + 'followers', 3600);
+                res.writeHead(200);
+                res.end();
+            }
+            getUsersExtendedInfo(ids, function(usersInfo) {
+                sys.debug('got ' + usersInfo.length + ' friends');
+                lfs.writeObjectsToFile('followers.json', usersInfo);
+                locker.at(me.uri + 'followers', 3600);
+                res.writeHead(200);
+                res.end();
+            });
+        });
+    });*/
+});
+
+function syncUsersInfo(friendsOrFollowers, req, res) {
+    if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
+        friendsOrFollowers = 'friends';
+        
+    function done() {    
+        locker.at(me.uri + friendsOrFollowers, 3600);
+        res.writeHead(200);
+        res.end();
+    }
+    getUserInfo(function(userInfo) {
+        lfs.writeObjectsToFile('profile.json', [userInfo]);
+        getIDs(friendsOrFollowers, userInfo.screen_name, function(ids) {
+            if(!ids || ids.length < 1)
+                done();
+            else
+                getUsersExtendedInfo(ids, function(usersInfo) {
+                    sys.debug('got ' + usersInfo.length + ' ' + friendsOrFollowers);
+                    lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
+                    done();
+                });
+        });
+    });
+}
 
 app.get('/profile',
 function(req, res) {
@@ -258,12 +311,14 @@ function getUserInfo(callback) {
 }
 
 
-function getIDs(screenName, friendsOrFolowers, callback) {
+function getIDs(friendsOrFolowers, screenName, callback) {
     if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
         friendsOrFolowers = 'friends';
     friendsOrFolowers = friendsOrFolowers.toLowerCase();
+    console.log('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1');
     wwwdude.createClient().get('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1')
     .addListener('success', function(data, resp) {
+        console.log('getIDs, data: ' + data);
        callback(JSON.parse(data).ids);
     })   
     .addListener('error', function (err) {
@@ -343,6 +398,7 @@ function _getUsersExtendedInfo(userIDs, userInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
+    console.log('user_id:' + id_str);
     twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: me.token.oauth_token_secret,
                                                                   oauth_token: me.token.oauth_token}, 
                                                          user_id: id_str,
