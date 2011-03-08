@@ -115,6 +115,16 @@ app.get('/mentions', function(req, res) {
     pullStatuses('mentions', 120, res);
 });
 
+app.get('/rate_limit_status', function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    getRateLimitStatus(function(status) {
+        res.write(JSON.stringify(status));
+        res.end();
+    });
+});
+
 function pullStatuses(endpoint, repeatAfter, res) {
     if(!getTwitterClient()) {
         sys.debug('could not get twitterClient, redirecting...');
@@ -208,11 +218,10 @@ function(req, res) {
 
 app.get('/friends',
 function(req, res) {
-    sys.debug('/friends');
     getUserInfo(function(userInfo) {
         me.user_info = userInfo;
         lfs.syncMeData(me);
-        getFriendsIDs(me.user_info.screen_name, function(ids) {
+        getFriendsIDs(me.user_info.screen_name, function(ids) {    
             getUsersExtendedInfo(ids, function(usersInfo) {
                 sys.debug('got ' + usersInfo.length + ' friends');
                 lfs.writeObjectsToFile('friends.json', usersInfo);
@@ -248,10 +257,78 @@ function getUserInfo(callback) {
         });
 }
 
+
+function getIDs(screenName, friendsOrFolowers, callback) {
+    if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
+        friendsOrFolowers = 'friends';
+    friendsOrFolowers = friendsOrFolowers.toLowerCase();
+    wwwdude.createClient().get('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1')
+    .addListener('success', function(data, resp) {
+       callback(JSON.parse(data).ids);
+    })   
+    .addListener('error', function (err) {
+        // err: error exception object
+        sys.debug('Error: ' + sys.inspect(err));
+     })
+    .addListener('http-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Status Code > 400');
+        sys.debug('Headers: ' + sys.inspect(res.headers));
+    })
+    .addListener('http-client-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Client Error (400 <= status < 500)');
+        sys.debug('Headers: ' + sys.inspect(res.headers));
+    })
+    .addListener('http-server-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Client Error (status > 500)');
+        sys.debug('Headers: ' + sys.inspect(res.headers));
+    });
+}
+
 function getFriendsIDs(screenName, callback) {
     wwwdude.createClient().get('http://api.twitter.com/1/friends/ids.json?screen_name=' + screenName + '&cursor=-1')
     .addListener('success', function(data, resp) {
        callback(JSON.parse(data).ids);
+    })   
+    .addListener('error', function (err) {
+        // err: error exception object
+        sys.debug('Error: ' + sys.inspect(err));
+     })
+    .addListener('http-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Status Code > 400');
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
+    })
+    .addListener('http-client-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Client Error (400 <= status < 500)');
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
+    })
+    .addListener('http-server-error', function (data, resp) {
+        // data = transferred content, resp = repsonse object
+        sys.debug('HTTP Client Error (status > 500)');
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
+    });
+}
+
+/** returns object with:
+ *  remaining_hits (api call remaining),
+ *  hourly_limit (total allowed per hour), 
+ *  reset_time (time stamp), 
+ *  reset_time_in_seconds (unix time in secs)
+ */
+function getRateLimitStatus(callback) {
+    wwwdude.createClient().get('http://api.twitter.com/1/account/rate_limit_status.json')
+    .addListener('success', function(data, resp) {
+        var limits = JSON.parse(data);
+        var remainingTime = limits.reset_time_in_seconds - (new Date().getTime() / 1000);
+        if(limits.remaining_hits)
+            limits.sec_between_calls = remainingTime / limits.remaining_hits;
+        else
+            limits.sec_between_calls = remainingTime / 1;
+        callback(limits);
     });
 }
 
