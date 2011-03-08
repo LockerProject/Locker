@@ -1,10 +1,10 @@
-var cwd = process.argv[2];
+/*var cwd = process.argv[2];
 var port = process.argv[3];
+//console.log
 if (!cwd || !port) {
     process.stderr.write("missing dir and port arguments\n");
     process.exit(1);
-}
-process.chdir(cwd);
+}*/
 
 var express = require('express'),
     connect = require('connect'),
@@ -27,7 +27,7 @@ var app = express.createServer(
         connect.session({secret : "locker"})
     );
     
-var me = lfs.loadMeData();
+var me;
 
 Array.prototype.addAll = function(anotherArray) {
     if(!anotherArray || !anotherArray.length)
@@ -71,7 +71,10 @@ app.get('/', function(req, res) {
             twitterClient = require('twitter-js')(me.consumerKey, me.consumerSecret, me.uri);   
         }
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>great! now you can <a href='home_timeline'> download your timeline</a></html>");
+        res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
+                                             "<li><a href='mentions'>sync your mentions</a></li>" + 
+                                             "<li><a href='friends'>sync your friends</a></li>" + 
+                                             "<li><a href='profile'>sync your profile</a></li>" +"</html>");
     }
 });
 
@@ -306,5 +309,14 @@ function clearCount() {
 }
 clearCount();
 
-app.listen(port);
-console.log('http://localhost:' + port + '/');
+var stdin = process.openStdin();
+stdin.setEncoding('utf8');
+stdin.on('data', function (chunk) {
+//  process.stderr.write('data: ' + chunk);
+  var processInfo = JSON.parse(chunk);
+  process.chdir(processInfo.workingDirectory);
+  me = lfs.loadMeData();
+  app.listen(processInfo.port);
+  var returnedInfo = {port: processInfo.port};
+  console.log(JSON.stringify(returnedInfo));
+});

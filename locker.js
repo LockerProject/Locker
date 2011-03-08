@@ -329,8 +329,8 @@ function spawnService(svc, callback) {
     };
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
-        var mod = console.outputModule
-        console.outputModule = svc.title
+        var mod = console.outputModule;
+        console.outputModule = svc.title;
         console.error(data);
         console.outputModule = mod
     });
@@ -341,6 +341,7 @@ function spawnService(svc, callback) {
             // We're already running so just log it for them
             console.log(data);
         } else {
+            console.log(data);
             // Process the startup json info
             try {
                 var returnedProcessInformation = JSON.parse(data);
