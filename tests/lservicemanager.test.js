@@ -51,3 +51,10 @@ ltest.Test("Service manager correctly performs a shutdown", function(test) {
     }, 1000);
 }).async();
 
+ltest.Test("Service manager check if service is installed", function(test) {
+    ltest.notImplemented();
+});
+
+ltest.Test("Service manager check if service is running", function(test) {
+    ltest.notImplemented();
+});

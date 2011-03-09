@@ -39,24 +39,30 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
         url:callbackURL
     };
     this.scheduledActions.push(trackingInfo);
-    var seconds = atTime.getTime() - (new Date().getTime());
-    if (seconds < 0) seconds = 0;
+    var milliseconds = atTime.getTime() - Date.now();
+    if (milliseconds < 0) milliseconds = 0;
     var self = this;
-    setTimeout(function() {
+    function runUrl() {
         var svc = serviceManager.metaInfo(serviceID);
-        serviceManager.spawn(serviceID, function() {
-            var cbUrl = url.parse(svc.uriLocal);
-            var httpOpts = {
-                host: cbUrl.hostname,
-                port: cbUrl.port,
-                path: callbackURL
-            };
-            http.get(httpOpts, function(res) {
-                self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
-                self.savePending();
-            });
+        var cbUrl = url.parse(svc.uriLocal);
+        var httpOpts = {
+            host: cbUrl.hostname,
+            port: cbUrl.port,
+            path: callbackURL
+        };
+        console.log("Calling " + httpOpts.host + ":" + httpOpts.port + callbackURL);
+        http.get(httpOpts, function(res) {
+            self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
+            self.savePending();
         });
-    }, seconds);
+    }
+    setTimeout(function() {
+        if (!serviceManager.isRunning(serviceID)) {
+            serviceManager.spawn(serviceID, runUrl);
+        } else {
+            runUrl();
+        }
+    }, milliseconds);
 }
 
 exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {

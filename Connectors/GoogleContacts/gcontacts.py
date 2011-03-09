@@ -35,15 +35,15 @@ def testCredentials(username, password):
 
 class GoogleDataContacts:
     def __init__(self):
-        me = lockerfs.loadMeData()
+        secrets = lockerfs.loadJsonFile("secrets.json");
         statusData = lockerfs.loadJsonFile("status.json")
         if "lastUpdate" in statusData:
             self.lastUpdate = datetime.fromtimestamp(int(statusData["lastUpdate"]))
         else:
             self.lastUpdate = datetime.fromtimestamp(0)
         self.gd_client = gdata.contacts.service.ContactsService()
-        self.gd_client.email = me["consumerKey"]
-        self.gd_client.password = me["consumerSecret"]
+        self.gd_client.email = secrets["consumerKey"]
+        self.gd_client.password = secrets["consumerSecret"]
         self.gd_client.source = 'locker-0.1'
         m = hashlib.sha1()
         m.update(self.gd_client.email)
@@ -60,8 +60,15 @@ class GoogleDataContacts:
         self.write_groups_feed_to_file()
         self.write_feed_to_file()
 
+    def fullSync(self):
+        """Performs an update that also checks for deletes."""
+        pass
+
     def write_groups_feed_to_file(self):
         feed = self.gd_client.GetGroupsFeed()
+        if len(feed.entry) <= 0:
+            return
+
         jsonFile = open('groups.json', 'w')
         for i, entry in enumerate(feed.entry):
             jsonObject = {}
@@ -140,6 +147,8 @@ class GoogleDataContacts:
         #query.updated_min = self.lastUpdate.isoformat()
         query.max_results = 3000
         feed = self.gd_client.GetContactsFeed(query.ToUri())
+        if len(feed.entry) <= 0:
+            return
         for i, entry in enumerate(feed.entry):
             self.write_entry_to_file(i, entry)
         self.jsonFile.close()

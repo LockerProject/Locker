@@ -44,11 +44,10 @@ app.get('/', function (req, res) {
         res.write('<table>');
         res.write('<tr><td>Title</td><td class="desc">Description</td><td>Type</td><td class="action">Action</td>' +
                   '<td>ID</td><td>Run</td><td>Services</td><td>Source Dir</td></tr>');
-        if(map.existing) for(var i=0;i<map.existing.length;i++) {
-            var id = map.existing[i];
-            var item = map[id];
+        if(map.installed) for(var id in map.installed) {
+            var item = map.installed[id];
             res.write('<tr>');
-            res.write('<td><a href="'+map[id].uri+'">' + item.title + '</a></td>');
+            res.write('<td><a href="'+item.uri+'">' + item.title + '</a></td>');
             res.write('<td class="desc">' + item.desc + '</td>');
             res.write('<td>' + item.is + '</td>');
             res.write('<td class="action">' + item.action + '</td>');
@@ -63,7 +62,7 @@ app.get('/', function (req, res) {
         
         res.write('<table>');
         res.write('<tr><td>Title</td><td class="desc">Description</td><td>Type</td><td class="action">Action</td>' + 
-                  '<td>ID</td><td>Run</td><td>Services</td><td>Source Dir</td></tr>');
+                  '<td>Run</td><td>Services</td><td>Source Dir</td></tr>');
         if(map.available) for(var i=0;i<map.available.length;i++) {
             // just using array offset as unique id for now as shortcut, should be our own id to the "template" to be installed
             var item = map.available[i];
@@ -72,7 +71,6 @@ app.get('/', function (req, res) {
             res.write('<td class="desc">' + item.desc + '</td>');
             res.write('<td>' + item.is + '</td>');
             res.write('<td class="action">' + item.action + '</td>');
-            res.write('<td>' + item.id + '</td>');
             res.write('<td>' + item.run + '</td>');
             res.write('<td>' + item.provides + '</td>');
             res.write('<td>' + item.srcdir + '</td>');

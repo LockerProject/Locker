@@ -63,6 +63,7 @@ exports.findInstalled = function () {
         if(!fs.statSync(dir).isDirectory()) continue;
         if(!fs.statSync(dir+'/me.json').isFile()) continue;
         var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+        console.log("Installing " + js.id);
         serviceMap.installed[js.id] = js;
     }
 }
@@ -115,6 +116,7 @@ exports.spawn = function(serviceId, callback) {
     var processInformation = {
         port: ++lockerPortNext, // This is just a suggested port
         workingDirectory: svc.me, // A path into the me directory
+        lockerUrl:lconfig.lockerBase
     };
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
@@ -162,6 +164,10 @@ exports.metaInfo = function(serviceId) {
     return serviceMap.installed[serviceId];
 }
 
+exports.isInstalled = function(serviceId) {
+    return serviceId in serviceMap.installed;
+}
+
 /**
 * Shutdown all running services
 *
@@ -185,6 +191,7 @@ exports.shutdown = function(cb) {
 * Return whether the service is running
 */
 exports.isRunning = function(serviceId) {
+    return exports.isInstalled(serviceId) && exports.metaInfo(serviceId).pid
 }
 
 function checkForShutdown() {

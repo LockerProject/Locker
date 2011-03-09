@@ -22,7 +22,8 @@ var lconsole = require("lconsole");
 var http = require('http');
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
-
+var lscheduler = require("lscheduler");
+var serviceManager = require("lservicemanager");
 
 var lockerHost = process.argv[2]||"localhost";
 if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
@@ -36,6 +37,7 @@ var map = new Object(); // all services and their metadata
 var ats = new Object(); // scheduled calls
 var listeners = new Object(); // listeners for events
 var shuttingDown_ = false;
+var scheduler = new lscheduler.Scheduler;
 
 // load up private key or create if none, just KISS for now
 var idKey,idKeyPub;
@@ -65,20 +67,15 @@ path.exists('Me/key',function(exists){
 });
 
 // look for available things
-mapDir('Connectors');
-mapDir('Collections');
-mapDir('Apps');
+serviceManager.scanDirectory("Connectors");
+serviceManager.scanDirectory("Collections");
+serviceManager.scanDirectory("Apps");
 
 // look for existing things
-var dirs = fs.readdirSync('Me');
-for (var i = 0; i < dirs.length; i++) {
-    var dir =  'Me/' + dirs[i];
-    if(!fs.statSync(dir).isDirectory()) continue;
-    if(!fs.statSync(dir+'/me.json').isFile()) continue;
-    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-    map[js.id] = js;
-    insertSafe(map,"existing",js.id);
-}
+serviceManager.findInstalled();
+
+var scheduler = new lscheduler.Scheduler;
+scheduler.loadAndStart();
 
 // start our internal service
 var express = require('express'),
@@ -111,7 +108,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    res.end(JSON.stringify(map));
+    res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
 // let any service schedule to be called, it can only have one per uri
@@ -120,17 +117,22 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
+    var seconds = req.param("at");
     var svcId = req.param('id'), cb = req.param('cb');
-    if(!map[svcId]) {
+    if (!seconds || !svcId || !cb) {
+        res.writeHead(400);
+        res.end("Invalid arguments");
+        return;
+    }
+    at = new Date;
+    at.setTime(seconds * 1000);
+    scheduler.at(at, svcId, cb);
+    if (!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
         res.end(id+" doesn't exist, but does anything really? ");
         return;
     }
-    ats[uri] = at;
-    var now = new Date().getTime();
-    var when = 
-    setTimeout(function(){attaboy(uri);},at-now);
-    console.log("scheduled "+ uri +" "+ (at - now)/1000 +" seconds from now");
+    console.log("scheduled "+ svcId + " " + cb + "  at " + at);
     res.end("true");
 });
 
@@ -142,15 +144,7 @@ function(req, res) {
     });
     console.log("installing "+req.rawBody);
     var js = JSON.parse(req.rawBody);
-    var hash = crypto.createHash('md5');
-    hash.update(Math.random());
-    js.id = hash.digest('hex');
-    js.me = lockerDir+'/Me/'+js.id;
-    js.uri = lockerBase+"Me/"+js.id+"/";
-    map[js.id] = js;
-    insertSafe(map,"existing",js.id);
-    fs.mkdirSync(js.me,0755);
-    fs.writeFileSync(js.me+'/me.json',JSON.stringify(js));
+    serviceManager.install(js);
     res.end(JSON.stringify(js));
 });
 
@@ -158,17 +152,17 @@ function(req, res) {
 locker.get('/Me/*', function(req,res){
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
-    if(!map[id]) { // make sure it exists before it can be opened
+    if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
         return;
     }
-    if(!map[id].pid) { // spawn if it hasn't been
-        spawnService(map[id],function(){
-            proxied(map[id],ppath,req,res);
+    if (!serviceManager.isRunning(id)) {
+        serviceManager.spawn(id,function(){
+            proxied(serviceManager.metaInfo(id),ppath,req,res);
         });
     } else {
-        proxied(map[id],ppath,req,res);
+        proxied(serviceManager.metaInfo(id),ppath,req,res);
     }
 });
 
@@ -176,7 +170,7 @@ locker.get('/Me/*', function(req,res){
 locker.get('/listen',
 function(req, res) {
     var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
-    if(!map[id] || !map[from]) {
+    if(!serviceManager.isInstalled(id) || !serviceManager.isInstalled(from)) {
         res.writeHead(404);
         res.end(id+" doesn't exist, but does anything really? ");
         return;
@@ -203,9 +197,9 @@ function(req, res) {
         var to = list[i].substr(0,32);
         var path = list[i].substr(32);
         console.log("publishing new event to "+id+" at "+path);
-        if(!map[id]) continue;
-        if(!map[id].pid) continue; // start up?? probably?
-        var uri = uri.parse(map[id].uriLocal);
+        if(!serviceManager.isInstalled(id)) continue;
+        if(!serviceManager.isRunning(id)) continue; // start up?? probably?
+        var uri = uri.parse(serviceManager.metaInfo(id).uriLocal);
         // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
         if(uri.host == "localhost" || uri.host == "127.0.0.1")
         {
@@ -293,123 +287,6 @@ function getCookie(headers) {
 locker.listen(lockerPort);
 console.log('locker running at ' + lockerBase);
 
-function checkForShutdown() {
-    if (!shuttingDown_) return;
-    for(var mapEntry in map) {
-        var svc = map[mapEntry];
-        if (svc.pid)  return;
-    }
-    process.exit(0);
-}
-
-//! Spawn a service instance
-/**
-* \param svc The service description to start
-* \param callback Completion callback
-*
-* The service will be spanwed as described in its configuration file.  The service can
-* read its environment description from stdin which will consist of one JSON object.  The
-* object will have a mandatory port and workingDirectory field, but the rest is optional.
-* \code
-*   {
-*     port:18044,
-*     workingDirectory:"/some/path/"
-*   }
-* \endcode
-* Once the service has completed its startup it will write out to stdout a single JSON object
-* with the used port and any other environment information.  The port must be the actual
-* port the service is listening on.
-* \code
-*   {
-*     port:18044
-*   }
-* \encode
-*/
-function spawnService(svc, callback) {
-    var run = svc.run.split(" "); // node foo.js
-
-    var processInformation = {
-        port: ++lockerPortNext, // This is just a suggested port
-        workingDirectory: svc.me, // A path into the me directory
-    };
-    app = spawn(run.shift(), run, {cwd: svc.srcdir});
-    app.stderr.on('data', function (data) {
-        var mod = console.outputModule;
-        console.outputModule = svc.title;
-        console.error(data);
-        console.outputModule = mod
-    });
-    app.stdout.on('data',function (data) {
-        var mod = console.outputModule
-        console.outputModule = svc.title
-        if (svc.pid) {
-            // We're already running so just log it for them
-            console.log(data);
-        } else {
-            console.log(data);
-            // Process the startup json info
-            try {
-                var returnedProcessInformation = JSON.parse(data);
-
-                console.log(svc.title + " is now running.");
-                svc.pid = app.pid;
-                svc.port = returnedProcessInformation.port;
-                svc.uriLocal = "http://localhost:"+svc.port+"/";
-                fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
-                if (callback) callback();
-            } catch(error) {
-                console.error("The process did not return valid startup information.");
-                app.kill();
-            }
-        }
-        console.outputModule = mod;
-        
-    });
-    app.on('exit', function (code) {
-        console.log('exited with code ' + code);
-        delete svc.pid;
-        fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
-        checkForShutdown();
-    });
-    app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
-    console.log('Spawning app ' + svc.title + " with id " + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
-}
-
-// scan to load local map of stuff
-function mapDir(dir) {
-    var files = fs.readdirSync(dir);
-    for (var i = 0; i < files.length; i++) {
-        var fullPath = dir + '/' + files[i];
-        var stats = fs.statSync(fullPath);
-        if(stats.isDirectory()) {
-            mapDir(fullPath);
-            continue;
-        }
-        if(/\.collection$/.test(fullPath)) mapCollection(fullPath);
-        if(/\.connector$/.test(fullPath)) mapConnector(fullPath);
-        if(/\.app$/.test(fullPath)) mapApp(fullPath);
-    }
-}
-
-function mapCollection(file) {
-    var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    js.srcdir = path.dirname(file);
-    js.is = "collection";
-    insertSafe(map,"available",js);
-}
-function mapConnector(file) {
-    var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    js.srcdir = path.dirname(file);
-    js.is = "connector";
-    insertSafe(map,"available",js);
-}
-function mapApp(file) {
-    var js = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    js.srcdir = path.dirname(file);
-    js.is = "app";
-    insertSafe(map,"available",js);
-}
-
 // make sure the value of the key is an array and insert the item
 function insertSafe(obj,key,item) {
     console.log("inserting into "+key+": "+JSON.stringify(item))
@@ -417,29 +294,12 @@ function insertSafe(obj,key,item) {
     obj[key].push(item);
 }
 
-// our hackney scheduler
-function attaboy(uri) {
-    var now = new Date().getTime();
-    // temporal displacement?
-    if(!ats[uri] || Math.abs(ats[uri] - now) > 10) return;
-    console.log("attaboy running "+uri);
-    wwwdude_client.get(uri);
-}
-
 process.on("SIGINT", function() {
+    process.stdout.write("\n");
     shuttingDown_ = true;
-    console.log("Starting shutdown...");
-    for(var mapEntry in map) {
-        var svc = map[mapEntry];
-        console.log("Checking " + svc.title + "...");
-        if (svc.pid) {
-            console.log("Ending " + svc.title);
-            try {
-                process.kill(svc.pid);
-            } catch(e) {
-            }
-        }
-    }
-    checkForShutdown();
+    serviceManager.shutdown(function() {
+        console.log("Shutdown complete.");
+        process.exit(0);
+    });
 });
 

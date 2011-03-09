@@ -23,7 +23,7 @@ ltest.Test("Scheduler fires direct callbacks", function(test) {
         test.emit("success", test);
     });
     setTimeout(function() {
-        if (!actionFired) test.emit("fail", test, "Did not fire");
+        if (!actionFired) test.emit("failure", test, "Did not fire");
     }, 1000);
 }).async().isolate();
 
@@ -40,7 +40,7 @@ ltest.Test("Scheduler fires uri callbacks", function(test) {
         if (statInfo.isFile()) {
             test.emit("success", test);
         } else {
-            test.emit("fail", test, "Did not fire");
+            test.emit("failure", test, "Did not fire");
         }
     }, 2000);
 }).async();
@@ -52,7 +52,7 @@ ltest.Test("Scheduler loads pending actions", function(test) {
         if (scheduler.scheduledActions.length > 0) {
             test.emit("success", test);
         } else {
-            test.emit("fail", test, "Did not load");
+            test.emit("failure", test, "Did not load");
         }
     }, 1000);
 }).async().isolate("scheduler");

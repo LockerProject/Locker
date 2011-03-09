@@ -59,7 +59,7 @@ if __name__ == "__main__":
     notifierThread = startNotifierThread(info)
     notifierThread.start()
     try:
-        webservice.runService(port)
+        webservice.runService(info)
         notifierThread.join()
     except KeyboardInterrupt, e:
         print "Ending..."
