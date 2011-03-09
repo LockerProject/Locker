@@ -120,7 +120,12 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    var uri = req.param('uri'), at = req.param('at');
+    var svcId = req.param('id'), cb = req.param('cb');
+    if(!map[svcId]) {
+        res.writeHead(404);
+        res.end(id+" doesn't exist, but does anything really? ");
+        return;
+    }
     ats[uri] = at;
     var now = new Date().getTime();
     var when = 
@@ -410,7 +415,7 @@ function insertSafe(obj,key,item) {
     if(!obj[key]) obj[key] = new Array();
     obj[key].push(item);
 }
-//
+
 // our hackney scheduler
 function attaboy(uri) {
     var now = new Date().getTime();
