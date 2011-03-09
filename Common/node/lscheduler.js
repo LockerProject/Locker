@@ -1,5 +1,8 @@
-lfs = require("lfs");
-fs = require("fs");
+var lfs = require("lfs");
+var fs = require("fs");
+var serviceManager = require("lservicemanager");
+var url = require("url");
+var http = require("http");
 
 SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
 SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
@@ -12,9 +15,10 @@ exports.Scheduler = function() {
 exports.Scheduler.prototype.loadAndStart = function() {
     var self = this;
     lfs.readObjectsFromFile(this.filename, function(objects) {
-        self.scheduledActions.concat(objects);
+        objects.forEach(function(action) {
+            self.scheduleURL(new Date(action.at), action.serviceId, action.url);
+        });
     });
-    // TODO: Start the pending events
 }
 
 exports.Scheduler.prototype.savePending = function() {
@@ -27,8 +31,48 @@ exports.Scheduler.prototype.savePending = function() {
     stream.end();
 }
 
-exports.Scheduler.prototype.scheduleURI = function(serviceID, callBackURI) {
+exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackURL) {
+    var trackingInfo = {
+        at:atTime,
+        type:SCHEDULE_ACTION_URI,
+        serviceId:serviceID,
+        url:callbackURL
+    };
+    this.scheduledActions.push(trackingInfo);
+    var seconds = atTime.getTime() - (new Date().getTime());
+    if (seconds < 0) seconds = 0;
+    var self = this;
+    setTimeout(function() {
+        var svc = serviceManager.metaInfo(serviceID);
+        serviceManager.spawn(serviceID, function() {
+            var cbUrl = url.parse(svc.uriLocal);
+            var httpOpts = {
+                host: cbUrl.hostname,
+                port: cbUrl.port,
+                path: callbackURL
+            };
+            http.get(httpOpts, function(res) {
+                self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
+                self.savePending();
+            });
+        });
+    }, seconds);
+}
 
+exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
+    var trackingInfo = {
+        at:atTime,
+        type:SCHEDULE_ACTION_DIRECT, 
+        cb:callback
+    };
+    var self = this;
+    this.scheduledActions.push(trackingInfo);
+    var now = new Date;
+    setTimeout(function() {
+        self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
+        self.savePending();
+        trackingInfo.cb();
+    }, trackingInfo.at.getTime() - now.getTime());
 }
 
 /**
@@ -46,20 +90,9 @@ exports.Scheduler.prototype.scheduleURI = function(serviceID, callBackURI) {
 */
 exports.Scheduler.prototype.at = function() {
     if (arguments.length == 2) {
-        var trackingInfo = {
-            at:arguments[0],
-            type:SCHEDULE_ACTION_DIRECT, 
-            cb:arguments[1]
-        };
-        var self = this;
-        this.scheduledActions.push(trackingInfo);
-        var now = new Date;
-        setTimeout(function() {
-            self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
-            trackingInfo.cb();
-        }, trackingInfo.at.getTime() - now.getTime());
+        this.scheduleInternal.apply(this, arguments);
     } else if (arguments.length == 3) {
-        this.scheduledActions.push({type:SCHEDULE_ACTION_URI, serviceId:arguments[1], uri:arguments[2]});
+        this.scheduleURL.apply(this, arguments);
     } else {
         console.error("Invalid scheduler call.");
     }

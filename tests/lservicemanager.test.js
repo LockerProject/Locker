@@ -28,20 +28,26 @@ ltest.Test("Service manager can return service information by id", function() {
 });
 
 ltest.Test("Service manager can spawn a service instance", function(test) {
+    var passed = false;
     sm.spawn("b2f70807a270e0de8a0a4709b1f260af", function() {
+        passed = true;
         test.emit("success", test);
     });
     setTimeout(function() {
-        test.emit("fail", test, "Did not spawn service");
+        if (passed) return;
+        test.emit("failure", test, "Did not spawn service");
     }, 1000);
 }).async();
 
 ltest.Test("Service manager correctly performs a shutdown", function(test) {
+    test.passed = false;
     sm.shutdown(function() {
+        test.passed = true;
         test.emit("success", test);
     });
     setTimeout(function() {
-        test.emit("fail", test, "Did not shutdown properly");
+        if (test.passed) return;
+        test.emit("failure", test, "Did not shutdown properly");
     }, 1000);
 }).async();
 

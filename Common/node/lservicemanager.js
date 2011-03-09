@@ -116,7 +116,6 @@ exports.spawn = function(serviceId, callback) {
         port: ++lockerPortNext, // This is just a suggested port
         workingDirectory: svc.me, // A path into the me directory
     };
-    //console.log("Spawning " + run + " in " + svc.srcdir);
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
         var mod = console.outputModule
@@ -135,7 +134,6 @@ exports.spawn = function(serviceId, callback) {
             try {
                 var returnedProcessInformation = JSON.parse(data);
 
-                //console.log(svc.title + " is now running.");
                 svc.pid = app.pid;
                 svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
@@ -150,13 +148,11 @@ exports.spawn = function(serviceId, callback) {
         
     });
     app.on('exit', function (code) {
-        //console.log('exited with code ' + code);
         delete svc.pid;
         fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
         checkForShutdown();
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
-    //console.log('Spawning app ' + svc.title + " with id " + svc.id + ', pid: ' + app.pid +' at ' + svc.uri);
 }
 
 /**
@@ -198,4 +194,5 @@ function checkForShutdown() {
         if (svc.pid)  return;
     }
     shuttingDown();
+    shuttingDown = null;
 }
