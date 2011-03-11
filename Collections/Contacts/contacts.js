@@ -44,6 +44,14 @@ app.get('/', function(req, res) {
     });
 });
 
+app.get("/allContacts", function(req, res) {
+    res.writeHead(200, {
+        "Content-Type":"text/javascript"
+    });
+    res.write(fs.readFileSync("contacts.json", "utf8"));
+    res.end();
+});
+
 function gatherContacts(){
     // This should really be timered, triggered, something else
     var me = lfs.loadMeData();

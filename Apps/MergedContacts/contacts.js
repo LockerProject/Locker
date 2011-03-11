@@ -2,6 +2,8 @@ var fs = require('fs'),
     path = require('path'),
     url = require('url'),
     sys = require('sys'),
+    http = require("http"),
+    lfs = require("../../Common/node/lfs.js"),
     express = require('express'),
     connect = require('connect');
     
@@ -11,39 +13,71 @@ var app = express.createServer(
                 connect.session({secret : "locker"})
             );
 
-function compareContacts(a, b) {
-    if(a.name == null & b.name == null)
-        return 0;
-    if(a.name == null)
-        return 1;
-    if(b.name == null)
-        return -1;
-    var an = a.name.toLowerCase();
-    var bn = b.name.toLowerCase();
-//    console.log(an);
-//    console.log(bn);
-//    return a.name.toLowerCase().compareTo(b.name.toLowerCase()); 
-    if(an < bn)
-        return -1;
-    if(an > bn)
-        return 1;
-    return 0;
-}
+var appDataDir = process.cwd();
 
-function readContacts() {
-    var contactsString = fs.readFileSync("cb/my/contacts.json", "utf-8");
-    var contacts = contactsString.split('\n');
-    var contactsArray = [];
-    for (var i in contacts) {
-        if (contacts[i])
-            contactsArray.push(JSON.parse(contacts[i]));
-        if(contacts[i].name == 'Matt Silverman')
-            console.log(contacts[i]);
+// Process the startup JSON object
+process.stdin.resume();
+process.stdin.on("data", function(data) {
+    lockerInfo = JSON.parse(data);
+    if (!lockerInfo || !lockerInfo["workingDirectory"]) {
+        process.stderr.write("Was not passed valid startup information."+data+"\n");
+        process.exit(1);
     }
-    contactsArray.sort(compareContacts);
-    return contactsArray;
+    process.chdir(lockerInfo.workingDirectory);
+    app.listen(lockerInfo.port, "localhost", function() {
+        process.stdout.write(data);
+    });
+});
+
+/**
+ * Reads in a file (at path), splits by line, and parses each line as JSON.
+ * return parsed objects in an arrayo
+ *
+ * XXX Duplicated code, needs to be made common
+ */
+function parseLinesOfJSON(data) {
+    var objects = [];
+    var cs = data.split("\n");
+    for (var i = 0; i < cs.length; i++) {
+        if (cs[i].substr(0, 1) != "{") continue;
+        try {
+            objects.push(JSON.parse(cs[i]));
+        } catch(E) {
+            console.log("Error parsing a line(" + E + "): " + cs[i]);
+        }
+    }
+    return objects;
 }
 
+function readContacts(contactsReadCB) {
+    var me = lfs.loadMeData();
+    var puri = url.parse(lockerInfo.lockerUrl);
+    var httpClient = http.createClient(puri.port);
+    console.log(me.use);
+    var collectionId = undefined;
+    for (var key in me.use) {
+        if (me.use.hasOwnProperty(key) && me.use[key] == "contact") {
+            collectionId = key;
+            break;
+        }
+    }
+    if (!collectionId) return;
+    var request = httpClient.request('GET', '/Me/'+collectionId+"/allContacts");
+    request.end();
+    request.on('response', function(response) {
+        response.setEncoding("utf8");
+        var data = '';
+        response.on('data', function(chunk) {
+            data += chunk;
+        });
+        response.on('end', function() {
+            console.log("Read data " + data);
+            contactsReadCB(parseLinesOfJSON(data));
+        });
+    });
+}
+
+/* Disabled for now
 function readGroups() {
     var groupsString = fs.readFileSync("cb/my/groups.json", "utf-8");
     var groups = groupsString.split('\n');
@@ -54,6 +88,7 @@ function readGroups() {
     }
     return groupsArray;
 }
+*/
 
 app.get('/', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -61,38 +96,38 @@ app.get('/', function (req, res) {
               '<link rel="stylesheet" href="contacts.css">\n</head>\n\n<body>');
 //        var groups = readGroups();
     console.log('reading contacts...');
-    var contacts = readContacts();
-    console.log('read contacts');
-    for (var i = 0; i < contacts.length; i++) {
-        var filename = null;
-        if(contacts[i].pic && contacts[i].pic.length > 0)
-            filename = path.join('cb/my/photos/', contacts[i].pic[0]);
-        res.write('<div class="contact">');
-        try {
-            var stats = fs.statSync(filename);
-            res.write('<img style="float:left; margin-right:5px" width="50px" height="50px"' + 
-                      ' src="' + filename + '">');
-        } catch(err) {
-            res.write('<div style="float:left; margin-right:5px; width:50px; height:50px;"></div>');
-        }
-        if (contacts[i]) {
-            var contact = contacts[i];
-            if (contact.name)
-                res.write('<div class="info"><b>' + contact.name + '</b><br>');
-            if (contact.phone) {
-                for(var j = 0; j < contact.phone.length; j++)
-                    res.write(contact.phone[j].value + (j+1 < contact.phone.length ?', ' : '<br>'));
+    readContacts(function(contacts) {
+        for (var i = 0; i < contacts.length; i++) {
+            var filename = null;
+            if(contacts[i].pic && contacts[i].pic.length > 0)
+                filename = path.join('cb/my/photos/', contacts[i].pic[0]);
+            res.write('<div class="contact">');
+            try {
+                var stats = fs.statSync(filename);
+                res.write('<img style="float:left; margin-right:5px" width="50px" height="50px"' + 
+                          ' src="' + filename + '">');
+            } catch(err) {
+                res.write('<div style="float:left; margin-right:5px; width:50px; height:50px;"></div>');
             }
-            if (contact.email) {
-                for(var j = 0; j < contact.email.length; j++) {
-                    res.write(contact.email[j].value + (j+1 < contact.email.length ?', ' : '<br>'));
+            if (contacts[i]) {
+                var contact = contacts[i];
+                if (contact.name)
+                    res.write('<div class="info"><b>' + contact.name + '</b><br>');
+                if (contact.phone) {
+                    for(var j = 0; j < contact.phone.length; j++)
+                        res.write(contact.phone[j].value + (j+1 < contact.phone.length ?', ' : '<br>'));
                 }
-                res.write('<br>');
+                if (contact.email) {
+                    for(var j = 0; j < contact.email.length; j++) {
+                        res.write(contact.email[j].value + (j+1 < contact.email.length ?', ' : '<br>'));
+                    }
+                    res.write('<br>');
+                }
+                res.write('</div></div>\n\n');
             }
-            res.write('</div></div>\n\n');
         }
-    }
-    res.end("</body></html>");
+        res.end("</body></html>");
+    });
 });
 app.get('/photos', function (req, res) {    
     var uri = url.parse(req.url).pathname;
@@ -121,7 +156,7 @@ app.get('/photos', function (req, res) {
 });
 app.get('/*', function (req, res) {
     var uri = url.parse(req.url).pathname;
-    var filename = path.join(process.cwd(), uri);  
+    var filename = path.join(appDataDir, uri);  
     path.exists(filename, function(exists) { 
         if(!exists) {  
             res.writeHead(404, {"Content-Type": "text/plain"});  
@@ -145,6 +180,3 @@ app.get('/*', function (req, res) {
     });
 });
 
-console.log('Server running at http://127.0.0.1:3003/');
-
-app.listen(3003);
