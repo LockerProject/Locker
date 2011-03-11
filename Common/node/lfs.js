@@ -1,5 +1,9 @@
 var fs = require('fs'),
-    sys = require('sys');
+    sys = require('sys'),
+    url = require('url'),
+    https = require('https'),
+    http = require('http'),
+    spawn = require('child_process').spawn;
 
 var wwwdude = require('wwwdude');
 
@@ -124,7 +128,7 @@ function writeURLContentsToFile(accountID, url, filename, encoding, retryCount) 
     writeURLContentsToFile(accountID, url, filename, encoding, retryCount);
 }*/
 
-function writeContentsOfURLToFile(url, filename, retryCount, encoding) {
+function writeContentsOfURLToFile(url, filename, retryCount, encoding, callback) {
     if(!url || !filename)
         return;
     if(!retryCount)
@@ -142,22 +146,55 @@ function writeContentsOfURLToFile(url, filename, retryCount, encoding) {
     function(err) {
         sys.puts('Network Error: ' + sys.inspect(err));
         if(retryCount > 0)
-            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding);
+            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding, callback);
     })
     .addListener('http-error',
     function(data, resp) {
         sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
         if(retryCount > 0)
-            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding);
+            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding, callback);
     })
     .addListener('success',
     function(data, resp) {
         fs.writeFileSync(filename, data, encoding);
+        if(callback) callback();
     });
 }
 
-exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding) {
-    writeContentsOfURLToFile(url, filename, retryCount, encoding);
+function getFile(requestURL, filename) {
+    var port = (url.parse(requestURL).protocol == 'http:') ? 80 : 443;
+    var host = url.parse(requestURL).hostname;
+    var client;
+    if(port == 80) 
+        client = http;
+    else 
+        client = https;
+    var request = https.get({ host: host, path: url.parse(requestURL).pathname }, function(res) {
+        var downloadfile = fs.createWriteStream(filename, {'flags': 'a'});
+        res.setEncoding('binary');
+        res.on('data', function (chunk) {
+            downloadfile.write(chunk, encoding='binary');
+        });
+        res.on('end', function() {
+            downloadfile.end();
+        });
+    })    .on('error', function(error) {
+            console.log('errorrs!!!');
+        });;
+}
+
+function curlFile(url, filename) {
+    spawn('curl', [url, '-o', filename, '-L']);
+}
+
+exports.curlFile = function(url, filename) {
+    curlFile(url, filename);
+}
+
+exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding, callback) {
+//    writeContentsOfURLToFile(url, filename, retryCount, encoding, callback);
+//    curlFile(url, filename);
+    getFile(url, filename);
 }
     
 
