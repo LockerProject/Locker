@@ -19,7 +19,7 @@ def setupAuth():
 def update():
     if app.consumerValidated:
         if datetime.datetime.now() < app.updateAt:
-            return "Update alrady scheduled"
+            return "Update already scheduled"
         app.updatesStarted = True
         gdc = gcontacts.GoogleDataContacts()
         gdc.updateAll()

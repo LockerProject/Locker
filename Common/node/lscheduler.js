@@ -50,7 +50,6 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
             port: cbUrl.port,
             path: callbackURL
         };
-        console.log("Calling " + httpOpts.host + ":" + httpOpts.port + callbackURL);
         http.get(httpOpts, function(res) {
             self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
             self.savePending();

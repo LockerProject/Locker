@@ -99,36 +99,36 @@ app.get('/post2install', function(req, res){
     var id = req.param('id');
     var js = map.available[id];
     // if this service being installed depends on another service, present a list before installing
-    if(js.takes)
+    if (js.takes)
     {
-        if(!req.param('use'))
+        if (!req.param('use'))
         {
             var opts = [];
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.write('Please select one of the following to be used:' +
                       '<form method="get"><input type="hidden" name="id" value="'+id+'"><select name="use" rows="5" multiple="1">');
-            for(var i=0;i<map.existing.length;i++)
-            {
-                var e = map[map.existing[i]];
+            for (key in map.installed) {
+                if (!map.installed.hasOwnProperty(key)) continue;
+                var e = map.installed[key];
+                console.log(e);
                 if(intersect(e.provides,js.takes)) res.write('<option value="'+e.id+'">'+e.title+'</option>');
-            }
+            };
             res.write('<input type="submit" value="install"></form>');
             res.write('<br>You may also need to install one of these:<ul>');
-            for(var i=0;i<map.available.length;i++)
-            {
-                if(intersect(map.available[i].provides,js.takes)) res.write('<li>'+map.available[i].title);
-            }
+            map.available.forEach(function(svc) {
+                if(intersect(svc.provides,js.takes)) res.write('<li>'+svc.title+"</li>");
+            });
             res.end();
             return;
-        }else{
+        } else {
             var use = req.param("use");
             js.use = {};
             // teh lame!!
-            if(typeof use == 'object')
+            if (typeof use == 'object')
             {
-                for(var i=0;i<use.length;i++) js.use[use[i]] = intersect(js.takes,map[use[i]].provides);
-            }else{
-                js.use[use] = intersect(js.takes,map[use].provides);
+                for(var i=0;i<use.length;i++) js.use[use[i]] = intersect(js.takes,map.installed[use[i]].provides);
+            } else {
+                js.use[use] = intersect(js.takes,map.installed[use].provides);
             }
         }
     }
@@ -140,12 +140,10 @@ app.get('/post2install', function(req, res){
     request.on('response',
     function(response) {
         var data = '';
-        response.on('data',
-        function(chunk) {
+        response.on('data', function(chunk) {
             data += chunk;
         });
-        response.on('end',
-        function() {
+        response.on('end', function() {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.write('Installed: '+data);
             res.end();

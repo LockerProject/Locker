@@ -6,57 +6,58 @@ var fs = require('fs'),
     crypto = require('crypto');
 
 
-var cwd = process.argv[2];
-var port = process.argv[3];
-if (!cwd || !port)
-{
-    process.stderr.write("missing dir and port arguments\n");
-    process.exit(1);
-}
+var lockerInfo;
 
-process.chdir(cwd);
 
 var express = require('express'),connect = require('connect');
 var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session({secret : "locker"}));
 
+// Process the startup JSON object
+process.stdin.resume();
+process.stdin.on("data", function(data) {
+    lockerInfo = JSON.parse(data);
+    if (!lockerInfo || !lockerInfo["workingDirectory"]) {
+        process.stderr.write("Was not passed valid startup information."+data+"\n");
+        process.exit(1);
+    }
+    process.chdir(lockerInfo.workingDirectory);
+    app.listen(lockerInfo.port, "localhost", function() {
+        process.stdout.write(data);
+        gatherContacts();
+    });
+});
+
 app.set('views', __dirname);
 
-app.get('/',
-function(req, res) {
+app.get('/', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
     lfs.readObjectsFromFile("contacts.json",function(contacts){
-        res.write("Found "+contacts.length+" contacts: <ul>");
+        res.write("<p>Found "+contacts.length+" contacts: <ul>");
         for(var i=0;i<contacts.length;i++)
         {
-            res.write('<li>'+JSON.stringify(contacts[i]));
+            res.write('<li>'+JSON.stringify(contacts[i])+"</li>");
         }
+        res.write("</ul></p>");
         res.end();
     });
 });
 
-app.listen(port);
-console.log("http://localhost:"+port+"/");
-
-// for right now we are really dumb, just merge on load always, trigger/update plumbing is on order :)
-var me = lfs.loadMeData();
-for(var conn in me.use)
-{
-    if(me.use[conn] == "contact/facebook")
+function gatherContacts(){
+    // This should really be timered, triggered, something else
+    var me = lfs.loadMeData();
+    for(var conn in me.use)
     {
-        addContactsFromConn(conn,'/getfriends','contact/facebook');
-    }
-    if(me.use[conn] == "contact/foursquare")
-    {
-        addContactsFromConn(conn,'/getfriends','contact/foursquare');
+        if(me.use[conn] == "contact/facebook") {
+            addContactsFromConn(conn,'/getfriends','contact/facebook');
+        } else if(me.use[conn] == "contact/foursquare") {
+            addContactsFromConn(conn,'/getfriends','contact/foursquare');
+        } else if (me.use[conn] == "contact/google") {
+            addContactsFromConn(conn, "/allContacts", "contact/google");
+        }
     }
 }
-
-
-
-
-
 
 
 var contacts = {};
@@ -162,9 +163,10 @@ function parseLinesOfJSON(data) {
 }
 
 function addContactsFromConn(conn, path, type) {
-    var puri = url.parse(me.uri);
+    var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
     var request = httpClient.request('GET', '/Me/'+conn+path);
+    console.log("Gathering contacts from " + conn);
     request.end();
     request.on('response',
     function(response) {
