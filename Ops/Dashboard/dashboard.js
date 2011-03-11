@@ -96,7 +96,7 @@ function intersect(a,b)
 }
 
 app.get('/post2install', function(req, res){
-    var id = req.param('id');
+    var id = parseInt(req.param('id'));
     var js = map.available[id];
     // if this service being installed depends on another service, present a list before installing
     if (js.takes)
