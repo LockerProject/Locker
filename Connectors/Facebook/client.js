@@ -1,14 +1,14 @@
 /**
  * web server/service to wrap interactions w/ FB open graph
  */
-
+/*
 var cwd = process.argv[2];
 var port = process.argv[3];
 if (!cwd || !port) {
     process.stderr.write("missing dir and port arguments\n");
     process.exit(1);
 }
-process.chdir(cwd);
+process.chdir(cwd);*/
 
 var fs = require('fs'),
     http = require('http'),
@@ -28,7 +28,8 @@ var wwwdude_client = wwwdude.createClient({
     encoding: 'binary'
 });
 
-var me = lfs.loadMeData();
+
+var me, auth, latests, userInfo;
 var facebookClient = require('facebook-js')();
 //var facebookClient = require('facebook-js')(context.appID, context.appSecret);
 
@@ -39,8 +40,8 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!me.appID) {
-        res.end("Enter your personal FaceBook app info that will be used to sync your data" + 
+    if(!auth.appID) {
+        res.end("<html>Enter your personal FaceBook app info that will be used to sync your data" + 
                 " (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>" + 
                 "http://www.facebook.com/developers/createapp.php</a> using the callback url of " +
                 "http://"+url.parse(me.uri).host+"/) " +
@@ -48,13 +49,13 @@ function(req, res) {
                     "App ID: <input name='appID'><br>" +
                     "App Secret: <input name='appSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form>");
+                "</form></html>");
         return;
     }
-    if(!me.token)
-        res.end("you need to <a href='gofb'>auth w/ fb</a> yet");
+    if(!auth.token)
+        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
     else
-        res.end("found a token, <a href='friends'>load friends</a>");
+        res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
 });
 
 app.get('/save',
@@ -66,16 +67,16 @@ function(req, res) {
         res.end("missing field(s)?");
         return;
     }
-    me.appID = req.param('appID');
-    me.appSecret = req.param('appSecret');
-    lfs.syncMeData(me);
-    res.end("thanks, now we need to <a href='gofb'>auth that app to your account</a>.");
+    auth.appID = req.param('appID');
+    auth.appSecret = req.param('appSecret');
+    lfs.writeObjectToFile('auth.json', auth);
+    res.end("<html>k thanks, now we need to <a href='./gofb'>auth that app to your account</a>.</html>");
 });
 
 app.get('/gofb',
 function(req, res) {
     res.redirect(facebookClient.getAuthorizeUrl({
-        client_id: me.appID,
+        client_id: auth.appID,
         redirect_uri: me.uri+"auth",
         scope: 'offline_access,read_stream'
     }));
@@ -89,7 +90,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     var OAuth = require("oauth").OAuth2;
-    var oa = new OAuth(me.appID, me.appSecret, 'https://graph.facebook.com');
+    var oa = new OAuth(auth.appID, auth.appSecret, 'https://graph.facebook.com');
 
     oa.getOAuthAccessToken(
     req.param('code'),
@@ -99,9 +100,9 @@ function(req, res) {
             sys.debug(error);
             res.end("uhoh " + error);
         } else {
-            res.end("<html>too legit to quit: " + access_token + " so now <a href='friends'>load friends</a></html>");
-            me.token = access_token;
-            lfs.syncMeData(me);
+            res.end("<html>too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a></html>");
+            auth.token = access_token;
+            lfs.writeObjectToFile('auth.json', auth);
         }
     });
 });
@@ -119,6 +120,7 @@ function downloadNextPhoto() {
     var userID = photoQueue[photoIndex].userID;
     var friendID = photoQueue[photoIndex].friendID;
     photoIndex++;
+    lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg');
     try {
         wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
         .addListener('error',
@@ -185,16 +187,16 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if (!me.token)
-        res.end("<html>you need to <a href='gofb'>auth w/ fb</a> yet</html>");
+    if (!auth.token)
+        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
     else {
-        facebookClient.apiCall('GET', '/me', {access_token: me.token},
+        facebookClient.apiCall('GET', '/me', {access_token: auth.token},
         function(error, result) {
             var userID = result.id;
             facebookClient.apiCall(
             'GET',
             '/me/friends',
-            {access_token: me.token},
+            {access_token: auth.token},
             function(error, result) {
                 console.log(error);
                 var stream = fs.createWriteStream('contacts.json');
@@ -218,7 +220,7 @@ function(req, res) {
             facebookClient.apiCall(
             'GET',
             '/me/checkins',
-            {access_token: me.token},
+            {access_token: auth.token},
             function(error, result) {
                 console.log(error);
                 var stream = fs.createWriteStream('places.json');
@@ -260,10 +262,10 @@ function(req, res) {
 });
 
 function pullNewsFeed(callback) {
-    if(!me.feed)
-        me.feed = {};
+    if(!latests.feed)
+        latests.feed = {};
     var items = [];
-    pullNewsFeedPage(null, me.feed.latest, items, function() {
+    pullNewsFeedPage(null, latests.feed.latest, items, function() {
         items.reverse();
         lfs.appendObjectsToFile('feed.json', items);
         callback();
@@ -271,7 +273,7 @@ function pullNewsFeed(callback) {
 }
 
 function pullNewsFeedPage(until, since, items, callback) {
-    var params = {access_token: me.token, limit: 1000};
+    var params = {access_token: auth.token, limit: 1000};
     if(until)
         params.until = until;
     if(since)
@@ -284,21 +286,42 @@ function pullNewsFeedPage(until, since, items, callback) {
             }
             if(result.data.length > 0) {
                 var t = result.data[0].updated_time;
-                if(!me.feed.latest || t > me.feed.latest)
-                    me.feed.latest = t;
-                console.log(JSON.stringify(me));
+                if(!latests.feed.latest || t > latests.feed.latest)
+                    latests.feed.latest = t;
+                console.log(JSON.stringify(latests));
                 for(var i = 0; i < result.data.length; i++)
                     items.push(result.data[i]);
                 var next = result.paging.next;
                 var until = unescape(next.substring(next.lastIndexOf("&until=") + 7));
                 pullNewsFeedPage(until, since, items, callback);
             } else if(callback) {
-                lfs.syncMeData(me);
+                lfs.writeObjectToFile('latests.json', latests);
                 callback();
             }
         });
 }
 
 
-app.listen(port);
-console.log("http://localhost:" + port + '/');
+//app.listen(port);
+//console.log("http://localhost:" + port + '/');
+
+
+var stdin = process.openStdin();
+stdin.setEncoding('utf8');
+stdin.on('data', function (chunk) {
+    var processInfo = JSON.parse(chunk);
+    process.chdir(processInfo.workingDirectory);
+    lfs.readObjectFromFile('auth.json', function(newAuth) {
+        auth = newAuth;
+        lfs.readObjectFromFile('latests.json', function(newLatests) {
+            latests = newLatests;
+            lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
+                userInfo = newUserInfo;
+                me = lfs.loadMeData();
+                app.listen(processInfo.port);
+                var returnedInfo = {port: processInfo.port};
+                console.log(JSON.stringify(returnedInfo));
+            });
+        });
+    });
+});
