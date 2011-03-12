@@ -52,6 +52,12 @@ app.get("/allContacts", function(req, res) {
     res.end();
 });
 
+app.get("/update", function(req, res) {
+    gatherContacts();
+    res.writeHead(200);
+    res.end("Updating");
+});
+
 function gatherContacts(){
     // This should really be timered, triggered, something else
     var me = lfs.loadMeData();
