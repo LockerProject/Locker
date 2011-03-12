@@ -1,16 +1,6 @@
 /**
  * Module dependencies.
  */
-
- 
-var cwd = process.argv[2];
-var port = process.argv[3];
-if (!cwd || !port) {
-    process.stderr.write("missing dir and port arguments\n");
-    process.exit(1);
-}
-process.chdir(cwd);
-
 var fs = require('fs');
 var express = require('express'),
     connect = require('connect'),
@@ -22,15 +12,19 @@ var express = require('express'),
         connect.session({secret : "locker"})
     ),
     http = require('http'),
+    https = require("https"),
     wwwdude = require('wwwdude'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
+
+var lockerInfo;
+var me;
+var accessData;
 
 var wwwdude_client = wwwdude.createClient({
     encoding: 'binary'
 });
 
-var me = lfs.loadMeData();
 
 Array.prototype.addAll = function(anotherArray) {
     if(!anotherArray || !anotherArray.length)
@@ -46,7 +40,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!me.access_token)
+    if(!accessData.accessToken)
         res.end("<html>you need to <a href='go4sq'>auth w/ foursquare</a> yet</html>");
     else
         res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");
@@ -55,7 +49,7 @@ function(req, res) {
 var oaTokenSecret = "";
 app.get('/go4sq',
 function(req, res) {
-    if(!(me.appKey && me.appSecret)) {
+    if(!(accessData.appKey && accessData.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='https://foursquare.com/oauth/register'>" + 
@@ -69,29 +63,29 @@ function(req, res) {
     } else {
         res.writeHead(302);
         sys.debug('redirecting to ' + me.uri + 'auth');
-        res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + me.appKey + '&response_type=code&redirect_uri=' + me.uri + 'auth');
+        res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + accessData.appKey + '&response_type=code&redirect_uri=' + me.uri + 'auth');
         res.end();
     }
 });
 
 function get(host, url, callback) {
     var httpClient = http.createClient(443, host, true);
-    var request = httpClient.request('GET', url, {
-        host: host
-    });
-    request.end();
-    request.on('response',
-    function(response) {
+    var httpOpts = {
+        "host" : host,
+        port : 443,
+        path: url,
+        method: "GET"
+    };
+    var request = https.request(httpOpts, function(res) {
         var data = '';
-        response.on('data',
-        function(chunk) {
+        res.on('data', function(chunk) {
             data += chunk;
         });
-        response.on('end',
-        function() {
+        res.on('end', function() {
             callback(data);
         });
     });
+    request.end();
 }
 
 app.get('/auth',
@@ -100,15 +94,16 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     var url = '/oauth2/access_token' +
-    '?client_id=' + me.appKey +
-    '&client_secret=' + me.appSecret +
+    '?client_id=' + accessData.appKey +
+    '&client_secret=' + accessData.appSecret +
     '&grant_type=authorization_code' +
     '&redirect_uri=' + me.uri + 'auth' +
     '&code=' + req.param('code');
     get('foursquare.com', url, function(data) {
+        console.log("Got " + data);
         var responseObject = JSON.parse(data);
-        me.access_token = responseObject.access_token;
-        lfs.syncMeData(me);
+        accessData.accessToken = responseObject.access_token;
+        lfs.writeObjectsToFile("access.json", [accessData]);
         res.end("<html>too legit to quit: " + responseObject.access_token + " so now <a href='/friends'>load friends</a>or <a href='checkins'>checkins</a></html>");
     });
 });
@@ -123,10 +118,9 @@ function(req, res) {
         res.end("missing field(s)?");
         return;
     }
-    me.appKey = req.param('appKey');
-    me.appSecret = req.param('appSecret');
-
-    lfs.syncMeData(me);
+    accessData.appKey = req.param('appKey');
+    accessData.appSecret = req.param('appSecret');
+    lfs.writeObjectsToFile("access.json", [accessData]);
     res.end("<html>thanks, now we need to <a href='./go4sq'>auth that app to your account</a>.</html>");
 });
 
@@ -135,20 +129,20 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    getMe(me.access_token, function(data) {
+    getMe(accessData.accessToken, function(data) {
         var self = JSON.parse(data).response.user;
         me.user_info = self;
         lfs.syncMeData(me);
         res.write('for user ' + self.firstName + ' with id ' + self.id + ': <br>');
         var userID = self.id;
         fs.mkdir('photos', 0755);
-        get('api.foursquare.com', '/v2/users/self/friends.json?oauth_token=' + me.access_token, function(data) {
+        get('api.foursquare.com', '/v2/users/self/friends.json?oauth_token=' + accessData.accessToken, function(data) {
             var friends = JSON.parse(data).response.friends.items;
             var queue = [];
             var users = {
                 'id': userID,
                 'queue': queue,
-                'token': me.access_token
+                'token': accessData.accessToken
             };
             for (var i = 0; i < friends.length; i++) {
                 res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
@@ -178,11 +172,11 @@ function(req, res) {
 
 app.get('/checkins', 
 function(req, res) {
-    getMe(me.access_token, function(data) {
+    getMe(accessData.accessToken, function(data) {
         var self = JSON.parse(data).response.user;
         me.user_info = self;
         lfs.syncMeData(me);
-        getCheckins(me.user_info.id, me.access_token, 0, function(newCheckins) {
+        getCheckins(me.user_info.id, accessData.accessToken, 0, function(newCheckins) {
             lfs.appendObjectsToFile('places.json', newCheckins);
             locker.at('checkins', 600);
             res.writeHead(200, {
@@ -257,5 +251,22 @@ function downloadNextUser(users) {
     });
 }
 
-app.listen(port);
-console.log("http://localhost:" + port + "/");
+// Process the startup JSON object
+process.stdin.resume();
+process.stdin.on("data", function(data) {
+    lockerInfo = JSON.parse(data);
+    if (!lockerInfo || !lockerInfo["workingDirectory"]) {
+        process.stderr.write("Was not passed valid startup information."+data+"\n");
+        process.exit(1);
+    }
+    process.chdir(lockerInfo.workingDirectory);
+    me = lfs.loadMeData();
+    try {
+        accessData = JSON.parse(fs.readFileSync("access.json", "utf8"));
+    } catch (E) {
+        accessData = {};
+    }
+    app.listen(lockerInfo.port, "localhost", function() {
+        process.stdout.write(data);
+    });
+});
