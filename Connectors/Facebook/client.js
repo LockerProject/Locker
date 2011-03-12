@@ -166,7 +166,7 @@ function doFQLQuery(access_token, query, callback) {
     });
 }
 
-app.get('/getfriends',
+app.get('/allContacts',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/plain'
