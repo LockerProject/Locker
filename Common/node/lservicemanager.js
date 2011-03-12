@@ -113,8 +113,9 @@ exports.spawn = function(serviceId, callback) {
     if (svc.pid) return;
     var run = svc.run.split(" "); // node foo.js
 
+    svc.port = ++lockerPortNext;
     var processInformation = {
-        port: ++lockerPortNext, // This is just a suggested port
+        port: svc.port, // This is just a suggested port
         workingDirectory: svc.me, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
@@ -137,7 +138,7 @@ exports.spawn = function(serviceId, callback) {
                 var returnedProcessInformation = JSON.parse(data);
 
                 svc.pid = app.pid;
-                svc.port = returnedProcessInformation.port;
+                if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port; // if they tell us a port, use that
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
                 fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
                 if (callback) callback();

@@ -1,26 +1,45 @@
 Developer Quickstart
 ====================
 
-* Every runnable thing within the locker is it's own web service
-* The moving parts are: sources, sinks, collections, and apps
-* The locker ops code does the work to create contexts for these to work in and schedule/run them as needed
-* A collection knows what sources it can "run" and what contexts to run them in in order to get data
-* Sources are probably the best way to add value fast to the platform, the more places we enable getting data from the better
-* When something is started, it is given a filename that has it's (json) config options for what it is supposed to be doing
-* Each thing also has a json file that describes itself to the system
-* To start, only node, python, and ruby are supported, and please don't duplicate one in another language unless the first is fully untenable
+* Every runnable thing within the locker is it's own web service (written in node, python, and ruby to start)
+* There is a core web service that coordinates stuff and handles startup, scheduling, etc
+* The types of services are generally: connectors, collections, and apps
+* Any service once it's "installed" is assigned it's own local directory for storing anything
+* Connectors are probably the best way to add value fast to the platform, the more places we enable getting data from the better
 
+Connectors
+==========
 
-NOTES
-=====
+* Fundamental goal: mirror/sync data from somewhere else
+* Store that data in JSON in as identical-to-the-source structure as possible
+* Serve it back up via as simple of a RESTful API as possible
+* Be OK with being turned off anytime (graceful start)
+* Identify your data to the locker via simple service types (below)
+* Generate event notifications when data changes
 
-Very raw braindump notes:
+Collections
+===========
 
-- Foo.app, Bar.connector, etc, any dir can have any number of each, scanned upon discovery/update
+* General common data-types (places, contacts, pages, music, photos, etc), there should be far fewer of these than connectors
+* Need to know how to speak service-types specific to the diverse set of connectors, understand the raw data formats
+* Embody the intelligence to merge and dedup from many sources, and handle local meta-data around each datum.
+* Register for event notifications to stay up to date efficiently
+
+Apps
+====
+
+* Can talk to Connectors or Collections, whatever data they need
+* For now, primary interface is just via web browser
+* Should contain all resources needed locally
+* Do something awesome for the person with their data :)
+
+Service Types
+=============
 
 A "service types" system, mimic mime types for collections/connectors, connectors list what they require and produce, apps can list what types they need to work
 
-Collections - a connector advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)
+A connector advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)
+
 	place/facebook
 	place/foursquare
 	photo/flickr

@@ -1,30 +1,52 @@
 <h1 id="developer_quickstart">Developer Quickstart</h1>
 
 <ul>
-<li>Every runnable thing within the locker is it&#8217;s own web service</li>
-<li>The moving parts are: sources, sinks, collections, and apps</li>
-<li>The locker ops code does the work to create contexts for these to work in and schedule/run them as needed</li>
-<li>A collection knows what sources it can &#8220;run&#8221; and what contexts to run them in in order to get data</li>
-<li>Sources are probably the best way to add value fast to the platform, the more places we enable getting data from the better</li>
-<li>When something is started, it is given a filename that has it&#8217;s (json) config options for what it is supposed to be doing</li>
-<li>Each thing also has a json file that describes itself to the system</li>
-<li>To start, only node, python, and ruby are supported, and please don&#8217;t duplicate one in another language unless the first is fully untenable</li>
+<li>Every runnable thing within the locker is it&#8217;s own web service (written in node, python, and ruby to start)</li>
+<li>There is a core web service that coordinates stuff and handles startup, scheduling, etc</li>
+<li>The types of services are generally: connectors, collections, and apps</li>
+<li>Any service once it&#8217;s &#8220;installed&#8221; is assigned it&#8217;s own local directory for storing anything</li>
+<li>Connectors are probably the best way to add value fast to the platform, the more places we enable getting data from the better</li>
 </ul>
 
-<h1 id="notes">NOTES</h1>
-
-<p>Very raw braindump notes:</p>
+<h1 id="connectors">Connectors</h1>
 
 <ul>
-<li>Foo.app, Bar.connector, etc, any dir can have any number of each, scanned upon discovery/update</li>
+<li>Fundamental goal: mirror/sync data from somewhere else</li>
+<li>Store that data in JSON in as identical-to-the-source structure as possible</li>
+<li>Serve it back up via as simple of a RESTful API as possible</li>
+<li>Be OK with being turned off anytime (graceful start)</li>
+<li>Identify your data to the locker via simple service types (below)</li>
+<li>Generate event notifications when data changes</li>
 </ul>
+
+<h1 id="collections">Collections</h1>
+
+<ul>
+<li>General common data-types (places, contacts, pages, music, photos, etc), there should be far fewer of these than connectors</li>
+<li>Need to know how to speak service-types specific to the diverse set of connectors, understand the raw data formats</li>
+<li>Embody the intelligence to merge and dedup from many sources, and handle local meta-data around each datum.</li>
+<li>Register for event notifications to stay up to date efficiently</li>
+</ul>
+
+<h1 id="apps">Apps</h1>
+
+<ul>
+<li>Can talk to Connectors or Collections, whatever data they need</li>
+<li>For now, primary interface is just via web browser</li>
+<li>Should contain all resources needed locally</li>
+<li>Do something awesome for the person with their data :)</li>
+</ul>
+
+<h1 id="service_types">Service Types</h1>
 
 <p>A &#8220;service types&#8221; system, mimic mime types for collections/connectors, connectors list what they require and produce, apps can list what types they need to work</p>
 
-<p>Collections - a connector advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)
-    place/facebook
-    place/foursquare
-    photo/flickr
-    contact/addressbook
-    page/safari-bookmark
-    page/safari-history</p>
+<p>A connector advertises which type it produces (page/safari-bookmark), and that type has a spec of common attributes expected within the data for the first part (page), the second part should describe the native format from the source of the data (safari-bookmark)</p>
+
+<pre><code>place/facebook
+place/foursquare
+photo/flickr
+contact/addressbook
+page/safari-bookmark
+page/safari-history
+</code></pre>

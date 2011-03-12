@@ -1,16 +1,3 @@
-/**
- * Module dependencies.
- */
-
-var cwd = process.argv[2];
-var port = process.argv[3];
-if (!cwd || !port) // Z stat dir
-{
-    process.stderr.write("missing dir and port arguments\n");
-    process.exit(1);
-}
-
-process.chdir(cwd);
 
 var fs = require('fs'),http = require('http');
 var express = require('express'),connect = require('connect');
@@ -26,5 +13,12 @@ function(req, res) {
     res.end("yeah, hello world, and stuff");
 });
 
-app.listen(port);
-console.log("http://localhost:"+port+"/");
+var stdin = process.openStdin();
+stdin.setEncoding('utf8');
+stdin.on('data', function (chunk) {
+    var processInfo = JSON.parse(chunk);
+    process.chdir(processInfo.workingDirectory);
+    app.listen(processInfo.port);
+    var returnedInfo = {};
+    console.log(JSON.stringify(returnedInfo));
+});

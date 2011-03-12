@@ -244,9 +244,8 @@ function proxied(svc, ppath, req, res) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
-        res.writeHead(200, {
-                "Access-Control-Allow-Origin": "*"
-            });
+        resp.headers["Access-Control-Allow-Origin"]="*"; // I forget why this is here, humm
+        res.writeHead(200, resp.headers);
         res.end(data);
     })
     .addListener('error', function(err) {
