@@ -29,11 +29,13 @@ var app = express.createServer(
 
 var me, auth, latests, userInfo;
 
-Array.prototype.addAll = function(anotherArray) {
+function addAll(target, anotherArray) {
+    if(!target) 
+        target = [];
     if(!anotherArray || !anotherArray.length)
         return;
     for(var i = 0; i < anotherArray.length; i++)
-        this.push(anotherArray[i]);
+        target.push(anotherArray[i]);
 }
 
 app.get('/', function(req, res) {
@@ -224,6 +226,39 @@ function(req, res) {
     syncUsersInfo('friends', req, res);
 });
 
+app.get('/allContacts', function(req, res) {
+    lfs.readObjectsFromFile('friends.json', function(frnds) {
+        var friends = frnds;
+        var allContacts = {};
+        for(var i in friends) {
+            var friend = friends[i];
+            if(!friend)
+                continue;
+            friend.isFriend = true;
+            allContacts[friend.screen_name] = friend;
+        }
+        lfs.readObjectsFromFile('followers.json', function(fllwrs) {
+            var followers = fllwrs;
+            for(var j in followers) {
+                var follower = followers[j];
+                if(!follower)
+                    continue;
+                if(allContacts[follower.screen_name]) {
+                    allContacts[follower.screen_name].isFollower = true;
+                } else {
+                    follower.isFollower = true;
+                    allContacts[follower.screen_name] = follower;
+                }
+            }
+            res.writeHead(200, {'content-type' : 'text/javascript'});
+            var arr = [];
+            for(var k in allContacts)
+                arr.push(allContacts[k]);
+            res.write(JSON.stringify(arr));
+            res.end();
+        })
+    });
+});
 
 app.get('/followers',
 function(req, res) {
@@ -284,10 +319,10 @@ function getIDs(friendsOrFolowers, screenName, callback) {
     if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
         friendsOrFolowers = 'friends';
     friendsOrFolowers = friendsOrFolowers.toLowerCase();
-    console.log('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1');
+//    console.log('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1');
     wwwdude.createClient().get('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1')
     .addListener('success', function(data, resp) {
-        console.log('getIDs, data: ' + data);
+//        console.log('getIDs, data: ' + data);
        callback(JSON.parse(data).ids);
     })   
     .addListener('error', function (err) {
@@ -368,7 +403,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
-    console.log('user_id:' + id_str);
+//    console.log('user_id:' + id_str);
     twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
                                                                   oauth_token: auth.token.oauth_token}, 
                                                          user_id: id_str,
@@ -378,7 +413,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
                 sys.debug('error! ' + JSON.stringify(error));
                 return;
             }
-            usersInfo.addAll(result.reverse());
+            addAll(usersInfo, result.reverse());
             if(userIDs.length > 0) 
                 _getUsersExtendedInfo(userIDs, usersInfo, callback);
             else if(callback) {
