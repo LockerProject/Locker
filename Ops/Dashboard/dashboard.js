@@ -105,7 +105,7 @@ app.get('/post2install', function(req, res){
         {
             var opts = [];
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('Please select one of the following to be used:' +
+            res.write('<html>Please select one of the following to be used:' +
                       '<form method="get"><input type="hidden" name="id" value="'+id+'"><select name="use" rows="5" multiple="1">');
             for (key in map.installed) {
                 if (!map.installed.hasOwnProperty(key)) continue;
@@ -118,7 +118,7 @@ app.get('/post2install', function(req, res){
             map.available.forEach(function(svc) {
                 if(intersect(svc.provides,js.takes)) res.write('<li>'+svc.title+"</li>");
             });
-            res.end();
+            res.end("</html>");
             return;
         } else {
             var use = req.param("use");

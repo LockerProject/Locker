@@ -1,5 +1,6 @@
 // merge contacts from journals
 var fs = require('fs'),
+    sys = require('sys'),
     http = require('http'),
     url = require('url'),
     lfs = require('../../Common/node/lfs.js'),
@@ -22,6 +23,7 @@ process.stdin.on("data", function(data) {
     }
     process.chdir(lockerInfo.workingDirectory);
     app.listen(lockerInfo.port, "localhost", function() {
+        sys.debug(data);
         process.stdout.write(data);
         gatherContacts();
     });
@@ -34,12 +36,12 @@ app.get('/', function(req, res) {
         'Content-Type': 'text/html'
     });
     lfs.readObjectsFromFile("contacts.json",function(contacts){
-        res.write("<p>Found "+contacts.length+" contacts: <ul>");
+        res.write("<html><p>Found "+contacts.length+" contacts: <ul>");
         for(var i=0;i<contacts.length;i++)
         {
             res.write('<li>'+JSON.stringify(contacts[i])+"</li>");
         }
-        res.write("</ul></p>");
+        res.write("</ul></p></html>");
         res.end();
     });
 });
@@ -58,7 +60,7 @@ function gatherContacts(){
     for(var conn in me.use)
     {
         if(me.use[conn] == "contact/facebook") {
-            addContactsFromConn(conn,'/getfriends','contact/facebook');
+            addContactsFromConn(conn,'/allContacts','contact/facebook');
         } else if(me.use[conn] == "contact/foursquare") {
             addContactsFromConn(conn,'/getfriends','contact/foursquare');
         } else if (me.use[conn] == "contact/google") {
@@ -174,7 +176,6 @@ function addContactsFromConn(conn, path, type) {
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
     var request = httpClient.request('GET', '/Me/'+conn+path);
-    console.log("Gathering contacts from " + conn);
     request.end();
     request.on('response',
     function(response) {
