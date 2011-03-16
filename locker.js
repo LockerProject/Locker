@@ -166,6 +166,24 @@ locker.get('/Me/*', function(req,res){
     }
 });
 
+// all of the requests to something installed (proxy them, moar future-safe)
+locker.post('/Me/*', function(req,res){
+    var id = req.url.substring(4,36);
+    var ppath = req.url.substring(37);
+    if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
+        res.writeHead(404);
+        res.end("so sad, couldn't find "+id);
+        return;
+    }
+    if (!serviceManager.isRunning(id)) {
+        serviceManager.spawn(id,function(){
+            proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
+        });
+    } else {
+        proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
+    }
+});
+
 // anybody can listen into any service's events
 locker.get('/listen',
 function(req, res) {
@@ -220,6 +238,12 @@ function(req, res) {
     proxied(dashboard,req.url.substring(1),req,res);
 });
 
+// fallback everything to the dashboard
+locker.post('/*',
+function(req, res) {
+    proxiedPost(dashboard,req.url.substring(1),req,res);
+});
+
 locker.get('/',
 function(req, res) {
     proxied(dashboard,"",req,res);
@@ -244,8 +268,52 @@ function proxied(svc, ppath, req, res) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
-        resp.headers["Access-Control-Allow-Origin"]="*"; // I forget why this is here, humm
         res.writeHead(200, resp.headers);
+        console.log('writing: ' + data);
+        res.end(data);
+    })
+    .addListener('error', function(err) {
+        res.writeHead(500);
+        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
+        res.end("eRr0r :( "+err);
+    })
+    .addListener('http-error', function(data, resp) {
+        res.writeHead(resp.statusCode);
+        res.end(data);
+    })
+    .addListener('redirect', function(data, resp) {
+        for (key in resp.headers)
+            res.header(key, resp.headers[key]);
+        
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null)
+            req.session.cookies[host] = {'connect.sid' : newCookie};
+        res.redirect(resp.headers['location']);
+    });
+}
+
+function proxiedPost(svc, ppath, req, res) {
+    console.log("proxying post " + req.url + " to "+svc.uriLocal + ppath);
+//    console.log(JSON.stringify(req.body));
+//    return;
+    var host = url.parse(svc.uriLocal).host;
+    var cookies;
+    if(!req.session.cookies) {
+        req.session.cookies = {};
+    } else {
+        cookies = req.session.cookies[host];
+    }
+    var headers = req.headers;
+    if(cookies && cookies['connect.sid'])
+        headers.cookie = 'connect.sid=' + cookies['connect.sid'];
+    var client = wwwdude.createClient({headers:headers});
+    client.post(svc.uriLocal+ppath, req.rawBody, req.headers)
+    .addListener('success', function(data, resp) {
+        var newCookie = getCookie(resp.headers);
+        if(newCookie != null) 
+            req.session.cookies[host] = {'connect.sid' : newCookie};
+        res.writeHead(200, resp.headers);
+        console.log('writing: ' + data);
         res.end(data);
     })
     .addListener('error', function(err) {
