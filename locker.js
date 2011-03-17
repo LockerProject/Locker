@@ -15,7 +15,7 @@ require.paths.push(__dirname + "/Common/node");
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');
-var crypto = require('crypto');
+//var crypto = require('crypto');
 var url = require("url");
 var sys = require('sys');
 var lconsole = require("lconsole");
@@ -263,13 +263,15 @@ function proxied(svc, ppath, req, res) {
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     var client = wwwdude.createClient({headers:headers});
+    sys.debug('headers: ' + sys.inspect(headers));
     client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
+        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
         res.writeHead(200, resp.headers);
-        console.log('writing: ' + data);
+//        console.log('writing: ' + data);
         res.end(data);
     })
     .addListener('error', function(err) {
@@ -294,8 +296,6 @@ function proxied(svc, ppath, req, res) {
 
 function proxiedPost(svc, ppath, req, res) {
     console.log("proxying post " + req.url + " to "+svc.uriLocal + ppath);
-//    console.log(JSON.stringify(req.body));
-//    return;
     var host = url.parse(svc.uriLocal).host;
     var cookies;
     if(!req.session.cookies) {
