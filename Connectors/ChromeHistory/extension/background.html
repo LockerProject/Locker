@@ -2,13 +2,11 @@
 <script>
 var debug = false;
 var startTime = 0;
-//var url = '__INSERT_ME_DOT_URI_HERE__/urls';
-var url = 'http://localhost:18043/urls';
+var url = '__INSERT_ME_DOT_URI_HERE__urls';
 function postHistory() {
     chrome.history.search({'text':'', 'maxResults':1000000, 'startTime':startTime}, function(urls) {
-//        alert('urls: ' + urls.length);
+        if(debug) alert('url:' + url + '\nurls: ' + urls.length);
         getVisits(urls, function(visitItems) {
-  //          alert('visits: ' + visitItems.length);
             $.post(url, {urls:JSON.stringify(visitItems)},function(data) {
                 if(debug) alert('posted data!');
                 setTimeout(postHistory, 60000);

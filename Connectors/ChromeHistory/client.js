@@ -21,15 +21,13 @@ var me, latests;
 
 app.get('/', 
 function(req, res) {
-    console.log('chrome /');
-    res.end("hello chrome");
+    res.end("<html>great! do you need to <a href='plugin'>install the plugin</a></html>?");
 });
 
 app.post('/urls',
 function(req, res) {
     console.log('/urls');
     var stream = fs.createWriteStream('history.json');
-//    console.log('body: ' + JSON.stringify(req.body));
     var json = JSON.parse(req.body.urls);
     sort(json, function(url1, url2) {
         if(url1.visitTime < url2.visitTime)
@@ -38,11 +36,13 @@ function(req, res) {
             return 1;
         return 0;
     });
-    for(var i = 0; i <  json.length; i++) {
+    if(!json)
+        return;
+    sys.debug('got ' + json.length + ' urls');
+    for(var i = 0; i <  json.length; i++)
         stream.write(JSON.stringify(json[i]) + '\n');
-    }
-    latests.latest = json[0];
-    latests.oldest = json[json.length - 1];
+    latests.oldest = json[0];
+    latests.latest = json[json.length - 1];
     lfs.writeObjectToFile('latests.json', latests);
     stream.end();
     res.end('1');
@@ -55,20 +55,20 @@ function(req, res) {
 });
 
 app.get('/plugin', function(req, res) {
+    //circumvent the still misbehaving proxy. [:(
     res.redirect('http://localhost:' + port + '/plugindl');
 });
 
 app.get('/plugindl', function(req, res) {
-    res.download(crxName);
+    createCrx(function(name) {
+        var crxName = name + '.crx';
+        res.download(crxName, 'locker-browser-history.crx', function() {
+            fs.unlink(crxName);
+        });
+    });
 });
 
-
-function serveFile(filename, response) {
-        console.log('servefile! ' + filename);
-        response.sendfile(filename);
-}
-
-var crxName, port;
+var port;
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
@@ -79,9 +79,6 @@ stdin.on('data', function (chunk) {
         me = lfs.loadMeData();
         port = processInfo.port;
         var returnedInfo = {port: processInfo.port};
-        createCrx(function(name) {
-            crxName = name + '.crx';
-        });
         app.listen(processInfo.port);
         console.log(JSON.stringify(returnedInfo));
     });
@@ -99,7 +96,13 @@ var manifest = function(){ return '{\n' +
 '    "history"\n' +
 '  ]\n' +
 '}\n'; };
-var background = function() { return '<script src="http://code.jquery.com/jquery-1.4.2.min.js"></script>\n<script>\nfunction postHistory() {\n  chrome.history.search({\'text\':\'\', \'maxResults\':10000, \'startTime\':0}, function(urls) {\n    $.post(\'' + me.uri + 'urls\', {urls:JSON.stringify(urls)}, function(data) {\n      alert(\'posted data!\');\n    }, \'UTF-8\');\n    });\n  }\n  function getLatest(callback) {\n    $.get(url + endpoint + \'/latest\',callback);\n  }\n  postHistory();\n</script>'; };
+var background = function() {
+    var cwd = process.cwd();
+    var lockerDir = cwd.substring(0, cwd.lastIndexOf('/Me/')) + '/';
+    var bg = fs.readFileSync(lockerDir + '/Connectors/ChromeHistory/extension/background.html');
+    bg = bg.toString().replace('__INSERT_ME_DOT_URI_HERE__', me.uri);
+    return bg;
+};
 
 var make = 'if test $# -ne 2; then\n' +
 '  echo "Usage: crxmake.sh <extension dir> <pem path>"\n' +
@@ -145,8 +148,15 @@ function createCrx(callback) {
     crxMake.stdout.on('data',function (data){sys.debug(data);});
     crxMake.stderr.on('data',function (data){sys.debug('Error:'+data);});
     crxMake.on('exit', function (code) {
-        sys.debug('packed!');
-        if(callback)
-            callback(dirName);
+        fs.unlink(dirName + '/manifest.json', function(err) {
+            fs.unlink(dirName + '/background.html', function(err) {
+                fs.rmdir(dirName, function(err) {
+                    fs.unlink('crxmake.sh', function(err) {
+                        if(callback)
+                            callback(dirName);
+                    });
+                });
+            });
+        });
     });
 }
