@@ -105,6 +105,7 @@ dashboard.on('exit', function (code) {
 // return the known map of our world
 locker.get('/map',
 function(req, res) {
+    console.log('/map');
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
@@ -114,6 +115,7 @@ function(req, res) {
 // let any service schedule to be called, it can only have one per uri
 locker.get('/at',
 function(req, res) {
+    console.log('/at');
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
@@ -139,6 +141,7 @@ function(req, res) {
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
 locker.post('/install',
 function(req, res) {
+    console.log('/install');
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
@@ -150,6 +153,7 @@ function(req, res) {
 
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
+    console.log(req.uri);
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
@@ -168,6 +172,7 @@ locker.get('/Me/*', function(req,res){
 
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.post('/Me/*', function(req,res){
+    console.log(req.uri);
     var id = req.url.substring(4,36);
     var ppath = req.url.substring(37);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
@@ -187,6 +192,7 @@ locker.post('/Me/*', function(req,res){
 // anybody can listen into any service's events
 locker.get('/listen',
 function(req, res) {
+    console.log(req.uri);
     var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
     if(!serviceManager.isInstalled(id) || !serviceManager.isInstalled(from)) {
         res.writeHead(404);
@@ -204,6 +210,7 @@ function(req, res) {
 // publish an event to any listeners
 locker.post('/event',
 function(req, res) {
+    console.log(req.uri);
     var id = req.param('id'), type = req.param('type');
     res.writeHead(200);
     res.end();
@@ -235,17 +242,20 @@ function(req, res) {
 // fallback everything to the dashboard
 locker.get('/*',
 function(req, res) {
+    console.log(req.uri);
     proxied(dashboard,req.url.substring(1),req,res);
 });
 
 // fallback everything to the dashboard
 locker.post('/*',
 function(req, res) {
+    console.log(req.uri);
     proxiedPost(dashboard,req.url.substring(1),req,res);
 });
 
 locker.get('/',
 function(req, res) {
+    console.log(req.uri);
     proxied(dashboard,"",req,res);
 });
 
@@ -263,13 +273,13 @@ function proxied(svc, ppath, req, res) {
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     var client = wwwdude.createClient({headers:headers});
-    sys.debug('headers: ' + sys.inspect(headers));
+//    sys.debug('headers: ' + sys.inspect(headers));
     client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
-        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
+//        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
         res.writeHead(200, resp.headers);
 //        console.log('writing: ' + data);
         res.end(data);

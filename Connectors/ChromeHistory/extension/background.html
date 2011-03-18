@@ -3,8 +3,9 @@
 var debug = false;
 var startTime = 0;
 var url = '__INSERT_ME_DOT_URI_HERE__urls';
+var NUM = 1000000;
 function postHistory() {
-    chrome.history.search({'text':'', 'maxResults':1000000, 'startTime':startTime}, function(urls) {
+    chrome.history.search({'text':'', 'maxResults':NUM, 'startTime':startTime}, function(urls) {
         if(debug) alert('url:' + url + '\nurls: ' + urls.length);
         getVisits(urls, function(visitItems) {
             $.post(url, {urls:JSON.stringify(visitItems)},function(data) {
@@ -25,11 +26,15 @@ function getVisits(historyItems, visitItems, callback) {
         callback = visitItems;
         visitItems = [];
     }
-    var url = historyItems.pop().url;
+    var item = historyItems.pop();
+    var url = item.url;
     if(historyItems.length > 0) {
         chrome.history.getVisits({'url':url}, function(visits) {
-            for(var j in visits)
+            for(var j in visits) {
+                visits[j].url = item.url;
+                visits[j].title = item.title;
                 visitItems.push(visits[j]);
+            }
             getVisits(historyItems, visitItems, callback);
         });
     } else {

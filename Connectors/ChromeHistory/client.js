@@ -68,6 +68,12 @@ app.get('/plugindl', function(req, res) {
     });
 });
 
+app.get('/allLinks', function(req, res) {
+    lfs.readObjectsFromFile('history.json', function(data) {
+        res.writeHead(200);
+        res.end(JSON.stringify(data));
+    })
+})
 var port;
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
