@@ -1,4 +1,4 @@
-import getpass, imaplib, sys, os, json
+import getpass, imaplib, sys, os, json, email
 from pyparsing import Word, alphas, Optional, ZeroOrMore, QuotedString, Or, Literal, delimitedList, White, Group
 
 class Mailbox:
@@ -15,7 +15,7 @@ def find(f, seq):
             return item
 
 class MailboxProcessor:
-    ## Pyparsing syntax for the list result
+    ## Pyparsing syntax for the list result    
     MboxFlag = Literal("\\").suppress() + Word(alphas)
     FlagList = Literal("(").suppress() + Group(delimitedList(MboxFlag, delim=White(" ",exact=1)))  + Literal(")").suppress()
     listParser = FlagList + QuotedString(quoteChar="\"") + (QuotedString(quoteChar="\"") ^ Word(alphas))
@@ -42,6 +42,8 @@ class MailboxProcessor:
         else:
             print "Updating..."
         results = self.IMAP.list()[1]
+        for r in results:
+            print r
         ## Go through all the results and organize them
         for box in results:
             boxParts = self.listParser.parseString(box)
@@ -53,6 +55,7 @@ class MailboxProcessor:
             newBox = Mailbox(boxParts[2].split(boxParts[1])[-1])
             newBox.flags = boxParts[0]
             curBox.children.append(newBox)
+        
         self.processMailboxAndChildren(self.mailboxes)
         print "Success."
         self.IMAP.logout()
@@ -82,17 +85,8 @@ class MailboxProcessor:
             except OSError:
                 pass
             for mailID in ids:
-                typ, data = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
-                for x in range(0, len(data), 2):
-                    firstPart = data[x][0]
-                    uidStart = firstPart.find("UID ") + 4
-                    uidEnd = firstPart.find(" ", uidStart)
-                    uid = int(firstPart[uidStart:uidEnd])
-                    if uid > self.lastUIDs[fullname]: self.lastUIDs[fullname] = uid
-                    print "UID %s in %s" % (uid, fullname)
-                    #info = data[x][0]
-                    msgFD = open("my/%s/%s/%s" % (self.username, fullname, uid), "w")
-                    msgFD.write(data[x][1])
+                self.getMessage(mailID, fullname)
+                
         # dump our last UIDs again before we process children just in case there's an error, dont' need to redo it
         lastUIDsFile = open("my/%s/lastUIDS.json" % (self.username), "w")
         json.dump(self.lastUIDs, lastUIDsFile)
@@ -103,6 +97,30 @@ class MailboxProcessor:
             if mailbox.name == "INBOX": nextName = ""
             ## OOOOHhhh scary recursion
             self.processMailboxAndChildren(child, nextName)
+            
+    def getMessage(self, mailID, fullname):        
+        typ, header = self.IMAP.fetch(mailID, "(UID BODY.PEEK[HEADER])")
+        typ, body = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
+        for x in range(0, len(header), 2):
+            firstPart = header[x][0]
+            uidStart = firstPart.find("UID ") + 4
+            uidEnd = firstPart.find(" ", uidStart)
+            uid = int(firstPart[uidStart:uidEnd])
+            if uid > self.lastUIDs[fullname]: self.lastUIDs[fullname] = uid
+            print "UID %s in %s" % (uid, fullname)
+            #info = data[x][0]
+            msgFD = open("my/%s/%s/%s" % (self.username, fullname, uid), "w")
+            mssg = email.message_from_string(body[x][1])
+            message = {"header":header, "body":{}}
+            for part in mssg.walk():
+                maintype = part.get_content_maintype();
+                mtype = part.get_content_type();
+                # multipart are just containers, so we skip them
+                if maintype == 'multipart':
+                    continue
+                
+                message["body"][mtype] = {"payload":part.get_payload()};
+            json.dump(message, msgFD)
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
