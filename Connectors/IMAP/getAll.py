@@ -4,6 +4,7 @@ from pyparsing import Word, alphas, Optional, ZeroOrMore, QuotedString, Or, Lite
 class Mailbox:
     def __init__(self, name):
         self.name = name
+        self.separator = "."
         self.children = []
         self.flags = []
     def __repr__(self):
@@ -42,6 +43,7 @@ class MailboxProcessor:
         else:
             print "Updating..."
         results = self.IMAP.list()[1]
+        print "Folder results",results
         ## Go through all the results and organize them
         for box in results:
             boxParts = self.listParser.parseString(box)
@@ -50,20 +52,23 @@ class MailboxProcessor:
             curBox = self.mailboxes
             for part in boxParts[2].split(boxParts[1])[:-1]:
                 curBox = find(lambda b: b.name == part, curBox.children)
+            print "Adding",boxParts[2]," to ",curBox.name
             newBox = Mailbox(boxParts[2].split(boxParts[1])[-1])
+            newBox.separator = boxParts[1]
             newBox.flags = boxParts[0]
             curBox.children.append(newBox)
         self.processMailboxAndChildren(self.mailboxes)
         print "Success."
         self.IMAP.logout()
 
-    def processMailboxAndChildren(self, mailbox, prevName=""):
-        fullname = prevName + mailbox.name
+    def selectAndProcessMailbox(self, fullname, mailbox):
         if "Noselect" in mailbox.flags: 
             return
         res, data = self.IMAP.select(fullname, readonly=True)
         if res == "NO": 
+            print "Res(%s) Data: %s" % (res, data)
             return
+        print "Select on ",mailbox.name,":",data
         try:
             maxuid = self.lastUIDs[fullname]
         except KeyError:
@@ -74,7 +79,7 @@ class MailboxProcessor:
         else:
             searchQuery = "(NOT (UID 1:%d))" % maxuid
         typ, data = self.IMAP.search(None, searchQuery)
-        #print "Data: (%s)(%d)%s" % (typ, len(data), data)
+        print "Data: (%s)(%d)%s" % (typ, len(data), data)
         if typ == "OK" and len(data[0]) != 0:
             ids = data[0].split(" ")
             try:
@@ -97,10 +102,16 @@ class MailboxProcessor:
         lastUIDsFile = open("my/%s/lastUIDS.json" % (self.username), "w")
         json.dump(self.lastUIDs, lastUIDsFile)
         lastUIDsFile.close()
+        
+
+    def processMailboxAndChildren(self, mailbox, prevName=""):
+        fullname = prevName + mailbox.name
+        self.selectAndProcessMailbox(fullname, mailbox)
         # process all the child mailboxes
         for child in mailbox.children:
-            nextName = mailbox.name + "."
+            nextName = mailbox.name + child.separator
             if mailbox.name == "INBOX": nextName = ""
+            print "Recursing into ",child.name
             ## OOOOHhhh scary recursion
             self.processMailboxAndChildren(child, nextName)
 
