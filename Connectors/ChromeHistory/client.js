@@ -15,7 +15,8 @@ var fs = require('fs'),
     crypto = require('crypto'),
     spawn = require('child_process').spawn,
     sys = require('sys'),
-    sort = require('../../Common/node/sort.js').quickSort;
+    sort = require('../../Common/node/sort.js').quickSort,
+    sqlite = require('sqlite');
 
 var me, latests;    
 
@@ -27,32 +28,66 @@ function(req, res) {
 app.post('/urls',
 function(req, res) {
     console.log('/urls');
-    var stream = fs.createWriteStream('history.json');
     var json = JSON.parse(req.body.urls);
-    sort(json, function(url1, url2) {
-        if(url1.visitTime < url2.visitTime)
-            return -1;
-        else if(url1.visitTime > url2.visitTime)
-            return 1;
-        return 0;
-    });
-    if(!json)
+    if(!json || json.length < 1)
         return;
-    sys.debug('got ' + json.length + ' urls');
-    for(var i = 0; i <  json.length; i++)
-        stream.write(JSON.stringify(json[i]) + '\n');
-    latests.oldest = json[0];
-    latests.latest = json[json.length - 1];
-    lfs.writeObjectToFile('latests.json', latests);
-    stream.end();
-    res.end('1');
+    sys.debug('got ' + json.length + ' urls');   
+//    sys.debug(typeof json.pop);
+//    console.log(json.pop())
+    insertUrls(json, function() {
+        res.end('1');
+        sys.debug('sent response');
+    });
 });
 
-app.get('/latest', 
-function(req, res) {
-    console.log('/latest');
-    res.end(JSON.stringify(latests.latest));
-});
+function insertUrls(URLs, callback) {
+    if(!URLs || URLs.length < 1) {
+        callback();
+        return;
+    }
+    var url = URLs.pop();
+    insertURL(url, function(error, rows) {
+        insertUrls(URLs, callback);
+    });
+}
+
+var columns = ['id', 'refferingVisitId', 'transition', 'visitId', 'visitTime', 'url', 'title'];
+
+function createTable(callback) {
+    db.execute('DROP TABLE chromeHistory', function(error) {
+        db.execute("CREATE TABLE chromeHistory (id INTEGER, referringVisitId INTEGER, transition TEXT, visitId INTEGER PRIMARY KEY, visitTime REAL, url TEXT, title TEXT);", function(error) {
+            callback();
+        });
+    });
+}
+
+function insertURL(url, callback) {
+    if(!url) callback();
+    var values = [];
+    for(var i in columns) {
+        if(url[columns[i]])
+            values.push(url[columns[i]]);
+        else 
+            values.push(null);
+    }
+    
+    var sql = 'INSERT OR REPLACE INTO chromeHistory (id, referringVisitId, transition, visitId, visitTime, url, title) VALUES (?, ?, ?, ?, ?, ?, ?);';
+    db.execute(sql, values, function(error, rows) {
+        if(error) throw error;
+        if(callback) callback(error, rows);
+    });
+}
+
+function getURL(visitId, callback) {
+    var sql = 'SELECT * FROM chromeHistory WHERE visitId = ?;';
+    db.execute(sql, [visitId], callback);
+}
+
+function getURLs(callback) {
+    var sql = 'SELECT * FROM chromeHistory;';
+    db.execute(sql, callback);
+}
+
 
 app.get('/plugin', function(req, res) {
     //circumvent the still misbehaving proxy. [:(
@@ -69,24 +104,30 @@ app.get('/plugindl', function(req, res) {
 });
 
 app.get('/allLinks', function(req, res) {
-    lfs.readObjectsFromFile('history.json', function(data) {
-        res.writeHead(200);
-        res.end(JSON.stringify(data));
-    })
+    getURLs(function(error, rows) {
+        sys.debug('rows : ' + rows.length);
+        if(error) throw error;
+        res.end(JSON.stringify(rows));
+    });
 })
 var port;
 var stdin = process.openStdin();
+
+var db = new sqlite.Database();
+
+
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
-    lfs.readObjectFromFile('latests.json', function(newLatests) {
-        latests = newLatests;
-        me = lfs.loadMeData();
-        port = processInfo.port;
-        var returnedInfo = {port: processInfo.port};
-        app.listen(processInfo.port);
-        console.log(JSON.stringify(returnedInfo));
+    db.open("history.db", function (error) {
+        createTable(function () {
+            me = lfs.loadMeData();
+            port = processInfo.port;
+            var returnedInfo = {port: processInfo.port};
+            app.listen(processInfo.port);
+            console.log(JSON.stringify(returnedInfo));
+        });
     });
 });
 

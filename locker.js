@@ -280,6 +280,7 @@ function proxied(svc, ppath, req, res) {
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
 //        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
+        resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
 //        console.log('writing: ' + data);
         res.end(data);
@@ -322,6 +323,7 @@ function proxiedPost(svc, ppath, req, res) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.session.cookies[host] = {'connect.sid' : newCookie};
+        resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
         console.log('writing: ' + data);
         res.end(data);

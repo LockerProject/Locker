@@ -1,0 +1,7 @@
+{
+	"title":"IMAP Connector",
+	"action":"Connect to IMAP account",
+	"desc":"Collect and sync my data from my IMAP account.",
+	"run":"python client.py",
+	"provides":["message/IMAP"]
+}
