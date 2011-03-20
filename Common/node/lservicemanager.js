@@ -73,7 +73,7 @@ exports.findInstalled = function () {
 */
 exports.install = function(metaData) {
     var hash = crypto.createHash('md5');
-    hash.update(Math.random());
+    hash.update(Math.random()+'');
     metaData.id = hash.digest('hex');
     metaData.me = lconfig.lockerDir+'/Me/'+metaData.id;
     metaData.uri = lconfig.lockerBase+"Me/"+metaData.id+"/";
