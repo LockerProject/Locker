@@ -181,7 +181,7 @@ var make = 'if test $# -ne 2; then\n' +
 'echo "Wrote $crx"\n';
 
 function createCrx(callback) {
-    var dirName = crypto.createHash('sha1').update(Math.random()).digest('hex');
+    var dirName = crypto.createHash('sha1').update(Math.random()+'').digest('hex');
     fs.mkdirSync(dirName, 0755);
     fs.writeFileSync(dirName + '/manifest.json', manifest());
     fs.writeFileSync(dirName + '/background.html', background());

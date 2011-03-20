@@ -48,7 +48,7 @@ TestDescription.prototype.isolate = function(presetDir) {
 
     var hash = crypto.createHash("sha1");
     hash.update(this.description);
-    hash.update(Date.now());
+    hash.update(Date.now()+'');
     this.isolatedDir = hash.digest("hex");
     this.workingDirIsTemp = true;
     return this;
