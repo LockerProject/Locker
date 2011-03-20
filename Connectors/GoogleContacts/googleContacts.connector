@@ -1,7 +1,7 @@
 {
 	"title":"Google Contacts",
 	"action":"Connect to Google contacts",
-	"desc":"Collect and sync my data from my Google contacts using the Google Data API a Twitter 'app' that I create just for myself.",
+	"desc":"Collect and sync my data from my Google contacts using the Google Data API",
 	"run":"python client.py",
 	"provides":["contact/google"]
 }
