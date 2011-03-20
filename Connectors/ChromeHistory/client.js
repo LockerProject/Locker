@@ -27,13 +27,10 @@ function(req, res) {
 
 app.post('/urls',
 function(req, res) {
-    console.log('/urls');
     var json = JSON.parse(req.body.urls);
     if(!json || json.length < 1)
         return;
-    sys.debug('got ' + json.length + ' urls');   
-//    sys.debug(typeof json.pop);
-//    console.log(json.pop())
+    sys.debug('got ' + json.length + ' urls');
     insertUrls(json, function() {
         res.end('1');
         sys.debug('sent response');
@@ -54,10 +51,8 @@ function insertUrls(URLs, callback) {
 var columns = ['id', 'refferingVisitId', 'transition', 'visitId', 'visitTime', 'url', 'title'];
 
 function createTable(callback) {
-    db.execute('DROP TABLE chromeHistory', function(error) {
-        db.execute("CREATE TABLE chromeHistory (id INTEGER, referringVisitId INTEGER, transition TEXT, visitId INTEGER PRIMARY KEY, visitTime REAL, url TEXT, title TEXT);", function(error) {
-            callback();
-        });
+    db.execute("CREATE TABLE chromeHistory (id INTEGER, referringVisitId INTEGER, transition TEXT, visitId INTEGER PRIMARY KEY, visitTime REAL, url TEXT, title TEXT);", function(error) {
+        callback();
     });
 }
 
@@ -105,7 +100,6 @@ app.get('/plugindl', function(req, res) {
 
 app.get('/allLinks', function(req, res) {
     getURLs(function(error, rows) {
-        sys.debug('rows : ' + rows.length);
         if(error) throw error;
         res.end(JSON.stringify(rows));
     });
@@ -130,7 +124,6 @@ stdin.on('data', function (chunk) {
         });
     });
 });
-
 
 var manifest = function(){ return '{\n' +
 '  "name": "Locker Browser History",\n' +
