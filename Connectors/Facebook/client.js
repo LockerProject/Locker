@@ -119,32 +119,10 @@ function downloadPhotos(userID) {
 function downloadNextPhoto() {
     if (photoIndex >= photoQueue.length) return;
 
-    var userID = photoQueue[photoIndex].userID;
+//    var userID = photoQueue[photoIndex].userID;
     var friendID = photoQueue[photoIndex].friendID;
     photoIndex++;
     lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg', downloadNextPhoto);
-   /* try {
-        wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
-        .addListener('error',
-        function(err) {
-            sys.debug('Network error getting fb photo for friendID ' + friendID + ': ' + sys.inspect(err));
-            downloadNextPhoto();
-        })
-        .addListener('http-error',
-        function(data, resp) {
-            sys.debug('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-            downloadNextPhoto();
-        })
-        .addListener('success',
-        function(data, resp) {
-            try {
-                fs.writeFileSync('photos/' + friendID + '.jpg', data, 'binary');
-                downloadNextPhoto();
-            } catch(err) {
-            }
-        });
-    } catch(err) {
-    }*/
 }
 
 function doFQLQuery(access_token, query, callback) {

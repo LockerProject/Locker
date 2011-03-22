@@ -192,8 +192,8 @@ function curlFile(url, filename, callback) {
     }
 }
 
-exports.curlFile = function(url, filename) {
-    curlFile(url, filename);
+exports.curlFile = function(url, filename, callback) {
+    curlFile(url, filename, callback);
 }
 
 exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding, callback) {
