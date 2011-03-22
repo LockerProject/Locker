@@ -10,6 +10,8 @@ if (!cwd || !port) {
 }
 process.chdir(cwd);*/
 
+var _debug = false;
+
 var fs = require('fs'),
     http = require('http'),
     url = require('url'),
@@ -78,7 +80,7 @@ function(req, res) {
     res.redirect(facebookClient.getAuthorizeUrl({
         client_id: auth.appID,
         redirect_uri: me.uri+"auth",
-        scope: 'offline_access,read_stream'
+        scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'
     }));
     res.end();
 });
@@ -120,8 +122,8 @@ function downloadNextPhoto() {
     var userID = photoQueue[photoIndex].userID;
     var friendID = photoQueue[photoIndex].friendID;
     photoIndex++;
-    lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg');
-    try {
+    lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg', downloadNextPhoto);
+   /* try {
         wwwdude_client.get('https://graph.facebook.com/' + friendID + '/picture')
         .addListener('error',
         function(err) {
@@ -142,7 +144,7 @@ function downloadNextPhoto() {
             }
         });
     } catch(err) {
-    }
+    }*/
 }
 
 function doFQLQuery(access_token, query, callback) {
@@ -247,6 +249,79 @@ function(req, res) {
     });
 });
 
+function getProfileInfo(userID, callback) {
+    if(!callback) {
+        callback = userID;
+        userID = 'Me';
+    }
+    facebookClient.apiCall('GET', '/' + userID, {access_token: auth.token}, callback);
+}
+
+app.get('/photos',
+function(req, res) {
+    getPhotoAlbums(function(error, albums) {
+        getNextPhotoAlbum(albums.data, function(albumError, album) { //get lists of photos in albums
+            var albumFolder = 'photos/Me/' + album.id;
+            try {
+                fs.mkdirSync('photos/Me', 0755);
+            } catch(err) {
+                if(_debug) sys.debug(err);
+            }
+            try {
+                fs.mkdirSync(albumFolder, 0755);
+            } catch(err) {
+                if(_debug) sys.debug(err);
+            }
+            lfs.writeObjectToFile(albumFolder + '/meta.json', album);
+            getPhotos(albumFolder, album.photosList.data, function(photosError) {
+                if(error) sys.debug(photosError);
+            });
+        }, function() {
+            //all done
+            res.end();
+        });
+    });
+});
+
+function getPhotoAlbums(userID, callback) {
+    if(!callback) {
+        callback = userID;
+        userID = 'Me';
+    }
+    facebookClient.apiCall('GET', '/' + userID + '/albums', {access_token: auth.token}, callback);
+}
+
+function getNextPhotoAlbum(albums, albumCallback, finalCallback) {
+    if(!albums || albums.length < 1) {
+        finalCallback();
+        return;
+    }
+    var album = albums.pop();
+    getPhotoAlbum(album.id, function(error, photosList) {
+        if(_debug) sys.debug('get album: ' + album.id);
+        if(error) sys.debug(sys.inspect(error));
+        album.photosList = photosList;
+        albumCallback(error, album);
+        getNextPhotoAlbum(albums, albumCallback, finalCallback);
+    });
+}
+
+function getPhotoAlbum(albumID, callback) {
+    if(_debug) sys.debug('getting album: ' + albumID);
+    facebookClient.apiCall('GET', '/' + albumID + '/photos', {access_token: auth.token}, callback);
+}
+
+function getPhotos(albumFolder, photos, callback) {
+    if(_debug) sys.debug('for ' + albumFolder + ', ' + photos.length + ' remaining.');
+    if(!photos || photos.length < 1) {
+        callback();
+        return;
+    }
+    var photo = photos.pop();
+    var largestURL = photo.images[0].source;
+    lfs.curlFile(largestURL, albumFolder + '/' + photo.id + '.jpg');
+    getPhotos(albumFolder, photos, callback);
+}
 
 app.get('/getfeed',
 function(req, res) {

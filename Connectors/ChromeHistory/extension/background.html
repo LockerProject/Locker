@@ -1,4 +1,4 @@
-<script src="http://code.jquery.com/jquery-1.4.2.min.js"> </script>
+<script src="http://code.jquery.com/jquery-1.5.min.js"> </script>
 <script>
 var debug = true;
 
@@ -52,10 +52,10 @@ function postURLs(historyItems, startTime) {
                 success: function(data) { //worked!
                     log('posted data!');
                 },
-                error: function(request, status, err) { //something went wrong
+                statusCode: {404: function(request, status, err) { //something went wrong
                     log('could not post data! queueing urls');
                     queueURLs(visitsFinal);
-                }
+                }}
         }, 'UTF-8');
     });
 }

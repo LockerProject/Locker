@@ -183,8 +183,13 @@ function getFile(requestURL, filename) {
         });;
 }
 
-function curlFile(url, filename) {
-    spawn('curl', [url, '-o', filename, '-L']);
+function curlFile(url, filename, callback) {
+    var curl = spawn('curl', [url, '-o', filename, '-L']);
+    if(callback) {
+        curl.on('exit', function() {
+            callback();
+        });
+    }
 }
 
 exports.curlFile = function(url, filename) {
