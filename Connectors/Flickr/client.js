@@ -3,38 +3,33 @@ var extras = 'description,license,date_upload,date_taken,owner_name,icon_server,
              'views,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o';
              
 
-var api_key = process.argv[2];
-var api_secret = process.argv[3];
-
+var debug = false;
 
 var base_url = 'http://api.flickr.com/services/rest/';
 
 var crypto = require('crypto'),
     fs = require('fs'),
+    sys = require('sys'),
     connect = require('connect'),
     express = require('express'),
     app = express.createServer(
             connect.bodyDecoder(),
             connect.cookieDecoder(),
-            connect.session({secret : "locker"}));
-
-var lfs = require('../Common/node/lfs');
+            connect.session({secret : "locker"})),
+    locker = require('../../Common/node/locker.js'),
+    lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude');
 var wwwdude_client = wwwdude.createClient({
     encoding: 'utf-8'
 });
 
-var meta;
-try {
-    meta = lfs.readMetadata();
-} catch(err) {
-}
+var me, state, userInfo;
 
 function getSignature(params) {
     var hash = crypto.createHash('md5');
     params.sort();
-    var baseString = api_secret;
+    var baseString = auth.apiSecret;
     for(i in params)
         baseString += params[i].replace(/=/, '');
     hash.update(baseString);
@@ -43,8 +38,8 @@ function getSignature(params) {
 
 function getAuthSignedURL(perms) {
     var url = 'http://www.flickr.com/services/auth/?';
-    var sig = getSignature(['api_key=' + api_key,'perms=' + perms]);
-    url += 'api_key=' + api_key + '&perms=' + perms + '&api_sig=' + sig;
+    var sig = getSignature(['api_key=' + auth.apiKey,'perms=' + perms]);
+    url += 'api_key=' + auth.apiKey + '&perms=' + perms + '&api_sig=' + sig;
     return url;
 }
 
@@ -54,7 +49,7 @@ function getSignedMethodURL(method, params) {
         params2.push(params[i]);
     params2.push('method=' + method);
     params2.push('format=json');
-    params2.push('api_key=' + api_key);
+    params2.push('api_key=' + auth.apiKey);
     params2.push('nojsoncallback=1');
     api_sig = getSignature(params2);
     var url = base_url +'?api_sig=' + api_sig;
@@ -77,13 +72,14 @@ function getTokenFromFrob(frob) {
     .addListener('success',
     function(data, resp) {
         var json = JSON.parse(data);
-        json.auth.state = {};
-        if(meta && meta.state && meta.state.newest)
-            json.auth.state.newest = meta.state.newest;
+        /*state = {};
+        if(state && state.newest)
+            json.auth.state.newest = state.newest;
         else
-            json.auth.state.newest = 0;
-        meta = json.auth;
-        lfs.writeMetadata(json.auth.user.username, meta);
+            json.auth.state.newest = 0;*/
+        for(var i in json.auth)
+            auth[i] = json.auth[i];
+        lfs.writeObjectToFile('auth.json', auth);
     });
 }
 
@@ -93,6 +89,7 @@ function getPhotoThumbURL(photoObject) {
         return null;
     return photoObject.url_sq;
 }
+
 function getPhotoURL(photoObject) {
     if(!photoObject)
         return null;
@@ -112,8 +109,49 @@ function constructPhotoURL(photoObject, size) {
                     + photoObject.id + '_' + photoObject.secret + '_' + size + '.jpg';
 }
 
-//send the user to flickr for authentication
+
 app.get('/',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    if(!(auth.apiKey && auth.apiSecret)) {
+        res.end("<html>Enter your personal Flickr app info that will be used to sync your data" + 
+                " (create a new one <a href='http://www.flickr.com/services/apps/create/apply/'>" + 
+                "here</a> using the callback url of " +
+                me.uri+"auth) " +
+                "<form method='get' action='save'>" +
+                    "API Key: <input name='apiKey'><br>" +
+                    "API Secret: <input name='apiSecret'><br>" +
+                    "<input type='submit' value='Save'>" +
+                "</form></html>");
+        return;
+    }
+    if(!auth.token)
+        res.end("<html>you need to <a href='./goflickr'>auth w/ flickr</a> yet</html>");
+    else
+        res.end();
+        //res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
+});
+
+app.get('/save',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    if(!req.param('apiKey') || !req.param('apiSecret')) {
+        res.end("missing field(s)?");
+        return;
+    }
+    auth.apiKey = req.param('apiKey');
+    auth.apiSecret = req.param('apiSecret');
+    lfs.writeObjectToFile('auth.json', auth);
+    res.end("<html>k thanks, now we need to <a href='./goflickr'>auth that app to your account</a>.</html>");
+});
+
+
+//send the user to flickr for authentication
+app.get('/goflickr',
 function(req, res) {
     res.redirect(getAuthSignedURL('read'));
 });
@@ -132,14 +170,14 @@ function(req, res) {
 //download social graph
 app.get('/friends',
 function(req, res) {
-    if(!meta || !meta.token || !meta.token._content) {
+    if(!auth || !auth.token || !auth.token._content) {
         res.redirect('/');
         return;
     }
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    var url = getSignedMethodURL('flickr.contacts.getList',['auth_token=' + meta.token._content]);
+    var url = getSignedMethodURL('flickr.contacts.getList',['auth_token=' + auth.token._content]);
     
     try {
         wwwdude_client.get(url)
@@ -154,7 +192,7 @@ function(req, res) {
         .addListener('success',
         function(data, resp) {
             var json = JSON.parse(data);
-            lfs.writeObjectsToFile('my/' + meta.user.username + '/contacts.json', json.contacts.contact);
+            lfs.writeObjectsToFile('contacts.json', json.contacts.contact);
             res.end();
         });
     } catch(err) {
@@ -164,8 +202,8 @@ function(req, res) {
 //get a page of photos and recurse until all pages are completed
 function getPhotos(auth_token, username, user_id, page, oldest, newest) {
     try {
-        fs.mkdirSync('my/' + username + '/originals', 0755);
-        fs.mkdirSync('my/' + username + '/thumbs', 0755);
+        fs.mkdirSync('originals', 0755);
+        fs.mkdirSync('thumbs', 0755);
     } catch(err) {
     }
     if(!oldest)
@@ -193,21 +231,28 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                 console.log(data);
                 res.end();
             }
-        
             var photos = json.photos.photo;
-            lfs.appendObjectsToFile('my/' + meta.user.username + '/photos.json', photos);
-            for(i in photos) {
-                if(!photos[i])
-                    continue;
-                lfs.writeURLContentsToFile(meta.user.username, 
-                                           getPhotoThumbURL(photos[i]),
-                                          'thumbs/' + photos[i].id + '.jpg', 'binary', 3);
-                lfs.writeURLContentsToFile(meta.user.username, 
-                                           getPhotoURL(photos[i]), 
-                                           'originals/' + photos[i].id + '.jpg', 'binary', 3);
+            lfs.appendObjectsToFile('photos.json', photos);
+            function curl(photos, callback) {
+                if(!photos || photos.length < 1) {
+                    callback();
+                    return;
+                }
+                var photo = photos.pop();
+                var id = photo.id;
+                var thumbURL = getPhotoThumbURL(id);
+                lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function() {
+                    lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function() {
+                        if(debug) sys.debug('got flickr photo ' + id);
+                        curl(photos, callback);
+                    });
+                });
             }
-            if((json.photos.pages - json.photos.page) > 0)
-                getPhotos(auth_token, username, user_id, page + 1, oldest, newest);
+            
+            curl(photos, function() {   
+                if((json.photos.pages - json.photos.page) > 0)
+                    getPhotos(auth_token, username, user_id, page + 1, oldest, newest);
+            });
         });
     } catch(err) { console.log(JSON.stringify(err)); }
     
@@ -216,7 +261,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
 //download photos
 app.get('/photos', 
 function(req, res) {
-    if(!meta || !meta.token || !meta.token._content) {
+    if(!auth || !auth.token || !auth.token._content) {
         res.redirect('/');
         return;
     }
@@ -224,14 +269,34 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     var now = new Date().getTime()/1000;
-    getPhotos(meta.token._content, meta.user.username, 'me', 1, meta.state.newest, now);
-    meta.state.newest = now;
-    lfs.writeMetadata(meta.user.username, meta);
-    res.write(JSON.stringify(meta));
+    getPhotos(auth.token._content, userInfo.username, 'me', 1, state.newest, now);
+    state.newest = now;
+    lfs.writeObjectToFile('state.json', state);
+    res.write(JSON.stringify(state));
     res.end();
 });
 
 
+function log(msg) {
+    if(debug) sys.debug(msg);
+}
 
-console.log('server listening on http://localhost:3006/');
-app.listen(3006);
+var stdin = process.openStdin();
+stdin.setEncoding('utf8');
+stdin.on('data', function (chunk) {
+    var processInfo = JSON.parse(chunk);
+    process.chdir(processInfo.workingDirectory);
+    lfs.readObjectFromFile('auth.json', function(newAuth) {
+        auth = newAuth;
+        lfs.readObjectFromFile('state.json', function(newLatests) {
+            state = newLatests;
+            lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
+                userInfo = newUserInfo;
+                me = lfs.loadMeData();
+                app.listen(processInfo.port);
+                var returnedInfo = {port: processInfo.port};
+                console.log(JSON.stringify(returnedInfo));
+            });
+        });
+    });
+});
