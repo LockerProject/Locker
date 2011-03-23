@@ -6,6 +6,7 @@ var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var wwwdude = require('wwwdude');
+var sys = require('sys');
 
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;

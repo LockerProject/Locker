@@ -179,7 +179,7 @@ function getFile(requestURL, filename) {
             downloadfile.end();
         });
     })    .on('error', function(error) {
-            console.log('errorrs!!!');
+            console.log('errorrs!!! '+requestURL);
         });;
 }
 
