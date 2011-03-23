@@ -1,4 +1,4 @@
-<script src="http://code.jquery.com/jquery-1.5.min.js"> </script>
+<script src="http://code.jquery.com/jquery-1.4.2.min.js"> </script>
 <script>
 var debug = true;
 
@@ -42,21 +42,11 @@ function postURLs(historyItems, startTime) {
         
         log('posting ' + visitsFinal.length + ' visitItems to: ' + postUrl);
         //post the URLs
-        $.ajax({type: "POST", 
-                url: postUrl, 
-                data:{'urls':JSON.stringify(visitsFinal)}, 
-                dataType:'json', 
-                timeout: 60000, //only wait 60s for a response 
-                                //(this might not make sense, but if more than 60s is needed, 
-                                //perhaps it makes more sense to break it up into multiple reqests)
-                success: function(data) { //worked!
+        $.post( postUrl, {'urls':JSON.stringify(visitsFinal)},
+                function(data) { //worked!
                     log('posted data!');
                 },
-                statusCode: {404: function(request, status, err) { //something went wrong
-                    log('could not post data! queueing urls');
-                    queueURLs(visitsFinal);
-                }}
-        }, 'UTF-8');
+                'json');
     });
 }
 
@@ -74,15 +64,6 @@ function queueURLs(urls, startTime) {
     }, (debug? 5000 : 60000)); //5 sec or 10 minutes
 }
 
-//gets the time (since the epoch) of the last url
-/*function getLatest(callback) {
-    $.getJSON(urlBase + 'latest',function(data) {
-        //log('latest: ' + JSON.stringify(data));
-        callback(data.visitTime);
-    });
-}
-
-*/
 function getVisits(historyItems, visitItems, callback) {
     if(!callback) {
         if(!visitItems)
@@ -106,30 +87,17 @@ function getVisits(historyItems, visitItems, callback) {
         callback(visitItems);
     }
 }
-/*
-var lastPost = 0;
-function shouldDoPost() {
-    return new Date().getTime();
-}*/
 //grabs all urls since the last successful post and posts them
 function postHistory() {
-//    getLatest(function(latest) {
-//        log('latest: ' + latest + '\nnow: ' + (new Date().getTime()));
-//        latest++;
-//        console.log(latest);
-        chrome.history.search({'text':'', 'maxResults':NUM, 'startTime':0}, function(urls) {
-            postURLs(urls);
-        });    
-//    });
+    chrome.history.search({'text':'', 'maxResults':NUM, 'startTime':0}, function(urls) {
+        postURLs(urls);
+    });
 }
 postHistory();
 
 //listen for visits and post them
 chrome.history.onVisited.addListener(function(historyItem) {
     log('at ' + new Date().getTime() + ', heard a url - posting...');
-    //wait a bit because the page doesn't get commited to history.search right away
-    //setTimeout(postHistory, 1000);
-//    postHistory();
     postURLs([historyItem]);
 });
 </script>
