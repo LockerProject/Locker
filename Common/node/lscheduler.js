@@ -104,3 +104,5 @@ exports.Scheduler.prototype.at = function() {
     this.savePending();
 }
 
+exports.masterScheduler = new exports.Scheduler;
+
