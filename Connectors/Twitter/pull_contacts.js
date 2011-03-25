@@ -17,8 +17,8 @@ var http = require('http'),
 var me = lfs.loadMeData();
 
 var app = express.createServer(
-    connect.bodyDecoder(),
-    connect.cookieDecoder(),
+    connect.bodyParser(),
+    connect.cookieParser(),
     connect.session({secret : "locker"})
     );
     

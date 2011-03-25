@@ -1,14 +1,6 @@
 /**
  * web server/service to wrap interactions w/ FB open graph
  */
-/*
-var cwd = process.argv[2];
-var port = process.argv[3];
-if (!cwd || !port) {
-    process.stderr.write("missing dir and port arguments\n");
-    process.exit(1);
-}
-process.chdir(cwd);*/
 
 var _debug = false;
 
@@ -17,23 +9,20 @@ var fs = require('fs'),
     url = require('url'),
     express = require('express'),
     connect = require('connect'),
+    sys = require('sys'),
     app = express.createServer(
-                    connect.bodyDecoder(),
-                    connect.cookieDecoder(),
+                    connect.bodyParser(),
+                    connect.cookieParser(),
                     connect.session({secret : "locker"})),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
 var wwwdude = require('wwwdude'),
-sys = require('sys');
-var wwwdude_client = wwwdude.createClient({
-    encoding: 'binary'
-});
+    wwwdude_client = wwwdude.createClient({ encoding: 'binary' });
 
 
 var me, auth, latests, userInfo;
 var facebookClient = require('facebook-js')();
-//var facebookClient = require('facebook-js')(context.appID, context.appSecret);
 
 
 app.set('views', __dirname);
@@ -353,10 +342,6 @@ function pullNewsFeedPage(until, since, items, callback) {
             }
         });
 }
-
-
-//app.listen(port);
-//console.log("http://localhost:" + port + '/');
 
 
 var stdin = process.openStdin();

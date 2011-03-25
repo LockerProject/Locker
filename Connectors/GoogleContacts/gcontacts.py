@@ -58,7 +58,7 @@ class GoogleDataContacts:
         sys.stdout.flush()
         self.gd_client.ProgrammaticLogin()
         self.write_groups_feed_to_file()
-        self.write_feed_to_file()
+        return self.write_feed_to_file()
 
     def fullSync(self):
         """Performs an update that also checks for deletes."""
@@ -154,4 +154,5 @@ class GoogleDataContacts:
         self.jsonFile.close()
         self.lastUpdate = datetime.now()
         lockerfs.saveJsonFile("status.json", {"lastUpdate":time.mktime(self.lastUpdate.timetuple())})
+        return len(feed.entry)
 

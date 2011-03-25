@@ -23,23 +23,27 @@ var fs = require('fs'),
         encoding: 'utf-8'
     });
     
-var app = express.createServer(
-                connect.bodyDecoder(),
-                connect.cookieDecoder(),
-                connect.session({secret : "locker"})
-            );
+var app = express.createServer();
+app.use(connect.bodyParser());
+app.use(connect.cookieParser());
+app.use(connect.session({secret : "locker"}));
 
 var map;
 app.get('/', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
+    wwwdude_client.get(lockerBase + '/map').addListener('success', function(data, resp) {
+        map = JSON.parse(data);
+        fs.readFile("dashboard.html", function(err, data) {
+            res.write(data, "binary");
+            res.end();
+        });
+    });
+    /*
     res.write('<html><head><title>Locker Dashboard</title>' +
                 '<script src="util.js"></script></head>\n\n<body>' +
                 '<script src="http://code.jquery.com/jquery-1.4.4.min.js"></script>' + 
                 '<link rel="stylesheet" href="css/style.css" type="text/css"></link></head>\n\n<body>');
     res.write('Welcome! Reading JSON is fun, right? :) ...requesting map from '+lockerBase+'/map');
-    wwwdude_client.get(lockerBase + '/map')
-    .addListener('success', function(data, resp) {
-        map = JSON.parse(data);
         res.write('<h2>my stuff</h2>');
         res.write('<table>');
         res.write('<tr><td>Title</td><td class="desc">Description</td><td>Type</td><td class="action">Action</td>' +
@@ -79,6 +83,7 @@ app.get('/', function (req, res) {
         res.write('</table>');
         res.end("</body></html>");
     });
+    */
 });
 
 // doesn't this exist somewhere? was easier to write than find out, meh!

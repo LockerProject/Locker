@@ -1,4 +1,5 @@
 import getpass, imaplib, sys, os, json, email
+from email.utils import getaddresses
 from pyparsing import Word, alphas, Optional, ZeroOrMore, QuotedString, Or, Literal, delimitedList, White, Group
 
 class Mailbox:
@@ -107,7 +108,11 @@ class MailboxProcessor:
             ## OOOOHhhh scary recursion
             self.processMailboxAndChildren(child, nextName)
             
-    def getMessage(self, mailID, fullname):        
+    def getMessage(self, mailID, fullname):         
+        if os.path.exists("%s/%s/%s" % (self.username, fullname, mailID)):
+            print 'UID %s exists' % (mailID)
+            return
+        print 'getting %s' % (mailID)
         typ, header = self.IMAP.fetch(mailID, "(UID BODY.PEEK[HEADER])")
         typ, body = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
         for x in range(0, len(header), 2):
@@ -117,13 +122,16 @@ class MailboxProcessor:
             uid = int(firstPart[uidStart:uidEnd])
             if uid > self.lastUIDs[fullname]: self.lastUIDs[fullname] = uid
             print "UID %s in %s" % (uid, fullname)
-            #info = data[x][0]
             msgFD = open("%s/%s/%s" % (self.username, fullname, uid), "w")
             mssg = email.message_from_string(body[x][1])
             hdrmsg = email.message_from_string(header[x][1])
             jsonHeader = {};
             for key in hdrmsg.keys():
                 jsonHeader[key] = hdrmsg[key]
+            #parse the email address lists into a usable format
+            for key in ['To', 'From', 'Cc', 'Bcc']:
+                jsonHeader[key] = self.getAddrs(hdrmsg, key)
+            
             message = {"headers":jsonHeader, "body":{"parts":{}}}
             for part in mssg.walk():
                 maintype = part.get_content_maintype();
@@ -140,6 +148,13 @@ class MailboxProcessor:
             except:
                 message["body"] = {"error":"Message download failed!!!"};
                 json.dump(message, msgFD)
+    
+    def getAddrs(self, msgHeaders, fieldName):
+        temp = msgHeaders[fieldName]
+        if temp is not None:
+            return getaddresses([temp])
+        return []
+    
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

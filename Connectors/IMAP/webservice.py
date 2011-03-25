@@ -5,6 +5,7 @@ import time
 import datetime
 import urllib2
 import thread
+import json
 from limap import MailboxProcessor
 
 app = Flask(__name__)
@@ -23,12 +24,13 @@ def update():
     else:
         return redirect(url_for("setupAuth"))
 
-@app.route("/save")
+@app.route("/save", methods=['POST'])
 def saveAuth():
+    print "saving!!!"
     secrets = lockerfs.loadJsonFile("secrets.json");
-    secrets["username"] = request.args["username"]
-    secrets["password"] = request.args["password"]
-    secrets["server"] = request.args["server"]
+    secrets["username"] = request.form["username"]
+    secrets["password"] = request.form["password"]
+    secrets["server"] = request.form["server"]
     app.consumerValidated = True
     lockerfs.saveJsonFile("secrets.json", secrets)
     return redirect(url_for("mainIndex"))
@@ -41,6 +43,24 @@ def mainIndex():
     else:
         return "redirect!"
 #        return redirect(url_for("setupAuth"))
+
+
+@app.route("/allMessages")
+def allMessages():
+    box = request.args['box']
+    start = int(request.args['start'])
+    end = int(request.args['end'])
+    secrets = lockerfs.loadJsonFile("secrets.json");
+    username = secrets['username']
+    boxPath = username + '/' + box
+    messages = []
+    for i in range(start, end):
+        message = lockerfs.loadJsonFile(boxPath + '/' + str(i))
+        if len(message.keys()) > 0:
+            messages.append(message)
+    
+    return json.dumps(messages)
+
 
 def runService(info):
     secrets = lockerfs.loadJsonFile("secrets.json");
