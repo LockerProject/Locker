@@ -60,11 +60,16 @@ exports.findInstalled = function () {
     var dirs = fs.readdirSync('Me');
     for (var i = 0; i < dirs.length; i++) {
         var dir =  'Me/' + dirs[i];
-        if(!fs.statSync(dir).isDirectory()) continue;
-        if(!fs.statSync(dir+'/me.json').isFile()) continue;
-        var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-        console.log("Installing " + js.id);
-        serviceMap.installed[js.id] = js;
+        try {
+            if(!fs.statSync(dir).isDirectory()) continue;
+            if(!fs.statSync(dir+'/me.json').isFile()) continue;
+            var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+            console.log("Installing " + js.id);
+            serviceMap.installed[js.id] = js;
+        } catch (E) {
+            console.error("Error parsing Me directory: " + E);
+        }
+
     }
 }
 
@@ -137,10 +142,11 @@ exports.spawn = function(serviceId, callback) {
             try {
                 var returnedProcessInformation = JSON.parse(data);
 
-                svc.pid = app.pid;
                 if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port; // if they tell us a port, use that
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
                 fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+                // Set the pid after the write because it's transient to this locker instance only
+                svc.pid = app.pid;
                 if (callback) callback();
             } catch(error) {
                 console.error("The process did not return valid startup information. "+error);

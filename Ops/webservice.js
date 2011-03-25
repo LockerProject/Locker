@@ -7,6 +7,8 @@ var express = require('express');
 var connect = require('connect');
 var wwwdude = require('wwwdude');
 var sys = require('sys');
+var fs = require("fs");
+var lfs = require(__dirname + "/../Common/node/lfs.js");
 
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
@@ -29,9 +31,9 @@ function insertSafe(obj,key,item) {
 // return the known map of our world
 locker.get('/map',
 function(req, res) {
-    console.log('/map');
     res.writeHead(200, {
-        'Content-Type': 'text/javascript'
+        'Content-Type': 'text/javascript',
+        "Access-Control-Allow-Origin" : "*" 
     });
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
@@ -109,6 +111,52 @@ locker.post('/Me/*', function(req,res){
     } else {
         proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
     }
+});
+
+// Publish a user visible message
+locker.post("/diary", function(req, res) {
+    var level = req.param("level") || 0;
+    var message = req.param("message");
+
+    var now = new Date;
+    try {
+        fs.mkdirSync("Me/diary", 0700, function(err) {
+            if (err) console.error("Error creating diary: " + err);
+        });
+    } catch (E) {
+        // Why do I still have to catch when it has an error callback?!
+    }
+    fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
+        console.log("Error for year dir: " + err);
+        fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+            console.log("Error month dir: " + err);
+            var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+            lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message}]);
+            res.writeHead(200);
+            res.end("{}");
+        })
+    });
+});
+
+// Retrieve the current days diary or the given range
+locker.get("/diary", function(req, res) {
+    var now = new Date;
+    var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+    res.writeHead(200, {
+        "Content-Type": "text/javascript",
+        "Access-Control-Allow-Origin" : "*" 
+    });
+    fs.readFile(fullPath, function(err, file) {
+        if (err) {
+            console.error("Error sending diary: " + err);
+            res.write("[]");
+            res.end();
+            return;
+        }
+        res.write(file, "binary");
+        res.end();
+    });
+    res.write
 });
 
 // anybody can listen into any service's events
