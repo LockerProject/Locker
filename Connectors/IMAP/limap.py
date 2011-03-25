@@ -108,7 +108,11 @@ class MailboxProcessor:
             ## OOOOHhhh scary recursion
             self.processMailboxAndChildren(child, nextName)
             
-    def getMessage(self, mailID, fullname):        
+    def getMessage(self, mailID, fullname):         
+        if os.path.exists("%s/%s/%s" % (self.username, fullname, mailID)):
+            print 'UID %s exists' % (mailID)
+            return
+        print 'getting %s' % (mailID)
         typ, header = self.IMAP.fetch(mailID, "(UID BODY.PEEK[HEADER])")
         typ, body = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
         for x in range(0, len(header), 2):
