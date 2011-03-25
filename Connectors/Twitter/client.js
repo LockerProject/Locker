@@ -430,7 +430,7 @@ function getPhotos(users) {
     }
     for(var i = 0; i < users.length; i++) {
         var user = users[i];
-        var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('.'));
+        var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('/')+1);
         lfs.writeContentsOfURLToFile(user.profile_image_url, 'photos/' + user.id_str + photoExt, 3, 'binary');
     }
 }

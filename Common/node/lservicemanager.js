@@ -63,6 +63,7 @@ exports.findInstalled = function () {
         if(!fs.statSync(dir).isDirectory()) continue;
         if(!fs.statSync(dir+'/me.json').isFile()) continue;
         var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+        delete js.pid;
         console.log("Installing " + js.id);
         serviceMap.installed[js.id] = js;
     }
