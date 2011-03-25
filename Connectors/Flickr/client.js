@@ -228,7 +228,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
         function(data, resp) {
             var json = JSON.parse(data);
             if(!json || !json.photos || !json.photos.photo) {
-                console.log(data);
+                log(data);
                 res.end();
             }
             var photos = json.photos.photo;
@@ -243,7 +243,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                 var thumbURL = getPhotoThumbURL(id);
                 lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function() {
                     lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function() {
-                        if(debug) sys.debug('got flickr photo ' + id);
+                        log('got flickr photo ' + id);
                         curl(photos, callback);
                     });
                 });
