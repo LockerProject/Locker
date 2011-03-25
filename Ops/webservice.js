@@ -136,6 +136,13 @@ locker.post("/diary", function(req, res) {
     });
 });
 
+// Return an empty diary in response to HTTP request
+var writeEmptyDiary= function(req, res) {
+    res.write("[]");
+    res.end();
+    return;
+};
+
 // Retrieve the current days diary or the given range
 locker.get("/diary", function(req, res) {
     var now = new Date;
@@ -144,17 +151,24 @@ locker.get("/diary", function(req, res) {
         "Content-Type": "text/javascript",
         "Access-Control-Allow-Origin" : "*" 
     });
-    fs.readFile(fullPath, function(err, file) {
-        if (err) {
-            console.error("Error sending diary: " + err);
-            res.write("[]");
-            res.end();
-            return;
-        }
-        res.write(file, "binary");
-        res.end();
-    });
-    res.write
+
+    fs.stat(fullPath, function(err, statResult) {
+	    if (err) {
+		console.error("Error finding diary '"+fullPath+"':"+JSON.stringify(err,null,2));
+		writeEmptyDiary(req,res);
+		return;
+	    }
+            fs.readFile(fullPath, function(err, file) {
+		    if (err) {
+			console.error("Error reading diary: " + err);
+			writeEmptyDiary(req,res);
+		    }
+		    else {
+			res.write(file, "binary");
+			res.end();
+		    }
+		});
+	});
 });
 
 // anybody can listen into any service's events
