@@ -3,6 +3,7 @@ import lockerfs
 import gcontacts
 import time
 import datetime
+import urllib
 import urllib2
 
 app = Flask(__name__)
@@ -22,7 +23,13 @@ def update():
             return "Update already scheduled"
         app.updatesStarted = True
         gdc = gcontacts.GoogleDataContacts()
-        gdc.updateAll()
+        updateCount = gdc.updateAll()
+
+        # Tell the diary how many contacts we updated
+        url = "{0}diary".format(app.lockerInfo["lockerUrl"])
+        urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+
+        # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
         me = lockerfs.loadMeData()

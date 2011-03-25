@@ -13,11 +13,10 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
-var locker = express.createServer(
-    connect.bodyDecoder(),
-    connect.cookieDecoder(),
-    connect.session({secret : "locker"})
-);
+var locker = express.createServer();
+locker.use(express.bodyParser());
+locker.use(express.cookieParser());
+locker.use(express.session({secret : "locker"}));
 
 var listeners = new Object(); // listeners for events
 
@@ -41,10 +40,6 @@ function(req, res) {
 // let any service schedule to be called, it can only have one per uri
 locker.get('/at',
 function(req, res) {
-    console.log('/at');
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
     var seconds = req.param("at");
     var svcId = req.param('id'), cb = req.param('cb');
     if (!seconds || !svcId || !cb) {
@@ -52,6 +47,9 @@ function(req, res) {
         res.end("Invalid arguments");
         return;
     }
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
     at = new Date;
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
@@ -229,10 +227,10 @@ function proxied(svc, ppath, req, res) {
     console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
     var host = url.parse(svc.uriLocal).host;
     var cookies;
-    if(!req.session.cookies) {
-        req.session.cookies = {};
+    if(!req.cookies) {
+        req.cookies = {};
     } else {
-        cookies = req.session.cookies[host];
+        cookies = req.cookies[host];
     }
     var headers = req.headers;
     if(cookies && cookies['connect.sid'])
@@ -243,7 +241,7 @@ function proxied(svc, ppath, req, res) {
     .addListener('success', function(data, resp) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
-            req.session.cookies[host] = {'connect.sid' : newCookie};
+            req.cookies[host] = {'connect.sid' : newCookie};
 //        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
@@ -265,7 +263,7 @@ function proxied(svc, ppath, req, res) {
         
         var newCookie = getCookie(resp.headers);
         if(newCookie != null)
-            req.session.cookies[host] = {'connect.sid' : newCookie};
+            req.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
     });
 }
@@ -274,10 +272,10 @@ function proxiedPost(svc, ppath, req, res) {
     console.log("proxying post " + req.url + " to "+svc.uriLocal + ppath);
     var host = url.parse(svc.uriLocal).host;
     var cookies;
-    if(!req.session.cookies) {
-        req.session.cookies = {};
+    if(!req.cookies) {
+        req.cookies = {};
     } else {
-        cookies = req.session.cookies[host];
+        cookies = req.cookies[host];
     }
     var headers = req.headers;
     if(cookies && cookies['connect.sid'])
@@ -287,7 +285,7 @@ function proxiedPost(svc, ppath, req, res) {
     .addListener('success', function(data, resp) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
-            req.session.cookies[host] = {'connect.sid' : newCookie};
+            req.cookies[host] = {'connect.sid' : newCookie};
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
         console.log('writing: ' + data);
@@ -308,7 +306,7 @@ function proxiedPost(svc, ppath, req, res) {
         
         var newCookie = getCookie(resp.headers);
         if(newCookie != null)
-            req.session.cookies[host] = {'connect.sid' : newCookie};
+            req.cookies[host] = {'connect.sid' : newCookie};
         res.redirect(resp.headers['location']);
     });
 }

@@ -8,8 +8,8 @@ var fs = require('fs'),
     connect = require('connect');
     
 var app = express.createServer(
-                connect.bodyDecoder(),
-                connect.cookieDecoder(),
+                connect.bodyParser(),
+                connect.cookieParser(),
                 connect.session({secret : "locker"})
             );
 

@@ -11,7 +11,7 @@ var lockerInfo;
 
 
 var express = require('express'),connect = require('connect');
-var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session({secret : "locker"}));
+var app = express.createServer(connect.bodyParser(), connect.cookieParser(), connect.session({secret : "locker"}));
 
 // Process the startup JSON object
 process.stdin.resume();

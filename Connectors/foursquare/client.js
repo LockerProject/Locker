@@ -7,8 +7,8 @@ var express = require('express'),
     url = require('url'),
     sys = require('sys'),
     app = express.createServer(
-        connect.bodyDecoder(),
-        connect.cookieDecoder(),
+        connect.bodyParser(),
+        connect.cookieParser(),
         connect.session({secret : "locker"})
     ),
     http = require('http'),

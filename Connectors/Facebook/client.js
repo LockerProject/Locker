@@ -11,8 +11,8 @@ var fs = require('fs'),
     connect = require('connect'),
     sys = require('sys'),
     app = express.createServer(
-                    connect.bodyDecoder(),
-                    connect.cookieDecoder(),
+                    connect.bodyParser(),
+                    connect.cookieParser(),
                     connect.session({secret : "locker"})),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');

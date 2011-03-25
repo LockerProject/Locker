@@ -23,11 +23,10 @@ var fs = require('fs'),
         encoding: 'utf-8'
     });
     
-var app = express.createServer(
-                connect.bodyDecoder(),
-                connect.cookieDecoder(),
-                connect.session({secret : "locker"})
-            );
+var app = express.createServer();
+app.use(connect.bodyParser());
+app.use(connect.cookieParser());
+app.use(connect.session({secret : "locker"}));
 
 var map;
 app.get('/', function (req, res) {    

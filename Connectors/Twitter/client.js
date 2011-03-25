@@ -21,8 +21,8 @@ var requestCount;
 var twitterClient;
 
 var app = express.createServer(
-        connect.bodyDecoder(),
-        connect.cookieDecoder(),
+        connect.bodyParser(),
+        connect.cookieParser(),
         connect.session({secret : "locker"})
     );
     

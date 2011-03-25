@@ -6,7 +6,7 @@ var port = 3005;
 
 var fs = require('fs'),http = require('http');
 var express = require('express'),connect = require('connect');
-var app = express.createServer(connect.bodyDecoder(), connect.cookieDecoder(), connect.session({secret : "locker"}));
+var app = express.createServer(connect.bodyParser(), connect.cookieParser(), connect.session({secret : "locker"}));
 var lfs = require('../../Common/node/lfs.js');
 
 
