@@ -145,12 +145,19 @@ class MailboxProcessor:
             elif part.get('Content-Disposition') is not None:
                 print 'getting attachment of type ' + mtype
                 orig_filename, saved_filename = self.getAttachment(part, "%s/%s" % (self.username, fullname), uid)
-                message["attachments"].append({"orig_filename": orig_filename, "saved_filename": saved_filename, "type": mtype})
+                if saved_filename is not None:
+                    attachment = {"orig_filename": orig_filename, "saved_filename": saved_filename, "type": mtype}
+                else:
+                    attachment = {"orig_filename": orig_filename, "error": "Could not save file", "type": mtype}
+                message["attachments"].append(attachment)
         try:
             json.dump(message, msgFD)
         except:
-            message["body"] = {"error":"Message download failed!!!"};
-            json.dump(message, msgFD)
+            try:
+                message = {"error":"Message download failed!!!"};
+                json.dump(message, msgFD)
+            except:
+                print "ERRRORZ: MESSAGE FAILED TO SAVE WITH UID %s" % (uid)
     
     def getAddrs(self, msgHeaders, fieldName):
         temp = msgHeaders[fieldName]
@@ -158,31 +165,42 @@ class MailboxProcessor:
             return getaddresses([temp])
         return []
     
-    def getAttachment(self, part, directory, UID):    
-        filename = part.get_filename()
-        # if there is no filename, we create one with a counter to avoid duplicates
-        if not filename:
-            filename = 'part-%03d%s' % (self.counter, 'bin')
-            self.counter += 1
-        directory += '/attachments'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+    def getAttachment(self, part, directory, UID):  
+        try:  
+            filename = part.get_filename()
+            # if there is no filename, we create one with a counter to avoid duplicates
+            if not filename:
+                filename = 'part-%03d%s' % (self.counter, 'bin')
+                self.counter += 1
+            directory += '/attachments'
+            if not os.path.exists(directory):
+                os.makedirs(directory)
         
-        saved_filename = ("%s_" % (UID))  + filename;
-        att_path = os.path.join(directory, saved_filename)
-        inc = 0;
-        while os.path.isfile(att_path):
-            print str(inc)
-            inc+=1
-            saved_filename = ("%s_%s_" % (UID,inc))  + filename;
+            saved_filename = ("%s_" % (UID))  + filename;
             att_path = os.path.join(directory, saved_filename)
-        #Check if its already there
-        if not os.path.isfile(att_path) :
-            # finally write the stuff
-            fp = open(att_path, 'wb')
-            fp.write(part.get_payload(decode=True))
-            fp.close()
-        return filename, saved_filename
+            inc = 0;
+            while os.path.isfile(att_path):
+                print str(inc)
+                inc+=1
+                saved_filename = ("%s_%s_" % (UID,inc))  + filename;
+                att_path = os.path.join(directory, saved_filename)
+            #Check if its already there
+            if not os.path.isfile(att_path) :
+                # finally write the stuff
+                payload = part.get_payload(decode=True)
+                if payload is not None:
+                    fp = open(att_path, 'wb')
+                    fp.write(payload)
+                    fp.close()
+                    return filename, saved_filename
+        except Exception as ex:
+            print type(ex)     # the exception instance
+            print ex.args      # arguments stored in .args
+            print ex           # __str__ allows args to printed directly
+            pass
+        
+        #something bad happened
+        return filename, None
     
 
 if __name__ == "__main__":

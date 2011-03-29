@@ -47,20 +47,51 @@ def mainIndex():
 
 @app.route("/allMessages")
 def allMessages():
-    box = request.args['box']
+    box = request.args.get('box', '')
     start = int(request.args['start'])
     end = int(request.args['end'])
+    attachmentTypes = request.args.get('attachmentTypes')
+    if attachmentTypes is not None:
+        try:
+#            attachmentTypes = json.loads(attachmentTypes)
+            attachmentTypes = attachmentTypes.split(',')
+        except:
+            pass
+    hasAttachment = request.args.get('hasAttachment')
+    if hasAttachment is not None or attachmentTypes is not None:
+        hasAttachment = str(hasAttachment).lower()
+        hasAttachment = (hasAttachment == 'true' or hasAttachment == '1' or attachmentTypes is not None)
     secrets = lockerfs.loadJsonFile("secrets.json");
     username = secrets['username']
     boxPath = username + '/' + box
     messages = []
+    
     for i in range(start, end):
         message = lockerfs.loadJsonFile(boxPath + '/' + str(i))
-        if len(message.keys()) > 0:
+        if filter(message, hasAttachment, attachmentTypes):
             messages.append(message)
     
     return json.dumps(messages)
 
+
+def filter(message, hasAttachment, attachmentTypes):
+    if len(message.keys()) > 0:
+        if hasAttachment:
+            if len(message['attachments']) > 0:
+                if len(attachmentTypes) > 0:
+                    for attachment in message['attachments']:
+                        for attachmentType in attachmentTypes:
+                            if attachment["type"] == attachmentType:
+                                return True
+                else:
+                    return True
+            else:
+                return False
+        elif hasAttachment is not None:
+            return (len(message['attachments']) == 0)
+        else:
+            return True
+    return False
 
 def runService(info):
     secrets = lockerfs.loadJsonFile("secrets.json");
