@@ -3,6 +3,15 @@ exports.quickSort = function (array, compare) {
 }
 
 function quicksort(array, left, right, compare) {
+    if(!compare) {
+        compare = function(one, two) {
+            if(one < two)
+                return -1;
+            if(one > two)
+                return 1;
+            return 0;
+        }
+    }
     if(right > left) { // subarray of 0 or 1 elements already sorted
         var pivotIndex = Math.floor(left + (right - left)/2);
         var pivotNewIndex = partition(array, left, right, pivotIndex, compare);
@@ -20,6 +29,7 @@ function partition(array, left, right, pivotIndex, compare) {
     swap(array, pivotIndex, right); // Move pivot to end
     var storeIndex = left;
     for(var i = left; i < right; i++) {
+        
         if(compare(array[i], pivotValue) <= 0) {
             swap(array, i, storeIndex);
             storeIndex++;

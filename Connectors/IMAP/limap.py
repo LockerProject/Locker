@@ -29,6 +29,7 @@ class MailboxProcessor:
         self.username = username
         self.password = password
         self.mailboxes = Mailbox("INBOX")
+        self.counter = 0
         try:
             lastUIDsFile = open("%s/lastUIDS.json" % (username), "r")
             self.lastUIDs = json.load(lastUIDsFile)
@@ -108,52 +109,80 @@ class MailboxProcessor:
             ## OOOOHhhh scary recursion
             self.processMailboxAndChildren(child, nextName)
             
-    def getMessage(self, mailID, fullname):         
-        if os.path.exists("%s/%s/%s" % (self.username, fullname, mailID)):
-            print 'UID %s exists' % (mailID)
+    def getMessage(self, mailID, fullname):
+        typ, headerList = self.IMAP.fetch(mailID, "(UID BODY.PEEK[HEADER])")
+        header = headerList[0]
+        firstPart = header[0]
+        uidStart = firstPart.find("UID ") + 4
+        uidEnd = firstPart.find(" ", uidStart)
+        uid = int(firstPart[uidStart:uidEnd])
+        if os.path.exists("%s/%s/%s" % (self.username, fullname, uid)):
+            print 'UID %s exists' % (uid)
             return
-        print 'getting %s' % (mailID)
-        typ, header = self.IMAP.fetch(mailID, "(UID BODY.PEEK[HEADER])")
-        typ, body = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
-        for x in range(0, len(header), 2):
-            firstPart = header[x][0]
-            uidStart = firstPart.find("UID ") + 4
-            uidEnd = firstPart.find(" ", uidStart)
-            uid = int(firstPart[uidStart:uidEnd])
-            if uid > self.lastUIDs[fullname]: self.lastUIDs[fullname] = uid
-            print "UID %s in %s" % (uid, fullname)
-            msgFD = open("%s/%s/%s" % (self.username, fullname, uid), "w")
-            mssg = email.message_from_string(body[x][1])
-            hdrmsg = email.message_from_string(header[x][1])
-            jsonHeader = {};
-            for key in hdrmsg.keys():
-                jsonHeader[key] = hdrmsg[key]
-            #parse the email address lists into a usable format
-            for key in ['To', 'From', 'Cc', 'Bcc']:
-                jsonHeader[key] = self.getAddrs(hdrmsg, key)
-            
-            message = {"headers":jsonHeader, "body":{"parts":{}}}
-            for part in mssg.walk():
-                maintype = part.get_content_maintype();
-                mtype = part.get_content_type();
-                # multipart are just containers, so we skip them
-                if maintype == 'multipart':
-                    continue
-                if maintype == 'text':
-                    message["body"]["parts"][mtype] = {"payload":part.get_payload()};
-                else: #TODO: handle attachments
-                    print mtype
-            try:
-                json.dump(message, msgFD)
-            except:
-                message["body"] = {"error":"Message download failed!!!"};
-                json.dump(message, msgFD)
+        if uid > self.lastUIDs[fullname]: self.lastUIDs[fullname] = uid
+        print "UID %s in %s" % (uid, fullname)
+        typ, bodyList = self.IMAP.fetch(mailID, "(UID BODY.PEEK[])")
+        body = bodyList[0]
+        msgFD = open("%s/%s/%s" % (self.username, fullname, uid), "w")
+        mssg = email.message_from_string(body[1])
+        hdrmsg = email.message_from_string(body[1])
+        jsonHeader = {};
+        for key in hdrmsg.keys():
+            jsonHeader[key] = hdrmsg[key]
+        #parse the email address lists into a usable format
+        for key in ['To', 'From', 'Cc', 'Bcc']:
+            jsonHeader[key] = self.getAddrs(hdrmsg, key)
+        
+        message = {"headers":jsonHeader, "body":{"parts":{}}, "attachments": []}
+        for part in mssg.walk():
+            maintype = part.get_content_maintype();
+            mtype = part.get_content_type();
+            # multipart are just containers, so we skip them
+            if maintype == 'multipart':
+                continue
+            if maintype == 'text':
+                message["body"]["parts"][mtype] = {"payload":part.get_payload()};
+            elif part.get('Content-Disposition') is not None:
+                print 'getting attachment of type ' + mtype
+                orig_filename, saved_filename = self.getAttachment(part, "%s/%s" % (self.username, fullname), uid)
+                message["attachments"].append({"orig_filename": orig_filename, "saved_filename": saved_filename, "type": mtype})
+        try:
+            json.dump(message, msgFD)
+        except:
+            message["body"] = {"error":"Message download failed!!!"};
+            json.dump(message, msgFD)
     
     def getAddrs(self, msgHeaders, fieldName):
         temp = msgHeaders[fieldName]
         if temp is not None:
             return getaddresses([temp])
         return []
+    
+    def getAttachment(self, part, directory, UID):    
+        filename = part.get_filename()
+        # if there is no filename, we create one with a counter to avoid duplicates
+        if not filename:
+            filename = 'part-%03d%s' % (self.counter, 'bin')
+            self.counter += 1
+        directory += '/attachments'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        saved_filename = ("%s_" % (UID))  + filename;
+        att_path = os.path.join(directory, saved_filename)
+        inc = 0;
+        while os.path.isfile(att_path):
+            print str(inc)
+            inc+=1
+            saved_filename = ("%s_%s_" % (UID,inc))  + filename;
+            att_path = os.path.join(directory, saved_filename)
+        #Check if its already there
+        if not os.path.isfile(att_path) :
+            # finally write the stuff
+            fp = open(att_path, 'wb')
+            fp.write(part.get_payload(decode=True))
+            fp.close()
+        return filename, saved_filename
     
 
 if __name__ == "__main__":
