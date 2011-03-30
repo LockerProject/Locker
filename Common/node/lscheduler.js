@@ -65,6 +65,11 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
 }
 
 exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
+    if (typeof(atTime) == "number") {
+        runTime = new Date;
+        runTime.setTime(runTime.getTime() + atTime);
+        atTime = runTime
+    }
     var trackingInfo = {
         at:atTime,
         type:SCHEDULE_ACTION_DIRECT, 
