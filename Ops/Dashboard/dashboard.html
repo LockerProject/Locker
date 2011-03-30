@@ -181,7 +181,7 @@
         $("#availInfo h1").html(item["title"]);
         $("#availInfo p").html(item["desc"]);
         $("#availInfo .availSrcDir").html(item["srcdir"]);
-        $("#availInfo .availProvides").html(item["provides"].join(","));
+        if (item["provides"]) $("#availInfo .availProvides").html(item["provides"].join(","));
         $("#availInstall").attr("href", "javascript:install(" + index + ");");
     }
     function refreshDiary() {
@@ -190,6 +190,7 @@
             data.split("\n").forEach(function(item) {
                 if (!item) return;
                 var line = JSON.parse(item);
+                if (!line || line.length == 0) return;
                 var ts = Date.parse(line["timestamp"].split(".")[0]);
                 var diaryLine = $("#diaryTemplate").clone();
                 diaryLine.attr("id", "");
