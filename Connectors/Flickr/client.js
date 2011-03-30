@@ -13,8 +13,8 @@ var crypto = require('crypto'),
     connect = require('connect'),
     express = require('express'),
     app = express.createServer(
-            connect.bodyDecoder(),
-            connect.cookieDecoder(),
+            connect.bodyParser(),
+            connect.cookieParser(),
             connect.session({secret : "locker"})),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
@@ -276,6 +276,17 @@ function(req, res) {
     res.end();
 });
 
+
+app.get('/allPhotos',
+function(req, res) {
+    lfs.readObjectsFromFile('photos.json', function(photos) {
+        res.writeHead(200, {
+            'Content-Type': 'text/html'
+        });
+        res.write(JSON.stringify(photos));
+        res.end();
+    });
+})
 
 function log(msg) {
     if(debug) sys.debug(msg);

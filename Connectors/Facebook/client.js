@@ -151,6 +151,33 @@ function(req, res) {
     });
 });
 
+
+app.get('/allPhotos',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/plain'
+    });
+    fs.readdir('photos/Me', function(err, files) {
+        var photoAlbums = [];
+        function readNext(callback) {
+            var file = files.pop();
+            sys.debug('reading file ' + file)
+            lfs.readObjectFromFile('photos/Me/' + file + "/meta.json", function(albumInfo) {
+                photoAlbums.push(albumInfo);
+                if(files.length > 0)
+                    readNext(callback);
+                else {
+                    callback();
+                    return;
+                }
+            });
+        }
+        readNext(function() {
+            res.end(JSON.stringify(photoAlbums));
+        });
+    });
+});
+
 app.get('/friends',
 function(req, res) {
     res.writeHead(200, {
