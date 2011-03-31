@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -o monitor
+
+# Backup the existing Me directory
+mv ../Me ../Me.test-tmp
+# Copy in to place the testing version
+cp -R Me ../Me
+# Run locker on our mock/fake Me dir
+cd ..
+node locker.js > tests/locker.log 2>&1 &
+cd tests
+# Actually run all our tests
+vows --spec *-test.js
+# cleanup
+kill -2 %1
+fg %1 > /dev/null 2>&1
+# Remove the testing Me directory and put the real one back
+rm -rf ../Me
+mv ../Me.test-tmp ../Me

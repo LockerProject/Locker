@@ -47,17 +47,17 @@ function(req, res) {
         res.end("Invalid arguments");
         return;
     }
+    if (!serviceManager.isInstalled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" doesn't exist, but does anything really? ");
+        return;
+    }
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
     at = new Date;
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
-    if (!serviceManager.isInstalled(svcId)) {
-        res.writeHead(404);
-        res.end(id+" doesn't exist, but does anything really? ");
-        return;
-    }
     console.log("scheduled "+ svcId + " " + cb + "  at " + at);
     res.end("true");
 });
@@ -71,8 +71,8 @@ function(req, res) {
     });
     console.log("installing "+req.rawBody);
     var js = JSON.parse(req.rawBody);
-    serviceManager.install(js);
-    res.end(JSON.stringify(js));
+    var metaData = serviceManager.install(js);
+    res.end(JSON.stringify(metaData));
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
@@ -256,7 +256,8 @@ function proxied(svc, ppath, req, res) {
     .addListener('http-error', function(data, resp) {
         res.writeHead(resp.statusCode);
         res.end(data);
-    })
+    });
+    /*
     .addListener('redirect', function(data, resp) {
         for (key in resp.headers)
             res.header(key, resp.headers[key]);
@@ -264,8 +265,9 @@ function proxied(svc, ppath, req, res) {
         var newCookie = getCookie(resp.headers);
         if(newCookie != null)
             req.cookies[host] = {'connect.sid' : newCookie};
-        res.redirect(resp.headers['location']);
+        //res.redirect(resp.headers['location']);
     });
+    */
 }
 
 function proxiedPost(svc, ppath, req, res) {

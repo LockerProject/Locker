@@ -114,6 +114,11 @@ exports.install = function(metaData) {
 */
 exports.spawn = function(serviceId, callback) {
     var svc = exports.metaInfo(serviceId);
+    if (!svc) {
+        console.error("Attemtping to spawn an unknown service " + serviceId);
+        return;
+    }
+
     // Already running
     if (svc.pid) return;
     var run = svc.run.split(" "); // node foo.js
