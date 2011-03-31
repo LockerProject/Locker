@@ -25,8 +25,8 @@ exports.map = function(callback) {
  * id - the ID of the service posting the event
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
  */
-exports.event = function(id, type) {
-    request.post({'url':lockerBaseURI + '/event' + encodeParams({'id':id, 'type':type})}, function(error, response, body) {
+exports.event = function(sourceID, objectID, type) {
+    request.post({'url':lockerBaseURI + '/event' + encodeParams({'src_id':sourceID, 'obj_id':objectID, 'type':type})}, function(error, response, body) {
         if(error) sys.debug(error);
     });
 }

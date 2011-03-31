@@ -3,7 +3,7 @@ var extras = 'description,license,date_upload,date_taken,owner_name,icon_server,
              'views,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o';
              
 
-var debug = false;
+var debug = true;
 
 var base_url = 'http://api.flickr.com/services/rest/';
 
@@ -245,6 +245,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                     lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function() {
                         log('got flickr photo ' + id);
                         curl(photos, callback);
+                        locker.event(me.id, id, 'photo/flickr')
                     });
                 });
             }
@@ -286,7 +287,51 @@ function(req, res) {
         res.write(JSON.stringify(photos));
         res.end();
     });
+});
+
+app.get('/photoObject/*', function(req, res) {
+    //TODO: this is reeealy bad! Some sort of DB probably makes way more sense
+    lfs.readObjectsFromFile('photos.json', function(photos) {
+        var photoNum = req.url.substring(13);
+        sys.debug(photoNum);
+        var index = photoNum.indexOf('/');
+        if(index >= 0)   
+            photoNum = photoNum.substring(0, index);
+        sys.debug(photoNum);
+        for(var i in photos) {
+            if(photos[i].id == photoNum) {
+                res.writeHead(200);
+                res.write(JSON.stringify(photos[i]));
+                res.end();
+                return;
+            }
+        }
+        res.writeHead(404);
+        res.end();
+    });
 })
+app.get('/photo/*', function(req, res) {
+    var photoNum = req.url.substring(7);
+    var index = photoNum.indexOf('/');
+    if(index >= 0)   
+        photoNum = photoNum.substring(0, index);
+    var stream = fs.createReadStream('originals/' + photoNum + '.jpg');
+    var head = false;
+    stream.on('data', function(chunk) {
+        if(!head) {
+            head = true;
+            res.writeHead(200, {'Content-Disposition': 'attachment; filename=' + photoNum + '.jpg'});
+        }
+        res.write(chunk);
+    });
+    stream.on('error', function() {
+        res.writeHead(404);
+        res.end();
+    });
+    stream.on('end', function() {
+        res.end();
+    });
+});
 
 function log(msg) {
     if(debug) sys.debug(msg);
