@@ -77,16 +77,27 @@ exports.findInstalled = function () {
 * Install a service
 */
 exports.install = function(metaData) {
+    var serviceInfo = undefined;
+    serviceMap.available.some(function(svcInfo) {
+        if (svcInfo.srcdir == metaData.srcdir) {
+            serviceInfo = svcInfo;
+            return true;
+        }
+        return false;
+    });
+    if (!serviceInfo) {
+        return serviceInfo;
+    }
     var hash = crypto.createHash('md5');
     hash.update(Math.random()+'');
-    metaData.id = hash.digest('hex');
-    metaData.me = lconfig.lockerDir+'/Me/'+metaData.id;
-    metaData.uri = lconfig.lockerBase+"Me/"+metaData.id+"/";
-    serviceMap.installed[metaData.id] = metaData;
-    fs.mkdirSync(metaData.me,0755);
-    fs.writeFileSync(metaData.me+'/me.json',JSON.stringify(metaData));
+    serviceInfo.id = hash.digest('hex');
+    serviceInfo.me = lconfig.lockerDir+'/Me/'+serviceInfo.id;
+    serviceInfo.uri = lconfig.lockerBase+"Me/"+serviceInfo.id+"/";
+    serviceMap.installed[serviceInfo.id] = serviceInfo;
+    fs.mkdirSync(serviceInfo.me,0755);
+    fs.writeFileSync(serviceInfo.me+'/me.json',JSON.stringify(serviceInfo));
 
-    return metaData;
+    return serviceInfo;
 }
 
 //! Spawn a service instance

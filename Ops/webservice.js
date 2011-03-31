@@ -39,8 +39,7 @@ function(req, res) {
 });
 
 // let any service schedule to be called, it can only have one per uri
-locker.get('/at',
-function(req, res) {
+locker.get('/at', function(req, res) {
     var seconds = req.param("at");
     var svcId = req.param('id'), cb = req.param('cb');
     if (!seconds || !svcId || !cb) {
@@ -64,15 +63,24 @@ function(req, res) {
 });
 
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
-locker.post('/install',
-function(req, res) {
+locker.post('/install', function(req, res) {
     console.log('/install');
+    if (!req.body.hasOwnProperty("srcdir")) {
+        res.writeHead(400);
+        res.end("{}")
+        return;
+    }
+    console.log("installing ");
+    //var js = JSON.parse(req.rawBody);
+    var metaData = serviceManager.install(req.body);
+    if (!metaData) {
+        res.writeHead(404);
+        res.end("{}");
+        return;
+    }
     res.writeHead(200, {
-        'Content-Type': 'text/javascript'
+        'Content-Type': 'application/json'
     });
-    console.log("installing "+req.rawBody);
-    var js = JSON.parse(req.rawBody);
-    var metaData = serviceManager.install(js);
     res.end(JSON.stringify(metaData));
 });
 

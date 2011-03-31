@@ -9,6 +9,9 @@ cp -R Me ../Me
 # Run locker on our mock/fake Me dir
 cd ..
 node locker.js > tests/locker.log 2>&1 &
+# Wait for the locker to have some startup time
+echo "Waiting for the locker to startup..."
+sleep 5
 cd tests
 # Actually run all our tests
 vows --spec *-test.js

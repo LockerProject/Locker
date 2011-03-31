@@ -10,7 +10,7 @@ var fs = require("fs");
 var suite = RESTeasy.describe("Locker core API")
 
 suite.use("localhost", 8042)
-    .discuss("When using the core you can")
+    .discuss("Core can")
 
     .discuss("map existing services with")
         .path("/map")
@@ -32,16 +32,35 @@ suite.use("localhost", 8042)
             })
     .unpath().undiscuss()
 
+    .path("/install")
     .discuss("install an available service")
-        .path("/install")
         /************
          * XXX Right now we're relying on the hello world application to exist, maybe we should make a testing app?
          */
-        .post('', '{"title":"Hello World","action":"not much","desc":"just sayin hi and all","run":"node hello.js","srcdir":"Apps/HelloWorld","is":"app"}')
-            .expect(200)
-            .expect("and returns the installed service information", function(err, res, body) {
-                console.log(body);
-            });
+        .setHeader("Content-Type", "application/json")
+        .discuss("but requires a srcdir attribute")
+            .post({"invalid":"invalid"})
+                .expect(400)
+        .undiscuss()
+        .discuss("and fails on an invalid service")
+            .post({"srcdir":"invalid"})
+                .expect(404)
+        .undiscuss()
+        .discuss("by srcdir attribute")
+            .post({"srcdir":"Apps/HelloWorld"})
+                .expect(200)
+                .expect("and returns the installed service information", function(err, res, body) {
+                    var svcInfo = JSON.parse(body);
+                    assert.include(svcInfo, "id");
+                    assert.include(svcInfo, "me");
+                    assert.include(svcInfo, "uri");
+                })
+                .expect("and has a created instance directory", function(err, res, body) {
+                    var svcInfo = JSON.parse(body);
+                    fs.statSync("../Me/" + svcInfo.id + "/me.json").isFile();
+                })
+        .undiscuss()
+    .undiscuss().unpath();
 
 suite.next().suite.addBatch({
     "can schedule a uri callback" : {
