@@ -1,5 +1,6 @@
 var url = require("url");
 var http = require('http');
+var request = require('request');
 var lscheduler = require("lscheduler");
 var serviceManager = require("lservicemanager");
 var dashboard = require(__dirname + "/dashboard.js");
@@ -13,10 +14,10 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
-var locker = express.createServer();
-locker.use(express.bodyParser());
-locker.use(express.cookieParser());
-locker.use(express.session({secret : "locker"}));
+var locker = express.createServer(
+            connect.bodyParser(),
+            connect.cookieParser(),
+            connect.session({secret : "locker"}));
 
 var listeners = new Object(); // listeners for events
 
@@ -177,29 +178,29 @@ function(req, res) {
 // publish an event to any listeners
 locker.post('/event',
 function(req, res) {
-    var id = req.param('id'), type = req.param('type');
+    var sourceID = req.param('src_id'), type = req.param('type'), objectID = req.param('obj_id');
     res.writeHead(200);
     res.end();
-    console.log("new event from "+id+" "+type);
-    var list = listeners[id+'='+type];
+    console.log("new event from "+sourceID+" "+type);
+    var list = listeners[sourceID+'='+type];
     if(!list || list.length == 0) return;
     for(var i in list)
     {
         var to = list[i].substr(0,32);
         var path = list[i].substr(32);
-        console.log("publishing new event to "+id+" at "+path);
-        if(!serviceManager.isInstalled(id)) continue;
-        if(!serviceManager.isRunning(id)) continue; // start up?? probably?
-        var uri = uri.parse(serviceManager.metaInfo(id).uriLocal);
+        console.log("publishing new event to "+to+" at "+path);
+        if(!serviceManager.isInstalled(to)) continue;
+        if(!serviceManager.isRunning(to)) continue; // start up?? probably?
+        var uri = url.parse(serviceManager.metaInfo(to).uriLocal);
         // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
-        if(uri.host == "localhost" || uri.host == "127.0.0.1")
+        if(uri.hostname == "localhost" || uri.hostname == "127.0.0.1")
         {
             var httpClient = http.createClient(uri.port);            
         }else{
             var httpClient = http.createClient(uri.port,uri.host);            
         }
         var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
-        request.write(req.rawBody);
+        request.write('src_id=' + encodeURIComponent(sourceID) + '&type=' + encodeURIComponent(type) + '&obj_id=' + encodeURIComponent(objectID));
         // !!!! need to catch errors and remove this from the list
         request.end();
     }
