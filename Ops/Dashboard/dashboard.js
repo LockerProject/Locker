@@ -138,10 +138,10 @@ app.get('/post2install', function(req, res){
         }
     }
     var httpClient = http.createClient(lockerPort);
-    var request = httpClient.request('POST', '/install', {'Content-Type':'application/x-www-form-urlencoded'});
+    var request = httpClient.request('POST', '/install', {'Content-Type':'application/json'});
+    var item = JSON.stringify(map.available[req.param('id')]);
     request.write(JSON.stringify(map.available[req.param('id')]));
     request.end();
-    console.log(request);
     request.on('response',
     function(response) {
         var data = '';

@@ -64,14 +64,11 @@ locker.get('/at', function(req, res) {
 
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
 locker.post('/install', function(req, res) {
-    console.log('/install');
     if (!req.body.hasOwnProperty("srcdir")) {
         res.writeHead(400);
         res.end("{}")
         return;
     }
-    console.log("installing ");
-    //var js = JSON.parse(req.rawBody);
     var metaData = serviceManager.install(req.body);
     if (!metaData) {
         res.writeHead(404);

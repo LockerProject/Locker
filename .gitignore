@@ -5,3 +5,4 @@ Me/*
 */*/*.json
 \.*.swp
 *.pyc
+node_modules
