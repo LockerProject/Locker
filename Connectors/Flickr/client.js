@@ -128,7 +128,7 @@ function(req, res) {
         return;
     }
     if(!auth.token)
-        res.end("<html>you need to <a href='./goflickr'>auth w/ flickr</a> yet</html>");
+        res.end("<html>you need to <a href='" + getAuthSignedURL('read') + "'>auth w/ flickr</a> yet</html>");
     else
         res.end();
         //res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
@@ -146,7 +146,7 @@ function(req, res) {
     auth.apiKey = req.param('apiKey');
     auth.apiSecret = req.param('apiSecret');
     lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>k thanks, now we need to <a href='./goflickr'>auth that app to your account</a>.</html>");
+    res.end("<html>k thanks, now we need to <a href='" + getAuthSignedURL('read') + "'>auth that app to your account</a>.</html>");
 });
 
 

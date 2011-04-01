@@ -241,17 +241,17 @@ function proxied(svc, ppath, req, res) {
     var headers = req.headers;
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
-    var client = wwwdude.createClient({headers:headers});
-//    sys.debug('headers: ' + sys.inspect(headers));
+        
+    var client = wwwdude.createClient({'headers':headers});
     client.get(svc.uriLocal+ppath, req.headers)
     .addListener('success', function(data, resp) {
+        console.log('success');
+        sys.debug(resp);
         var newCookie = getCookie(resp.headers);
         if(newCookie != null) 
             req.cookies[host] = {'connect.sid' : newCookie};
-//        sys.debug('resp.headers: ' + sys.inspect(resp.headers));
         resp.headers["Access-Control-Allow-Origin"] = "*";
-        res.writeHead(200, resp.headers);
-//        console.log('writing: ' + data);
+        res.writeHead(resp.statusCode, resp.headers);
         res.end(data);
     })
     .addListener('error', function(err) {
@@ -262,18 +262,17 @@ function proxied(svc, ppath, req, res) {
     .addListener('http-error', function(data, resp) {
         res.writeHead(resp.statusCode);
         res.end(data);
-    });
-    /*
-    .addListener('redirect', function(data, resp) {
-        for (key in resp.headers)
+    })
+//    .addListener('redirect', function(data, resp) {
+        /*for (key in resp.headers)
             res.header(key, resp.headers[key]);
         
         var newCookie = getCookie(resp.headers);
         if(newCookie != null)
-            req.cookies[host] = {'connect.sid' : newCookie};
-        //res.redirect(resp.headers['location']);
-    });
-    */
+            req.cookies[host] = {'connect.sid' : newCookie};*/
+//        res.redirect(resp.headers['location']);
+//        res.redirect('http://www.example.com');
+   // });
 }
 
 function proxiedPost(svc, ppath, req, res) {

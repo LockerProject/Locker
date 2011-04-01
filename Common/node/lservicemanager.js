@@ -91,11 +91,10 @@ exports.install = function(metaData) {
     var hash = crypto.createHash('md5');
     hash.update(Math.random()+'');
     serviceInfo.id = hash.digest('hex');
-    serviceInfo.me = lconfig.lockerDir+'/Me/'+serviceInfo.id;
     serviceInfo.uri = lconfig.lockerBase+"Me/"+serviceInfo.id+"/";
     serviceMap.installed[serviceInfo.id] = serviceInfo;
-    fs.mkdirSync(serviceInfo.me,0755);
-    fs.writeFileSync(serviceInfo.me+'/me.json',JSON.stringify(serviceInfo));
+    fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
+    fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo));
 
     return serviceInfo;
 }
@@ -135,9 +134,10 @@ exports.spawn = function(serviceId, callback) {
     var run = svc.run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
+    console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        workingDirectory: svc.me, // A path into the me directory
+        workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
@@ -160,7 +160,7 @@ exports.spawn = function(serviceId, callback) {
 
                 if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port; // if they tell us a port, use that
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
-                fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
                 // Set the pid after the write because it's transient to this locker instance only
                 svc.pid = app.pid;
                 if (callback) callback();
@@ -172,9 +172,11 @@ exports.spawn = function(serviceId, callback) {
         console.outputModule = mod;
         
     });
+    console.log(svc.id);
     app.on('exit', function (code) {
+        var id = svc.id;
         delete svc.pid;
-        fs.writeFileSync(svc.me+'/me.json',JSON.stringify(svc)); // save out all updated meta fields
+        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
         checkForShutdown();
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
