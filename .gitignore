@@ -6,3 +6,4 @@ Me/*
 \.*.swp
 *.pyc
 node_modules
+scheduler.json

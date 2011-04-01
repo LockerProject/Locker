@@ -10,7 +10,7 @@ var fs = require("fs");
 var suite = RESTeasy.describe("Locker core API")
 
 suite.use("localhost", 8042)
-    .discuss("Core can")
+    .discuss("can")
 
     .discuss("map existing services with")
         .path("/map")

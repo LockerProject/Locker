@@ -184,6 +184,10 @@ function getFile(requestURL, filename) {
 }
 
 function curlFile(url, filename, callback) {
+    if(!url || !filename) {
+        callback(new Error);
+        return;
+    }
     var curl = spawn('curl', [url, '-o', filename, '-L']);
     if(callback) {
         curl.on('exit', function() {
@@ -201,7 +205,6 @@ exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding,
 //    curlFile(url, filename);
     getFile(url, filename);
 }
-    
 
 /**
  * Lists the subdirectories at the specified path
