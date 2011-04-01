@@ -9,6 +9,10 @@ To get started I'll need node and npm installed, then to install dependencies (f
 
     npm install
 
+There are a few Python utilities that are used in the stack, so run:
+
+    python setupEnv.py
+
 To turn on my locker run:
 
 	node locker.js
