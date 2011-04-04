@@ -99,6 +99,12 @@ function getPhotoURL(photoObject) {
         return photoObject.url_l;
     if(photoObject.url_z)
         return photoObject.url_z;
+    if(photoObject.url_m)
+        return photoObject.url_m;
+    if(photoObject.url_s)
+        return photoObject.url_s;
+    if(photoObject.url_t)
+        return photoObject.url_t;
     return null;
 }
 
@@ -240,12 +246,15 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                 }
                 var photo = photos.pop();
                 var id = photo.id;
-                var thumbURL = getPhotoThumbURL(id);
-                lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function() {
-                    lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function() {
+                lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function(err) {
+                    if(err)
+                        sys.debug(err)
+                    lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function(err) {
+                        if(err)
+                            sys.debug(err)
                         log('got flickr photo ' + id);
-                        curl(photos, callback);
                         locker.event(me.id, id, 'photo/flickr')
+                        curl(photos, callback);
                     });
                 });
             }

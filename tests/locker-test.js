@@ -11,7 +11,6 @@ var tests = RESTeasy.describe("Locker core API")
 
 tests.use("localhost", 8042)
     .discuss("Core can")
-
     .discuss("map existing services with")
         .path("/map")
         .get()
