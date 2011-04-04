@@ -25,7 +25,7 @@ tests.use("localhost", 8042)
             .expect("has 12 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 12);
-            }).expect("has 1 installed service", function(err, res, body) {
+            }).expect("has 2 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {

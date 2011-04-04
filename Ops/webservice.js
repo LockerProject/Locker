@@ -172,8 +172,7 @@ locker.get("/diary", function(req, res) {
 });
 
 // anybody can listen into any service's events
-locker.get('/listen',
-function(req, res) {
+locker.get('/listen', function(req, res) {
     var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
     if(!serviceManager.isInstalled(id) || !serviceManager.isInstalled(from)) {
         res.writeHead(404);
@@ -189,8 +188,7 @@ function(req, res) {
 });
 
 // publish an event to any listeners
-locker.post('/event',
-function(req, res) {
+locker.post('/event', function(req, res) {
     var sourceID = req.param('src_id'), type = req.param('type'), objectID = req.param('obj_id');
     res.writeHead(200);
     res.end();
