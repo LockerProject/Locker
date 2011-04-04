@@ -131,6 +131,13 @@ exports.spawn = function(serviceId, callback) {
 
     // Already running
     if (svc.pid) return;
+    // Queue up callbacks if we are already trying to start this service
+    if (svc.hasOwnProperty("starting")) {
+        svc.starting.push(callback);
+        return;
+    } else {
+        svc.starting = [callback];
+    }
     var run = svc.run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
@@ -163,7 +170,9 @@ exports.spawn = function(serviceId, callback) {
                 fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
                 // Set the pid after the write because it's transient to this locker instance only
                 svc.pid = app.pid;
-                if (callback) callback();
+                svc.starting.forEach(function(cb) {
+                    cb.call();
+                });
             } catch(error) {
                 console.error("The process did not return valid startup information. "+error);
                 app.kill();

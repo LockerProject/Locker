@@ -83,38 +83,46 @@ locker.post('/install', function(req, res) {
 
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
-    var id = req.url.substring(4,36);
-    var ppath = req.url.substring(37);
+    var slashIndex = req.url.indexOf("/", 4);
+    var id = req.url.substring(4, slashIndex);
+    var ppath = req.url.substring(slashIndex+1);
+    console.log("Proxying a get to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
         return;
     }
     if (!serviceManager.isRunning(id)) {
+        console.log("Having to spawn " + id);
         serviceManager.spawn(id,function(){
             proxied(serviceManager.metaInfo(id),ppath,req,res);
         });
     } else {
         proxied(serviceManager.metaInfo(id),ppath,req,res);
     }
+    console.log("Proxy complete");
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.post('/Me/*', function(req,res){
-    var id = req.url.substring(4,36);
-    var ppath = req.url.substring(37);
+    var slashIndex = req.url.indexOf("/", 4);
+    var id = req.url.substring(4, slashIndex);
+    var ppath = req.url.substring(slashIndex+1);
+    console.log("Proxying a post to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
         return;
     }
     if (!serviceManager.isRunning(id)) {
+        console.log("Having to spawn " + id);
         serviceManager.spawn(id,function(){
             proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
         });
     } else {
         proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
     }
+    console.log("Proxy complete");
 });
 
 // Publish a user visible message
@@ -131,9 +139,9 @@ locker.post("/diary", function(req, res) {
         // Why do I still have to catch when it has an error callback?!
     }
     fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
-        console.log("Error for year dir: " + err);
+        if (err) console.log("Error for year dir: " + err);
         fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            console.log("Error month dir: " + err);
+            if (err) console.log("Error month dir: " + err);
             var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message}]);
             res.writeHead(200);
@@ -212,19 +220,16 @@ function(req, res) {
 });
 
 // fallback everything to the dashboard
-locker.get('/*',
-function(req, res) {
+locker.get('/*', function(req, res) {
     proxied(dashboard.instance,req.url.substring(1),req,res);
 });
 
 // fallback everything to the dashboard
-locker.post('/*',
-function(req, res) {
+locker.post('/*', function(req, res) {
     proxiedPost(dashboard.instance,req.url.substring(1),req,res);
 });
 
-locker.get('/',
-function(req, res) {
+locker.get('/', function(req, res) {
     proxied(dashboard.instance,"",req,res);
 });
 
