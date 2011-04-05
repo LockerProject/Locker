@@ -1,5 +1,6 @@
 var http = require("http");
 var fs = require("fs");
+var querystring = require("querystring");
 
 // Startup shiz
 process.stdin.resume();
@@ -12,6 +13,20 @@ process.stdin.on("data", function(data) {
             fs.writeSync(fd, '{"result":true}');
             fs.close(fd);
             res.end("");
+            return;
+        } else if (req.url == "/event") {
+            var body = "";
+            req.on("data", function(chunk) {
+                body += chunk;
+            });
+            req.on("end", function() {
+                var postData = querystring.parse(body);
+                var fd = fs.openSync("event.json", "w");
+                console.log("Writing " + postData.obj);
+                fs.writeSync(fd, postData.obj);
+                fs.close(fd);
+                res.end("");
+            });
             return;
         }
         res.writeHead(200, {"Content-Type":"application/json"});

@@ -2,6 +2,7 @@ var url = require("url");
 var http = require('http');
 var request = require('request');
 var lscheduler = require("lscheduler");
+var levents = require("levents");
 var serviceManager = require("lservicemanager");
 var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
@@ -20,13 +21,6 @@ var locker = express.createServer(
             connect.session({secret : "locker"}));
 
 var listeners = new Object(); // listeners for events
-
-// make sure the value of the key is an array and insert the item
-function insertSafe(obj,key,item) {
-    console.log("inserting into "+key+": "+JSON.stringify(item))
-    if(!obj[key]) obj[key] = new Array();
-    obj[key].push(item);
-}
 
 // return the known map of our world
 locker.get('/map',
@@ -173,48 +167,63 @@ locker.get("/diary", function(req, res) {
 
 // anybody can listen into any service's events
 locker.get('/listen', function(req, res) {
-    var id = req.param('id'), type = req.param('type'), cb = req.param('cb'), from = req.param('from');
-    if(!serviceManager.isInstalled(id) || !serviceManager.isInstalled(from)) {
+    var id = req.param('id'), type = req.param('type'), cb = req.param('cb');
+    if(!serviceManager.isInstalled(id)) {
         res.writeHead(404);
         res.end(id+" doesn't exist, but does anything really? ");
         return;
     }
+    if (!type || !cb) {
+        res.writeHead(400);
+        res.end("Invalid type or callback");
+        return;
+    }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
+    levents.addListener(type, id, cb);
     res.writeHead(200);
     res.end("OKTHXBI");
-    // really simple datastructure for now: listeners["5e99c869b5fbe2be1f66e17894e92364=contact/facebook"][0]="241a4b440371069305c340bed2cf69ec/cb/path"
-    insertSafe(listeners,id+"="+type,from+cb);
-    console.log("new listener "+id+" "+type+" at "+id+cb);
+});
+
+// Stop listening to some events
+locker.get("/deafen", function(req, res) {
+    var id = req.param('id'), type = req.param('type'), cb = req.param('cb');
+    if(!serviceManager.isInstalled(id)) {
+        res.writeHead(404);
+        res.end(id+" doesn't exist, but does anything really? ");
+        return;
+    }
+    if (!type || !cb) {
+        res.writeHead(400);
+        res.end("Invalid type or callback");
+        return;
+    }
+    if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
+    levents.removeListener(type, id, cb);
+    res.writeHead(200);
+    res.end("OKTHXBI");
 });
 
 // publish an event to any listeners
 locker.post('/event', function(req, res) {
-    var sourceID = req.param('src_id'), type = req.param('type'), objectID = req.param('obj_id');
-    res.writeHead(200);
-    res.end();
-    console.log("new event from "+sourceID+" "+type);
-    var list = listeners[sourceID+'='+type];
-    if(!list || list.length == 0) return;
-    for(var i in list)
-    {
-        var to = list[i].substr(0,32);
-        var path = list[i].substr(32);
-        console.log("publishing new event to "+to+" at "+path);
-        if(!serviceManager.isInstalled(to)) continue;
-        if(!serviceManager.isRunning(to)) continue; // start up?? probably?
-        var uri = url.parse(serviceManager.metaInfo(to).uriLocal);
-        // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
-        if(uri.hostname == "localhost" || uri.hostname == "127.0.0.1")
-        {
-            var httpClient = http.createClient(uri.port);            
-        }else{
-            var httpClient = http.createClient(uri.port,uri.host);            
-        }
-        var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
-        request.write('src_id=' + encodeURIComponent(sourceID) + '&type=' + encodeURIComponent(type) + '&obj_id=' + encodeURIComponent(objectID));
-        // !!!! need to catch errors and remove this from the list
-        request.end();
+    if (!req.body ) {
+        res.writeHead(400);
+        res.end("Post data missing");
+        return;
     }
+    var id = req.body['id'], type = req.body['type'], obj = req.body['obj'];
+    if(!serviceManager.isInstalled(id)) {
+        res.writeHead(404);
+        res.end(id+" doesn't exist, but does anything really? ");
+        return;
+    }
+    if (!type || !obj) {
+        res.writeHead(400);
+        res.end("Invalid type or object");
+        return;
+    }
+    levents.fireEvent(type, id, obj);
+    res.writeHead(200);
+    res.end("OKTHXBI");
 });
 
 // fallback everything to the dashboard

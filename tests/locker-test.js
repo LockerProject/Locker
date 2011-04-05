@@ -31,7 +31,7 @@ tests.use("localhost", 8042)
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 1);
+                assert.equal(count, 2);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
@@ -68,6 +68,7 @@ tests.use("localhost", 8042)
         .undiscuss()
     .undiscuss().unpath()
 
+    // Tests for the proxying
     .path("/Me")
     .discuss("proxy requests via GET to services")
         .get("testURLCallback/test")
@@ -86,14 +87,25 @@ tests.use("localhost", 8042)
             .expect(404)
     .undiscuss().unpath()
 
+    // Diary storage
     .path("/diary")
     .discuss("store diary messages")
         .post({level:2, message:"Test message"})
             .expect(200)
+    .undiscuss().unpath()
+
+    // Event basics
+    .path("/listen")
+    .discuss("register a listener for an event")
+        .get({type:"test/event2", id:"testURLCallback", cb:"/event"})
+            .expect(200)
     .undiscuss().unpath();
 
-// Test this after the main suite so we're sure the diary POST is done
-tests.next().discuss("retrieve stored diary messages")
+
+// These tests are dependent on the previous tests so we make sure they fire after them
+tests.next()
+    // Test this after the main suite so we're sure the diary POST is done
+    .discuss("retrieve stored diary messages")
     .path("/diary")
     .get()
         .expect(200)
@@ -103,8 +115,16 @@ tests.next().discuss("retrieve stored diary messages")
             assert.include(diaryLine, "level");
             assert.include(diaryLine, "timestamp");
         })
+    .undiscuss().unpath()
+
+    // Makes sure the /listen is done first
+    .path("/deafen")
+    .discuss("deafen a listener for an event")
+        .get({type:"test/event2", id:"testURLCallback", cb:"/event"})
+            .expect(200)
     .undiscuss().unpath();
 
+// These tests are written in normal Vows
 tests.next().suite.addBatch({
     "Core can schedule a uri callback" : {
         topic:function() {
@@ -135,6 +155,54 @@ tests.next().suite.addBatch({
             return promise;
         },
         "and is called":function(err, stat) {
+            assert.isNull(err);
+        }
+    },
+    "Core can fire an event" : {
+        topic:function() {
+            var promise = new events.EventEmitter;
+            var getOptions = {
+                host:"localhost",
+                port:8042,
+                path:"/listen?" + querystring.stringify({type:"test/event", id:"testURLCallback", cb:"/event"})
+            };
+            var req = http.get(getOptions, function(res) {
+                var options = {
+                    host:"localhost",
+                    port:8042,
+                    method:"POST",
+                    path:"/event",
+                    headers:{
+                        "Content-Type":"application/json"
+                    }
+                };
+                try {
+                    fs.unlinkSync("../Me/testURLCallback/event.json");
+                } catch (E) {
+                }
+                var req = http.request(options);
+                req.on("response", function(res) {
+                    setTimeout(function() {
+                        fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
+                            if (!err)
+                                promise.emit("success", true);
+                            else
+                                promise.emit("error", err);
+                        });
+                    }, 1000);
+                });
+                req.on("error", function(e) {
+                    console.log("Error from request");
+                    promise.emit("error", e);
+                });
+                req.write(JSON.stringify({type:"test/event",id:"testURLCallback",obj:{test:"value", result:true}}));
+                req.end();
+            }).on("error", function(e) {
+                promise.emit("error", e);
+            });
+            return promise;
+        },
+        "and callbacks are called":function(err, stat) {
             assert.isNull(err);
         }
     }
