@@ -170,6 +170,7 @@ exports.spawn = function(serviceId, callback) {
                 fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
                 // Set the pid after the write because it's transient to this locker instance only
                 svc.pid = app.pid;
+                console.log(svc.id + " started, running startup callbacks.");
                 svc.starting.forEach(function(cb) {
                     cb.call();
                 });

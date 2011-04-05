@@ -1,6 +1,9 @@
 var wwwdude = require('wwwdude'),
     request = require('request'),
     sys = require('sys'),
+    http = require("http"),
+    url = require("url"),
+    lconfig = require(__dirname + "/lconfig.js"),
     client = wwwdude.createClient();
 
 var lockerBaseURI = 'http://localhost:8042';
@@ -24,27 +27,37 @@ exports.map = function(callback) {
  * Post an event
  * id - the ID of the service posting the event
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
+ * obj - the object to make a JSON string of as the event body
  */
-exports.event = function(sourceID, objectID, type) {
-    request.post({'url':lockerBaseURI + '/event' + encodeParams({'src_id':sourceID, 'obj_id':objectID, 'type':type})}, function(error, response, body) {
-        if(error) sys.debug(error);
-    });
+exports.event = function(type, id, obj) {
+    var urlInfo = url.parse(lconfig.lockerBase);
+    var options = {
+        method: "POST",
+        host: urlInfo.hostname,
+        port: urlInfo.port,
+        path: "/event",
+        headers: {
+            "Content-Type":"application/json"
+        }
+    };
+    var req = http.request(options);
+    req.write(JSON.stringify({"id":id,"type":type,"obj":obj}));
+    req.end();
 }
 
 /**
  * Sign up to be notified of events
- * id - the ID of the service posting the event
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
- * from - the ID of the service listening for events
+ * id - the ID of the service listening for events
  * callback - the URL path at the listener to callback to
  * 
  * for example, if our id is "foo" and we want to get a ping at "/photoListener" 
  * for photos from a flickr connector with id "bar", our call would look like this:
  * 
- * listen("bar", "photo/flickr", "foo", "/photoListener");
+ * listen("photo/flickr", "foo", "/photoListener");
  */
-exports.listen = function(id, type, from, callback) {
-    request.get({url:lockerBaseURI + '/listen' + encodeParams({'id':id, 'type':type, 'from':from, 'cb':callback})}, function(error, response, body) {
+exports.listen = function(type, id, callback) {
+    request.get({url:lockerBaseURI + '/listen' + encodeParams({'type':type, 'id':id, 'cb':callback})}, function(error, response, body) {
         if(error) sys.debug(error);
     });
 }

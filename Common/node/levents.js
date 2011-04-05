@@ -5,11 +5,13 @@ var serviceManager = require("lservicemanager");
 var eventListeners = {};
 
 exports.addListener = function(type, id, cb) {
+    console.log("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     eventListeners[type].push({"id":id, "cb":cb});
 }
 
 exports.removeListener = function(type, id, cb) {
+    console.log("Going to remove " + id + cb + " from " + type);
     if (!eventListeners.hasOwnProperty(type)) return;
     var pos = findListenerPosition(type, id, cb);
     if (pos >= 0) eventListeners[type].splice(pos, 1);
@@ -17,6 +19,7 @@ exports.removeListener = function(type, id, cb) {
 
 exports.fireEvent = function(type, id, obj) {
     if (!eventListeners.hasOwnProperty(type)) return;
+    console.log("Firing " + eventListeners[type].length + " listeners for " + type + " from " + id);
     eventListeners[type].forEach(function(listener) {
         if (!serviceManager.isInstalled(listener.id)) return;
         function sendEvent() {
@@ -25,9 +28,16 @@ exports.fireEvent = function(type, id, obj) {
             var httpOpts = {
                 host: cbUrl.hostname,
                 port: cbUrl.port,
-                path: listener.cb
+                path: listener.cb,
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json"
+                }
             };
-            http.get(httpOpts);
+            console.log("Firing event to " + listener.id + " to " + listener.cb);
+            var req = http.request(httpOpts);
+            req.write(JSON.stringify(obj));
+            req.end();
         }
         if (!serviceManager.isRunning(listener.id)) {
             serviceManager.spawn(listener.id, sendEvent);

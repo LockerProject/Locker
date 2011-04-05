@@ -253,7 +253,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                         if(err)
                             sys.debug(err)
                         log('got flickr photo ' + id);
-                        locker.event(me.id, id, 'photo/flickr')
+                        locker.event('photo/flickr', me.id, {"_id":id})
                         curl(photos, callback);
                     });
                 });
@@ -331,7 +331,7 @@ app.get('/photo/*', function(req, res) {
             head = true;
             res.writeHead(200, {'Content-Disposition': 'attachment; filename=' + photoNum + '.jpg'});
         }
-        res.write(chunk);
+        res.write(chunk, "binary");
     });
     stream.on('error', function() {
         res.writeHead(404);
