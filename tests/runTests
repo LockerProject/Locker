@@ -20,5 +20,4 @@ kill -2 %1
 fg %1 > /dev/null 2>&1
 # Remove the testing Me directory and put the real one back
 rm -rf ../Me
-#mv ../Me Me-prev
 mv ../Me.test-tmp ../Me

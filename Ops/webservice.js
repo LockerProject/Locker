@@ -195,25 +195,40 @@ locker.post('/event', function(req, res) {
     console.log("new event from "+sourceID+" "+type);
     var list = listeners[sourceID+'='+type];
     if(!list || list.length == 0) return;
-    for(var i in list)
-    {
-        var to = list[i].substr(0,32);
-        var path = list[i].substr(32);
+    for(var i in list) {
+        var firstSlash = list[i].indexOf('/');
+        if(!firstSlash)
+            firstSlash = 32;
+        var to = list[i].substr(0,firstSlash);
+        var path = list[i].substr(firstSlash);
         console.log("publishing new event to "+to+" at "+path);
         if(!serviceManager.isInstalled(to)) continue;
-        if(!serviceManager.isRunning(to)) continue; // start up?? probably?
-        var uri = url.parse(serviceManager.metaInfo(to).uriLocal);
-        // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
-        if(uri.hostname == "localhost" || uri.hostname == "127.0.0.1")
-        {
-            var httpClient = http.createClient(uri.port);            
-        }else{
-            var httpClient = http.createClient(uri.port,uri.host);            
+        
+        function finish() {
+            var uri = url.parse(serviceManager.metaInfo(to).uriLocal);
+            // cuz http client is dumb and doesn't work on localhost w/ no dns?!?! srsly
+            if(uri.hostname == "localhost" || uri.hostname == "127.0.0.1") {
+                var httpClient = http.createClient(uri.port);            
+            } else {
+                var httpClient = http.createClient(uri.port,uri.host);            
+            }
+            var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
+            request.write('src_id=' + encodeURIComponent(sourceID) + 
+                          '&type=' + encodeURIComponent(type) + 
+                          '&obj_id=' + encodeURIComponent(objectID));
+            // !!!! need to catch errors and remove this from the list
+            request.end();
         }
-        var request = httpClient.request('POST', path, {'Content-Type':'application/x-www-form-urlencoded'});
-        request.write('src_id=' + encodeURIComponent(sourceID) + '&type=' + encodeURIComponent(type) + '&obj_id=' + encodeURIComponent(objectID));
-        // !!!! need to catch errors and remove this from the list
-        request.end();
+        
+        if(!serviceManager.isRunning(to)) {
+            serviceManager.spawn(to, function() {
+                finish();
+            });
+            return;
+            //continue; // start up?? probably?
+        } else {
+            finish();
+        }
     }
 });
 
@@ -298,7 +313,6 @@ function proxiedPost(svc, ppath, req, res) {
             req.cookies[host] = {'connect.sid' : newCookie};
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
-        console.log('writing: ' + data);
         res.end(data);
     })
     .addListener('error', function(err) {
