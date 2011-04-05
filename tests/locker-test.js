@@ -2,6 +2,7 @@ var assert = require("assert");
 var vows = require("vows");
 var RESTeasy = require("rest-easy");
 var http = require("http");
+var request = require('request');
 var querystring = require("querystring");
 var events = require("events");
 var fs = require("fs");
@@ -25,13 +26,13 @@ tests.use("localhost", 8042)
             .expect("has 12 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 12);
-            }).expect("has 2 installed services", function(err, res, body) {
+            }).expect("has 3 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 2);
+                assert.equal(count, 3);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
@@ -149,6 +150,8 @@ tests.next().suite.addBatch({
                             promise.emit("error", err);
                     });
                 }, 500);
+            }).on('data', function(chunk) {
+                
             }).on("error", function(e) {
                 promise.emit("error", e);
             });

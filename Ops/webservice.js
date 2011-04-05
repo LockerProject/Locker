@@ -307,7 +307,6 @@ function proxiedPost(svc, ppath, req, res) {
             req.cookies[host] = {'connect.sid' : newCookie};
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
-        console.log('writing: ' + data);
         res.end(data);
     })
     .addListener('error', function(err) {
