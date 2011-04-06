@@ -5,5 +5,9 @@ Me/*
 */*/*.json
 \.*.swp
 *.pyc
+*.log
+*~
+#*
+.#*
 node_modules
 scheduler.json
