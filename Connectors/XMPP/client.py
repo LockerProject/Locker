@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import time
 import logging
 import sleekxmpp as xmpp
 import json
 
+# sleekxmpp claims this is necessary
 if sys.version_info < (3, 0):
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -22,7 +24,7 @@ def stanza_to_dict(stanza):
             json.dumps(value)
             data[key] = value
         except:
-            # if not coerce to string
+            # otherwise coerce to string
             data[key] = str(value)
     return data
 
@@ -30,19 +32,47 @@ class Client(xmpp.ClientXMPP):
 
     def __init__(self, jid=jid, password=password):
         xmpp.ClientXMPP.__init__(self, jid, password)
+
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("message", self.message)
         self.add_event_handler("changed_status", self.status)
+        self.add_event_handler("failed_auth", self.fail)
 
+        self.message_file = open("messages.json", "a+")
+        self.messages = [json.loads(msg) for msg in self.message_file.readlines()]
+        
+        self.status_file = open("statuses.json", "a+")
+        self.statuses = [json.loads(sts) for sts in self.status_file.readlines()]
+        
     def start(self, event):
-        self.getRoster()
         self.sendPresence()
 
-    def message(self, msg):
-        print "Message", json.dumps(stanza_to_dict(msg))
+    def getRoster(self):
+        try:
+            xmpp.ClientXMPP.getRoster(self)
+            logging.info("Roster: %s" % self.roster)
+        except exc:
+            logging.info("Roster fail: %s" % exc)
+            
+    def message(self, message):
+        message = stanza_to_dict(message)
+        message["timestamp"] = time.time()
+        self.messages.append(message)
+        msg_string = json.dumps(message) 
+        self.message_file.write(msg_string + "\n")
+        logging.info("Message: %s" % msg_string)
 
     def status(self, status):
-        print "Status", json.dumps(stanza_to_dict(status))
+        status = stanza_to_dict(status)
+        status["timestamp"] = time.time()
+        self.statuses.append(status)
+        sts_string = json.dumps(status)
+        self.status_file.write(sts_string + "\n")
+        logging.info("Status: %s" % sts_string)
+
+    def fail(self, fail):
+        logging.error("Fail: %s" % fail)
+        exit(1)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
@@ -52,6 +82,5 @@ if __name__ == '__main__':
 
     if client.connect():
         client.process(threaded=False)
-        print("Done")
     else:
-        print("Unable to connect.")
+        logging.error("Unable to connect")
