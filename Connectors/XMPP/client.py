@@ -33,10 +33,13 @@ class Client(xmpp.ClientXMPP):
     def __init__(self, jid=jid, password=password):
         xmpp.ClientXMPP.__init__(self, jid, password)
 
+        self.auto_reconnect = False
+
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("message", self.message)
         self.add_event_handler("changed_status", self.status)
         self.add_event_handler("failed_auth", self.fail)
+        self.add_event_handler("disconnect", self.fail)
 
         self.message_file = open("messages.json", "a+")
         self.messages = [json.loads(msg) for msg in self.message_file.readlines()]
