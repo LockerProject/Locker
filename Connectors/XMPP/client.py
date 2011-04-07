@@ -5,7 +5,10 @@ import sys
 import time
 import logging
 import sleekxmpp as xmpp
+import httplib
 import json
+sys.path.append("../../Common/python")
+import lockerfs
 
 # sleekxmpp claims this is necessary
 if sys.version_info < (3, 0):
@@ -30,8 +33,11 @@ def stanza_to_dict(stanza):
 
 class Client(xmpp.ClientXMPP):
 
-    def __init__(self, jid=jid, password=password):
+    def __init__(self, core_info, jid=jid, password=password):
         xmpp.ClientXMPP.__init__(self, jid, password)
+
+        self.core_info = core_info
+        self.me_info = lockerfs.loadJsonFile("me.json")
 
         self.auto_reconnect = False
 
@@ -61,6 +67,7 @@ class Client(xmpp.ClientXMPP):
         message = stanza_to_dict(message)
         message["timestamp"] = time.time()
         self.messages.append(message)
+        self.push_event("message/XMPP", message)
         msg_string = json.dumps(message) 
         self.message_file.write(msg_string + "\n")
         logging.info("Message: %s" % msg_string)
@@ -69,6 +76,7 @@ class Client(xmpp.ClientXMPP):
         status = stanza_to_dict(status)
         status["timestamp"] = time.time()
         self.statuses.append(status)
+        self.push_event("status/XMPP", status)
         sts_string = json.dumps(status)
         self.status_file.write(sts_string + "\n")
         logging.info("Status: %s" % sts_string)
@@ -76,6 +84,21 @@ class Client(xmpp.ClientXMPP):
     def fail(self, fail):
         logging.error("Fail: %s" % fail)
         exit(1)
+
+    def push_event(self, event_type, event):
+        data = json.dumps({
+                "id": self.me_info["id"],
+                "type": event_type,
+                "obj": event
+                })
+        headers = {"Content-type": "application/json"}
+        url = self.core_info["lockerUrl"].rstrip("/").lstrip("http:/")
+        conn = httplib.HTTPConnection(url)
+        conn.request("POST", "/event", data, headers)
+        status = conn.getresponse().status
+        if status != 200:
+            logging.error("push_event failed with code %s" % status)
+        conn.close()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,

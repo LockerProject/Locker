@@ -25,7 +25,7 @@ def saveAuth():
 
 def start():
     secrets = lockerfs.loadJsonFile("secrets.json")
-    app.client = client.Client(jid=secrets["jid"], password=secrets["password"])
+    app.client = client.Client(app.info, jid=secrets["jid"], password=secrets["password"])
     if app.client.connect():
         app.client.process(threaded=True)
         app.started = True
