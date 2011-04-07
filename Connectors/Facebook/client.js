@@ -140,13 +140,8 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/plain'
     });
-    fs.readFile("contacts.json", "binary", function(err, file) {  
-        if(err) {  
-            res.write("[]");  
-            res.end();  
-            return;  
-        }  
-        res.write(file, "binary");  
+    lfs.readObjectsFromFile('contacts.json', function(contacts) {
+        res.write(JSON.stringify(contacts));
         res.end();
     });
 });
@@ -180,12 +175,15 @@ function(req, res) {
 
 app.get('/friends',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    if (!auth.token)
-        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
-    else {
+    if (!auth.token) {
+        res.writeHead(401);
+        res.end();
+//        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
+        return;
+    } else {
+        res.writeHead(200, {
+            'Content-Type': 'text/html'
+        });
         facebookClient.apiCall('GET', '/me', {access_token: auth.token},
         function(error, result) {
             var userID = result.id;

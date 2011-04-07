@@ -26,13 +26,13 @@ tests.use("localhost", 8042)
             .expect("has 12 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 12);
-            }).expect("has 3 installed services", function(err, res, body) {
+            }).expect("has 4 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 3);
+                assert.equal(count, 4);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
