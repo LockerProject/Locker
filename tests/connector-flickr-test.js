@@ -115,6 +115,11 @@ suite.next().use("localhost", 8042)
                 })
             .unpath()
         .undiscuss()
+    .undiscuss();
+
+
+suite.next().use("localhost", 8042)
+    .discuss("Flicker Connector")
         .discuss("can get an individual photo object")
             .path('/Me/' + id + '/photoObject/' + photoID)
             .get()
