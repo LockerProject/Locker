@@ -143,6 +143,7 @@ exports.spawn = function(serviceId, callback) {
     // Queue up callbacks if we are already trying to start this service
     if (callback) {
         if (svc.hasOwnProperty("starting")) {
+            console.log(svc.id + " is still spawning, adding callback to queue.");
             svc.starting.push(callback);
             return;
         } else {

@@ -14,7 +14,7 @@ echo "Waiting for the locker to startup..."
 sleep 5
 cd tests
 # Actually run all our tests
-if [ -n $1 ]; then
+if test -n "$1"; then
     echo "Running only tests $1"
     vows --spec $1;
 else
