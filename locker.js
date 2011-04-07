@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 /* random notes:
 on startup scan all folders
     Apps Collections Connectors - generate lists of "available"

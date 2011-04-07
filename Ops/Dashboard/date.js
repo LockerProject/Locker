@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 /**
  * Version: 1.0 Alpha-1 
  * Build Date: 13-Nov-2007

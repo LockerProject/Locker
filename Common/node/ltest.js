@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 var crypto = require("crypto");
 var fs = require("fs");
 var rimraf = require("rimraf"); // rm -rf helper, npm install rimraf

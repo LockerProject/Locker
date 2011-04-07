@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 console.baseColor = "\033[0m"; // white
 console.errorColors = [/* yellow */"\033[33;40m", /* red */ "\033[31;40m"];
 console.moduleColor = "\033[32;40m"; // green
