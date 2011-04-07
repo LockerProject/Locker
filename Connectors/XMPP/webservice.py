@@ -1,10 +1,13 @@
 import sys
-sys.path.append("../../Common/python")
-from flask import Flask, render_template, request, redirect, url_for
-import lockerfs
-import logging
-import client
 import json
+import logging
+from flask import Flask, render_template, request, redirect, url_for
+
+sys.path.append("../../Common/python")
+import lockerfs
+
+import client
+import util
 
 app = Flask(__name__)
 
@@ -30,8 +33,7 @@ def start():
         app.client.process(threaded=True)
         app.started = True
     else:
-        logging.error("Connection failed")
-        exit(1)
+        util.die("XMPP connection failed")
 
 @app.route("/")
 def index():
@@ -68,8 +70,7 @@ def statuses():
 
 @app.route("/roster")
 def roster():
-    app.client.getRoster()
-    return json.dumps(app.client.roster)
+    return json.dumps(app.client.fetch_roster())
 
 def runService(info):
     app.info = info

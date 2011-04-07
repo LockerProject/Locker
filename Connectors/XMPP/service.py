@@ -1,9 +1,11 @@
 import sys, os, socket
 import threading, time
+import signal
 import json
 import logging
 
 import webservice
+import util
 
 def testListenPort(port):
     """Test if a port can be listened on."""
@@ -42,6 +44,10 @@ class startNotifierThread(threading.Thread):
             time.sleep(self.timeout)
 
 if __name__ == "__main__":
+    def die_sigint(signal, stack):
+        util.die("SIGINT")
+    signal.signal(signal.SIGINT, die_sigint)
+
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)-8s %(message)s')
     logging.info("Starting")
@@ -59,8 +65,5 @@ if __name__ == "__main__":
     # We have to use a thread here to see if the startup has finished to avoid race conditions
     notifierThread = startNotifierThread(info)
     notifierThread.start()
-    try:
-        webservice.runService(info)
-        notifierThread.join()
-    except KeyboardInterrupt, e:
-        exit(0)
+    webservice.runService(info)
+    notifierThread.join()

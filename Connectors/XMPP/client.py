@@ -4,11 +4,14 @@
 import sys
 import time
 import logging
-import sleekxmpp as xmpp
-import httplib
 import json
+import httplib
+import sleekxmpp as xmpp
+
 sys.path.append("../../Common/python")
 import lockerfs
+
+import util
 
 # sleekxmpp claims this is necessary
 if sys.version_info < (3, 0):
@@ -56,12 +59,13 @@ class Client(xmpp.ClientXMPP):
     def start(self, event):
         self.sendPresence()
 
-    def getRoster(self):
+    def fetch_roster(self):
         try:
-            xmpp.ClientXMPP.getRoster(self)
+            xmpp.ClientXMPP.get_roster(self)
             logging.info("Roster: %s" % self.roster)
-        except exc:
-            logging.info("Roster fail: %s" % exc)
+            return self.roster
+        except Exception, exc:
+            util.die("Couldn't fetch roster: %s" % exc)
             
     def message(self, message):
         message = stanza_to_dict(message)
@@ -82,8 +86,7 @@ class Client(xmpp.ClientXMPP):
         logging.info("Status: %s" % sts_string)
 
     def fail(self, fail):
-        logging.error("Fail: %s" % fail)
-        exit(1)
+        util.die(fail)
 
     def push_event(self, event_type, event):
         data = json.dumps({
