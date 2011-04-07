@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 /*var cwd = process.argv[2];
 var port = process.argv[3];
 //console.log

@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 var fs = require('fs'),
     xml2js = require('xml2js'),
     wwwdude = require('wwwdude');

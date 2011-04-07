@@ -1,3 +1,12 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
 // merge contacts from journals
 var fs = require('fs'),
     sys = require('sys'),

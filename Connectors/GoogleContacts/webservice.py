@@ -1,3 +1,10 @@
+#
+# Copyright (C) 2011, The Locker Project
+# All rights reserved.
+#
+# Please see the LICENSE file for more information.
+#
+
 from flask import Flask, render_template, url_for, request, redirect, send_file
 import lockerfs
 import gcontacts
