@@ -7,7 +7,7 @@
         "lib": "./Common/node"
     },
     "engines": {
-        "node": ">= 0.4.2"
+        "node": ">= 0.4.3"
     },
     "dependencies": {
         "connect" : "=1.1.4",
@@ -21,6 +21,7 @@
         "twitter-js" : "=0.0.5",
         "wwwdude" : "=0.0.5",
         "xml2js" : "=0.1.5",
-        "request" : "=1.9.5"
+        "request" : "=1.9.5",
+        "rest-easy": "=0.2.0"
     }
 }

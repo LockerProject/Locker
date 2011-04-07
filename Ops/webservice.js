@@ -264,7 +264,8 @@ function proxied(svc, ppath, req, res) {
             req.cookies[host] = {'connect.sid' : newCookie};
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(resp.statusCode, resp.headers);
-        res.end(data);
+        res.write(data, 'binary');
+        res.end();
     })
     .addListener('error', function(err) {
         res.writeHead(500);
@@ -307,7 +308,8 @@ function proxiedPost(svc, ppath, req, res) {
             req.cookies[host] = {'connect.sid' : newCookie};
         resp.headers["Access-Control-Allow-Origin"] = "*";
         res.writeHead(200, resp.headers);
-        res.end(data);
+        res.write(data, 'binary');
+        res.end();
     })
     .addListener('error', function(err) {
         res.writeHead(500);
