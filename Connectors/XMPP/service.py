@@ -43,12 +43,11 @@ class startNotifierThread(threading.Thread):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
-                        format='%(levelname)-8s %(message)s',
-                        filename='XMPP.log',
-                        filemode='a')
+                        format='%(levelname)-8s %(message)s')
     logging.info("Starting")
 
     info = json.loads(sys.stdin.readline())
+    logging.info("Core info: %s" % info)
 
     # Make sure we can use the offered port or pick one
     port = testListenPort(info["port"]) or testListenPort(0)

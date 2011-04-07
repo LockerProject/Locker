@@ -7,8 +7,6 @@ import client
 import json
 
 app = Flask(__name__)
-app.client = None
-app.started = False
 
 @app.route("/setupAuth")
 def setupAuth():
@@ -21,15 +19,16 @@ def saveAuth():
     secrets["jid"] = request.form["jid"]
     secrets["password"] = request.form["password"]
     lockerfs.saveJsonFile("secrets.json", secrets)
-    return start()
+    start()
+    return json.dumps("started")
 
 def start():
+    logging.info("Starting")
     secrets = lockerfs.loadJsonFile("secrets.json")
     app.client = client.Client(app.info, jid=secrets["jid"], password=secrets["password"])
     if app.client.connect():
         app.client.process(threaded=True)
         app.started = True
-        return json.dumps("Started")
     else:
         logging.error("Connection failed")
         exit(1)
@@ -74,9 +73,11 @@ def roster():
 
 def runService(info):
     app.info = info
+    app.client = None
+    app.started = False
+
     secrets = lockerfs.loadJsonFile("secrets.json")
     if "jid" in secrets and "password" in secrets:
-        logging.info("Starting")
         start()
     else:
         logging.info("No auth details available")
