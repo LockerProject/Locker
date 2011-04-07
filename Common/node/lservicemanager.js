@@ -141,11 +141,13 @@ exports.spawn = function(serviceId, callback) {
     // Already running
     if (svc.pid) return;
     // Queue up callbacks if we are already trying to start this service
-    if (svc.hasOwnProperty("starting")) {
-        svc.starting.push(callback);
-        return;
-    } else {
-        svc.starting = [callback];
+    if (callback) {
+        if (svc.hasOwnProperty("starting")) {
+            svc.starting.push(callback);
+            return;
+        } else {
+            svc.starting = [callback];
+        }
     }
     var run = svc.run.split(" "); // node foo.js
 
@@ -166,7 +168,7 @@ exports.spawn = function(serviceId, callback) {
     app.stdout.on('data',function (data) {
         var mod = console.outputModule
         console.outputModule = svc.title
-        if (svc.pid) {
+        if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
             console.log(data);
         } else {
@@ -182,7 +184,16 @@ exports.spawn = function(serviceId, callback) {
                 console.log(svc.id + " started, running startup callbacks.");
                 svc.starting.forEach(function(cb) {
                     cb.call();
+                    // See if it ended whilst running the callbacks
+                    if (!svc.hasOwnProperty("pid") && svc.starting.length > 0) {
+                        // We'll try again in a sec
+                        setTimeout(function() {
+                            exports.spawn(svc.id);
+                        }, 10);
+                        return;
+                    }
                 });
+                delete svc.starting;
             } catch(error) {
                 console.error("The process did not return valid startup information. "+error);
                 app.kill();
@@ -193,6 +204,7 @@ exports.spawn = function(serviceId, callback) {
     });
     console.log(svc.id);
     app.on('exit', function (code) {
+        console.log(svc.id + " process has ended.");
         var id = svc.id;
         delete svc.pid;
         fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields

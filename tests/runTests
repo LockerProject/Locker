@@ -14,7 +14,12 @@ echo "Waiting for the locker to startup..."
 sleep 5
 cd tests
 # Actually run all our tests
-vows --spec *-test.js
+if [ -n $1 ]; then
+    echo "Running only tests $1"
+    vows --spec $1;
+else
+    vows --spec *-test.js;
+fi
 # cleanup
 kill -2 %1
 fg %1 > /dev/null 2>&1
