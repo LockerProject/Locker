@@ -3,5 +3,6 @@
 	"action":"Connect to XMPP account",
 	"desc":"Receive contact lists, messages and status updates from my IMAP account.",
 	"run":"python service.py",
+	"status":"unstable",
 	"provides":["message/XMPP","status/XMPP"]
 }
