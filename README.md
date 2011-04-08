@@ -5,7 +5,7 @@ This is an open source project that helps me collect all of my social data from 
 
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress! 
 
-To get started I'll need node and npm installed, then to install dependencies (from the Locker directory, and this may take a while to run):
+To get started I'll need [node](http://nodejs.org/#download) and [npm](https://github.com/isaacs/npm) installed, then to install dependencies (from the Locker directory, and this may take a while to run):
 
     npm install
 
