@@ -2,6 +2,6 @@
     "title":"Links",
     "desc":"A collection of links from many places.",
     "run":"node links.js",
-    "takes":["link/chrome"],
+	"status":"unstable",
     "provides":["link"]
 }
