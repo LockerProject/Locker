@@ -32,13 +32,24 @@ var locker = express.createServer(
 var listeners = new Object(); // listeners for events
 
 // return the known map of our world
-locker.get('/map',
-function(req, res) {
+locker.get('/map', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript',
         "Access-Control-Allow-Origin" : "*" 
     });
     res.end(JSON.stringify(serviceManager.serviceMap()));
+});
+
+locker.get("/providers", function(req, res) {
+    console.log("Checking url " + req.url);
+    console.log("Looking for providers of type " + req.param("types"));
+    if (!req.param("types")) {
+        res.writeHead(400);
+        res.end("[]");
+        return;
+    }
+    res.writeHead(200, {"Content-Type":"application/json"});
+    res.end(JSON.stringify(serviceManager.providers(req.param("types").split(","))));
 });
 
 // let any service schedule to be called, it can only have one per uri

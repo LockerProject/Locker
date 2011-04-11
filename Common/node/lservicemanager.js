@@ -26,6 +26,29 @@ exports.serviceMap = function() {
     return serviceMap;
 }
 
+exports.providers = function(types) {
+    var services = serviceMap.available.filter(function(service) {
+        if (!service.hasOwnProperty("provides")) return false;
+        return service.provides.some(function(svcType, index, actualArray) {
+            for (var i = 0; i < types.length; ++i) {
+                var currentType = types[i];
+                var currentTypeSlashIndex = currentType.indexOf("/");
+                if (currentTypeSlashIndex < 0) {
+                    // This is a primary only comparison
+                    var svcTypeSlashIndex = svcType.indexOf("/");
+                    if (svcTypeSlashIndex < 0 && currentType == svcType) return true;
+                    if (currentType == svcType.substring(0, svcTypeSlashIndex)) return true;
+                    continue;
+                }
+                // Full comparison
+                if (currentType == svcType) return true;
+            }
+            return false;
+        });
+    });
+    return services;
+}
+
 /**
 * Map a meta data file JSON with a few more fields and make it available
 */
