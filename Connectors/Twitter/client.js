@@ -111,21 +111,28 @@ function(req, res) {
     res.end("<html>thanks, now we need to <a href='./'>auth that app to your account</a>.</html>");
 });
 
-app.get('/get_home_timeline', function(req, res) {
+function readStatuses(req, res, type) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript'
     });
-    lfs.readObjectsFromFile('feed.json', function(data) {
+    lfs.readObjectsFromFile(type + '.json', function(data) {
         data.reverse();
         res.write(JSON.stringify(data));
         res.end();
     });
+}
+
+app.get('/get_home_timeline', function(req, res) {
+    readStatuses(req, res, 'home_timeline');
 });
 
 app.get('/home_timeline', function(req, res) {
     pullStatuses('home_timeline', 60, res);
 });
 
+app.get('/get_mentions', function(req, res) {
+    readStatuses(req, res, 'mentions');
+});
 
 app.get('/mentions', function(req, res) {
     pullStatuses('mentions', 120, res);
