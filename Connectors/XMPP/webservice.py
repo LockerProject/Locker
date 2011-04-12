@@ -21,13 +21,12 @@ def saveAuth():
     secrets = lockerfs.loadJsonFile("secrets.json")
     secrets["jid"] = request.form["jid"]
     secrets["password"] = request.form["password"]
+    start(secrets)
     lockerfs.saveJsonFile("secrets.json", secrets)
-    start()
     return json.dumps("started")
 
-def start():
+def start(secrets):
     logging.info("Starting")
-    secrets = lockerfs.loadJsonFile("secrets.json")
     app.client = client.Client(app.info, jid=secrets["jid"], password=secrets["password"])
     if app.client.connect():
         app.client.process(threaded=True)
@@ -79,7 +78,7 @@ def runService(info):
 
     secrets = lockerfs.loadJsonFile("secrets.json")
     if "jid" in secrets and "password" in secrets:
-        start()
+        start(secrets)
     else:
         logging.info("No auth details available")
     app.debug = True
