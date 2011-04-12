@@ -135,4 +135,24 @@ suite.next().use('localhost', port)
         .undiscuss()
     .undiscuss();
 
+suite.next().suite.addBatch({
+    'When Twitter Connector got friends' : {
+        topic:function() {
+            var promise = new events.EventEmitter;
+//            setTimeout(function() {
+                fs.readdir('../Me/' + id + '/photos', function(err, files) {
+                        if(err || !files || files.length < 2)
+                            promise.emit('error', new Error);
+                        else
+                            promise.emit('success', true);
+                    }
+                );
+//            }, 10000);
+            return promise;
+        },
+        'it downloaded their profile photos':function(err, stat) {
+            assert.isNull(err);
+        }
+    }
+});
 suite.export(module);

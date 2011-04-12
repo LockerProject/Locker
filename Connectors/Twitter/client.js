@@ -7,14 +7,6 @@
 *
 */
 
-/*var cwd = process.argv[2];
-var port = process.argv[3];
-//console.log
-if (!cwd || !port) {
-    process.stderr.write("missing dir and port arguments\n");
-    process.exit(1);
-}*/
-
 var express = require('express'),
     connect = require('connect'),
     fs = require('fs'),
@@ -419,7 +411,6 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
-//    console.log('user_id:' + id_str);
     twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
                                                                   oauth_token: auth.token.oauth_token}, 
                                                          user_id: id_str,
@@ -444,11 +435,20 @@ function getPhotos(users) {
         fs.mkdirSync('photos', 0755);
     } catch(err) {
     }
-    for(var i = 0; i < users.length; i++) {
-        var user = users[i];
+    var userz = [];
+    for(var i in users)
+        userz.push(users[i]);
+    
+    function _curlNext() {
+        var user = userz.pop();
+        if(!user)
+            return;
         var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('/')+1);
-        lfs.writeContentsOfURLToFile(user.profile_image_url, 'photos/' + user.id_str + photoExt, 3, 'binary');
+        lfs.curlFile(user.profile_image_url, 'photos/' + user.id_str + photoExt, function(success) {
+            _curlNext();
+        });
     }
+    _curlNext();
 }
 
 function getTwitterClient() {
