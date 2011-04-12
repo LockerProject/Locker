@@ -17,6 +17,7 @@ var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var wwwdude = require('wwwdude');
+var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
 var lfs = require(__dirname + "/../Common/node/lfs.js");
@@ -109,10 +110,10 @@ locker.get('/Me/*', function(req,res){
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
         serviceManager.spawn(id,function(){
-            proxied(serviceManager.metaInfo(id),ppath,req,res);
+            proxied('GET', serviceManager.metaInfo(id),ppath,req,res);
         });
     } else {
-        proxied(serviceManager.metaInfo(id),ppath,req,res);
+        proxied('GET', serviceManager.metaInfo(id),ppath,req,res);
     }
     console.log("Proxy complete");
 });
@@ -131,10 +132,10 @@ locker.post('/Me/*', function(req,res){
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
         serviceManager.spawn(id,function(){
-            proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
+            proxied('POST', serviceManager.metaInfo(id),ppath,req,res);
         });
     } else {
-        proxiedPost(serviceManager.metaInfo(id),ppath,req,res);
+        proxied('POST', serviceManager.metaInfo(id),ppath,req,res);
     }
     console.log("Proxy complete");
 });
@@ -248,21 +249,21 @@ locker.post('/event', function(req, res) {
 
 // fallback everything to the dashboard
 locker.get('/*', function(req, res) {
-    proxied(dashboard.instance,req.url.substring(1),req,res);
+    proxied('GET', dashboard.instance,req.url.substring(1),req,res);
 });
 
 // fallback everything to the dashboard
 locker.post('/*', function(req, res) {
-    proxiedPost(dashboard.instance,req.url.substring(1),req,res);
+    proxied('POST', dashboard.instance,req.url.substring(1),req,res);
 });
 
 locker.get('/', function(req, res) {
-    proxied(dashboard.instance,"",req,res);
+    proxied('GET', dashboard.instance,"",req,res);
 });
 
 
-function proxied(svc, ppath, req, res) {
-    console.log("proxying " + req.url + " to "+svc.uriLocal + ppath);
+function proxied(method, svc, ppath, req, res) {
+    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
     var host = url.parse(svc.uriLocal).host;
     var cookies;
     if(!req.cookies) {
@@ -273,81 +274,29 @@ function proxied(svc, ppath, req, res) {
     var headers = req.headers;
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
-        
-    var client = wwwdude.createClient({'headers':headers});
-    client.get(svc.uriLocal+ppath, req.headers)
-    .addListener('success', function(data, resp) {
-        console.log('success');
-        sys.debug(resp);
-        var newCookie = getCookie(resp.headers);
-        if(newCookie != null) 
-            req.cookies[host] = {'connect.sid' : newCookie};
-        resp.headers["Access-Control-Allow-Origin"] = "*";
-        res.writeHead(resp.statusCode, resp.headers);
-        res.write(data, 'binary');
-        res.end();
-    })
-    .addListener('error', function(err) {
-        res.writeHead(500);
-        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
-        res.end("eRr0r :( "+err);
-    })
-    .addListener('http-error', function(data, resp) {
-        res.writeHead(resp.statusCode);
-        res.end(data);
-    })
-//    .addListener('redirect', function(data, resp) {
-        /*for (key in resp.headers)
-            res.header(key, resp.headers[key]);
-        
-        var newCookie = getCookie(resp.headers);
-        if(newCookie != null)
-            req.cookies[host] = {'connect.sid' : newCookie};*/
-//        res.redirect(resp.headers['location']);
-//        res.redirect('http://www.example.com');
-   // });
-}
-
-function proxiedPost(svc, ppath, req, res) {
-    console.log("proxying post " + req.url + " to "+svc.uriLocal + ppath);
-    var host = url.parse(svc.uriLocal).host;
-    var cookies;
-    if(!req.cookies) {
-        req.cookies = {};
-    } else {
-        cookies = req.cookies[host];
-    }
-    var headers = req.headers;
-    if(cookies && cookies['connect.sid'])
-        headers.cookie = 'connect.sid=' + cookies['connect.sid'];
-    var client = wwwdude.createClient({headers:headers});
-    client.post(svc.uriLocal+ppath, req.rawBody, req.headers)
-    .addListener('success', function(data, resp) {
-        var newCookie = getCookie(resp.headers);
-        if(newCookie != null) 
-            req.cookies[host] = {'connect.sid' : newCookie};
-        resp.headers["Access-Control-Allow-Origin"] = "*";
-        res.writeHead(200, resp.headers);
-        res.write(data, 'binary');
-        res.end();
-    })
-    .addListener('error', function(err) {
-        res.writeHead(500);
-        sys.debug("eRr0r :( "+err.toString().trim() + ' ' + svc.uriLocal+ppath);
-        res.end("eRr0r :( "+err);
-    })
-    .addListener('http-error', function(data, resp) {
-        res.writeHead(resp.statusCode);
-        res.end(data);
-    })
-    .addListener('redirect', function(data, resp) {
-        for (key in resp.headers)
-            res.header(key, resp.headers[key]);
-        
-        var newCookie = getCookie(resp.headers);
-        if(newCookie != null)
-            req.cookies[host] = {'connect.sid' : newCookie};
-        res.redirect(resp.headers['location']);
+    
+    request({uri:svc.uriLocal+ppath, 'headers':headers, method:method}, function(error, resp, data) {
+        if(error) {
+            res.writeHead(resp.statusCode);
+            res.end(data);            
+        } else {
+            if(resp.statusCode == 200) {//success!!
+                console.log('success');
+                sys.debug(resp);
+                var newCookie = getCookie(resp.headers);
+                if(newCookie != null) 
+                    req.cookies[host] = {'connect.sid' : newCookie};
+                resp.headers["Access-Control-Allow-Origin"] = "*";
+                res.writeHead(resp.statusCode, resp.headers);
+                res.write(data);
+                res.end();
+            } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
+                console.log(data);
+            } else if(resp.statusCode > 400) {
+                res.writeHead(resp.statusCode);
+                res.end(data);
+            }
+        }
     });
 }
 

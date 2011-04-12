@@ -133,7 +133,11 @@ tests.use("localhost", 8042)
             .get()
                 .expect(200)
                 .expect("properly", function(err, res, body) {
-                    var json = JSON.parse(body);
+                    try {
+                        var json = JSON.parse(body);
+                    } catch(err) {
+                        throw new Error('Could not parse json correctly: ' + body);
+                    }
                     assert.isNotNull(json);
                 })
         .unpath()
