@@ -89,6 +89,7 @@ exports.scanDirectory = function(dir) {
 * Scans the Me directory for instaled services
 */
 exports.findInstalled = function () {
+    serviceMap.installed = {};
     var dirs = fs.readdirSync('Me');
     for (var i = 0; i < dirs.length; i++) {
         var dir =  'Me/' + dirs[i];
@@ -111,6 +112,7 @@ exports.findInstalled = function () {
 exports.install = function(metaData) {
     var serviceInfo = undefined;
     serviceMap.available.some(function(svcInfo) {
+        console.log("Comparing " + svcInfo.srcdir + " to " + metaData.srcdir);
         if (svcInfo.srcdir == metaData.srcdir) {
             serviceInfo = svcInfo;
             return true;
