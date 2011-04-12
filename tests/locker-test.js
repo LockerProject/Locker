@@ -128,6 +128,17 @@ tests.use("localhost", 8042)
             .expect(404)
     .undiscuss().unpath()
 
+    .discuss("proxy handles Unicode ")
+        .path("/Me/testUnicode/test")
+            .get()
+                .expect(200)
+                .expect("properly", function(err, res, body) {
+                    var json = JSON.parse(body);
+                    assert.isNotNull(json);
+                })
+        .unpath()
+    .undiscuss()
+    
     // Diary storage
     .path("/diary")
     .discuss("store diary messages")
