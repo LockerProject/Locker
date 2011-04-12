@@ -84,6 +84,9 @@ function addStatusSync(type) {
 addStatusSync('home_timeline');
 addStatusSync('mentions');
 
+//this test will fail until the proxy unicode issues are fixed.
+//in the meantime, they can be run independently ("./runTests connector-twitter-test.js")
+//in which case the next line should be commented out, and the second back in
 var port = 8042, mePath = '/Me/' + id;
 //var port = 18043, mePath = '';
 
@@ -139,7 +142,6 @@ suite.next().suite.addBatch({
     'When Twitter Connector got friends' : {
         topic:function() {
             var promise = new events.EventEmitter;
-//            setTimeout(function() {
                 fs.readdir('../Me/' + id + '/photos', function(err, files) {
                         if(err || !files || files.length < 2)
                             promise.emit('error', new Error);
@@ -147,7 +149,6 @@ suite.next().suite.addBatch({
                             promise.emit('success', true);
                     }
                 );
-//            }, 10000);
             return promise;
         },
         'it downloaded their profile photos':function(err, stat) {
