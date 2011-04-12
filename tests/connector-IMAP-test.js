@@ -28,9 +28,13 @@ var id = 'imap-test';
 
 //requires that the credentials be stored in a file in tests/Me/imap-auth.json
 //in the form of {"username":"address@domain.com", "password":"myWickedPassword", "server":"imap.gmail.com"}
-var credstr = fs.readFileSync('Me/' + id + '/secrets.json');
-if(credstr)
-    var auth = JSON.parse(credstr);
+try {
+    var credstr = fs.readFileSync('Me/' + id + '/secrets.json');
+    if(credstr)
+        var auth = JSON.parse(credstr);
+} catch (E) {
+    var auth = undefined;
+}
 
 if(auth && auth.username && auth.password && auth.server) {
     

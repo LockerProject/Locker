@@ -7,6 +7,13 @@ mv ../Me ../Me.test-tmp
 # Copy in to place the testing version
 cp -R Me ../Me
 # Run locker on our mock/fake Me dir
+if test -z "$1"; then
+    echo "Running local tests"
+    vows --spec *-test-local.js;
+    rm -rf ../Me
+    cp -R Me ../Me
+fi
+
 cd ..
 node locker.js > tests/locker.log 2>&1 &
 # Wait for the locker to have some startup time

@@ -7,7 +7,6 @@ process.stdin.resume();
 process.stdin.on("data", function(data) {
     var info = JSON.parse(data);
     server = http.createServer(function(req, res) {
-        process.stdout.write("Sending: " + '{"url":"'+req.url+'","method":"'+req.method+'"}');
         if (req.url == "/write") {
             var fd = fs.openSync("result.json", "w");
             fs.writeSync(fd, '{"result":true}');
@@ -28,6 +27,10 @@ process.stdin.on("data", function(data) {
                 res.end("");
             });
             return;
+        } else if (req.url == "/end"){
+            res.writeHead(200);
+            res.end();
+            process.exit(0);
         }
         res.writeHead(200, {"Content-Type":"application/json"});
         res.end('{"url":"'+req.url+'","method":"'+req.method+'"}');
