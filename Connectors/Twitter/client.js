@@ -347,8 +347,8 @@ function getIDs(friendsOrFolowers, screenName, callback) {
      })
     .addListener('http-error', function (data, resp) {
         // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Status Code > 400');
-        sys.debug('Headers: ' + sys.inspect(res.headers));
+        sys.debug('HTTP Status Code > 400 : ' + resp.statusCode);
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
     })
     .addListener('http-client-error', function (data, resp) {
         // data = transferred content, resp = repsonse object
