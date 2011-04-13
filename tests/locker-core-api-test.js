@@ -35,13 +35,13 @@ tests.use("localhost", 8042)
             .expect("has 16 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 16);
-            }).expect("has 8 installed services", function(err, res, body) {
+            }).expect("has 10 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 8);
+                assert.equal(count, 10);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
@@ -139,6 +139,16 @@ tests.use("localhost", 8042)
                         throw new Error('Could not parse json correctly: ' + body);
                     }
                     assert.isNotNull(json);
+                })
+        .unpath()
+    .undiscuss()
+    
+    .discuss("proxy passes cookies through")
+        .path("/Me/testCookies/test")
+            .get()
+                .expect(200)
+                .expect("properly", function(err, res, body) {
+                    console.log(res.headers);
                 })
         .unpath()
     .undiscuss()
