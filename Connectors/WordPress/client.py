@@ -76,7 +76,13 @@ class Client(object):
 
         self._server = xmlrpclib.ServerProxy(self.url)
 
-        self.update()
+        self.user_info = {}
+        self.blogs = []
+        self.categories = []
+        self.posts = []
+        self.comments = []
+        self.pingbacks = []
+        self.trackbacks = []
 
     @updater('user_info', default={})
     def updateUserInfo(self):

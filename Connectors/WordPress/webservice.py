@@ -32,6 +32,14 @@ def start(secrets):
     app.client = client.Client(app.info, url=secrets["url"], user=secrets["user"], password=secrets["password"], server_type=secrets["server_type"])
     app.started = True
 
+@app.route("/update", methods=['POST'])
+def update():
+    if app.client:
+        app.client.update()
+        return json.dumps("updated")
+    else:
+        return json.dumps("no login")
+
 @app.route("/")
 def index():
     if app.started:
@@ -41,7 +49,8 @@ def index():
                 "/posts" : "List of users posts",
                 "/comments" : "Comments on users posts",
                 "/pingbacks" : "Pingbacks to users blogs",
-                "/trackbacks" : "Trackbacks to users blogs"
+                "/trackbacks" : "Trackbacks to users blogs",
+                "/update" : "Post to update to refresh info"
                 })
     else:
         return redirect(url_for("setupAuth"))
