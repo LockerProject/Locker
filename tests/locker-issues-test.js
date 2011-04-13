@@ -15,6 +15,20 @@ var fs = require("fs");
 var tests = RESTeasy.describe("Locker Core Issues")
 
 tests.use("localhost", 8042);
+tests.outgoing
+tests.discuss("Issues #11 - Proxy should respond to redirects")
+    .before('Don\'t follow redirects', function(outgoing) {
+        outgoing.followRedirect = false;
+        return outgoing;
+    })
+    .get("/Me/proxy-redirect-test/external")
+        .expect(302)
+        .expect("redirects to http://www.example.com", function(err, resp, body) {
+            assert.equal(resp.headers.location, 'http://www.example.com');
+        })
+    .get('/Me/proxy-redirect-test/internal')
+        .expect(200)
+.undiscuss();
 
 tests.discuss("Issues #15 - Services do not spawn when called through the proxy")
     // Two of these at once to test the error of the process stopping with multiple pending callbacks
