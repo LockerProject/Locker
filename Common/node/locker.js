@@ -7,28 +7,40 @@
 *
 */
 
-var wwwdude = require('wwwdude'),
-    request = require('request'),
+var request = require('request'),
+    fs = require("fs");
     sys = require('sys'),
     http = require("http"),
     url = require("url"),
-    lconfig = require(__dirname + "/lconfig.js"),
-    client = wwwdude.createClient();
+    querystring = require("querystring"),
+    lconfig = require(__dirname + "/lconfig.js");
 
 var lockerBaseURI = 'http://localhost:8042';
+var localServiceId = undefined;
+var baseServiceUrl = undefined;
+
+exports.initClient = function(instanceInfo) {
+    var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
+    var svcInfo = JSON.parse(meData);
+    localServiceId = svcInfo.id;
+    lconfig.lockerBase = instanceInfo.lockerUrl;
+    baseServiceUrl = lconfig.lockerBase + "/" + localServiceId;
+}
 
 exports.at = function(uri, delayInSec) {
     //this should be migrated to request.get
-    client.get(lockerBaseURI + '/at?uri=' + escape(uri) + '&at=' + (new Date().getTime() + (delayInSec * 1000)));
+    request.get({
+        url:baseServiceUrl + '/at?' + querystring.stringify({
+            cb:uri,
+            at:((new Date().getTime() + (delayInSec * 1000))/1000)
+            })
+    });
 }
 
 exports.map = function(callback) {
     //this should be migrated to request.get
-    client.get(lockerBaseURI + '/map').addListener('success', function(data, resp) {
-        if(data)
-            callback(JSON.parse(data));
-        else
-            callback();
+    request.get({url:lconfig.lockerBase + "/map"}, function(error, res, body) {
+        callback(body ? JSON.parse(body) : undefined);
     });
 }
 
@@ -39,19 +51,14 @@ exports.map = function(callback) {
  * obj - the object to make a JSON string of as the event body
  */
 exports.event = function(type, id, obj) {
-    var urlInfo = url.parse(lconfig.lockerBase);
-    var options = {
-        method: "POST",
-        host: urlInfo.hostname,
-        port: urlInfo.port,
-        path: "/event",
+    request.post({
+        url:baseServiceUrl + "/event", 
         headers: {
             "Content-Type":"application/json"
-        }
-    };
-    var req = http.request(options);
-    req.write(JSON.stringify({"id":id,"type":type,"obj":obj}));
-    req.end();
+        },
+        body:JSON.stringify({"type":type,"obj":obj})
+
+    });
 }
 
 /**
@@ -66,17 +73,8 @@ exports.event = function(type, id, obj) {
  * listen("photo/flickr", "foo", "/photoListener");
  */
 exports.listen = function(type, id, callback) {
-    request.get({url:lockerBaseURI + '/listen' + encodeParams({'type':type, 'id':id, 'cb':callback})}, function(error, response, body) {
+    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'id':id, 'cb':callback})}, function(error, response, body) {
         if(error) sys.debug(error);
     });
 }
 
-function encodeParams(params) {
-    var str = "?";
-    for(var key in params) {
-        var value = params[key];
-        if(value)
-            str += encodeURIComponent(key) + "=" + encodeURIComponent(value) + "&"
-    }
-    return str.substring(0, str.length - 1);
-}
