@@ -61,7 +61,7 @@ class GoogleDataContacts:
             os.makedirs("photos")
         except OSError:
             pass
-        sys.stdout.write("Checking for udpates since %s" % (str(self.lastUpdate)))
+        sys.stdout.write("Checking for updates since %s" % (str(self.lastUpdate)))
         sys.stdout.flush()
         self.gd_client.ProgrammaticLogin()
         self.write_groups_feed_to_file()
