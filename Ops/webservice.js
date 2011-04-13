@@ -28,8 +28,7 @@ var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
             connect.bodyParser(),
-            connect.cookieParser(),
-            connect.session({secret : "locker"}));
+            connect.cookieParser());
 
 var listeners = new Object(); // listeners for events
 
@@ -273,8 +272,8 @@ function proxied(method, svc, ppath, req, res) {
         cookies = req.cookies[host];
     }
     var headers = req.headers;
-    if(cookies && cookies['connect.sid'])
-        headers.cookie = 'connect.sid=' + cookies['connect.sid'];
+    //if(cookies && cookies['connect.sid'])
+    //    headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     
     function doReq(method, redirect, svc, ppath, req, res) {
         request({uri:svc.uriLocal+ppath, 
@@ -286,22 +285,21 @@ function proxied(method, svc, ppath, req, res) {
                     res.writeHead(resp.statusCode);
                 res.end(data);            
             } else {
+                console.log(resp.headers);
                 if(resp.statusCode == 200) {//success!!
-                    console.log('success');
-                    sys.debug(resp);
-                    var newCookie = getCookie(resp.headers);
-                    if(newCookie != null) 
-                        req.cookies[host] = {'connect.sid' : newCookie};
                     resp.headers["Access-Control-Allow-Origin"] = "*";
                     res.writeHead(resp.statusCode, resp.headers);
                     res.write(data);
                     res.end();
                 } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
                     var redURL = url.parse(resp.headers.location);
+                    sys.debug(sys.inspect(resp.headers));
                     if(redURL.host.indexOf('localhost:') == 0 || redURL.host.indexOf('127.0.0.1:') == 0) {
                         doReq(method, true, svc, ppath, req, res);
                     } else {
-                        res.redirect(resp.headers.location);
+                        res.writeHead(resp.statusCode, resp.headers);
+                        res.write(data);
+                        res.end();
                     }
                 } else if(resp.statusCode > 400) {
                     res.writeHead(resp.statusCode);
