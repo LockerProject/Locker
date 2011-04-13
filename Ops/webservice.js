@@ -20,6 +20,7 @@ var wwwdude = require('wwwdude');
 var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
+var url = require('url');
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
@@ -275,29 +276,42 @@ function proxied(method, svc, ppath, req, res) {
     if(cookies && cookies['connect.sid'])
         headers.cookie = 'connect.sid=' + cookies['connect.sid'];
     
-    request({uri:svc.uriLocal+ppath, 'headers':headers, method:method}, function(error, resp, data) {
-        if(error) {
-            res.writeHead(resp.statusCode);
-            res.end(data);            
-        } else {
-            if(resp.statusCode == 200) {//success!!
-                console.log('success');
-                sys.debug(resp);
-                var newCookie = getCookie(resp.headers);
-                if(newCookie != null) 
-                    req.cookies[host] = {'connect.sid' : newCookie};
-                resp.headers["Access-Control-Allow-Origin"] = "*";
-                res.writeHead(resp.statusCode, resp.headers);
-                res.write(data);
-                res.end();
-            } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
-                console.log(data);
-            } else if(resp.statusCode > 400) {
-                res.writeHead(resp.statusCode);
-                res.end(data);
+    function doReq(method, redirect, svc, ppath, req, res) {
+        request({uri:svc.uriLocal+ppath, 
+                 headers:headers, 
+                 method:method, 
+                 followRedirect:redirect}, function(error, resp, data) {
+            if(error) {
+                if(resp)
+                    res.writeHead(resp.statusCode);
+                res.end(data);            
+            } else {
+                if(resp.statusCode == 200) {//success!!
+                    console.log('success');
+                    sys.debug(resp);
+                    var newCookie = getCookie(resp.headers);
+                    if(newCookie != null) 
+                        req.cookies[host] = {'connect.sid' : newCookie};
+                    resp.headers["Access-Control-Allow-Origin"] = "*";
+                    res.writeHead(resp.statusCode, resp.headers);
+                    res.write(data);
+                    res.end();
+                } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
+                    var redURL = url.parse(resp.headers.location);
+                    if(redURL.host.indexOf('localhost:') == 0 || redURL.host.indexOf('127.0.0.1:') == 0) {
+                        doReq(method, true, svc, ppath, req, res);
+                    } else {
+                        res.redirect(resp.headers.location);
+                    }
+                } else if(resp.statusCode > 400) {
+                    res.writeHead(resp.statusCode);
+                    res.end(data);
+                }
             }
-        }
-    });
+        });
+    }
+    
+    doReq(method, false, svc, ppath, req, res);
 }
 
 function getCookie(headers) {

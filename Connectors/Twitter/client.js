@@ -345,12 +345,12 @@ function getIDs(friendsOrFolowers, screenName, callback) {
     .addListener('http-client-error', function (data, resp) {
         // data = transferred content, resp = repsonse object
         sys.debug('HTTP Client Error (400 <= status < 500)');
-        sys.debug('Headers: ' + sys.inspect(res.headers));
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
     })
     .addListener('http-server-error', function (data, resp) {
         // data = transferred content, resp = repsonse object
         sys.debug('HTTP Client Error (status > 500)');
-        sys.debug('Headers: ' + sys.inspect(res.headers));
+        sys.debug('Headers: ' + sys.inspect(resp.headers));
     });
 }
 
