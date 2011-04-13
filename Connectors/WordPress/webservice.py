@@ -30,7 +30,6 @@ def saveAuth():
 def start(secrets):
     logging.info("Starting")
     app.client = client.Client(app.info, url=secrets["url"], user=secrets["user"], password=secrets["password"], server_type=secrets["server_type"])
-    app.client.update()
     app.started = True
 
 @app.route("/")
@@ -42,7 +41,7 @@ def index():
                 "/posts" : "List of users posts",
                 "/comments" : "Comments on users posts",
                 "/pingbacks" : "Pingbacks to users blogs",
-                "/trackbackPings" : "TrackbackPings to users blogs"
+                "/trackbacks" : "Trackbacks to users blogs"
                 })
     else:
         return redirect(url_for("setupAuth"))
@@ -87,12 +86,12 @@ def pingbacks():
         pingbacks = [pingback for pingback in pingbacks if matches_arg(pingback[key], json.loads(value))]
     return json.dumps(pingbacks)
 
-@app.route("/trackbackPings")
-def trackbackPings():
-    trackbackPings = app.client.trackbackPings
+@app.route("/trackbacks")
+def trackbacks():
+    trackbacks = app.client.trackbacks
     for key, value in request.args.items():
-        trackbackPings = [trackbackPing for trackbackPing in trackbackPings if matches_arg(trackbackPing[key], json.loads(value))]
-    return json.dumps(trackbackPings)
+        trackbacks = [trackback for trackback in trackbacks if matches_arg(trackback[key], json.loads(value))]
+    return json.dumps(trackbacks)
 
 def runService(info):
     app.info = info

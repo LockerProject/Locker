@@ -23,9 +23,40 @@ def dict_to_json(dict):
             data[key] = str(value)
     return data
 
+def push_event(url, event_type, event):
+    data = json.dumps({
+            "id": self.me_info["id"],
+            "type": event_type,
+            "obj": event
+            })
+    logging.info("Pushing event: %s" % data)
+    headers = {"Content-type": "application/json"}
+    url = url.rstrip("/").lstrip("http:/")
+    conn = httplib.HTTPConnection(url)
+    conn.request("POST", "/event", data, headers)
+    status = conn.getresponse().status
+    if status != 200:
+        logging.error("push_event failed with code %s" % status)
+    conn.close()
+
+def updater(name, event_type=None, default=[]):
+    def transform(fun):
+        def update(self):
+            logging.info("Updating %s" % name)
+            old_value = self.__dict__.get(name, None) or lockerfs.loadJsonFile(name + ".json") or default
+            new_value = fun(self)
+            self.__dict__[name] = new_value
+            lockerfs.saveJsonFile(name + ".json", new_value)
+            if event_type:
+                for item in new_value:
+                    if item not in old_value:
+                        push_event(self.core_info["lockerUrl"], event_type, item)
+        return update
+    return transform
+
 class Client(object):
-    def __init__(self, app_info, url, user, password, server_type="wordpress"):
-        self.app_info = app_info
+    def __init__(self, core_info, url, user, password, server_type="wordpress"):
+        self.core_info = core_info
 
         assert(server_type in server_types)
 
@@ -42,67 +73,93 @@ class Client(object):
         self.server_type = server_type
 
         self._server = xmlrpclib.ServerProxy(self.url)
+
         self.update()
 
-    def getUserInfo(self):
-        return self._server.blogger.getUserInfo('', self.user, self.password)
+    @updater('user_info', default={})
+    def updateUserInfo(self):
+        raw_user_info = self._server.blogger.getUserInfo('', self.user, self.password)
+        return dict_to_json(raw_user_info)
 
-    def getUsersBlogs(self):
-        return self._server.blogger.getUsersBlogs('', self.user, self.password)
+    @updater('blogs', event_type='blog/WordPress')
+    def updateBlogs(self):
+        raw_blogs = self._server.blogger.getUsersBlogs('', self.user, self.password)
+        return map(dict_to_json, raw_blogs)
 
-    def getPosts(self, blogid):
-        if self.server_type in ["metaweblog", "wordpress"]:
-            return self._server.metaWeblog.getRecentPosts(blogid, self.user, self.password, 1000000000) # horrible hack
-        elif self.server_type == "blogger":
-            return self._server.blogger.getRecentPosts(blogid, self.user, self.password, 1000000000) # also horrible hack
-        else:
-            return []
+    @updater('categories', event_type='category/WordPress')
+    def updateCategories(self):
+        categories = []
+        for blog in self.blogs:
+            blogid = blog['blogid']
+            raw_categories = []
+            if self.server_type in ["metaweblog", "wordpress"]:
+                raw_categories = self._server.metaWeblog.getCategories(blogid, self.user, self.password)
+            categories.extend(map(dict_to_json, raw_categories))
+        return categories
 
-    def getComments(self, postid):
-        if self.server_type == "wordpress":
-            return self._server.wp.getComments(postid, self.user, self.password)
-        else:
-            return []
+    @updater('posts', event_type='post/WordPress')
+    def updatePosts(self):
+        posts = []
+        for blog in self.blogs:
+            blogid = blog['blogid']
+            raw_posts = []
+            if self.server_type in ["metaweblog", "wordpress"]:
+                # horrible hack
+                raw_posts = self._server.metaWeblog.getRecentPosts(blogid, self.user, self.password, 1000000000)
+            elif self.server_type == "blogger":
+                # also horrible hack
+                raw_posts = self._server.blogger.getRecentPosts(blogid, self.user, self.password, 1000000000)
+            for post in raw_posts:
+                post['blogid'] = blogid
+            posts.extend(map(dict_to_json, raw_posts))
+        return posts
 
-    def getCategories(self, blogid):
-        if self.server_type in ["metaweblog", "wordpress"]:
-            return self._server.metaWeblog.getCategories(blogid, self.user, self.password)
-        else:
-            return []
+    @updater('comments', event_type='comment/WordPress')
+    def updateComments(self):
+        comments = []
+        for post in self.posts:
+            postid = post['postid']
+            raw_comments = []
+            if self.server_type == "wordpress":
+                raw_comments = self._server.wp.getComments(postid, self.user, self.password)
+            comments.extend(map(dict_to_json, raw_comments))
+        return comments
 
-    def getPingbacks(self, postUrl):
-        if self.server_type == "wordpress":
-            return self._server.pingback.extensions.getPingbacks(postUrl)
-        else:
-            return []
-
-    def getTrackbackPings(self, postId):
-        if self.server_type == "wordpress":
-            return self._server.mt.getTrackbackPings(postId)
-        else:
-            return []
+    @updater('pingbacks', event_type='pingback/WordPress')
+    def updatePingbacks(self):
+        pingbacks = []
+        for post in self.posts:
+            postUrl = post['link']
+            raw_pingbacks = []
+            if self.server_type == "wordpress":
+                raw_pingbacks = self._server.pingback.extensions.getPingbacks(postUrl)
+            pingbacks.extend([{'url_to':postUrl, 'url_from':raw_pingback} for raw_pingback in raw_pingbacks])
+        return pingbacks
+    
+    @updater('trackbacks', event_type='trackback/WordPress')
+    def updateTrackbacks(self):
+        trackbacks = []
+        for post in self.posts:
+            postid = post['postid']
+            raw_trackbacks = []
+            if self.server_type == "wordpress":
+                raw_trackbacks = self._server.mt.getTrackbackPings(postid)
+            # !!! not sure yet if trackbacks always contain postid, may have to insert it
+            trackbacks.extend(map(dict_to_json, raw_trackbacks))
+        return trackbacks
 
     def update(self):
         logging.info("Updating...")
 
-        self.user_info = dict_to_json(self.getUserInfo())
+        self.updateUserInfo()
+        self.updateBlogs()
+        self.updateCategories()
+        self.updatePosts()
+        self.updateComments()
+        self.updatePingbacks()
+        self.updateTrackbacks()
 
-        self.blogs = map(dict_to_json, self.getUsersBlogs())
-
-        self.posts = []
-        self.pingbacks = []
-        self.trackbackPings = []
-        self.comments = []
-        self.categories = []
-
-        for blog in self.blogs:
-            self.categories.extend(map(dict_to_json, self.getCategories(blog)))
-            for post in self.getPosts(blog['blogid']): 
-                post['blogid'] = blog['blogid']
-                self.posts.append(dict_to_json(post))
-                self.pingbacks.extend(self.getPingbacks(post['link']))
-                self.trackbackPings.extend(map(dict_to_json, self.getTrackbackPings(post['postid'])))
-                self.comments.extend(map(dict_to_json, self.getComments(post['postid'])))
+        logging.info("Update finished")
 
 def test_login():
     url = "lockertest.wordpress.com"
