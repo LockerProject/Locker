@@ -3,6 +3,7 @@ import time
 import logging
 import json
 import xmlrpclib
+import httplib
 
 sys.path.append("../../Common/python")
 import lockerfs
@@ -23,9 +24,9 @@ def dict_to_json(dict):
             data[key] = str(value)
     return data
 
-def push_event(url, event_type, event):
+def push_event(url, service_id, event_type, event):
     data = json.dumps({
-            "id": self.me_info["id"],
+            "id": service_id,
             "type": event_type,
             "obj": event
             })
@@ -46,17 +47,18 @@ def updater(name, event_type=None, default=[]):
             old_value = self.__dict__.get(name, None) or lockerfs.loadJsonFile(name + ".json") or default
             new_value = fun(self)
             self.__dict__[name] = new_value
-            lockerfs.saveJsonFile(name + ".json", new_value)
             if event_type:
                 for item in new_value:
                     if item not in old_value:
-                        push_event(self.core_info["lockerUrl"], event_type, item)
+                        push_event(self.core_info["lockerUrl"], self.me_info["id"], event_type, item)
+            lockerfs.saveJsonFile(name + ".json", new_value)
         return update
     return transform
 
 class Client(object):
     def __init__(self, core_info, url, user, password, server_type="wordpress"):
         self.core_info = core_info
+        self.me_info = lockerfs.loadJsonFile("me.json")
 
         assert(server_type in server_types)
 
