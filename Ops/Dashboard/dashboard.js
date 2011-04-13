@@ -97,18 +97,36 @@ app.get('/*', function (req, res) {
             return;  
         }  
 
-        fs.readFile(filename, "binary", function(err, file) {  
-            if(err) {  
-                res.writeHead(500, {"Content-Type": "text/plain"});  
-                res.write(err + "\n");  
-                res.end();  
-                return;  
+        fs.readFile(filename, "binary", function(err, file) {
+            if(err) {
+                res.writeHead(500, {"Content-Type": "text/plain"}); 
+                res.write(err + "\n");
+                res.end();
+                return;
             }  
 
-            res.writeHead(200);  
-            res.write(file, "binary");  
-            res.end();  
-        });  
+            var fileExtension = filename.substring(filename.lastIndexOf(".") + 1);
+            var contentType, contentLength;
+
+            switch (fileExtension)
+            {
+              case "png": contentType = "image/png";  break;
+              case "jpg": contentType = "image/jpeg"; break;
+              case "gif": contentType = "image/gif";  break;
+            }
+
+            if (contentType)
+            {
+              res.writeHead(200, { "Content-Type": contentType });
+              res.write(file);
+            }
+            else
+            {
+              res.writeHead(200);
+              res.write(file, "binary");
+            }
+            res.end();
+        });
     });
 });
 
