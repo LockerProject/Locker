@@ -262,7 +262,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                         if(err)
                             sys.debug(err)
                         log('got flickr photo ' + id);
-                        locker.event('photo/flickr', me.id, {"_id":id})
+                        locker.event('photo/flickr', {"_id":id})
                         curl(photos, callback);
                     });
                 });
@@ -359,6 +359,7 @@ var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
+    locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     lfs.readObjectFromFile('auth.json', function(newAuth) {
         auth = newAuth;

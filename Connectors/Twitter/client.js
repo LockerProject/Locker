@@ -150,7 +150,7 @@ function pullStatuses(endpoint, repeatAfter, res) {
         'Content-Type': 'text/html'
     });
     pullTimeline(endpoint, function() {
-        locker.at(me.uri + endpoint, repeatAfter);
+        locker.at(endpoint, repeatAfter);
         res.end();
     });
     
@@ -275,10 +275,10 @@ function(req, res) {
 
 function syncUsersInfo(friendsOrFollowers, req, res) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
-        friendsOrFollowers = 'friends';
+        friendsOrFollowers = '/friends';
         
     function done() {    
-        locker.at(me.uri + friendsOrFollowers, 3600);
+        locker.at(friendsOrFollowers, 3600);
         res.writeHead(200);
         res.end();
     }
@@ -467,6 +467,7 @@ var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
+    locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     lfs.readObjectFromFile('auth.json', function(newAuth) {
         auth = newAuth;
