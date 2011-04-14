@@ -154,16 +154,16 @@ tests.use("localhost", 8042)
     .undiscuss()
     
     // Diary storage
-    .path("/diary")
+    .path("/testURLCallback/diary")
     .discuss("store diary messages")
         .post({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
 
     // Event basics
-    .path("/listen")
+    .path("/testURLCallback/listen")
     .discuss("register a listener for an event")
-        .get({type:"test/event2", id:"testURLCallback", cb:"/event"})
+        .get({type:"test/event2", cb:"/event"})
             .expect(200)
     .undiscuss().unpath();
 
@@ -184,9 +184,9 @@ tests.next()
     .undiscuss().unpath()
 
     // Makes sure the /listen is done first
-    .path("/deafen")
+    .path("/testURLCallback/deafen")
     .discuss("deafen a listener for an event")
-        .get({type:"test/event2", id:"testURLCallback", cb:"/event"})
+        .get({type:"test/event2", cb:"/event"})
             .expect(200)
     .undiscuss().unpath();
 
@@ -200,7 +200,7 @@ tests.next().suite.addBatch({
             var options = {
                 host:"localhost",
                 port:8042,
-                path:"/at?" + querystring.stringify({at:when.getTime()/1000,id:"testURLCallback",cb:"/write"}) 
+                path:"/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
                 fs.unlinkSync("../Me/testURLCallback/result.json");
@@ -232,14 +232,14 @@ tests.next().suite.addBatch({
             var getOptions = {
                 host:"localhost",
                 port:8042,
-                path:"/listen?" + querystring.stringify({type:"test/event", id:"testURLCallback", cb:"/event"})
+                path:"/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
             };
             var req = http.get(getOptions, function(res) {
                 var options = {
                     host:"localhost",
                     port:8042,
                     method:"POST",
-                    path:"/event",
+                    path:"/testURLCallback/event",
                     headers:{
                         "Content-Type":"application/json"
                     }
@@ -263,7 +263,7 @@ tests.next().suite.addBatch({
                     console.log("Error from request");
                     promise.emit("error", e);
                 });
-                req.write(JSON.stringify({type:"test/event",id:"testURLCallback",obj:{test:"value", result:true}}));
+                req.write(JSON.stringify({type:"test/event",obj:{test:"value", result:true}}));
                 req.end();
             }).on("error", function(e) {
                 promise.emit("error", e);
