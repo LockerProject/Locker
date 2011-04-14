@@ -157,7 +157,7 @@ function(req, res) {
                 res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
                 queue.push(friends[i]);
             }
-            locker.at('friends', 3600);
+            locker.at('/friends', 3600);
             res.end();
             downloadNextUser(users);
         });
@@ -187,7 +187,7 @@ function(req, res) {
         lfs.syncMeData(me);
         getCheckins(me.user_info.id, accessData.accessToken, 0, function(newCheckins) {
             lfs.appendObjectsToFile('places.json', newCheckins);
-            locker.at('checkins', 600);
+            locker.at('/checkins', 600);
             res.writeHead(200, {
                 'Content-Type': 'text/html'
             });
@@ -268,6 +268,7 @@ process.stdin.on("data", function(data) {
         process.stderr.write("Was not passed valid startup information."+data+"\n");
         process.exit(1);
     }
+    locker.initClient(lockerInfo);
     process.chdir(lockerInfo.workingDirectory);
     me = lfs.loadMeData();
     try {
