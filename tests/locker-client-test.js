@@ -62,7 +62,34 @@ vows.describe("Locker Client API").addBatch({
                 }, 1500);
                 return promise;
             },
-            "fires an event":function(err, result) {
+            "fires a scheduled callback":function(err, result) {
+                assert.isNull(err);
+                assert.isTrue(result);
+            }
+        },
+        "events" : {
+            topic:function() {
+                var promise = new events.EventEmitter;
+                var fired = false;
+
+                try {
+                    fs.unlinkSync("../Me/testURLCallback/event.json");
+                } catch (E) {
+                    // test the error?
+                }
+                locker.listen("test/event", "/event");
+                locker.event("test/event", {"test":"value"});
+                setTimeout(function() {
+                    fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
+                        if (!err)
+                            promise.emit("success", true);
+                        else
+                            promise.emit("error", err);
+                    });
+                }, 500);
+                return promise;
+            },
+            "fires an event callback": function(err, result) {
                 assert.isNull(err);
                 assert.isTrue(result);
             }

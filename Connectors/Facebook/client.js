@@ -216,7 +216,7 @@ function(req, res) {
                 }
                 stream.end();
                 downloadPhotos(userID);
-                locker.at(me.uri + 'friends', 3600);
+                locker.at('/friends', 3600);
                 res.end();
             });
 
@@ -245,7 +245,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     pullNewsFeed(function() {
-        locker.at(me.uri + 'feed', 10);
+        locker.at('/feed', 10);
         res.end();
     });
 });
@@ -382,6 +382,7 @@ var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
+    locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     lfs.readObjectFromFile('auth.json', function(newAuth) {
         auth = newAuth;
