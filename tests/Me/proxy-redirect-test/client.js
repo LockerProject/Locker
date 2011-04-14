@@ -1,4 +1,6 @@
 //test unicode compatibility
+require.paths.push(__dirname + "/../../Common/node");
+
 var http = require("http");
 var fs = require("fs");
 var lfs = require("lfs");
