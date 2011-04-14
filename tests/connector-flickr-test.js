@@ -22,7 +22,8 @@ var suite = RESTeasy.describe("Flickr Connector")
 
 var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 
-locker.listen('photo/flickr', 'flickr-event-collector', 'event');
+locker.initClient({lockerUrl:"http://localhost:8042", workingDirectory:"../Me/flickr-event-collector"});
+locker.listen('photo/flickr', 'event');
 
 suite.next().suite.addBatch({
     "Flickr Connector can get photos from Flickr" : {

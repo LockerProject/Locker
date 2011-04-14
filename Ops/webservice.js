@@ -54,9 +54,10 @@ locker.get("/providers", function(req, res) {
 });
 
 // let any service schedule to be called, it can only have one per uri
-locker.get('/at', function(req, res) {
+locker.get('/:svcId/at', function(req, res) {
     var seconds = req.param("at");
-    var svcId = req.param('id'), cb = req.param('cb');
+    var cb = req.param('cb');
+    var svcId = req.params.svcId;
     if (!seconds || !svcId || !cb) {
         res.writeHead(400);
         res.end("Invalid arguments");
@@ -141,9 +142,10 @@ locker.post('/Me/*', function(req,res){
 });
 
 // Publish a user visible message
-locker.post("/diary", function(req, res) {
+locker.post("/:svcId/diary", function(req, res) {
     var level = req.param("level") || 0;
     var message = req.param("message");
+    var svcId = req.params.svcId;
 
     var now = new Date;
     try {
@@ -158,7 +160,7 @@ locker.post("/diary", function(req, res) {
         fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
             if (err) console.log("Error month dir: " + err);
             var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
-            lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message}]);
+            lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
             res.end("{}");
         })
@@ -187,11 +189,13 @@ locker.get("/diary", function(req, res) {
 });
 
 // anybody can listen into any service's events
-locker.get('/listen', function(req, res) {
-    var id = req.param('id'), type = req.param('type'), cb = req.param('cb');
-    if(!serviceManager.isInstalled(id)) {
+locker.get('/:svcId/listen', function(req, res) {
+    var type = req.param('type'), cb = req.param('cb');
+    var svcId = req.params.svcId;
+    if(!serviceManager.isInstalled(svcId)) {
+        console.log("Could not find " + svcId);
         res.writeHead(404);
-        res.end(id+" doesn't exist, but does anything really? ");
+        res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
     if (!type || !cb) {
@@ -200,17 +204,18 @@ locker.get('/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, id, cb);
+    levents.addListener(type, svcId, cb);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
 
 // Stop listening to some events
-locker.get("/deafen", function(req, res) {
-    var id = req.param('id'), type = req.param('type'), cb = req.param('cb');
-    if(!serviceManager.isInstalled(id)) {
+locker.get("/:svcId/deafen", function(req, res) {
+    var type = req.param('type'), cb = req.param('cb');
+    var svcId = req.params.svcId;
+    if(!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
-        res.end(id+" doesn't exist, but does anything really? ");
+        res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
     if (!type || !cb) {
@@ -219,22 +224,23 @@ locker.get("/deafen", function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.removeListener(type, id, cb);
+    levents.removeListener(type, svcId, cb);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
 
 // publish an event to any listeners
-locker.post('/event', function(req, res) {
+locker.post('/:svcId/event', function(req, res) {
     if (!req.body ) {
         res.writeHead(400);
         res.end("Post data missing");
         return;
     }
-    var id = req.body['id'], type = req.body['type'], obj = req.body['obj'];
-    if(!serviceManager.isInstalled(id)) {
+    var type = req.body['type'], obj = req.body['obj'];
+    var svcId = req.params.svcId;
+    if(!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
-        res.end(id+" doesn't exist, but does anything really? ");
+        res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
     if (!type || !obj) {
@@ -242,7 +248,7 @@ locker.post('/event', function(req, res) {
         res.end("Invalid type or object");
         return;
     }
-    levents.fireEvent(type, id, obj);
+    levents.fireEvent(type, svcId, obj);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
