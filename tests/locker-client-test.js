@@ -78,7 +78,9 @@ vows.describe("Locker Client API").addBatch({
                     // test the error?
                 }
                 locker.listen("test/event", "/event");
-                locker.event("test/event", {"test":"value"});
+                setTimeout(function() {
+                    locker.event("test/event", {"test":"value"});
+                }, 100);
                 setTimeout(function() {
                     fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
                         if (!err)
@@ -86,7 +88,7 @@ vows.describe("Locker Client API").addBatch({
                         else
                             promise.emit("error", err);
                     });
-                }, 500);
+                }, 1000);
                 return promise;
             },
             "fires an event callback": function(err, result) {
