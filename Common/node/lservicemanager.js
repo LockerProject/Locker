@@ -27,10 +27,13 @@ exports.serviceMap = function() {
 }
 
 exports.providers = function(types) {
-    var services = serviceMap.available.filter(function(service) {
-        if (!service.hasOwnProperty("provides")) return false;
-        return service.provides.some(function(svcType, index, actualArray) {
-            for (var i = 0; i < types.length; ++i) {
+    var services = []
+    for(var svcId in serviceMap.installed) {
+        if (!serviceMap.installed.hasOwnProperty(svcId))  continue;
+        var service = serviceMap.installed[svcId];
+        if (!service.hasOwnProperty("provides")) continue;
+        if (service.provides.some(function(svcType, index, actualArray) {
+            for (var i = 0; i < types.length; i++) {
                 var currentType = types[i];
                 var currentTypeSlashIndex = currentType.indexOf("/");
                 if (currentTypeSlashIndex < 0) {
@@ -44,8 +47,10 @@ exports.providers = function(types) {
                 if (currentType == svcType) return true;
             }
             return false;
-        });
-    });
+        })) {
+            services.push(service);
+        }
+    }
     return services;
 }
 

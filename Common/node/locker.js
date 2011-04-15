@@ -44,6 +44,13 @@ exports.map = function(callback) {
     });
 }
 
+exports.providers = function(types, callback) {
+    if (typeof(types) == "string") types = [types];
+    request.get({url:lconfig.lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, function(error, res, body) {
+        callback(body ? JSON.parse(body) : undefined);
+    });
+}
+
 /**
  * Post an event
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
