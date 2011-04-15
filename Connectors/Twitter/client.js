@@ -275,10 +275,10 @@ function(req, res) {
 
 function syncUsersInfo(friendsOrFollowers, req, res) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
-        friendsOrFollowers = '/friends';
+        friendsOrFollowers = 'friends';
         
     function done() {    
-        locker.at(friendsOrFollowers, 3600);
+        locker.at('/' + friendsOrFollowers, 3600);
         res.writeHead(200);
         res.end();
     }

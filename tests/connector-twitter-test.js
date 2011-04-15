@@ -49,7 +49,7 @@ function addFriendOrFollowersSync(friendsOrFollowers) {
                 });
                 return promise;
             },
-            'and returns within 10 seconds':function(err, stat) {
+            'and returns within 60 seconds':function(err, stat) {
                 assert.isNull(err);
             }
         };
