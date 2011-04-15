@@ -13,6 +13,7 @@ var serviceManager = require("lservicemanager");
 var url = require("url");
 var http = require("http");
 var request = require("request");
+var lconfig = require('lconfig');
 
 SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
 SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
