@@ -14,6 +14,8 @@ var fs = require('fs'),
     url = require('url'),
     lfs = require('../../Common/node/lfs.js'),
     locker = require("../../Common/node/locker.js"),
+    lconfig = require("../../Common/node/lconfig.js"),
+    request = require("request"),
     crypto = require('crypto');
 
 
@@ -60,7 +62,9 @@ app.get("/allContacts", function(req, res) {
     res.writeHead(200, {
         "Content-Type":"text/javascript"
     });
+    res.write("[");
     res.write(fs.readFileSync("contacts.json", "utf8"));
+    res.write("]");
     res.end();
 });
 
@@ -75,7 +79,6 @@ function gatherContacts(){
     locker.providers(["contact/facebook", "contact/foursquare", "contact/google"], function(services) {
         if (!services) return;
         services.forEach(function(svc) {
-            console.log(JSON.stringify(svc));
             if(svc.provides.indexOf("contact/facebook") >= 0) {
                 addContactsFromConn(svc.id,'/allContacts','contact/facebook');
             } else if(svc.provides.indexOf("contact/foursquare") >= 0) {
@@ -193,24 +196,13 @@ function parseLinesOfJSON(data) {
 function addContactsFromConn(conn, path, type) {
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
-    var request = httpClient.request('GET', '/Me/'+conn+path);
-    request.end();
-    request.on('response',
-    function(response) {
-        var data = '';
-        response.on('data',
-        function(chunk) {
-            data += chunk;
-        });
-        response.on('end',
-        function() {
-            var cs = parseLinesOfJSON(data);
-            for (var i = 0; i < cs.length; i++) {
-                cs[i]["_via"] = [conn];
-                cadd(cs[i],type);
-            }
-            csync();
-        });
+    request.get({url:lconfig.lockerBase + "/Me/"+conn+path}, function(err, res, data) {
+        var cs = data[0] == "[" ? JSON.parse(data) : parseLinesOfJSON(data);
+        for (var i = 0; i < cs.length; i++) {
+            cs[i]["_via"] = [conn];
+            cadd(cs[i],type);
+        }
+        csync();
     });
 }
 
