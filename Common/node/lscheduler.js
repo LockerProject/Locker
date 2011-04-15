@@ -12,6 +12,7 @@ var fs = require("fs");
 var serviceManager = require("lservicemanager");
 var url = require("url");
 var http = require("http");
+var request = require("request");
 
 SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
 SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
@@ -25,6 +26,7 @@ exports.Scheduler.prototype.loadAndStart = function() {
     var self = this;
     lfs.readObjectsFromFile(this.filename, function(objects) {
         objects.forEach(function(action) {
+            if (serviceManager.isInstalled(action.serviceId)) return;
             self.scheduleURL(new Date(action.at), action.serviceId, action.url);
         });
     });
@@ -52,14 +54,7 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
     if (milliseconds < 0) milliseconds = 0;
     var self = this;
     function runUrl() {
-        var svc = serviceManager.metaInfo(serviceID);
-        var cbUrl = url.parse(svc.uriLocal);
-        var httpOpts = {
-            host: cbUrl.hostname,
-            port: cbUrl.port,
-            path: callbackURL
-        };
-        http.get(httpOpts, function(res) {
+        request.get({url:lconfig.lockerBase + "/Me/" + serviceID + callbackURL}, function() {
             self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
             self.savePending();
         });

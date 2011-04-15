@@ -130,7 +130,7 @@ exports.install = function(metaData) {
     var hash = crypto.createHash('md5');
     hash.update(Math.random()+'');
     serviceInfo.id = hash.digest('hex');
-    serviceInfo.uri = lconfig.lockerBase+"Me/"+serviceInfo.id+"/";
+    serviceInfo.uri = lconfig.lockerBase+"/Me/"+serviceInfo.id+"/";
     serviceMap.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
     fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo));
