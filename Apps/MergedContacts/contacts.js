@@ -13,7 +13,10 @@ var fs = require('fs'),
     sys = require('sys'),
     http = require("http"),
     lfs = require("../../Common/node/lfs.js"),
+    locker = require("../../Common/node/locker.js"),
+    lconfig = require("../../Common/node/lconfig.js"),
     express = require('express'),
+    request = require("request"),
     connect = require('connect');
     
 var app = express.createServer(
@@ -32,6 +35,7 @@ process.stdin.on("data", function(data) {
         process.stderr.write("Was not passed valid startup information."+data+"\n");
         process.exit(1);
     }
+    locker.initClient(lockerInfo);
     process.chdir(lockerInfo.workingDirectory);
     app.listen(lockerInfo.port, "localhost", function() {
         process.stdout.write(data);
@@ -62,24 +66,15 @@ function readContacts(contactsReadCB) {
     var me = lfs.loadMeData();
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
-    console.log(me.use);
     var collectionId = undefined;
-    for (var key in me.use) {
-        if (me.use.hasOwnProperty(key) && me.use[key] == "contact") {
-            collectionId = key;
-            break;
-        }
-    }
-    if (!collectionId) return;
-    var request = httpClient.request('GET', '/Me/'+collectionId+"/allContacts");
-    request.end();
-    request.on('response', function(response) {
-        response.setEncoding("utf8");
-        var data = '';
-        response.on('data', function(chunk) {
-            data += chunk;
+    locker.providers("contact", function(services) {
+        services.forEach(function(service) {
+            if (service.is == "collection") {
+                collectionId = service.id;
+            }
         });
-        response.on('end', function() {
+        if (!collectionId) return;
+        request.get({url:lconfig.lockerBase + "/Me/"+collectionId+"/allContacts"}, function(err, res, data) {
             console.log("Read data " + data);
             contactsReadCB(parseLinesOfJSON(data));
         });

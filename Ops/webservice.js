@@ -42,7 +42,6 @@ locker.get('/map', function(req, res) {
 });
 
 locker.get("/providers", function(req, res) {
-    console.log("Checking url " + req.url);
     console.log("Looking for providers of type " + req.param("types"));
     if (!req.param("types")) {
         res.writeHead(400);
