@@ -51,16 +51,16 @@ tests.use("localhost", 8042)
 
     .discuss("list services providing a specific type")
         .path("/providers")
-        .get("", {types:"link/chrome"})
+        .get("", {types:"contact/twitter"})
             .expect(200)
             .expect("and return an array of valid services", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 1);
-                assert.equal(providers[0].title, "Chrome History");
+                assert.equal(providers[0].title, "Twitter Account");
             })
-        .get("", {types:"link/chrome,contact/google"})
+        .get("", {types:"contact/twitter,contact/flickr"})
             .expect(200)
             .expect("and return an array of valid services", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
@@ -68,14 +68,13 @@ tests.use("localhost", 8042)
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 2);
             })
-        .get("", {types:"link"})
+        .get("", {types:"contact"})
             .expect(200)
             .expect("and return an array of valid services", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
-                assert.equal(providers.length, 2);
-                assert.equal(providers[0].title, "Chrome History");
+                assert.equal(providers.length, 3);
             })
         .unpath()
     .undiscuss()

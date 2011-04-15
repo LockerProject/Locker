@@ -13,6 +13,7 @@ var fs = require('fs'),
     http = require('http'),
     url = require('url'),
     lfs = require('../../Common/node/lfs.js'),
+    locker = require("../../Common/node/locker.js"),
     crypto = require('crypto');
 
 
@@ -71,17 +72,19 @@ app.get("/update", function(req, res) {
 
 function gatherContacts(){
     // This should really be timered, triggered, something else
-    var me = lfs.loadMeData();
-    for(var conn in me.use)
-    {
-        if(me.use[conn] == "contact/facebook") {
-            addContactsFromConn(conn,'/allContacts','contact/facebook');
-        } else if(me.use[conn] == "contact/foursquare") {
-            addContactsFromConn(conn,'/getfriends','contact/foursquare');
-        } else if (me.use[conn] == "contact/google") {
-            addContactsFromConn(conn, "/allContacts", "contact/google");
-        }
-    }
+    locker.providers(["contact/facebook", "contact/foursquare", "contact/google"], function(services) {
+        if (!services) return;
+        services.forEach(function(svc) {
+            console.log(JSON.stringify(svc));
+            if(svc.provides.indexOf("contact/facebook") >= 0) {
+                addContactsFromConn(svc.id,'/allContacts','contact/facebook');
+            } else if(svc.provides.indexOf("contact/foursquare") >= 0) {
+                addContactsFromConn(svc.id,'/getfriends','contact/foursquare');
+            } else if(svc.provides.indexOf("contact/google") >= 0) {
+                addContactsFromConn(svc.id, "/allContacts", "contact/google");
+            }
+        });
+    });
 }
 
 
