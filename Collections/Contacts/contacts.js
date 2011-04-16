@@ -49,9 +49,9 @@ app.get('/', function(req, res) {
     });
     lfs.readObjectsFromFile("contacts.json",function(contacts){
         res.write("<html><p>Found "+contacts.length+" contacts: <ul>");
-        for(var i=0;i<contacts.length;i++)
-        {
-            res.write('<li>'+JSON.stringify(contacts[i])+"</li>");
+        for(var i in contacts) {
+            res.write('<li>' + (contacts[i].name? '<b>' + contacts[i].name + ': </b>' : '') +
+                            JSON.stringify(contacts[i])+"</li>");
         }
         res.write("</ul></p></html>");
         res.end();
@@ -76,13 +76,13 @@ app.get("/update", function(req, res) {
 
 function gatherContacts(){
     // This should really be timered, triggered, something else
-    locker.providers(["contact/facebook", "contact/foursquare", "contact/google"], function(services) {
+    locker.providers(["contact/facebook", "contact/twitter", "contact/google"], function(services) {
         if (!services) return;
         services.forEach(function(svc) {
             if(svc.provides.indexOf("contact/facebook") >= 0) {
                 addContactsFromConn(svc.id,'/allContacts','contact/facebook');
-            } else if(svc.provides.indexOf("contact/foursquare") >= 0) {
-                addContactsFromConn(svc.id,'/getfriends','contact/foursquare');
+            } else if(svc.provides.indexOf("contact/twitter") >= 0) {
+                addContactsFromConn(svc.id,'/allContacts','contact/twitter');
             } else if(svc.provides.indexOf("contact/google") >= 0) {
                 addContactsFromConn(svc.id, "/allContacts", "contact/google");
             }
