@@ -45,7 +45,7 @@ app.get('/', function(req, res) {
         res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>" + 
                 "here</a> using the callback url of " +
-                "http://"+url.parse(me.uri).host+"/) " +
+                "http://"+url.parse(me.uri).host.replace("localhost", "127.0.0.1")+"/) " +
                 "<form method='get' action='save'>" +
                     "Consumer Key: <input name='consumerKey'><br>" +
                     "Consumer Secret: <input name='consumerSecret'><br>" +
