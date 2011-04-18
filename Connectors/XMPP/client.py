@@ -18,9 +18,6 @@ if sys.version_info < (3, 0):
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-jid = "locker-test@jabber.org"
-password = "stopbreakingmyshit"
-
 def stanza_to_dict(stanza):
     data = {}
     for key in stanza.keys():
@@ -36,7 +33,7 @@ def stanza_to_dict(stanza):
 
 class Client(xmpp.ClientXMPP):
 
-    def __init__(self, core_info, jid=jid, password=password):
+    def __init__(self, core_info, jid, password):
         xmpp.ClientXMPP.__init__(self, jid, password)
 
         self.core_info = core_info
@@ -107,6 +104,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)-8s %(message)s')
 
+    jid = "locker-test@jabber.org"
+    password = "stopbreakingmyshit"
     client = Client(jid, password)
 
     if client.connect():
