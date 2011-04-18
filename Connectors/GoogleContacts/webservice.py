@@ -12,6 +12,7 @@ import time
 import datetime
 import urllib
 import urllib2
+import sys
 
 app = Flask(__name__)
 
@@ -21,6 +22,7 @@ def allContacts():
 
 @app.route("/setupAuth")
 def setupAuth():
+    sys.stderr.write("Sending setupAuth template")
     return render_template("setupAuth.html")
 
 @app.route("/update")
@@ -33,14 +35,14 @@ def update():
         updateCount = gdc.updateAll()
 
         # Tell the diary how many contacts we updated
-        url = "{0}diary".format(app.lockerInfo["lockerUrl"])
+        url = "{0}/diary".format(app.lockerInfo["lockerUrl"])
         urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
 
         # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
         me = lockerfs.loadMeData()
-        url = "{0}at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
+        url = "{0}/at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
         urllib2.urlopen(url)
         return "Updated"
     else:
@@ -60,8 +62,10 @@ def saveAuth():
 @app.route("/")
 def mainIndex():
     if app.consumerValidated:
+        sys.stderr.write("Rendering index")
         return render_template("index.html", updateTime=app.updateAt, updatesStarted=app.updatesStarted)
     else:
+        sys.stderr.write("Going to auth")
         return redirect(url_for("setupAuth"))
 
 def runService(info):
@@ -71,6 +75,6 @@ def runService(info):
     app.puller = None
     app.updateAt = datetime.datetime.now()
     app.updatesStarted = False
-    app.debug = True
+    #app.debug = True
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 
