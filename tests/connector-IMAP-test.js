@@ -11,7 +11,7 @@
 
 var assert = require('assert');
 var vows = require('vows');
-var RESTeasy = require('rest-easy');
+var RESTeasy = require('api-easy');
 var http = require('http');
 var querystring = require('querystring');
 var events = require('events');
