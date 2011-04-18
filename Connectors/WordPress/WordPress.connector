@@ -1,0 +1,8 @@
+{
+	"title":"WordPress Connector",
+	"action":"Connect to WordPress account",
+	"desc":"Export user info, posts, comments, pingbacks and trackback pings from my WordPress account.",
+	"run":"python service.py",
+	"status":"unstable",
+	"provides":[]
+}
