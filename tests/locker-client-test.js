@@ -43,24 +43,71 @@ vows.describe("Locker Client API").addBatch({
         "providers" : {
             topic: function() {
                 var promise = new events.EventEmitter;
-                locker.providers("contact/twitter", function(providers) {
+                locker.providers("testtype/testproviders", function(providers) {
                     if (providers.length != 1) promise.emit("error", providers);
-                    else if (providers[0].title != "Twitter Account") promise.emit("error", providers);
+                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
                     else promise.emit("success", providers);
                 });
                 return promise;
             },
-            "can retrieve the service map" : function (err, data) {
+            "getting providers of type testtype/testproviders returns 1 valid service" : function (err, data) {
                 assert.isNull(err);
                 assert.include(data[0], "title");
-                assert.include(data[0], "action");
-                assert.include(data[0], "desc");
-                assert.include(data[0], "run");
                 assert.include(data[0], "provides");
                 assert.include(data[0], "srcdir");
                 assert.include(data[0], "is");
                 assert.include(data[0], "id");
-                assert.include(data[0], "uri");
+            },
+            topic: function() {
+                var promise = new events.EventEmitter;
+                locker.providers("badtype/badsvc", function(providers) {
+                    if (providers.length != 0) promise.emit("error", providers);
+                    else promise.emit("success", providers);
+                });
+                return promise;
+            },
+            "getting providers of type badtype/badsvc return an empty array" : function (err, data) {
+                assert.isNull(err);
+            },
+            topic: function() {
+                var promise = new events.EventEmitter;
+                locker.providers("testtype/testproviders,testtype/anotherprovider", function(providers) {
+                    if (providers.length != 2) promise.emit("error", providers);
+                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
+                    else if (providers[1].title != "Test /providers 2") promise.emit("error", providers);
+                    else promise.emit("success", providers);
+                });
+                return promise;
+            },
+            "getting providers of types testtype/testproviders,testtype/anotherprovider returns an array of 2 valid providers" : function (err, data) {
+                assert.isNull(err);
+                for(var i in data) {
+                    assert.include(data[i], "title");
+                    assert.include(data[i], "provides");
+                    assert.include(data[i], "srcdir");
+                    assert.include(data[i], "is");
+                    assert.include(data[i], "id");
+                }
+            },
+            topic: function() {
+                var promise = new events.EventEmitter;
+                locker.providers("testtype", function(providers) {
+                    if (providers.length != 2) promise.emit("error", providers);
+                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
+                    else if (providers[1].title != "Test /providers 2") promise.emit("error", providers);
+                    else promise.emit("success", providers);
+                });
+                return promise;
+            },
+            "getting providers of types testtype returns an array of 2 valid providers" : function (err, data) {
+                assert.isNull(err);
+                for(var i in data) {
+                    assert.include(data[i], "title");
+                    assert.include(data[i], "provides");
+                    assert.include(data[i], "srcdir");
+                    assert.include(data[i], "is");
+                    assert.include(data[i], "id");
+                }
             }
         }
     }
