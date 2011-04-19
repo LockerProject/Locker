@@ -120,20 +120,22 @@ app.get('/*', function (req, res) {
 
             switch (fileExtension)
             {
-              case "png": contentType = "image/png";  break;
-              case "jpg": contentType = "image/jpeg"; break;
-              case "gif": contentType = "image/gif";  break;
+                case "png": contentType = "image/png"; break;
+                case "jpg": contentType = "image/jpeg"; break;
+                case "gif": contentType = "image/gif"; break;
+                case "css": contentType = "text/css"; break;
+                case "js":  contentType = "application/javascript"; break;
             }
 
             if (contentType)
             {
-              res.writeHead(200, { "Content-Type": contentType });
-              res.write(file);
+                res.writeHead(200, { "Content-Type": contentType });
+                res.write(file);
             }
             else
             {
-              res.writeHead(200);
-              res.write(file, "binary");
+                res.writeHead(200);
+                res.write(file, "binary");
             }
             res.end();
         });

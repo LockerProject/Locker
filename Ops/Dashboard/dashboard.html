@@ -1,211 +1,95 @@
-<html lang='en'>
-
-<head>
-    <meta charset='utf-8' />
-    <title>Dashboard</title>
-    <meta name='description' content='Locker Dashboard' />
-    <style>
-        body {
-            font-family:sans-serif;
-            height:100%;
-            margin:0;
-            padding:0;
-        }
-#mainContainer {
-        padding:10px;
-}
-        .tab {
-            border-top-left-radius:5px;
-            border-top-right-radius:5px;
-            background-color:grey;
-            margin-left:10px;
-            padding:5px;
-            width:140px;
-            color:white;
-            float:left;
-            cursor:pointer;
-        }
-        .tab:hover {
-            background-color:lightslategrey;
-        }
-        .activeTab {
-            background-color:lightslategrey;
-        }
-        .tab a {
-            font-size:12px;
-        }
-        #tabPages {
-            clear:both;
-            border:1px solid lightslategrey;
-            border-right:0;
-            border-radius:5px;
-        }
-
-
-        #diary {
-            overflow:scroll;
-            overflow-x:hidden;
-            padding:5px;
-            height:90%;
-        }
-        .diaryLine {
-            padding-bottom:4px;
-        }
-        .diaryTimestamp {
-            color:#aaaaaa;
-            padding-right:5px;
-        }
-
-        #available {
-            display:none;
-            clear:both;
-            height:210px;
-            border-top:1px dashed lightslategrey;
-            padding-top:10px;
-        }
-        #availList {
-            width:200px;
-            height:200px;
-            overflow-y:scroll;
-            overflow-x:hidden;
-            float:left;
-            border:1px solid lightslategrey;
-        }
-        #availList p {
-            padding:2px;
-            margin:0;
-            background:lightslategrey;
-            border-bottom:1px solid #666;
-            cursor:pointer;
-        }
-        #availList p:hover {
-            font-weight:bold;
-        }
-        #availInfo {
-            margin-left:210px;
-        }
-        #availInfo h1 {
-            margin:0;
-            padding:0;
-        }
-        .availKey {
-            font-weight:bold;
-        }
-        #availInstall {
-            font-size:12px;
-        }
-        #services {
-            display:none;
-            padding:10px;
-        }
-    </style>
-</head>
-
-<body>
-    <div id='mainContainer'>
-        <div id='tabbar'>
-            <div id='diaryTab' class='tab activeTab'>
-              Locker Diary
-              <a href='javascript:refreshDiary();'>Refresh</a>
-            </div>
-            <div id='servicesTab' class='tab'>
-              Services
-            </div>
-        </div>
-        <div id='tabPages'>
-            <div style='display:none;' id='diaryTemplate'><span class='diaryTimestamp'></span></div>
-            <div class='tabPage' id='diary'>
-            </div>
-            
-            <div class='tabPage' id='services'>
-              <div id='installed'></div>
-              <div id='available'>
-                <div id='availList'>
-                </div>
-                <div id='availInfo'>
-                  <div><h1>Name</h1><a id='availInstall' href='javascript:install(-1)'>(Install)</a></div>
-                  <p>Description</p>
-                  <div><span class='availKey'>Source directory:</span><span class='availSrcDir'></span></div>
-                  <div><span class='availKey'>Provides:</span><span class='availProvides'></span></div>
-                </div>
-              </div>
-              <a href='#' id='installer'>Install another service</a>
-            </div>
-        </div>
-    </div>
-    
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="description" content="Locker Dashboard" />
+    <title>Locker &mdash; Dashboard</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
-    <script src='date.js' type='text/javascript'></script>
-    <script src='config.js' type='text/javascript'></script>
-    <script src='util.js'></script>
-    <script>
-    var serviceMap;
-    $.ajax({url: config.lockerBase + "/map", dataType:"json"}).success(function(data) {
-        serviceMap = data;
-        for (var key in serviceMap.installed) {
-            var item = serviceMap.installed[key];
-            $("#installed").append("<p>" + item["title"] + " - <em>" + item["id"] +  "</em> - <a href='" + item["uri"] + "'>page</a></p>");
-        }
-        serviceMap.available.forEach(function(item) {
-            $("#availList").append($("<p>" + item["title"]+"</p>").click(function() {
-                selectAvailable(serviceMap.available.indexOf(item));
-            }));
-        });
-        selectAvailable(0);
-    });
-    $("#installer").click(function() {
-        if ($("#available").is(":hidden")) {
-            $("#available").slideDown(250, function() {
-                $("#installer").text("Hide installer")
-            });
-        } else {
-            $("#available").slideUp(250, function() {
-                $("#installer").text("Install another service");
-                $("#available").hide();
-            });
-        }
-    });
-    $("#servicesTab").click(function() {
-        $(".tabPage").hide();
-        $("#services").show();
-        $(".tab").removeClass("activeTab");
-        $("#servicesTab").addClass("activeTab");
-    });
-    $("#diaryTab").click(function() {
-        $(".tabPage").hide();
-        $("#diary").show();
-        $(".tab").removeClass("activeTab");
-        $("#diaryTab").addClass("activeTab");
-    });
-    function selectAvailable(index) {
-        var item = serviceMap.available[index];
-        $("#availInfo h1").html(item["title"]);
-        $("#availInfo p").html(item["desc"]);
-        $("#availInfo .availSrcDir").html(item["srcdir"]);
-        if (item["provides"]) $("#availInfo .availProvides").html(item["provides"].join(","));
-        $("#availInstall").attr("href", "javascript:install(" + index + ");");
-    }
-    function refreshDiary() {
-        $("#diary").children().remove();
-        $.ajax({url: config.lockerBase + "/diary"}).success(function(data) {
-            data.split("\n").forEach(function(item) {
-                if (!item) return;
-                var line = JSON.parse(item);
-                if (!line || line.length == 0) return;
-                var ts = Date.parse(line["timestamp"].split(".")[0]);
-                var diaryLine = $("#diaryTemplate").clone();
-                diaryLine.attr("id", "");
-                diaryLine.addClass("diaryLine");
-                diaryLine.children("span").append(ts.toString("MM/d/yyyy HH:mm:ss"));
-                diaryLine.append(line["message"]);
-                diaryLine.appendTo("#diary");
-                diaryLine.show();
-            });
-            $("#diary").animate({scrollTop:$("#diary").attr("scrollHeight") - $("#diary").height()}, 250);
-        });
-    }
-    refreshDiary();
-    </script>
-</body>
+    <script src="util.js"></script>
+    <script src="JavaScripts/Extensions/Date.js"></script>
+    <script src="JavaScripts/Extensions/String.js"></script>
+    <script src="JavaScripts/Dashboard.js"></script>
+    <link rel="stylesheet" href="Stylesheets/Reset.css" />
+    <link rel="stylesheet" href="Stylesheets/Dashboard.css" />
+  </head>
+  <body>
 
+    <aside>
+      <header>
+        <h1><img src="../Images/Lock.png" width="200" height="260" alt="" /></h1>
+      </header>
+      <nav id="primary">
+        <ul>
+          <li id="diaryTab" class="tab current">Diary</li>
+          <li id="servicesTab" class="tab">Services</li>
+        </ul>
+      </nav>
+      <nav id="services">
+      </nav>
+    </aside>
+
+    <section id="mainSection">
+
+      <!-- Diary Section -->
+      <section id="diarySection" class="tabPage">
+        <header>
+          <h1>Locker Diary</h1>
+          <ul class="actions">
+            <li onclick="javascript:refreshDiary()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
+          </ul>
+        </header>
+        <section id="timelineSection">
+          <ul>
+            <li style="height: 12%"></li>
+            <li style="height: 18%"></li>
+            <li style="height: 15%"></li>
+            <li style="height: 9%"></li>
+            <li style="height: 10%"></li>
+            <li style="height: 7%"></li>
+            <li style="height: 19%"></li>
+          </ul>
+        </section>
+        <ul id="diaryLines">
+        </ul>
+        <div id="diaryTemplate">
+          <span class="diaryTimestamp"></span>
+        </div>
+      </section>
+
+      <!-- Services -->
+      <section id="servicesSection" class="tabPage">
+        <header>
+          <h1>Services</h1>
+          <ul class="actions">
+            <li id="installer"><img src="../Images/Plus.png" width="24" height="24" alt="Install Service" /></li>
+            <!-- <li><a href='#' id='installer'>Install Service</a></li> -->
+          </ul>
+        </header>
+        <table>
+          <thead>
+            <th>Service</th>
+            <th>ID</th>
+            <th></th>
+          </thead>
+          <tbody id="installed">
+          </tbody>
+        </table>
+        <div id='available'>
+          <div id='availList'>
+          </div>
+          <div id='availInfo'>
+            <div><h1>Name</h1><a id='availInstall' href='javascript:install(-1)'>(Install)</a></div>
+            <p>Description</p>
+            <div><span class='availKey'>Source directory:</span><span class='availSrcDir'></span></div>
+            <div><span class='availKey'>Provides:</span><span class='availProvides'></span></div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <footer>
+      <small>&copy; 2011 The Locker Project</small>
+    </footer>
+  </body>
 </html>
