@@ -306,10 +306,14 @@ function proxied(method, svc, ppath, req, res) {
                         res.write(data);
                         res.end();
                     }
+                } else if(resp.statusCode == 304) { // not modified
+                  res.writeHead(resp.statusCode, resp.headers);
+                  res.end(data);
                 } else if(resp.statusCode > 400) {
                     res.writeHead(resp.statusCode);
                     res.end(data);
                 }
+                //FIXME: What if the server returns an unhandled status code? The app will just hang...
             }
         });
     }
