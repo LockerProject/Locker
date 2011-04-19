@@ -32,16 +32,16 @@ tests.use("localhost", 8042)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
-            .expect("has 16 available services", function(err, res, body) {
+            .expect("has 17 available services", function(err, res, body) {
                 var map = JSON.parse(body);
-                assert.equal(map.available.length, 16);
-            }).expect("has 10 installed services", function(err, res, body) {
+                assert.equal(map.available.length, 17);
+            }).expect("has 12 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 10);
+                assert.equal(count, 12);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
@@ -51,30 +51,38 @@ tests.use("localhost", 8042)
 
     .discuss("list services providing a specific type")
         .path("/providers")
-        .get("", {types:"contact/twitter"})
+        .get("", {types:"testtype/testproviders"})
             .expect(200)
-            .expect("and return an array of valid services", function(err, res, body) {
+            .expect("and return an array of length 1 of valid services", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 1);
-                assert.equal(providers[0].title, "Twitter Account");
+                assert.equal(providers[0].title, "Test /providers");
             })
-        .get("", {types:"contact/twitter,contact/flickr"})
+        .get("", {types:"badtype/badsvc"})
+            .expect(200)
+            .expect("and return an empty array", function(err, res, body) {
+                assert.equal(res.statusCode, 200);
+                assert.isNotNull(body);
+                var providers = JSON.parse(body);
+                assert.equal(providers.length, 0);
+            })
+        .get("", {types:"testtype/testproviders,testtype/anotherprovider"})
             .expect(200)
             .expect("and return an array of valid services", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 2);
-            })
-        .get("", {types:"contact"})
+          }) 
+        .get("", {types:"testtype"})
             .expect(200)
-            .expect("and return an array of valid services", function(err, res, body) {
+            .expect("and return an array of length 2", function(err, res, body) {
                 assert.equal(res.statusCode, 200);
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
-                assert.equal(providers.length, 3);
+                assert.equal(providers.length, 2);
             })
         .unpath()
     .undiscuss()
@@ -147,7 +155,8 @@ tests.use("localhost", 8042)
             .get()
                 .expect(200)
                 .expect("properly", function(err, res, body) {
-                    console.log(res.headers);
+                    assert.isNull(err);
+                    assert.include(res.headers, "set-cookie");
                 })
         .unpath()
     .undiscuss()
