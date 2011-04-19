@@ -28,7 +28,6 @@ exports.initClient = function(instanceInfo) {
 }
 
 exports.at = function(uri, delayInSec) {
-    //this should be migrated to request.get
     request.get({
         url:baseServiceUrl + '/at?' + querystring.stringify({
             cb:uri,
@@ -38,7 +37,6 @@ exports.at = function(uri, delayInSec) {
 }
 
 exports.map = function(callback) {
-    //this should be migrated to request.get
     request.get({url:lconfig.lockerBase + "/map"}, function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
     });
