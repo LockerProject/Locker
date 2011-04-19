@@ -2,8 +2,10 @@
 
 set -o monitor
 
-# Backup the existing Me directory
+# Backup the existing Me directory and scheduler.json file
 mv ../Me ../Me.test-tmp
+touch ../scheduler.json
+mv ../scheduler.json ../scheduler.json.test-tmp
 # Copy in to place the testing version
 cp -R Me ../Me
 # Run locker on our mock/fake Me dir
@@ -33,3 +35,6 @@ fg %1 > /dev/null 2>&1
 # Remove the testing Me directory and put the real one back
 rm -rf ../Me
 mv ../Me.test-tmp ../Me
+# Remove the test scheduler.json and put the real one back
+rm ../scheduler.json
+mv ../scheduler.json.test-tmp ../scheduler.json
