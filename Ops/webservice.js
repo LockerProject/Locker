@@ -27,8 +27,8 @@ var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
-            connect.bodyParser(),
-            connect.cookieParser());
+            connect.bodyParser());
+
 
 var listeners = new Object(); // listeners for events
 
@@ -269,22 +269,17 @@ locker.get('/', function(req, res) {
 
 function proxied(method, svc, ppath, req, res) {
     console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
-    var host = url.parse(svc.uriLocal).host;
-    var cookies;
-    if(!req.cookies) {
-        req.cookies = {};
-    } else {
-        cookies = req.cookies[host];
-    }
     var headers = req.headers;
-    //if(cookies && cookies['connect.sid'])
-    //    headers.cookie = 'connect.sid=' + cookies['connect.sid'];
-    
     function doReq(method, redirect, svc, ppath, req, res) {
-        request({uri:svc.uriLocal+ppath, 
+        var options = {uri:svc.uriLocal+ppath, 
                  headers:headers, 
                  method:method, 
-                 followRedirect:redirect}, function(error, resp, data) {
+                 followRedirect:redirect};
+        if(!method)
+            method = 'GET';
+        if(method.toLowerCase() == 'post' || method.toLowerCase() == 'post')
+            options.body = req.rawBody;
+        request(options, function(error, resp, data) {
             if(error) {
                 if(resp)
                     res.writeHead(resp.statusCode);
@@ -315,21 +310,6 @@ function proxied(method, svc, ppath, req, res) {
     }
     
     doReq(method, false, svc, ppath, req, res);
-}
-
-function getCookie(headers) {
-    var cookies = {};
-    if(headers && headers['set-cookie']) {
-        var splitCookies = headers['set-cookie'].toString().split(';');
-        for(var i = 0; i < splitCookies.length; i++) {
-            var cookie = splitCookies[i];
-            var parts = cookie.split('=');
-            var key = parts[ 0 ].trim();
-            if(key == 'connect.sid') 
-                return ( parts[ 1 ] || '' ).trim();
-        }
-    }
-    return null;
 }
 
 exports.startService = function(port) {

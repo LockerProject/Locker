@@ -13,6 +13,7 @@ import datetime
 import urllib2
 import thread
 import json
+#import sys
 from limap import MailboxProcessor
 
 app = Flask(__name__)
@@ -27,29 +28,31 @@ def update():
         secrets = lockerfs.loadJsonFile("secrets.json");
         proc = MailboxProcessor(secrets["server"], secrets["username"], secrets["password"])
         thread.start_new_thread(proc.process,())
-        return "Yep!"
+        return "true"
     else:
-        return redirect(url_for("setupAuth"))
+        return "<html>looks like you still need to <a href='setupAuth'>auth your account</a></html>"
+#        return redirect("http://localhost:18043/setupAuth")
+
 
 @app.route("/save", methods=['POST'])
-def saveAuth():
-    print "saving!!!"
+def saveAuth():    
     secrets = lockerfs.loadJsonFile("secrets.json");
     secrets["username"] = request.form["username"]
     secrets["password"] = request.form["password"]
     secrets["server"] = request.form["server"]
     app.consumerValidated = True
     lockerfs.saveJsonFile("secrets.json", secrets)
-    return redirect(url_for("mainIndex"))
+    return "<html>Looks good! You can:<br><ul><li><a href='update'>Get new messages</a></li></ul>"
+#    return redirect(url_for("mainIndex"))
 
 @app.route("/")
 def mainIndex():
     if app.consumerValidated:
-        return "hello!!"
+        return "<html>Looks good! You can:<br><ul><li><a href='update'>Get new messages</a></li></ul>"
         #return render_template("index.html", updateTime=app.updateAt, updatesStarted=app.updatesStarted)
     else:
-        return "redirect!"
-#        return redirect(url_for("setupAuth"))
+        return "<html>looks like you still need to <a href='setupAuth'>auth your account</a></html>"
+#        return redirect(url_for("/setupAuth"))
 
 
 @app.route("/allMessages")
@@ -104,6 +107,6 @@ def runService(info):
     secrets = lockerfs.loadJsonFile("secrets.json");
     app.lockerInfo = info
     app.consumerValidated = "username" in secrets and "password" in secrets and "server" in secrets 
-    app.debug = True
+    app.debug = False
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 
