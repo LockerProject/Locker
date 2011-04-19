@@ -25,18 +25,43 @@ vows.describe("Locker Client API").addBatch({
     }
 }).addBatch({
     "Public APIs" : {
-        topic: function() {
-            var promise = new events.EventEmitter;
-            locker.map(function(svcMap) {
-                if (!svcMap) promise.emit("error", svcMap);
-                else promise.emit("success", svcMap);
-            });
-            return promise;
+        "map" : {
+            topic: function() {
+                var promise = new events.EventEmitter;
+                locker.map(function(svcMap) {
+                    if (!svcMap) promise.emit("error", svcMap);
+                    else promise.emit("success", svcMap);
+                });
+                return promise;
+            },
+            "can retrieve the service map" : function (err, data) {
+                assert.isNull(err);
+                assert.include(data, "installed");
+                assert.include(data, "available");
+            }
         },
-        "can retrieve the service map" : function (err, data) {
-            assert.isNull(err);
-            assert.include(data, "installed");
-            assert.include(data, "available");
+        "providers" : {
+            topic: function() {
+                var promise = new events.EventEmitter;
+                locker.providers("contact/twitter", function(providers) {
+                    if (providers.length != 1) promise.emit("error", providers);
+                    else if (providers[0].title != "Twitter Account") promise.emit("error", providers);
+                    else promise.emit("success", providers);
+                });
+                return promise;
+            },
+            "can retrieve the service map" : function (err, data) {
+                assert.isNull(err);
+                assert.include(data[0], "title");
+                assert.include(data[0], "action");
+                assert.include(data[0], "desc");
+                assert.include(data[0], "run");
+                assert.include(data[0], "provides");
+                assert.include(data[0], "srcdir");
+                assert.include(data[0], "is");
+                assert.include(data[0], "id");
+                assert.include(data[0], "uri");
+            }
         }
     }
 }).addBatch({
