@@ -85,50 +85,7 @@ app.get('/post2install', function(req, res){
     });
 });
 
-
-app.get('/*', function (req, res) {
-    var uri = url.parse(req.url).pathname;
-    var filename = path.join(process.cwd(), uri);  
-    path.exists(filename, function(exists) { 
-        if(!exists) {  
-            res.writeHead(404, {"Content-Type": "text/plain"});  
-            res.write("404 Not Found\n");  
-            res.end();  
-            return;  
-        }  
-
-        fs.readFile(filename, "binary", function(err, file) {
-            if(err) {
-                res.writeHead(500, {"Content-Type": "text/plain"}); 
-                res.write(err + "\n");
-                res.end();
-                return;
-            }  
-
-            var fileExtension = filename.substring(filename.lastIndexOf(".") + 1);
-            var contentType, contentLength;
-
-            switch (fileExtension)
-            {
-              case "png": contentType = "image/png";  break;
-              case "jpg": contentType = "image/jpeg"; break;
-              case "gif": contentType = "image/gif";  break;
-            }
-
-            if (contentType)
-            {
-              res.writeHead(200, { "Content-Type": contentType });
-              res.write(file);
-            }
-            else
-            {
-              res.writeHead(200);
-              res.write(file, "binary");
-            }
-            res.end();
-        });
-    });
-});
+app.use(express.static(__dirname)); 
 
 console.log('http://'+rootHost+':'+rootPort+'/');
 
