@@ -139,7 +139,7 @@ tests.use("localhost", 8042)
         .path("/Me/testUnicode/test")
             .get()
                 .expect(200)
-                .expect("properly", function(err, res, body) {
+                .expect("returned unicode JSON should be parsable", function(err, res, body) {
                     try {
                         var json = JSON.parse(body);
                     } catch(err) {
@@ -154,7 +154,7 @@ tests.use("localhost", 8042)
         .path("/Me/testCookies/test")
             .get()
                 .expect(200)
-                .expect("properly", function(err, res, body) {
+                .expect("should pass a set-cookie header", function(err, res, body) {
                     assert.isNull(err);
                     assert.include(res.headers, "set-cookie");
                 })
