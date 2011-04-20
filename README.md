@@ -41,6 +41,4 @@ Once I "install" them in my locker (giving them some working space, a local port
 
 We need *TONS* of help and it's welcomed across the board, particularly in adding and advancing more of the connectors, just don a hard-hat and dig in, all patches welcomed, personal data FTW!
 
-I am the platform.
-
-*** THIS IS THE DEV BRANCH ***
+**I am the platform.**
