@@ -25,10 +25,10 @@ Then I go to to the dashboard (and am amazed by the design!):
 ## What are these things? ##
 
 * **Connectors** - A service that knows how to connect to and sync data with a place where I have data about myself, such as an account on a site or service, or in some desktop app, on my phone, or even from a device.
-* **Collections** - My data from the many different sources gets organized into common collections, such as places, contacts, messages, statuses, pages, etc.
-* **Apps** - Once my data is in my locker, I can then run apps locally within that locker that do useful or fun things for me without having to give my data up to any web site or give anyone access to my online accounts.
+* **Collections** - My data from the many different sources gets organized into common collections, such as places, contacts, messages, statuses, links, etc.
+* **Apps** - Once my data is in my locker I need apps that do useful or fun things for me, with the ability to control where my data goes and not have to give up access to my online accounts.
 
-Once I "install" them in my locker (giving them some working space, a local port, and some config), I can browse to them where they have their own instructions/steps (for now, it's early yet and pretty manual).  To learn more about the innards, I can install and run the Dev Docs app. :)
+Once I "install" them in my locker (giving them some working space, a local port, and some config), I can browse to them where they provide their own instructions/steps (for now, it's early yet and pretty manual).  To learn a bit more about the innards, I can install and run the Dev Docs app. :)
 
 We need *TONS* of help and it's welcomed across the board, particularly in adding and advancing more of the connectors, just don a hard-hat and dig in, all patches welcomed, personal data FTW!
 
