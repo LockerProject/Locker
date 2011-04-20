@@ -130,6 +130,4 @@ app.get('/*', function (req, res) {
     });
 });
 
-console.log('http://'+rootHost+':'+rootPort+'/');
-
 app.listen(rootPort);
