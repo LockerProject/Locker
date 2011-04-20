@@ -13,7 +13,8 @@
 <ul>
 <li>Fundamental goal: mirror/sync data from somewhere else</li>
 <li>Store that data in JSON in as identical-to-the-source structure as possible</li>
-<li>Serve it back up via as simple of a RESTful API as possible</li>
+<li>Structure the data in a simple archival way, take the long-view</li>
+<li>Serve it back up via as simple of a RESTful API as possible, just make it accessible in bulk upon request</li>
 <li>Be OK with being turned off anytime (graceful start)</li>
 <li>Identify your data to the locker via simple service types (below)</li>
 <li>Generate event notifications when data changes</li>
@@ -22,10 +23,13 @@
 <h1 id="collections">Collections</h1>
 
 <ul>
-<li>General common data-types (places, contacts, pages, music, photos, etc), there should be far fewer of these than connectors</li>
+<li>General common data-types, one Collection per type (places, contacts, links, messages, music, photos, etc)</li>
 <li>Need to know how to speak service-types specific to the diverse set of connectors, understand the raw data formats</li>
 <li>Embody the intelligence to merge and dedup from many sources, and handle local meta-data around each datum.</li>
 <li>Register for event notifications to stay up to date efficiently</li>
+<li>Many will consume-from / feed-to other Collections</li>
+<li>Preserve and convey the context of where the data came from (&#8220;via&#8221;)</li>
+<li>Be able to cold start from scratch by &#8220;crawling&#8221; existing data as well as subsequent updating from pushed events</li>
 </ul>
 
 <h1 id="apps">Apps</h1>

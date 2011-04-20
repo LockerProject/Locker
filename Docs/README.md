@@ -12,7 +12,8 @@ Connectors
 
 * Fundamental goal: mirror/sync data from somewhere else
 * Store that data in JSON in as identical-to-the-source structure as possible
-* Serve it back up via as simple of a RESTful API as possible
+* Structure the data in a simple archival way, take the long-view
+* Serve it back up via as simple of a RESTful API as possible, just make it accessible in bulk upon request
 * Be OK with being turned off anytime (graceful start)
 * Identify your data to the locker via simple service types (below)
 * Generate event notifications when data changes
@@ -20,10 +21,13 @@ Connectors
 Collections
 ===========
 
-* General common data-types (places, contacts, pages, music, photos, etc), there should be far fewer of these than connectors
+* General common data-types, one Collection per type (places, contacts, links, messages, music, photos, etc)
 * Need to know how to speak service-types specific to the diverse set of connectors, understand the raw data formats
 * Embody the intelligence to merge and dedup from many sources, and handle local meta-data around each datum.
 * Register for event notifications to stay up to date efficiently
+* Many will consume-from / feed-to other Collections
+* Preserve and convey the context of where the data came from ("via")
+* Be able to cold start from scratch by "crawling" existing data as well as subsequent updating from pushed events
 
 Apps
 ====
