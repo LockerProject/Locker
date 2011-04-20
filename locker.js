@@ -84,7 +84,7 @@ var lockerPortNext = "1"+lockerPort;
 dashboard.start(lockerPortNext);
 lockerPortNext++;
 
-console.log('locker running at ' + lockerBase);
+console.log('locker is running, use your browser and visit ' + lockerBase);
 
 process.on("SIGINT", function() {
     process.stdout.write("\n");
