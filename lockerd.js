@@ -34,7 +34,7 @@ var webservice = require(__dirname + "/Ops/webservice.js");
 var lockerHost = process.argv[2]||"localhost";
 if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                'which if so inclined can be hacked into locker.js and added since it\'s apparently still not implemented :)\n\n');
+                'which if so inclined can be hacked into lockerd.js and added since it\'s apparently still not implemented :)\n\n');
 }
 var lockerPort = process.argv[3]||8042;
 var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
