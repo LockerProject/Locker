@@ -24,7 +24,7 @@ There are a few Python utilities that are used in the stack, so I'll run (this r
 
 To turn on my locker I run:
 
-    node locker.js
+    node lockerd.js
 
 Then I go to to the dashboard (and am amazed by the design!):
 
@@ -41,4 +41,4 @@ Once I "install" them in my locker (giving them some working space, a local port
 
 We need *TONS* of help and it's welcomed across the board, particularly in adding and advancing more of the connectors, just don a hard-hat and dig in, all patches welcomed, personal data FTW!
 
-I am the platform.
+**I am the platform.**
