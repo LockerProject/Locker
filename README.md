@@ -24,7 +24,7 @@ There are a few Python utilities that are used in the stack, so I'll run (this r
 
 To turn on my locker I run:
 
-    node locker.js
+    node lockerd.js
 
 Then I go to to the dashboard (and am amazed by the design!):
 
