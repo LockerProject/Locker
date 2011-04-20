@@ -1,8 +1,0 @@
-{
-	"title":"Google Contacts",
-	"action":"Connect to Google contacts",
-	"desc":"Collect and sync my data from my Google contacts using the Google Data API",
-	"run":"python client.py",
-	"status":"unstable",
-	"provides":["contact/google"]
-}

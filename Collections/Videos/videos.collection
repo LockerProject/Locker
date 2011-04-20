@@ -1,7 +1,0 @@
-{
-    "title":"Videos",
-    "desc":"A collection of videos created, shared, received, and viewed.",
-    "run":"node videos.js",
-	"status":"stub",
-    "provides":["video"]
-}
