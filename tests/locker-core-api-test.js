@@ -32,9 +32,9 @@ tests.use("localhost", 8042)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
-            .expect("has 17 available services", function(err, res, body) {
+            .expect("has 8 available services", function(err, res, body) {
                 var map = JSON.parse(body);
-                assert.equal(map.available.length, 17);
+                assert.equal(map.available.length, 8);
             }).expect("has 12 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
