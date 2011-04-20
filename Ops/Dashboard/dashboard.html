@@ -38,6 +38,7 @@
             <li onclick="javascript:refreshDiary()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
           </ul>
         </header>
+        <!--
         <section id="timelineSection">
           <ul>
             <li style="height: 12%"></li>
@@ -49,6 +50,7 @@
             <li style="height: 19%"></li>
           </ul>
         </section>
+        -->
         <ul id="diaryLines">
         </ul>
         <div id="diaryTemplate">
@@ -62,22 +64,14 @@
           <h1>Services</h1>
           <ul class="actions">
             <li id="installer"><img src="../Images/Plus.png" width="24" height="24" alt="Install Service" /></li>
-            <!-- <li><a href='#' id='installer'>Install Service</a></li> -->
           </ul>
         </header>
-        <table>
-          <thead>
-            <th>Service</th>
-            <th>ID</th>
-            <th></th>
-          </thead>
-          <tbody id="installed">
-          </tbody>
-        </table>
-        <div id='available'>
-          <div id='availList'>
-          </div>
-          <div id='availInfo'>
+        <ul id="installedServices">
+        </ul>
+        <div id="available">
+          <ul id="availList">
+          </ul>
+          <div id="availInfo">
             <div><h1>Name</h1><a id='availInstall' href='javascript:install(-1)'>(Install)</a></div>
             <p>Description</p>
             <div><span class='availKey'>Source directory:</span><span class='availSrcDir'></span></div>

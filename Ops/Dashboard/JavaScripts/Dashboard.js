@@ -37,11 +37,11 @@ $(document).ready(function()
       serviceMap = data;
       for (var key in serviceMap.installed) {
           var item = serviceMap.installed[key];
-          $("#installed").append("<tr><td>" + item["title"] + "</td><td>" + item["id"] +  "</td><td><a href='" + item["uri"] + "'>page</a></td></li>");
+          $("#installedServices").append("<li><span class='title'>" + item["title"] + "</span><span class='identifier'>" + item["id"] +  "</span><span class='page'><a href='" + item["uri"] + "'>Configure</a></span></li>");
           $("#services").append("<li>" + item["title"] + "</li>");
       }
       serviceMap.available.forEach(function(item) {
-          $("#availList").append($("<p>" + item["title"]+"</p>").click(function() {
+          $("#availList").append($("<li>" + item["title"] + "</li>").click(function() {
               selectAvailable(serviceMap.available.indexOf(item));
           }));
       });
@@ -71,11 +71,27 @@ $(document).ready(function()
       $("#available").slideDown(250, function() {
         // $("#installer").text("Hide installer")
       });
+      $("#installedServices").animate(
+        {
+          top: "270px"
+        },
+        {
+          duration: 250
+        }
+      );
     } else {
       $("#available").slideUp(250, function() {
         // $("#installer").text("Install another service");
         $("#available").hide();
       });
+      $("#installedServices").animate(
+        {
+          top: "50px"
+        },
+        {
+          duration: 250
+        }
+      );
     }
   });
 

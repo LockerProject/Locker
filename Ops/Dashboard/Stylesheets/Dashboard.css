@@ -357,48 +357,86 @@ section#diarySection #diaryLines
 
 /* Services --------------------------------------------------------------- */
 
+#servicesSection
+{
+  display: none;
+}
+
 #available
 {
-  display:none;
-  clear:both;
-  height:210px;
-  border-top:1px dashed lightslategrey;
-  padding-top:10px;
+  display: none;
+  clear: both;
+  height: 210px;
+  padding-top: 10px;
+  position: absolute;
+  left: 1px;
+  top: 50px;
+  right: 1px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 #availList
 {
-  width:200px;
-  height:200px;
-  overflow-y:scroll;
-  overflow-x:hidden;
-  float:left;
-  border:1px solid lightslategrey;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 200px;
+
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  background-color: rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
 }
 
-#availList p
+#availList li
 {
-  padding: 2px;
+  line-height: 32px;
+  height: 32px;
+  padding-left: 20px;
+  padding-right: 20px;
   margin: 0;
-  background: lightslategrey;
-  border-bottom: 1px solid #666;
-  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 1);
+  font-size: 14px;
+  cursor: default;
 }
 
-#availList p:hover
+#availList li:nth-of-type(odd)
 {
-  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+#availList li:hover
+{
+  color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 #availInfo
 {
+  position: absolute;
+  left: 10px;
+  right: 0;
+  top: 0;
+  bottom: 0;
   margin-left: 210px;
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 12px;
 }
 
 #availInfo h1
 {
   margin: 0;
   padding: 0;
+  line-height: 64px;
+  font-size: 18px;
 }
 
 .availKey
@@ -411,9 +449,64 @@ section#diarySection #diaryLines
   font-size: 12px;
 }
 
-#servicesSection
+#installedServices
 {
-  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 50px;
+  list-style: none;
+  padding: 20px;
+}
+
+#installedServices li
+{
+  position: relative;
+  padding-left: 10px;
+  font-size: 14px;
+
+  height: 36px;
+  line-height: 36px;
+
+/*  background-color: rgba(255, 255, 255, 0.1);*/
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.1)), to(rgba(255, 255, 255, 0.05)));
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin-bottom: 3px;
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.075), inset 1px 0px 0px rgba(255, 255, 255, 0.05), inset -1px 0px 0px rgba(255, 255, 255, 0.05), inset 0px -1px 0px rgba(0, 0, 0, 0.5);
+
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 1);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+#installedServices li .title
+{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+}
+
+#installedServices li .identifier
+{
+  position: absolute;
+  right: 100px;
+  top: 0;
+  bottom: 0;
+  font-size: 12px;
+  font-family: Menlo, Courier, monospace;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+#installedServices li .page
+{
+  position: absolute;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  font-size: 12px;
 }
 
 // Custom Scrollbars ---------------------------------------------------------
