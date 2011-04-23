@@ -13,6 +13,7 @@ var request = require('request');
 var lscheduler = require("lscheduler");
 var levents = require("levents");
 var serviceManager = require("lservicemanager");
+var keychain = require("lkeychain");
 var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
@@ -96,6 +97,8 @@ locker.post('/install', function(req, res) {
     res.end(JSON.stringify(metaData));
 });
 
+
+// ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
@@ -140,6 +143,8 @@ locker.post('/Me/*', function(req,res){
     console.log("Proxy complete");
 });
 
+
+// DIARY
 // Publish a user visible message
 locker.post("/:svcId/diary", function(req, res) {
     var level = req.param("level") || 0;
@@ -187,6 +192,8 @@ locker.get("/diary", function(req, res) {
     res.write
 });
 
+
+// EVENTING
 // anybody can listen into any service's events
 locker.get('/:svcId/listen', function(req, res) {
     var type = req.param('type'), cb = req.param('cb');
@@ -251,6 +258,51 @@ locker.post('/:svcId/event', function(req, res) {
     res.writeHead(200);
     res.end("OKTHXBI");
 });
+
+
+// KEYCHAIN
+// put an object in the keychain
+locker.post('/keychain/put', function(req, res) {
+    console.log(req.param('serviceType'), req.param('object'), req.param('meta'));
+    keychain.putObject(req.param('serviceType'), req.param('object'), req.param('meta'));
+    console.log('getmeta: ' + JSON.stringify(keychain.getObjectsMetaOfServiceType(req.param('serviceType'))));
+    res.writeHead(200);
+    res.end();
+});
+
+// permission an object in the keychain
+locker.post('/keychain/permission', function(req, res) {
+    keychain.permissionServiceIDToObject(req.param('serviceID'), req.param('serviceType'), req.param('index'));
+    res.writeHead(200);
+    res.end();
+});
+
+// get all objects' meta for a given service type in the keychain
+locker.get('/keychain/meta', function(req, res) {
+    var meta = keychain.getObjectsMetaOfServiceType(req.param('serviceType'));
+    res.writeHead(200, {
+        'Content-Type':'text/json'
+    });
+    res.end(JSON.stringify(meta));
+});
+
+// get all objects' meta for a given service type in the keychain
+locker.get('/keychain/get', function(req, res) {
+    try {
+        var meta = keychain.getObject(req.param('serviceID'), req.param('serviceType'), req.param('index'));
+        res.writeHead(200, {
+            'Content-Type':'text/json'
+        });
+        res.end(JSON.stringify(meta));
+    } catch(err) {
+        res.writeHead(401, {
+            'Content-Type':'text/json'
+        });
+        sys.debug(err);
+        res.end(JSON.stringify({error:'Permission denied'}));
+    }
+});
+
 
 // fallback everything to the dashboard
 locker.get('/*', function(req, res) {
