@@ -25,7 +25,7 @@ exports.putObject = function(serviceType, object, meta) {
     write();
 }
 
-exports.permissionServiceIDToObject = function(serviceID, serviceType, index) {
+exports.grantPermission = function(serviceID, serviceType, index) {
     if(!chain.objects.hasOwnProperty(serviceType)) {
         throw new Error('no objects of service type ' + serviceType);
     } else if(index < 0 || index >= chain.objects[serviceType].length) {
@@ -44,7 +44,7 @@ exports.permissionServiceIDToObject = function(serviceID, serviceType, index) {
     write();
 }
 
-exports.getObjectsMetaOfServiceType = function(serviceType) {
+exports.getMetaForServiceType = function(serviceType) {
     var arr = chain.objects[serviceType];
     if(!arr)
         return [];

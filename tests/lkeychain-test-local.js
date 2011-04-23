@@ -29,13 +29,13 @@ vows.describe('Keychain').addBatch({
     }
 }).addBatch({
     'can get a list of objects\' metadata by service type': function() {
-        var objects = keychain.getObjectsMetaOfServiceType('myservicetype');
+        var objects = keychain.getMetaForServiceType('myservicetype');
         assert.equal(objects.length, 2);
         assert.equal(objects[0], null);
         assert.equal(objects[1].username, 'Mr. Locker Test');
     },
     'can permission a service ID to an object': function() {
-        keychain.permissionServiceIDToObject('testid', 'myservicetype', 0);
+        keychain.grantPermission('testid', 'myservicetype', 0);
     }
 }).addBatch({
     'can get an object with permissions': function() {

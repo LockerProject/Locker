@@ -263,23 +263,21 @@ locker.post('/:svcId/event', function(req, res) {
 // KEYCHAIN
 // put an object in the keychain
 locker.post('/keychain/put', function(req, res) {
-    console.log(req.param('serviceType'), req.param('object'), req.param('meta'));
     keychain.putObject(req.param('serviceType'), req.param('object'), req.param('meta'));
-    console.log('getmeta: ' + JSON.stringify(keychain.getObjectsMetaOfServiceType(req.param('serviceType'))));
     res.writeHead(200);
     res.end();
 });
 
 // permission an object in the keychain
 locker.post('/keychain/permission', function(req, res) {
-    keychain.permissionServiceIDToObject(req.param('serviceID'), req.param('serviceType'), req.param('index'));
+    keychain.grantPermission(req.param('serviceID'), req.param('serviceType'), req.param('index'));
     res.writeHead(200);
     res.end();
 });
 
 // get all objects' meta for a given service type in the keychain
 locker.get('/keychain/meta', function(req, res) {
-    var meta = keychain.getObjectsMetaOfServiceType(req.param('serviceType'));
+    var meta = keychain.getMetaForServiceType(req.param('serviceType'));
     res.writeHead(200, {
         'Content-Type':'text/json'
     });
