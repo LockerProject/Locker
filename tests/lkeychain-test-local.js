@@ -16,17 +16,11 @@ var assert = require('assert');
 var fs = require('fs');
 var util = require('util');
 var events = require('events');
-//var request = require('request');
 var testUtils = require(__dirname + '/test-utils.js');
 require.paths.push(__dirname + '/../Common/node');
 
 var keychain = require('lkeychain');
 var lconfig = require('lconfig');
-//var testUtils = require('test-utils.js');
-
-// Run in the main directory
-process.chdir('..');
-lconfig.lockerDir = process.cwd();
 
 vows.describe('Keychain').addBatch({
     'can put an object on the keychain': function() {
