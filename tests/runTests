@@ -2,10 +2,12 @@
 
 set -o monitor
 
-# Backup the existing Me directory and scheduler.json file
+# Backup the existing Me directory, scheduler.json, and keychain.json file
 mv ../Me ../Me.test-tmp
 touch ../scheduler.json
 mv ../scheduler.json ../scheduler.json.test-tmp
+touch ../keychain.json
+mv ../keychain.json ../keychain.json.test-tmp
 # Copy in to place the testing version
 cp -R Me ../Me
 # Run locker on our mock/fake Me dir
@@ -38,3 +40,6 @@ mv ../Me.test-tmp ../Me
 # Remove the test scheduler.json and put the real one back
 rm ../scheduler.json
 mv ../scheduler.json.test-tmp ../scheduler.json
+# Remove the test keychain.json and put the real one back
+rm ../keychain.json
+mv ../keychain.json.test-tmp ../keychain.json
