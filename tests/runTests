@@ -17,10 +17,21 @@ if test -z "$1"; then
 fi
 
 cd ..
+
 node lockerd.js > tests/locker.log 2>&1 &
+node_pid=$!
+
 # Wait for the locker to have some startup time
 echo "Waiting for the locker to startup..."
 sleep 5
+
+# Check that it is actually running
+if ! kill -0 $node_pid 2>/dev/null; then
+    echo "Locker failed to start up:"
+    cat tests/locker.log
+    exit 1
+fi
+
 cd tests
 # Actually run all our tests
 if test -n "$1"; then
