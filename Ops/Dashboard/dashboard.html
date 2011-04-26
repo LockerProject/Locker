@@ -21,10 +21,12 @@
       <nav id="primary">
         <ul>
           <li id="diaryTab" class="tab current">Diary</li>
-          <li id="servicesTab" class="tab">Services</li>
+          <li id="adaptersTab" class="tab">Adapters</li>
+          <li id="collectionsTab" class="tab">Collections</li>
         </ul>
       </nav>
-      <nav id="services">
+      <nav id="applications">
+        <p class="placeholder">Apps</p>
       </nav>
     </aside>
 
@@ -58,26 +60,42 @@
         </div>
       </section>
 
-      <!-- Services -->
-      <section id="servicesSection" class="tabPage">
+      <!-- Adapters -->
+      <section id="adaptersSection" class="tabPage">
         <header>
-          <h1>Services</h1>
+          <h1>Adapters</h1>
           <ul class="actions">
             <li id="installer"><img src="../Images/Plus.png" width="24" height="24" alt="Install Service" /></li>
           </ul>
         </header>
-        <ul id="installedServices">
-        </ul>
         <div id="available">
           <ul id="availList">
           </ul>
           <div id="availInfo">
-            <div><h1>Name</h1><a id='availInstall' href='javascript:install(-1)'>(Install)</a></div>
-            <p>Description</p>
-            <div><span class='availKey'>Source directory:</span><span class='availSrcDir'></span></div>
-            <div><span class='availKey'>Provides:</span><span class='availProvides'></span></div>
+            <div>
+              <h1>Name</h1>
+              <a id="availInstall" href='javascript:install(-1)'>Install Service</a>
+            </div>
+            <p class="description">Description</p>
+            <ul class="details">
+              <li>
+                <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
+              </li>
+              <li>
+                <strong>Provides:</strong> <span id="availProvides" class="value"></span>
+              </li>
+            </ul>
           </div>
         </div>
+        <ul id="installedServices">
+        </ul>
+      </section>
+
+      <!-- Collections -->
+      <section id="collectionsSection" class="tabPage">
+        <header>
+          <h1>Collections</h1>
+        </header>
       </section>
 
     </section>

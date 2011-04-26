@@ -5,8 +5,8 @@ function selectAvailable(index) {
     var item = serviceMap.available[index];
     $("#availInfo h1").html(item["title"]);
     $("#availInfo p").html(item["desc"]);
-    $("#availInfo .availSrcDir").html(item["srcdir"]);
-    if (item["provides"]) $("#availInfo .availProvides").html(item["provides"].join(","));
+    $("#availSrcDir").html(item["srcdir"]);
+    if (item["provides"]) $("#availProvides").html(item["provides"].join(","));
     $("#availInstall").attr("href", "javascript:install(" + index + ");");
 }
 
@@ -41,7 +41,9 @@ $(document).ready(function()
           $("#services").append("<li>" + item["title"] + "</li>");
       }
       serviceMap.available.forEach(function(item) {
-          $("#availList").append($("<li>" + item["title"] + "</li>").click(function() {
+          $("#availList").append($("<li>" + item["title"] + "</li>").click(function(event) {
+              $("#availList li").removeClass("current");
+              $(event.target).addClass("current");
               selectAvailable(serviceMap.available.indexOf(item));
           }));
       });
@@ -50,12 +52,20 @@ $(document).ready(function()
 
   refreshDiary();
 
-  $("#servicesTab").click(function()
+  $("#adaptersTab").click(function()
   {
     $(".tabPage").hide();
-    $("#servicesSection").show();
+    $("#adaptersSection").show();
     $(".tab").removeClass("current");
-    $("#servicesTab").addClass("current");
+    $("#adaptersTab").addClass("current");
+  });
+
+  $("#collectionsTab").click(function()
+  {
+    $(".tabPage").hide();
+    $("#collectionsSection").show();
+    $(".tab").removeClass("current");
+    $("#collectionsTab").addClass("current");
   });
 
   $("#diaryTab").click(function()
