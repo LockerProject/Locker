@@ -30,7 +30,16 @@ var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
-            connect.bodyParser());
+            function(req, res, next) {
+                if (req.url.substring(0, 4) == "/Me/") {
+                    // Skipping the body parser on proxied bits
+                    next();
+                } else {
+                    connect.bodyParser()(req, res, next);
+                }
+            }
+            //connect.bodyParser()
+            );
 
 
 var listeners = new Object(); // listeners for events
