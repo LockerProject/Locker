@@ -87,7 +87,7 @@ tests.use("localhost", 8042)
         .unpath()
     .undiscuss()
 
-    .path("/install")
+    .path("/core/testSvcId/install")
     .discuss("install an available service")
         /************
          * XXX Right now we're relying on the hello world application to exist, maybe we should make a testing app?
@@ -162,14 +162,14 @@ tests.use("localhost", 8042)
     .undiscuss()
     
     // Diary storage
-    .path("/testURLCallback/diary")
+    .path("/core/testURLCallback/diary")
     .discuss("store diary messages")
         .post({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
 
     // Event basics
-    .path("/testURLCallback/listen")
+    .path("/core/testURLCallback/listen")
     .discuss("register a listener for an event")
         .get({type:"test/event2", cb:"/event"})
             .expect(200)
@@ -192,7 +192,7 @@ tests.next()
     .undiscuss().unpath()
 
     // Makes sure the /listen is done first
-    .path("/testURLCallback/deafen")
+    .path("/core/testURLCallback/deafen")
     .discuss("deafen a listener for an event")
         .get({type:"test/event2", cb:"/event"})
             .expect(200)
@@ -208,7 +208,7 @@ tests.next().suite.addBatch({
             var options = {
                 host:"localhost",
                 port:8042,
-                path:"/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
+                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
                 fs.unlinkSync("../Me/testURLCallback/result.json");
@@ -240,14 +240,14 @@ tests.next().suite.addBatch({
             var getOptions = {
                 host:"localhost",
                 port:8042,
-                path:"/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
+                path:"/core/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
             };
             var req = http.get(getOptions, function(res) {
                 var options = {
                     host:"localhost",
                     port:8042,
                     method:"POST",
-                    path:"/testURLCallback/event",
+                    path:"/core/testURLCallback/event",
                     headers:{
                         "Content-Type":"application/json"
                     }
