@@ -67,7 +67,7 @@ app.get('/post2install', function(req, res){
     var id = parseInt(req.param('id'));
     var js = map.available[id];
     var httpClient = http.createClient(lockerPort);
-    var request = httpClient.request('POST', '/install', {'Content-Type':'application/json'});
+    var request = httpClient.request('POST', '/core/Dashboard/install', {'Content-Type':'application/json'});
     var item = JSON.stringify(map.available[req.param('id')]);
     request.write(JSON.stringify(map.available[req.param('id')]));
     request.end();
