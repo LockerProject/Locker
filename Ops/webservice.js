@@ -23,7 +23,9 @@ var sys = require('sys');
 var fs = require("fs");
 var url = require('url');
 var lfs = require(__dirname + "/../Common/node/lfs.js");
+var httpProxy = require('http-proxy');
 
+var proxy = new httpProxy.HttpProxy();
 var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
@@ -112,8 +114,9 @@ locker.get('/Me/*', function(req,res){
     }
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
+        var buffer = proxy.buffer(req);
         serviceManager.spawn(id,function(){
-            proxied('GET', serviceManager.metaInfo(id),ppath,req,res);
+            proxied('GET', serviceManager.metaInfo(id),ppath,req,res,buffer);
         });
     } else {
         proxied('GET', serviceManager.metaInfo(id),ppath,req,res);
@@ -126,6 +129,7 @@ locker.post('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex+1);
+    sys.debug("Proxying a post to " + ppath + " to service " + req.url);
     console.log("Proxying a post to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
@@ -134,8 +138,9 @@ locker.post('/Me/*', function(req,res){
     }
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
+        var buffer = proxy.buffer(req);
         serviceManager.spawn(id,function(){
-            proxied('POST', serviceManager.metaInfo(id),ppath,req,res);
+            proxied('POST', serviceManager.metaInfo(id),ppath,req,res,buffer);
         });
     } else {
         proxied('POST', serviceManager.metaInfo(id),ppath,req,res);
@@ -316,8 +321,17 @@ locker.get('/', function(req, res) {
     proxied('GET', dashboard.instance,"",req,res);
 });
 
+function proxied(method, svc, ppath, req, res, buffer) {
+    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
+    req.url = "/"+ppath;
+    proxy.proxyRequest(req, res, {
+      host: url.parse(svc.uriLocal).hostname,
+      port: url.parse(svc.uriLocal).port,
+      buffer: buffer
+    });
+}
 
-function proxied(method, svc, ppath, req, res) {
+function proxied2(method, svc, ppath, req, res) {
     console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
     var headers = req.headers;
     function doReq(method, redirect, svc, ppath, req, res) {
@@ -335,7 +349,7 @@ function proxied(method, svc, ppath, req, res) {
                     res.writeHead(resp.statusCode);
                 res.end(data);            
             } else {
-                console.log(resp.headers);
+                console.log(JSON.stringify(resp.headers));
                 if(resp.statusCode == 200) {//success!!
                     resp.headers["Access-Control-Allow-Origin"] = "*";
                     res.writeHead(resp.statusCode, resp.headers);

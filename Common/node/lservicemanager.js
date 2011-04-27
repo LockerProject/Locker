@@ -103,6 +103,7 @@ exports.findInstalled = function () {
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             delete js.pid;
+            delete js.starting;
             console.log("Installing " + js.id);
             serviceMap.installed[js.id] = js;
         } catch (E) {
@@ -233,7 +234,6 @@ exports.spawn = function(serviceId, callback) {
         console.outputModule = mod;
         
     });
-    console.log(svc.id);
     app.on('exit', function (code) {
         console.log(svc.id + " process has ended.");
         var id = svc.id;
@@ -241,6 +241,7 @@ exports.spawn = function(serviceId, callback) {
         fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
         checkForShutdown();
     });
+    console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
 }
 

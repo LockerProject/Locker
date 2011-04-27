@@ -118,7 +118,7 @@ app.get('/*', function (req, res) {
             if (contentType)
             {
               res.writeHead(200, { "Content-Type": contentType });
-              res.write(file);
+              res.write(file, "binary");
             }
             else
             {
