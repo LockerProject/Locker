@@ -55,7 +55,7 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
     if (milliseconds < 0) milliseconds = 0;
     var self = this;
     function runUrl() {
-        request.get({url:lconfig.lockerBase + "Me/" + serviceID + callbackURL}, function() {
+        request.get({url:lconfig.lockerBase + "/Me/" + serviceID + callbackURL}, function() {
             self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
             self.savePending();
         });

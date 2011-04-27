@@ -37,7 +37,7 @@ if(process.argv[2] == '--config' && process.argv[3]) {
 
 lconfig.lockerHost = config.lockerHost || "localhost";
 lconfig.lockerPort = config.lockerPort || 8042;
-lconfig.lockerBase = "http://" + lconfig.lockerHost + (lconfig.lockerPort? ":" + lconfig.lockerPort : "") + "/";
+lconfig.lockerBase = "http://" + lconfig.lockerHost + (lconfig.lockerPort? ":" + lconfig.lockerPort : "");
 lconfig.scannedDirs = config.scannedDirs;
 lconfig.lockerDir = process.cwd();
 
