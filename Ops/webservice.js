@@ -113,6 +113,7 @@ locker.post('/core/:svcId/install', function(req, res) {
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
+    if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex+1);
     console.log("Proxying a get to " + ppath + " to service " + req.url);
@@ -136,6 +137,7 @@ locker.get('/Me/*', function(req,res){
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.post('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
+    if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex+1);
     sys.debug("Proxying a post to " + ppath + " to service " + req.url);
@@ -331,7 +333,7 @@ locker.get('/', function(req, res) {
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
-    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
+    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + "/" + ppath);
     req.url = "/"+ppath;
     proxy.proxyRequest(req, res, {
       host: url.parse(svc.uriLocal).hostname,
