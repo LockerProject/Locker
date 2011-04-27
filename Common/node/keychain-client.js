@@ -9,7 +9,12 @@
 
 var request = require('request');
 var querystring = require('querystring');
-var lconfig = require('./lconfig.js');
+
+var lockerBase;
+
+exports.init = function(theLockerBase) {
+    lockerBase = theLockerBase;
+}
 
 exports.putObject = function(serviceType, object, meta, callback) {
     post('put', {serviceType:serviceType, object:object, meta:meta}, (callback? callback : function(){}));
@@ -31,8 +36,10 @@ exports.getObject = function(serviceID, serviceType, index, callback) {
 
 
 function get(endpoint, params, callback) {
+    if(!lockerBase)
+        throw new Error('must call init(lockerBase) prior to using keychain client!');
     request.get({
-        uri: lconfig.lockerBase + '/keychain/' + endpoint + '?' + querystring.stringify(params),
+        uri: lockerBase + '/keychain/' + endpoint + '?' + querystring.stringify(params),
     }, function(err, resp, body) {
         if(body)
             body = JSON.parse(body);
@@ -44,21 +51,12 @@ function get(endpoint, params, callback) {
 }
 
 function post(endpoint, params, callback) {
+    if(!lockerBase)
+        throw new Error('must call init(lockerBase) prior to using keychain client!');
     request.post({
-        uri: lconfig.lockerBase + '/keychain/' + endpoint,
+        uri: lockerBase + '/keychain/' + endpoint,
         json: params
     }, function(err, resp, body) {
-        if(body)
-            body = JSON.parse(body);
-        callback(err, body);
-    });
-}
-
-function req(method, endpoint, params, callback) {
-    request({
-        uri: lconfig.lockerBase + '/keychain/' + endpoint + '?' + querystring.stringify(params),
-        method: method
-    }, function(err, body, resp) {
         if(body)
             body = JSON.parse(body);
         callback(err, body);

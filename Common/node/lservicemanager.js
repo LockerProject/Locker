@@ -20,6 +20,7 @@ var serviceMap = {
 
 var shuttingDown = null;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
+console.log('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 exports.serviceMap = function() {
     // XXX Sterilize?
