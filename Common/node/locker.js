@@ -23,7 +23,7 @@ exports.initClient = function(instanceInfo) {
     var svcInfo = JSON.parse(meData);
     localServiceId = svcInfo.id;
     lockerBase = instanceInfo.lockerUrl;
-    baseServiceUrl = lockerBase + "/" + localServiceId;
+    baseServiceUrl = lockerBase + "/core/" + localServiceId;
 }
 
 exports.at = function(uri, delayInSec) {
