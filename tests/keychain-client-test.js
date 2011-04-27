@@ -12,6 +12,9 @@ var assert = require("assert");
 var events = require("events");
 var keychainClient = require('../Common/node/keychain-client.js');
 
+//CONFIGFIX
+keychainClient.init('http://localhost:8042');
+
 var srvType = 'clientservicetype';
 
 vows.describe("Keychain Client API").addBatch({

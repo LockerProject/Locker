@@ -19,7 +19,7 @@ if test -z "$1"; then
 fi
 
 cd ..
-node lockerd.js > tests/locker.log 2>&1 &
+node lockerd.js --config tests/config.json > tests/locker.log 2>&1 &
 # Wait for the locker to have some startup time
 echo "Waiting for the locker to startup..."
 sleep 5
