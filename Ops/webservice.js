@@ -339,51 +339,6 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
-function proxied2(method, svc, ppath, req, res) {
-    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
-    var headers = req.headers;
-    function doReq(method, redirect, svc, ppath, req, res) {
-        var options = {uri:svc.uriLocal+ppath, 
-                 headers:headers, 
-                 method:method, 
-                 followRedirect:redirect};
-        if(!method)
-            method = 'GET';
-        if(method.toLowerCase() == 'post' || method.toLowerCase() == 'post')
-            options.body = req.rawBody;
-        request(options, function(error, resp, data) {
-            if(error) {
-                if(resp)
-                    res.writeHead(resp.statusCode);
-                res.end(data);            
-            } else {
-                console.log(JSON.stringify(resp.headers));
-                if(resp.statusCode == 200) {//success!!
-                    resp.headers["Access-Control-Allow-Origin"] = "*";
-                    res.writeHead(resp.statusCode, resp.headers);
-                    res.write(data);
-                    res.end();
-                } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
-                    var redURL = url.parse(resp.headers.location);
-                    sys.debug(sys.inspect(resp.headers));
-                    if(redURL.host.indexOf('localhost:') == 0 || redURL.host.indexOf('127.0.0.1:') == 0) {
-                        doReq(method, true, svc, ppath, req, res);
-                    } else {
-                        res.writeHead(resp.statusCode, resp.headers);
-                        res.write(data);
-                        res.end();
-                    }
-                } else if(resp.statusCode > 400) {
-                    res.writeHead(resp.statusCode);
-                    res.end(data);
-                }
-            }
-        });
-    }
-    
-    doReq(method, false, svc, ppath, req, res);
-}
-
 exports.startService = function(port) {
     locker.listen(port);
 }
