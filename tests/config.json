@@ -5,7 +5,6 @@
     "scannedDirs" : [
         "Apps", 
         "Collections", 
-        "Connectors",
-        "Auth"
+        "Connectors"
         ]
 }
