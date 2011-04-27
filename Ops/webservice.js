@@ -30,15 +30,14 @@ var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
+            // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 4) == "/Me/") {
-                    // Skipping the body parser on proxied bits
-                    next();
-                } else {
+                if (req.url.substring(0, 6) == "/core/") {
                     connect.bodyParser()(req, res, next);
+                } else {
+                    next();
                 }
             }
-            //connect.bodyParser()
             );
 
 
@@ -65,7 +64,7 @@ locker.get("/providers", function(req, res) {
 });
 
 // let any service schedule to be called, it can only have one per uri
-locker.get('/:svcId/at', function(req, res) {
+locker.get('/core/:svcId/at', function(req, res) {
     var seconds = req.param("at");
     var cb = req.param('cb');
     var svcId = req.params.svcId;
@@ -90,7 +89,7 @@ locker.get('/:svcId/at', function(req, res) {
 });
 
 // given a bunch of json describing a service, make a home for it on disk and add it to our map
-locker.post('/install', function(req, res) {
+locker.post('/core/:svcId/install', function(req, res) {
     if (!req.body.hasOwnProperty("srcdir")) {
         res.writeHead(400);
         res.end("{}")
@@ -160,7 +159,7 @@ locker.post('/Me/*', function(req,res){
 
 // DIARY
 // Publish a user visible message
-locker.post("/:svcId/diary", function(req, res) {
+locker.post("/core/:svcId/diary", function(req, res) {
     var level = req.param("level") || 0;
     var message = req.param("message");
     var svcId = req.params.svcId;
@@ -209,7 +208,7 @@ locker.get("/diary", function(req, res) {
 
 // EVENTING
 // anybody can listen into any service's events
-locker.get('/:svcId/listen', function(req, res) {
+locker.get('/core/:svcId/listen', function(req, res) {
     var type = req.param('type'), cb = req.param('cb');
     var svcId = req.params.svcId;
     if(!serviceManager.isInstalled(svcId)) {
@@ -230,7 +229,7 @@ locker.get('/:svcId/listen', function(req, res) {
 });
 
 // Stop listening to some events
-locker.get("/:svcId/deafen", function(req, res) {
+locker.get("/core/:svcId/deafen", function(req, res) {
     var type = req.param('type'), cb = req.param('cb');
     var svcId = req.params.svcId;
     if(!serviceManager.isInstalled(svcId)) {
@@ -250,7 +249,7 @@ locker.get("/:svcId/deafen", function(req, res) {
 });
 
 // publish an event to any listeners
-locker.post('/:svcId/event', function(req, res) {
+locker.post('/core/:svcId/event', function(req, res) {
     if (!req.body ) {
         res.writeHead(400);
         res.end("Post data missing");
@@ -338,51 +337,6 @@ function proxied(method, svc, ppath, req, res, buffer) {
       port: url.parse(svc.uriLocal).port,
       buffer: buffer
     });
-}
-
-function proxied2(method, svc, ppath, req, res) {
-    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + ppath);
-    var headers = req.headers;
-    function doReq(method, redirect, svc, ppath, req, res) {
-        var options = {uri:svc.uriLocal+ppath, 
-                 headers:headers, 
-                 method:method, 
-                 followRedirect:redirect};
-        if(!method)
-            method = 'GET';
-        if(method.toLowerCase() == 'post' || method.toLowerCase() == 'post')
-            options.body = req.rawBody;
-        request(options, function(error, resp, data) {
-            if(error) {
-                if(resp)
-                    res.writeHead(resp.statusCode);
-                res.end(data);            
-            } else {
-                console.log(JSON.stringify(resp.headers));
-                if(resp.statusCode == 200) {//success!!
-                    resp.headers["Access-Control-Allow-Origin"] = "*";
-                    res.writeHead(resp.statusCode, resp.headers);
-                    res.write(data);
-                    res.end();
-                } else if(resp.statusCode == 301 || resp.statusCode == 302) { //redirect
-                    var redURL = url.parse(resp.headers.location);
-                    sys.debug(sys.inspect(resp.headers));
-                    if(redURL.host.indexOf('localhost:') == 0 || redURL.host.indexOf('127.0.0.1:') == 0) {
-                        doReq(method, true, svc, ppath, req, res);
-                    } else {
-                        res.writeHead(resp.statusCode, resp.headers);
-                        res.write(data);
-                        res.end();
-                    }
-                } else if(resp.statusCode > 400) {
-                    res.writeHead(resp.statusCode);
-                    res.end(data);
-                }
-            }
-        });
-    }
-    
-    doReq(method, false, svc, ppath, req, res);
 }
 
 exports.startService = function(port) {
