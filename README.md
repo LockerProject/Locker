@@ -12,7 +12,7 @@ To get started I'll need [node](http://nodejs.org/#download) and [npm](https://g
 
 This is the stable master branch by default, which should work smoothly on OSX/Ubuntu but is kinda minimal. If I want to try a lot more stuff that is on the bleeding edge I can also optionally checkout the dev branch:
 
-    git co dev
+    git checkout dev
 
 Then I can install dependencies (this may take a little while):
 
