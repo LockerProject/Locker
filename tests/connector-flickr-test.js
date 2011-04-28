@@ -16,13 +16,16 @@ var events = require("events");
 var fs = require("fs");
 var lfs = require('../Common/node/lfs.js');
 var locker = require('../Common/node/locker.js');
+var lconfig = require('../Common/node/lconfig.js')
 var path = require('path');
 
 var suite = RESTeasy.describe("Flickr Connector")
 
 var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 
-locker.initClient({lockerUrl:"http://localhost:8042", workingDirectory:"../Me/flickr-event-collector"});
+lconfig.load('config.json');
+
+locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"../Me/flickr-event-collector"});
 locker.listen('photo/flickr', 'event');
 
 suite.next().suite.addBatch({
@@ -30,8 +33,8 @@ suite.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
             var options = {
-                host:"localhost",
-                port:8042,
+                host:lconfig.lockerHost,
+                port:lconfig.lockerPort,
                 path:'/Me/' + id + '/photos' 
             };
             fs.statSync('Me/' + id);
@@ -113,7 +116,7 @@ suite.next().suite.addBatch({
 var photos = [];
 var photoID = '5577555595';
 
-suite.next().use("localhost", 8042)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Flicker Connector")
         .discuss("can get all photos")
             .path('/Me/' + id + '/allPhotos')
@@ -128,7 +131,7 @@ suite.next().use("localhost", 8042)
     .undiscuss();
 
 
-suite.next().use("localhost", 8042)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Flicker Connector")
         .discuss("can get an individual photo object")
             .path('/Me/' + id + '/photoObject/' + photoID)
