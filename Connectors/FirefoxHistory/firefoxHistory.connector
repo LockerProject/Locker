@@ -1,0 +1,8 @@
+{
+	"title":"Firefox History",
+	"action":"Sync your browser history from Firefox",
+	"desc":"Collect and sync my browser history from Firefox.",
+	"run":"node client.js",
+	"status":"unstable",
+	"provides":["link/firefox"]
+}
