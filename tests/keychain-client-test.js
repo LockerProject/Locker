@@ -11,6 +11,7 @@ var vows = require("vows");
 var assert = require("assert");
 var events = require("events");
 var keychainClient = require('../Common/node/keychain-client.js');
+var lconfig = require('../Common/node/lconfig.js')
 
 var serviceType = 'clientservicetype';
 var serviceID = 'clientserviceID';
@@ -19,7 +20,7 @@ var authToken1 = {'test':1}, descriptor1 = null;
 var authToken2 = {'test2':2}, descriptor2 = {'username': 'Mr. Locker Test'};
 
 //CONFIGFIX
-keychainClient.init('http://localhost:8042', serviceID);
+keychainClient.init(lconfig.lockerBase, serviceID);
 var authTokenID1, authTokenID2;
 
 vows.describe("Keychain Client API").addBatch({

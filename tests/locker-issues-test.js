@@ -10,11 +10,13 @@ var request = require('request');
 var querystring = require("querystring");
 var events = require("events");
 var fs = require("fs");
+var lconfig = require('../Common/node/lconfig.js');
 
+lconfig.load('config.json');
 
 var tests = RESTeasy.describe("Locker Core Issues")
 
-tests.use("localhost", 8042);
+tests.use(lconfig.lockerHost, lconfig.lockerPort);
 tests.outgoing
 tests.discuss("Issues #11 - Proxy should respond to redirects")
     .before('Don\'t follow redirects', function(outgoing) {

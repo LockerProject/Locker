@@ -19,12 +19,15 @@ var fs = require('fs');
 var request = require('request');
 var lfs = require('../Common/node/lfs.js');
 var locker = require('../Common/node/locker.js');
+var lconfig = require('../Common/node/lconfig.js');
 var path = require('path');
 var testUtils = require(__dirname + "/test-utils.js");
 
 var suite = RESTeasy.describe('IMAP Connector')
 
 var id = 'imap-test';
+
+lconfig.load('config.json');
 
 //requires that the credentials be stored in a file in tests/Me/imap-auth.json
 //in the form of {"username":"address@domain.com", "password":"myWickedPassword", "server":"imap.gmail.com"}
@@ -43,7 +46,7 @@ suite.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
         
-            request({uri:'http://localhost:8042/Me/' + id + '/update'}, function(err, resp, body) {
+            request({uri:lconfig.lockerBase + '/Me/' + id + '/update'}, function(err, resp, body) {
                 if(err || resp.statusCode != 200) {
                     promise.emit('error', err);
                     return;
@@ -71,7 +74,7 @@ suite.next().suite.addBatch({
 
 var messages = [];
 var messagesWithAttachments = [];
-suite.next().use('localhost', 8042)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('IMAP connector')
         .discuss('can get INBOX messages')
             .path('/Me/' + id + '/allMessages')

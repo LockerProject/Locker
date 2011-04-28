@@ -10,11 +10,14 @@ var fs = require('fs');
 var request = require('request');
 var lfs = require('../Common/node/lfs.js');
 var locker = require('../Common/node/locker.js');
+var lconfig = require('../Common/node/lconfig.js')
 var path = require('path');
 
 var suite = RESTeasy.describe('Facebook Connector')
 
 var id = 'c2b28e92ebe576c5687ce1ce9d2f25c2';
+
+lconfig.load('config.json');
 
 //checks to ensure a list of paths all exist
 function checkFiles(paths, callback) {
@@ -82,7 +85,7 @@ suite.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
             
-            request({uri:'http://localhost:8042/Me/' + id + '/friends'}, function(err, resp, body) {
+            request({uri:lconfig.lockerBase + '/Me/' + id + '/friends'}, function(err, resp, body) {
                 if(err) {
                     promise.emit('error', err);
                     return;
@@ -104,7 +107,7 @@ suite.next().suite.addBatch({
 });
 
 
-suite.next().use('localhost', 8042)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Facebook connector')
         .discuss('can get all friends')
             .path('/Me/' + id + '/allContacts')
@@ -129,7 +132,7 @@ suite.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
             
-            request({uri:'http://localhost:8042/Me/' + id + '/photos'}, function(err, resp, body) {
+            request({uri:lconfig.lockerBase + '/Me/' + id + '/photos'}, function(err, resp, body) {
                 if(err) {
                     promise.emit('error', err);
                     return;
@@ -155,7 +158,7 @@ suite.next().suite.addBatch({
 });
 
 var albums = [];
-suite.next().use('localhost', 8042)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Facebook connector')
         .discuss('can get all photos')
             .path('/Me/' + id + '/allPhotos')
