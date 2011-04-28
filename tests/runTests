@@ -8,6 +8,7 @@ touch ../scheduler.json
 mv ../scheduler.json ../scheduler.json.test-tmp
 touch ../keychain.json
 mv ../keychain.json ../keychain.json.test-tmp
+cp keychain.json ../keychain.json
 # Copy in to place the testing version
 cp -R Me ../Me
 # Run locker on our mock/fake Me dir

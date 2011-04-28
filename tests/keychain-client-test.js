@@ -12,23 +12,32 @@ var assert = require("assert");
 var events = require("events");
 var keychainClient = require('../Common/node/keychain-client.js');
 
-//CONFIGFIX
-keychainClient.init('http://localhost:8042');
+var serviceType = 'clientservicetype';
+var serviceID = 'clientserviceID';
 
-var srvType = 'clientservicetype';
+var authToken1 = {'test':1}, descriptor1 = null;
+var authToken2 = {'test2':2}, descriptor2 = {'username': 'Mr. Locker Test'};
+
+//CONFIGFIX
+keychainClient.init('http://localhost:8042', serviceID);
+var authTokenID1, authTokenID2;
 
 vows.describe("Keychain Client API").addBatch({
-    'Putting an object on the keychain': {
+    'Putting 2 authTokens on the keychain': {
         topic:function() {
             var promise = new(events.EventEmitter);
-            keychainClient.putObject(srvType, {'test2':2}, null, function(err, resp) {
+            keychainClient.putAuthToken(authToken2, serviceType, descriptor2, function(err, resp) {
                 if(err) {
+                    console.log(err);
                     promise.emit('error', false);
                 } else {
-                    keychainClient.putObject(srvType, {'test':1}, {'username': 'Mr. Locker Test'}, function(err, resp) {
+                    authTokenID2 = resp.authTokenID;
+                    keychainClient.putAuthToken(authToken1, serviceType, descriptor1, function(err, resp) {
                         if(err) {
+                            console.log(err);
                             promise.emit('error', false);
                         } else {
+                            authTokenID1 = resp.authTokenID;
                             promise.emit('success', true);
                         }
                     });
@@ -36,21 +45,27 @@ vows.describe("Keychain Client API").addBatch({
             });
             return promise;
         },
-        'returns successfully': function(err, stat) {
+        'returns 2 authTokenIDs': function(err, stat) {
+            assert.isNotNull(authTokenID1);
+            assert.isNotNull(authTokenID2);
             assert.isNull(err);
             assert.equal(stat, true);
         }
     }
 }).addBatch({
-    'Getting a list of objects\' metadata by service type': {
+    'Getting a list of auth token descriptors by service type': {
         topic:function() {
             var promise = new(events.EventEmitter);
-            keychainClient.getMetaForServiceType(srvType, function(err, objects) {
-                if(objects.length != 2) {
+            keychainClient.getTokenDescriptors(serviceType, function(err, descriptors) {
+                if(Object.keys(descriptors).length != 2) {
                     promise.emit('error', false);
-                } else if(objects[0] != null) {
+                } else if(!descriptors.hasOwnProperty(authTokenID1)) {
                     promise.emit('error', false);
-                } else if(objects[1].username != 'Mr. Locker Test') {
+                } else if(!descriptors.hasOwnProperty(authTokenID2)) {
+                    promise.emit('error', false);
+                } else if(descriptors[authTokenID1] != descriptor1) {
+                    promise.emit('error', false);
+                } else if(descriptors[authTokenID2].username != descriptor2.username) {
                     promise.emit('error', false);
                 } else {
                     promise.emit('success', true);
@@ -66,7 +81,7 @@ vows.describe("Keychain Client API").addBatch({
     'Granting permission to a service ID for an object': {
         topic:function() {
             var promise = new(events.EventEmitter);
-            keychainClient.grantPermission('testid', srvType, 0, function(err) {
+            keychainClient.grantPermission(authTokenID2, serviceID, function(err) {
                 if(err) {
                     promise.emit('error', false);
                 } else {
@@ -81,11 +96,11 @@ vows.describe("Keychain Client API").addBatch({
         }
     }
 }).addBatch({
-    'Getting an object with proper permissions': {
+    'Getting an auth token with proper permissions': {
         topic:function() {
             var promise = new(events.EventEmitter);
-            keychainClient.getObject('testid', srvType, 0, function(err, obj) {
-                if(obj['test2'] != 2) {
+            keychainClient.getAuthToken(authTokenID2, function(err, authToken) {
+                if(authToken.test2 != authToken2.test2) {
                     promise.emit('error', false);
                 } else {
                     promise.emit('success', true);
@@ -101,7 +116,7 @@ vows.describe("Keychain Client API").addBatch({
     'Getting an object without proper permissions': {
         topic:function() {
             var promise = new(events.EventEmitter);
-            keychainClient.getObject('testid2', srvType, 0, function(err, obj) {
+            keychainClient.getAuthToken(authTokenID1, function(err, obj) {
                 if(!err) {
                     promise.emit('error', false);
                 } else {

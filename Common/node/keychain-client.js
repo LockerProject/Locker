@@ -10,40 +10,40 @@
 var request = require('request');
 var querystring = require('querystring');
 
-var lockerBase;
+var lockerBase, myServiceID;
 
-exports.init = function(theLockerBase) {
+exports.init = function(theLockerBase, theServiceID) {
     lockerBase = theLockerBase;
+    myServiceID = theServiceID;
 }
 
-exports.putObject = function(serviceType, object, meta, callback) {
-    post('put', {serviceType:serviceType, object:object, meta:meta}, (callback? callback : function(){}));
+exports.putAuthToken = function(authToken, serviceType, descriptor, callback) {
+    post('putAuthToken', {authToken:authToken, serviceType:serviceType, descriptor:descriptor}, (callback? callback : function(){}));
 }
 
-exports.grantPermission = function(serviceID, serviceType, index, callback) {
-    post('permission', {serviceID:serviceID, serviceType:serviceType, index:index}, (callback? callback : function(){}));
+exports.grantPermission = function(authTokenID, serviceID, callback) {
+    post('grantPermission', {authTokenID:authTokenID, serviceID:serviceID}, (callback? callback : function(){}));
 }
 
-exports.getMetaForServiceType = function(serviceType, callback) {
-    get('meta', {serviceType:serviceType}, callback);
+exports.getTokenDescriptors = function(serviceType, callback) {
+    get('getTokenDescriptors', {serviceType:serviceType}, callback);
 }
 
-exports.getObject = function(serviceID, serviceType, index, callback) {
-    get('get', {serviceID:serviceID, serviceType:serviceType, index:index}, callback);
+exports.getAuthToken = function(authTokenID, callback) {
+    get('getAuthToken', {authTokenID:authTokenID}, callback);
     
 }
-
 
 
 function get(endpoint, params, callback) {
     if(!lockerBase)
         throw new Error('must call init(lockerBase) prior to using keychain client!');
     request.get({
-        uri: lockerBase + '/keychain/' + endpoint + '?' + querystring.stringify(params),
+        uri: lockerBase + '/core/' + myServiceID + '/keychain/' + endpoint + '?' + querystring.stringify(params),
     }, function(err, resp, body) {
         if(body)
             body = JSON.parse(body);
-        if(resp.statusCode < 400)
+        if(resp && resp.statusCode < 400)
             callback(err, body);
         else
             callback(body);
@@ -54,7 +54,7 @@ function post(endpoint, params, callback) {
     if(!lockerBase)
         throw new Error('must call init(lockerBase) prior to using keychain client!');
     request.post({
-        uri: lockerBase + '/keychain/' + endpoint,
+        uri: lockerBase + '/core/' + myServiceID + '/keychain/' + endpoint,
         json: params
     }, function(err, resp, body) {
         if(body)
