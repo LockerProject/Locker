@@ -15,11 +15,13 @@ var request = require('request');
 var querystring = require("querystring");
 var events = require("events");
 var fs = require("fs");
+var lconfig = require('../Common/node/lconfig.js');
 
+lconfig.load('config.json');
 
 var tests = RESTeasy.describe("Locker core API")
 
-tests.use("localhost", 8042)
+tests.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Core can")
     .discuss("map existing services with")
         .path("/map")
@@ -206,8 +208,8 @@ tests.next().suite.addBatch({
             var when = new Date;
             when.setTime(when.getTime() + 250);
             var options = {
-                host:"localhost",
-                port:8042,
+                host:lconfig.lockerHost,
+                port:lconfig.lockerPort,
                 path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
@@ -238,14 +240,14 @@ tests.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
             var getOptions = {
-                host:"localhost",
-                port:8042,
+                host:lconfig.lockerHost,
+                port:lconfig.lockerPort,
                 path:"/core/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
             };
             var req = http.get(getOptions, function(res) {
                 var options = {
-                    host:"localhost",
-                    port:8042,
+                    host:lconfig.lockerHost,
+                    port:lconfig.lockerPort,
                     method:"POST",
                     path:"/core/testURLCallback/event",
                     headers:{
