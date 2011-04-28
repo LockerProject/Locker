@@ -1,3 +1,11 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
 
 var serviceMap;
 
@@ -29,6 +37,11 @@ function refreshDiary()
     });
     $("#diarySection").animate({scrollTop:$("#diarySection").attr("scrollHeight") - $("#diarySection").height()}, 250);
   });
+}
+
+function install(i)
+{
+    document.location = "/post2install?id="+i;
 }
 
 $(document).ready(function()
