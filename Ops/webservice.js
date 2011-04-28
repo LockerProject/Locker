@@ -32,8 +32,8 @@ var scheduler = lscheduler.masterScheduler;
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" ||
-                    req.url.substring(0, 10) == "/keychain/") {
+                if (req.url.substring(0, 6) == "/core/" ) { //||
+//                    req.url.substring(0, 10) == "/keychain/") {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -276,22 +276,22 @@ locker.post('/core/:svcId/event', function(req, res) {
 
 // KEYCHAIN
 // put an object in the keychain
-locker.post('/keychain/put', function(req, res) {
-    keychain.putObject(req.param('serviceType'), req.param('object'), req.param('meta'));
+locker.post('/core/:svcId/keychain/putAuthToken', function(req, res) {
+    var authTokenID = keychain.putAuthToken(req.param('authToken'), req.param('serviceType'), req.param('descriptor'));
     res.writeHead(200);
-    res.end();
+    res.end(JSON.stringify({'authTokenID':authTokenID}));
 });
 
 // permission an object in the keychain
-locker.post('/keychain/permission', function(req, res) {
-    keychain.grantPermission(req.param('serviceID'), req.param('serviceType'), req.param('index'));
+locker.post('/core/:svcId/keychain/grantPermission', function(req, res) {
+    keychain.grantPermission(req.param('authTokenID'), req.param('serviceID'));
     res.writeHead(200);
-    res.end();
+    res.end(JSON.stringify({'success':true}));
 });
 
 // get all objects' meta for a given service type in the keychain
-locker.get('/keychain/meta', function(req, res) {
-    var meta = keychain.getMetaForServiceType(req.param('serviceType'));
+locker.get('/core/:svcId/keychain/getTokenDescriptors', function(req, res) {
+    var meta = keychain.getTokenDescriptors(req.param('serviceType'));
     res.writeHead(200, {
         'Content-Type':'text/json'
     });
@@ -299,9 +299,9 @@ locker.get('/keychain/meta', function(req, res) {
 });
 
 // get all objects' meta for a given service type in the keychain
-locker.get('/keychain/get', function(req, res) {
+locker.get('/core/:svcId/keychain/getAuthToken', function(req, res) {
     try {
-        var meta = keychain.getObject(req.param('serviceID'), req.param('serviceType'), req.param('index'));
+        var meta = keychain.getAuthToken(req.param('authTokenID'), req.param('svcId'));
         res.writeHead(200, {
             'Content-Type':'text/json'
         });
