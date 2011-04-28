@@ -70,7 +70,6 @@ function(req, res) {
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else {
-        //res.writeHead(302);
         sys.debug('redirecting to ' + me.uri + 'auth');
         res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + accessData.appKey + '&response_type=code&redirect_uri=' + me.uri + 'auth');
         res.end();
