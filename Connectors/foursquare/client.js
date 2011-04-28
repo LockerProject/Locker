@@ -60,7 +60,7 @@ app.get('/go4sq',
 function(req, res) {
     if(!(accessData.appKey && accessData.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
+        res.end("<html>Enter your personal Foursquare app info that will be used to sync your data" + 
                 " (create a new one <a href='https://foursquare.com/oauth/register'>" + 
                 "here</a> using the callback url of " +
                 me.uri+"auth) " +
@@ -70,7 +70,7 @@ function(req, res) {
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else {
-        res.writeHead(302);
+        //res.writeHead(302);
         sys.debug('redirecting to ' + me.uri + 'auth');
         res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + accessData.appKey + '&response_type=code&redirect_uri=' + me.uri + 'auth');
         res.end();
@@ -113,7 +113,7 @@ function(req, res) {
         var responseObject = JSON.parse(data);
         accessData.accessToken = responseObject.access_token;
         lfs.writeObjectsToFile("access.json", [accessData]);
-        res.end("<html>too legit to quit: " + responseObject.access_token + " so now <a href='/friends'>load friends</a>or <a href='checkins'>checkins</a></html>");
+        res.end("<html>too legit to quit: " + responseObject.access_token + " so now <a href='friends'>load friends</a> or <a href='checkins'>checkins</a></html>");
     });
 });
 
