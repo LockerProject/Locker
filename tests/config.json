@@ -1,7 +1,7 @@
 {
     "lockerHost" : "localhost",
     "lockerPort" : 8042,
-    "me" : "Me",
+    "me" : "tests/Me",
     "scannedDirs" : [
         "Apps", 
         "Collections", 
