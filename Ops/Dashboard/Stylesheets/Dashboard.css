@@ -358,16 +358,14 @@ section#diarySection #diaryLines
 
 #available
 {
-  display: none;
-  clear: both;
-  height: 210px;
-  padding-top: 10px;
   position: absolute;
   left: 1px;
   top: 50px;
   right: 1px;
+  bottom: 1px;
+
+  padding-top: 10px;
   background-color: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 #available .description
@@ -394,14 +392,12 @@ section#diarySection #diaryLines
   left: 0;
   top: 0;
   bottom: 0;
-
   width: 200px;
+  z-index: 1;
 
-  overflow-y: scroll;
-  overflow-x: hidden;
 
   background-color: rgba(255, 255, 255, 0.05);
-  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  border-right: 1px solid rgba(0, 0, 0, 0.35);
 }
 
 #availList li

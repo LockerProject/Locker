@@ -67,7 +67,7 @@ $(document).ready(function()
           $("#appsList").append($("<li>" + item.title + "</li>").click(function(event) {
             $("#appsList li, .tab").removeClass("current");
             $(event.target).addClass("current");
-            selectAvailable(serviceMap.available.indexOf(item));
+            // selectAvailable(serviceMap.available.indexOf(item));
           }));
           break;
 
@@ -121,33 +121,33 @@ $(document).ready(function()
     $("#diaryTab").addClass("current");
   });
 
-  $("#installer").click(function() {
-    if ($("#available").is(":hidden")) {
-      $("#available").slideDown(250, function() {
-        // $("#installer").text("Hide installer")
-      });
-      $("#installedServices").animate(
-        {
-          top: "270px"
-        },
-        {
-          duration: 250
-        }
-      );
-    } else {
-      $("#available").slideUp(250, function() {
-        // $("#installer").text("Install another service");
-        $("#available").hide();
-      });
-      $("#installedServices").animate(
-        {
-          top: "50px"
-        },
-        {
-          duration: 250
-        }
-      );
-    }
-  });
+  // $("#installer").click(function() {
+  //   if ($("#available").is(":hidden")) {
+  //     $("#available").slideDown(250, function() {
+  //       // $("#installer").text("Hide installer")
+  //     });
+  //     $("#installedServices").animate(
+  //       {
+  //         top: "270px"
+  //       },
+  //       {
+  //         duration: 250
+  //       }
+  //     );
+  //   } else {
+  //     $("#available").slideUp(250, function() {
+  //       // $("#installer").text("Install another service");
+  //       $("#available").hide();
+  //     });
+  //     $("#installedServices").animate(
+  //       {
+  //         top: "50px"
+  //       },
+  //       {
+  //         duration: 250
+  //       }
+  //     );
+  //   }
+  // });
 
 });
