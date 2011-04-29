@@ -142,7 +142,7 @@ aside nav li#diaryTab
   padding-left: 48px;
 }
 
-aside nav li#adaptersTab
+aside nav li#connectorsTab
 {
   background-image: url("../Images/Services.png");
   background-repeat: no-repeat;
@@ -349,9 +349,9 @@ section#diarySection #diaryLines
   font-size: 12px;
 }
 
-/* Adapters --------------------------------------------------------------- */
+/* Connectors ------------------------------------------------------------- */
 
-#adaptersSection
+#connectorsSection
 {
   display: none;
 }

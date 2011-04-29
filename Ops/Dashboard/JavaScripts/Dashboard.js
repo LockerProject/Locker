@@ -65,12 +65,12 @@ $(document).ready(function()
 
   refreshDiary();
 
-  $("#adaptersTab").click(function()
+  $("#connectorsTab").click(function()
   {
     $(".tabPage").hide();
-    $("#adaptersSection").show();
+    $("#connectorsSection").show();
     $(".tab").removeClass("current");
-    $("#adaptersTab").addClass("current");
+    $("#connectorsTab").addClass("current");
   });
 
   $("#collectionsTab").click(function()
