@@ -299,34 +299,6 @@ footer
 
 /* Diary Section ---------------------------------------------------------- */
 
-section#timelineSection
-{
-  position: absolute;
-  top: 50px;
-  left: 0;
-  right: 0;
-  height: 120px;
-}
-
-section#timelineSection ul
-{
-  list-style: none;
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 0;
-  outline: 1px solid red;
-  height: 100px;
-}
-
-section#timelineSection li
-{
-  float: right;
-  width: 10px;
-  background-color: rgba(255, 255, 255, 0.5);
-  margin-right: 1px;
-}
-
 section#diarySection
 {
 }
