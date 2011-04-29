@@ -46,21 +46,53 @@ function install(i)
 
 $(document).ready(function()
 {
+
+  // Update Interface from Service Map
   $.ajax({url:"/map", dataType:"json"}).success(function(data) {
-      serviceMap = data;
-      for (var key in serviceMap.installed) {
-          var item = serviceMap.installed[key];
-          $("#installedServices").append("<li><span class='title'>" + item["title"] + "</span><span class='identifier'>" + item["id"] +  "</span><span class='page'><a href='" + item["uri"] + "'>Configure</a></span></li>");
-          $("#services").append("<li>" + item["title"] + "</li>");
-      }
-      serviceMap.available.forEach(function(item) {
-          $("#availList").append($("<li>" + item["title"] + "</li>").click(function(event) {
-              $("#availList li").removeClass("current");
-              $(event.target).addClass("current");
-              selectAvailable(serviceMap.available.indexOf(item));
+    serviceMap = data;
+    // for (var key in serviceMap.installed) {
+    //   var item = serviceMap.installed[key];
+    //   $("#installedServices").append("<li><span class='title'>" + item["title"] + "</span><span class='identifier'>" + item["id"] +  "</span><span class='page'><a href='" + item["uri"] + "'>Configure</a></span></li>");
+    //   $("#services").append("<li>" + item["title"] + "</li>");
+    // }
+
+    // var appsList, connectorsList, collectionsList;
+
+    serviceMap.available.forEach(function(item) {
+      console.log(item)
+
+      switch (item.is)
+      {
+        case "app":
+          $("#appsList").append($("<li>" + item.title + "</li>").click(function(event) {
+            $("#appsList li, .tab").removeClass("current");
+            $(event.target).addClass("current");
+            selectAvailable(serviceMap.available.indexOf(item));
           }));
-      });
-      selectAvailable(0);
+          break;
+
+        case "connector":
+          $("#availList").append($("<li>" + item.title + "</li>").click(function(event) {
+            $("#availList li").removeClass("current");
+            $(event.target).addClass("current");
+            selectAvailable(serviceMap.available.indexOf(item));
+          }));
+          break;
+
+        case "collection":
+          $("#collectionsList").append($("<li><span class='title'>" + item.title + "</span><span class='description'>" + item.desc + "</span></li>").click(function(event) {
+            $("#collectionsList li").removeClass("current");
+            $(event.target).addClass("current");
+            selectAvailable(serviceMap.available.indexOf(item));
+          }));
+          break;
+
+        default:
+          console.log("Unknown service type \"" + item.is + "\"");
+          break;
+      }
+    });
+    selectAvailable(0);
   });
 
   refreshDiary();
@@ -69,7 +101,7 @@ $(document).ready(function()
   {
     $(".tabPage").hide();
     $("#connectorsSection").show();
-    $(".tab").removeClass("current");
+    $("#appsList li, .tab").removeClass("current");
     $("#connectorsTab").addClass("current");
   });
 
@@ -77,7 +109,7 @@ $(document).ready(function()
   {
     $(".tabPage").hide();
     $("#collectionsSection").show();
-    $(".tab").removeClass("current");
+    $("#appsList li, .tab").removeClass("current");
     $("#collectionsTab").addClass("current");
   });
 
@@ -85,7 +117,7 @@ $(document).ready(function()
   {
     $(".tabPage").hide();
     $("#diarySection").show();
-    $(".tab").removeClass("current");
+    $("#appsList li, .tab").removeClass("current");
     $("#diaryTab").addClass("current");
   });
 
