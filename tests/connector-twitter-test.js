@@ -12,12 +12,15 @@ var sys = require('sys');
 var request = require('request');
 var lfs = require('../Common/node/lfs.js');
 var locker = require('../Common/node/locker.js');
+var lconfig = require('../Common/node/lconfig.js')
 var path = require('path');
 var testUtils = require(__dirname + "/test-utils.js");
 
 var suite = RESTeasy.describe('Twitter Connector')
 
 var id = 'twitter-test';
+
+lconfig.load('config.json');
 
 try {
     var stats = fs.statSync('../Me/twitter-test/auth.json');
@@ -33,7 +36,7 @@ function addFriendOrFollowersSync(friendsOrFollowers) {
             topic:function() {
                 var promise = new events.EventEmitter;
             
-                request({uri:'http://localhost:8042/Me/' + id + '/' + friendsOrFollowers}, function(err, resp, body) {
+                request({uri:lconfig.lockerBase + '/Me/' + id + '/' + friendsOrFollowers}, function(err, resp, body) {
                     if(err) {
                         promise.emit('error', err);
                         return;
@@ -67,7 +70,7 @@ function addStatusSync(type) {
             topic:function() {
                 var promise = new events.EventEmitter;
             
-                request({uri:'http://localhost:8042/Me/' + id + '/' + type}, function(err, resp, body) {
+                request({uri:lconfig.lockerBase + '/Me/' + id + '/' + type}, function(err, resp, body) {
                     if(err) {
                         promise.emit('error', err);
                         return;
@@ -93,9 +96,9 @@ function addStatusSync(type) {
 addStatusSync('home_timeline');
 addStatusSync('mentions');
 
-var port = 8042, mePath = '/Me/' + id;
+var mePath = '/Me/' + id;
 
-suite.next().use('localhost', port)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector')
         .discuss('can get all friends and followers')
             .path(mePath + '/allContacts')
@@ -115,7 +118,7 @@ suite.next().use('localhost', port)
         .undiscuss()
     .undiscuss();
     
-suite.next().use('localhost', port)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector')
         .discuss('can get home timeline')
             .path(mePath + '/get_home_timeline')
@@ -135,7 +138,7 @@ suite.next().use('localhost', port)
         .undiscuss()
     .undiscuss();
     
-suite.next().use('localhost', port)
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector')
         .discuss('can get mentions')
             .path(mePath + '/get_mentions')

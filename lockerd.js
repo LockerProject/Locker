@@ -27,19 +27,7 @@ var path = require('path');
 
 // This lconfig stuff has to come before and other locker modules are loaded!!
 var lconfig = require('lconfig');
-var config = 'config.json';
-//this should be replaced in the future with a proper option parser
-if(process.argv[2] == '--config' && process.argv[3]) {
-    config = JSON.parse(fs.readFileSync(process.argv[3]));
-} else {
-    config = JSON.parse(fs.readFileSync(config));
-}
-
-lconfig.lockerHost = config.lockerHost || "localhost";
-lconfig.lockerPort = config.lockerPort || 8042;
-lconfig.lockerBase = "http://" + lconfig.lockerHost + (lconfig.lockerPort? ":" + lconfig.lockerPort : "");
-lconfig.scannedDirs = config.scannedDirs;
-lconfig.lockerDir = process.cwd();
+lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'config.json'));
 
 
 //var crypto = require('crypto');
