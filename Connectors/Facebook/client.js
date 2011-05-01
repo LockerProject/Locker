@@ -25,6 +25,7 @@ var fs = require('fs'),
                     connect.session({secret : "locker"})),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
+    html = require('../../Common/html.js');
 
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({ encoding: 'binary' });
