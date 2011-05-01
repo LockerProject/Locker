@@ -25,7 +25,6 @@ var fs = require('fs'),
                     connect.session({secret : "locker"})),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
-    html = require('../../Common/html.js');
 
 var wwwdude = require('wwwdude'),
     wwwdude_client = wwwdude.createClient({ encoding: 'binary' });
@@ -34,6 +33,15 @@ var wwwdude = require('wwwdude'),
 var me, auth, latests, userInfo;
 var facebookClient = require('facebook-js')();
 
+function displayHTML(content) {
+	return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+			+ "<meta name='description' content='Locker Facebook Connector' />"
+			+ "<title>Facebook Connector - Locker</title>"
+			+ "<link rel='stylesheet' type='text/css' href='styles.css' /></head><body>"
+			+ "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
+			+ "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
+			+ content + "</div></body></html>";
+}
 
 app.set('views', __dirname);
 app.get('/',
@@ -42,7 +50,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!auth.appID) {
-        res.end("<html>Enter your personal FaceBook app info that will be used to sync your data" + 
+        res.end(displayHTML("Enter your personal FaceBook app info that will be used to sync your data" + 
                 " (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>" + 
                 "http://www.facebook.com/developers/createapp.php</a> using the callback url of " +
                 "http://"+url.parse(me.uri).host+"/) " +
@@ -50,13 +58,13 @@ function(req, res) {
                     "App ID: <input name='appID'><br>" +
                     "App Secret: <input name='appSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form></html>");
+                "</form>"));
         return;
     }
     if(!auth.token)
-        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
+        res.end(displayHTML("you need to <a href='./gofb'>auth w/ fb</a> yet"));
     else
-        res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
+        res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
 });
 
 app.get('/save',
@@ -65,13 +73,13 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!req.param('appID') || !req.param('appSecret')) {
-        res.end("missing field(s)?");
+        res.end(displayHTML("missing field(s)?"));
         return;
     }
     auth.appID = req.param('appID');
     auth.appSecret = req.param('appSecret');
     lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>k thanks, now we need to <a href='./gofb'>auth that app to your account</a>.</html>");
+    res.end(displayHTML("k thanks, now we need to <a href='./gofb'>auth that app to your account</a>."));
 });
 
 app.get('/gofb',
@@ -99,9 +107,9 @@ function(req, res) {
     function(error, access_token, refresh_token) {
         if (error) {
             sys.debug(error);
-            res.end("uhoh " + error);
+            res.end(displayHTML("uhoh " + error));
         } else {
-            res.end("<html>too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a></html>");
+            res.end(displayHTML("too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a>"));
             auth.token = access_token;
             lfs.writeObjectToFile('auth.json', auth);
         }
