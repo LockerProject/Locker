@@ -44,6 +44,7 @@ exports.Scheduler.prototype.savePending = function() {
 }
 
 exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackURL) {
+    if(callbackURL.substr(0,1) != "/") callbackURL = "/"+callbackURL; // be flexible in what you take
     var trackingInfo = {
         at:atTime,
         type:SCHEDULE_ACTION_URI,

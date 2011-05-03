@@ -29,6 +29,7 @@ var app = express.createServer(connect.bodyParser(), connect.cookieParser(), con
 process.stdin.resume();
 process.stdin.on("data", function(data) {
     lockerInfo = JSON.parse(data);
+    locker.initClient(lockerInfo);
     if (!lockerInfo || !lockerInfo["workingDirectory"]) {
         process.stderr.write("Was not passed valid startup information."+data+"\n");
         process.exit(1);
