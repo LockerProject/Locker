@@ -169,11 +169,10 @@ locker.post("/core/:svcId/diary", function(req, res) {
 
     var now = new Date;
     try {
-        fs.mkdirSync("Me/diary", 0700, function(err) {
-            if (err) console.error("Error creating diary: " + err);
-        });
-    } catch (E) {
+        fs.mkdirSync("Me/diary", 0700);
+    } catch (err) {
         // Why do I still have to catch when it has an error callback?!
+        if (err) console.error("Error creating diary: " + err);
     }
     fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
         if (err) console.log("Error for year dir: " + err);

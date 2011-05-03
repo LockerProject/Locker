@@ -45,7 +45,7 @@ exports.fireEvent = function(type, id, obj) {
             };
             console.log("Firing event to " + listener.id + " to " + listener.cb);
             var req = http.request(httpOpts);
-            req.write(JSON.stringify(obj));
+            req.write(JSON.stringify({obj:obj, _via:id}));
             req.end();
         }
         if (!serviceManager.isRunning(listener.id)) {

@@ -273,12 +273,22 @@ function(req, res) {
     syncUsersInfo('followers', req, res);
 });
 
+var followerIDs = {};
+
 function syncUsersInfo(friendsOrFollowers, req, res) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
         friendsOrFollowers = 'friends';
         
-    function done() {    
-        locker.at('/' + friendsOrFollowers, 3600);
+    function done(usersInfo) {    
+        locker.at('/' + friendsOrFollowers, 600);
+        console.log(Object.keys(followerIDs).length + ' followers already known, ' + usersInfo.length + ' followers found.');
+        for(var i in usersInfo) {
+            if(!followerIDs[usersInfo[i].screen_name.toLowerCase()]) {
+                locker.event('contact/twitter', usersInfo[i]);
+                followerIDs[usersInfo[i].screen_name.toLowerCase()] = 1;
+            }
+        }
+        fs.writeFile('followerIDs.json', JSON.stringify(followerIDs));
         res.writeHead(200);
         res.end();
     }
@@ -287,12 +297,12 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(ids) {
             if(!ids || ids.length < 1)
-                done();
+                done([]);
             else
                 getUsersExtendedInfo(ids, function(usersInfo) {
                     sys.debug('got ' + usersInfo.length + ' ' + friendsOrFollowers);
                     lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
-                    done();
+                    done(usersInfo);
                 });
         });
     });
@@ -403,14 +413,13 @@ function getUsersExtendedInfo(userIDs, callback) {
     _getUsersExtendedInfo(userIDs, [], callback);
 }
 
+
 function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
     if(!usersInfo)
         usersInfo = [];
     var id_str = "";
-    for(var i = 0; i < 100 && userIDs.length > 0; i++) {
-        id_str += userIDs.pop();
-        if(i < 99) id_str += ',';
-    }
+    for(var i = 0; i < 100 && userIDs.length > 0; i++)
+        id_str += (userIDs.pop() + ',');
     twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
                                                                   oauth_token: auth.token.oauth_token}, 
                                                          user_id: id_str,
@@ -475,10 +484,19 @@ stdin.on('data', function (chunk) {
             latests = newLatests;
             lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
                 userInfo = newUserInfo;
-                me = lfs.loadMeData();
-                app.listen(processInfo.port);
-                var returnedInfo = {port: processInfo.port};
-                console.log(JSON.stringify(returnedInfo));
+                fs.readFile('followerIDs.json', function(err, data) {
+                    if(!err) {
+                        try {
+                            followerIDs = JSON.parse(data);
+                        } catch(error) {
+                            followerIDs = {};
+                        }
+                    }
+                    me = lfs.loadMeData();
+                    app.listen(processInfo.port);
+                    var returnedInfo = {port: processInfo.port};
+                    console.log(JSON.stringify(returnedInfo));
+                });
             });
         });
     });
