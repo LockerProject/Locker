@@ -162,7 +162,7 @@ locker.post('/Me/*', function(req,res){
 
 // DIARY
 // Publish a user visible message
-locker.post("/core/:svcId/diary", function(req, res) {
+locker.get("/core/:svcId/diary", function(req, res) {
     var level = req.param("level") || 0;
     var message = req.param("message");
     var svcId = req.params.svcId;
@@ -170,15 +170,13 @@ locker.post("/core/:svcId/diary", function(req, res) {
     var now = new Date;
     try {
         fs.mkdirSync("Me/diary", 0700, function(err) {
-            if (err) console.error("Error creating diary: " + err);
+            if (err && err.errno != process.EEXIST) console.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
     fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
-        if (err) console.log("Error for year dir: " + err);
         fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            if (err) console.log("Error month dir: " + err);
             var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
@@ -197,7 +195,6 @@ locker.get("/diary", function(req, res) {
     });
     fs.readFile(fullPath, function(err, file) {
         if (err) {
-            console.error("Error sending diary: " + err);
             res.write("[]");
             res.end();
             return;

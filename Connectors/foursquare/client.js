@@ -153,6 +153,7 @@ function(req, res) {
                 'queue': queue,
                 'token': accessData.accessToken
             };
+            locker.diary("syncing "+friends.length+" friends");
             for (var i = 0; i < friends.length; i++) {
                 res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
                 queue.push(friends[i]);
@@ -186,12 +187,13 @@ function(req, res) {
         me.user_info = self;
         lfs.syncMeData(me);
         getCheckins(me.user_info.id, accessData.accessToken, 0, function(newCheckins) {
+            locker.diary("syncing "+newCheckins.length+" new checkins");
             lfs.appendObjectsToFile('places.json', newCheckins);
             locker.at('/checkins', 600);
             res.writeHead(200, {
                 'Content-Type': 'text/html'
             });
-            res.end();
+            res.end("got "+newCheckins.length+" new checkins!");
         });
     });
 })
