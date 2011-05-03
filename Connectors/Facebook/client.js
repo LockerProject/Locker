@@ -201,7 +201,8 @@ function(req, res) {
             '/me/friends',
             {access_token: auth.token},
             function(error, result) {
-                console.log(error);
+                if(error) console.log(error);
+                locker.diary("syncing "+result.data.length+" friends");
                 var stream = fs.createWriteStream('contacts.json');
                 for (var i = 0; i < result.data.length; i++) {
                     if (result.data[i]) {
@@ -217,7 +218,7 @@ function(req, res) {
                 stream.end();
                 downloadPhotos(userID);
                 locker.at('/friends', 3600);
-                res.end();
+                res.end("sync'd "+result.data.length+" friends, how sociable!");
             });
 
             facebookClient.apiCall(
@@ -225,7 +226,8 @@ function(req, res) {
             '/me/checkins',
             {access_token: auth.token},
             function(error, result) {
-                console.log(error);
+                if(error) console.log(error);
+                locker.diary("syncing "+result.data.length+" places");
                 var stream = fs.createWriteStream('places.json');
                 for (var i = 0; i < result.data.length; i++) {
                     if (result.data[i]) {
@@ -343,6 +345,7 @@ function pullNewsFeed(callback) {
     var items = [];
     pullNewsFeedPage(null, latests.feed.latest, items, function() {
         items.reverse();
+        locker.diary("saving "+items.length+" new news items");
         lfs.appendObjectsToFile('feed.json', items);
         callback();
     });
