@@ -54,7 +54,7 @@ app.get('/', function(req, res) {
         return;
     } else if(!auth.token) {
         if(!twitterClient) 
-            twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);
+            twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, me.uri);
 
         twitterClient.getAccessToken(req, res,
             function(error, newToken) {
@@ -75,7 +75,7 @@ app.get('/', function(req, res) {
             });    
     } else {
         if(!twitterClient)
-            twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);   
+            twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, me.uri);   
 
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
@@ -141,17 +141,17 @@ app.get('/rate_limit_status', function(req, res) {
 });
 
 function pullStatuses(endpoint, repeatAfter, res) {
-    if(!getTwitterClient()) {
-        sys.debug('could not get twitterClient, redirecting...');
-        res.redirect('./');
-        return;
-    }
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    pullTimeline(endpoint, function() {
+    if(!getTwitterClient()) {
+        sys.debug('could not get twitterClient');
+        res.end('missing auth info :(');
+        return;
+    }
+    pullTimeline(endpoint, function(items) {
         locker.at(endpoint, repeatAfter);
-        res.end();
+        res.end("got "+endpoint+" with "+items.length+" new entries and scheduled to automatically sync again in "+repeatAfter+" seconds, happy day");
     });
     
 }
@@ -163,7 +163,7 @@ function pullTimeline(endpoint, callback) {
     pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
         lfs.appendObjectsToFile(endpoint + '.json', items);
-        callback();
+        callback(items);
     });
 }
 
@@ -452,8 +452,8 @@ function getPhotos(users) {
 }
 
 function getTwitterClient() {
-    if(!twitterClient && auth && auth.consumerKey && auth.consumerSecret && me && me.uri)
-        twitterClient = require('twitter-js')(auth.consumerKey, auth.consumerSecret, me.uri);
+    if(!twitterClient && auth && auth.consumerKey && auth.consumerSecret)
+        twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
     return twitterClient;
 }
 
