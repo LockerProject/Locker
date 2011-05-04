@@ -166,7 +166,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
     // Diary storage
     .path("/core/testURLCallback/diary")
     .discuss("store diary messages")
-        .post({level:2, message:"Test message"})
+        .get({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
 
