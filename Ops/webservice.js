@@ -115,7 +115,7 @@ locker.get('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
-    var ppath = req.url.substring(slashIndex+1);
+    var ppath = req.url.substring(slashIndex);
     console.log("Proxying a get to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
@@ -139,7 +139,7 @@ locker.post('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
-    var ppath = req.url.substring(slashIndex+1);
+    var ppath = req.url.substring(slashIndex);
     sys.debug("Proxying a post to " + ppath + " to service " + req.url);
     console.log("Proxying a post to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
@@ -330,8 +330,8 @@ locker.get('/', function(req, res) {
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
-    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + "/" + ppath);
-    req.url = "/"+ppath;
+    console.log("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
+    req.url = ppath;
     proxy.proxyRequest(req, res, {
       host: url.parse(svc.uriLocal).hostname,
       port: url.parse(svc.uriLocal).port,
