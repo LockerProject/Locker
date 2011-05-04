@@ -25,7 +25,7 @@ var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 
 lconfig.load('config.json');
 
-locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"../Me/flickr-event-collector"});
+locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"Me/flickr-event-collector"});
 locker.listen('photo/flickr', 'event');
 
 suite.next().suite.addBatch({
@@ -45,22 +45,22 @@ suite.next().suite.addBatch({
                         return;
                     } 
                     setTimeout(function() {
-                        fs.readdir('../Me/' + id + '/originals', function(err, files) {
+                        fs.readdir('Me/' + id + '/originals', function(err, files) {
                             if(err || !files || files.length != 2) {
                                 checkForPhotos(retries - 1);
                                 return;
                             }
-                            fs.readdir('../Me/' + id + '/thumbs', function(err, files) {
+                            fs.readdir('Me/' + id + '/thumbs', function(err, files) {
                                 if(err || !files || files.length != 2) {
                                     checkForPhotos(retries - 1);
                                     return;
                                 }
-                                fs.stat('../Me/' + id + '/state.json', function(err, stat) {
+                                fs.stat('Me/' + id + '/state.json', function(err, stat) {
                                     if(err || !stat) {
                                         checkForPhotos(retries - 1);
                                         return;
                                     }
-                                    fs.stat('../Me/' + id + '/photos.json', function(err, stat) {
+                                    fs.stat('Me/' + id + '/photos.json', function(err, stat) {
                                         if(err || !stat) {
                                             checkForPhotos(retries - 1);
                                             return;
@@ -95,7 +95,7 @@ suite.next().suite.addBatch({
                     return;
                 } 
                 setTimeout(function() {
-                    fs.readFile('../Me/' + eventCollectorID + '/events', function(err, data) {
+                    fs.readFile('Me/' + eventCollectorID + '/events', function(err, data) {
                         if(err || data != '2') {
                             checkForEvents(retries - 1);
                             return;
