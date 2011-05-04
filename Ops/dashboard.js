@@ -15,7 +15,7 @@ exports.instance = dashboard;
 
 exports.start = function(port) {
     // start dashboard
-    dashboard  = spawn('node', ['dashboard-client.js', lconfig.lockerHost, lconfig.lockerPort, port], {cwd: 'Ops/Dashboard'});
+    dashboard  = spawn('node', ['dashboard-client.js', lconfig.lockerHost, lconfig.lockerPort, port], {cwd: __dirname + '/Dashboard'});
     dashboard.uriLocal = 'http://' + lconfig.lockerHost + ':' + port;
     dashboard.port = port;
     console.log('Spawned dashboard pid: ' + dashboard.pid);

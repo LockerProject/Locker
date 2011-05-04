@@ -51,12 +51,12 @@ suite.next().suite.addBatch({
                     promise.emit('error', err);
                     return;
                 }
-                testUtils.waitForPathsToExist(['../Me/' + id + '/' + auth.username,
-                                               '../Me/' + id + '/' + auth.username + '/lastUIDS.json',
-                                               '../Me/' + id + '/' + auth.username + '/INBOX',
-                                               '../Me/' + id + '/' + auth.username + '/INBOX/attachments',
-//                                               '../Me/' + id + '/' + auth.username + '/[Gmail]',
-  //                                             '../Me/' + id + '/' + auth.username + '/[Gmail]/All Mail'
+                testUtils.waitForPathsToExist(['Me/' + id + '/' + auth.username,
+                                               'Me/' + id + '/' + auth.username + '/lastUIDS.json',
+                                               'Me/' + id + '/' + auth.username + '/INBOX',
+                                               'Me/' + id + '/' + auth.username + '/INBOX/attachments',
+//                                               'Me/' + id + '/' + auth.username + '/[Gmail]',
+  //                                             'Me/' + id + '/' + auth.username + '/[Gmail]/All Mail'
                                               ], 12, 5000, function(success) {
                     if(success == true)
                         promise.emit('success', true);

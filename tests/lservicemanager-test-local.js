@@ -21,10 +21,7 @@ var testUtils = require(__dirname + "/test-utils.js");
 require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
-
-// Run in the main directory
-process.chdir("..");
-lconfig.lockerDir = process.cwd();
+lconfig.load("config.json");
 
 vows.describe("Service Manager").addBatch({
     "has a map of the available services" : function() {
