@@ -98,6 +98,7 @@ exports.findInstalled = function () {
     serviceMap.installed = {};
     var dirs = fs.readdirSync('Me');
     for (var i = 0; i < dirs.length; i++) {
+        if(dirs[i] == "diary") continue;
         var dir =  'Me/' + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
