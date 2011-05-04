@@ -28,11 +28,15 @@ def saveAuth():
 def start(secrets):
     logging.info("Starting")
     app.client = client.Client(app.info, jid=secrets["jid"], password=secrets["password"])
-    if app.client.connect():
+    address = (secrets["host"], secrets["port"]) if (secrets.has_key("host") and secrets.has_key("port")) else ()
+    if app.client.connect(address):
         app.client.process(threaded=True)
         app.started = True
     else:
+        # We shouldn't die here, we should still serve existing data and try again.  
+        # We could also prompt for credentials again
         util.die("XMPP connection failed")
+        pass
 
 @app.route("/")
 def index():

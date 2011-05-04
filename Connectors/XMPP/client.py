@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import time
 import logging
@@ -48,9 +49,12 @@ class Client(xmpp.ClientXMPP):
         self.add_event_handler("disconnect", self.fail)
 
         self.message_file = open("messages.json", "a+")
+        self.message_file.seek(0)
         self.messages = [json.loads(msg) for msg in self.message_file.readlines()]
+        logging.info("Messages " + str(self.messages))
         
         self.status_file = open("statuses.json", "a+")
+        self.status_file.seek(0)
         self.statuses = [json.loads(sts) for sts in self.status_file.readlines()]
         
     def start(self, event):
