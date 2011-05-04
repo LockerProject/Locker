@@ -37,13 +37,13 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
             .expect("has 18 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 18);
-            }).expect("has 12 installed services", function(err, res, body) {
+            }).expect("has 13 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 12);
+                assert.equal(count, 13);
             }).expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
