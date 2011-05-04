@@ -330,6 +330,7 @@ locker.get('/', function(req, res) {
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
+    if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
     console.log("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
     proxy.proxyRequest(req, res, {
