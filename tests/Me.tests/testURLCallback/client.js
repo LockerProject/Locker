@@ -7,10 +7,12 @@ process.stdin.resume();
 process.stdin.on("data", function(data) {
     var info = JSON.parse(data);
     server = http.createServer(function(req, res) {
+        process.stderr.write("Request to " + req.url);
         if (req.url == "/write") {
             var fd = fs.openSync("result.json", "w");
             fs.writeSync(fd, '{"result":true}');
             fs.close(fd);
+        process.stderr.write("Saving a result");
             res.end("");
             return;
         } else if (req.url == "/event") {
@@ -37,4 +39,9 @@ process.stdin.on("data", function(data) {
     }).listen(info.port, "127.0.0.1", function() {
         process.stdout.write(data);
     });
+});
+
+process.on("SIGINT", function() {
+    console.log("Ending testURLCallback");
+    process.exit(0);
 });

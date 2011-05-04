@@ -34,9 +34,9 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
-            .expect("has 17 available services", function(err, res, body) {
+            .expect("has 18 available services", function(err, res, body) {
                 var map = JSON.parse(body);
-                assert.equal(map.available.length, 17);
+                assert.equal(map.available.length, 18);
             }).expect("has 12 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
@@ -113,7 +113,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 })
                 .expect("and has a created instance directory", function(err, res, body) {
                     var svcInfo = JSON.parse(body);
-                    fs.statSync("../Me/" + svcInfo.id + "/me.json").isFile();
+                    fs.statSync("Me/" + svcInfo.id + "/me.json").isFile();
                 })
         .undiscuss()
     .undiscuss().unpath()
@@ -213,12 +213,12 @@ tests.next().suite.addBatch({
                 path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
-                fs.unlinkSync("../Me/testURLCallback/result.json");
+                fs.unlinkSync("Me/testURLCallback/result.json");
             } catch (E) {
             }
             http.get(options, function(res) {
                 setTimeout(function() {
-                    fs.stat("../Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -255,13 +255,13 @@ tests.next().suite.addBatch({
                     }
                 };
                 try {
-                    fs.unlinkSync("../Me/testURLCallback/event.json");
+                    fs.unlinkSync("Me/testURLCallback/event.json");
                 } catch (E) {
                 }
                 var req = http.request(options);
                 req.on("response", function(res) {
                     setTimeout(function() {
-                        fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
+                        fs.stat("Me/testURLCallback/event.json", function(err, stats) {
                             if (!err)
                                 promise.emit("success", true);
                             else
