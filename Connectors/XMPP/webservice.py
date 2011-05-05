@@ -28,10 +28,14 @@ def saveAuth():
 def start(secrets):
     logging.info("Starting")
     app.client = client.Client(app.info, jid=secrets["jid"], password=secrets["password"])
-    if app.client.connect():
+    address = (secrets["host"], secrets["port"]) if (secrets.has_key("host") and secrets.has_key("port")) else ()
+    logging.info("XMPP connecting with address " + str(address))
+    if app.client.connect(address):
         app.client.process(threaded=True)
         app.started = True
     else:
+        # XXX We shouldn't die here, we should still serve existing data and try again.  
+        # We could also prompt for credentials again
         util.die("XMPP connection failed")
 
 @app.route("/")
@@ -43,7 +47,7 @@ def index():
                 "/roster" : "Current roster (at time of login)"
                 })
     else:
-        return redirect(url_for("setupAuth"))
+        return redirect(app.me_info["uri"] + "setupAuth")
 
 def matches_arg(value, arg):
     # either a literal match or a range [lo,hi]
@@ -55,6 +59,7 @@ def matches_arg(value, arg):
 
 @app.route("/messages")
 def messages():
+    if not app.client or len(app.client.messages) == 0: return "[]"
     messages = app.client.messages
     for key, value in request.args.items():
         messages = [msg for msg in messages if matches_arg(msg[key], json.loads(value))]
@@ -62,6 +67,7 @@ def messages():
 
 @app.route("/statuses")
 def statuses():
+    if not app.client or len(app.client.statuses) == 0: return "[]"
     statuses = app.client.statuses
     for key, value in request.args.items():
         statuses = [sts for sts in statuses if matches_arg(sts[key], json.loads(value))]
@@ -75,6 +81,8 @@ def runService(info):
     app.info = info
     app.client = None
     app.started = False
+
+    app.me_info = lockerfs.loadJsonFile("me.json")
 
     secrets = lockerfs.loadJsonFile("secrets.json")
     if "jid" in secrets and "password" in secrets:
