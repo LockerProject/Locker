@@ -1,0 +1,8 @@
+{
+	"title":"Instagram Account",
+	"action":"Connect to an Instagram account",
+	"desc":"Collect and sync my data from my Instagram account using the Instagram API and an Instagram 'app' that I create just for myself.",
+	"run":"node client.js",
+	"status":"unstable",
+	"provides":["photo/instagram"]
+}
