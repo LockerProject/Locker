@@ -45,7 +45,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if (!accessData.tokenData.accessToken) {
+    if (!accessData.tokenData || !accessData.tokenData.accessToken) {
         res.end('<html>you need to <a href="oauthrequest">auth w/ Linkedin</a> still</html>');
     } else {
         res.end('<html>found a token, load <a href="profile">profile</a> or <a href="connections">connections</a></html>');
@@ -67,7 +67,10 @@ function(req, res) {
                 '</form></html>');
     } else {
         console.log('redirecting to ' + me.uri + 'auth');
-
+    
+        accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
+        setupOAuthClient(accessData.appKey, accessData.appSecret, me.uri + 'auth');
+    
         oAuth.getOAuthRequestToken(function(err, oAuthToken, oAuthTokenSecret, results) {
             if (err) {
               console.log(err);
@@ -98,14 +101,16 @@ function(req, res) {
     accessData.appKey = req.param('appKey');
     accessData.appSecret = req.param('appSecret');
     lfs.writeObjectsToFile('access.json', [accessData]);
-    res.end('<html>thanks, now we need to <a href="auth">auth that app to your account</a>.</html>');
+    res.end('<html>thanks, now we need to <a href="oauthrequest">auth that app to your account</a>.</html>');
 });
 
 app.get('/auth',
 function(req, res) {
     console.log('calling /auth');
+    
     accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
     setupOAuthClient(accessData.appKey, accessData.appSecret, me.uri + 'auth');
+    
     oAuth.getOAuthAccessToken(
         accessData.tokenData.oAuthToken, 
         accessData.tokenData.oAuthTokenSecret, 
@@ -144,7 +149,6 @@ function(req, res) {
       var parser = new xml2js.Parser();
       
       parser.on('end', function(result) {
-        console.log(result);
         me.user_info = result;
         lfs.syncMeData(me);
         res.write('User profile: ' + JSON.stringify(result) + ': <br>');
@@ -189,7 +193,6 @@ function(req, res) {
         var parser = new xml2js.Parser();
 
         parser.on('end', function(result) {
-          console.log(result);
           lfs.writeObjectsToFile('connections.json', [result]);
           res.write('Connections: ' + JSON.stringify(result) + ': <br>');
         });
