@@ -318,6 +318,23 @@ function(req, res) {
     })
 });
 
+app.get('/get_profile', function(req, res) {
+    function writeUserInfo() {
+        res.writeHead(200, {"Content-Type":"text/json"});
+        res.end(JSON.stringify(userInfo));
+    }
+    
+    if(userInfo) {
+        writeUserInfo();
+    } else {
+        getUserInfo(function(newUserInfo) {
+            userInfo = newUserInfo;
+            lfs.writeObjectToFile('userInfo.json', userInfo);
+            writeUserInfo();
+        });
+    }
+});
+
 function getUserInfo(callback) {
     if(!getTwitterClient())
         return;
