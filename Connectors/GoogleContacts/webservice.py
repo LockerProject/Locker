@@ -13,12 +13,19 @@ import datetime
 import urllib
 import urllib2
 import sys
+import os
 
 app = Flask(__name__)
 
 @app.route("/allContacts")
 def allContacts():
-    return send_file("{0}/contacts.json".format(app.lockerInfo["workingDirectory"]))
+    if os.path.exists(app.lockerInfo["workingDirectory"] + "/contacts.json"):
+        fd = open("{0}/contacts.json".format(app.lockerInfo["workingDirectory"]), "r")
+        lines = fd.readlines()
+        fd.close()
+        return "[{0}]".format(",".join(lines))
+    else:
+        return "[]"
 
 @app.route("/setupAuth")
 def setupAuth():
@@ -46,18 +53,18 @@ def update():
         urllib2.urlopen(url)
         return "Updated"
     else:
-        return redirect(url_for("setupAuth"))
+        return redirect(app.meInfo["uri"] + "setupAuth")
 
 @app.route("/save")
 def saveAuth():
     if not gcontacts.testCredentials(request.args["consumerKey"], request.args["consumerSecret"]):
-        return redirect(url_for("setupAuth"))
+        return redirect(app.meInfo["uri"] + "setupAuth")
     secrets = lockerfs.loadJsonFile("secrets.json");
     secrets["consumerKey"] = request.args["consumerKey"]
     secrets["consumerSecret"] = request.args["consumerSecret"]
     lockerfs.saveJsonFile("secrets.json", secrets)
     app.consumerValidated = True
-    return redirect(url_for("mainIndex"))
+    return redirect(app.meInfo["uri"] + "/")
 
 @app.route("/")
 def mainIndex():
@@ -66,7 +73,7 @@ def mainIndex():
         return render_template("index.html", updateTime=app.updateAt, updatesStarted=app.updatesStarted)
     else:
         sys.stderr.write("Going to auth")
-        return redirect(url_for("setupAuth"))
+        return redirect(app.meInfo["uri"] + "setupAuth")
 
 def runService(info):
     secrets = lockerfs.loadJsonFile("secrets.json");
@@ -75,6 +82,7 @@ def runService(info):
     app.puller = None
     app.updateAt = datetime.datetime.now()
     app.updatesStarted = False
+    app.meInfo = lockerfs.loadMeData()
     #app.debug = True
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 
