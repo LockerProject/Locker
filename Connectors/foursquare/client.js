@@ -175,7 +175,9 @@ function(req, res) {
             res.end();  
             return;  
         }  
+        res.write("[");
         res.write(file, "binary");  
+        res.write("]");
         res.end();
     });
 });
