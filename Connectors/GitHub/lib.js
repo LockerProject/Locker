@@ -18,25 +18,21 @@ function GHClient(username) {
 GHClient.prototype = new EventEmitter();
 
 GHClient.prototype.syncWatchersInfo = function(repo, callback) {
-    console.log(this.username);
+    var filePrefix = this.username + '-' + repo;
     var self = this;
-    lfs.readObjectFromFile('repo-' + repo + '-watchersIDs.json', function(watchersIDs) {
-        console.log(watchersIDs);
+    lfs.readObjectFromFile(filePrefix + '-watchersIDs.json', function(watchersIDs) {
         github.getNewWatchers(self.username, repo, watchersIDs, function(newWatchers) {
             //sync watchers to disk
-            lfs.appendObjectsToFile(self.username + '-' + repo + '-watchers.json', newWatchers);
+            lfs.appendObjectsToFile(filePrefix + '-watchers.json', newWatchers);
             //determine which watchers are new, emit events, and sync watchersIDs to disk
-            lfs.readObjectFromFile(self.username + '-' + repo + '-watchersIDs.json', function(watchersIDs) {
-                newWatchers.forEach(function(watcher) {
-                    if(!watchersIDs[watcher.login]) {
-                        watchersIDs[watcher.login] = true;
-                        self.emit('new-watcher', {repo:{username:self.username, reponame:repo}, user:watcher});
-                        //emit event
-                    }
-                });
-                lfs.writeObjectToFile('repo-' + repo + '-watchersIDs.json', watchersIDs);
-                if(callback) callback();
+            newWatchers.forEach(function(watcher) {
+                if(!watchersIDs[watcher.login]) {
+                    watchersIDs[watcher.login] = 1;
+                    self.emit('new-watcher', {repo:{username:self.username, reponame:repo}, user:watcher});
+                }
             });
+            lfs.writeObjectToFile(filePrefix + '-watchersIDs.json', watchersIDs);
+            if(callback) callback();
         });
     });
 }
