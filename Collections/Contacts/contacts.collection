@@ -1,5 +1,5 @@
 {
-    "title":"All Your Contacts Are Belong To Us",
+    "title":"Contacts Collection",
     "desc":"A collection of contacts from many places.",
     "run":"node contacts.js",
 	"status":"unstable",

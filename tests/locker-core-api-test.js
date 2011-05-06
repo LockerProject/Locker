@@ -34,6 +34,8 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
+            // These tests don't scale as we develop more parts, test for actual known contents
+            /*
             .expect("has 18 available services", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.equal(map.available.length, 18);
@@ -44,7 +46,20 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
                 assert.equal(count, 16);
-            }).expect("has the required test services installed", function(err, res, body) {
+            })
+            */
+            .expect("has the HelloWorld app available", function(err, res, body) {
+                var map = JSON.parse(body);
+                var found = false;
+                for (var x = 0; x < map.available.length; ++x) {
+                    if (map.available[x].srcdir == "Apps/HelloWorld") {
+                        found = true;
+                        break;
+                    }
+                }
+                assert.isTrue(found);
+            })
+            .expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
                 // Add statements here to test for services required to test
