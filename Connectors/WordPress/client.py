@@ -76,13 +76,13 @@ class Client(object):
 
         self._server = xmlrpclib.ServerProxy(self.url)
 
-        self.user_info = {}
-        self.blogs = []
-        self.categories = []
-        self.posts = []
-        self.comments = []
-        self.pingbacks = []
-        self.trackbacks = []
+        self.user_info = lockerfs.loadJsonFile("user_info.json")
+        self.blogs = lockerfs.loadJsonFile("blogs.json")
+        self.categories = lockerfs.loadJsonFile("categories.json")
+        self.posts = lockerfs.loadJsonFile("posts.json")
+        self.comments = lockerfs.loadJsonFile("comments.json")
+        self.pingbacks = lockerfs.loadJsonFile("pingbacks.json")
+        self.trackbacks = lockerfs.loadJsonFile("trackbacks.json")
 
     @updater('user_info', default={})
     def updateUserInfo(self):
