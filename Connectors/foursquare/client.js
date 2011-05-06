@@ -203,16 +203,16 @@ function getMe(token, callback) {
     get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + token, callback);
 }
 
-var checkins_limit = 500;
+var checkins_limit = 250;
 function getCheckins(userID, token, offset, callback, checkins) {
     if(!checkins)
         checkins = [];
-    var latest = '';
+    var latest = 1;
     if(me.checkins && me.checkins.latest)
-        latest = '&afterTimestamp=' + me.checkins.latest;
+        latest = me.checkins.latest;
     else if(!me.checkins)
         me.checkins = {};
-    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token + latest,
+    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token + '&afterTimestamp=' + latest,
     function(data) {
         var newCheckins = JSON.parse(data).response.checkins.items;
         checkins.addAll(newCheckins);
