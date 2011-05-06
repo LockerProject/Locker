@@ -91,7 +91,7 @@ function getGitHub() {
     if(!github) {
         github = ghlib.createClient('quartzjer');
         github.on('new-watcher', function(newWatcherEvent) {
-            console.log('got new watcher:', newWatcherEvent);
+//            console.log('got new watcher:', newWatcherEvent);
             locker.event('contact/github', newWatcherEvent);
         });
     }
