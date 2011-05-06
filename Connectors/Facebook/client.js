@@ -33,18 +33,10 @@ var wwwdude = require('wwwdude'),
 var me, auth, latests, userInfo;
 var facebookClient = require('facebook-js')();
 
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;} .goback{position:absolute;left:90%;top:3%;} .body{background:rgb(125,174,92);border-radius:14px;color: white;} .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
-}
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Facebook", content, ["#3B5998", "white"]);
+};
 
 app.set('views', __dirname);
 app.get('/',
@@ -53,7 +45,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!auth.appID) {
-        res.end(displayHTML("Enter your personal FaceBook app info that will be used to sync your data" + 
+        res.end(format("Enter your personal FaceBook app info that will be used to sync your data" + 
                 " (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>" + 
                 "http://www.facebook.com/developers/createapp.php</a> using the callback url of " +
                 "http://"+url.parse(me.uri).host+"/) " +
@@ -65,9 +57,9 @@ function(req, res) {
         return;
     }
     if(!auth.token)
-        res.end(displayHTML("you need to <a href='./gofb'>auth w/ fb</a> yet"));
+        res.end(format("you need to <a href='./gofb'>auth w/ fb</a> yet"));
     else
-        res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
+        res.end(format("found a token, <a href='./friends'>load friends</a>"));
 });
 
 app.get('/save',
@@ -76,13 +68,13 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!req.param('appID') || !req.param('appSecret')) {
-        res.end(displayHTML("missing field(s)?"));
+        res.end(format("missing field(s)?"));
         return;
     }
     auth.appID = req.param('appID');
     auth.appSecret = req.param('appSecret');
     lfs.writeObjectToFile('auth.json', auth);
-    res.end(displayHTML("k thanks, now we need to <a href='./gofb'>auth that app to your account</a>."));
+    res.end(format("k thanks, now we need to <a href='./gofb'>auth that app to your account</a>."));
 });
 
 app.get('/gofb',
@@ -92,7 +84,7 @@ function(req, res) {
         redirect_uri: me.uri+"auth",
         scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'
     }));
-    res.end();
+    res.end(format("redirecting to auth facebook"));
 });
 
 app.get('/auth',
@@ -110,9 +102,9 @@ function(req, res) {
     function(error, access_token, refresh_token) {
         if (error) {
             sys.debug(error);
-            res.end(displayHTML("uhoh " + error));
+            res.end(format("uhoh " + error));
         } else {
-            res.end(displayHTML("too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a>"));
+            res.end(format("too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a>"));
             auth.token = access_token;
             lfs.writeObjectToFile('auth.json', auth);
         }
@@ -163,7 +155,7 @@ function(req, res) {
     });
     lfs.readObjectsFromFile('contacts.json', function(contacts) {
         res.write(JSON.stringify(contacts));
-        res.end();
+        res.end(format("getting facebook contacts"));
     });
 });
 
@@ -189,7 +181,7 @@ function(req, res) {
             });
         }
         readNext(function() {
-            res.end(JSON.stringify(photoAlbums));
+            res.end(format(JSON.stringify(photoAlbums)));
         });
     });
 });
@@ -198,7 +190,7 @@ app.get('/friends',
 function(req, res) {
     if (!auth.token) {
         res.writeHead(401);
-        res.end();
+        res.end(format("auth token missing, you need to <a href='./gofb'>auth w/ fb</a>."));
 //        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
         return;
     } else {
@@ -230,7 +222,7 @@ function(req, res) {
                 stream.end();
                 downloadPhotos(userID);
                 locker.at('/friends', 3600);
-                res.end("sync'd "+result.data.length+" friends, how sociable!");
+                res.end(format("sync'd "+result.data.length+" friends, how sociable!"));
             });
 
             facebookClient.apiCall(
@@ -260,7 +252,7 @@ function(req, res) {
     });
     pullNewsFeed(function() {
         locker.at('/feed', 10);
-        res.end();
+        res.end(format("getting news feeds from facebook"));
     });
 });
 
@@ -293,7 +285,7 @@ function(req, res) {
             });
         }, function() {
             //all done
-            res.end();
+            res.end(format("finished getting photos from facebook!"));
         });
     });
 });
@@ -347,7 +339,7 @@ function(req, res) {
         var obj = {};
         obj.data = data;
         res.write(JSON.stringify(obj));
-        res.end();
+        res.end(format("saving new feeds to file"));
     });
 });
 
