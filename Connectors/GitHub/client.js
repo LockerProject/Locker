@@ -41,7 +41,7 @@ function(req, res) {
                 "</form></html>");
         return;
     } else
-        res.end("<html>We've got a username, <a href='./profile'>load p</a></html>");
+        res.end("<html>We've got a username, <a href='./syncprofile'>sync profile</a></html>");
 });
 
 
@@ -72,6 +72,20 @@ app.get('/syncrepo/:repo', function(req, res) {
     res.end();
 });
 
+
+app.get('/syncprofile', function(req, res) {
+    getGitHub().syncProfile(function() {
+        res.writeHead(200);
+        res.end();
+    })
+})
+
+app.get('/get_profile', function(req, res) {
+    getGitHub().getProfile(function(profile) {
+        res.writeHead(200, {'Content-Type':'application/json'});
+        res.end(JSON.stringify(profile));
+    });
+})
 
 function getGitHub() {
     if(!github) {
