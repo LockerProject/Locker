@@ -35,6 +35,11 @@ var wwwdude_client = wwwdude.createClient({
 
 var me, state, userInfo;
 
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Flickr", content, ["#3B5998", "white"]); // These colors can be customized later...
+};
+
 function getSignature(params) {
     var hash = crypto.createHash('md5');
     params.sort();
@@ -131,7 +136,7 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!(auth.apiKey && auth.apiSecret)) {
-        res.end("<html>Enter your personal Flickr app info that will be used to sync your data" + 
+        res.end(format("Enter your personal Flickr app info that will be used to sync your data" + 
                 " (create a new one <a href='http://www.flickr.com/services/apps/create/apply/'>" + 
                 "here</a> using the callback url of " +
                 me.uri+"auth) " +
@@ -139,11 +144,11 @@ function(req, res) {
                     "API Key: <input name='apiKey'><br>" +
                     "API Secret: <input name='apiSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form></html>");
+                "</form>"));
         return;
     }
     if(!auth.token)
-        res.end("<html>you need to <a href='" + getAuthSignedURL('read') + "'>auth w/ flickr</a> yet</html>");
+        res.end(format("you need to <a href='" + getAuthSignedURL('read') + "'>auth w/ flickr</a> yet"));
     else
         res.end();
         //res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
@@ -155,13 +160,13 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!req.param('apiKey') || !req.param('apiSecret')) {
-        res.end("missing field(s)?");
+        res.end(format("missing field(s)?"));
         return;
     }
     auth.apiKey = req.param('apiKey');
     auth.apiSecret = req.param('apiSecret');
     lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>k thanks, now we need to <a href='" + getAuthSignedURL('read') + "'>auth that app to your account</a>.</html>");
+    res.end(format("k thanks, now we need to <a href='" + getAuthSignedURL('read') + "'>auth that app to your account</a>."));
 });
 
 
