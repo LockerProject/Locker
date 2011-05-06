@@ -115,7 +115,7 @@ locker.get('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
-    var ppath = req.url.substring(slashIndex+1);
+    var ppath = req.url.substring(slashIndex);
     console.log("Proxying a get to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
@@ -139,7 +139,7 @@ locker.post('/Me/*', function(req,res){
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
-    var ppath = req.url.substring(slashIndex+1);
+    var ppath = req.url.substring(slashIndex);
     sys.debug("Proxying a post to " + ppath + " to service " + req.url);
     console.log("Proxying a post to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
@@ -162,22 +162,21 @@ locker.post('/Me/*', function(req,res){
 
 // DIARY
 // Publish a user visible message
-locker.post("/core/:svcId/diary", function(req, res) {
+locker.get("/core/:svcId/diary", function(req, res) {
     var level = req.param("level") || 0;
     var message = req.param("message");
     var svcId = req.params.svcId;
 
     var now = new Date;
     try {
-        fs.mkdirSync("Me/diary", 0700);
-    } catch (err) {
+        fs.mkdirSync("Me/diary", 0700, function(err) {
+            if (err && err.errno != process.EEXIST) console.error("Error creating diary: " + err);
+        });
+    } catch (E) {
         // Why do I still have to catch when it has an error callback?!
-        if (err) console.error("Error creating diary: " + err);
     }
     fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
-        if (err) console.log("Error for year dir: " + err);
         fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            if (err) console.log("Error month dir: " + err);
             var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
@@ -196,7 +195,6 @@ locker.get("/diary", function(req, res) {
     });
     fs.readFile(fullPath, function(err, file) {
         if (err) {
-            console.error("Error sending diary: " + err);
             res.write("[]");
             res.end();
             return;
@@ -332,8 +330,9 @@ locker.get('/', function(req, res) {
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
-    console.log("proxying " + method + " " + req.url + " to "+svc.uriLocal + "/" + ppath);
-    req.url = "/"+ppath;
+    if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
+    console.log("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
+    req.url = ppath;
     proxy.proxyRequest(req, res, {
       host: url.parse(svc.uriLocal).hostname,
       port: url.parse(svc.uriLocal).port,

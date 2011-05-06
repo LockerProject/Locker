@@ -10,7 +10,7 @@ var connect = require('connect'),
 
 var eventCount = 1;
 app.post('/event', function(req, res) {
-   //sys.debug('flickr-event!!!');
+   sys.debug('flickr-event!!!');
     fs.writeFileSync('events', "" + eventCount);
     eventCount++;
 //        sys.debug("events:" + fs.readFileSync('events'));
@@ -23,6 +23,7 @@ process.stdin.resume();
 process.stdin.on("data", function(chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
+    process.stderr.write("Listening on " + processInfo.port);
     app.listen(processInfo.port, function() {
         process.stdout.write(chunk);
         process.stdout.flush();
