@@ -68,12 +68,12 @@ function getUsersInfo(users, arr, callback) {
         callback = arr;
         arr = [];
     }
-    if(!users || users.length < 1 || arr.length > 5) {
+    if(!users || users.length < 1) { // || arr.length > 50) {
         callback(arr);
         return;
     }
     var user = users[0];
-    console.log('getting ', user.login);
+    console.log('getting', user.login);
     exports.getUserInfo(user.login, function(err, userInfo) {
         var sleep = 10000;
         if(!userInfo || !userInfo.login) //probably rate limited
