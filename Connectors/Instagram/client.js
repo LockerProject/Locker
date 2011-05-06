@@ -22,7 +22,7 @@ var express = require('express'),
     ),
     http = require('http'),
     https = require('https'),
-    oauthclient = require('oauth').OAuth2,
+    oauthclient = require('../../Common/node/node-oauth/index.js').OAuth2,
     xml2js = require('xml2js'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
@@ -32,6 +32,7 @@ var me;
 var accessData;
 var tokenData = {};
 var oAuth;
+var state;
 
 function setupOAuthClient(clientId, clientSecret) {
   oAuth = new oauthclient(clientId, clientSecret, 
@@ -98,10 +99,11 @@ function(req, res) {
     console.log('calling /auth');
 
     accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
-console.log(accessData);
     setupOAuthClient(accessData.clientId, accessData.clientSecret);
-
-    oAuth.getOAuthAccessToken(req.param('code'), {}, 
+		console.log(accessData);
+    oAuth.getOAuthAccessToken(req.param('code'), 
+															{ grant_type: 'authorization_code', 
+		    											  redirect_uri: me.uri + 'auth' }, 
         function(err, oAuthAccessToken, oAuthRefreshToken) {
           if (err) {
             console.log(err);
@@ -123,28 +125,17 @@ console.log(accessData);
 app.get('/profile',
 function(req, res) {
   oAuth.getProtectedResource(
-    'http://api.linkedin.com/v1/people/~',
+    'https://api.instagram.com/v1/users/self',
     accessData.tokenData.accessToken, 
     function(err, data) {
       if (err) {
         console.log(err);
         return false;
       }
-      
-      var parser = new xml2js.Parser();
-      
-      parser.on('end', function(result) {
-        console.log(result);
-        me.user_info = result;
-        lfs.syncMeData(me);
-        res.write('User profile: ' + JSON.stringify(result) + ': <br>');
-      });
-      
-      parser.on('error', function(err) {
-        console.log(err);
-      });
-      
-      res.end(parser.parseString(data));
+  
+			me.user_info = data;
+			lfs.syncMeData(me);
+			res.end('User profile: ' + JSON.stringify(data) + ': <br>');
   });
 });
 
@@ -165,30 +156,19 @@ function(req, res) {
 
 app.get('/photos',
 function(req, res) {
-    oAuth.getProtectedResource(
-      'http://api.linkedin.com/v1/people/~/connections', 
-      'GET', 
-      accessData.tokenData.accessToken, 
-      accessData.tokenData.accessTokenSecret, 
-      function(err, data) {
-        if (err) {
-          console.log(err);
-          return false;
-        }
-
-        var parser = new xml2js.Parser();
-
-        parser.on('end', function(result) {
-          console.log(result);
-          lfs.writeObjectsToFile('connections.json', [result]);
-          res.write('Connections: ' + JSON.stringify(result) + ': <br>');
-        });
-
-        parser.on('error', function(err) {
-          console.log(err);
-        });
-
-        res.end(parser.parseString(data));
+	
+		try {
+	      fs.mkdirSync('low_resolution', 0755);
+	      fs.mkdirSync('thumbnail', 0755);
+				fs.mkdirSync('standard', 0755);
+	  } catch(err) {
+	  	console.log('could not create directories to store photos');
+			return false;
+		}
+	
+		getPhotos(state.newest);
+    lfs.writeObjectToFile('state.json', state);
+    res.end(JSON.stringify(state));
     });
 });
 
@@ -207,6 +187,66 @@ function(req, res) {
     });
 });
 
+//get a page of photos and recurse until all pages are completed
+function getPhotos(newest) {
+
+    if(!newest) {
+			newest = 0;
+		}
+		
+		oAuth.getProtectedResource(
+      'https://api.instagram.com/v1/users/self/feed?max_id=' + newest,
+      accessData.tokenData.accessToken, 
+      function(err, data) {
+        if (err) {
+          console.log(err);
+          return false;
+        }
+		
+				var json = JSON.parse(data);
+		
+				if(!json || !json.data) {
+					console.log(data);
+					res.end();
+				}
+
+				lfs.appendObjectsToFile('photos.json', json.data);
+
+				for (var i=0, var length=json.data.length; i<length; ++i) {
+
+					function curl(photos, callback) {
+						if (!photos || photos.length < 1) {
+							return callback();
+						}
+						var photo = photos.pop();
+						var id = photo.id;
+						lfs.curlFile(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
+							if (err) {
+								sys.debug(err);
+							}
+							
+							lfs.curlFile(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
+								if (err) {
+									sys.debug(err);
+								}
+								
+								lfs.curlFile(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
+									if (err) {
+										sys.debug(err);
+									}
+									
+									console.log('got Instagram photo ' + id);
+									locker.event('photo/instagram', {"_id":id});
+								});
+							});
+						});
+					}
+				}
+				
+				curl(json.data, function() {});
+			});
+}
+
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
@@ -224,6 +264,9 @@ process.stdin.on('data', function(data) {
     } catch (E) {
         accessData = {};
     }
+		lfs.readObjectFromFile('state.json', function(newestState) {
+        state = newestState;
+		}
     app.listen(lockerInfo.port, 'localhost', function() {
         process.stdout.write(data);
     });
