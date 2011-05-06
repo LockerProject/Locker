@@ -23,24 +23,35 @@ GHClient.prototype.syncWatchersInfo = function(repo, callback) {
     lfs.readObjectFromFile('repo-' + repo + '-watchersIDs.json', function(watchersIDs) {
         console.log(watchersIDs);
         github.getNewWatchers(self.username, repo, watchersIDs, function(newWatchers) {
-//            if(!err) {
-                //sync watchers to disk
-                lfs.appendObjectsToFile(self.username + '-' + repo + '-watchers.json', newWatchers);
-                //determine which watchers are new, emit events, and sync watchersIDs to disk
-                lfs.readObjectFromFile(self.username + '-' + repo + '-watchersIDs.json', function(watchersIDs) {
-                    newWatchers.forEach(function(watcher) {
-                        if(!watchersIDs[watcher.login]) {
-                            watchersIDs[watcher.login] = true;
-                            self.emit('new-watcher', {repo:{username:self.username, reponame:repo}, user:watcher});
-                            //emit event
-                        }
-                    });
-                    lfs.writeObjectToFile('repo-' + repo + '-watchersIDs.json', watchersIDs);
-                    if(callback) callback();
+            //sync watchers to disk
+            lfs.appendObjectsToFile(self.username + '-' + repo + '-watchers.json', newWatchers);
+            //determine which watchers are new, emit events, and sync watchersIDs to disk
+            lfs.readObjectFromFile(self.username + '-' + repo + '-watchersIDs.json', function(watchersIDs) {
+                newWatchers.forEach(function(watcher) {
+                    if(!watchersIDs[watcher.login]) {
+                        watchersIDs[watcher.login] = true;
+                        self.emit('new-watcher', {repo:{username:self.username, reponame:repo}, user:watcher});
+                        //emit event
+                    }
                 });
-            // }
+                lfs.writeObjectToFile('repo-' + repo + '-watchersIDs.json', watchersIDs);
+                if(callback) callback();
+            });
         });
     });
+}
+
+GHClient.prototype.syncProfile = function(callback) {
+    github.getUserInfo(this.username, function(err, data) {
+        if(!err) {
+            lfs.writeObjectToFile('profile.json', data);
+            callback();
+        }
+    });
+}
+
+GHClient.prototype.getProfile = function(callback) {
+    lfs.readObjectFromFile('profile.json', callback);
 }
 
 var userInfoQueue = [];
