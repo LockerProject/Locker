@@ -24,6 +24,12 @@ require.paths.push(__dirname + "/Common/node");
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');
+
+// This lconfig stuff has to come before and other locker modules are loaded!!
+var lconfig = require('lconfig');
+lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'config.json'));
+
+
 //var crypto = require('crypto');
 var lconsole = require("lconsole");
 var lscheduler = require("lscheduler");
@@ -31,14 +37,11 @@ var serviceManager = require("lservicemanager");
 var dashboard = require(__dirname + "/Ops/dashboard.js");
 var webservice = require(__dirname + "/Ops/webservice.js");
 
-var lockerHost = process.argv[2]||"localhost";
-if(lockerHost != "localhost" && lockerHost != "127.0.0.1") {
+
+if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
                 'which if so inclined can be hacked into lockerd.js and added since it\'s apparently still not implemented :)\n\n');
 }
-var lockerPort = process.argv[3]||8042;
-var lockerBase = "http://"+lockerHost+":"+lockerPort+"/";
-var lockerDir = process.cwd();
 var shuttingDown_ = false;
 
 // load up private key or create if none, just KISS for now
@@ -69,29 +72,35 @@ path.exists('Me/key',function(exists){
 });
 
 // look for available things
-serviceManager.scanDirectory("Connectors");
-serviceManager.scanDirectory("Collections");
-serviceManager.scanDirectory("Apps");
+lconfig.scannedDirs.forEach(serviceManager.scanDirectory);
 
 // look for existing things
 serviceManager.findInstalled();
 
 lscheduler.masterScheduler.loadAndStart();
 
-webservice.startService(lockerPort);
+webservice.startService(lconfig.lockerPort);
 
-var lockerPortNext = "1"+lockerPort;
+var lockerPortNext = "1"+lconfig.lockerPort;
 dashboard.start(lockerPortNext);
 lockerPortNext++;
 
-console.log('locker is running, use your browser and visit ' + lockerBase);
+console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
 
-process.on("SIGINT", function() {
+function shutdown()
+{
     process.stdout.write("\n");
     shuttingDown_ = true;
+    dashboard.instance.kill(dashboard.pid, "SIGINT");
     serviceManager.shutdown(function() {
         console.log("Shutdown complete.");
         process.exit(0);
     });
+}
+
+process.on("SIGINT", function() {
+    shutdown();
 });
 
+// Export some things so this can be used by other processes, mainly for the test runner
+exports.shutdown = shutdown;

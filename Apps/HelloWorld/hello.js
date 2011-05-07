@@ -22,6 +22,28 @@ function(req, res) {
     res.end("yeah, hello world, and stuff");
 });
 
+app.get('/foo',
+function(req, res) {
+    res.redirect('/bar');
+});
+
+app.get('/bar',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    res.end("coffee or beer?");
+});
+
+app.get('/utf8',
+function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    
+    res.end('{"data":"♈♉♌♟♖Дворцовλευταῖόपशुपतिरपि तान्यहा學而時اибашен"}');
+});
+
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {

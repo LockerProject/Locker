@@ -1,0 +1,10 @@
+{
+    "lockerHost" : "localhost",
+    "lockerPort" : 8042,
+    "me" : "Me",
+    "scannedDirs" : [
+        "Apps", 
+        "Collections", 
+        "Connectors"
+        ]
+}

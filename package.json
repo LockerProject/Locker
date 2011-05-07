@@ -7,22 +7,26 @@
         "lib": "./Common/node"
     },
     "engines": {
-        "node": ">= 0.4.3"
+        "node": ">= 0.4.6"
     },
     "dependencies": {
-        "connect" : "=1.1.4",
-        "express" : "=2.1.0",
-        "facebook-js" : "=0.0.5",
-        "flickr-reflection" : "=0.0.1",
-        "lastfm" : "=0.4.3",
-        "oauth" : "=0.9.0",
-        "sax" : "=0.1.1",
-        "sqlite" : "=1.0.3",
-        "twitter-js" : "=0.0.5",
-        "wwwdude" : "=0.0.5",
-        "xml2js" : "=0.1.5",
-        "request" : "=1.9.5",
+        "connect": "=1.1.4",
+        "express": "=2.1.0",
+        "facebook-js": "=0.0.5",
+        "flickr-reflection": "=0.0.1",
+        "lastfm": "=0.4.3",
+        "oauth": "=0.9.0",
+        "sax": "=0.1.1",
+        "sqlite": "=1.0.3",
+        "wwwdude": "=0.0.5",
+        "xml2js": "=0.1.5",
+        "request": "=1.9.5",
         "api-easy": "=0.2.0",
-        "vows":">=0.5.8"
+        "http-proxy": "=0.5.0",
+        "xml2js": "=0.1.6",
+        "vows": ">=0.5.8",
+        "http-proxy": "=0.5.0",
+        "vows": ">=0.5.8",
+        "wrench": ">=1.1.0"
     }
 }
