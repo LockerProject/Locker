@@ -76,8 +76,8 @@ vows.describe("Service Manager").addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
             topic:serviceManager.scanDirectory("Collections"),
-            "gathered 5 services": function() {
-                assert.equal(serviceManager.serviceMap().available.length, 5);
+            "gathered 1 services": function() {
+                assert.equal(serviceManager.serviceMap().available.length, 1);
             },
             topic:serviceManager.install({srcdir:"Collections/Contacts"}),
             "can be installed" : {
