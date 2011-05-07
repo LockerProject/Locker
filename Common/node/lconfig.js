@@ -7,6 +7,24 @@
 *
 */
 
-exports.lockerBase = "http://localhost:8042";
+//just a place for lockerd.js to populate config info
+var fs = require('fs');
+
+exports.lockerHost = 'localhost';
 exports.lockerPort = 8042;
+setLockerBase();
 exports.lockerDir = process.cwd();
+
+exports.load = function(filepath) {
+    var config = JSON.parse(fs.readFileSync(filepath));
+    exports.lockerHost = config.lockerHost || "localhost";
+    exports.lockerPort = config.lockerPort || 8042;
+    setLockerBase();
+    exports.scannedDirs = config.scannedDirs;
+    exports.lockerDir = process.cwd();
+}
+
+function setLockerBase() {
+    exports.lockerBase = 'http://' + exports.lockerHost 
+                                   + (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
+}

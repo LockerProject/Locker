@@ -8,15 +8,16 @@
 */
 
 var spawn = require('child_process').spawn;
-
+var lconfig = require('../Common/node/lconfig.js');
 var dashboard;
 
 exports.instance = dashboard;
 
 exports.start = function(port) {
     // start dashboard
-    dashboard  = spawn('node', ['dashboard-client.js', "localhost", port], {cwd: 'Ops/Dashboard'});
-    dashboard.uriLocal = "http://localhost:"+port+"/";
+    dashboard  = spawn('node', ['dashboard-client.js', lconfig.lockerHost, lconfig.lockerPort, port], {cwd: __dirname + '/Dashboard'});
+    dashboard.uriLocal = 'http://' + lconfig.lockerHost + ':' + port;
+    dashboard.port = port;
     console.log('Spawned dashboard pid: ' + dashboard.pid);
     dashboard.stdout.on('data',function (data){
     console.log('dashboard stdout: '+data);

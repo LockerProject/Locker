@@ -11,13 +11,13 @@
 // enable start/stop on all (that you can)
 
 var rootHost = process.argv[2];
-var rootPort = process.argv[3];
-if (!rootHost || !rootPort)
- {
+var lockerPort = process.argv[3];
+var rootPort = process.argv[4];
+if (!rootHost || !rootPort) {
     process.stderr.write("missing host and port arguments\n");
     process.exit(1);
 }
-var lockerPort = rootPort.substring(1);
+//var lockerPort = rootPort.substring(1);
 var lockerBase = 'http://'+rootHost+':'+lockerPort;
 
 var fs = require('fs'),
@@ -32,6 +32,7 @@ var fs = require('fs'),
         encoding: 'utf-8'
     });
     
+
 var app = express.createServer();
 app.use(connect.bodyParser());
 app.use(connect.cookieParser());
@@ -47,6 +48,15 @@ app.get('/', function (req, res) {
             res.end();
         });
     });
+});
+
+app.get('/config.js', function (req, res) {    
+    res.writeHead(200, { 'Content-Type': 'text/javascript','Access-Control-Allow-Origin' : '*' });
+    //this might be a potential script injection attack, just sayin.
+    var config = {'lockerHost':rootHost,
+                  'lockerPort':rootPort,
+                  'lockerBase':lockerBase};
+    res.end('var config = ' + JSON.stringify(config) + ';');
 });
 
 // doesn't this exist somewhere? was easier to write than find out, meh!
@@ -67,7 +77,7 @@ app.get('/post2install', function(req, res){
     var id = parseInt(req.param('id'));
     var js = map.available[id];
     var httpClient = http.createClient(lockerPort);
-    var request = httpClient.request('POST', '/install', {'Content-Type':'application/json'});
+    var request = httpClient.request('POST', '/core/Dashboard/install', {'Content-Type':'application/json'});
     var item = JSON.stringify(map.available[req.param('id')]);
     request.write(JSON.stringify(map.available[req.param('id')]));
     request.end();

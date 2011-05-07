@@ -29,6 +29,7 @@ var app = express.createServer(connect.bodyParser(), connect.cookieParser(), con
 process.stdin.resume();
 process.stdin.on("data", function(data) {
     lockerInfo = JSON.parse(data);
+    locker.initClient(lockerInfo);
     if (!lockerInfo || !lockerInfo["workingDirectory"]) {
         process.stderr.write("Was not passed valid startup information."+data+"\n");
         process.exit(1);
@@ -202,11 +203,11 @@ function addContactsFromConn(conn, path, type) {
             cs[i]["_via"] = [conn];
             cadd(cs[i],type);
         }
-        csync();
+        csync(type);
     });
 }
 
-function csync()
+function csync(conn, type)
 {
     var stream = fs.createWriteStream("contacts.json");
     var ccount=0;
@@ -215,5 +216,5 @@ function csync()
         ccount++;
     }
     stream.end();
-    console.log("saved " + ccount + " contacts");    
+    locker.diary("collected " + ccount + " contacts from "+conn+" of type "+type);    
 }

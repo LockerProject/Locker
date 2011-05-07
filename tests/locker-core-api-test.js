@@ -15,11 +15,13 @@ var request = require('request');
 var querystring = require("querystring");
 var events = require("events");
 var fs = require("fs");
+var lconfig = require('../Common/node/lconfig.js');
 
+lconfig.load('config.json');
 
 var tests = RESTeasy.describe("Locker core API")
 
-tests.use("localhost", 8042)
+tests.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Core can")
     .discuss("map existing services with")
         .path("/map")
@@ -32,17 +34,32 @@ tests.use("localhost", 8042)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
-            .expect("has 8 available services", function(err, res, body) {
+            // These tests don't scale as we develop more parts, test for actual known contents
+            /*
+            .expect("has 18 available services", function(err, res, body) {
                 var map = JSON.parse(body);
-                assert.equal(map.available.length, 8);
-            }).expect("has 12 installed services", function(err, res, body) {
+                assert.equal(map.available.length, 18);
+            }).expect("has 16 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 12);
-            }).expect("has the required test services installed", function(err, res, body) {
+                assert.equal(count, 16);
+            })
+            */
+            .expect("has the HelloWorld app available", function(err, res, body) {
+                var map = JSON.parse(body);
+                var found = false;
+                for (var x = 0; x < map.available.length; ++x) {
+                    if (map.available[x].srcdir == "Apps/HelloWorld") {
+                        found = true;
+                        break;
+                    }
+                }
+                assert.isTrue(found);
+            })
+            .expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
                 // Add statements here to test for services required to test
@@ -87,7 +104,7 @@ tests.use("localhost", 8042)
         .unpath()
     .undiscuss()
 
-    .path("/install")
+    .path("/core/testSvcId/install")
     .discuss("install an available service")
         /************
          * XXX Right now we're relying on the hello world application to exist, maybe we should make a testing app?
@@ -111,7 +128,7 @@ tests.use("localhost", 8042)
                 })
                 .expect("and has a created instance directory", function(err, res, body) {
                     var svcInfo = JSON.parse(body);
-                    fs.statSync("../Me/" + svcInfo.id + "/me.json").isFile();
+                    fs.statSync("Me/" + svcInfo.id + "/me.json").isFile();
                 })
         .undiscuss()
     .undiscuss().unpath()
@@ -162,14 +179,14 @@ tests.use("localhost", 8042)
     .undiscuss()
     
     // Diary storage
-    .path("/testURLCallback/diary")
+    .path("/core/testURLCallback/diary")
     .discuss("store diary messages")
-        .post({level:2, message:"Test message"})
+        .get({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
 
     // Event basics
-    .path("/testURLCallback/listen")
+    .path("/core/testURLCallback/listen")
     .discuss("register a listener for an event")
         .get({type:"test/event2", cb:"/event"})
             .expect(200)
@@ -192,7 +209,7 @@ tests.next()
     .undiscuss().unpath()
 
     // Makes sure the /listen is done first
-    .path("/testURLCallback/deafen")
+    .path("/core/testURLCallback/deafen")
     .discuss("deafen a listener for an event")
         .get({type:"test/event2", cb:"/event"})
             .expect(200)
@@ -206,17 +223,17 @@ tests.next().suite.addBatch({
             var when = new Date;
             when.setTime(when.getTime() + 250);
             var options = {
-                host:"localhost",
-                port:8042,
-                path:"/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
+                host:lconfig.lockerHost,
+                port:lconfig.lockerPort,
+                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
-                fs.unlinkSync("../Me/testURLCallback/result.json");
+                fs.unlinkSync("Me/testURLCallback/result.json");
             } catch (E) {
             }
             http.get(options, function(res) {
                 setTimeout(function() {
-                    fs.stat("../Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -238,28 +255,28 @@ tests.next().suite.addBatch({
         topic:function() {
             var promise = new events.EventEmitter;
             var getOptions = {
-                host:"localhost",
-                port:8042,
-                path:"/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
+                host:lconfig.lockerHost,
+                port:lconfig.lockerPort,
+                path:"/core/testURLCallback/listen?" + querystring.stringify({type:"test/event", cb:"/event"})
             };
             var req = http.get(getOptions, function(res) {
                 var options = {
-                    host:"localhost",
-                    port:8042,
+                    host:lconfig.lockerHost,
+                    port:lconfig.lockerPort,
                     method:"POST",
-                    path:"/testURLCallback/event",
+                    path:"/core/testURLCallback/event",
                     headers:{
                         "Content-Type":"application/json"
                     }
                 };
                 try {
-                    fs.unlinkSync("../Me/testURLCallback/event.json");
+                    fs.unlinkSync("Me/testURLCallback/event.json");
                 } catch (E) {
                 }
                 var req = http.request(options);
                 req.on("response", function(res) {
                     setTimeout(function() {
-                        fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
+                        fs.stat("Me/testURLCallback/event.json", function(err, stats) {
                             if (!err)
                                 promise.emit("success", true);
                             else

@@ -12,10 +12,9 @@ var request = require('request'),
     sys = require('sys'),
     http = require("http"),
     url = require("url"),
-    querystring = require("querystring"),
-    lconfig = require(__dirname + "/lconfig.js");
+    querystring = require("querystring")
 
-var lockerBaseURI = 'http://localhost:8042';
+var lockerBase;
 var localServiceId = undefined;
 var baseServiceUrl = undefined;
 
@@ -23,8 +22,8 @@ exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
     var svcInfo = JSON.parse(meData);
     localServiceId = svcInfo.id;
-    lconfig.lockerBase = instanceInfo.lockerUrl;
-    baseServiceUrl = lconfig.lockerBase + "/" + localServiceId;
+    lockerBase = instanceInfo.lockerUrl;
+    baseServiceUrl = lockerBase + "/core/" + localServiceId;
 }
 
 exports.at = function(uri, delayInSec) {
@@ -36,15 +35,24 @@ exports.at = function(uri, delayInSec) {
     });
 }
 
+exports.diary = function(message, level) {
+    request.get({
+        url:baseServiceUrl + '/diary?' + querystring.stringify({
+            message:message,
+            level:level
+        })
+    });
+}
+
 exports.map = function(callback) {
-    request.get({url:lconfig.lockerBase + "/map"}, function(error, res, body) {
+    request.get({url:lockerBase + "/map"}, function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
     });
 }
 
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
-    request.get({url:lconfig.lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, function(error, res, body) {
+    request.get({url:lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
     });
 }
