@@ -203,11 +203,11 @@ function addContactsFromConn(conn, path, type) {
             cs[i]["_via"] = [conn];
             cadd(cs[i],type);
         }
-        csync();
+        csync(type);
     });
 }
 
-function csync()
+function csync(conn, type)
 {
     var stream = fs.createWriteStream("contacts.json");
     var ccount=0;
@@ -216,5 +216,5 @@ function csync()
         ccount++;
     }
     stream.end();
-    console.log("saved " + ccount + " contacts");    
+    locker.diary("collected " + ccount + " contacts from "+conn+" of type "+type);    
 }

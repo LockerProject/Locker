@@ -87,12 +87,20 @@ lockerPortNext++;
 
 console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
 
-process.on("SIGINT", function() {
+function shutdown()
+{
     process.stdout.write("\n");
     shuttingDown_ = true;
+    dashboard.instance.kill(dashboard.pid, "SIGINT");
     serviceManager.shutdown(function() {
         console.log("Shutdown complete.");
         process.exit(0);
     });
+}
+
+process.on("SIGINT", function() {
+    shutdown();
 });
 
+// Export some things so this can be used by other processes, mainly for the test runner
+exports.shutdown = shutdown;

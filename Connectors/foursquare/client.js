@@ -70,7 +70,6 @@ function(req, res) {
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else {
-        //res.writeHead(302);
         sys.debug('redirecting to ' + me.uri + 'auth');
         res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + accessData.appKey + '&response_type=code&redirect_uri=' + me.uri + 'auth');
         res.end();
@@ -153,6 +152,7 @@ function(req, res) {
                 'queue': queue,
                 'token': accessData.accessToken
             };
+            locker.diary("syncing "+friends.length+" friends");
             for (var i = 0; i < friends.length; i++) {
                 res.write(friends[i].firstName + " " + friends[i].lastName + "<br>");
                 queue.push(friends[i]);
@@ -174,7 +174,9 @@ function(req, res) {
             res.end();  
             return;  
         }  
+        res.write("[");
         res.write(file, "binary");  
+        res.write("]");
         res.end();
     });
 });
@@ -186,12 +188,13 @@ function(req, res) {
         me.user_info = self;
         lfs.syncMeData(me);
         getCheckins(me.user_info.id, accessData.accessToken, 0, function(newCheckins) {
+            locker.diary("syncing "+newCheckins.length+" new checkins");
             lfs.appendObjectsToFile('places.json', newCheckins);
             locker.at('/checkins', 600);
             res.writeHead(200, {
                 'Content-Type': 'text/html'
             });
-            res.end();
+            res.end("got "+newCheckins.length+" new checkins!");
         });
     });
 })
@@ -200,16 +203,16 @@ function getMe(token, callback) {
     get('api.foursquare.com', '/v2/users/self.json?oauth_token=' + token, callback);
 }
 
-var checkins_limit = 500;
+var checkins_limit = 250;
 function getCheckins(userID, token, offset, callback, checkins) {
     if(!checkins)
         checkins = [];
-    var latest = '';
+    var latest = 1;
     if(me.checkins && me.checkins.latest)
-        latest = '&afterTimestamp=' + me.checkins.latest;
+        latest = me.checkins.latest;
     else if(!me.checkins)
         me.checkins = {};
-    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token + latest,
+    get('api.foursquare.com', '/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + '&oauth_token=' + token + '&afterTimestamp=' + latest,
     function(data) {
         var newCheckins = JSON.parse(data).response.checkins.items;
         checkins.addAll(newCheckins);

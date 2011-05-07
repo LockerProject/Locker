@@ -1,0 +1,12 @@
+{
+	"title":"XMPP Connector",
+	"action":"Connect to XMPP account",
+	"desc":"Receive contact lists, messages and status updates from my XMPP account.",
+	"run":"python service.py",
+	"status":"unstable",
+	"provides":["message/XMPP","status/XMPP"],
+    "srcdir":"Connectors/XMPP",
+    "is":"connector",
+    "id":"xmpp-test",
+    "uri":"http://localhost:8043/Me/xmpp-test"
+}

@@ -91,7 +91,7 @@ suite.next().suite.addBatch({
                     return;
                 }
                 //TODO: file size might not be a great way to determine if a file is done
-                waitForFileToComplete('../Me/' + id + '/contacts.json', 45, 10, 500, function(success) {
+                waitForFileToComplete('Me/' + id + '/contacts.json', 45, 10, 500, function(success) {
                     if(success == true)
                         promise.emit('success', true);
                     else
@@ -137,9 +137,9 @@ suite.next().suite.addBatch({
                     promise.emit('error', err);
                     return;
                 }
-                waitForPathsToExist(['../Me/' + id + '/photos/Me/105391012878112/105391016211445.jpg',
-                                     '../Me/' + id + '/photos/Me/105399949543885/105400009543879.jpg',
-                                     '../Me/' + id + '/photos/Me/105787999505080/105788059505074.jpg'],
+                waitForPathsToExist(['Me/' + id + '/photos/Me/105391012878112/105391016211445.jpg',
+                                     'Me/' + id + '/photos/Me/105399949543885/105400009543879.jpg',
+                                     'Me/' + id + '/photos/Me/105787999505080/105788059505074.jpg'],
                                     10, 1000, 
                     function(success) {
                         if(success)

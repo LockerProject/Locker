@@ -34,17 +34,32 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.include(map, "installed");
                 serviceMap = map;
             })
-            .expect("has 17 available services", function(err, res, body) {
+            // These tests don't scale as we develop more parts, test for actual known contents
+            /*
+            .expect("has 18 available services", function(err, res, body) {
                 var map = JSON.parse(body);
-                assert.equal(map.available.length, 17);
-            }).expect("has 12 installed services", function(err, res, body) {
+                assert.equal(map.available.length, 18);
+            }).expect("has 16 installed services", function(err, res, body) {
                 var map = JSON.parse(body);
                 var count = 0;
                 for (var key in map.installed) {
                     if (map.installed.hasOwnProperty(key)) ++count;
                 }
-                assert.equal(count, 12);
-            }).expect("has the required test services installed", function(err, res, body) {
+                assert.equal(count, 16);
+            })
+            */
+            .expect("has the HelloWorld app available", function(err, res, body) {
+                var map = JSON.parse(body);
+                var found = false;
+                for (var x = 0; x < map.available.length; ++x) {
+                    if (map.available[x].srcdir == "Apps/HelloWorld") {
+                        found = true;
+                        break;
+                    }
+                }
+                assert.isTrue(found);
+            })
+            .expect("has the required test services installed", function(err, res, body) {
                 var map = JSON.parse(body);
                 assert.include(map.installed, "testURLCallback");
                 // Add statements here to test for services required to test
@@ -113,7 +128,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 })
                 .expect("and has a created instance directory", function(err, res, body) {
                     var svcInfo = JSON.parse(body);
-                    fs.statSync("../Me/" + svcInfo.id + "/me.json").isFile();
+                    fs.statSync("Me/" + svcInfo.id + "/me.json").isFile();
                 })
         .undiscuss()
     .undiscuss().unpath()
@@ -166,7 +181,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
     // Diary storage
     .path("/core/testURLCallback/diary")
     .discuss("store diary messages")
-        .post({level:2, message:"Test message"})
+        .get({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
 
@@ -213,12 +228,12 @@ tests.next().suite.addBatch({
                 path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
-                fs.unlinkSync("../Me/testURLCallback/result.json");
+                fs.unlinkSync("Me/testURLCallback/result.json");
             } catch (E) {
             }
             http.get(options, function(res) {
                 setTimeout(function() {
-                    fs.stat("../Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -255,13 +270,13 @@ tests.next().suite.addBatch({
                     }
                 };
                 try {
-                    fs.unlinkSync("../Me/testURLCallback/event.json");
+                    fs.unlinkSync("Me/testURLCallback/event.json");
                 } catch (E) {
                 }
                 var req = http.request(options);
                 req.on("response", function(res) {
                     setTimeout(function() {
-                        fs.stat("../Me/testURLCallback/event.json", function(err, stats) {
+                        fs.stat("Me/testURLCallback/event.json", function(err, stats) {
                             if (!err)
                                 promise.emit("success", true);
                             else

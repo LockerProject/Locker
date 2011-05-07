@@ -1,10 +1,22 @@
 {
     "lockerHost" : "localhost",
     "lockerPort" : 8043,
-    "me" : "tests/Me",
-    "scannedDirs" : [
-        "Apps", 
-        "Collections", 
-        "Connectors"
-        ]
+    "me" : "Me",
+    "scannedDirs" : ["Apps", "Connectors", "Collections"],
+    "testGroups" : {
+        "core" : ["locker-core-api-test.js"],
+        "core-lib" : ["lservicemanager-test-local.js", "lconfig-test-local.js", "lscheduler-test-local.js", "lconsole-test-local.js"],
+        "client-api" : ["locker-client-test.js"],
+        "connectors-local" : ["connector-local-google-contacts-test.js", "connector-local-wordpress-test.js", "connector-local-foursquare-test.js"],
+        "connectors-remote" : [],
+        "connectors" : ["connector-IMAP-test.js", "connector-facebook-test.js", "connector-flickr-test.js", "connector-twitter-test.js"],
+        "collections" : [],
+        "issues" : ["locker-issues-test.js"]
+    },
+    "disabledTests" : [
+        "keychain-client-test.js",
+        "lkeychain-test-local.js",
+        "connector-local-XMPP-test.js"
+    ]
+
 }

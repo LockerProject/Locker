@@ -98,6 +98,7 @@ exports.findInstalled = function () {
     serviceMap.installed = {};
     var dirs = fs.readdirSync('Me');
     for (var i = 0; i < dirs.length; i++) {
+        if(dirs[i] == "diary") continue;
         var dir =  'Me/' + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
@@ -213,8 +214,10 @@ exports.spawn = function(serviceId, callback) {
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
                 fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
                 // Set the pid after the write because it's transient to this locker instance only
-                svc.pid = app.pid;
-                console.log(svc.id + " started, running startup callbacks.");
+                // I'm confused why we have to use startingPid and app.pid is invalid here
+                svc.pid = svc.startingPid;
+                delete svc.startingPid;
+                console.log(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
                 svc.starting.forEach(function(cb) {
                     cb.call();
                     // See if it ended whilst running the callbacks
@@ -244,6 +247,8 @@ exports.spawn = function(serviceId, callback) {
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
+    // We track this here because app.pid doesn't seem to work inside the next context
+    svc.startingPid = app.pid;
 }
 
 /**
@@ -268,7 +273,8 @@ exports.shutdown = function(cb) {
         var svc = serviceMap.installed[mapEntry];
         if (svc.pid) {
             try {
-                process.kill(svc.pid);
+                console.log("Killing running service " + svc.id + " at pid " + svc.pid);
+                process.kill(svc.pid, "SIGINT");
             } catch(e) {
             }
         }
@@ -287,7 +293,10 @@ function checkForShutdown() {
     if (!shuttingDown) return;
     for(var mapEntry in serviceMap.installed) {
         var svc = serviceMap.installed[mapEntry];
-        if (svc.pid)  return;
+        if (svc.pid)  {
+            console.log(svc.id + " is still running can not complete shutdown.");
+            return;
+        }
     }
     shuttingDown();
     shuttingDown = null;

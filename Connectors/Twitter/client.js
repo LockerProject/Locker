@@ -151,6 +151,7 @@ function pullStatuses(endpoint, repeatAfter, res) {
     }
     pullTimeline(endpoint, function(items) {
         locker.at(endpoint, repeatAfter);
+        locker.diary("sync'd "+endpoint+" with "+items.length+" new entries");
         res.end("got "+endpoint+" with "+items.length+" new entries and scheduled to automatically sync again in "+repeatAfter+" seconds, happy day");
     });
     
@@ -280,7 +281,7 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
     function done() {    
         locker.at('/' + friendsOrFollowers, 3600);
         res.writeHead(200);
-        res.end();
+        res.end("done fetching "+friendsOrFollowers);
     }
     getUserInfo(function(newUserInfo) {
         userInfo = newUserInfo;
@@ -290,7 +291,7 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
                 done();
             else
                 getUsersExtendedInfo(ids, function(usersInfo) {
-                    sys.debug('got ' + usersInfo.length + ' ' + friendsOrFollowers);
+                    locker.diary('got ' + usersInfo.length + ' ' + friendsOrFollowers);
                     lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
                     done();
                 });
@@ -304,7 +305,7 @@ function(req, res) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('userInfo.json', userInfo);
         res.writeHead(200);
-        res.end();
+        res.end("got profile: "+JSON.stringify(userInfo));
     })
 });
 

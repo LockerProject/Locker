@@ -35,6 +35,15 @@ exports.at = function(uri, delayInSec) {
     });
 }
 
+exports.diary = function(message, level) {
+    request.get({
+        url:baseServiceUrl + '/diary?' + querystring.stringify({
+            message:message,
+            level:level
+        })
+    });
+}
+
 exports.map = function(callback) {
     request.get({url:lockerBase + "/map"}, function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
