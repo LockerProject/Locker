@@ -35,7 +35,7 @@ var facebookClient = require('facebook-js')();
 
 var html = require('../../Common/node/html.js');
 var format = function(content) {
-    return html.formatHTML("Facebook", content, ["#3B5998", "white"]);
+    return html.formatHTML("Facebook", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
 };
 
 app.set('views', __dirname);
