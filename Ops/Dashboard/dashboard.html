@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -10,6 +11,10 @@
     <script src="JavaScripts/Dashboard.js"></script>
     <link rel="stylesheet" href="Stylesheets/Reset.css" />
     <link rel="stylesheet" href="Stylesheets/Dashboard.css" />
+    <link rel="stylesheet" href="Stylesheets/Diary.css" />
+    <link rel="stylesheet" href="Stylesheets/Connectors.css" />
+    <link rel="stylesheet" href="Stylesheets/Collections.css" />
+    <link rel="stylesheet" href="Stylesheets/Apps.css" />
   </head>
   <body>
 
@@ -17,6 +22,8 @@
       <header>
         <h1><img src="../Images/Lock.png" width="200" height="260" alt="" /></h1>
       </header>
+
+      <!-- Primary Sections Listing -->
       <nav id="primary">
         <ul>
           <li id="diaryTab" class="tab current">Diary</li>
@@ -24,6 +31,8 @@
           <li id="collectionsTab" class="tab">Collections</li>
         </ul>
       </nav>
+
+      <!-- Applications Listing -->
       <nav id="applications">
         <ul id="appsList">
         </ul>
@@ -40,14 +49,14 @@
             <li onclick="javascript:refreshDiary()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
           </ul>
         </header>
-        <ul id="diaryLines">
+        <ul id="diaryEntriesList">
         </ul>
-        <div id="diaryTemplate">
+        <div id="diaryEntryTemplate">
           <span class="diaryTimestamp"></span>
         </div>
       </section>
 
-      <!-- Connectors -->
+      <!-- Connectors Section -->
       <section id="connectorsSection" class="tabPage">
         <header>
           <h1>Connectors</h1>
@@ -57,30 +66,38 @@
           </ul>
           -->
         </header>
-        <div id="available">
-          <ul id="availList">
-          </ul>
-          <div id="availInfo">
-            <div>
-              <h1>Name</h1>
-              <a id="availInstall" href='javascript:install(-1)'>Install Service</a>
-            </div>
-            <p class="description">Description</p>
-            <ul class="details">
-              <li>
-                <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
-              </li>
-              <li>
-                <strong>Provides:</strong> <span id="availProvides" class="value"></span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <ul id="installedServices">
+        <ul id="connectorsList">
         </ul>
+        <div id="connectorInfo">
+          <div>
+            <h1>Name</h1>
+            <a id="availInstall" href='javascript:install(-1)'>Install Service</a>
+          </div>
+          <p class="description">Description</p>
+          <ul class="details">
+            <li>
+              <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
+            </li>
+            <li>
+              <strong>Provides:</strong> <span id="availProvides" class="value"></span>
+            </li>
+          </ul>
+          <section id="connectorInstancesSection">
+            <!-- <header>
+              <h1>Configured</h1>
+            </header> -->
+            <ul id="connectorInstancesList">
+            </ul>
+            <footer>
+              <ul>
+                <li>Add Account</li>
+              </ul>
+            </footer>
+          </section>
+        </div>
       </section>
 
-      <!-- Collections -->
+      <!-- Collections Section -->
       <section id="collectionsSection" class="tabPage">
         <header>
           <h1>Collections</h1>

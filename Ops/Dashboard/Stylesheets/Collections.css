@@ -1,0 +1,63 @@
+
+/* Collections ------------------------------------------------------------ */
+
+#collectionsSection
+{
+  display: none;
+}
+
+ul#collectionsList
+{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 50px;
+  list-style: none;
+  padding: 20px;
+}
+
+ul#collectionsList li
+{
+  position: relative;
+  padding-left: 10px;
+  font-size: 14px;
+
+  height: 64px;
+  line-height: 24px;
+
+  background-position: 14px 14px, 0 0;
+  background-repeat: no-repeat;
+  background-image: url("../Images/Collections.Large.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.1)), to(rgba(255, 255, 255, 0.05)));
+  background-image: url("../Images/Collections.Large.png"), -moz-linear-gradient(top, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background-image: url("../Images/Collections.Large.png"), -o-linear-gradient(top, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background-image: url("../Images/Collections.Large.png"), linear-gradient(top, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin-bottom: 3px;
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.075), inset 1px 0px 0px rgba(255, 255, 255, 0.05), inset -1px 0px 0px rgba(255, 255, 255, 0.05), inset 0px -1px 0px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.075), inset 1px 0px 0px rgba(255, 255, 255, 0.05), inset -1px 0px 0px rgba(255, 255, 255, 0.05), inset 0px -1px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.075), inset 1px 0px 0px rgba(255, 255, 255, 0.05), inset -1px 0px 0px rgba(255, 255, 255, 0.05), inset 0px -1px 0px rgba(0, 0, 0, 0.5);
+
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 1);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+ul#collectionsList li .title
+{
+  position: absolute;
+  top: 8px;
+  height: 24px;
+  left: 64px;
+  font-weight: bold;
+}
+
+ul#collectionsList li .description
+{
+  position: absolute;
+  top: 32px;
+  height: 24px;
+  left: 64px;
+  font-size: 12px;
+}
