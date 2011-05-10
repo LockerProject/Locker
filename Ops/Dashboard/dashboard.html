@@ -140,7 +140,7 @@
     <script src='util.js'></script>
     <script>
     var serviceMap;
-    $.ajax({url: config.lockerBase + "/map", dataType:"json"}).success(function(data) {
+    $.ajax({url: "/map", dataType:"json"}).success(function(data) {
         serviceMap = data;
         for (var key in serviceMap.installed) {
             var item = serviceMap.installed[key];
@@ -187,7 +187,7 @@
     }
     function refreshDiary() {
         $("#diary").children().remove();
-        $.ajax({url: config.lockerBase + "/diary"}).success(function(data) {
+        $.ajax({url: "/diary"}).success(function(data) {
             data.split("\n").forEach(function(item) {
                 if (!item) return;
                 var line = JSON.parse(item);
