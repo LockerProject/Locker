@@ -18,11 +18,9 @@ var app = express.createServer(
         connect.session({secret : "locker"}));
 
 var uri, auth, callback;
-var twitterClient;
 
 exports.init = function(baseUri, storedAuth, app, onCompletedCallback) {
     uri = baseUri;
-    console.error(uri);
     callback = onCompletedCallback;
     auth = storedAuth || {};
     if(auth.consumerKey && auth.consumerSecret && auth.token) {
@@ -45,9 +43,8 @@ function handleAuth(req, res) {
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else if(!auth.token) {
-        if(!twitterClient) 
-            twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, uri + 'auth');
-        twitterClient.getAccessToken(req, res, function(err, newToken) {
+        require('./twitter_client')(auth.consumerKey, auth.consumerSecret, uri + 'auth')
+            .getAccessToken(req, res, function(err, newToken) {
             if(err)
                 console.error(err);
             if(newToken != null) {
