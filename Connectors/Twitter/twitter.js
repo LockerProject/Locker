@@ -15,7 +15,8 @@ var express = require('express'),
     sys = require('sys'),
     wwwdude = require('wwwdude'),
     locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    lfs = require('../../Common/node/lfs.js'),
+    authLib = require('./auth');
 
 
 var requestCount;
@@ -39,44 +40,14 @@ function addAll(target, anotherArray) {
         target.push(anotherArray[i]);
 }
 
-app.get('/', function(req, res) {
-    if(!(auth.consumerKey && auth.consumerSecret)) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
-                " (create a new one <a href='http://dev.twitter.com/apps/new'>" + 
-                "here</a> using the callback url of " +
-                "http://"+url.parse(me.uri).host.replace("localhost", "127.0.0.1")+"/) " +
-                "<form method='get' action='save'>" +
-                    "Consumer Key: <input name='consumerKey'><br>" +
-                    "Consumer Secret: <input name='consumerSecret'><br>" +
-                    "<input type='submit' value='Save'>" +
-                "</form></html>");
-        return;
-    } else if(!auth.token) {
-        if(!twitterClient) 
-            twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, me.uri);
+app.get('/', handleIndex);
 
-        twitterClient.getAccessToken(req, res,
-            function(error, newToken) {
-                if (error)
-                    sys.debug(JSON.stringify(error));
-                if (newToken != null) {  
-                    res.writeHead(200, {
-                        'Content-Type': 'text/html'
-                    });
-                    auth.token = newToken;
-                    lfs.writeObjectToFile('auth.json', auth);
-                    res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
-                                                         "<li><a href='mentions'>sync your mentions</a></li>" + 
-                                                         "<li><a href='friends'>sync your friends</a></li>" + 
-                                                          "<li><a href='followers'>sync your followers</a></li>" +
-                                                         "<li><a href='profile'>sync your profile</a></li>" +"</html>");
-                }
-            });    
+function handleIndex(req, res) {
+    if(!(auth && auth.consumerKey && auth.consumerSecret && auth.token)) {
+        res.redirect(me.uri + 'auth');
     } else {
         if(!twitterClient)
             twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, me.uri);   
-
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                              "<li><a href='mentions'>sync your mentions</a></li>" + 
@@ -84,24 +55,8 @@ app.get('/', function(req, res) {
                                               "<li><a href='followers'>sync your followers</a></li>" +
                                              "<li><a href='profile'>sync your profile</a></li>" +"</html>");
     }
-});
-
-
-app.get('/save',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    if(!req.param('consumerKey') || !req.param('consumerSecret')) {
-        res.end("missing field(s)?");
-        return;
-    }
-    auth.consumerKey = req.param('consumerKey');
-    auth.consumerSecret = req.param('consumerSecret');
-
-    lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>thanks, now we need to <a href='./'>auth that app to your account</a>.</html>");
-});
+    
+}
 
 function readStatuses(req, res, type) {
     res.writeHead(200, {
@@ -210,25 +165,6 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
             }
         });
 }
-
-    
-/*
-app.post('/message',
-function(req, res) {
-    twitterClient.apiCall('POST', '/statuses/update.json',
-    {
-        token: {
-            oauth_token_secret: req.param('oauth_token_secret'),
-            oauth_token: req.param('oauth_token'),
-            status: req.param('message')
-        }
-    },
-    function(error, result) {
-        console.log(JSON.stringify(error));
-        console.log(JSON.stringify(result));
-    }
-    );
-});*/
 
 app.get('/friends',
 function(req, res) {
@@ -470,13 +406,18 @@ stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    lfs.readObjectFromFile('auth.json', function(newAuth) {
-        auth = newAuth;
+    me = lfs.loadMeData();
+    lfs.readObjectFromFile('auth.json', function(storedAuth) {
+        authLib.init(me.uri, storedAuth, app, function(newAuth, req, res) {
+            auth = newAuth;
+            lfs.writeObjectToFile('auth.json', auth);
+            if(req, res)
+                handleIndex(req, res);
+        });
         lfs.readObjectFromFile('latests.json', function(newLatests) {
             latests = newLatests;
             lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
                 userInfo = newUserInfo;
-                me = lfs.loadMeData();
                 app.listen(processInfo.port);
                 var returnedInfo = {port: processInfo.port};
                 console.log(JSON.stringify(returnedInfo));
