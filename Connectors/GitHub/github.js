@@ -18,12 +18,13 @@ var fs = require('fs'),
     sys = require('sys'),
     app = express.createServer(
                     connect.bodyParser(),
-                    connect.cookieParser(),
-                    connect.session({secret : "locker"})),
+                    connect.cookieParser()),
     locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    lfs = require('../../Common/node/lfs.js'),
+    authLib = require('./auth.js');
     
-var ghlib = require('./lib.js');
+    
+var ghsync = require('./sync.js');
 
 var me, auth, github;
 
@@ -33,31 +34,12 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!auth.username) {
-        res.end("<html>Enter your personal GitHub username" +
-                "<form method='post' action='/save'>" +
-                    "Username: <input name='username'><br>" +
-                    "<input type='submit' value='Save'>" +
-                "</form></html>");
+    if(!auth || !auth.username) {
+        //do something here
         return;
-    } else
-        res.end("<html>We've got a username, <a href='./syncprofile'>sync profile</a></html>");
-});
-
-
-app.post('/save',
-function(req, res) {
-    if(!req.param('username')) {
-        res.writeHead(400);
-        res.end("missing field(s)?");
-        return;
+    } else {
+        res.end(fs.readFileSync(__dirname + '/ui/index.html'));
     }
-    res.writeHead(200, {
-        'Content-Type': 'application/json'
-    });
-    auth.username = req.param('username');
-    lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>k thanks. <a href='/'>head home</a></html>");
 });
 
 app.get('/syncrepo/:repo', function(req, res) {
@@ -73,25 +55,39 @@ app.get('/syncrepo/:repo', function(req, res) {
 });
 
 
-app.get('/syncprofile', function(req, res) {
+app.get('/sync/profile', function(req, res) {
     getGitHub().syncProfile(function() {
         res.writeHead(200);
         res.end();
+        locker.at('/sync/profile', 3600);
     })
-})
+});
 
 app.get('/get_profile', function(req, res) {
-    getGitHub().getProfile(function(profile) {
+    getGitHub().getRepos(function(profile) {
         res.writeHead(200, {'Content-Type':'application/json'});
         res.end(JSON.stringify(profile));
     });
-})
+});
+app.get('/sync/repos', function(req, res) {
+    getGitHub().syncRepos(function() {
+        res.writeHead(200);
+        res.end();
+        locker.at('/sync/repos', 3600);
+    })
+});
+
+app.get('/get/repos', function(req, res) {
+    getGitHub().getRepos(function(repos) {
+        res.writeHead(200, {'Content-Type':'application/json'});
+        res.end(JSON.stringify(repos));
+    });
+});
 
 function getGitHub() {
-    if(!github) {
-        github = ghlib.createClient('quartzjer');
+    if(!github && auth) {
+        github = ghsync.createClient(auth);
         github.on('new-watcher', function(newWatcherEvent) {
-//            console.log('got new watcher:', newWatcherEvent);
             locker.event('contact/github', newWatcherEvent);
         });
     }
@@ -107,6 +103,14 @@ stdin.on('data', function (chunk) {
     me = lfs.loadMeData();
     lfs.readObjectFromFile('auth.json', function(newAuth) {
         auth = newAuth;
+        authLib.init(me.uri, auth, app, function(newAuth, req, res) {
+            auth = newAuth;
+            fs.writeFileSync('auth.json', JSON.stringify(auth));
+            if(req && res) {
+                res.writeHead(200);
+                res.end(JSON.stringify(auth));
+            }
+        });
         app.listen(processInfo.port,function() {
             var returnedInfo = {port: processInfo.port};
             console.log(JSON.stringify(returnedInfo));

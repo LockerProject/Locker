@@ -1,8 +1,13 @@
 var request = require('request');
 var querystring = require('querystring');
 
-var _debug = false;
+var _debug = true;
 var urlBase = 'https://github.com/api/v2/json';
+var token;
+
+exports.setToken = function(newToken) {
+    token = newToken;
+}
 
 exports.getNewWatchers = function(username, repoName, knownIDs, callback) {
     exports.getWatchers(username, repoName, function(err, watchers) {
@@ -27,20 +32,32 @@ exports.getWatchers = function(username, reponame, callback) {
 }
 
 exports.getUserInfo = function(username, callback) {
-    get('/user/show/' + username, null, function(err, data) {
-        if(!data)
+    get('/user/show/' + username , null, function(err, data) {
+        if(!data || !data.user)
             callback(err, data);
         else
             callback(err, data.user);
     });
 }
 
+exports.getRepositories = function(username, callback) {
+    get('/repos/show/' + username, null, function(err, data) {
+        if(!data || !data.repositories)
+            callback(err, data);
+        else
+            callback(err, data.repositories);
+    })
+}
+
 //var callsThisMinute = 0;
 var rateLimited = false;
 function get(endpoint, params, callback) {
     var url = urlBase + endpoint;
-    if(params)
-        url += '?' + querystring.stringify(params);
+    if(!params)
+        params = {};
+    if(token)
+        params.token = token;
+    url += '?' + querystring.stringify(params);
     if(_debug) console.log('github getting', url);
     request.get({uri:url}, function(err, resp, body) {
         if(_debug) console.log(resp.statusCode);
