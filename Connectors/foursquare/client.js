@@ -22,7 +22,7 @@ var express = require('express'),
     ),
     http = require('http'),
     https = require("https"),
-    wwwdude = require('wwwdude'),
+    request = require('request'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
@@ -30,9 +30,6 @@ var lockerInfo;
 var me;
 var accessData;
 
-var wwwdude_client = wwwdude.createClient({
-    encoding: 'binary'
-});
 
 
 Array.prototype.addAll = function(anotherArray) {
@@ -244,20 +241,11 @@ function downloadNextUser(users) {
             return downloadNextUser(users);
         
         // fetch photo
-        wwwdude_client.get(friend.photo)
-        .addListener('error',
-        function(err) {
-            sys.debug(err);
-            downloadNextUser(users);
-        })
-        .addListener('http-error',
-        function(data, resp) {
-            sys.debug('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-            downloadNextUser(users);
-        })
-        .addListener('success',
-        function(data, resp) {
-            fs.writeFileSync('photos/' + friend.id + '.jpg', data, 'binary');
+        request.get({uri:friend.photo}, function(err, resp, body) {
+            if(err)
+                sys.debug(err);
+            else
+                fs.writeFileSync('photos/' + friend.id + '.jpg', data, 'binary');
             downloadNextUser(users);
         });
     });

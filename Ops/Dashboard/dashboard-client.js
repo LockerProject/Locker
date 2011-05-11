@@ -27,10 +27,7 @@ var fs = require('fs'),
     express = require('express'),
     connect = require('connect'),
     http = require('http'),
-    wwwdude = require('wwwdude'),
-    wwwdude_client = wwwdude.createClient({
-        encoding: 'utf-8'
-    });
+    request = require('request');
     
 
 var app = express.createServer();
@@ -41,8 +38,8 @@ app.use(connect.session({secret : "locker"}));
 var map;
 app.get('/', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
-    wwwdude_client.get(lockerBase + '/map').addListener('success', function(data, resp) {
-        map = JSON.parse(data);
+    request.get({uri:lockerBase + '/map'}, function(err, resp, body) {
+        map = JSON.parse(body);
         fs.readFile("dashboard.html", function(err, data) {
             res.write(data, "binary");
             res.end();
@@ -60,16 +57,11 @@ app.get('/config.js', function (req, res) {
 });
 
 // doesn't this exist somewhere? was easier to write than find out, meh!
-function intersect(a,b)
-{
+function intersect(a,b) {
     if(!a || !b) return false;
     for(var i=0;i<a.length;i++)
-    {
         for(var j=0;j<b.length;j++)
-        {
             if(a[i] == b[j]) return a[i];
-        }
-    }
     return false;
 }
 
