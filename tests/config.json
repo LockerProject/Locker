@@ -7,7 +7,7 @@
         "core" : ["locker-core-api-test.js"],
         "core-lib" : ["lservicemanager-test-local.js", "lconfig-test-local.js", "lscheduler-test-local.js", "lconsole-test-local.js"],
         "client-api" : ["locker-client-test.js"],
-        "connectors-local" : ["connector-local-XMPP-test.js", "connector-local-google-contacts-test.js"],
+        "connectors-local" : ["connector-local-google-contacts-test.js", "connector-local-wordpress-test.js", "connector-local-foursquare-test.js"],
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js", "connector-facebook-test.js", "connector-flickr-test.js", "connector-twitter-test.js"],
         "collections" : [],
@@ -15,7 +15,8 @@
     },
     "disabledTests" : [
         "keychain-client-test.js",
-        "lkeychain-test-local.js"
+        "lkeychain-test-local.js",
+        "connector-local-XMPP-test.js"
     ]
 
 }
