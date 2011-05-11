@@ -21,14 +21,10 @@ var fs = require('fs'),
     sys = require('sys'),
     app = express.createServer(
                     connect.bodyParser(),
-                    connect.cookieParser(),
-                    connect.session({secret : "locker"})),
+                    connect.cookieParser()),
     locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
-
-var wwwdude = require('wwwdude'),
-    wwwdude_client = wwwdude.createClient({ encoding: 'binary' });
-
+    lfs = require('../../Common/node/lfs.js'),
+    authLib = require('./auth.js');
 
 var me, auth, latests, userInfo;
 var facebookClient = require('facebook-js')();
@@ -38,7 +34,9 @@ function displayHTML(content) {
         + "<meta name='description' content='Locker Facebook Connector' />"
         + "<title>Facebook Connector - Locker</title>"
         + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;} .goback{position:absolute;left:90%;top:3%;} .body{background:rgb(125,174,92);border-radius:14px;color: white;} .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
+        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
+        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
+        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
         + "</style>"
         + "</head><body>"
         + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
@@ -47,77 +45,16 @@ function displayHTML(content) {
 }
 
 app.set('views', __dirname);
-app.get('/',
-function(req, res) {
+app.get('/', handleIndex);
+function handleIndex(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if(!auth.appID) {
-        res.end(displayHTML("Enter your personal FaceBook app info that will be used to sync your data" + 
-                " (create a new one at <a href='http://www.facebook.com/developers/createapp.php'>" + 
-                "http://www.facebook.com/developers/createapp.php</a> using the callback url of " +
-                "http://"+url.parse(me.uri).host+"/) " +
-                "<form method='get' action='save'>" +
-                    "App ID: <input name='appID'><br>" +
-                    "App Secret: <input name='appSecret'><br>" +
-                    "<input type='submit' value='Save'>" +
-                "</form>"));
-        return;
-    }
-    if(!auth.token)
-        res.end(displayHTML("you need to <a href='./gofb'>auth w/ fb</a> yet"));
+    if(!(auth && auth.appID && auth.appSecret && auth.token))
+        res.end(displayHTML("You need to <a href='./auth'>auth</a>"));
     else
         res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
-});
-
-app.get('/save',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    if(!req.param('appID') || !req.param('appSecret')) {
-        res.end(displayHTML("missing field(s)?"));
-        return;
-    }
-    auth.appID = req.param('appID');
-    auth.appSecret = req.param('appSecret');
-    lfs.writeObjectToFile('auth.json', auth);
-    res.end(displayHTML("k thanks, now we need to <a href='./gofb'>auth that app to your account</a>."));
-});
-
-app.get('/gofb',
-function(req, res) {
-    res.redirect(facebookClient.getAuthorizeUrl({
-        client_id: auth.appID,
-        redirect_uri: me.uri+"auth",
-        scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'
-    }));
-    res.end();
-});
-
-app.get('/auth',
-function(req, res) {
-    console.log("incoming auth " + req.param('code'));
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    var OAuth = require("oauth").OAuth2;
-    var oa = new OAuth(auth.appID, auth.appSecret, 'https://graph.facebook.com');
-
-    oa.getOAuthAccessToken(
-    req.param('code'),
-    {redirect_uri: me.uri+"auth"},
-    function(error, access_token, refresh_token) {
-        if (error) {
-            sys.debug(error);
-            res.end(displayHTML("uhoh " + error));
-        } else {
-            res.end(displayHTML("too legit to quit: " + access_token + " so now <a href='./friends'>load friends</a>"));
-            auth.token = access_token;
-            lfs.writeObjectToFile('auth.json', auth);
-        }
-    });
-});
+}
 
 
 var photoQueue = [];
@@ -129,7 +66,6 @@ function downloadPhotos(userID) {
 function downloadNextPhoto() {
     if (photoIndex >= photoQueue.length) return;
 
-//    var userID = photoQueue[photoIndex].userID;
     var friendID = photoQueue[photoIndex].friendID;
     photoIndex++;
     lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg', downloadNextPhoto);
@@ -199,7 +135,6 @@ function(req, res) {
     if (!auth.token) {
         res.writeHead(401);
         res.end();
-//        res.end("<html>you need to <a href='./gofb'>auth w/ fb</a> yet</html>");
         return;
     } else {
         res.writeHead(200, {
@@ -399,13 +334,18 @@ stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    lfs.readObjectFromFile('auth.json', function(newAuth) {
-        auth = newAuth;
+    me = lfs.loadMeData();
+    lfs.readObjectFromFile('auth.json', function(storedAuth) {
+        authLib.init(me.uri, storedAuth, app, function(newAuth, req, res) {
+            auth = newAuth;
+            lfs.writeObjectToFile('auth.json', auth);
+            if(req && res)
+                handleIndex(req, res);
+        });
         lfs.readObjectFromFile('latests.json', function(newLatests) {
             latests = newLatests;
             lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
                 userInfo = newUserInfo;
-                me = lfs.loadMeData();
                 app.listen(processInfo.port,function(){
                     var returnedInfo = {port: processInfo.port};
                     console.log(JSON.stringify(returnedInfo));
