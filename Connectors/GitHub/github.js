@@ -29,18 +29,16 @@ var ghsync = require('./sync.js');
 var me, auth, github;
 
 app.set('views', __dirname);
-app.get('/',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    if(!auth || !auth.username) {
-        //do something here
-        return;
+app.get('/', handleIndex);
+
+function handleIndex(req, res) {
+    if(!auth || !auth.username || !auth.access_token) {
+        authLib.handleIncompleteAuth(req, res);
     } else {
+        res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(fs.readFileSync(__dirname + '/ui/index.html'));
     }
-});
+}
 
 app.get('/syncrepo/:repo', function(req, res) {
     var repo = req.params.repo;
@@ -106,10 +104,9 @@ stdin.on('data', function (chunk) {
         authLib.init(me.uri, auth, app, function(newAuth, req, res) {
             auth = newAuth;
             fs.writeFileSync('auth.json', JSON.stringify(auth));
-            if(req && res) {
-                res.writeHead(200);
-                res.end(JSON.stringify(auth));
-            }
+            if(req && res)
+                handleIndex(req, res);
+            return;
         });
         app.listen(processInfo.port,function() {
             var returnedInfo = {port: processInfo.port};

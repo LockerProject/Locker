@@ -6,7 +6,6 @@ var auth, uri, callback;
 exports.init = function(myUri, passedAuth, app, onCompleteCallback) {
     uri = myUri;
     auth = passedAuth;
-    console.error('auth', auth);
     callback = onCompleteCallback;
     app.get('/auth', initAuth);
     app.get('/authComplete', backFromGithub);
@@ -23,33 +22,42 @@ function initAuth(req, res) {
     }
 }
 
+exports.handleIncompleteAuth = initAuth;
+
 function saveAuth(req, res) {
-    if(!(auth.clientID && auth.secret)) {
+    if(!req.body.clientID || !req.body.secret || !req.body.username) {
+        noApp(req, res);
+    } else {
         auth.clientID = req.body.clientID;
         auth.secret = req.body.secret;
-    }
-    if(!auth.username);
         auth.username = req.body.username;
-    noToken(req, res);
+        noToken(req, res);
+    }
 }
 
 function noApp(req, res) {
     res.writeHead(200, {'content-type':'text/html'});
-    res.write('<html>create an app at <a href="https://github.com/account/applications/new">github</a>' +
+    res.write('<html>');
+    //if(!(auth.clientID && auth.secret))
+        res.write('create an app at <a href="https://github.com/account/applications/new">github</a>' +
                 ' with a callback url of ' + uri + 'authComplete');
     res.write('<form method="POST" action="saveAuth">');
-    if(!(auth.clientID && auth.secret)) 
+    //if(!(auth.clientID && auth.secret)) 
         res.write('Client ID: <input name="clientID"><br>Secret: <input name="secret">');
-    if(!auth.username)
+    //if(!auth.username)
         res.write('<br>Username: <input name="username">');
     res.end('<input type="submit"></form></html>');
 }
 
 function noToken(req, res) {
-    res.writeHead(200, {'content-type':'text/html'});
-    res.write('<html>cool. now <a href="https://github.com/login/oauth/authorize?client_id=' + 
-                                        auth.clientID + '&redirect_uri=' + uri +'authComplete">auth it up.</a>');
-    res.end('</html>');
+    if(auth.access_token) {
+        if(callback) callback(auth, req, res);
+    } else {
+        res.writeHead(200, {'content-type':'text/html'});
+        res.write('<html>cool. now <a href="https://github.com/login/oauth/authorize?client_id=' + 
+                                            auth.clientID + '&redirect_uri=' + uri +'authComplete">auth it up.</a>');
+        res.end('</html>');
+    }
 }
 
 function backFromGithub(req, res) {
