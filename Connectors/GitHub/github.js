@@ -54,6 +54,8 @@ app.get('/syncrepo/:repo', function(req, res) {
 
 
 app.get('/sync/profile', function(req, res) {
+    console.error('/sync/profile');
+    console.log('/sync/profile');
     getGitHub().syncProfile(function() {
         res.writeHead(200);
         res.end();
@@ -62,7 +64,7 @@ app.get('/sync/profile', function(req, res) {
 });
 
 app.get('/get_profile', function(req, res) {
-    getGitHub().getRepos(function(profile) {
+    getGitHub().getProfile(function(profile) {
         res.writeHead(200, {'Content-Type':'application/json'});
         res.end(JSON.stringify(profile));
     });
