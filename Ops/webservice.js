@@ -17,7 +17,6 @@ var keychain = require("lkeychain");
 var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
-var wwwdude = require('wwwdude');
 var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
@@ -26,7 +25,6 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 
 var proxy = new httpProxy.HttpProxy();
-var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
