@@ -6,33 +6,44 @@
 * Please see the LICENSE file for more information.
 *
 */
+var fs = require("fs");
 
-var express = require('express'),
-    connect = require('connect'),
-    fs = require('fs'),
-    url = require('url');
+var uri, 
+    auth, 
+    completedCallback = null;
 
-var app = express.createServer(
-        connect.bodyParser(),
-        connect.cookieParser(),
-        connect.session({secret : "locker"}));
-
-var uri, auth, callback;
-
-exports.init = function(baseUri, storedAuth, app, onCompletedCallback) {
-    uri = baseUri;
-    callback = onCompletedCallback;
-    auth = storedAuth || {};
-    if(auth.consumerKey && auth.consumerSecret && auth.token) {
-        callback(auth, null, null);
-    } else {
-        app.get('/auth', handleAuth);
-        app.get('/saveAuth', saveAuth);
+exports.isAuthed = function() {
+    try {
+        // Already have the stuff read
+        if (exports.hasOwnProperty("consumerKey") && exports.hasOwnProperty("consumerSecret")) {
+            return true;
+        }
+        // Try and read it in
+        var authData = JSON.parse(fs.readFileSync("auth.json"));
+        if (authData.hasOwnProperty("consumerKey") && authData.hasOwnProperty("consumerSecret")) {
+            exports.consumerKey = authData.consumerKey;
+            exports.consumerSecret = authData.consumerSecret;
+            return true;
+        }
+    } catch (E) {
+        // TODO:  Could actually check the error type here
     }
+    return false;
+}
+
+
+exports.authAndRun = function(app, onCompletedCallback) {
+    if (exports.isAuthed()) {
+        onCompletedCallback();
+        return;
+    }
+    completedCallback = onCompletedCallback;
+    app.get("/auth", handleAuth);
+    app.get("/saveAuth", saveAuth);
 }
 
 function handleAuth(req, res) {
-    if(!(auth.consumerKey && auth.consumerSecret)) {
+    if(!exports.isAuthed()) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>here</a> " +
@@ -42,18 +53,18 @@ function handleAuth(req, res) {
                     "Consumer Secret: <input name='consumerSecret'><br>" +
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
-    } else if(!auth.token) {
-        require('./twitter_client')(auth.consumerKey, auth.consumerSecret, uri + 'auth')
+    } else if(!exports.token) {
+        require('./twitter_client')(exports.consumerKey, exports.consumerSecret, uri + 'auth')
             .getAccessToken(req, res, function(err, newToken) {
             if(err)
                 console.error(err);
             if(newToken != null) {
-                auth.token = newToken;
-                callback(auth, req, res);
+                exports.token = newToken;
+                completedCallback();
             }
         });    
     } else { 
-        callback(auth, req, res);
+        completedCallback();
     }
 }
 
@@ -63,8 +74,8 @@ function saveAuth(req, res) {
         res.end("missing field(s)?");
     } else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        auth.consumerKey = req.param('consumerKey');
-        auth.consumerSecret = req.param('consumerSecret');
+        exports.consumerKey = req.param('consumerKey');
+        exports.consumerSecret = req.param('consumerSecret');
         res.end("<html>thanks, now we need to <a href='./auth'>auth that app to your account</a>.</html>");
     }
 }
