@@ -39,10 +39,15 @@ function addAll(target, anotherArray) {
         target.push(anotherArray[i]);
 }
 
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Twitter", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
+};
+
 app.get('/', function(req, res) {
     if(!(auth.consumerKey && auth.consumerSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
+        res.end(format("Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>" + 
                 "here</a> using the callback url of " +
                 "http://"+url.parse(me.uri).host.replace("localhost", "127.0.0.1")+"/) " +
@@ -50,7 +55,7 @@ app.get('/', function(req, res) {
                     "Consumer Key: <input name='consumerKey'><br>" +
                     "Consumer Secret: <input name='consumerSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form></html>");
+                "</form>"));
         return;
     } else if(!auth.token) {
         if(!twitterClient) 
@@ -66,11 +71,11 @@ app.get('/', function(req, res) {
                     });
                     auth.token = newToken;
                     lfs.writeObjectToFile('auth.json', auth);
-                    res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
+                    res.end(format("great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                                          "<li><a href='mentions'>sync your mentions</a></li>" + 
                                                          "<li><a href='friends'>sync your friends</a></li>" + 
                                                           "<li><a href='followers'>sync your followers</a></li>" +
-                                                         "<li><a href='profile'>sync your profile</a></li>" +"</html>");
+                                                         "<li><a href='profile'>sync your profile</a></li>"));
                 }
             });    
     } else {
@@ -78,11 +83,11 @@ app.get('/', function(req, res) {
             twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret, me.uri);   
 
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
+        res.end(format("great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                              "<li><a href='mentions'>sync your mentions</a></li>" + 
                                              "<li><a href='friends'>sync your friends</a></li>" + 
                                               "<li><a href='followers'>sync your followers</a></li>" +
-                                             "<li><a href='profile'>sync your profile</a></li>" +"</html>");
+                                             "<li><a href='profile'>sync your profile</a></li>"));
     }
 });
 
@@ -93,14 +98,14 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if(!req.param('consumerKey') || !req.param('consumerSecret')) {
-        res.end("missing field(s)?");
+        res.end(format("missing field(s)?"));
         return;
     }
     auth.consumerKey = req.param('consumerKey');
     auth.consumerSecret = req.param('consumerSecret');
 
     lfs.writeObjectToFile('auth.json', auth);
-    res.end("<html>thanks, now we need to <a href='./'>auth that app to your account</a>.</html>");
+    res.end(format("thanks, now we need to <a href='./'>auth that app to your account</a>."));
 });
 
 function readStatuses(req, res, type) {
@@ -109,8 +114,7 @@ function readStatuses(req, res, type) {
     });
     lfs.readObjectsFromFile(type + '.json', function(data) {
         data.reverse();
-        res.write(JSON.stringify(data));
-        res.end();
+        res.end(format(JSON.stringify(data)));
     });
 }
 
@@ -135,8 +139,7 @@ app.get('/rate_limit_status', function(req, res) {
         'Content-Type': 'text/html'
     });
     getRateLimitStatus(function(status) {
-        res.write(JSON.stringify(status));
-        res.end();
+        res.end(format(JSON.stringify(status)));
     });
 });
 
@@ -146,13 +149,13 @@ function pullStatuses(endpoint, repeatAfter, res) {
     });
     if(!getTwitterClient()) {
         sys.debug('could not get twitterClient');
-        res.end('missing auth info :(');
+        res.end(format('missing auth info :('));
         return;
     }
     pullTimeline(endpoint, function(items) {
         locker.at(endpoint, repeatAfter);
         locker.diary("sync'd "+endpoint+" with "+items.length+" new entries");
-        res.end("got "+endpoint+" with "+items.length+" new entries and scheduled to automatically sync again in "+repeatAfter+" seconds, happy day");
+        res.end(format("got "+endpoint+" with "+items.length+" new entries and scheduled to automatically sync again in "+repeatAfter+" seconds, happy day"));
     });
     
 }
@@ -263,8 +266,7 @@ app.get('/allContacts', function(req, res) {
             var arr = [];
             for(var k in allContacts)
                 arr.push(allContacts[k]);
-            res.write(JSON.stringify(arr));
-            res.end();
+            res.end(format(JSON.stringify(arr)));
         })
     });
 });
@@ -281,7 +283,7 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
     function done() {    
         locker.at('/' + friendsOrFollowers, 3600);
         res.writeHead(200);
-        res.end("done fetching "+friendsOrFollowers);
+        res.end(format("done fetching "+friendsOrFollowers));
     }
     getUserInfo(function(newUserInfo) {
         userInfo = newUserInfo;
@@ -305,7 +307,7 @@ function(req, res) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('userInfo.json', userInfo);
         res.writeHead(200);
-        res.end("got profile: "+JSON.stringify(userInfo));
+        res.end(format("got profile: "+JSON.stringify(userInfo)));
     })
 });
 

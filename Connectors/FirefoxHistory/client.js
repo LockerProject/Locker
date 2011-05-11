@@ -23,8 +23,13 @@ var app = express.createServer(
     connect.session({secret: "locker"})
 );
 
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Firefox History", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
+};
+
 app.get('/', function(req, res) {
-    res.end("<html>we'll be chugging away...</html>");
+    res.end(format("we'll be chugging away..."));
     
     // TODO: Check for existing JSON dump and update if exists
     fs.mkdir('my', 0755);
@@ -62,7 +67,7 @@ app.get('/', function(req, res) {
 
 app.get('/allLinks', function(req, res) {
     lfs.readObjectsFromFile('my/default/history.json', function(links) {
-        res.end(JSON.stringify(links));
+        res.end(format(JSON.stringify(links)));
     });
 });
 

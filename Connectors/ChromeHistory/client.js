@@ -27,21 +27,28 @@ var fs = require('fs'),
     sort = require('../../Common/node/sort.js').quickSort,
     sqlite = require('sqlite');
 
-var me, latests;    
+var me, latests;  
+
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Chrome History", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
+};
 
 app.get('/', 
 function(req, res) {
-    res.end("<html>great! do you need to <a href='plugin'>install the plugin</a></html>?");
+    res.end(format("great! do you need to <a href='plugin'>install the plugin</a>?"));
 });
 
 app.post('/urls',
 function(req, res) {
     var json = JSON.parse(req.body.urls);
-    if(!json || json.length < 1)
-        return;
+    if(!json || json.length < 1) {
+        res.end(format("Invalid JSON, please try again."));
+    	return;
+    }
     sys.debug('got ' + json.length + ' urls');
     insertUrls(json, function() {
-        res.end('1');
+        res.end(format('1'));
         sys.debug('sent response');
     });
 });
@@ -110,7 +117,7 @@ app.get('/plugindl', function(req, res) {
 app.get('/allLinks', function(req, res) {
     getURLs(function(error, rows) {
         if(error) throw error;
-        res.end(JSON.stringify(rows));
+        res.end(format(JSON.stringify(rows)));
     });
 })
 var port;

@@ -33,6 +33,11 @@ var accessData;
 var tokenData = {};
 var oAuth;
 
+var html = require('../../Common/node/html.js');
+var format = function(content) {
+    return html.formatHTML("Instagram", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
+};
+
 function setupOAuthClient(clientId, clientSecret) {
   oAuth = new oauthclient(clientId, clientSecret, 
 													'https://api.instagram.com',
@@ -46,9 +51,9 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if (!accessData.tokenData || !accessData.tokenData.accessToken) {
-        res.end('<html>you need to <a href="oauthrequest">auth w/ Instagram</a> still</html>');
+        res.end(format('you need to <a href="oauthrequest">auth w/ Instagram</a> still'));
     } else {
-        res.end('<html>found a token, load <a href="profile">profile</a> or <a href="connections">photos</a></html>');
+        res.end(format('found a token, load <a href="profile">profile</a> or <a href="connections">photos</a>'));
     }
 });
 
@@ -56,7 +61,7 @@ app.get('/oauthrequest',
 function(req, res) {
     if (!(accessData.clientId && accessData.clientSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('<html>Enter your personal Instagram app info that will be used to sync your data' + 
+        res.end(format('Enter your personal Instagram app info that will be used to sync your data' + 
                 ' (create a new one <a href="http://www.instagr.am/developer">' + 
                 'here</a> using the callback url of ' +
                 me.uri+'auth) ' +
@@ -64,7 +69,7 @@ function(req, res) {
                     'Client ID: <input name="clientId"><br>' +
                     'Client Secret: <input name="clientSecret"><br>' +
                     '<input type="submit" value="Save">' +
-                '</form></html>');
+                '</form>'));
     } else {
 				var params = { response_type: 'code',
 											 redirect_uri: me.uri + 'auth' };
@@ -84,13 +89,13 @@ function(req, res) {
         'Content-Type': 'text/html'
     });
     if (!req.param('clientId') || !req.param('clientSecret')) {
-        res.end('missing field(s)?');
+        res.end(format('missing field(s)?'));
         return;
     }
     accessData.clientId = req.param('clientId');
     accessData.clientSecret = req.param('clientSecret');
     lfs.writeObjectsToFile('access.json', [accessData]);
-    res.end('<html>thanks, now we need to <a href="oauthrequest">auth that app to your account</a>.</html>');
+    res.end(format('thanks, now we need to <a href="oauthrequest">auth that app to your account</a>.'));
 });
 
 app.get('/auth',
@@ -115,7 +120,7 @@ console.log(accessData);
             res.writeHead(200, {
                 'Content-Type': 'text/html'
             });
-            res.end('<html>Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a></html>');
+            res.end(format('Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a>'));
           }
       });
 });
@@ -132,19 +137,19 @@ function(req, res) {
       }
       
       var parser = new xml2js.Parser();
-      
+      var userProfile;
       parser.on('end', function(result) {
         console.log(result);
         me.user_info = result;
         lfs.syncMeData(me);
-        res.write('User profile: ' + JSON.stringify(result) + ': <br>');
+        userProfile = 'User profile: ' + JSON.stringify(result) + ': <br>';
       });
       
       parser.on('error', function(err) {
         console.log(err);
       });
       
-      res.end(parser.parseString(data));
+      res.end(format(userProfile + parser.parseString(data)));
   });
 });
 
@@ -177,18 +182,18 @@ function(req, res) {
         }
 
         var parser = new xml2js.Parser();
-
+        var connections;
         parser.on('end', function(result) {
           console.log(result);
           lfs.writeObjectsToFile('connections.json', [result]);
-          res.write('Connections: ' + JSON.stringify(result) + ': <br>');
+          connections = 'Connections: ' + JSON.stringify(result) + ': <br>';
         });
 
         parser.on('error', function(err) {
           console.log(err);
         });
 
-        res.end(parser.parseString(data));
+        res.end(format(connections + parser.parseString(data)));
     });
 });
 
