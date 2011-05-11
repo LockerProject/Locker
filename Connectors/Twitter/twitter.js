@@ -10,10 +10,10 @@
 var express = require('express'),
     connect = require('connect'),
     fs = require('fs'),
-    http = require('http'),
     url = require('url'),
+    querystring = require('querystring'),
     sys = require('sys'),
-    wwwdude = require('wwwdude'),
+    request = require('request'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     authLib = require('./auth');
@@ -59,13 +59,10 @@ function handleIndex(req, res) {
 }
 
 function readStatuses(req, res, type) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
     lfs.readObjectsFromFile(type + '.json', function(data) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
         data.reverse();
-        res.write(JSON.stringify(data));
-        res.end();
+        res.end(JSON.stringify(data));
     });
 }
 
@@ -86,30 +83,26 @@ app.get('/mentions', function(req, res) {
 });
 
 app.get('/rate_limit_status', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
     getRateLimitStatus(function(status) {
-        res.write(JSON.stringify(status));
-        res.end();
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(status));
     });
 });
 
 function pullStatuses(endpoint, repeatAfter, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
     if(!getTwitterClient()) {
         sys.debug('could not get twitterClient');
-        res.end('missing auth info :(');
+        res.writeHead(401, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({error:'missing auth info :('}));
         return;
     }
     pullTimeline(endpoint, function(items) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
         locker.at(endpoint, repeatAfter);
         locker.diary("sync'd "+endpoint+" with "+items.length+" new entries");
-        res.end("got "+endpoint+" with "+items.length+" new entries and scheduled to automatically sync again in "+repeatAfter+" seconds, happy day");
+        res.end(JSON.stringify({success:"got "+endpoint+" with "+items.length+" new entries" + 
+                                " and scheduled to sync again in "+repeatAfter+" seconds, happy day"}));
     });
-    
 }
 
 function pullTimeline(endpoint, callback) {
@@ -135,7 +128,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     twitterClient.apiCall('GET', '/statuses/' + endpoint + '.json', params, 
         function(error, result) {
             if(error) {
-                if(error.statusCode == 502 || error.statusCode == 503) { //failz-whalez, hang out for a bit
+                if(error.statusCode >= 500) { //failz-whalez, hang out for a bit
                     setTimeout(function(){pullTimelinePage(endpoint, max_id, since_id, page, items, callback);}, 10000);
                 }
                 sys.debug('error from twitter:' + sys.inspect(error));
@@ -166,8 +159,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
         });
 }
 
-app.get('/friends',
-function(req, res) {
+app.get('/friends', function(req, res) {
     syncUsersInfo('friends', req, res);
 });
 
@@ -195,18 +187,16 @@ app.get('/allContacts', function(req, res) {
                     allContacts[follower.screen_name] = follower;
                 }
             }
-            res.writeHead(200, {'content-type' : 'text/javascript'});
             var arr = [];
             for(var k in allContacts)
                 arr.push(allContacts[k]);
-            res.write(JSON.stringify(arr));
-            res.end();
-        })
+            res.writeHead(200, {'content-type' : 'application/json'});
+            res.end(JSON.stringify(arr));
+        });
     });
 });
 
-app.get('/followers',
-function(req, res) {
+app.get('/followers', function(req, res) {
     syncUsersInfo('followers', req, res);
 });
 
@@ -216,13 +206,13 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
         
     function done() {    
         locker.at('/' + friendsOrFollowers, 3600);
-        res.writeHead(200);
-        res.end("done fetching "+friendsOrFollowers);
+        res.writeHead(200, {'content-type':'application/json'});
+        res.end(JSON.stringify({success:"done fetching "+friendsOrFollowers}));
     }
-    getUserInfo(function(newUserInfo) {
+    getUserInfo(function(err, newUserInfo) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('usersInfo.json', userInfo);
-        getIDs(friendsOrFollowers, userInfo.screen_name, function(ids) {
+        getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
             if(!ids || ids.length < 1)
                 done();
             else
@@ -235,28 +225,19 @@ function syncUsersInfo(friendsOrFollowers, req, res) {
     });
 }
 
-app.get('/profile',
-function(req, res) {
-    getUserInfo(function(newUserInfo) {
+app.get('/profile', function(req, res) {
+    getUserInfo(function(err, newUserInfo) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('userInfo.json', userInfo);
-        res.writeHead(200);
-        res.end("got profile: "+JSON.stringify(userInfo));
-    })
+        res.writeHead(200, {'content-type':'application/json'});
+        res.end(JSON.stringify({success:userInfo}));
+    });
 });
 
 function getUserInfo(callback) {
     if(!getTwitterClient())
         return;
-    twitterClient.apiCall('GET', '/account/verify_credentials.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
-                                                                                oauth_token: auth.token.oauth_token},
-                                                                       include_entities : true},
-        function(error, result) {
-            if(error)
-                sys.debug('verify_credentials error: ' + sys.inspect(error));
-            else
-                callback(result);
-        });
+    twitterClient.apiCall('GET', '/account/verify_credentials.json', {token:auth.token, include_entities:true}, callback);
 }
 
 
@@ -264,56 +245,13 @@ function getIDs(friendsOrFolowers, screenName, callback) {
     if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
         friendsOrFolowers = 'friends';
     friendsOrFolowers = friendsOrFolowers.toLowerCase();
-//    console.log('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1');
-    wwwdude.createClient().get('http://api.twitter.com/1/' + friendsOrFolowers + '/ids.json?screen_name=' + screenName + '&cursor=-1')
-    .addListener('success', function(data, resp) {
-//        console.log('getIDs, data: ' + data);
-       callback(JSON.parse(data).ids);
-    })   
-    .addListener('error', function (err) {
-        // err: error exception object
-        sys.debug('Error: ' + sys.inspect(err));
-     })
-    .addListener('http-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Status Code > 400 : ' + resp.statusCode);
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
-    })
-    .addListener('http-client-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Client Error (400 <= status < 500)');
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
-    })
-    .addListener('http-server-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Client Error (status > 500)');
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
-    });
-}
-
-function getFriendsIDs(screenName, callback) {
-    wwwdude.createClient().get('http://api.twitter.com/1/friends/ids.json?screen_name=' + screenName + '&cursor=-1')
-    .addListener('success', function(data, resp) {
-       callback(JSON.parse(data).ids);
-    })   
-    .addListener('error', function (err) {
-        // err: error exception object
-        sys.debug('Error: ' + sys.inspect(err));
-     })
-    .addListener('http-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Status Code > 400');
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
-    })
-    .addListener('http-client-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Client Error (400 <= status < 500)');
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
-    })
-    .addListener('http-server-error', function (data, resp) {
-        // data = transferred content, resp = repsonse object
-        sys.debug('HTTP Client Error (status > 500)');
-        sys.debug('Headers: ' + sys.inspect(resp.headers));
+    twitterClient.apiCall('GET', '/' + friendsOrFolowers + '/ids.json', 
+                    {screen_name:screenName, cursor:-1, token: auth.token}, function(err, result) {
+        if(err) {
+            callback(err, result);
+        } else {
+            callback(null, result.ids);
+        }
     });
 }
 
@@ -324,9 +262,8 @@ function getFriendsIDs(screenName, callback) {
  *  reset_time_in_seconds (unix time in secs)
  */
 function getRateLimitStatus(callback) {
-    wwwdude.createClient().get('http://api.twitter.com/1/account/rate_limit_status.json')
-    .addListener('success', function(data, resp) {
-        var limits = JSON.parse(data);
+    request.get({uri:'http://api.twitter.com/1/account/rate_limit_status.json'}, function(err, resp, body) {
+        var limits = JSON.parse(body);
         var remainingTime = limits.reset_time_in_seconds - (new Date().getTime() / 1000);
         if(limits.remaining_hits)
             limits.sec_between_calls = remainingTime / limits.remaining_hits;
@@ -348,10 +285,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
-    twitterClient.apiCall('GET', '/users/lookup.json', { token: { oauth_token_secret: auth.token.oauth_token_secret,
-                                                                  oauth_token: auth.token.oauth_token}, 
-                                                         user_id: id_str,
-                                                         include_entities : true },
+    twitterClient.apiCall('GET', '/users/lookup.json', {token: auth.token, user_id: id_str, include_entities: true},
         function(error, result) {
             if(error) {
                 sys.debug('error! ' + JSON.stringify(error));
