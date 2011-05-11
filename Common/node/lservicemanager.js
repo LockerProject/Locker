@@ -183,7 +183,22 @@ exports.spawn = function(serviceId, callback) {
             svc.starting = [callback];
         }
     }
-    var run = svc.run.split(" "); // node foo.js
+    
+    //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
+    var run;
+    for(var i in serviceMap.available) {
+        if(serviceMap.available[i].srcdir == svc.srcdir) {
+            run = serviceMap.available[i].run;
+            break;
+        }
+    }
+    run = run || svc.run;
+    if(!run) {
+        console.error('Could not spawn service from source directory', svc.srcdir);
+        return;
+    }
+    
+    run = run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
     console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
@@ -210,9 +225,12 @@ exports.spawn = function(serviceId, callback) {
             try {
                 var returnedProcessInformation = JSON.parse(data);
 
-                if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port; // if they tell us a port, use that
+                // if they tell us a port, use that
+                if(returnedProcessInformation.port)
+                    svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
-                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
+                // save out all updated meta fields
+                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc));
                 // Set the pid after the write because it's transient to this locker instance only
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
@@ -241,8 +259,12 @@ exports.spawn = function(serviceId, callback) {
     app.on('exit', function (code) {
         console.log(svc.id + " process has ended.");
         var id = svc.id;
+        //remove transient fields
         delete svc.pid;
-        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
+        delete svc.port;
+        delete svc.uriLocal;
+        // save out all updated meta fields (pretty print!)
+        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc, null, 4));
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
