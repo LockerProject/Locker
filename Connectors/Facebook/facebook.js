@@ -173,7 +173,7 @@ function(req, res) {
             '/me/checkins',
             {access_token: auth.token},
             function(error, result) {
-                if(error) console.log(error);
+                if(error) console.error(error);
                 locker.diary("syncing "+result.data.length+" places");
                 var stream = fs.createWriteStream('places.json');
                 for (var i = 0; i < result.data.length; i++) {
@@ -307,14 +307,13 @@ function pullNewsFeedPage(until, since, items, callback) {
     facebookClient.apiCall('GET', '/me/home', params, 
         function(error, result) {
             if(error) {
-                console.log(JSON.stringify(error));
+                console.error(JSON.stringify(error));
                 return;
             }
             if(result.data.length > 0) {
                 var t = result.data[0].updated_time;
                 if(!latests.feed.latest || t > latests.feed.latest)
                     latests.feed.latest = t;
-                console.log(JSON.stringify(latests));
                 for(var i = 0; i < result.data.length; i++)
                     items.push(result.data[i]);
                 var next = result.paging.next;
@@ -331,18 +330,30 @@ function pullNewsFeedPage(until, since, items, callback) {
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
+// Do the initialization bits
     var processInfo = JSON.parse(chunk);
+   	// TODO:  Is there validation to do here?
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    me = lfs.loadMeData();
-    lfs.readObjectFromFile('auth.json', function(storedAuth) {
-        authLib.init(me.uri, storedAuth, app, function(newAuth, req, res) {
-            auth = newAuth;
-            lfs.writeObjectToFile('auth.json', auth);
-            if(req && res)
-                handleIndex(req, res);
-        });
-        lfs.readObjectFromFile('latests.json', function(newLatests) {
+    
+    // We're adding this info to app for basic utility use
+    app.meData = lfs.loadMeData();
+    // Adds the internal API to the app because it should always be available
+//    require(__dirname + "/api.js")(app);
+    // If we're not authed, we add the auth routes, otherwise add the webservice
+    authLib.authAndRun(app, function() {
+        auth = authLib.auth;
+	   // require(__dirname + "/webservice.js")(app, authLib.auth);
+    });
+    
+    // lfs.readObjectFromFile('auth.json', function(storedAuth) {
+    //         authLib.init(me.uri, storedAuth, app, function(newAuth, req, res) {
+    //             auth = newAuth;
+    //             lfs.writeObjectToFile('auth.json', auth);
+    //             if(req && res)
+    //                 handleIndex(req, res);
+    //         });
+            lfs.readObjectFromFile('latests.json', function(newLatests) {
             latests = newLatests;
             lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
                 userInfo = newUserInfo;
@@ -352,5 +363,5 @@ stdin.on('data', function (chunk) {
                 });
             });
         });
-    });
+    // });
 });
