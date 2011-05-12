@@ -13,7 +13,6 @@ var uri,
 
 exports.auth = {};
 exports.isAuthed = function() {
-    console.error('isAuthed!');
     try {
         if(!exports.hasOwnProperty("auth"))
             exports.auth = {};
@@ -41,12 +40,10 @@ exports.isAuthed = function() {
 
 exports.authAndRun = function(app, onCompletedCallback) {
     if (exports.isAuthed()) {
-        console.error('authAndRun gives isAuthed = true');
         onCompletedCallback();
         return;
     }
     uri = app.meData.uri;
-    console.error('authAndRun gives isAuthed = false');
     completedCallback = onCompletedCallback;
     app.get("/auth", handleAuth);
     app.get("/saveAuth", saveAuth);
