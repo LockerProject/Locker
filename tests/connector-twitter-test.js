@@ -158,13 +158,12 @@ suite.next().suite.addBatch({
     'When Twitter Connector got friends' : {
         topic:function() {
             var promise = new events.EventEmitter;
-                fs.readdir('Me/' + id + '/photos', function(err, files) {
-                        if(err || !files || files.length < 2)
-                            promise.emit('error', new Error);
-                        else
-                            promise.emit('success', true);
-                    }
-                );
+            testUtils.waitForPathsToExist(['Me/' + id + '/photos'], 10, 1000, function(exists) {
+                if(!exists)
+                    promise.emit('error', new Error());
+                else
+                    promise.emit('success', true);
+            });
             return promise;
         },
         'it downloaded their profile photos':function(err, stat) {
