@@ -6,13 +6,22 @@
 * Please see the LICENSE file for more information.
 *
 */
+
+/*
+* 
+* This module wraps all authentication functionality with the Twitter API
+*/
+
 var fs = require("fs");
 
 var uri,
     completedCallback = null;
 
 exports.auth = {};
-exports.isAuthed = function() {
+
+// Check if exports.auth contains the required properties (consumerKey, consumerSecret, and token)
+// if not, read it from disk and try again
+function isAuthed() {
     try {
         if(!exports.hasOwnProperty("auth"))
             exports.auth = {};
@@ -37,18 +46,27 @@ exports.isAuthed = function() {
     return false;
 }
 
-
+// The required exported function
+// Checks if there is a valid auth, callback immediately (and synchronously) if there is
+// If there isn't, adds /auth and /saveAuth endpoint to the app
 exports.authAndRun = function(app, onCompletedCallback) {
-    if (exports.isAuthed()) {
+    if (isAuthed()) {
         onCompletedCallback();
         return;
     }
+    
+    // not auth'd yet, save the app's uri and the function to call back to later
     uri = app.meData.uri;
     completedCallback = onCompletedCallback;
     app.get("/auth", handleAuth);
     app.get("/saveAuth", saveAuth);
 }
 
+// Handles requests to the /auth endpoint
+// This will be called 3 times:
+// 1. To captue the consumerKey and consumerSecret via a form (which posts to /saveAuth)
+// 2. Uses the consumerKey and consumerSecret to contruct the twitter url to redirect to
+// 3. Capture the access token when the person returns from twitter
 function handleAuth(req, res) {
     if(!exports.auth)
         exports.auth = {};
@@ -81,6 +99,7 @@ function handleAuth(req, res) {
     }
 }
 
+// Save the consumerKey and consumerSecret
 function saveAuth(req, res) {
     if(!req.param('consumerKey') || !req.param('consumerSecret')) {
         res.writeHead(400);
@@ -89,6 +108,7 @@ function saveAuth(req, res) {
         res.writeHead(200, {'Content-Type': 'text/html'});
         exports.auth.consumerKey = req.param('consumerKey');
         exports.auth.consumerSecret = req.param('consumerSecret');
-        res.end("<html>thanks, now we need to <a href='./auth'>auth that app to your account</a>.</html>");
+        res.redirect(uri + 'auth');
+        // res.end("<html>thanks, now we need to <a href='./auth'>auth that app to your account</a>.</html>");
     }
 }

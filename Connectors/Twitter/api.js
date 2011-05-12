@@ -7,10 +7,19 @@
 *
 */
 
+/*
+*
+* Data access endpoints.
+*
+*/
+
 var lfs = require('../../Common/node/lfs.js');
-    
+
+
 module.exports = function(app) {
 
+// In adherence with the contact/* provider API
+// Returns a list of the current set of contacts (friends and followers)
 app.get('/allContacts', function(req, res) {
     lfs.readObjectsFromFile('friends.json', function(frnds) {
         var friends = frnds;
@@ -44,7 +53,7 @@ app.get('/allContacts', function(req, res) {
     });
 });
 
-
+// Reads a list of statuses from disk
 function readStatuses(req, res, type) {
     lfs.readObjectsFromFile(type + '.json', function(data) {
         res.writeHead(200, {'Content-Type': 'application/json'});
@@ -53,10 +62,12 @@ function readStatuses(req, res, type) {
     });
 }
 
+// Returns the person's home timeline
 app.get('/get_home_timeline', function(req, res) {
     readStatuses(req, res, 'home_timeline');
 });
 
+// Returns the person's mentions
 app.get('/get_mentions', function(req, res) {
     readStatuses(req, res, 'mentions');
 });
