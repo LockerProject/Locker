@@ -33,11 +33,12 @@ module.exports = function(theApp) {
                                                  "<li><a href='profile'>sync your profile</a></li>" +"</html>");
         }
     });
+    this.authComplete = authComplete;
     return this;
 }
 
 // Adds all of the sync API endpoints once the auth process is completed
-exports.authComplete = function(theAuth) {
+function authComplete(theAuth) {
     auth = theAuth;
     sync.init(auth);
     
