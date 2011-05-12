@@ -21,7 +21,8 @@ var app = express.createServer(
 );
 
 process.stdin.setEncoding('utf8');
-stdin.on('data', function (chunk) {
+process.stdin.on('data', function (chunk) {
+    console.error('data!');
 	// Do the initialization bits
     var processInfo = JSON.parse(chunk);
    	// TODO:  Is there validation to do here?
@@ -34,13 +35,17 @@ stdin.on('data', function (chunk) {
     require(__dirname + "/api.js")(app);
     // If we're not authed, we add the auth routes, otherwise add the webservice
     authLib.authAndRun(app, function() {
-	    require(__dirname + "/webservice.js")(app);
+        console.error('requiring webservice.js!');
+	    require(__dirname + "/webservice.js")(app, authLib.auth);
     });
+    
+    console.error('listening on port', processInfo.port);
     // Start the core web server
 	app.listen(processInfo.port, function() {
 		// Tell the locker core that we're done
 		var returnedInfo = {port: processInfo.port};
 		process.stdout.write(JSON.stringify(returnedInfo));
+        console.error('wrote back to stdout!');
 	});
 });
-prcoess.stdin.resume();
+process.stdin.resume();

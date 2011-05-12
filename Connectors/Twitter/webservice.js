@@ -16,8 +16,6 @@ var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js');
 
 
-exports.function(app) {
-
 function addAll(target, anotherArray) {
     if(!target) 
         target = [];
@@ -26,6 +24,10 @@ function addAll(target, anotherArray) {
     for(var i = 0; i < anotherArray.length; i++)
         target.push(anotherArray[i]);
 }
+    
+module.exports = function(app, auth) {
+    
+console.error('webservice loaded');
 
 app.get('/', handleIndex);
 
@@ -45,16 +47,6 @@ function handleIndex(req, res) {
     
 }
 
-
-function readInState(callback) {
-    lfs.readObjectFromFile('latests.json', function(newLatests) {
-        latests = newLatests;
-        lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
-            userInfo = newUserInfo;
-            callback();
-        });
-    });
-}
 var userInfo, latests;
 
 try {
@@ -145,6 +137,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
 }
 
 app.get('/friends', function(req, res) {
+    console.error('called /friends');
     syncUsersInfo('friends', req, res);
 });
 
@@ -257,7 +250,7 @@ function getPhotos(users) {
     _curlNext();
 }
 
-
+var twitterClient;
 function getTwitterClient() {
     if(!twitterClient && auth && auth.consumerKey && auth.consumerSecret)
         twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
@@ -296,5 +289,6 @@ app.get('/rate_limit_status', function(req, res) {
     });
 });
 
+console.error('added all webservice endpoints');
 
 }

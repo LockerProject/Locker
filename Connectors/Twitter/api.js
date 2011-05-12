@@ -6,7 +6,10 @@
 * Please see the LICENSE file for more information.
 *
 */
-exports = function(app) {
+
+var lfs = require('../../Common/node/lfs.js');
+    
+module.exports = function(app) {
 
 app.get('/allContacts', function(req, res) {
     lfs.readObjectsFromFile('friends.json', function(frnds) {
@@ -58,4 +61,5 @@ app.get('/get_mentions', function(req, res) {
     readStatuses(req, res, 'mentions');
 });
 
+return this;
 };
