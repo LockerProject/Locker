@@ -24,8 +24,6 @@
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
-        "keychain-client-test.js",
-        "lkeychain-test-local.js",
         "connector-local-XMPP-test.js"
     ]
 
