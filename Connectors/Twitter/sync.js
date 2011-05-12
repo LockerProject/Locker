@@ -7,13 +7,21 @@
 *
 */
 
+/*
+*
+* Handles all sync logic of data from Twitter
+* 
+*/
+
 var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
     
 var auth, userInfo, latests;
+var twitterClient;
 
+// Initialize the state
 exports.init = function(theAuth) {
     auth = theAuth;
     try {
@@ -24,7 +32,7 @@ exports.init = function(theAuth) {
     } catch (err) { userInfo = {}; }
 }
 
-
+// Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
 exports.pullStatuses = function(endpoint, repeatAfter, callback) {
     if(!getTwitterClient()) {
         sys.debug('could not get twitterClient');
@@ -43,6 +51,7 @@ exports.pullStatuses = function(endpoint, repeatAfter, callback) {
     });
 }
 
+// Pulls one page of a statuses endpoint
 function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     if(!page)
         page = 1;
@@ -55,7 +64,9 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     twitterClient.apiCall('GET', '/statuses/' + endpoint + '.json', params, function(error, result) {
         if(error) {
             if(error.statusCode >= 500) { //failz-whalez, hang out for a bit
-                setTimeout(function(){pullTimelinePage(endpoint, max_id, since_id, page, items, callback);}, 10000);
+                setTimeout(function(){
+                    pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
+                }, 10000);
             }
             sys.debug('error from twitter:' + sys.inspect(error));
             return;
@@ -85,7 +96,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     });
 }
 
-
+// Syncs info about friends of followers
 exports.syncUsersInfo = function(friendsOrFollowers, callback) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
         friendsOrFollowers = 'friends';
@@ -109,6 +120,7 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
     });
 }
 
+// Syncs the profile of the auth'd user
 exports.syncProfile = function(callback) {
     getUserInfo(function(err, newUserInfo) {
         userInfo = newUserInfo;
@@ -117,12 +129,15 @@ exports.syncProfile = function(callback) {
     });
 }
 
+// Gets the profile of the auth'd user
 function getUserInfo(callback) {
     if(!getTwitterClient())
         return;
-    twitterClient.apiCall('GET', '/account/verify_credentials.json', {token:auth.token, include_entities:true}, callback);
+    twitterClient.apiCall('GET', '/account/verify_credentials.json', 
+                            {token:auth.token, include_entities:true}, callback);
 }
 
+// Gets the list of IDs of friends or followers of the auth'd user
 function getIDs(friendsOrFolowers, screenName, callback) {
     if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
         friendsOrFolowers = 'friends';
@@ -137,10 +152,15 @@ function getIDs(friendsOrFolowers, screenName, callback) {
     });
 }
 
+// Get extended profile info about the users in userIDs
 function getUsersExtendedInfo(userIDs, callback) {
     _getUsersExtendedInfo(userIDs, [], callback);
 }
 
+// Recursive function to handle the fact that twitter can only
+// process 100 ID's at a time
+// NOTE: there is a known bug in the Twitter API here!
+// Returns some duplicates and misses others
 function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
     if(!usersInfo)
         usersInfo = [];
@@ -149,7 +169,8 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
-    twitterClient.apiCall('GET', '/users/lookup.json', {token: auth.token, user_id: id_str, include_entities: true},
+    twitterClient.apiCall('GET', '/users/lookup.json', 
+        {token: auth.token, user_id: id_str, include_entities: true},
         function(error, result) {
             if(error) {
                 sys.debug('error! ' + JSON.stringify(error));
@@ -165,6 +186,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         });
 }
 
+// Pulls profile images for a list of users
 function getPhotos(users) {
     try {
         fs.mkdirSync('photos', 0755);
@@ -186,15 +208,15 @@ function getPhotos(users) {
     _curlNext();
 }
 
-
-var twitterClient;
+// Ensures that we are always working with the same, valid and auth'd twitter client object
 function getTwitterClient() {
     if(!twitterClient && auth && auth.consumerKey && auth.consumerSecret)
         twitterClient = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
     return twitterClient;
 }
 
-/** returns object with:
+/** 
+ *  returns object with:
  *  remaining_hits (api call remaining),
  *  hourly_limit (total allowed per hour), 
  *  reset_time (time stamp), 
@@ -212,6 +234,7 @@ exports.getRateLimitStatus = function(callback) {
     });
 }
 
+// Concatenate arrays (is the some collection methods out there?)
 function addAll(target, anotherArray) {
     if(!target) 
         target = [];
@@ -221,6 +244,7 @@ function addAll(target, anotherArray) {
         target.push(anotherArray[i]);
 }
 
+// Nothing right now - will be part of calming routines
 function clearCount() {
     requestCount = 0;
     setTimeout(clearCount, 3600000);

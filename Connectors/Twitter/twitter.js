@@ -18,7 +18,10 @@ var app = express.createServer(
     connect.bodyParser(),
     connect.cookieParser(),
     connect.session({secret : "locker"})
-);
+);    
+
+// This only adds the / endpoint, the rest are added in the authComplete function
+var webservice = require(__dirname + "/webservice.js")(app);
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
@@ -32,9 +35,11 @@ process.stdin.on('data', function (chunk) {
     app.meData = lfs.loadMeData();
     // Adds the internal API to the app because it should always be available
     require(__dirname + "/api.js")(app);
+    
     // If we're not authed, we add the auth routes, otherwise add the webservice
     authLib.authAndRun(app, function() {
-	    require(__dirname + "/webservice.js")(app, authLib.auth);
+        // Add the rest of the sync API (only / is added automatically)
+	    webservice.authComplete(authLib.auth);
     });
     
     // Start the core web server
