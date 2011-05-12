@@ -133,6 +133,16 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
     .undiscuss().unpath()
 
+    .path("/Me")
+    .discuss("spawn a valid service")
+        .get("/spawn-valid/")
+            .expect(200)
+    .undiscuss()
+    .discuss("not spawn an invalid service")
+        .get("/spawn-invalid/")
+            .expect(404)
+    .undiscuss().unpath()
+
     // Tests for the proxying
     .path("/Me")
     .discuss("proxy requests via GET to services")
