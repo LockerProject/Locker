@@ -11,288 +11,18 @@
  * web server/service to wrap interactions w/ FB open graph
  */
 
-var _debug = false;
-
-var fs = require('fs'),
-    http = require('http'),
-    url = require('url'),
-    express = require('express'),
+var express = require('express'),
     connect = require('connect'),
-    sys = require('sys'),
-    app = express.createServer(
-                    connect.bodyParser(),
-                    connect.cookieParser()),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
-    authLib = require('./auth.js');
+    authLib = require('./auth');
 
-var me, auth, latests, userInfo;
-var facebookClient = require('facebook-js')();
-
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
-        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
-        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
-}
-
-app.set('views', __dirname);
-app.get('/', handleIndex);
-function handleIndex(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    if(!(auth && auth.appID && auth.appSecret && auth.token))
-        res.end(displayHTML("You need to <a href='./auth'>auth</a>"));
-    else
-        res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
-}
-
-
-var photoQueue = [];
-var photoIndex = 0;
-function downloadPhotos(userID) {
-    fs.mkdir('photos/', 0755);
-    downloadNextPhoto();
-}
-function downloadNextPhoto() {
-    if (photoIndex >= photoQueue.length) return;
-
-    var friendID = photoQueue[photoIndex].friendID;
-    photoIndex++;
-    lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg', downloadNextPhoto);
-}
-
-function doFQLQuery(access_token, query, callback) {
-    var fb = http.createClient(443, 'api.facebook.com', true);
-    var request = fb.request('GET', '/method/fql.query?format=json&access_token=' + access_token +
-                            '&query=' + escape(query),
-                            {'host': 'api.facebook.com'});
-    request.end();
-    var data = '';
-    request.on('response',
-    function(response) {
-        response.setEncoding('utf8');
-        response.on('data',
-        function(chunk) {
-            data += chunk;
-        });
-        response.on('end',
-        function() {
-            callback(data);
-        });
-    });
-}
-
-app.get('/friends',
-function(req, res) {
-    if (!auth.token) {
-        res.writeHead(401);
-        res.end();
-        return;
-    } else {
-        res.writeHead(200, {
-            'Content-Type': 'text/html'
-        });
-        facebookClient.apiCall('GET', '/me', {access_token: auth.token},
-        function(error, result) {
-            var userID = result.id;
-            facebookClient.apiCall(
-            'GET',
-            '/me/friends',
-            {access_token: auth.token},
-            function(error, result) {
-                if(error) console.log(error);
-                locker.diary("syncing "+result.data.length+" friends");
-                var stream = fs.createWriteStream('contacts.json');
-                for (var i = 0; i < result.data.length; i++) {
-                    if (result.data[i]) {
-                        stream.write(JSON.stringify(result.data[i]) + "\n");
-                        if (result.data[i].id) {
-                            photoQueue.push({
-                                'userID': userID,
-                                'friendID': result.data[i].id
-                            });
-                        }
-                    }
-                }
-                stream.end();
-                downloadPhotos(userID);
-                locker.at('/friends', 3600);
-                res.end("sync'd "+result.data.length+" friends, how sociable!");
-            });
-
-            facebookClient.apiCall(
-            'GET',
-            '/me/checkins',
-            {access_token: auth.token},
-            function(error, result) {
-                if(error) console.error(error);
-                locker.diary("syncing "+result.data.length+" places");
-                var stream = fs.createWriteStream('places.json');
-                for (var i = 0; i < result.data.length; i++) {
-                    if (result.data[i]) {
-                        stream.write(JSON.stringify(result.data[i]) + "\n");
-                    }
-                }
-                stream.end();
-            });
-        });
-    }
-});
-
-
-app.get('/feed',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    pullNewsFeed(function() {
-        locker.at('/feed', 10);
-        res.end();
-    });
-});
-
-function getProfileInfo(userID, callback) {
-    if(!callback) {
-        callback = userID;
-        userID = 'Me';
-    }
-    facebookClient.apiCall('GET', '/' + userID, {access_token: auth.token}, callback);
-}
-
-app.get('/photos',
-function(req, res) {
-    getPhotoAlbums(function(error, albums) {
-        getNextPhotoAlbum(albums.data, function(albumError, album) { //get lists of photos in albums
-            var albumFolder = 'photos/Me/' + album.id;
-            try {
-                fs.mkdirSync('photos/Me', 0755);
-            } catch(err) {
-                if(_debug) sys.debug(err);
-            }
-            try {
-                fs.mkdirSync(albumFolder, 0755);
-            } catch(err) {
-                if(_debug) sys.debug(err);
-            }
-            lfs.writeObjectToFile(albumFolder + '/meta.json', album);
-            getPhotos(albumFolder, album.photosList.data, function(photosError) {
-                if(error) sys.debug(photosError);
-            });
-        }, function() {
-            //all done
-            res.end();
-        });
-    });
-});
-
-function getPhotoAlbums(userID, callback) {
-    if(!callback) {
-        callback = userID;
-        userID = 'Me';
-    }
-    facebookClient.apiCall('GET', '/' + userID + '/albums', {access_token: auth.token}, callback);
-}
-
-function getNextPhotoAlbum(albums, albumCallback, finalCallback) {
-    if(!albums || albums.length < 1) {
-        finalCallback();
-        return;
-    }
-    var album = albums.pop();
-    getPhotoAlbum(album.id, function(error, photosList) {
-        if(_debug) sys.debug('get album: ' + album.id);
-        if(error) sys.debug(sys.inspect(error));
-        album.photosList = photosList;
-        albumCallback(error, album);
-        getNextPhotoAlbum(albums, albumCallback, finalCallback);
-    });
-}
-
-function getPhotoAlbum(albumID, callback) {
-    if(_debug) sys.debug('getting album: ' + albumID);
-    facebookClient.apiCall('GET', '/' + albumID + '/photos', {access_token: auth.token}, callback);
-}
-
-function getPhotos(albumFolder, photos, callback) {
-    if(_debug) sys.debug('for ' + albumFolder + ', ' + photos.length + ' remaining.');
-    if(!photos || photos.length < 1) {
-        callback();
-        return;
-    }
-    var photo = photos.pop();
-    var largestURL = photo.images[0].source;
-    lfs.curlFile(largestURL, albumFolder + '/' + photo.id + '.jpg');
-    getPhotos(albumFolder, photos, callback);
-}
-
-app.get('/getfeed',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    lfs.readObjectsFromFile('feed.json', function(data) {
-        var obj = {};
-        obj.data = data;
-        res.write(JSON.stringify(obj));
-        res.end();
-    });
-});
-
-function pullNewsFeed(callback) {
-    if(!latests.feed)
-        latests.feed = {};
-    var items = [];
-    pullNewsFeedPage(null, latests.feed.latest, items, function() {
-        items.reverse();
-        locker.diary("saving "+items.length+" new news items");
-        lfs.appendObjectsToFile('feed.json', items);
-        callback();
-    });
-}
-
-function pullNewsFeedPage(until, since, items, callback) {
-    var params = {access_token: auth.token, limit: 1000};
-    if(until)
-        params.until = until;
-    if(since)
-        params.since = since;
-    facebookClient.apiCall('GET', '/me/home', params, 
-        function(error, result) {
-            if(error) {
-                console.error(JSON.stringify(error));
-                return;
-            }
-            if(result.data.length > 0) {
-                var t = result.data[0].updated_time;
-                if(!latests.feed.latest || t > latests.feed.latest)
-                    latests.feed.latest = t;
-                for(var i = 0; i < result.data.length; i++)
-                    items.push(result.data[i]);
-                var next = result.paging.next;
-                var until = unescape(next.substring(next.lastIndexOf("&until=") + 7));
-                pullNewsFeedPage(until, since, items, callback);
-            } else if(callback) {
-                lfs.writeObjectToFile('latests.json', latests);
-                callback();
-            }
-        });
-}
-
+var app = express.createServer(connect.bodyParser());
 
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
-// Do the initialization bits
+    // Do the initialization bits
     var processInfo = JSON.parse(chunk);
    	// TODO:  Is there validation to do here?
     locker.initClient(processInfo);
@@ -305,25 +35,13 @@ stdin.on('data', function (chunk) {
     // If we're not authed, we add the auth routes, otherwise add the webservice
     authLib.authAndRun(app, function() {
         auth = authLib.auth;
-	   // require(__dirname + "/webservice.js")(app, authLib.auth);
+        require(__dirname + "/webservice.js")(app, authLib.auth);
     });
     
-    // lfs.readObjectFromFile('auth.json', function(storedAuth) {
-    //         authLib.init(me.uri, storedAuth, app, function(newAuth, req, res) {
-    //             auth = newAuth;
-    //             lfs.writeObjectToFile('auth.json', auth);
-    //             if(req && res)
-    //                 handleIndex(req, res);
-    //         });
-            lfs.readObjectFromFile('latests.json', function(newLatests) {
-            latests = newLatests;
-            lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
-                userInfo = newUserInfo;
-                app.listen(processInfo.port,function(){
-                    var returnedInfo = {port: processInfo.port};
-                    console.log(JSON.stringify(returnedInfo));
-                });
-            });
-        });
-    // });
+    // Start the core web server
+    app.listen(processInfo.port,function(){
+		// Tell the locker core that we're done
+        var returnedInfo = {port: processInfo.port};
+        process.stdout.write(JSON.stringify(returnedInfo));
+    });
 });
