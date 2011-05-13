@@ -10,7 +10,7 @@
 var fs = require('fs'),
     sync = require('./sync');
     
-var app;
+var app, auth;
 
 module.exports = function(theapp) {
     app = theapp;

@@ -19,8 +19,9 @@ exports.init = function(theauth) {
     auth = theauth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
-    } catch (err) { updateState = {}; }
-    
+    } catch (err) { 
+        updateState = {checkins:{syncedThrough:0}}; 
+    }
 }
 
 
@@ -61,8 +62,8 @@ exports.syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
-        getCheckins(self.id, auth.accessToken, 0, function() {
-            // lfs.appendObjectsToFile('places.json', newCheckins);
+        getCheckins(self.id, auth.accessToken, 0, function(checkins) {
+            lfs.appendObjectsToFile('places.json', checkins);
             locker.at('/checkins', 600);
             callback();
         });
@@ -77,20 +78,31 @@ function getMe(token, callback) {
 
 var checkins_limit = 250;
 function getCheckins(userID, token, offset, callback, checkins) {
+    if(!checkins)
+        checkins = [];
     var latest = 1;
-    if(updateState.checkins && updateState.checkins)
-        latest = updateState.checkins;
+    if(updateState.checkins && updateState.checkins.syncedThrough)
+        latest = updateState.checkins.syncThrough;
     request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + 
                                                             '&oauth_token=' + token + '&afterTimestamp=' + latest},
     function(err, resp, data) {
-        var newCheckins = JSON.parse(data).response.checkins.items;
-        lfs.appendObjectsToFile('checkins.json', newCheckins);
+        var response = JSON.parse(data).response;
+        if(!(response.checkins && response.checkins.items)) { //we got nothing
+            if(checkins.length > 0)
+                updateState.checkins.syncedThrough = checkins[0].createdAt;
+                lfs.writeObjectToFile('updateState.json', updateState);
+            callback(checkins.reverse());
+            return;
+        }
+        var newCheckins = response.checkins.items;
+        addAll(checkins, newCheckins);
         locker.diary("sync'd "+newCheckins.length+" new checkins");
         if(newCheckins && newCheckins.length == checkins_limit) 
             getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {    
+        else {        
+            updateState.checkins.syncedThrough = checkins[0].createdAt;
             lfs.writeObjectToFile('updateState.json', updateState);
-            callback();
+            callback(checkins.reverse());
         }
     });
 }
@@ -130,9 +142,9 @@ function downloadNextUser(users) {
 }
 
 
-Array.prototype.addAll = function(anotherArray) {
-    if(!anotherArray || !anotherArray.length)
+function addAll(thisArray, anotherArray) {
+    if(!(thisArray && anotherArray && anotherArray.length))
         return;
     for(var i = 0; i < anotherArray.length; i++)
-        this.push(anotherArray[i]);
+        thisArray.push(anotherArray[i]);
 }
