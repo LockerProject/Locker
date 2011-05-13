@@ -12,7 +12,7 @@ var fs = require('fs');
 
 module.exports = function(app) {
     
-app.get('/getContacts',
+app.get('/allContacts',
 function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/plain'
