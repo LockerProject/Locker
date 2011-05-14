@@ -12,11 +12,14 @@ var request = require('request'),
     sys = require('sys'),
     http = require("http"),
     url = require("url"),
-    querystring = require("querystring")
+    querystring = require("querystring");
+    
+var lmongoclient;
 
 var lockerBase;
 var localServiceId = undefined;
 var baseServiceUrl = undefined;
+var mongoInfo;
 
 exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
@@ -24,6 +27,11 @@ exports.initClient = function(instanceInfo) {
     localServiceId = svcInfo.id;
     lockerBase = instanceInfo.lockerUrl;
     baseServiceUrl = lockerBase + "/core/" + localServiceId;
+    if(instanceInfo.mongo) {
+        mongoInfo = instanceInfo.mongo;
+        lmongoclient = require(__dirname + '/lmongoclient')(mongoInfo.host, mongoInfo.port);
+        exports.getMongoCollections = getMongoCollections;
+    }
 }
 
 exports.at = function(uri, delayInSec) {
@@ -86,6 +94,16 @@ exports.event = function(type, obj) {
 exports.listen = function(type, callback) {
     request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callback})}, function(error, response, body) {
         if(error) sys.debug(error);
+    });
+}
+
+
+function getMongoCollections(callback) {
+    lmongoclient.connectToDB(function() {
+        var collections = {};
+        for(var i in mongoInfo.collections)
+            collections[mongoInfo.collections[i]] = lmongoclient.getCollection(localServiceId, mongoInfo.collections[i]);
+        callback(collections);
     });
 }
 

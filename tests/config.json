@@ -8,7 +8,8 @@
         "core-lib" : ["lservicemanager-test-local.js", 
                       "lconfig-test-local.js", 
                       "lscheduler-test-local.js", 
-                      "lconsole-test-local.js"],
+                      "lconsole-test-local.js",
+                      "mongo-test.js"],
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
@@ -25,6 +26,11 @@
     },
     "disabledTests" : [
         "connector-local-XMPP-test.js"
-    ]
+    ], 
+    "mongo" : {
+        "dataDir": "mongoTest",
+        "host": "localhost",
+        "port": 27018
+    }
 
 }

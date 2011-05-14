@@ -186,9 +186,11 @@ exports.spawn = function(serviceId, callback) {
     
     //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
     var run;
+    var serviceInfo;
     for(var i in serviceMap.available) {
         if(serviceMap.available[i].srcdir == svc.srcdir) {
-            run = serviceMap.available[i].run;
+            serviceInfo = serviceMap.available[i];
+            run = serviceInfo.run;
             break;
         }
     }
@@ -207,6 +209,13 @@ exports.spawn = function(serviceId, callback) {
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
+    if(serviceInfo && serviceInfo.mongoCollections) {
+        processInformation.mongo = {
+            host: lconfig.mongo.host,
+            port: lconfig.mongo.port
+        }
+        processInformation.mongo.collections = serviceInfo.mongoCollections;
+    }
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
         var mod = console.outputModule
