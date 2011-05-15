@@ -8,7 +8,8 @@
 */
 
 var fs = require('fs'),
-    sync = require('./sync');
+    sync = require('./sync'),
+    locker = require('../../Common/node/locker.js');
     
 var app, auth;
 
