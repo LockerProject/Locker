@@ -198,7 +198,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
             if(userIDs.length > 0) 
                 _getUsersExtendedInfo(userIDs, usersInfo, callback);
             else if(callback) {
-                //getPhotos(usersInfo);
+                getPhotos(usersInfo);
                 callback(usersInfo);
             }
         });
