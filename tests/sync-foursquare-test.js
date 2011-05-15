@@ -13,6 +13,9 @@ vows.describe("Foursquare sync").addBatch({
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
+                body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
+            fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/me.json' });
             fakeweb.registerUri({
@@ -23,14 +26,21 @@ vows.describe("Foursquare sync").addBatch({
                 file : __dirname + '/fixtures/foursquare/checkins_2.json' });
             foursquare.syncCheckins(this.callback) },
         "successfully" : function(err, response) {
-            fakeweb.tearDown();
-            fs.unlink("places.json");
-            fs.unlink("profile.json");
-            fs.unlink("updateState.json");
-            assert.equal(response, 251); }
+            assert.equal(response, 251); },
+            "successfully " : {
+                topic: function() {
+                    foursquare.syncCheckins(this.callback) },
+                "again" : function(err, response) {
+                    assert.equal(response, 0);
+                    fakeweb.tearDown();
+                    fs.unlink("places.json");
+                    fs.unlink("profile.json");
+                    fs.unlink("updateState.json");
+                }
+            }
             // this is the correct way to perform these functions, but teardown isn't safe right now.  if this is the last test, vows will exit
             // before the teardown is done.  see: https://github.com/cloudhead/vows/pull/82
-            // ,
+            //
             //         teardown: function(topic) {
             //             fakeweb.tearDown();
             //             fs.unlink("places.json");

@@ -78,7 +78,7 @@ function getCheckins(userID, token, offset, callback, checkins) {
         checkins = [];
     var latest = 1;
     if(updateState.checkins && updateState.checkins.syncedThrough)
-        latest = updateState.checkins.syncThrough;
+        latest = updateState.checkins.syncedThrough;
     request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + 
                                                             '&oauth_token=' + token + '&afterTimestamp=' + latest},
     function(err, resp, data) {
@@ -94,8 +94,10 @@ function getCheckins(userID, token, offset, callback, checkins) {
         addAll(checkins, newCheckins);
         if(newCheckins && newCheckins.length == checkins_limit) 
             getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {        
-            updateState.checkins.syncedThrough = checkins[0].createdAt;
+        else {
+            if (checkins[0]) {
+                updateState.checkins.syncedThrough = checkins[0].createdAt;
+            }
             lfs.writeObjectToFile('updateState.json', updateState);
             callback(err, checkins.reverse());
         }
