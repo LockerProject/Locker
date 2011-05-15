@@ -19,6 +19,7 @@ var base_url = 'http://api.flickr.com/services/rest/';
 var crypto = require('crypto'),
     fs = require('fs'),
     sys = require('sys'),
+    request = require('request'),
     connect = require('connect'),
     express = require('express'),
     app = express.createServer(
@@ -28,10 +29,6 @@ var crypto = require('crypto'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
 
-var wwwdude = require('wwwdude');
-var wwwdude_client = wwwdude.createClient({
-    encoding: 'utf-8'
-});
 
 var me, state, userInfo;
 
@@ -69,26 +66,15 @@ function getSignedMethodURL(method, params) {
 
 function getTokenFromFrob(frob) {
     var url = getSignedMethodURL('flickr.auth.getToken', ['frob=' + frob]);
-    wwwdude_client.get(url)
-    .addListener('error',
-    function(err) {
-        sys.puts('Network Error: ' + sys.inspect(err));
-    })
-    .addListener('http-error',
-    function(data, resp) {
-        sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-    })
-    .addListener('success',
-    function(data, resp) {
-        var json = JSON.parse(data);
-        /*state = {};
-        if(state && state.newest)
-            json.auth.state.newest = state.newest;
-        else
-            json.auth.state.newest = 0;*/
-        for(var i in json.auth)
-            auth[i] = json.auth[i];
-        lfs.writeObjectToFile('auth.json', auth);
+    request.get({uri:url}, function(err, resp, body) {
+        if(err)
+            sys.puts('Network Error: ' + sys.inspect(err));
+        else {    
+            var json = JSON.parse(body);
+            for(var i in json.auth)
+                auth[i] = json.auth[i];
+            lfs.writeObjectToFile('auth.json', auth);
+        }
     });
 }
 
@@ -195,20 +181,14 @@ function(req, res) {
     var url = getSignedMethodURL('flickr.contacts.getList',['auth_token=' + auth.token._content]);
     
     try {
-        wwwdude_client.get(url)
-        .addListener('error',
-        function(err) {
-            sys.puts('Network Error: ' + sys.inspect(err));
-        })
-        .addListener('http-error',
-        function(data, resp) {
-            sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-        })
-        .addListener('success',
-        function(data, resp) {
-            var json = JSON.parse(data);
-            lfs.writeObjectsToFile('contacts.json', json.contacts.contact);
-            res.end();
+        request.get({uri:url}, function(err, resp, body) {
+            if(err)
+                sys.puts('Network Error: ' + sys.inspect(err));
+            else {
+                var json = JSON.parse(body);
+                lfs.writeObjectsToFile('contacts.json', json.contacts.contact);
+                res.end();
+            }
         });
     } catch(err) {
     }
@@ -230,50 +210,44 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                                  'min_upload_date=' + oldest, 'max_upload_date=' + newest,
                                  'per_page=25', 'page=' + page, 'extras=' + extras]);
     try {
-        wwwdude_client.get(url)
-        .addListener('error',
-        function(err) {
-            sys.puts('Network Error: ' + sys.inspect(err));
-        })
-        .addListener('http-error',
-        function(data, resp) {
-            sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-        })
-        .addListener('success',
-        function(data, resp) {
-            var json = JSON.parse(data);
-            if(!json || !json.photos || !json.photos.photo) {
-                log(data);
-                res.end();
-            }
-            var photos = json.photos.photo;
-            lfs.appendObjectsToFile('photos.json', photos);
-            function curl(photos, callback) {
-                if(!photos || photos.length < 1) {
-                    callback();
-                    return;
+        request.get({uri:url}, function(err, resp, body) {
+            if(err)
+                sys.puts('Network Error: ' + sys.inspect(err));
+            else {
+                var json = JSON.parse(body);
+                if(!json || !json.photos || !json.photos.photo) {
+                    log(body);
+                    res.end();
                 }
-                var photo = photos.pop();
-                var id = photo.id;
-                lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function(err) {
-                    if(err)
-                        sys.debug(err)
-                    lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function(err) {
+                var photos = json.photos.photo;
+                lfs.appendObjectsToFile('photos.json', photos);
+                function curl(photos, callback) {
+                    if(!photos || photos.length < 1) {
+                        callback();
+                        return;
+                    }
+                    var photo = photos.pop();
+                    var id = photo.id;
+                    lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function(err) {
                         if(err)
                             sys.debug(err)
-                        log('got flickr photo ' + id);
-                        locker.event('photo/flickr', {"_id":id})
-                        curl(photos, callback);
+                        lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function(err) {
+                            if(err)
+                                sys.debug(err)
+                            log('got flickr photo ' + id);
+                            locker.event('photo/flickr', {"_id":id})
+                            curl(photos, callback);
+                        });
                     });
-                });
-            }
-            
-            curl(photos, function() {   
-                if((json.photos.pages - json.photos.page) > 0)
-                    getPhotos(auth_token, username, user_id, page + 1, oldest, newest);
+                }
+        
+                curl(photos, function() {   
+                    if((json.photos.pages - json.photos.page) > 0)
+                        getPhotos(auth_token, username, user_id, page + 1, oldest, newest);
+                    });
+                }
             });
-        });
-    } catch(err) { console.log(JSON.stringify(err)); }
+    } catch(err) { console.error(err); }
     
 }
 

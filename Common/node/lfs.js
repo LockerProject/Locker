@@ -14,8 +14,6 @@ var fs = require('fs'),
     http = require('http'),
     spawn = require('child_process').spawn;
 
-var wwwdude = require('wwwdude');
-
 /**
  * Appends an array of objects as lined-delimited JSON to the file at the specified path
  */
@@ -104,72 +102,6 @@ exports.loadMeData = function() {
     }
 }
 
-/**
- * Downloads the contents of a URL and saves it to the path, retrying if requested
- */
-function writeURLContentsToFile(accountID, url, filename, encoding, retryCount) {
-    if(!url || !accountID || !filename)
-        return;
-    var wwwdude_client = wwwdude.createClient({
-        encoding: encoding
-    });
-    wwwdude_client.get(url)
-    .addListener('error',
-    function(err) {
-        sys.puts('Network Error: ' + sys.inspect(err));
-        if(retryCount > 0)
-            writeURLContentsToFile(accountID, url, filename, encoding, retryCount - 1);
-    })
-    .addListener('http-error',
-    function(data, resp) {
-        sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-        if(retryCount > 0)
-            writeURLContentsToFile(accountID, url, filename, encoding, retryCount - 1);
-    })
-    .addListener('success',
-    function(data, resp) {
-        fs.writeFileSync('my/' + accountID + '/' + filename, data, encoding);
-    });
-}
-/*exports.writeURLContentsToFile = function(accountID, url, filename, encoding, retryCount) {
-    if(!retryCount)
-        retryCount = 0;
-    writeURLContentsToFile(accountID, url, filename, encoding, retryCount);
-}*/
-
-function writeContentsOfURLToFile(url, filename, retryCount, encoding, callback) {
-    if(!url || !filename)
-        return;
-    if(!retryCount)
-        retryCount = 0;
-    var wwwdude_client;
-    if(encoding)
-        wwwdude_client = wwwdude.createClient({
-            encoding: encoding
-        });
-    else
-        wwwdude_client = wwwdude.createClient();
-        
-    wwwdude_client.get(url)
-    .addListener('error',
-    function(err) {
-        sys.puts('Network Error: ' + sys.inspect(err));
-        if(retryCount > 0)
-            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding, callback);
-    })
-    .addListener('http-error',
-    function(data, resp) {
-        sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode);
-        if(retryCount > 0)
-            writeContentsOfURLToFile(url, filename, retryCount - 1, encoding, callback);
-    })
-    .addListener('success',
-    function(data, resp) {
-        fs.writeFileSync(filename, data, encoding);
-        if(callback) callback();
-    });
-}
-
 function getFile(requestURL, filename) {
     var port = (url.parse(requestURL).protocol == 'http:') ? 80 : 443;
     var host = url.parse(requestURL).hostname;
@@ -210,7 +142,6 @@ exports.curlFile = function(url, filename, callback) {
 }
 
 exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding, callback) {
-//    writeContentsOfURLToFile(url, filename, retryCount, encoding, callback);
 //    curlFile(url, filename);
     getFile(url, filename);
 }

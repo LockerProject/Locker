@@ -107,7 +107,7 @@ var resultTest = {
 suite.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Foursquare connector")
         .discuss("can return all contacts")
-            .path(mePath + "/getFriends")
+            .path(mePath + "/allContacts")
             .get()
                 .expect(200)
                 .expect([resultTest])
