@@ -14,6 +14,7 @@
 */
 
 var lfs = require('../../Common/node/lfs.js');
+var fs = require('fs');
 
 
 module.exports = function(app) {
@@ -70,6 +71,13 @@ app.get('/get_home_timeline', function(req, res) {
 // Returns the person's mentions
 app.get('/get_mentions', function(req, res) {
     readStatuses(req, res, 'mentions');
+});
+
+app.get('/get_profile', function(req, res) {
+    lfs.readObjectFromFile('userInfo.json', function(userInfo) {
+        res.writeHead(200, {"Content-Type":"text/json"});
+        res.end(JSON.stringify(userInfo));        
+    });
 });
 
 return this;

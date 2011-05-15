@@ -20,6 +20,7 @@ var request = require('request'),
     
 var auth, userInfo, latests;
 var twitterClient;
+var allKnownIDs;
 
 // Initialize the state
 exports.init = function(theAuth) {
@@ -30,6 +31,9 @@ exports.init = function(theAuth) {
     try {
         userInfo = JSON.parse(fs.readFileSync('userInfo.json'));
     } catch (err) { userInfo = {}; }
+    try {
+        allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+    } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
@@ -96,6 +100,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     });
 }
 
+
 // Syncs info about friends of followers
 exports.syncUsersInfo = function(friendsOrFollowers, callback) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
@@ -106,18 +111,31 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
             if(!ids || ids.length < 1) {
-                locker.at('/' + friendsOrFollowers, 3600);
-                callback();
+                syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, res, callback);
             } else {
                 getUsersExtendedInfo(ids, function(usersInfo) {
                     locker.diary('got ' + usersInfo.length + ' ' + friendsOrFollowers);
                     lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
-                    locker.at('/' + friendsOrFollowers, 3600);
-                    callback();
+                    syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, callback);
                 });
             }
         });
     });
+}
+
+
+function syncUsersInfoDone(friendsOrFollowers, knownIDs, usersInfo, callback) {    
+    locker.at('/' + friendsOrFollowers, 600);
+    console.log(Object.keys(knownIDs).length + ' ' + friendsOrFollowers + ' already known, ' 
+                + usersInfo.length + ' ' + friendsOrFollowers + ' found.');
+    for(var i in usersInfo) {
+        if(!knownIDs[usersInfo[i].id_str]) {
+            locker.event('contact/twitter', usersInfo[i]);
+            knownIDs[usersInfo[i].id_str] = 1;
+        }
+    }
+    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+    callback();
 }
 
 // Syncs the profile of the auth'd user
