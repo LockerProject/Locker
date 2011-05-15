@@ -10,8 +10,7 @@ var Fakeweb = function() {
     request.get = function(options, callback) {
         response = {statusCode : 200}
         if (interceptedUris[options.uri]) {
-            var resp = fs.readFileSync(interceptedUris[options.uri]);
-            return callback(null, response, resp);
+            return callback(null, response, interceptedUris[options.uri]);
         }
         if (allowNetConnect == false) {
             if (options.uri) {
@@ -20,17 +19,21 @@ var Fakeweb = function() {
                 }
                 throw "Unhandled GET request to " + options.uri;
             } else {
-                throw "Broken request"
+                throw "Invalid request"
             }
         } else {
             return oldRequest.call(request, options, callback);
         }
     }
-    registerUri = function(uri, response) {
-        interceptedUris[uri] = response;
-    }
     cleanRegistry = function() {
         interceptedUris = {};
+    }
+    registerUri = function(options) {
+        if (options.file) {
+            interceptedUris[options.uri] = fs.readFileSync(options.file);
+        } else if (options.body) {
+            interceptedUris[options.uri] = options.body;
+        }
     }
     return this;
 };
