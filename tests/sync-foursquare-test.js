@@ -17,16 +17,14 @@ vows.describe("Foursquare sync").addBatch({
                 __dirname + '/fixtures/foursquare/checkins_1.json');
             fakeweb.registerUri('https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
                 __dirname + '/fixtures/foursquare/checkins_2.json');
-            locker.at = function(uri, delayInSec) {}
-            locker.diary = function(text) { console.log(text); }
             foursquare.syncCheckins(this.callback) },
-        "successfully" : function(err, stat) {
+        "successfully" : function(err, response) {
             fakeweb.cleanRegistry();
-            assert.isNull (err);
             fs.unlink("places.json");
             fs.unlink("profile.json");
             fs.unlink("updateState.json");
             fakeweb.allowNetConnect = true;
+            assert.equal(response, 251);
         }
     }
 }).export(module);

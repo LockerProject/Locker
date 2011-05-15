@@ -14,10 +14,14 @@ var Fakeweb = function() {
             return callback(null, response, resp);
         }
         if (allowNetConnect == false) {
-            if (allowLocalConnect == true && url.parse(options.uri).host == "localhost") {
-                return oldRequest.call(http, options, callback);
+            if (options.uri) {
+                if (allowLocalConnect == true && url.parse(options.uri).host == "localhost") {
+                    return oldRequest.call(http, options, callback);
+                }
+                throw "Unhandled GET request to " + options.uri;
+            } else {
+                throw "Broken request"
             }
-            throw "Unhandled GET request to " + options.uri;
         } else {
             return oldRequest.call(request, options, callback);
         }

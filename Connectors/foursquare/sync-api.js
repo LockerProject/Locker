@@ -37,15 +37,19 @@ function index(req, res) {
 
 function friends(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    sync.syncFriends(function() {
+    sync.syncFriends(function(err, friendCount) {
+        locker.diary("syncing "+friendCount+" friends");
+        locker.at('/friends', 3600);
         res.end();
     });
 }
 
 
 function checkins(req, res) {
-    sync.syncCheckins(function() {
+    sync.syncCheckins(function(err, checkinCount) {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("got new checkins!");
+        locker.diary("sync'd "+checkinCount+" new checkins");
+        locker.at('/checkins', 600);
+        res.end("got "+checkinCount+" new checkins!");
     });
 }
