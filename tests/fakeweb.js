@@ -25,8 +25,10 @@ var Fakeweb = function() {
             return oldRequest.call(request, options, callback);
         }
     }
-    cleanRegistry = function() {
+    tearDown = function() {
         interceptedUris = {};
+        allowNetConnect = true;
+        allowLocalConnect = true;
     }
     registerUri = function(options) {
         if (options.file) {
