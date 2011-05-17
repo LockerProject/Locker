@@ -108,7 +108,6 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
 
 // Syncs info about friends of followers
 exports.syncUsersInfo = function(friendsOrFollowers, callback) {
-    console.error('syncUsersInfo ' + friendsOrFollowers);
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
         friendsOrFollowers = 'friends';
         
@@ -118,15 +117,30 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
             var newIDs = [];
             var knownIDs = allKnownIDs[friendsOrFollowers];
-            ids.forEach(function(id) {
-                if(!knownIDs[id])
-                    newIDs.push(id);
-            });
+            var repeatedIDs = {};
+            if(ids) {
+                ids.forEach(function(id) {
+                    if(!knownIDs[id])
+                        newIDs.push(id);
+                    else
+                        repeatedIDs[id] = 1;
+                });
+            }
+            var removedIDs = [];
+            for(var knownID in knownIDs) {
+                if(!repeatedIDs[knownID])
+                    removedIDs.push(knownID);
+            }
+            
             if(newIDs.length < 1) {
+                if(removedIDs.length > 0)
+                    logRemoved(friendsOrFollowers, removedIDs);
                 callback();
             } else {
                 getUsersExtendedInfo(newIDs, function(usersInfo) {
                     addPeople(friendsOrFollowers, usersInfo, knownIDs);
+                    if(removedIDs.length > 0)
+                        logRemoved(friendsOrFollowers, removedIDs);
                     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                     locker.diary('synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
                     callback();
@@ -137,14 +151,18 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
     });
 }
 
-function addPeople(type, people, knownIDs, callback) {
-    // console.error('adding ' + people.length + ' ' + type);
+function addPeople(type, people, knownIDs) {
     for(var i in people) {
         var person = people[i];
         locker.event('contact/twitter', person);
         knownIDs[person.id_str] = 1;
         dataStore.addPerson(type, person);    
     }
+}
+
+function logRemoved(type, ids) {
+    for(var i in ids)
+        dataStore.logRemovePerson(type, ids[i]);
 }
 
 // Syncs the profile of the auth'd user

@@ -39,13 +39,18 @@ process.stdin.on('data', function (chunk) {
         // If we're not authed, we add the auth routes, otherwise add the webservice
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
-    	    webservice.authComplete(authLib.auth, startWebServer);
+    	    webservice.authComplete(authLib.auth, function() {
+    	        if(!started)
+    	            startWebServer();
+    	    });
         });
     
         if(!authLib.isAuthed())
             startWebServer();
         
+        var started = false;
         function startWebServer() {
+            started = true;
             // Start the core web server
     	    app.listen(processInfo.port, function() {
     		    // Tell the locker core that we're done

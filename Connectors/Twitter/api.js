@@ -30,6 +30,37 @@ app.get('/allContacts', function(req, res) {
     });
 });
 
+// In adherence with the contact/* provider API
+// Returns a list of the current set of contacts (friends and followers)
+app.get('/:type/getAll', function(req, res) {
+    if(req.params.type == 'followers' || req.params.type == 'friends') {
+        dataStore.getPeople(req.params.type, function(err, allPeople) {
+            res.writeHead(200, {'content-type' : 'application/json'});
+            res.end(JSON.stringify(allPeople));
+        });
+    }
+});
+
+// In adherence with the contact/* provider API
+// Returns a list of the current set of contacts (friends and followers)
+app.get('/:type/getSince', function(req, res) {
+    if(req.params.type == 'followers' || req.params.type == 'friends') {
+        var query = {};
+        if(req.query.recordID) {
+            query.recordID = req.query.recordID;
+        } else if(req.query.timeStamp) {
+            query.timeStamp = req.query.timeStamp;
+        } else {
+            //this is just /getAll
+            query = {recordID:-1};
+        }
+        dataStore.getPeople(req.params.type, query, function(err, allPeople) {
+            res.writeHead(200, {'content-type' : 'application/json'});
+            res.end(JSON.stringify(allPeople));
+        });
+    }
+});
+
 // Reads a list of statuses from disk
 function readStatuses(req, res, type) {
     lfs.readObjectsFromFile(type + '.json', function(data) {
