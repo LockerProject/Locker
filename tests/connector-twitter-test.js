@@ -76,7 +76,7 @@ function addStatusSync(type) {
                         return;
                     }
                     //TODO: file size might not be a great way to determine if a file is done
-                    testUtils.waitForFileToComplete('Me/' + id + '/' + type + '.json',
+                    testUtils.waitForFileToComplete('Me/' + id + '/' + type + '/' + type + '.json',
                                                     1000, 30, 1000, function(success) { //10KB doesn't really make any sense!!
                         if(success == true)
                             promise.emit('success', true);
@@ -97,31 +97,31 @@ addStatusSync('home_timeline');
 addStatusSync('mentions');
 
 var mePath = '/Me/' + id;
-
-suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
-    .discuss('Twitter connector')
-        .discuss('can get all friends and followers')
-            .path(mePath + '/allContacts')
-            .get()
-                .expect(200)
-                .expect('returns some friends or followers', function(err, res, body) {
-                    assert.isNull(err);
-                    try {
-                        var friends = JSON.parse(body);
-                    } catch(err) {
-                        throw new Error("Could not parse the body as json");
-                    }
-                    assert.isNotNull(friends);
-                    assert.ok(friends.length > 0);
-                })
-            .unpath()
-        .undiscuss()
-    .undiscuss();
+// 
+// suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
+//     .discuss('Twitter connector')
+//         .discuss('can get all friends and followers')
+//             .path(mePath + '/allContacts')
+//             .get()
+//                 .expect(200)
+//                 .expect('returns some friends or followers', function(err, res, body) {
+//                     assert.isNull(err);
+//                     try {
+//                         var friends = JSON.parse(body);
+//                     } catch(err) {
+//                         throw new Error("Could not parse the body as json");
+//                     }
+//                     assert.isNotNull(friends);
+//                     assert.ok(friends.length > 0);
+//                 })
+//             .unpath()
+//         .undiscuss()
+//     .undiscuss();
     
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector')
         .discuss('can get home timeline')
-            .path(mePath + '/get_home_timeline')
+            .path(mePath + '/home_timeline/getAll')
             .get()
                 .expect(200)
                 .expect('returns some statuses', function(err, res, body) {
@@ -141,7 +141,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector')
         .discuss('can get mentions')
-            .path(mePath + '/get_mentions')
+            .path(mePath + '/mentions/getAll')
             .get()
                 .expect(200)
                 .expect('returns some mentions', function(err, res, body) {
