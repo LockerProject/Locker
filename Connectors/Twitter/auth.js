@@ -46,6 +46,8 @@ function isAuthed() {
     return false;
 }
 
+exports.isAuthed = isAuthed;
+
 // The required exported function
 // Checks if there is a valid auth, callback immediately (and synchronously) if there is
 // If there isn't, adds /auth and /saveAuth endpoint to the app

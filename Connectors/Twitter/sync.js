@@ -108,6 +108,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
 
 // Syncs info about friends of followers
 exports.syncUsersInfo = function(friendsOrFollowers, callback) {
+    console.error('syncUsersInfo ' + friendsOrFollowers);
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
         friendsOrFollowers = 'friends';
         

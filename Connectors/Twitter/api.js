@@ -22,20 +22,20 @@ module.exports = function(app) {
 // In adherence with the contact/* provider API
 // Returns a list of the current set of contacts (friends and followers)
 app.get('/allContacts', function(req, res) {
-    lfs.readObjectsFromFile('friends.json', function(frnds) {
+    lfs.readObjectsFromFile('friends/friends.json', function(frnds) {
         var friends = frnds;
         var allContacts = {};
         for(var i in friends) {
-            var friend = friends[i];
+            var friend = friends[i].data;
             if(!friend)
                 continue;
             friend.isFriend = true;
             allContacts[friend.screen_name] = friend;
         }
-        lfs.readObjectsFromFile('followers.json', function(fllwrs) {
+        lfs.readObjectsFromFile('followers/followers.json', function(fllwrs) {
             var followers = fllwrs;
             for(var j in followers) {
-                var follower = followers[j];
+                var follower = followers[j].data;
                 if(!follower)
                     continue;
                 if(allContacts[follower.screen_name]) {

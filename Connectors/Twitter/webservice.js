@@ -38,7 +38,7 @@ module.exports = function(theApp) {
 }
 
 // Adds all of the sync API endpoints once the auth process is completed
-function authComplete(theAuth) {
+function authComplete(theAuth, callback) {
     auth = theAuth;
     sync.init(auth, function() {
         
@@ -100,6 +100,6 @@ function authComplete(theAuth) {
                 res.end(JSON.stringify(status));
             });
         });
-        
+        callback();
     });
 }

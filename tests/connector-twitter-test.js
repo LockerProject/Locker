@@ -42,7 +42,7 @@ function addFriendOrFollowersSync(friendsOrFollowers) {
                         return;
                     }
                     //TODO: file size might not be a great way to determine if a file is done
-                    testUtils.waitForFileToComplete('Me/' + id + '/' + friendsOrFollowers + '.json',
+                    testUtils.waitForFileToComplete('Me/' + id + '/' + friendsOrFollowers + '/' + friendsOrFollowers + '.json',
                                                     10000, 60, 1000, function(success) { //10KB doesn't really make any sense!!
                         if(success == true)
                             promise.emit('success', true);
