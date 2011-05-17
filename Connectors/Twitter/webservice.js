@@ -40,64 +40,66 @@ module.exports = function(theApp) {
 // Adds all of the sync API endpoints once the auth process is completed
 function authComplete(theAuth) {
     auth = theAuth;
-    sync.init(auth);
+    sync.init(auth, function() {
+        
+        // Sync the person's home timline
+        app.get('/home_timeline', function(req, res) {
+            statuses('home_timeline', 60, res);
+        });
     
-    // Sync the person's home timline
-    app.get('/home_timeline', function(req, res) {
-        statuses('home_timeline', 60, res);
-    });
+        // Sync the person's metions
+        app.get('/mentions', function(req, res) {
+            statuses('mentions', 120, res);
+        });
     
-    // Sync the person's metions
-    app.get('/mentions', function(req, res) {
-        statuses('mentions', 120, res);
-    });
+        // Sync a status stream endpoint (home_timeline, mentions, etc)
+        function statuses(endpoint, repeatAfter, res) {
+            sync.pullStatuses(endpoint, repeatAfter, function(err) {
+                if(err) {
+                    res.writeHead(401, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({error:err}));
+                    return;
+                } else {
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.end(JSON.stringify({success:"got "+endpoint+", happy day"}));
+                }
+            });
+        
+        }
     
-    // Sync a status stream endpoint (home_timeline, mentions, etc)
-    function statuses(endpoint, repeatAfter, res) {
-        sync.pullStatuses(endpoint, repeatAfter, function(err) {
-            if(err) {
-                res.writeHead(401, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({error:err}));
-                return;
-            } else {
+        // Sync the person's friend data
+        app.get('/friends', function(req, res) {
+            people('friends', res);
+        });
+    
+        // Sync the person's follower data
+        app.get('/followers', function(req, res) {
+            people('followers', res);
+        });
+    
+        // Sync the person's friend or follower data
+        function people(endpoint, res) {
+            sync.syncUsersInfo(endpoint, function() {  
+                res.writeHead(200, {'content-type':'application/json'});
+                res.end(JSON.stringify({success:"done fetching " + endpoint}));
+            });
+        }
+    
+        // Sync the person's profile info
+        app.get('/profile', function(req, res) {
+            sync.syncProfile(function(err, userInfo) {
+                res.writeHead(200, {'content-type':'application/json'});
+                res.end(JSON.stringify({success:userInfo}));
+            });
+        });
+
+        // Rate limit status (not currently used anywhere, will be part of calming)
+        app.get('/rate_limit_status', function(req, res) {
+            sync.getRateLimitStatus(function(status) {
                 res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success:"got "+endpoint+", happy day"}));
-            }
+                res.end(JSON.stringify(status));
+            });
         });
         
-    }
-    
-    // Sync the person's friend data
-    app.get('/friends', function(req, res) {
-        people('friends', res);
-    });
-    
-    // Sync the person's follower data
-    app.get('/followers', function(req, res) {
-        people('followers', res);
-    });
-    
-    // Sync the person's friend or follower data
-    function people(endpoint, res) {
-        sync.syncUsersInfo(endpoint, function() {  
-            res.writeHead(200, {'content-type':'application/json'});
-            res.end(JSON.stringify({success:"done fetching " + endpoint}));
-        });
-    }
-    
-    // Sync the person's profile info
-    app.get('/profile', function(req, res) {
-        sync.syncProfile(function(err, userInfo) {
-            res.writeHead(200, {'content-type':'application/json'});
-            res.end(JSON.stringify({success:userInfo}));
-        });
-    });
-
-    // Rate limit status (not currently used anywhere, will be part of calming)
-    app.get('/rate_limit_status', function(req, res) {
-        sync.getRateLimitStatus(function(status) {
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end(JSON.stringify(status));
-        });
     });
 }

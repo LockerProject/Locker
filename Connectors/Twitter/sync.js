@@ -16,14 +16,16 @@
 var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    lfs = require('../../Common/node/lfs.js'),
+    dataStore = require('./dataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
 var allKnownIDs;
+var requestCount = 0;
 
 // Initialize the state
-exports.init = function(theAuth) {
+exports.init = function(theAuth, callback) {
     auth = theAuth;
     try {
         latests = JSON.parse(fs.readFileSync('latests.json'));
@@ -34,6 +36,9 @@ exports.init = function(theAuth) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
+    dataStore.init(function() {
+        callback();
+    });
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
@@ -50,7 +55,7 @@ exports.pullStatuses = function(endpoint, repeatAfter, callback) {
         items.reverse();
         lfs.appendObjectsToFile(endpoint + '.json', items);
         locker.at(endpoint, repeatAfter);
-        locker.diary("sync'd "+endpoint+" with "+items.length+" new entries");
+        locker.diary("synced "+endpoint+" with "+items.length+" new entries");
         callback();
     });
 }
@@ -110,32 +115,35 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
-            if(!ids || ids.length < 1) {
-                syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, res, callback);
+            var newIDs = [];
+            var knownIDs = allKnownIDs[friendsOrFollowers];
+            ids.forEach(function(id) {
+                if(!knownIDs[id])
+                    newIDs.push(id);
+            });
+            if(newIDs.length < 1) {
+                callback();
             } else {
-                getUsersExtendedInfo(ids, function(usersInfo) {
-                    locker.diary('got ' + usersInfo.length + ' ' + friendsOrFollowers);
-                    lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
-                    syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, callback);
+                getUsersExtendedInfo(newIDs, function(usersInfo) {
+                    addPeople(friendsOrFollowers, usersInfo, knownIDs);
+                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                    locker.diary('synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
+                    callback();
                 });
             }
+            locker.at('/' + friendsOrFollowers, 600);
         });
     });
 }
 
-
-function syncUsersInfoDone(friendsOrFollowers, knownIDs, usersInfo, callback) {    
-    locker.at('/' + friendsOrFollowers, 600);
-    console.log(Object.keys(knownIDs).length + ' ' + friendsOrFollowers + ' already known, ' 
-                + usersInfo.length + ' ' + friendsOrFollowers + ' found.');
-    for(var i in usersInfo) {
-        if(!knownIDs[usersInfo[i].id_str]) {
-            locker.event('contact/twitter', usersInfo[i]);
-            knownIDs[usersInfo[i].id_str] = 1;
-        }
+function addPeople(type, people, knownIDs, callback) {
+    console.error('adding ' + people.length + ' ' + type);
+    for(var i in people) {
+        var person = people[i];
+        locker.event('contact/twitter', person);
+        knownIDs[person.id_str] = 1;
+        dataStore.addPerson(type, person);    
     }
-    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-    callback();
 }
 
 // Syncs the profile of the auth'd user
@@ -169,6 +177,7 @@ function getIDs(friendsOrFolowers, screenName, callback) {
         }
     });
 }
+
 
 // Get extended profile info about the users in userIDs
 function getUsersExtendedInfo(userIDs, callback) {
