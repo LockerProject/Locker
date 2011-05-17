@@ -138,7 +138,7 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
 }
 
 function addPeople(type, people, knownIDs, callback) {
-    console.error('adding ' + people.length + ' ' + type);
+    // console.error('adding ' + people.length + ' ' + type);
     for(var i in people) {
         var person = people[i];
         locker.event('contact/twitter', person);

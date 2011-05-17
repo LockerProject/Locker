@@ -15,42 +15,18 @@
 
 var lfs = require('../../Common/node/lfs.js');
 var fs = require('fs');
+var dataStore = require('./dataStore.js');
 
+module.exports = function(app, callback) {
 
-module.exports = function(app) {
-
+dataStore.init(function() {
+    
 // In adherence with the contact/* provider API
 // Returns a list of the current set of contacts (friends and followers)
 app.get('/allContacts', function(req, res) {
-    lfs.readObjectsFromFile('friends/friends.json', function(frnds) {
-        var friends = frnds;
-        var allContacts = {};
-        for(var i in friends) {
-            var friend = friends[i].data;
-            if(!friend)
-                continue;
-            friend.isFriend = true;
-            allContacts[friend.screen_name] = friend;
-        }
-        lfs.readObjectsFromFile('followers/followers.json', function(fllwrs) {
-            var followers = fllwrs;
-            for(var j in followers) {
-                var follower = followers[j].data;
-                if(!follower)
-                    continue;
-                if(allContacts[follower.screen_name]) {
-                    allContacts[follower.screen_name].isFollower = true;
-                } else {
-                    follower.isFollower = true;
-                    allContacts[follower.screen_name] = follower;
-                }
-            }
-            var arr = [];
-            for(var k in allContacts)
-                arr.push(allContacts[k]);
-            res.writeHead(200, {'content-type' : 'application/json'});
-            res.end(JSON.stringify(arr));
-        });
+    dataStore.getAllContacts(function(allContacts) {
+        res.writeHead(200, {'content-type' : 'application/json'});
+        res.end(JSON.stringify(allContacts));
     });
 });
 
@@ -80,5 +56,7 @@ app.get('/get_profile', function(req, res) {
     });
 });
 
-return this;
+callback();
+
+});
 };
