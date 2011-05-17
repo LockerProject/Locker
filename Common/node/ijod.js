@@ -58,7 +58,7 @@ exports.createIJOD = function(name, indexedFields, callback) {
         self.addRecord = function(record) {
             var str = JSON.stringify(record) + '\n';
             self.dataStream.write(str);
-            var end = str.length;
+                var end = Buffer.byteLength(str);
             str = null;
             if(self.index.length > 0)
                 end += self.index[self.index.length - 1];
@@ -66,6 +66,15 @@ exports.createIJOD = function(name, indexedFields, callback) {
             self.indexStream.write(end + '\n');
             for(var i in self.indexedFields)
                 addIndexedValue(self.indexedFields[i], record);
+        }
+        self.getRecordByID = function(recordID, callback) {
+            var start = recordID >= 0? self.index[recordID]: 0;
+            var end = recordID < self.index.length? self.index[recordID + 1]: null;
+            readObjectsFromFile(name + '/' + name + '.json', start, end, function(err, docs) {
+                if(docs && docs.length)
+                    docs = docs[0];
+                callback(err, docs);
+            });
         }
         self.getAfterRecordID = function(recordID, callback) {
             var start = recordID >= 0? self.index[recordID]: 0;
@@ -75,8 +84,10 @@ exports.createIJOD = function(name, indexedFields, callback) {
             findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
                 if(err)
                     callback(err);
-                else
+                else if(docs[0])
                     self.getAfterRecordID(docs[0].mainIndex - 1, callback);
+                else
+                    callback(null, []);
             });
         }
         self.close = function() {
@@ -88,27 +99,24 @@ exports.createIJOD = function(name, indexedFields, callback) {
     }
     
     function addIndexedValue(field, record) {
-        var sql = 'INSERT OR REPLACE INTO ' + field.fieldName +' (indexedValue, mainIndex) VALUES (?, ?);';
-        db.execute(sql, [record[field.fieldName], self.index.length - 1], function(err) {
+        var sql = 'INSERT OR REPLACE INTO ' + tableName(field.fieldName) +' (indexedValue, mainIndex) VALUES (?, ?);';
+        db.execute(sql, [getFieldValue(record, field.fieldName), self.index.length - 1], function(err) {
             if(err)
                 console.error(err);
         });
     }
     
     function findGreaterThanIndex(fieldName, value, callback) {
-        var sql = 'SELECT mainIndex FROM ' + fieldName + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
+        var sql = 'SELECT mainIndex FROM ' + tableName(fieldName) + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
         db.execute(sql, [value], callback);
     }
-    
     function addIndicies(i, callback) {
-        // console.log('self.indexedFields[i]:',self.indexedFields[i]);
         if(i == self.indexedFields.length) {
             callback();
             return;
         }
         var field = self.indexedFields[i];
-        // console.log('create sql:', 'CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);');
-        db.execute('CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
+        db.execute('CREATE TABLE ' + tableName(field.fieldName) + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
             if(err)
                 callback(err);
             else
@@ -117,21 +125,31 @@ exports.createIJOD = function(name, indexedFields, callback) {
     }
 }
 
+function tableName(fieldName) {
+    return fieldName.replace(/\./g, '_');
+}
+
+function getFieldValue(record, fieldName) {
+    var value = record[fieldName];
+    if(fieldName.indexOf('.') > 0) {
+        var fields = fieldName.split('.');
+        value = record;
+        for(var i in fields) {
+            value = value[fields[i]];
+            if(value == null || value == undefined)
+                return;
+        }
+    }
+    return value;
+}
 
 function validateIJOD(name, callback) {
     fs.readdir(name, function(err, files) {
-        if(err) { //dir doesn't exist
-            fs.mkdir(name, 0755, function(err) {
-                callback();
-            });
-        } else {
+        if(err) //dir doesn't exist
+            fs.mkdir(name, 0755, callback);
+        else
             callback();
-        }
     });
-}
-
-function touch(path) {
-    fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf-8'}).end();
 }
 
 
@@ -171,8 +189,13 @@ function readObjectsFromFile(path, start, end, callback) {
         var itemStrings = data.split('\n');
         var items = [];
         for(var i = 0; i < itemStrings.length; i++) {
-            if(itemStrings[i])
-                items.push(JSON.parse(itemStrings[i]));
+            if(itemStrings[i]) {
+                try {
+                    items.push(JSON.parse(itemStrings[i]));
+                } catch(err) {
+                    console.error('JSON parse error for string:', itemStrings[i], '\nerr:', err);
+                }
+            }
         }
         callback(null, items);
     });
@@ -180,17 +203,3 @@ function readObjectsFromFile(path, start, end, callback) {
         callback(err, []);
     });
 }
-// 
-// createIJOD('testijod', [{fieldName:'ts', fieldType:'REAL'}], function(ijod) {
-//     var date1 = 10;
-//     ijod.addRecord({'ts':10, 'data': {'screen_name':'smurthas', 'id_str':'1523467'}});
-//     ijod.addRecord({'ts':100, 'data': {'screen_name':'jsoncavnr', 'id_str':'i love music'}});
-//     ijod.addRecord({'ts':1000, 'data': {'screen_name':'jeremie', 'id_str':'42'}});
-//     ijod.getAfterRecordID(-1, function(err, objects) {
-//         console.log('objs!:' + JSON.stringify(objects));
-//         ijod.getAfterFieldsValueEquals('ts', 99, function(err, docs) {
-//             console.log('getAfterField:', docs);
-//         });
-//     });
-//     console.log('done!!');
-// });
