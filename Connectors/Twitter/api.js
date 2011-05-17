@@ -33,18 +33,18 @@ app.get('/allContacts', function(req, res) {
 // In adherence with the contact/* provider API
 // Returns a list of the current set of contacts (friends and followers)
 app.get('/:type/getAll', function(req, res) {
-    if(req.params.type == 'followers' || req.params.type == 'friends') {
-        dataStore.getPeople(req.params.type, function(err, allPeople) {
-            res.writeHead(200, {'content-type' : 'application/json'});
-            res.end(JSON.stringify(allPeople));
-        });
-    }
+    var type = req.params.type;
+    if(type == 'followers' || type == 'friends')
+        getPeople(req.params.type, {recordID:-1}, res);
+    else if(type == 'home_timeline' || type == 'mentions')
+        getStatuses(type, {recordID:-1}, res);
 });
 
 // In adherence with the contact/* provider API
 // Returns a list of the current set of contacts (friends and followers)
 app.get('/:type/getSince', function(req, res) {
-    if(req.params.type == 'followers' || req.params.type == 'friends') {
+    var type = req.params.type;
+    if(type == 'followers' || type == 'friends') {
         var query = {};
         if(req.query.recordID) {
             query.recordID = req.query.recordID;
@@ -54,12 +54,34 @@ app.get('/:type/getSince', function(req, res) {
             //this is just /getAll
             query = {recordID:-1};
         }
-        dataStore.getPeople(req.params.type, query, function(err, allPeople) {
-            res.writeHead(200, {'content-type' : 'application/json'});
-            res.end(JSON.stringify(allPeople));
-        });
+        getPeople(req.params.type, query, res);
+    } else if(type == 'home_timeline' || type == 'mentions') {
+        var query = {};
+        if(req.query.recordID) {
+            query.recordID = req.query.recordID;
+        } else if(req.query.timeStamp) {
+            query.timeStamp = req.query.timeStamp;
+        } else {
+            //this is just /getAll
+            query = {recordID:-1};
+        }
+        getStatuses(req.params.type, query, res);
     }
 });
+
+function getPeople(type, query, res) {
+    dataStore.getPeople(type, query, function(err, allPeople) {
+        res.writeHead(200, {'content-type' : 'application/json'});
+        res.end(JSON.stringify(allPeople));
+    });
+}
+
+function getStatuses(type, query, res) {
+    dataStore.getStatuses(type, query, function(err, statuses) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(statuses));
+    });
+}
 
 // Reads a list of statuses from disk
 function readStatuses(req, res, type) {

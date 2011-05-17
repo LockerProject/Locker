@@ -10,15 +10,24 @@
 var ijodLib = require('../../Common/node/ijod');
 
 var people = {};
+var statuses = {};
 exports.init = function(callback) {
     if(!people.followers && ! people.friends) {
         ijodLib.createIJOD('followers', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                         {fieldName:'id', fieldType:'REAL'}], function(ijod) {
+                                         {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
             people.followers = ijod;
             ijodLib.createIJOD('friends', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                           {fieldName:'id', fieldType:'REAL'}], function(ijod) {
+                                           {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
                 people.friends = ijod;
-                callback();
+                ijodLib.createIJOD('home_timeline', [{fieldName:'timeStamp', fieldType:'REAL'}, 
+                                                     {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
+                    statuses.home_timeline = ijod;
+                    ijodLib.createIJOD('mentions', [{fieldName:'timeStamp', fieldType:'REAL'}, 
+                                                    {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
+                        statuses.mentions = ijod;
+                        callback();
+                    });
+                });
             });
         });
     } else {
@@ -67,3 +76,21 @@ exports.getAllContacts = function(callback) {
     });
 }
 
+exports.addStatus = function(type, status) {
+    statuses[type].addRecord({timeStamp:new Date(status.created_at).getTime(), type:'add', data:status});
+}
+
+exports.getStatuses = function(type, query, callback) {
+    var ijod = statuses[type];
+    if(!callback && typeof query == 'function') {
+        callback = query;
+        query = {recordID:-1};
+    }
+    if(query.hasOwnProperty('recordID')) {
+        ijod.getAfterRecordID(query.recordID, callback);
+    } else if(query.hasOwnProperty('timeStamp')) {
+        ijod.getAfterFieldsValueEquals('timeStamp', query.timeStamp, callback);
+    } else {
+        callback(new Error('invalid query, must contain either a recordID or timeStamp'), null);
+    }
+}

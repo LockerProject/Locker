@@ -53,7 +53,9 @@ exports.pullStatuses = function(endpoint, repeatAfter, callback) {
     var items = [];
     pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
-        lfs.appendObjectsToFile(endpoint + '.json', items);
+        for(var i in items)
+            dataStore.addStatus(endpoint, items[i]);
+        // lfs.appendObjectsToFile(endpoint + '.json', items);
         locker.at(endpoint, repeatAfter);
         locker.diary("synced "+endpoint+" with "+items.length+" new entries");
         callback();
