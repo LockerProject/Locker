@@ -56,10 +56,10 @@ exports.createIJOD = function(name, indexedFields, callback) {
     
     function addFunctions() {
         self.addRecord = function(record) {
-            var str = JSON.stringify(object) + '\n';
+            var str = JSON.stringify(record) + '\n';
             self.dataStream.write(str);
-            str = null;
             var end = str.length;
+            str = null;
             if(self.index.length > 0)
                 end += self.index[self.index.length - 1];
             self.index.push(end);
@@ -101,13 +101,13 @@ exports.createIJOD = function(name, indexedFields, callback) {
     }
     
     function addIndicies(i, callback) {
-        console.log('self.indexedFields[i]:',self.indexedFields[i]);
+        // console.log('self.indexedFields[i]:',self.indexedFields[i]);
         if(i == self.indexedFields.length) {
             callback();
             return;
         }
         var field = self.indexedFields[i];
-        console.log('create sql:', 'CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);');
+        // console.log('create sql:', 'CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);');
         db.execute('CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
             if(err)
                 callback(err);
