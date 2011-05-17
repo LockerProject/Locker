@@ -13,36 +13,102 @@
 */
 
 var fs = require('fs'),
-    lfs = require(__dirname + '/lfs');
+    lfs = require(__dirname + '/lfs'),
+    sqlite = require('sqlite');
 
-function createIJOD(name, callback) {
+
+function createIJOD(name, indexedFields, callback) {
+    if(!callback && typeof indexedFields == 'function') {
+        callback = indexedFields;
+        indexedFields = null;
+    }
     var self = {
         name:name,
         indexFile : name + '/' + name + '.index',
-        dataFile : name + '/' + name + '.json'
+        dataFile : name + '/' + name + '.json',
+        dbFile : name + '/' + name + '.db',
+        indexListFile : name + '/' + name + '.json',
+        indexedFields:(indexedFields || [])
     };
-    
+    var db = new sqlite.Database();
     validateIJOD(self.name, function(err) {
-        readIndex(self.indexFile, function(indexArray) {
-            self.index = indexArray;
-            
-            self.addRecord = function(record) {
-                var end = appendObjectToFile(record, self.dataFile);
-                if(self.index.length > 0)
-                    end += self.index[self.index.length - 1];
-                self.index.push(end);
-                appendToIndex(self.indexFile, end);
-            }
-            self.getAfterRecordID = function(recordID, callback) {
-                var start = recordID >= 0? indexArray[recordID]: 0;
-                readObjectsfromFile(name + '/' + name + '.json', start, null, callback);
-            }
-            
-            callback(self);
+        db.open(self.dbFile, function(error) {
+            readIndex(self.indexFile, function(indexArray) {
+                self.index = indexArray;
+                lfs.readObjectsFromFile(self.indexListFile, function(readIndexedFields) {
+                    if(!self.indexedFields && readIndexedFields)
+                        self.indexedFields = readIndexedFields;
+                    console.log('self.indexedFields:',self.indexedFields);
+                    if(self.indexedFields) {
+                        addIndicies(0, function(err) {
+                            if(err) {
+                                console.error('got sqlite err:', err);
+                            }
+                            addFunctions();
+                            callback(self);
+                        });
+                    } else {    
+                        addFunctions();
+                        callback(self);
+                    }
+                });
+            });
         });
     });
+    
+    function addFunctions() {
+        self.addRecord = function(record, callback) {
+            var end = appendObjectToFile(record, self.dataFile);
+            if(self.index.length > 0)
+                end += self.index[self.index.length - 1];
+            self.index.push(end);
+            appendToIndex(self.indexFile, end);
+            for(var i in self.indexedFields)
+                addIndexedValue(self.indexedFields[i], record);
+        }
+        self.getAfterRecordID = function(recordID, callback) {
+            var start = recordID >= 0? self.index[recordID]: 0;
+            readObjectsFromFile(name + '/' + name + '.json', start, null, callback);
+        }
+        self.getAfterFieldsValueEquals = function(fieldName, fieldValue, callback) {
+            findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
+                if(err)
+                    callback(err);
+                else
+                    self.getAfterRecordID(docs[0].mainIndex - 1, callback);
+            });
+        }
+    }
+    
+    function addIndexedValue(field, record) {
+        var sql = 'INSERT OR REPLACE INTO ' + field.fieldName +' (indexedValue, mainIndex) VALUES (?, ?);';
+        db.execute(sql, [record[field.fieldName], self.index.length - 1], function(err) {
+            if(err)
+                console.error(err);
+        });
+    }
+    
+    function findGreaterThanIndex(fieldName, value, callback) {
+        var sql = 'SELECT mainIndex FROM ' + fieldName + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
+        db.execute(sql, [value], callback);
+    }
+    
+    function addIndicies(i, callback) {
+        console.log('self.indexedFields[i]:',self.indexedFields[i]);
+        if(i == self.indexedFields.length) {
+            callback();
+            return;
+        }
+        var field = self.indexedFields[i];
+        console.log('create sql:', 'CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);');
+        db.execute('CREATE TABLE ' + field.fieldName + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
+            if(err)
+                callback(err);
+            else
+                addIndicies(i+1, callback);
+        });
+    }
 }
-
 
 
 function validateIJOD(name, callback) {
@@ -73,6 +139,7 @@ function touchAll(name) {
 function touch(path) {
     fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf-8'}).end();
 }
+
 
 /**
  * Appends an object as lined-delimited JSON to the file at the specified path
@@ -112,7 +179,7 @@ function appendToIndex(path, value) {
     stream.end();
 }
 
-function readObjectsfromFile(path, start, end, callback) {
+function readObjectsFromFile(path, start, end, callback) {
     var options = {'encoding': 'utf-8'};
     if(start) {
         options.start = start;
@@ -131,74 +198,23 @@ function readObjectsfromFile(path, start, end, callback) {
             if(itemStrings[i])
                 items.push(JSON.parse(itemStrings[i]));
         }
-        callback(items);
+        callback(null, items);
     });
     stream.on('error', function(err) {
-        callback([]);
+        callback(err, []);
     });
 }
 
-var IJODDiscreteIndex = function(path) {
-    var self = this;
-    self._index = {};
-    self._path = path;
-    try {
-        self._index = JSON.parse(fs.readFileSync(self._path));
-    } catch(err) {}
-    self.put = function(key, value) {
-        if(!self._index.key)
-            self._index.key = [value];
-        else {
-            var notAlready = true;
-            self._index.key.forEach(function(thisValue) {
-                if(value == thisValue)
-                    notAlready = false;
-            });
-            if(notAlready)
-                self._index.key.push(value);
-        }
-        fs.writeFile(self._path, JSON.stringify(self._index));
-    }
-    self.get = function(key) {
-        return self._index.key;
-    }
-}
-
-var IJODContinuousIndex = function(path) {
-    var self = this;
-    self._array = [];
-    self._path = path;
-    try {
-        self._array = JSON.parse(fs.readFileSync(self._path));
-    } catch(err) {}
-    self.addPair = function(key, value) {
-        var obj = {key:key, value:value};
-        self._array.push(obj);
-        self._array.sort(function(a, b) {
-            if(a.key < b.key)
-                return -1;
-            if(a.key > key.b)
-                return 1;
-            return 0;
-        });
-        fs.writeFile(self._path, JSON.stringify(self._index));
-    }
-    self.find = function(value) {
-        //search for value
-        for(var i in self.array) {
-            if(self.array[i] >= value)
-                return i;
-        }
-    }
-}
-
-
-createIJOD('testijod', function(ijod) {
-    ijod.addRecord({'ts':new Date().getTime(), 'data': {'screen_name':'smurthas', 'id_str':'1523467'}});
-    ijod.addRecord({'ts':new Date().getTime(), 'data': {'screen_name':'jsoncavnr', 'id_str':'i love music'}});
-    ijod.addRecord({'ts':new Date().getTime(), 'data': {'screen_name':'jeremie', 'id_str':'42'}});
-    ijod.getAfterRecordID(-1, function(objects) {
+createIJOD('testijod', [{fieldName:'ts', fieldType:'REAL'}], function(ijod) {
+    var date1 = 10;
+    ijod.addRecord({'ts':10, 'data': {'screen_name':'smurthas', 'id_str':'1523467'}});
+    ijod.addRecord({'ts':100, 'data': {'screen_name':'jsoncavnr', 'id_str':'i love music'}});
+    ijod.addRecord({'ts':1000, 'data': {'screen_name':'jeremie', 'id_str':'42'}});
+    ijod.getAfterRecordID(-1, function(err, objects) {
         console.log('objs!:' + JSON.stringify(objects));
+        ijod.getAfterFieldsValueEquals('ts', 99, function(err, docs) {
+            console.log('getAfterField:', docs);
+        });
     });
     console.log('done!!');
 });
