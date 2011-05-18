@@ -8,11 +8,13 @@
 */
 
 var IJOD = require('../../Common/node/ijod').IJOD;
+var sqlite = require('sqlite');
 
 var INDEXED_FIELDS = [{fieldName:'timeStamp', fieldType:'REAL'}, {fieldName:'data.id', fieldType:'REAL'}];
 
 var people = {};
 var statuses = {};
+var currentDB = new sqlite.Database();
 exports.init = function(callback) {
     if(!people.followers && ! people.friends) {
         people.followers = new IJOD('followers', INDEXED_FIELDS);
@@ -22,13 +24,23 @@ exports.init = function(callback) {
         people.followers.init(function() {
             people.friends.init(function() {
                 statuses.home_timeline.init(function() {
-                    statuses.mentions.init(callback);
+                    statuses.mentions.init(function() {
+                        openDB(callback);
+                    });
                 });
             });
         });
     } else {
         callback();
     }
+}
+
+function openDB(callback) {
+    currentDB.open('current.db', function(err) {
+        this.db.execute('CREATE TABLE friends (id INTEGER PRIMARY KEY, profile TEXT, status TEXT);', function(err) {
+            this.db.execute('CREATE TABLE followers (id INTEGER PRIMARY KEY, profile TEXT, status TEXT);', callback);      
+        });
+    });
 }
 
 function now() {
