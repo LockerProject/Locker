@@ -16,7 +16,7 @@ var fs = require('fs'),
     lfs = require(__dirname + '/lfs'),
     sqlite = require('sqlite');
 
-function IJOD(name, indexedFields) {    
+function IJOD(name, indexedFields) {
     this.name = name;
     this.indexFile = name + '/' + name + '.index';
     this.dataFile = name + '/' + name + '.json';
@@ -40,7 +40,7 @@ IJOD.prototype.init = function(callback) {
                     if(!self.indexedFields && readIndexedFields)
                         self.indexedFields = readIndexedFields;
                     if(self.indexedFields) {
-                        self.addIndicies(0, function(err) {
+                        self._addIndicies(0, function(err) {
                             callback();
                         });
                     } else {
@@ -61,8 +61,7 @@ IJOD.prototype.addRecord = function(record) {
         end += this.index[this.index.length - 1];
     this.index.push(end);
     this.indexStream.write(end + '\n');
-    for(var i in this.indexedFields)
-        this.addIndexedValue(this.indexedFields[i], record);
+    this._addIndexedValues(this.index.length - 1, record);
 }
 
 IJOD.prototype.getRecordByID = function(recordID, callback) {
@@ -82,11 +81,11 @@ IJOD.prototype.getAfterRecordID = function(recordID, callback) {
 
 IJOD.prototype.getAfterFieldsValueEquals = function(fieldName, fieldValue, callback) {
     var self = this;
-    this.findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
+    this._findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
         if(err)
             callback(err);
         else if(docs[0])
-            self.getAfterRecordID(docs[0].mainIndex - 1, callback);
+            self.getAfterRecordID(docs[0].recordID - 1, callback);
         else
             callback(null, []);
     });
@@ -104,36 +103,67 @@ IJOD.prototype.close = function() {
 }
 
 
-IJOD.prototype.addIndexedValue = function(field, record) {
-    var sql = 'INSERT OR REPLACE INTO ' + tableName(field.fieldName) +' (indexedValue, mainIndex) VALUES (?, ?);';
-    this.db.execute(sql, [getFieldValue(record, field.fieldName), this.index.length - 1], function(err) {
+IJOD.prototype._addIndexedValues = function(recordID, record) {
+    var sql = 'INSERT INTO indicies (' + this._getIndexFieldNames(recordID);
+    var values = [recordID];
+    for(var i = 0; i < this.indexedFields.length; i++) {
+        var field = this.indexedFields[i].fieldName;
+        values.push(getFieldValue(record, field));
+    }
+    sql += ') VALUES (';
+    for(var i = 0; i < this.indexedFields.length; i++)
+        sql += '?, ';
+    sql += '?);';
+    this.db.execute(sql, values, function(err) {
         if(err)
             console.error(err);
     });
 }
 
-IJOD.prototype.findGreaterThanIndex = function(fieldName, value, callback) {
-    var sql = 'SELECT mainIndex FROM ' + tableName(fieldName) + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
+IJOD.prototype._findGreaterThanIndex = function(fName, value, callback) {
+    var sql = 'SELECT recordID FROM indicies WHERE ' + fieldName(fName) + ' > ? ORDER BY recordID LIMIT 1;';
     this.db.execute(sql, [value], callback);
 }
 
-IJOD.prototype.addIndicies = function(i, callback) {
+IJOD.prototype._addIndicies = function(i, callback) {
     if(i == this.indexedFields.length) {
         callback();
         return;
     }
     var field = this.indexedFields[i];
     var self = this;
-    this.db.execute('CREATE TABLE ' + tableName(field.fieldName) + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
+    this.db.execute('CREATE TABLE indicies (' + this._getIndexFieldNamesAndTypes() + ');', function(err) {
         if(err)
-            callback(err);
-        else
-            self.addIndicies(i+1, callback);
+            console.error('err!', err);
+        callback(err);
     });
 }
 
+IJOD.prototype._getIndexFieldNames = function() {
+    var str = 'recordID, ';
+    for(var i = 0; i < this.indexedFields.length; i++) {
+        var field = this.indexedFields[i];
+        str += fieldName(field.fieldName);
+        if(i < this.indexedFields.length - 1) 
+            str += ', ';
+    }
+    return str;
+}
 
-function tableName(fieldName) {
+IJOD.prototype._getIndexFieldNamesAndTypes = function() {
+    var str = 'recordID INTEGER, ';
+    for(var i = 0; i < this.indexedFields.length; i++) {
+        var field = this.indexedFields[i];
+        str += fieldName(field.fieldName) + ' ' + field.fieldType;
+        if(i < this.indexedFields.length - 1) 
+            str += ',';
+    }
+    return str;
+}
+
+
+
+function fieldName(fieldName) {
     return fieldName.replace(/\./g, '_');
 }
 
