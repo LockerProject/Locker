@@ -66,9 +66,9 @@ IJOD.prototype.addRecord = function(record) {
 }
 
 IJOD.prototype.getRecordByID = function(recordID, callback) {
-    var start = recordID >= 0? this.index[recordID]: 0;
-    var end = recordID < this.index.length? this.index[recordID + 1]: null;
-    readObjectsFromFile(name + '/' + name + '.json', start, end, function(err, docs) {
+    var start = recordID > 0? this.index[recordID - 1]: 0;
+    var end = recordID < this.index.length? this.index[recordID]: null;
+    readObjectsFromFile(this.name + '/' + this.name + '.json', start, end, function(err, docs) {
         if(docs && docs.length)
             docs = docs[0];
         callback(err, docs);
@@ -81,11 +81,12 @@ IJOD.prototype.getAfterRecordID = function(recordID, callback) {
 }
 
 IJOD.prototype.getAfterFieldsValueEquals = function(fieldName, fieldValue, callback) {
-    findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
+    var self = this;
+    this.findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
         if(err)
             callback(err);
         else if(docs[0])
-            this.getAfterRecordID(docs[0].mainIndex - 1, callback);
+            self.getAfterRecordID(docs[0].mainIndex - 1, callback);
         else
             callback(null, []);
     });
@@ -131,18 +132,6 @@ IJOD.prototype.addIndicies = function(i, callback) {
     });
 }
 
-
-
-exports.createIJOD = function(name, indexedFields, callback) {
-    if(!callback && typeof indexedFields == 'function') {
-        callback = indexedFields;
-        indexedFields = null;
-    }
-    var ijod = new IJOD(name, indexedFields);
-    ijod.init(function() {
-        callback(ijod);
-    });
-}
 
 function tableName(fieldName) {
     return fieldName.replace(/\./g, '_');

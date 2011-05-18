@@ -30,6 +30,16 @@ try {
 }
 wrench.copyDirSyncRecursive("Me.tests", "Me");
 
+// Cleanup the old runs ijodtest dir
+try {
+    wrench.rmdirSyncRecursive("ijodtest");
+} catch (E) {
+    if (E.code != "ENOENT") {
+        process.stderr.write("Error: " + E + "\n");
+        process.exit(1);
+    }
+}
+
 // Ladies and gentlemen, get your logs ready
 var logFd = fs.openSync("locker.log", "w+");
 
@@ -125,5 +135,6 @@ setTimeout(function() {
     vowsProcess.on("exit", function(code) {
         console.log("All tests done");
         lockerd.shutdown();
+
     });
 }, 1000);
