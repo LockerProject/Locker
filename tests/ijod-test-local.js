@@ -14,7 +14,7 @@ var IJOD = require("../Common/node/ijod.js").IJOD;
 
 var myIJOD = new IJOD('ijodtest', [{fieldName:'id', fieldType:'REAL'}, {fieldName:'timeStamp', fieldType:'REAL'}]);
 
-var suite = vows.describe("IJOD Module Initialization");
+var suite = vows.describe("IJOD Module");
 
 suite.addBatch({
     'An IJOD': {
