@@ -7,26 +7,22 @@
 *
 */
 
-var ijodLib = require('../../Common/node/ijod');
+var IJOD = require('../../Common/node/ijod').IJOD;
+
+var INDEXED_FIELDS = [{fieldName:'timeStamp', fieldType:'REAL'}, {fieldName:'data.id', fieldType:'REAL'}];
 
 var people = {};
 var statuses = {};
 exports.init = function(callback) {
     if(!people.followers && ! people.friends) {
-        ijodLib.createIJOD('followers', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                         {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
-            people.followers = ijod;
-            ijodLib.createIJOD('friends', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                           {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
-                people.friends = ijod;
-                ijodLib.createIJOD('home_timeline', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                                     {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
-                    statuses.home_timeline = ijod;
-                    ijodLib.createIJOD('mentions', [{fieldName:'timeStamp', fieldType:'REAL'}, 
-                                                    {fieldName:'data.id', fieldType:'REAL'}], function(ijod) {
-                        statuses.mentions = ijod;
-                        callback();
-                    });
+        people.followers = new IJOD('followers', INDEXED_FIELDS);
+        people.friends = new IJOD('friends', INDEXED_FIELDS);
+        statuses.home_timeline = new IJOD('home_timeline', INDEXED_FIELDS);
+        statuses.mentions = new IJOD('mentions', INDEXED_FIELDS);
+        people.followers.init(function() {
+            people.friends.init(function() {
+                statuses.home_timeline.init(function() {
+                    statuses.mentions.init(callback);
                 });
             });
         });
