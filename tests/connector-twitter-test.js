@@ -122,8 +122,8 @@ var mePath = '/Me/' + id;
 
 var counts = {};
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
-    .discuss('Twitter connector')
-        .discuss('can get home timeline')
+    .discuss('Twitter connector can get all')
+        .discuss('home timeline entries')
             .path(mePath + '/home_timeline/getAll')
             .get()
                 .expect(200)
@@ -136,12 +136,12 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
-        .discuss('can get mentions')
+        .discuss('mentions entries')
             .path(mePath + '/mentions/getAll')
             .get()
                 .expect(200)
                 .expect('returns some mentions', function(err, res, body) {
-                    assert.isNull(err);;
+                    assert.isNull(err);
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.ok(statuses.length > 0);
@@ -149,11 +149,37 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
+        .discuss('friends entries')
+            .path(mePath + '/friends/getAll')
+            .get()
+                .expect(200)
+                .expect('returns some friends', function(err, res, body) {
+                    assert.isNull(err);
+                    var friends = JSON.parse(body);
+                    assert.isNotNull(friends);
+                    assert.ok(friends.length > 0);
+                    counts.friends = friends.length;
+                })
+            .unpath()
+        .undiscuss()
+        .discuss('followers entries')
+            .path(mePath + '/followers/getAll')
+            .get()
+                .expect(200)
+                .expect('returns some followers', function(err, res, body) {
+                    assert.isNull(err);
+                    var followers = JSON.parse(body);
+                    assert.isNotNull(followers);
+                    assert.ok(followers.length > 0);
+                    counts.followers = followers.length;
+                })
+            .unpath()
+        .undiscuss()
     .undiscuss();
     
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
-    .discuss('Twitter connector')
-        .discuss('can get home timeline')
+    .discuss('Twitter connector can get')
+        .discuss('home timeline entries after recordID 1')
             .path(mePath + '/home_timeline/getSince?recordID=1')
             .get()
                 .expect(200)
@@ -166,7 +192,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
-        .discuss('can get mentions')
+        .discuss('mentions entries after recordID 1')
             .path(mePath + '/mentions/getSince?recordID=1')
             .get()
                 .expect(200)
@@ -176,6 +202,32 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNotNull(statuses);
                     assert.ok(statuses.length > 0);
                     assert.equal(statuses.length, counts.mentions - 2);
+                })
+            .unpath()
+        .undiscuss()
+        .discuss('friends entries after recordID 1')
+            .path(mePath + '/friends/getSince?recordID=1')
+            .get()
+                .expect(200)
+                .expect('returns two fewer friends', function(err, res, body) {
+                    assert.isNull(err);
+                    var friends = JSON.parse(body);
+                    assert.isNotNull(friends);
+                    assert.ok(friends.length > 0);
+                    assert.equal(friends.length, counts.friends - 2);
+                })
+            .unpath()
+        .undiscuss()
+        .discuss('followers entries after recordID 1')
+            .path(mePath + '/followers/getSince?recordID=1')
+            .get()
+                .expect(200)
+                .expect('returns two fewer followers', function(err, res, body) {
+                    assert.isNull(err);
+                    var followers = JSON.parse(body);
+                    assert.isNotNull(followers);
+                    assert.ok(followers.length > 0);
+                    assert.equal(followers.length, counts.followers - 2);
                 })
             .unpath()
         .undiscuss()
