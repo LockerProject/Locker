@@ -16,113 +16,132 @@ var fs = require('fs'),
     lfs = require(__dirname + '/lfs'),
     sqlite = require('sqlite');
 
+function IJOD(name, indexedFields) {    
+    this.name = name;
+    this.indexFile = name + '/' + name + '.index';
+    this.dataFile = name + '/' + name + '.json';
+    this.dbFile = name + '/' + name + '.db';
+    this.indexListFile = name + '/' + name + '.json';
+    this.indexedFields = indexedFields;
+    this.db = new sqlite.Database();
+}
 
-exports.createIJOD = function(name, indexedFields, callback) {
-    if(!callback && typeof indexedFields == 'function') {
-        callback = indexedFields;
-        indexedFields = null;
-    }
-    var self = {
-        name:name,
-        indexFile : name + '/' + name + '.index',
-        dataFile : name + '/' + name + '.json',
-        dbFile : name + '/' + name + '.db',
-        indexListFile : name + '/' + name + '.json',
-        indexedFields:indexedFields
-    };
-    var db = new sqlite.Database();
+exports.IJOD = IJOD;
+
+IJOD.prototype.init = function(callback) {
+    var self = this;
     validateIJOD(self.name, function(err) {
         self.dataStream = fs.createWriteStream(self.dataFile, {'flags':'a', 'encoding': 'utf-8'});
         self.indexStream = fs.createWriteStream(self.indexFile, {'flags':'a', 'encoding': 'utf-8'});
-        db.open(self.dbFile, function(error) {
+        self.db.open(self.dbFile, function(error) {
             readIndex(self.indexFile, function(indexArray) {
                 self.index = indexArray;
                 lfs.readObjectsFromFile(self.indexListFile, function(readIndexedFields) {
                     if(!self.indexedFields && readIndexedFields)
                         self.indexedFields = readIndexedFields;
                     if(self.indexedFields) {
-                        addIndicies(0, function(err) {
-                            addFunctions();
-                            callback(self);
+                        self.addIndicies(0, function(err) {
+                            callback();
                         });
-                    } else {    
-                        addFunctions();
-                        callback(self);
+                    } else {
+                        callback();
                     }
                 });
             });
         });
     });
-    
-    function addFunctions() {
-        self.addRecord = function(record) {
-            var str = JSON.stringify(record) + '\n';
-            self.dataStream.write(str);
-                var end = Buffer.byteLength(str);
-            str = null;
-            if(self.index.length > 0)
-                end += self.index[self.index.length - 1];
-            self.index.push(end);
-            self.indexStream.write(end + '\n');
-            for(var i in self.indexedFields)
-                addIndexedValue(self.indexedFields[i], record);
-        }
-        self.getRecordByID = function(recordID, callback) {
-            var start = recordID >= 0? self.index[recordID]: 0;
-            var end = recordID < self.index.length? self.index[recordID + 1]: null;
-            readObjectsFromFile(name + '/' + name + '.json', start, end, function(err, docs) {
-                if(docs && docs.length)
-                    docs = docs[0];
-                callback(err, docs);
-            });
-        }
-        self.getAfterRecordID = function(recordID, callback) {
-            var start = recordID >= 0? self.index[recordID]: 0;
-            readObjectsFromFile(name + '/' + name + '.json', start, null, callback);
-        }
-        self.getAfterFieldsValueEquals = function(fieldName, fieldValue, callback) {
-            findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
-                if(err)
-                    callback(err);
-                else if(docs[0])
-                    self.getAfterRecordID(docs[0].mainIndex - 1, callback);
-                else
-                    callback(null, []);
-            });
-        }
-        self.close = function() {
-            self.dataStream.end();
-            self.dataStream.destory();
-            self.indexStream.end();
-            self.indexStream.destory();
-        }
+}
+
+IJOD.prototype.addRecord = function(record) {
+    var str = JSON.stringify(record) + '\n';
+    this.dataStream.write(str);
+        var end = Buffer.byteLength(str);
+    str = null;
+    if(this.index.length > 0)
+        end += this.index[this.index.length - 1];
+    this.index.push(end);
+    this.indexStream.write(end + '\n');
+    for(var i in this.indexedFields)
+        this.addIndexedValue(this.indexedFields[i], record);
+}
+
+IJOD.prototype.getRecordByID = function(recordID, callback) {
+    var start = recordID >= 0? this.index[recordID]: 0;
+    var end = recordID < this.index.length? this.index[recordID + 1]: null;
+    readObjectsFromFile(name + '/' + name + '.json', start, end, function(err, docs) {
+        if(docs && docs.length)
+            docs = docs[0];
+        callback(err, docs);
+    });
+}
+
+IJOD.prototype.getAfterRecordID = function(recordID, callback) {
+    var start = recordID >= 0? this.index[recordID]: 0;
+    readObjectsFromFile(this.name + '/' + this.name + '.json', start, null, callback);
+}
+
+IJOD.prototype.getAfterFieldsValueEquals = function(fieldName, fieldValue, callback) {
+    findGreaterThanIndex(fieldName, fieldValue, function(err, docs) {
+        if(err)
+            callback(err);
+        else if(docs[0])
+            this.getAfterRecordID(docs[0].mainIndex - 1, callback);
+        else
+            callback(null, []);
+    });
+}
+
+IJOD.prototype.close = function() {
+    if(this.dataStream) {
+        this.dataStream.end();
+        this.dataStream.destory();
     }
-    
-    function addIndexedValue(field, record) {
-        var sql = 'INSERT OR REPLACE INTO ' + tableName(field.fieldName) +' (indexedValue, mainIndex) VALUES (?, ?);';
-        db.execute(sql, [getFieldValue(record, field.fieldName), self.index.length - 1], function(err) {
-            if(err)
-                console.error(err);
-        });
+    if(this.indexStream) {
+        this.indexStream.end();
+        this.indexStream.destory();
     }
-    
-    function findGreaterThanIndex(fieldName, value, callback) {
-        var sql = 'SELECT mainIndex FROM ' + tableName(fieldName) + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
-        db.execute(sql, [value], callback);
+}
+
+
+IJOD.prototype.addIndexedValue = function(field, record) {
+    var sql = 'INSERT OR REPLACE INTO ' + tableName(field.fieldName) +' (indexedValue, mainIndex) VALUES (?, ?);';
+    this.db.execute(sql, [getFieldValue(record, field.fieldName), this.index.length - 1], function(err) {
+        if(err)
+            console.error(err);
+    });
+}
+
+IJOD.prototype.findGreaterThanIndex = function(fieldName, value, callback) {
+    var sql = 'SELECT mainIndex FROM ' + tableName(fieldName) + ' WHERE indexedValue > ? ORDER BY indexedValue LIMIT 1;';
+    this.db.execute(sql, [value], callback);
+}
+
+IJOD.prototype.addIndicies = function(i, callback) {
+    if(i == this.indexedFields.length) {
+        callback();
+        return;
     }
-    function addIndicies(i, callback) {
-        if(i == self.indexedFields.length) {
-            callback();
-            return;
-        }
-        var field = self.indexedFields[i];
-        db.execute('CREATE TABLE ' + tableName(field.fieldName) + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
-            if(err)
-                callback(err);
-            else
-                addIndicies(i+1, callback);
-        });
+    var field = this.indexedFields[i];
+    var self = this;
+    this.db.execute('CREATE TABLE ' + tableName(field.fieldName) + ' (indexedValue ' + field.fieldType + ', mainIndex INTEGER);', function(err) {
+        if(err)
+            callback(err);
+        else
+            self.addIndicies(i+1, callback);
+    });
+}
+
+
+
+exports.createIJOD = function(name, indexedFields, callback) {
+    if(!callback && typeof indexedFields == 'function') {
+        callback = indexedFields;
+        indexedFields = null;
     }
+    var ijod = new IJOD(name, indexedFields);
+    ijod.init(function() {
+        callback(ijod);
+    });
 }
 
 function tableName(fieldName) {
