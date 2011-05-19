@@ -9,7 +9,12 @@
 
 var lfs = require('../../Common/node/lfs.js');
 var fs = require('fs');
-    
+
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 module.exports = function(app) {
     
 app.get('/allContacts',
@@ -18,7 +23,7 @@ function(req, res) {
         'Content-Type': 'text/plain'
     });
     lfs.readObjectsFromFile('contacts.json', function(contacts) {
-        res.write(JSON.stringify(contacts));
+        res.write(format(JSON.stringify(contacts)));
         res.end();
     });
 });
@@ -45,7 +50,7 @@ function(req, res) {
             });
         }
         readNext(function() {
-            res.end(JSON.stringify(photoAlbums));
+            res.end(format(JSON.stringify(photoAlbums)));
         });
     });
 });
@@ -57,7 +62,7 @@ function(req, res) {
         var obj = {};
         obj.data = data;
         res.writeHead(200, {'Content-Type': 'application/json'});
-        res.write(JSON.stringify(obj));
+        res.write(format(JSON.stringify(obj)));
         res.end();
     });
 });

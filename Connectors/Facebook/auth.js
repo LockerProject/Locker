@@ -17,6 +17,11 @@ var express = require('express'),
 var facebookClient = require('facebook-js')();
 var uri, completedCallback;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 exports.auth = {};
 function isAuthed() {
     try {
@@ -75,7 +80,7 @@ function handleAuth(req, res) {
     if(!req.param('code')) {
         if(!(exports.auth.appID && exports.auth.appSecret)) {
             res.writeHead(200);
-            res.end(displayHTML("Enter your personal FaceBook app info that will be used to sync your data" + 
+            res.end(format("Enter your personal FaceBook app info that will be used to sync your data" + 
                     " (create a new one <a href='http://www.facebook.com/developers/createapp.php'>here</a>" +
                     " using a callback url of http://"+url.parse(uri).host+"/) " +
                     "<form method='post' action='saveAuth'>" +
@@ -111,13 +116,13 @@ function handleAuth(req, res) {
 function saveAuth(req, res) {
     if(!(req.body.appID && req.body.appSecret)) {
         res.writeHead(400, {'Content-Type': 'text/html'});
-        res.end(displayHTML("missing field(s)?"));
+        res.end(format("missing field(s)?"));
         return;
     }
     res.writeHead(200, {'Content-Type': 'text/html'});
     exports.auth.appID = req.body.appID;
     exports.auth.appSecret = req.body.appSecret;
-    res.end(displayHTML(getGoFB()));
+    res.end(format(getGoFB()));
 }
 
 function getGoFB() {
@@ -127,19 +132,4 @@ function getGoFB() {
 function getAuthURI() {
     return facebookClient.getAuthorizeUrl({client_id: exports.auth.appID, redirect_uri: uri+"auth",
                 scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'});
-}
-
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
-        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
-        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
 }

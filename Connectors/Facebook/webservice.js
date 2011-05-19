@@ -18,6 +18,11 @@ var fs = require('fs'),
 
 var _debug = false;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 module.exports = function(app, auth) {
     sync.init(auth);
 
@@ -26,7 +31,7 @@ module.exports = function(app, auth) {
             res.redirect(app.meData.uri + 'auth');
         else {    
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
+            res.end(format("found a token, <a href='./friends'>load friends</a>"));
         }   
     });
 
@@ -35,14 +40,13 @@ module.exports = function(app, auth) {
         sync.getFriends(function(err) {
             if(err) {
                 res.writeHead(500, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify(err));
+                res.end(format(JSON.stringify(err)));
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success:"sync'd all your friends, how sociable!"}));
+                res.end(format(JSON.stringify({success:"sync'd all your friends, how sociable!"})));
             }
         });
     });
-
 
     app.get('/feed',
     function(req, res) {
@@ -58,20 +62,4 @@ module.exports = function(app, auth) {
             res.end();
         });
     });
-}
-
-
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
-        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
-        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
 }
