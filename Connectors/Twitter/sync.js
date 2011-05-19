@@ -16,14 +16,16 @@
 var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    lfs = require('../../Common/node/lfs.js'),
+    dataStore = require('./dataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
 var allKnownIDs;
+var requestCount = 0;
 
 // Initialize the state
-exports.init = function(theAuth) {
+exports.init = function(theAuth, callback) {
     auth = theAuth;
     try {
         latests = JSON.parse(fs.readFileSync('latests.json'));
@@ -34,12 +36,15 @@ exports.init = function(theAuth) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
+    dataStore.init(function() {
+        callback();
+    });
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
-exports.pullStatuses = function(endpoint, repeatAfter, callback) {
+exports.pullStatuses = function(endpoint, callback) {
     if(!getTwitterClient()) {
-        sys.debug('could not get twitterClient');
+        sys.debug('could not get Twitter Client');
         callback('missing auth info :(');
         return;
     }
@@ -48,9 +53,11 @@ exports.pullStatuses = function(endpoint, repeatAfter, callback) {
     var items = [];
     pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
-        lfs.appendObjectsToFile(endpoint + '.json', items);
-        locker.at(endpoint, repeatAfter);
-        locker.diary("sync'd "+endpoint+" with "+items.length+" new entries");
+        for(var i in items)
+            dataStore.addStatus(endpoint, items[i]);
+        // lfs.appendObjectsToFile(endpoint + '.json', items);
+        locker.at('/getNew/' + endpoint, (endpoint === 'home_timeline' ? 60 : 120));
+        locker.diary("synced "+endpoint+" with "+items.length+" new entries");
         callback();
     });
 }
@@ -65,7 +72,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
     if(since_id)
         params.since_id = since_id;
     requestCount++;
-    twitterClient.apiCall('GET', '/statuses/' + endpoint + '.json', params, function(error, result) {
+    getTwitterClient().apiCall('GET', '/statuses/' + endpoint + '.json', params, function(error, result) {
         if(error) {
             if(error.statusCode >= 500) { //failz-whalez, hang out for a bit
                 setTimeout(function(){
@@ -110,32 +117,115 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
-            if(!ids || ids.length < 1) {
-                syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, res, callback);
-            } else {
-                getUsersExtendedInfo(ids, function(usersInfo) {
-                    locker.diary('got ' + usersInfo.length + ' ' + friendsOrFollowers);
-                    lfs.writeObjectsToFile(friendsOrFollowers + '.json', usersInfo);
-                    syncUsersInfoDone(friendsOrFollowers, allKnownIDs[friendsOrFollowers], usersInfo, callback);
+            // console.error('got ids:', ids);
+            var newIDs = [];
+            var knownIDs = allKnownIDs[friendsOrFollowers];
+            var repeatedIDs = {};
+            if(ids) {
+                ids.forEach(function(id) {
+                    if(!knownIDs[id])
+                        newIDs.push(id);
+                    else
+                        repeatedIDs[id] = 1;
                 });
             }
+            var removedIDs = [];
+            for(var knownID in knownIDs) {
+                if(!repeatedIDs[knownID])
+                    removedIDs.push(knownID);
+            }
+            // console.error('got new ids:', newIDs);
+            // console.error('got removedIDs:', removedIDs);
+            if(newIDs.length < 1) {
+                if(removedIDs.length > 0)
+                    logRemoved(friendsOrFollowers, removedIDs);
+                callback();
+            } else {
+                getUsersExtendedInfo(newIDs, function(usersInfo) {
+                    addPeople(friendsOrFollowers, usersInfo, knownIDs);
+                    if(removedIDs.length > 0)
+                        logRemoved(friendsOrFollowers, removedIDs);
+                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                    locker.diary('synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
+                    callback();
+                });
+            }
+            locker.at('/getNew/' + friendsOrFollowers, 600);
         });
     });
 }
 
-
-function syncUsersInfoDone(friendsOrFollowers, knownIDs, usersInfo, callback) {    
-    locker.at('/' + friendsOrFollowers, 600);
-    console.log(Object.keys(knownIDs).length + ' ' + friendsOrFollowers + ' already known, ' 
-                + usersInfo.length + ' ' + friendsOrFollowers + ' found.');
-    for(var i in usersInfo) {
-        if(!knownIDs[usersInfo[i].id_str]) {
-            locker.event('contact/twitter', usersInfo[i]);
-            knownIDs[usersInfo[i].id_str] = 1;
-        }
+exports.updateProfiles = function(type, callback) {
+    if(!type || type.toLowerCase() != 'followers')
+        type = 'friends';
+        
+    var ids = [];
+    for(var i in allKnownIDs[type]) {
+        ids.push(i);
     }
+    getUsersExtendedInfo(ids, function(usersInfo) {
+        updatePeople(type, usersInfo);
+        callback();
+    });
+}
+
+
+function updatePeople(type, people) {
+    if(!people)
+        return;
+    people.forEach(function(profileFromTwitter) {
+        dataStore.getPersonFromCurrent(type, profileFromTwitter.id, function(err, records) {
+            if(err) {
+                console.error('got error from dataStore.getPersonFromCurrent:', err);
+            } else if(!records) {
+                console.error('!records for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+            } else if(records.length !== 1) {
+                console.error('records.length !== 1 for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+            } else {
+                var profileFromSQL = JSON.parse(records[0].profile);
+                var isDifferent = false;
+                var keys = Object.keys(profileFromSQL);
+                if(keys.length != Object.keys(profileFromTwitter).length) {
+                    isDifferent = true;
+                } else {
+                    for(var key in profileFromTwitter) {
+                        if(key === 'status') //don't check status   
+                            continue;
+                        if(key !== 'status' && profileFromTwitter[key] !== profileFromSQL[key]) {
+                            isDifferent = true;
+                            break;
+                        }
+                    }
+                }
+                if(isDifferent) {
+                    // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
+                    dataStore.logUpdatePerson(type, profileFromTwitter);
+                } else {
+                    // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
+                }
+            }
+        })
+    })
+}
+
+function addPeople(type, people, knownIDs) {
+    for(var i in people) {
+        var person = people[i];
+        locker.event('contact/twitter', person);
+        knownIDs[person.id_str] = 1;
+        dataStore.addPerson(type, person);    
+    }
+}
+
+function logRemoved(type, ids) {
+    if(!ids)
+        return;
+    var knownIDs = allKnownIDs[type];
+    ids.forEach(function(id) {
+        dataStore.logRemovePerson(type, id);
+        delete knownIDs[id];
+    });
     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-    callback();
 }
 
 // Syncs the profile of the auth'd user
@@ -151,7 +241,7 @@ exports.syncProfile = function(callback) {
 function getUserInfo(callback) {
     if(!getTwitterClient())
         return;
-    twitterClient.apiCall('GET', '/account/verify_credentials.json', 
+    getTwitterClient().apiCall('GET', '/account/verify_credentials.json', 
                             {token:auth.token, include_entities:true}, callback);
 }
 
@@ -160,7 +250,7 @@ function getIDs(friendsOrFolowers, screenName, callback) {
     if(!friendsOrFolowers || friendsOrFolowers.toLowerCase() != 'followers')
         friendsOrFolowers = 'friends';
     friendsOrFolowers = friendsOrFolowers.toLowerCase();
-    twitterClient.apiCall('GET', '/' + friendsOrFolowers + '/ids.json', 
+    getTwitterClient().apiCall('GET', '/' + friendsOrFolowers + '/ids.json', 
                     {screen_name:screenName, cursor:-1, token: auth.token}, function(err, result) {
         if(err) {
             callback(err, result);
@@ -169,6 +259,7 @@ function getIDs(friendsOrFolowers, screenName, callback) {
         }
     });
 }
+
 
 // Get extended profile info about the users in userIDs
 function getUsersExtendedInfo(userIDs, callback) {
@@ -187,7 +278,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         id_str += userIDs.pop();
         if(i < 99) id_str += ',';
     }
-    twitterClient.apiCall('GET', '/users/lookup.json', 
+    getTwitterClient().apiCall('GET', '/users/lookup.json', 
         {token: auth.token, user_id: id_str, include_entities: true},
         function(error, result) {
             if(error) {
