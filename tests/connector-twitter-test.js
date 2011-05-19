@@ -37,7 +37,7 @@ function addFriendOrFollowersSync(friendsOrFollowers) {
             topic:function() {
                 var promise = new events.EventEmitter;
             
-                request({uri:lconfig.lockerBase + '/Me/' + id + '/' + friendsOrFollowers}, function(err, resp, body) {
+                request({uri:lconfig.lockerBase + '/Me/' + id + '/getNew/' + friendsOrFollowers}, function(err, resp, body) {
                     if(err) {
                         promise.emit('error', err);
                         return;
@@ -71,7 +71,7 @@ function addStatusSync(type) {
             topic:function() {
                 var promise = new events.EventEmitter;
             
-                request({uri:lconfig.lockerBase + '/Me/' + id + '/' + type}, function(err, resp, body) {
+                request({uri:lconfig.lockerBase + '/Me/' + id + '/getNew/' + type}, function(err, resp, body) {
                     if(err) {
                         promise.emit('error', err);
                         return;
@@ -124,7 +124,7 @@ var counts = {};
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector can get all')
         .discuss('home timeline entries')
-            .path(mePath + '/home_timeline/getAll')
+            .path(mePath + '/getAll/home_timeline')
             .get()
                 .expect(200)
                 .expect('returns some statuses', function(err, res, body) {
@@ -137,7 +137,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('mentions entries')
-            .path(mePath + '/mentions/getAll')
+            .path(mePath + '/getAll/mentions')
             .get()
                 .expect(200)
                 .expect('returns some mentions', function(err, res, body) {
@@ -150,7 +150,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('friends entries')
-            .path(mePath + '/friends/getAll')
+            .path(mePath + '/getAll/friends')
             .get()
                 .expect(200)
                 .expect('returns some friends', function(err, res, body) {
@@ -163,7 +163,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('followers entries')
-            .path(mePath + '/followers/getAll')
+            .path(mePath + '/getAll/followers')
             .get()
                 .expect(200)
                 .expect('returns some followers', function(err, res, body) {
@@ -180,7 +180,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector can get')
         .discuss('home timeline entries after recordID 1')
-            .path(mePath + '/home_timeline/getSince?recordID=1')
+            .path(mePath + '/getSince/home_timeline?recordID=1')
             .get()
                 .expect(200)
                 .expect('returns two fewer statuses', function(err, res, body) {
@@ -193,7 +193,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('mentions entries after recordID 1')
-            .path(mePath + '/mentions/getSince?recordID=1')
+            .path(mePath + '/getSince/mentions?recordID=1')
             .get()
                 .expect(200)
                 .expect('returns two fewer mentions', function(err, res, body) {
@@ -206,7 +206,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('friends entries after recordID 1')
-            .path(mePath + '/friends/getSince?recordID=1')
+            .path(mePath + '/getSince/friends?recordID=1')
             .get()
                 .expect(200)
                 .expect('returns two fewer friends', function(err, res, body) {
@@ -219,7 +219,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss('followers entries after recordID 1')
-            .path(mePath + '/followers/getSince?recordID=1')
+            .path(mePath + '/getSince/followers?recordID=1')
             .get()
                 .expect(200)
                 .expect('returns two fewer followers', function(err, res, body) {

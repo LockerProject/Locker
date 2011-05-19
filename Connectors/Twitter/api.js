@@ -31,8 +31,23 @@ app.get('/allContacts', function(req, res) {
 });
 
 // In adherence with the contact/* provider API
-// Returns a list of the current set of contacts (friends and followers)
-app.get('/:type/getAll', function(req, res) {
+// Returns a list of the current set of friends or followers
+app.get('/getCurrent/:type', function(req, res) {
+    var type = req.params.type;
+    if(type == 'followers' || type == 'friends') {
+        dataStore.getPeopleCurrent(req.params.type, function(err, profiles) {
+            if(err) {
+                
+            } else {
+                res.writeHead(200, {'content-type' : 'application/json'});
+                res.end(JSON.stringify(profiles));
+            }
+        });
+    }
+});
+
+// In adherence with the contact/* provider API
+app.get('/getAll/:type', function(req, res) {
     var type = req.params.type;
     if(type == 'followers' || type == 'friends')
         getPeople(req.params.type, {recordID:-1}, res);
@@ -41,8 +56,7 @@ app.get('/:type/getAll', function(req, res) {
 });
 
 // In adherence with the contact/* provider API
-// Returns a list of the current set of contacts (friends and followers)
-app.get('/:type/getSince', function(req, res) {
+app.get('/getSince/:type', function(req, res) {
     var type = req.params.type;
     if(type == 'followers' || type == 'friends') {
         var query = {};
@@ -54,7 +68,7 @@ app.get('/:type/getSince', function(req, res) {
             //this is just /getAll
             query = {recordID:-1};
         }
-        getPeople(req.params.type, query, res);
+        getPeople(type, query, res);
     } else if(type == 'home_timeline' || type == 'mentions') {
         var query = {};
         if(req.query.recordID) {
@@ -65,7 +79,7 @@ app.get('/:type/getSince', function(req, res) {
             //this is just /getAll
             query = {recordID:-1};
         }
-        getStatuses(req.params.type, query, res);
+        getStatuses(type, query, res);
     }
 });
 

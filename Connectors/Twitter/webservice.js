@@ -26,11 +26,13 @@ module.exports = function(theApp) {
             res.redirect(app.meData.uri + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
-                                                 "<li><a href='mentions'>sync your mentions</a></li>" + 
-                                                 "<li><a href='friends'>sync your friends</a></li>" + 
-                                                  "<li><a href='followers'>sync your followers</a></li>" +
-                                                 "<li><a href='profile'>sync your profile</a></li>" +"</html>");
+            res.end("<html>great! now you can:<br><li><a href='getNew/home_timeline'>sync new home_timeline entries</a></li>" + 
+                                                 "<li><a href='getNew/mentions'>sync new mentions</a></li>" + 
+                                                 "<li><a href='getNew/friends'>sync new friends</a></li>" + 
+                                                 "<li><a href='getNew/followers'>sync new followers</a></li>" +
+                                                 "<li><a href='update/friends'>update existing friends</a></li>" + 
+                                                 "<li><a href='update/followers'>update existing followers</a></li>" +
+                                                 "<li><a href='update/profile'>sync your profile</a></li>" +"</html>");
         }
     });
     this.authComplete = authComplete;
@@ -41,20 +43,28 @@ module.exports = function(theApp) {
 function authComplete(theAuth, callback) {
     auth = theAuth;
     sync.init(auth, function() {
-        
-        // Sync the person's home timline
-        app.get('/home_timeline', function(req, res) {
-            statuses('home_timeline', 60, res);
+
+        // Sync the person's friend data
+        app.get('/getNew/:type', function(req, res) {
+            var type = req.params.type.toLowerCase();
+            if(type === 'friends' || type === 'followers')
+                people(type, res);
+            else if(type === 'mentions' || type === 'home_timeline') {
+                statuses(type, res);                
+            }
         });
-    
-        // Sync the person's metions
-        app.get('/mentions', function(req, res) {
-            statuses('mentions', 120, res);
-        });
-    
+
+        // Sync the person's friend or follower data
+        function people(type, res) {
+            sync.syncUsersInfo(type, function() {  
+                res.writeHead(200, {'content-type':'application/json'});
+                res.end(JSON.stringify({success:"done fetching " + type}));
+            });
+        }
+
         // Sync a status stream endpoint (home_timeline, mentions, etc)
-        function statuses(endpoint, repeatAfter, res) {
-            sync.pullStatuses(endpoint, repeatAfter, function(err) {
+        function statuses(endpoint, res) {
+            sync.pullStatuses(endpoint, function(err) {
                 if(err) {
                     res.writeHead(401, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({error:err}));
@@ -64,34 +74,22 @@ function authComplete(theAuth, callback) {
                     res.end(JSON.stringify({success:"got "+endpoint+", happy day"}));
                 }
             });
+        }
         
-        }
-    
-        // Sync the person's friend data
-        app.get('/friends', function(req, res) {
-            people('friends', res);
-        });
-    
-        // Sync the person's follower data
-        app.get('/followers', function(req, res) {
-            people('followers', res);
-        });
-    
-        // Sync the person's friend or follower data
-        function people(endpoint, res) {
-            sync.syncUsersInfo(endpoint, function() {  
-                res.writeHead(200, {'content-type':'application/json'});
-                res.end(JSON.stringify({success:"done fetching " + endpoint}));
-            });
-        }
-    
-        // Sync the person's profile info
-        app.get('/profile', function(req, res) {
-            sync.syncProfile(function(err, userInfo) {
-                res.writeHead(200, {'content-type':'application/json'});
-                res.end(JSON.stringify({success:userInfo}));
-            });
-        });
+        app.get('/update/:type', function(req, res) {
+            var type = req.params.type.toLowerCase();
+            if(type == 'friends' || type == 'followers') {
+                sync.updateProfiles(type, function() {
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:'k, I\'m on it!'}));
+                });
+            } else if(type === 'profile') {
+                sync.syncProfile(function(err, userInfo) {
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:userInfo}));
+                });
+            }
+        })
 
         // Rate limit status (not currently used anywhere, will be part of calming)
         app.get('/rate_limit_status', function(req, res) {

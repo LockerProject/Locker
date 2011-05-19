@@ -37,8 +37,8 @@ exports.init = function(callback) {
 
 function openDB(callback) {
     currentDB.open('current.db', function(err) {
-        this.db.execute('CREATE TABLE friends (id INTEGER PRIMARY KEY, profile TEXT, status TEXT);', function(err) {
-            this.db.execute('CREATE TABLE followers (id INTEGER PRIMARY KEY, profile TEXT, status TEXT);', callback);      
+        currentDB.execute('CREATE TABLE friends (id INTEGER PRIMARY KEY, profile TEXT);', function(err) {
+            currentDB.execute('CREATE TABLE followers (id INTEGER PRIMARY KEY, profile TEXT);', callback);      
         });
     });
 }
@@ -48,16 +48,76 @@ function now() {
 }
 
 exports.addPerson = function(type, person) {
+    var status = person.status;
+    delete person.status;
     people[type].addRecord({timeStamp:now(), type:'add', data:person});
+    person.status = status;
+    addPersonToCurrent(type, person, function(err) {
+        if(err)
+            console.error(err);
+    });
+}
+
+exports.getPersonFromCurrent = function(type, id, callback) {
+    if(type != 'friends' && type != 'followers') {
+        callback(new Error('invalid type:' + type));
+        return;
+    }
+    var sql = "SELECT profile FROM " + type + " WHERE id = ?;";
+    currentDB.execute(sql, [id], callback);
+}
+
+// function getPeopleFromCurrent()
+
+function addPersonToCurrent(type, person, callback) {
+    if(type != 'friends' && type != 'followers') {
+        callback(new Error('invalid type:' + type));
+        return;
+    }
+    var sql = "INSERT OR REPLACE INTO " + type + "(id, profile) VALUES (?, ?);";
+    currentDB.execute(sql, [person.id, JSON.stringify(person)], callback);
 }
 
 exports.logRemovePerson = function(type, id) {
     people[type].addRecord({timeStamp:now(), type:'remove', data:{id_str:id, id:parseInt(id)}});
+    removePersonFromCurrent(type, id, function(err) {
+        if(err)
+            console.error(err);
+    })
+}
+
+function removePersonFromCurrent(type, id, callback) {
+    if(type != 'friends' && type != 'followers') {
+        callback(new Error('invalid type:' + type));
+        return;
+    }
+    if(typeof id !== 'number') {
+        id = parseInt(id);
+    }
+    var sql = "DELETE FROM " + type + " WHERE id = ?;";
+    currentDB.execute(sql, [id], callback);
 }
 
 exports.logUpdatePerson = function(type, person) {
+    var status = person.status;
+    delete person.status;
     people[type].addRecord({timeStamp:now(), type:'update', data:person});
+    person.status = status;
+    updatePersonInCurrent(type, person, function(err) {
+        if(err)
+            console.error(err);
+    });
 }
+
+function updatePersonInCurrent(type, person, callback) {
+    if(type != 'friends' && type != 'followers') {
+        callback(new Error('invalid type:' + type));
+        return;
+    }
+    var sql = "UPDATE " + type + " SET profile = ? WHERE id = ?;";
+    currentDB.execute(sql, [JSON.stringify(person), person.id], callback);
+}
+
 
 exports.getPeople = function(type, query, callback) {
     var ijod = people[type];
@@ -72,6 +132,24 @@ exports.getPeople = function(type, query, callback) {
     } else {
         callback(new Error('invalid query, must contain either a recordID or timeStamp'), null);
     }
+}
+
+exports.getPeopleCurrent = function(type, callback) {
+    currentDB.execute('SELECT profile FROM ' + type + ';', function(err, profileStrs) {
+        if(err) {
+            callback(err, profileStrs);
+            return;
+        }
+        var profiles = [];
+        for(var i in profileStrs) {
+            try {
+                profiles.push(JSON.parse(profileStrs[i].profile));
+            } catch(err) {
+                console.error(err);
+            }
+        }
+        callback(err, profiles);
+    });
 }
 
 exports.getAllContacts = function(callback) {
