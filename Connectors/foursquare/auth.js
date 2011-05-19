@@ -13,6 +13,11 @@ var request = require('request'),
 
 var auth, completedCallback, me;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 exports.authAndRun = function(app, onCompletedCallback) {
     me = app.meData;
     if(isAuthed()) {
@@ -52,14 +57,14 @@ function isAuthed() {
 function go4sq(req, res) {
     if(!(auth.appKey && auth.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Foursquare app info that will be used to sync your data" + 
+        res.end(format("Enter your personal Foursquare app info that will be used to sync your data" + 
                 " (create a new one <a href='https://foursquare.com/oauth/register'>" + 
                 "here</a> using the callback url of " + me.uri+"auth) " +
                 "<form method='post' action='saveAuth'>" +
                     "Client ID: <input name='appKey'><br>" +
                     "Client Secret: <input name='appSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form></html>");
+                "</form>"));
     } else {
         sys.debug('redirecting to ' + me.uri + 'auth');
         res.redirect('https://foursquare.com/oauth2/authenticate?client_id=' + auth.appKey + 
@@ -85,7 +90,7 @@ function handleAuth(req, res) {
 function saveAuth(req, res) {
     // res.writeHead(200, {'Content-Type': 'text/html'});
     if(!req.body.appKey || !req.body.appSecret) {
-        res.end("missing field(s)?");
+        res.end(format("missing field(s)?"));
         return;
     }
     auth.appKey = req.param('appKey');

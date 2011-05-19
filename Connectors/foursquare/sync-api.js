@@ -12,6 +12,11 @@ var fs = require('fs'),
     
 var app, auth;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 module.exports = function(theapp) {
     app = theapp;
     app.get('/', index);
@@ -31,7 +36,7 @@ function index(req, res) {
         res.redirect(app.meData.uri + 'go4sq');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");
+        res.end(format("found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a>"));
     }
 }
 
@@ -46,6 +51,6 @@ function friends(req, res) {
 function checkins(req, res) {
     sync.syncCheckins(function() {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("got new checkins!");
+        res.end(format("got new checkins!"));
     });
 }
