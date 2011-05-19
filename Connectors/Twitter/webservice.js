@@ -17,6 +17,11 @@ var fs = require('fs'),
 
 var app, auth;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 // Add the basic / head ups (or forward to /auth if needed)
 module.exports = function(theApp) {
     app = theApp;
@@ -26,11 +31,11 @@ module.exports = function(theApp) {
             res.redirect(app.meData.uri + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end("<html>great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
+            res.end(format("great! now you can:<br><li><a href='home_timeline'>sync your timeline</a></li>" + 
                                                  "<li><a href='mentions'>sync your mentions</a></li>" + 
                                                  "<li><a href='friends'>sync your friends</a></li>" + 
                                                   "<li><a href='followers'>sync your followers</a></li>" +
-                                                 "<li><a href='profile'>sync your profile</a></li>" +"</html>");
+                                                 "<li><a href='profile'>sync your profile</a></li>"));
         }
     });
     this.authComplete = authComplete;
@@ -57,11 +62,11 @@ function authComplete(theAuth) {
         sync.pullStatuses(endpoint, repeatAfter, function(err) {
             if(err) {
                 res.writeHead(401, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({error:err}));
+                res.end(format(JSON.stringify({error:err})));
                 return;
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success:"got "+endpoint+", happy day"}));
+                res.end(format(JSON.stringify({success:"got "+endpoint+", happy day"})));
             }
         });
         
@@ -81,7 +86,7 @@ function authComplete(theAuth) {
     function people(endpoint, res) {
         sync.syncUsersInfo(endpoint, function() {  
             res.writeHead(200, {'content-type':'application/json'});
-            res.end(JSON.stringify({success:"done fetching " + endpoint}));
+            res.end(format(JSON.stringify({success:"done fetching " + endpoint})));
         });
     }
     
@@ -89,7 +94,7 @@ function authComplete(theAuth) {
     app.get('/profile', function(req, res) {
         sync.syncProfile(function(err, userInfo) {
             res.writeHead(200, {'content-type':'application/json'});
-            res.end(JSON.stringify({success:userInfo}));
+            res.end(format(JSON.stringify({success:userInfo})));
         });
     });
 
@@ -97,7 +102,7 @@ function authComplete(theAuth) {
     app.get('/rate_limit_status', function(req, res) {
         sync.getRateLimitStatus(function(status) {
             res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end(JSON.stringify(status));
+            res.end(format(JSON.stringify(status)));
         });
     });
 }

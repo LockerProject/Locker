@@ -17,6 +17,11 @@ var fs = require("fs");
 var uri,
     completedCallback = null;
 
+var styles = require('./styles.js');
+var format = function(content) {
+    return styles.format(content);
+};
+
 exports.auth = {};
 
 // Check if exports.auth contains the required properties (consumerKey, consumerSecret, and token)
@@ -74,14 +79,14 @@ function handleAuth(req, res) {
     if(!(exports.auth.hasOwnProperty("consumerKey") && 
          exports.auth.hasOwnProperty("consumerSecret"))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
+        res.end(format("Enter your personal Twitter app info that will be used to sync your data" + 
                 " (create a new one <a href='http://dev.twitter.com/apps/new'>here</a> " +
                 "using the callback url of http://"+url.parse(uri).host.replace("localhost", "127.0.0.1")+"/) " +
                 "<form method='get' action='saveAuth'>" +
                     "Consumer Key: <input name='consumerKey'><br>" +
                     "Consumer Secret: <input name='consumerSecret'><br>" +
                     "<input type='submit' value='Save'>" +
-                "</form></html>");
+                "</form>"));
     } else if(!exports.auth.token) {
         require('./twitter_client')(exports.auth.consumerKey, exports.auth.consumerSecret, uri + 'auth')
             .getAccessToken(req, res, function(err, newToken) {
@@ -103,7 +108,7 @@ function handleAuth(req, res) {
 function saveAuth(req, res) {
     if(!req.param('consumerKey') || !req.param('consumerSecret')) {
         res.writeHead(400);
-        res.end("missing field(s)?");
+        res.end(format("missing field(s)?"));
     } else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         exports.auth.consumerKey = req.param('consumerKey');
