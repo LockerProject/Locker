@@ -3,7 +3,6 @@ var foursquare = require('../Connectors/foursquare/sync');
 foursquare.init({accessToken : 'abc'});
 var assert = require("assert");
 var vows = require("vows");
-var locker = require('../Common/node/locker.js');
 var fs = require("fs");
 
 // figure out if this supports batch setup / teardown, which makes far more sense for this than doing it in each.
