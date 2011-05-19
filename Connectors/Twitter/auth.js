@@ -46,6 +46,8 @@ function isAuthed() {
     return false;
 }
 
+exports.isAuthed = isAuthed;
+
 // The required exported function
 // Checks if there is a valid auth, callback immediately (and synchronously) if there is
 // If there isn't, adds /auth and /saveAuth endpoint to the app
@@ -105,7 +107,7 @@ function saveAuth(req, res) {
         res.writeHead(400);
         res.end("missing field(s)?");
     } else {
-        res.writeHead(200, {'Content-Type': 'text/html'});
+        // res.writeHead(200, {'Content-Type': 'text/html'});
         exports.auth.consumerKey = req.param('consumerKey');
         exports.auth.consumerSecret = req.param('consumerSecret');
         res.redirect(uri + 'auth');
