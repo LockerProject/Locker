@@ -40,23 +40,33 @@ var webservice = require(__dirname + "/Ops/webservice.js");
 
 if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
     console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                'which if so inclined can be hacked into lockerd.js and added since it\'s apparently still not implemented :)\n\n');
+                'which if so inclined can be hacked into lockerd.js and added since' + 
+                ' it\'s apparently still not implemented :)\n\n');
 }
 var shuttingDown_ = false;
 
+var mongoProcess;
+path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
+    if(!exists)
+        fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
+    mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir, 
+                                    '--port', lconfig.mongo.port]);
+    mongoProcess.stderr.on('data', function(data) {
+        console.error('mongod err: ' + data);
+    });
+});
+
 // load up private key or create if none, just KISS for now
 var idKey,idKeyPub;
-function loadKeys()
-{
+function loadKeys() {
     idKey = fs.readFileSync('Me/key','utf-8');
     idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
     console.log("id keys loaded");
 }
 path.exists('Me/key',function(exists){
-    if(exists)
-    {
+    if(exists) {
         loadKeys();
-    }else{
+    } else {
         openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
         console.log('generating id private key');
 //        openssl.stdout.on('data',function (data){console.log(data);});
@@ -87,8 +97,7 @@ lockerPortNext++;
 
 console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
 
-function shutdown()
-{
+function shutdown() {
     process.stdout.write("\n");
     shuttingDown_ = true;
     dashboard.instance.kill(dashboard.pid, "SIGINT");
@@ -96,6 +105,7 @@ function shutdown()
         console.log("Shutdown complete.");
         process.exit(0);
     });
+    mongoProcess.kill();
 }
 
 process.on("SIGINT", function() {
