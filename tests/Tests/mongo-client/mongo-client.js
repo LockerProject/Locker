@@ -45,11 +45,8 @@ process.stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-//    console.error('procInfo:', processInfo);
-    locker.getMongoCollections(function(thecollections) {
+    locker.connectToMongo(function(thecollections) {
         collections = thecollections;
-        console.error('got ' + Object.keys(collections).length + ' mongo collections');
-
     	app.listen(processInfo.port, function() {
     		process.stdout.write(JSON.stringify({port: processInfo.port}));
     	});

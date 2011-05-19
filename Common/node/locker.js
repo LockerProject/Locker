@@ -19,7 +19,6 @@ var lmongoclient;
 var lockerBase;
 var localServiceId = undefined;
 var baseServiceUrl = undefined;
-var mongoInfo;
 
 exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
@@ -28,9 +27,9 @@ exports.initClient = function(instanceInfo) {
     lockerBase = instanceInfo.lockerUrl;
     baseServiceUrl = lockerBase + "/core/" + localServiceId;
     if(instanceInfo.mongo) {
-        mongoInfo = instanceInfo.mongo;
-        lmongoclient = require(__dirname + '/lmongoclient')(mongoInfo.host, mongoInfo.port);
-        exports.getMongoCollections = getMongoCollections;
+        lmongoclient = require(__dirname + '/lmongoclient')(instanceInfo.mongo.host, instanceInfo.mongo.port, 
+                                                            localServiceId, instanceInfo.mongo.collections);
+        exports.connectToMongo = lmongoclient.connect;
     }
 }
 
@@ -60,7 +59,8 @@ exports.map = function(callback) {
 
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
-    request.get({url:lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, function(error, res, body) {
+    request.get({url:lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, 
+    function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
     });
 }
@@ -92,18 +92,8 @@ exports.event = function(type, obj) {
  * listen("photo/flickr", "/photoListener");
  */
 exports.listen = function(type, callback) {
-    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callback})}, function(error, response, body) {
+    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callback})}, 
+    function(error, response, body) {
         if(error) sys.debug(error);
     });
 }
-
-
-function getMongoCollections(callback) {
-    lmongoclient.connectToDB(function() {
-        var collections = {};
-        for(var i in mongoInfo.collections)
-            collections[mongoInfo.collections[i]] = lmongoclient.getCollection(localServiceId, mongoInfo.collections[i]);
-        callback(collections);
-    });
-}
-

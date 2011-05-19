@@ -10,19 +10,17 @@
 var mongodb = require('mongodb');
 
 var db, dbClient;
+var serviceID, collectionNames;
 
-module.exports = function(host, port) {
+module.exports = function(host, port, localServiceId, theCollectionNames) {
+    serviceID = localServiceId;
+    collectionNames = theCollectionNames;
     db = new mongodb.Db('locker', new mongodb.Server(host, port, {}), {});
-    this.getCollection = getCollection;
-    this.connectToDB = connectToDB;
+    this.connect = connect;
     return this;
 }
 
-function connectToDB(callback) {
-    _connectToDB(callback);
-}
-
-function _connectToDB(callback, isRetry) {
+function connectToDB(callback, isRetry) {
     db.open(function(error, client) {
         // in case the mongod process was a bit slow to start up
         if(error && !isRetry) { 
@@ -36,6 +34,11 @@ function _connectToDB(callback, isRetry) {
     });
 }
 
-function getCollection(serviceID, collectionName) {
-    return new mongodb.Collection(dbClient, serviceID + '-' + collectionName);
+function connect(callback) {
+    connectToDB(function() {
+        var collections = {};
+        for(var i in collectionNames)
+            collections[collectionNames[i]] = new mongodb.Collection(dbClient, serviceID + '-' + collectionNames[i]);
+        callback(collections);
+    })
 }
