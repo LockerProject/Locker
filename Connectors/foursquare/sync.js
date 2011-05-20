@@ -8,7 +8,6 @@
 */
 
 var fs = require('fs'),
-    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request');
 
@@ -48,11 +47,9 @@ exports.syncFriends = function(callback) {
                 'queue': queue,
                 'token': auth.accessToken
             };
-            locker.diary("syncing "+friends.length+" friends");
             for (var i = 0; i < friends.length; i++)
                 queue.push(friends[i]);
-            locker.at('/friends', 3600);
-            callback();
+            callback(err, friends.length);
             downloadNextUser(users);
         });
     });
@@ -62,10 +59,9 @@ exports.syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
-        getCheckins(self.id, auth.accessToken, 0, function(checkins) {
+        getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
             lfs.appendObjectsToFile('places.json', checkins);
-            locker.at('/checkins', 600);
-            callback();
+            callback(err, checkins.length);
         });
     });
 }
@@ -82,7 +78,7 @@ function getCheckins(userID, token, offset, callback, checkins) {
         checkins = [];
     var latest = 1;
     if(updateState.checkins && updateState.checkins.syncedThrough)
-        latest = updateState.checkins.syncThrough;
+        latest = updateState.checkins.syncedThrough;
     request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + 
                                                             '&oauth_token=' + token + '&afterTimestamp=' + latest},
     function(err, resp, data) {
@@ -91,18 +87,19 @@ function getCheckins(userID, token, offset, callback, checkins) {
             if(checkins.length > 0)
                 updateState.checkins.syncedThrough = checkins[0].createdAt;
                 lfs.writeObjectToFile('updateState.json', updateState);
-            callback(checkins.reverse());
+            callback(err, checkins.reverse());
             return;
         }
         var newCheckins = response.checkins.items;
         addAll(checkins, newCheckins);
-        locker.diary("sync'd "+newCheckins.length+" new checkins");
         if(newCheckins && newCheckins.length == checkins_limit) 
             getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {        
-            updateState.checkins.syncedThrough = checkins[0].createdAt;
+        else {
+            if (checkins[0]) {
+                updateState.checkins.syncedThrough = checkins[0].createdAt;
+            }
             lfs.writeObjectToFile('updateState.json', updateState);
-            callback(checkins.reverse());
+            callback(err, checkins.reverse());
         }
     });
 }
