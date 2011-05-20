@@ -4,18 +4,21 @@ var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
 var rimraf = require("rimraf");
+var currentDir = process.cwd();
 
 
 
 vows.describe("Twitter sync").addBatch({
     "Can get timeline" : {
         topic: function() {
+            console.log(process.cwd());
             process.chdir('./Me/Twitter');
             fakeweb.allowNetConnect = false;
             twitter.init({consumerKey : 'abc', consumerSecret : 'abc', token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, this.callback); },
         "after setting up": {
             topic: function() {
                 fakeweb.registerUri({
+                    statusCode : 500,
                     uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=1&include_entities=true",
                     file : __dirname + '/fixtures/twitter/home_timeline.js' });
                 fakeweb.registerUri({
@@ -23,15 +26,17 @@ vows.describe("Twitter sync").addBatch({
                     body : '[]' });
                 twitter.pullStatuses("home_timeline", this.callback); },
             "successfully": function(err, response) {
-                assert.equal(response, 1);
+                assert.equal(response, "synced home_timeline with 1 new entries");
             }
         }
     }
 }).addBatch({
-    "Tears itself down successfully" : {
-        topic: function() {
-            Fakeweb.tearDown();
+    "Tears itself down" : {
+        topic: [],
+        'sucessfully': function(topic) {
+            fakeweb.tearDown();
             process.chdir('../..');
+            assert.equal(process.cwd(), currentDir);
         }
     }
 }).export(module);

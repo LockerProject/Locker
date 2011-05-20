@@ -4,6 +4,8 @@ foursquare.init({accessToken : 'abc'});
 var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
+var currentDir = process.cwd();
+
 
 // figure out if this supports batch setup / teardown, which makes far more sense for this than doing it in each.
 // without that, we have to split these into separate batches to ensure a consistent fakeweb state before and after
@@ -57,10 +59,12 @@ vows.describe("Foursquare sync").addBatch({
         }
     }
 }).addBatch({
-    "Tears itself down successfully" : {
-        topic: function() {
+    "Tears itself down" : {
+        topic: [],
+        'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');
+            assert.equal(process.cwd(), currentDir);
         }
     }
 }).export(module);

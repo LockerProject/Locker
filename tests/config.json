@@ -22,7 +22,8 @@
                         "connector-flickr-test.js", 
                         "connector-twitter-test.js", 
                         "connector-github-test.js",
-                        "sync-foursquare-test.js"],
+                        "sync-foursquare-test.js",
+                        "sync-twitter-test.js"],
         "collections" : [],
         "issues" : ["locker-issues-test.js"]
     },

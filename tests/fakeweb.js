@@ -32,9 +32,8 @@ var Fakeweb = function() {
     
     oldRequestGet = request.get;
     request.get = function(options, callback) {
-        var response = {statusCode : 200};
         if (interceptable(options.uri)) {
-            return callback(null, response, interceptedUris[options.uri]);
+            return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
         } else {
             return oldRequestGet.call(request, options, callback);
         }
@@ -48,10 +47,10 @@ var Fakeweb = function() {
             thisRequest.end = function() {
                 var thisResponse = new EventEmitter();
                 thisResponse.setEncoding = function() {};
-                thisResponse.statusCode = 200;
+                thisResponse.statusCode = interceptedUris[uri].statusCode;
                 thisRequest.emit('response', thisResponse);
                 
-                thisResponse.emit('data', interceptedUris[uri]);
+                thisResponse.emit('data', interceptedUris[uri].response);
                 thisResponse.emit('end');
             }
             return thisRequest;
@@ -67,16 +66,18 @@ var Fakeweb = function() {
         interceptedUris = {};
         allowNetConnect = true;
         allowLocalConnect = true;
-        request.get = oldRequestGet;
-        https.request = oldHttpsRequest;
+        // request.get = oldRequestGet;
+        // https.request = oldHttpsRequest;
         // http.request = oldHttpRequest;
     }
     registerUri = function(options) {
+        interceptedUris[options.uri] = {};
         if (options.file) {
-            interceptedUris[options.uri] = fs.readFileSync(options.file);
+            interceptedUris[options.uri].response = fs.readFileSync(options.file);
         } else if (options.body) {
-            interceptedUris[options.uri] = options.body;
+            interceptedUris[options.uri].response = options.body;
         }
+        interceptedUris[options.uri].statusCode = options.status || 200;
     }
     return this;
 };

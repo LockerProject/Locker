@@ -56,9 +56,7 @@ exports.pullStatuses = function(endpoint, callback) {
         for(var i in items)
             dataStore.addStatus(endpoint, items[i]);
         // lfs.appendObjectsToFile(endpoint + '.json', items);
-        // locker.at('/getNew/' + endpoint, (endpoint === 'home_timeline' ? 60 : 120));
-        // locker.diary("synced "+endpoint+" with "+items.length+" new entries");
-        callback(null, items.length);
+        callback(null, "synced "+endpoint+" with "+items.length+" new entries");
     });
 }
 
