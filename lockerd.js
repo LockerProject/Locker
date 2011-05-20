@@ -54,6 +54,25 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess.stderr.on('data', function(data) {
         console.error('mongod err: ' + data);
     });
+    
+    var mongodExit = function(errorCode) {
+        if(errorCode !== 0) {
+            console.error('mongod did not start successfully.');
+            shutdown();
+        }
+    };
+    mongoProcess.on('exit', mongodExit);
+    
+    // watch for mongo startup
+    var mongoOutput = "";
+    var callback = function(data) {
+        mongoOutput += data;
+        if(mongoOutput.match(/\[initandlisten\] waiting for connections on port/g)) {
+            mongoProcess.stdout.removeListener('data', callback);
+            checkKeys();
+        }
+    };
+    mongoProcess.stdout.on('data', callback);
 });
 
 // load up private key or create if none, just KISS for now
@@ -62,50 +81,56 @@ function loadKeys() {
     idKey = fs.readFileSync('Me/key','utf-8');
     idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
     console.log("id keys loaded");
+    finishStartup();
 }
-path.exists('Me/key',function(exists){
-    if(exists) {
-        loadKeys();
-    } else {
-        openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
-        console.log('generating id private key');
-//        openssl.stdout.on('data',function (data){console.log(data);});
-//        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
-        openssl.on('exit', function (code) {
-            console.log('generating id public key');
-            openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+
+function checkKeys() {
+    path.exists('Me/key',function(exists){
+        if(exists) {
+            loadKeys();
+        } else {
+            openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
+            console.log('generating id private key');
+    //        openssl.stdout.on('data',function (data){console.log(data);});
+    //        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
             openssl.on('exit', function (code) {
-                loadKeys();
+                console.log('generating id public key');
+                openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+                openssl.on('exit', function (code) {
+                    loadKeys();
+                });
             });
-        });
-    }
-});
+        }
+    });
+}
 
-// look for available things
-lconfig.scannedDirs.forEach(serviceManager.scanDirectory);
+function finishStartup() {
+    // look for available things
+    lconfig.scannedDirs.forEach(serviceManager.scanDirectory);
 
-// look for existing things
-serviceManager.findInstalled();
+    // look for existing things
+    serviceManager.findInstalled();
 
-lscheduler.masterScheduler.loadAndStart();
+    lscheduler.masterScheduler.loadAndStart();
 
-webservice.startService(lconfig.lockerPort);
+    webservice.startService(lconfig.lockerPort);
 
-var lockerPortNext = "1"+lconfig.lockerPort;
-dashboard.start(lockerPortNext);
-lockerPortNext++;
+    var lockerPortNext = "1"+lconfig.lockerPort;
+    dashboard.start(lockerPortNext);
+    lockerPortNext++;
 
-console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
+    console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
+}
 
 function shutdown() {
     process.stdout.write("\n");
     shuttingDown_ = true;
     dashboard.instance.kill(dashboard.pid, "SIGINT");
     serviceManager.shutdown(function() {
+        mongoProcess.kill();
         console.log("Shutdown complete.");
         process.exit(0);
     });
-    mongoProcess.kill();
 }
 
 process.on("SIGINT", function() {
