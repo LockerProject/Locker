@@ -107,6 +107,13 @@ function authComplete(theAuth, callback) {
                 res.end(JSON.stringify(status));
             });
         });
+        
+        sync.eventEmitter.on('status/twitter', function(eventObj) {
+            locker.event('status/twitter', eventObj);
+        });
+        sync.eventEmitter.on('contact/twitter', function(eventObj) {
+            locker.event('contact/twitter', eventObj);
+        });
         callback();
     });
 }

@@ -1,0 +1,4 @@
+{
+	"title":"Collect Twitter Events",
+	"run":"node twitter-event-collector.js"
+}

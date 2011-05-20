@@ -17,12 +17,15 @@ var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
+    EventEmitter = require('events').EventEmitter;
     dataStore = require('./dataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
 var allKnownIDs;
 var requestCount = 0;
+
+exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
 exports.init = function(theAuth, callback) {
@@ -53,8 +56,11 @@ exports.pullStatuses = function(endpoint, callback) {
     var items = [];
     pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
-        for(var i in items)
+        for(var i in items) {
             dataStore.addStatus(endpoint, items[i]);
+            var eventObj = {source:endpoint, type:'new', status:items[i]};
+            exports.eventEmitter.emit('status/twitter', eventObj);
+        }
         callback(null, (endpoint === 'home_timeline' ? 60 : 120), "synced "+endpoint+" with "+items.length+" new entries");
     });
 }
@@ -76,6 +82,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                 }, 10000);
             }
+            require("sys").puts( error.stack )
             sys.debug('error from twitter:' + sys.inspect(error));
             return;
         }
@@ -193,7 +200,7 @@ function updatePeople(type, people) {
                     // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
                     dataStore.logUpdatePerson(type, profileFromTwitter);
                     var eventObj = {source:type, type:'update', person:person};
-                    locker.event('contact/twitter', eventObj);
+                    exports.eventEmitter.emit('contact/twitter', eventObj);
                 } else {
                     // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
                 }
@@ -208,7 +215,7 @@ function addPeople(type, people, knownIDs) {
         knownIDs[person.id_str] = 1;
         dataStore.addPerson(type, person);    
         var eventObj = {source:type, type:'new', person:person};
-        locker.event('contact/twitter', eventObj);
+        exports.eventEmitter.emit('contact/twitter', eventObj);
     }
 }
 
@@ -219,7 +226,7 @@ function logRemoved(type, ids) {
     ids.forEach(function(id) {
         dataStore.logRemovePerson(type, id);
         var eventObj = {source:type, type:'delete', person:{id:id, deleted:true}};
-        locker.event('contact/twitter', eventObj);
+        exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
     });
     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
