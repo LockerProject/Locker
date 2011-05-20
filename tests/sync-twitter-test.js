@@ -30,6 +30,7 @@ vows.describe("Twitter sync").addBatch({
 }).addBatch({
     "Tears itself down successfully" : {
         topic: function() {
+            Fakeweb.tearDown();
             process.chdir('../..');
         }
     }

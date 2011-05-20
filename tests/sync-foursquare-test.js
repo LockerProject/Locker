@@ -10,6 +10,7 @@ var fs = require("fs");
 vows.describe("Foursquare sync").addBatch({
     "Can get checkins" : {
         topic: function() {
+            process.chdir('./Me/Foursquare');
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
@@ -26,26 +27,16 @@ vows.describe("Foursquare sync").addBatch({
             foursquare.syncCheckins(this.callback) },
         "successfully" : function(err, response) {
             assert.equal(response, 251); },
-            "successfully " : {
-                topic: function() {
-                    foursquare.syncCheckins(this.callback) },
-                "again" : function(err, response) {
-                    assert.equal(response, 0);
-                    fakeweb.tearDown();
-                    fs.unlink("places.json");
-                    fs.unlink("profile.json");
-                    fs.unlink("updateState.json");
-                }
+        "successfully " : {
+            topic: function() {
+                foursquare.syncCheckins(this.callback) },
+            "again" : function(err, response) {
+                assert.equal(response, 0);
+                fs.unlinkSync("places.json");
+                fs.unlinkSync("profile.json");
+                fs.unlinkSync("updateState.json");
             }
-            // this is the correct way to perform these functions, but teardown isn't safe right now.  if this is the last test, vows will exit
-            // before the teardown is done.  see: https://github.com/cloudhead/vows/pull/82
-            //
-            //         teardown: function(topic) {
-            //             fakeweb.tearDown();
-            //             fs.unlink("places.json");
-            //             fs.unlink("profile.json");
-            //             fs.unlink("updateState.json");
-            //             fakeweb.allowNetConnect = true; }
+        }
     }
 }).addBatch({
     "Can get friends" : {
@@ -62,10 +53,14 @@ vows.describe("Foursquare sync").addBatch({
                 file : __dirname + '/fixtures/foursquare/2715557.json' });
             foursquare.syncFriends(this.callback) },
         "successfully" : function(err, response) {
-            fakeweb.tearDown();
             assert.equal(response, 1);
-            fs.unlink("friends.json");
-            fs.unlink("profile.json");
+        }
+    }
+}).addBatch({
+    "Tears itself down successfully" : {
+        topic: function() {
+            fakeweb.tearDown();
+            process.chdir('../..');
         }
     }
 }).export(module);

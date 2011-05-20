@@ -67,6 +67,9 @@ var Fakeweb = function() {
         interceptedUris = {};
         allowNetConnect = true;
         allowLocalConnect = true;
+        request.get = oldRequestGet;
+        https.request = oldHttpsRequest;
+        // http.request = oldHttpRequest;
     }
     registerUri = function(options) {
         if (options.file) {
