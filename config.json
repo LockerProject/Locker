@@ -6,5 +6,10 @@
         "Apps", 
         "Collections", 
         "Connectors"
-        ]
+        ],
+    "mongo" : {
+        "dataDir": "mongodata",
+        "host": "localhost",
+        "port": 27017
+    }
 }
