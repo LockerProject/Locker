@@ -18,7 +18,6 @@ vows.describe("Twitter sync").addBatch({
         "after setting up": {
             topic: function() {
                 fakeweb.registerUri({
-                    statusCode : 500,
                     uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=1&include_entities=true",
                     file : __dirname + '/fixtures/twitter/home_timeline.js' });
                 fakeweb.registerUri({

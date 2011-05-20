@@ -77,7 +77,7 @@ var Fakeweb = function() {
         } else if (options.body) {
             interceptedUris[options.uri].response = options.body;
         }
-        interceptedUris[options.uri].statusCode = options.status || 200;
+        interceptedUris[options.uri].statusCode = options.statusCode || 200;
     }
     return this;
 };
