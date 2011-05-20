@@ -13,8 +13,8 @@ var fs = require('fs'),
     sys = require('sys'),
     request = require('request'),
     lfs = require('../../Common/node/lfs.js'),
-    sync = require('./sync'),
-    locker = require('../../Common/node/locker.js');
+    locker = require('../../Common/node/locker.js'),
+    sync = require('./sync');
 
 var app, auth;
 
@@ -57,22 +57,28 @@ function authComplete(theAuth, callback) {
 
         // Sync the person's friend or follower data
         function people(type, res) {
-            sync.syncUsersInfo(type, function() {  
-                res.writeHead(200, {'content-type':'application/json'});
-                res.end(JSON.stringify({success:"done fetching " + type}));
+            sync.syncUsersInfo(type, function(err, repeatAfter, diaryEntry) {
+                if(err) {
+                    
+                } else {
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/' + type, repeatAfter);
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:"done fetching " + type}));
+                }
             });
         }
 
         // Sync a status stream endpoint (home_timeline, mentions, etc)
         function statuses(endpoint, res) {
-            sync.pullStatuses(endpoint, function(err, response) {
-                locker.at('/getNew/' + endpoint, (endpoint === 'home_timeline' ? 60 : 120));
-                locker.diary(response);
+            sync.pullStatuses(endpoint, function(err, repeatAfter, diaryEntry) {
                 if(err) {
                     res.writeHead(401, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({error:err}));
                     return;
                 } else {
+                    locker.at('/getNew/' + endpoint, repeatAfter);
+                    locker.diary(diaryEntry);
                     res.writeHead(200, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({success:"got "+endpoint+", happy day"}));
                 }
@@ -100,6 +106,13 @@ function authComplete(theAuth, callback) {
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify(status));
             });
+        });
+        
+        sync.eventEmitter.on('status/twitter', function(eventObj) {
+            locker.event('status/twitter', eventObj);
+        });
+        sync.eventEmitter.on('contact/twitter', function(eventObj) {
+            locker.event('contact/twitter', eventObj);
         });
         callback();
     });

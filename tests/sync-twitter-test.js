@@ -10,7 +10,6 @@ var currentDir = process.cwd();
 vows.describe("Twitter sync").addBatch({
     "Can get timeline" : {
         topic: function() {
-            console.log(process.cwd());
             process.chdir('./Me/Twitter');
             fakeweb.allowNetConnect = false;
             twitter.init({consumerKey : 'abc', consumerSecret : 'abc', token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, this.callback); },
@@ -23,7 +22,7 @@ vows.describe("Twitter sync").addBatch({
                     uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=2&include_entities=true&max_id=71348168469643260",
                     body : '[]' });
                 twitter.pullStatuses("home_timeline", this.callback); },
-            "successfully": function(err, response) {
+            "successfully": function(err, repeatAfter, response) {
                 assert.equal(response, "synced home_timeline with 1 new entries");
             }
         }

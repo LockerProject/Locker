@@ -21,11 +21,7 @@ process.stdin.on("data", function(data) {
                 body += chunk;
             });
             req.on("end", function() {
-                var postData = querystring.parse(body);
-                var fd = fs.openSync("event.json", "w");
-                console.log("Writing " + postData.obj);
-                fs.writeSync(fd, postData.obj);
-                fs.close(fd);
+                fs.writeFileSync('event.json', body);
                 res.end("");
             });
             return;
