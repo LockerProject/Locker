@@ -117,7 +117,6 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
-            // console.error('got ids:', ids);
             var newIDs = [];
             var knownIDs = allKnownIDs[friendsOrFollowers];
             var repeatedIDs = {};
@@ -134,8 +133,6 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                 if(!repeatedIDs[knownID])
                     removedIDs.push(knownID);
             }
-            // console.error('got new ids:', newIDs);
-            // console.error('got removedIDs:', removedIDs);
             if(newIDs.length < 1) {
                 if(removedIDs.length > 0)
                     logRemoved(friendsOrFollowers, removedIDs);
