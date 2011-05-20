@@ -41,7 +41,7 @@ tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
         .unpath()
     .undiscuss();
-    
+
 tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("A service")
         .path("/Me/mongo-client")
@@ -58,5 +58,5 @@ tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
         .unpath()
     .undiscuss();
-    
+
 tests.export(module);
