@@ -47,9 +47,9 @@ process.stdin.on('data', function (chunk) {
     process.chdir(processInfo.workingDirectory);
     locker.connectToMongo(function(thecollections) {
         collections = thecollections;
-    	app.listen(processInfo.port, function() {
-    		process.stdout.write(JSON.stringify({port: processInfo.port}));
-    	});
+        app.listen(processInfo.port, function() {
+            process.stdout.write(JSON.stringify({port: processInfo.port}));
+        });
     });
 });
 process.stdin.resume();

@@ -40,7 +40,12 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .path("/Me/mongo-client")
         .discuss("can connect to a mongo server")
             .get("/get")
+                .expect(200)
                 .expect("and can get an object from the collection", function(err, resp, body) {
+                    if(!resp.statusCode == 200) {
+                        console.error('bad status code, body:', body);
+                        assert.ok(false);
+                    }
                     assert.equal(JSON.parse(body).hello, 'world');
                 })
         .undiscuss()
