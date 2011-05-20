@@ -25,6 +25,20 @@ function interceptable(uri) {
     }
 }
 
+function httpModuleRequest(uri) {
+    var thisRequest = new EventEmitter();
+    thisRequest.end = function() {
+        var thisResponse = new EventEmitter();
+        thisResponse.setEncoding = function() {};
+        thisResponse.statusCode = interceptedUris[uri].statusCode;
+        thisRequest.emit('response', thisResponse);
+        
+        thisResponse.emit('data', interceptedUris[uri].response);
+        thisResponse.emit('end');
+    }
+    return thisRequest;
+}
+
 var Fakeweb = function() {
     interceptedUris = {};
     allowNetConnect = true;
@@ -43,25 +57,20 @@ var Fakeweb = function() {
     https.request = function(options, callback) {
         var uri = "https://" + options.host + ":" + options.port + options.path;
         if (interceptable(uri)) {
-            var thisRequest = new EventEmitter();
-            thisRequest.end = function() {
-                var thisResponse = new EventEmitter();
-                thisResponse.setEncoding = function() {};
-                thisResponse.statusCode = interceptedUris[uri].statusCode;
-                thisRequest.emit('response', thisResponse);
-                
-                thisResponse.emit('data', interceptedUris[uri].response);
-                thisResponse.emit('end');
-            }
-            return thisRequest;
+            return httpModuleRequest(uri);
         } else {
             return oldHttpsRequest.call(https, options, callback);
         }
     }
-    // oldHttpRequest = http.request;
-    // http.request = function(options, callback) {
-    //     oldHttpRequest.call(http, options, callback);
-    // }
+    oldHttpRequest = http.request;
+    http.request = function(options, callback) {
+        var uri = "http://" + options.host + ":" + options.port + options.path;
+        if (interceptable(uri)) {
+            return httpModuleRequest(uri);
+        } else {
+            return oldHttpRequest.call(http, options, callback);
+        }
+    }
     tearDown = function() {
         interceptedUris = {};
         allowNetConnect = true;
