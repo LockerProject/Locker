@@ -9,5 +9,5 @@
 
 var html = require('../../Common/node/html.js');
 exports.format = function(content) {
-    return html.formatHTML("foursquare", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
+    return html.formatHTML("twitter", content, ["#3B5998", "white", "white", "#7C9494"]); // These colors can be customized later...
 };
