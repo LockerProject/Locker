@@ -33,10 +33,13 @@ app.get('/get', function(req, res) {
         if(err) {
             res.writeHead(500);
             res.end(JSON.stringify(err));
-            return;
+        } else if(doc) {
+            res.writeHead(200);
+            res.end(JSON.stringify(doc));
+        } else {
+            res.writeHead(500);
+            res.end(JSON.stringify({error:'not found'}));
         }
-        res.writeHead(200);
-        res.end(JSON.stringify(doc));
     });
 });
 

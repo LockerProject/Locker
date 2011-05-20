@@ -21,27 +21,34 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .path("/Me/mongo-client")
         .discuss("can connect to a mongo server")
             .get("/names")
-                .expect("and connects to the correct collections", function(err, resp, body) {
+                .expect("and connects to the correct collections with", function(err, resp, body) {
                     var names = JSON.parse(body);
                     assert.equal(names.length, 2);
                     assert.equal(names[0], 'thing1');
                     assert.equal(names[1], 'thing2');
                 })
+        .undiscuss()
+        .unpath()
+    .undiscuss();
+
+tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
+    .discuss("A service") 
+        .path("/Me/mongo-client")           
             .get("/put")
-                .expect("and can put an object in the collection", function(err, resp, body) {
+                .expect("and can put an object in the collection with", function(err, resp, body) {
                     assert.equal(body, '1');
                 })
         .undiscuss()
         .unpath()
     .undiscuss();
-    
-tests.use(lconfig.lockerHost, lconfig.lockerPort)
+
+tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("A service")
         .path("/Me/mongo-client")
         .discuss("can connect to a mongo server")
             .get("/get")
                 .expect(200)
-                .expect("and can get an object from the collection", function(err, resp, body) {
+                .expect("and can get an object from the collection with", function(err, resp, body) {
                     if(!resp.statusCode == 200) {
                         console.error('bad status code, body:', body);
                         assert.ok(false);
@@ -51,5 +58,5 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
         .unpath()
     .undiscuss();
-    
+
 tests.export(module);
