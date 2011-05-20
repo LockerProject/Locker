@@ -5,9 +5,12 @@ var vows = require("vows");
 var fs = require("fs");
 var rimraf = require("rimraf");
 
+
+
 vows.describe("Twitter sync").addBatch({
     "Can get timeline" : {
         topic: function() {
+            process.chdir('./Me/Twitter');
             fakeweb.allowNetConnect = false;
             twitter.init({consumerKey : 'abc', consumerSecret : 'abc', token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, this.callback); },
         "after setting up": {
@@ -21,13 +24,13 @@ vows.describe("Twitter sync").addBatch({
                 twitter.pullStatuses("home_timeline", this.callback); },
             "successfully": function(err, response) {
                 assert.equal(response, 1);
-                fs.unlink("current.db");
-                rimraf.sync("followers");
-                rimraf.sync("friends");
-                rimraf.sync("home_timeline");
-                rimraf.sync("mentions");
-                fs.unlink("latests.json");
             }
+        }
+    }
+}).addBatch({
+    "Tears itself down successfully" : {
+        topic: function() {
+            process.chdir('../..');
         }
     }
 }).export(module);

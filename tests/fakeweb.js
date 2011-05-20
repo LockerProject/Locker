@@ -59,10 +59,10 @@ var Fakeweb = function() {
             return oldHttpsRequest.call(https, options, callback);
         }
     }
-    oldHttpRequest = http.request;
-    http.request = function(options, callback) {
-        oldHttpRequestGet.call(http, options, callback);
-    }
+    // oldHttpRequest = http.request;
+    // http.request = function(options, callback) {
+    //     oldHttpRequest.call(http, options, callback);
+    // }
     tearDown = function() {
         interceptedUris = {};
         allowNetConnect = true;
