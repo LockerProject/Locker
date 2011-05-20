@@ -13,7 +13,8 @@ var fs = require('fs'),
     sys = require('sys'),
     request = require('request'),
     lfs = require('../../Common/node/lfs.js'),
-    sync = require('./sync');
+    sync = require('./sync'),
+    locker = require('../../Common/node/locker.js');
 
 var app, auth;
 
@@ -64,7 +65,9 @@ function authComplete(theAuth, callback) {
 
         // Sync a status stream endpoint (home_timeline, mentions, etc)
         function statuses(endpoint, res) {
-            sync.pullStatuses(endpoint, function(err) {
+            sync.pullStatuses(endpoint, function(err, response) {
+                locker.at('/getNew/' + endpoint, (endpoint === 'home_timeline' ? 60 : 120));
+                locker.diary(response);
                 if(err) {
                     res.writeHead(401, {'Content-Type': 'application/json'});
                     res.end(JSON.stringify({error:err}));
