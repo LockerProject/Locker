@@ -3,7 +3,6 @@ var twitter = require('../Connectors/Twitter/sync');
 var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
-var rimraf = require("rimraf");
 var currentDir = process.cwd();
 
 
