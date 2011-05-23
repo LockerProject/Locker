@@ -12,5 +12,4 @@ Me/*
 *.tmproj
 node_modules
 scheduler.json
-keychain.json
 tests/Me/*

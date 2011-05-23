@@ -13,6 +13,7 @@ var events = require("events");
 var fs = require("fs");
 var locker = require("../Common/node/locker.js");
 var lconfig = require("../Common/node/lconfig.js");
+var testUtils = require('./test-utils');
 
 lconfig.load("config.json");
 
@@ -145,24 +146,22 @@ vows.describe("Locker Client API").addBatch({
             topic:function() {
                 var promise = new events.EventEmitter;
                 var fired = false;
-
+                
                 try {
                     fs.unlinkSync("Me/testURLCallback/event.json");
                 } catch (E) {
+                    console.error(E);
                     // test the error?
                 }
-                locker.listen("test/event", "/event");
-                setTimeout(function() {
+                locker.listen("test/event", "/event", function(err, resp, body) {
                     locker.event("test/event", {"test":"value"});
-                }, 100);
-                setTimeout(function() {
-                    fs.stat("Me/testURLCallback/event.json", function(err, stats) {
-                        if (!err)
+                    testUtils.waitForPathsToExist(["Me/testURLCallback/event.json"], 10, 1000, function(success) {
+                        if(success)
                             promise.emit("success", true);
                         else
-                            promise.emit("error", err);
+                            promise.emit("error", false);
                     });
-                }, 1000);
+                });
                 return promise;
             },
             "fires an event callback": function(err, result) {
