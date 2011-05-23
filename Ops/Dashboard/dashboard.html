@@ -49,52 +49,50 @@
             <li onclick="javascript:refreshDiary()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
           </ul>
         </header>
-        <ul id="diaryEntriesList">
-        </ul>
-        <div id="diaryEntryTemplate">
-          <span class="diaryTimestamp"></span>
-        </div>
+        <section class="content">
+          <ul id="diaryEntriesList">
+          </ul>
+          <div id="diaryEntryTemplate">
+            <span class="diaryTimestamp"></span>
+          </div>
+        </section>
       </section>
 
       <!-- Connectors Section -->
       <section id="connectorsSection" class="tabPage">
         <header>
           <h1>Connectors</h1>
-          <!--
-          <ul class="actions">
-            <li id="installer"><img src="../Images/Plus.png" width="24" height="24" alt="Install Service" /></li>
-          </ul>
-          -->
         </header>
-        <ul id="connectorsList">
-        </ul>
-        <div id="connectorInfo">
-          <div>
-            <h1>Name</h1>
-            <a id="availInstall" href='javascript:install(-1)'>Install Service</a>
-          </div>
-          <p class="description">Description</p>
-          <ul class="details">
-            <li>
-              <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
-            </li>
-            <li>
-              <strong>Provides:</strong> <span id="availProvides" class="value"></span>
-            </li>
+        <section class="content">
+          <ul id="connectorsList">
           </ul>
-          <section id="connectorInstancesSection">
-            <!-- <header>
-              <h1>Configured</h1>
-            </header> -->
-            <ul id="connectorInstancesList">
+          <div id="connectorInfo">
+            <div>
+              <h1>Name</h1>
+            </div>
+            <p class="description">Description</p>
+            <ul class="details">
+              <li>
+                <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
+              </li>
+              <li>
+                <strong>Provides:</strong> <span id="availProvides" class="value"></span>
+              </li>
             </ul>
-            <footer>
-              <ul>
-                <li>Add Account</li>
+            <section id="connectorInstancesSection">
+              <!-- <header>
+                <h1>Configured</h1>
+              </header> -->
+              <ul id="connectorInstancesList">
               </ul>
-            </footer>
-          </section>
-        </div>
+              <footer>
+                <ul>
+                  <li id="addConnectorInstanceButton"><a href='javascript:install(-1)'><img src="Images/Plus.png" /></a></li>
+                </ul>
+              </footer>
+            </section>
+          </div>
+        </section>
       </section>
 
       <!-- Collections Section -->
@@ -102,8 +100,20 @@
         <header>
           <h1>Collections</h1>
         </header>
-        <ul id="collectionsList">
-        </ul>
+        <section class="content">
+          <ul id="collectionsList">
+          </ul>
+        </section>
+      </section>
+
+      <!-- App Section -->
+      <section id="appSection" class="tabPage">
+        <header>
+          <h1 id="appTitle">App Title</h1>
+        </header>
+        <section class="content">
+          <iframe id="appFrame"></iframe>
+        </section>
       </section>
 
     </section>

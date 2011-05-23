@@ -16,11 +16,11 @@ function selectAvailable(index)
   $("#connectorInfo p").html(item["desc"]);
   $("#availSrcDir").html(item["srcdir"]);
   if (item["provides"]) $("#availProvides").html(item["provides"].join(","));
-  $("#availInstall").attr("href", "javascript:install(" + index + ");");
+  $("#addConnectorInstanceButton a").attr("href", "javascript:install(" + index + ");");
   $("#connectorInstancesList").children().remove();
   $.each(serviceMap.installed, function(key, value) {
     if (value["srcdir"] == item["srcdir"])
-      $("#connectorInstancesList").append("<li><span class='title'>" + value["title"] + "</span><span class='identifier'>" + value["id"] +  "</span><span class='page'><a href='" + value["uri"] + "'>Configure</a></span></li>");
+      $("#connectorInstancesList").append("<li><span class='title'>" + value["title"] + "</span><span class='identifier'>" + value["id"] +  "</span><span class='page'><a href='" + value["uri"] + "'><img src='Images/Configure.png' /></a></span></li>");
   });
 }
 
@@ -67,6 +67,14 @@ $(document).ready(function()
             $("#appsList li, .tab").removeClass("current");
             $(event.target).addClass("current");
             // selectAvailable(serviceMap.available.indexOf(item));
+
+            $(".tabPage").hide();
+            $("#appSection").show();
+            // $("#appsList li, .tab").removeClass("current");
+            // $("#appTab").addClass("current");
+
+            $("#appTitle").html(item.title);
+            $("#appFrame").attr("src", item.uri || "");
           }));
           break;
 

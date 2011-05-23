@@ -12,13 +12,14 @@ ul#collectionsList
   left: 0;
   right: 0;
   bottom: 0;
-  top: 50px;
+  top: 0;
   list-style: none;
   padding: 20px;
 }
 
 ul#collectionsList li
 {
+  /*
   position: relative;
   padding-left: 10px;
   font-size: 14px;
@@ -42,6 +43,28 @@ ul#collectionsList li
 
   text-shadow: 0 -1px 1px rgba(0, 0, 0, 1);
   color: rgba(255, 255, 255, 0.75);
+  */
+
+  position: relative;
+  padding-left: 10px;
+  font-size: 14px;
+
+  height: 64px;
+  line-height: 24px;
+/*  background-color: rgba(255, 255, 255, 0.1);*/
+
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.15)));
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.8);
 }
 
 ul#collectionsList li .title
