@@ -53,6 +53,14 @@ var Fakeweb = function() {
         }
     }
     
+    oldRequestPost = request.post;
+    request.post = function(options, callback) {
+        if (interceptable(options.uri)) {
+            return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
+        } else {
+            return oldRequestPost.call(request, options, callback);
+        }
+    }
     oldHttpsRequest = https.request;
     https.request = function(options, callback) {
         var uri = "https://" + options.host + ":" + options.port + options.path;

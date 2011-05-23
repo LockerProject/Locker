@@ -72,11 +72,8 @@ exports.providers = function(types, callback) {
  */
 exports.event = function(type, obj) {
     request.post({
-        url:baseServiceUrl + "/event", 
-        headers: {
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({"type":type,"obj":obj})
+        url:baseServiceUrl + "/event",
+        json:{"type":type,"obj":obj}
 
     });
 }
@@ -91,9 +88,10 @@ exports.event = function(type, obj) {
  * 
  * listen("photo/flickr", "/photoListener");
  */
-exports.listen = function(type, callback) {
-    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callback})}, 
+exports.listen = function(type, callbackEndpoint, callbackFunction) {
+    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})}, 
     function(error, response, body) {
         if(error) sys.debug(error);
+        if(callbackFunction) callbackFunction(error);
     });
 }

@@ -19,8 +19,16 @@ var testUtils = require(__dirname + "/test-utils.js");
 var suite = RESTeasy.describe('Twitter Connector')
 
 var id = 'twitter-test';
-
+var eventCounts = {friends:0, followers:0, mentions:0, home_timeline:0};
 lconfig.load('config.json');
+
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
+    .discuss('can start listening to events')
+        .path('/Me/twitter-event-collector/')
+        .get()
+            .expect(200)
+        .unpath()
+    .undiscuss();
 
 try {
     var stats = fs.statSync('Me/twitter-test/auth.json');
@@ -98,27 +106,6 @@ addStatusSync('home_timeline');
 addStatusSync('mentions');
 
 var mePath = '/Me/' + id;
-// 
-// suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
-//     .discuss('Twitter connector')
-//         .discuss('can get all friends and followers')
-//             .path(mePath + '/allContacts')
-//             .get()
-//                 .expect(200)
-//                 .expect('returns some friends or followers', function(err, res, body) {
-//                     assert.isNull(err);
-//                     try {
-//                         var friends = JSON.parse(body);
-//                     } catch(err) {
-//                         throw new Error("Could not parse the body as json");
-//                     }
-//                     assert.isNotNull(friends);
-//                     assert.ok(friends.length > 0);
-//                 })
-//             .unpath()
-//         .undiscuss()
-//     .undiscuss();
-
 
 var counts = {};
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
@@ -126,63 +113,62 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .discuss('home timeline entries')
             .path(mePath + '/getAll/home_timeline')
             .get()
-                .expect(200)
                 .expect('returns some statuses', function(err, res, body) {
                     assert.isNull(err);
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.ok(statuses.length > 0);
                     counts.home_timeline = statuses.length;
+                    eventCounts.home_timeline += statuses.length;
                 })
             .unpath()
         .undiscuss()
         .discuss('mentions entries')
             .path(mePath + '/getAll/mentions')
             .get()
-                .expect(200)
                 .expect('returns some mentions', function(err, res, body) {
                     assert.isNull(err);
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.ok(statuses.length > 0);
                     counts.mentions = statuses.length;
+                    eventCounts.mentions += statuses.length;
                 })
             .unpath()
         .undiscuss()
         .discuss('friends entries')
             .path(mePath + '/getAll/friends')
             .get()
-                .expect(200)
                 .expect('returns some friends', function(err, res, body) {
                     assert.isNull(err);
                     var friends = JSON.parse(body);
                     assert.isNotNull(friends);
                     assert.ok(friends.length > 0);
                     counts.friends = friends.length;
+                    eventCounts.friends += friends.length;
                 })
             .unpath()
         .undiscuss()
         .discuss('followers entries')
             .path(mePath + '/getAll/followers')
             .get()
-                .expect(200)
                 .expect('returns some followers', function(err, res, body) {
                     assert.isNull(err);
                     var followers = JSON.parse(body);
                     assert.isNotNull(followers);
                     assert.ok(followers.length > 0);
                     counts.followers = followers.length;
+                    eventCounts.followers += followers.length;
                 })
             .unpath()
         .undiscuss()
     .undiscuss();
-    
+
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss('Twitter connector can get')
         .discuss('home timeline entries after recordID 1')
             .path(mePath + '/getSince/home_timeline?recordID=1')
             .get()
-                .expect(200)
                 .expect('returns two fewer statuses', function(err, res, body) {
                     assert.isNull(err);
                     var statuses = JSON.parse(body);
@@ -195,7 +181,6 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .discuss('mentions entries after recordID 1')
             .path(mePath + '/getSince/mentions?recordID=1')
             .get()
-                .expect(200)
                 .expect('returns two fewer mentions', function(err, res, body) {
                     assert.isNull(err);;
                     var statuses = JSON.parse(body);
@@ -208,7 +193,6 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .discuss('friends entries after recordID 1')
             .path(mePath + '/getSince/friends?recordID=1')
             .get()
-                .expect(200)
                 .expect('returns two fewer friends', function(err, res, body) {
                     assert.isNull(err);
                     var friends = JSON.parse(body);
@@ -221,7 +205,6 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
         .discuss('followers entries after recordID 1')
             .path(mePath + '/getSince/followers?recordID=1')
             .get()
-                .expect(200)
                 .expect('returns two fewer followers', function(err, res, body) {
                     assert.isNull(err);
                     var followers = JSON.parse(body);
@@ -250,4 +233,34 @@ suite.next().suite.addBatch({
         }
     }
 });
+
+
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
+    .discuss('got events')
+        .path('/Me/twitter-event-collector/getEvents/friends')
+        .get()
+            .expect('got all friends events', function(err, resp, body) {
+                assert.equal(body, eventCounts.friends);
+            })
+        .unpath()
+        .path('/Me/twitter-event-collector/getEvents/followers')
+        .get()
+            .expect('got all followers events', function(err, resp, body) {
+                assert.equal(body, eventCounts.followers);
+            })
+        .unpath()
+        .path('/Me/twitter-event-collector/getEvents/mentions')
+        .get()
+            .expect('got all mentions events', function(err, resp, body) {
+                assert.equal(body, eventCounts.mentions);
+            })
+        .unpath()
+        .path('/Me/twitter-event-collector/getEvents/home_timeline')
+        .get()
+            .expect('got all home_timeline events', function(err, resp, body) {
+                assert.equal(body, eventCounts.home_timeline);
+            })
+        .unpath()
+    .undiscuss();
+    
 suite.export(module);

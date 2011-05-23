@@ -17,12 +17,15 @@ var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
+    EventEmitter = require('events').EventEmitter;
     dataStore = require('./dataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
 var allKnownIDs;
 var requestCount = 0;
+
+exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
 exports.init = function(theAuth, callback) {
@@ -53,10 +56,12 @@ exports.pullStatuses = function(endpoint, callback) {
     var items = [];
     pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
         items.reverse();
-        for(var i in items)
+        for(var i in items) {
             dataStore.addStatus(endpoint, items[i]);
-        // lfs.appendObjectsToFile(endpoint + '.json', items);
-        callback(null, "synced "+endpoint+" with "+items.length+" new entries");
+            var eventObj = {source:endpoint, type:'new', status:items[i]};
+            exports.eventEmitter.emit('status/twitter', eventObj);
+        }
+        callback(null, (endpoint === 'home_timeline' ? 60 : 120), "synced "+endpoint+" with "+items.length+" new entries");
     });
 }
 
@@ -77,6 +82,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                 }, 10000);
             }
+            require("sys").puts( error.stack )
             sys.debug('error from twitter:' + sys.inspect(error));
             return;
         }
@@ -115,7 +121,6 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
         userInfo = newUserInfo;
         lfs.writeObjectToFile('usersInfo.json', userInfo);
         getIDs(friendsOrFollowers, userInfo.screen_name, function(err, ids) {
-            // console.error('got ids:', ids);
             var newIDs = [];
             var knownIDs = allKnownIDs[friendsOrFollowers];
             var repeatedIDs = {};
@@ -132,8 +137,6 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                 if(!repeatedIDs[knownID])
                     removedIDs.push(knownID);
             }
-            // console.error('got new ids:', newIDs);
-            // console.error('got removedIDs:', removedIDs);
             if(newIDs.length < 1) {
                 if(removedIDs.length > 0)
                     logRemoved(friendsOrFollowers, removedIDs);
@@ -144,11 +147,9 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                     if(removedIDs.length > 0)
                         logRemoved(friendsOrFollowers, removedIDs);
                     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                    locker.diary('synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
-                    callback();
+                    callback(null, 600, 'synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
                 });
             }
-            locker.at('/getNew/' + friendsOrFollowers, 600);
         });
     });
 }
@@ -198,6 +199,8 @@ function updatePeople(type, people) {
                 if(isDifferent) {
                     // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
                     dataStore.logUpdatePerson(type, profileFromTwitter);
+                    var eventObj = {source:type, type:'update', person:person};
+                    exports.eventEmitter.emit('contact/twitter', eventObj);
                 } else {
                     // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
                 }
@@ -209,9 +212,10 @@ function updatePeople(type, people) {
 function addPeople(type, people, knownIDs) {
     for(var i in people) {
         var person = people[i];
-        locker.event('contact/twitter', person);
         knownIDs[person.id_str] = 1;
         dataStore.addPerson(type, person);    
+        var eventObj = {source:type, type:'new', person:person};
+        exports.eventEmitter.emit('contact/twitter', eventObj);
     }
 }
 
@@ -221,6 +225,8 @@ function logRemoved(type, ids) {
     var knownIDs = allKnownIDs[type];
     ids.forEach(function(id) {
         dataStore.logRemovePerson(type, id);
+        var eventObj = {source:type, type:'delete', person:{id:id, deleted:true}};
+        exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
     });
     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));

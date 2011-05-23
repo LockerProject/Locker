@@ -33,10 +33,13 @@ app.get('/get', function(req, res) {
         if(err) {
             res.writeHead(500);
             res.end(JSON.stringify(err));
-            return;
+        } else if(doc) {
+            res.writeHead(200);
+            res.end(JSON.stringify(doc));
+        } else {
+            res.writeHead(500);
+            res.end(JSON.stringify({error:'not found'}));
         }
-        res.writeHead(200);
-        res.end(JSON.stringify(doc));
     });
 });
 
@@ -47,9 +50,9 @@ process.stdin.on('data', function (chunk) {
     process.chdir(processInfo.workingDirectory);
     locker.connectToMongo(function(thecollections) {
         collections = thecollections;
-    	app.listen(processInfo.port, function() {
-    		process.stdout.write(JSON.stringify({port: processInfo.port}));
-    	});
+        app.listen(processInfo.port, function() {
+            process.stdout.write(JSON.stringify({port: processInfo.port}));
+        });
     });
 });
 process.stdin.resume();
