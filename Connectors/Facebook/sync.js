@@ -17,12 +17,15 @@ var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
+    EventEmitter = require('events').EventEmitter;
     dataStore = require('./dataStore');
     
 var auth, userInfo, latests;
 var facebookClient;
 var allKnownIDs;
 var requestCount = 0;
+
+exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
 exports.init = function(theAuth, callback) {

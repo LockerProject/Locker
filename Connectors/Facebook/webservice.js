@@ -45,9 +45,9 @@ function authComplete(theAuth, callback) {
         app.get('/getNew/:type', function(req, res) {
             var type = req.params.type.toLowerCase();
             if(type === 'friends') {
-                sync.syncUsersInfo(type, function() {  
+                sync.syncUsersInfo(function() {  
                     res.writeHead(200, {'content-type':'application/json'});
-                    res.end(JSON.stringify({success:"done fetching " + type}));
+                    res.end(JSON.stringify({success:'done fetching friends'}));
                 });             
             }
         });
@@ -55,7 +55,7 @@ function authComplete(theAuth, callback) {
         app.get('/update/:type', function(req, res) {
             var type = req.params.type.toLowerCase();
             if(type === 'friends') {
-                sync.updatePeople(type, function() {
+                sync.updatePeople(function() {
                     res.writeHead(200, {'content-type':'application/json'});
                     res.end(JSON.stringify({success:'k, I\'m on it!'}));
                 });

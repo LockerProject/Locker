@@ -27,7 +27,7 @@ exports.init = function(callback) {
 
 function openDB(callback) {
     currentDB.open('current.db', function(err) {
-        currentDB.execute('CREATE TABLE friends (id INTEGER PRIMARY KEY, profile TEXT);', callback);      
+        currentDB.execute('CREATE TABLE IF NOT EXISTS friends (id INTEGER PRIMARY KEY, profile TEXT);', callback);      
     });
 }
 
