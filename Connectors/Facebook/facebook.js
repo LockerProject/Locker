@@ -26,6 +26,7 @@ var app = express.createServer(
 
 // This only adds the / endpoint, the rest are added in the authComplete function
 var webservice = require(__dirname + "/webservice.js")(app);
+var started = false;
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
@@ -44,19 +45,17 @@ process.stdin.on('data', function (chunk) {
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
     	    webservice.authComplete(authLib.auth, function() {
-    	        startWebServer();
+    	        if(!started) {
+    	            startWebServer();
+    	        }
     	    });
         });
     
-        if(!authLib.isAuthed()) {
+        if(!authLib.isAuthed() && !started) {
             startWebServer();
         }
-        
-        var started = false;
+             
         function startWebServer() {
-            if (started == true) {
-                return;
-            }
             started = true;
             // Start the core web server
     	    app.listen(processInfo.port, function() {

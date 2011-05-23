@@ -6,18 +6,14 @@
 * Please see the LICENSE file for more information.
 *
 */
-var fs = require("fs");
-
-var express = require('express'),
-    connect = require('connect'),
-    app = express.createServer(
-                    connect.bodyParser(),
-                    connect.cookieParser());
+var fs = require('fs');
                     
 var facebookClient = require('facebook-js')();
-var uri, completedCallback;
+var uri, 
+		completedCallback = null;
 
 exports.auth = {};
+
 exports.isAuthed = function() {
     try {
         if(!exports.hasOwnProperty('auth')) {
@@ -57,6 +53,7 @@ exports.authAndRun = function(app, onCompletedCallback) {
     app.post('/saveAuth', saveAuth);
 }
 
+/*
 exports.init = function(baseUri, storedAuth, app, onCompletedCallback) { 
     uri = baseUri;
     completedCallback = onCompletedCallback;
@@ -67,18 +64,20 @@ exports.init = function(baseUri, storedAuth, app, onCompletedCallback) {
         app.get('/auth', handleAuth);
         app.get('/saveAuth', saveAuth);
     }
-}
+}*/
+
     
 function handleAuth(req, res) {
     if(!exports.auth) {
         exports.auth = {};
     }
     if(!req.param('code')) {
-        if(!(exports.auth.appID && exports.auth.appSecret)) {
-            res.writeHead(200);
-            res.end(displayHTML("Enter your personal FaceBook app info that will be used to sync your data" + 
+        if(!(exports.auth.hasOwnProperty('appID') && 
+             exports.auth.hasOwnProperty('appSecret'))) {
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.end(displayHTML("Enter your personal Facebook app info that will be used to sync your data" + 
                     " (create a new one <a href='http://www.facebook.com/developers/createapp.php'>here</a>" +
-                    " using a callback url of http://"+url.parse(uri).host+"/) " +
+                    " using a callback url of http://" + url.parse(uri).host + "/) " +
                     "<form method='post' action='saveAuth'>" +
                         "App ID: <input name='appID'><br>" +
                         "App Secret: <input name='appSecret'><br>" +
@@ -86,12 +85,13 @@ function handleAuth(req, res) {
                     "</form>"));
             return;
         }
-        if(!exports.auth.token) {
-            res.writeHead(200);
+        if(!exports.auth.hasOwnProperty('token')) {
+            res.writeHead(200, {'Content-Type': 'text/html'});
             res.end(displayHTML(getGoFB()));
         }
-        else
-            return completedCallback(auth, req, res);
+        else {
+            completedCallback(exports.auth, req, res);
+        }
     } else {
         var OAuth = require('oauth').OAuth2;
         var oa = new OAuth(exports.auth.appID, exports.auth.appSecret, 'https://graph.facebook.com');
@@ -103,8 +103,7 @@ function handleAuth(req, res) {
                 exports.auth.token = token;
                 fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
                 res.redirect(uri);
-                res.end();
-                return completedCallback(exports.auth, req, res);
+                completedCallback(exports.auth, req, res);
             }
         });
     }
