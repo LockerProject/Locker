@@ -56,21 +56,22 @@ exports.syncFriends = function(callback) {
                 'queue': queue,
                 'token': auth.accessToken
             };
+            var removedIDs = [];
             for (var i = 0; i < friends.length; i++) {
                 queue.push(friends[i]);
                 if(!knownIDs[friends[i].id])
                     newIDs.push(friends[i].id);
                 else
                     repeatedIDs[friends[i].id] = 1;
-                var removedIDs = [];
-                for(var knownID in knownIDs) {
-                    if(!repeatedIDs[knownID])
-                        removedIDs.push(knownID);
-                }
+            }
+            for(var knownID in knownIDs) {
+                if(!repeatedIDs[knownID])
+                    removedIDs.push(knownID);
             }
             if(newIDs.length < 1) {
                 if(removedIDs.length > 0)
                     logRemoved(removedIDs);
+                callback(err, 3600, "no new friends, removed " + removedIDs.length + " deleted friends");
             } else {
                 for (var i = 0; i < newIDs.length; i++) {
                     allKnownIDs[newIDs[i]] = 1;
@@ -79,8 +80,8 @@ exports.syncFriends = function(callback) {
                 downloadUsers(newIDs, auth.accessToken);
                 if(removedIDs.length > 0)
                     logRemoved(removedIDs);
+                callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
             }
-            callback(err, newIDs.length);
         });
     });
 }
@@ -103,7 +104,7 @@ exports.syncCheckins = function (callback) {
         getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
             for (var i = 0; i < checkins.length; i++)
                 dataStore.addPlace(checkins[i]);
-            callback(err, checkins.length);
+            callback(err, 600, "sync'd " + checkins.length + " new checkins");
         });
     });
 }
@@ -154,11 +155,11 @@ function downloadUsers(users, token, callback) {
        request.get({uri:'https://api.foursquare.com/v2/users/' + friend + '.json?oauth_token=' + token},
        function(err, resp, data) {
            var response = JSON.parse(data);
-           if(response.meta.code >= 500) {
+           if(response.meta.code >= 400) {
                console.error(data);
-               return;
-           } else if(response.meta.code >= 400) {
-               console.error(data);
+               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+               delete allKnownIDs[id];
+               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                return;
            }
            var js = JSON.parse(data).response.user;
@@ -172,7 +173,6 @@ function downloadUsers(users, token, callback) {
                       fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
               });
            }
-           allKnownIDs[friend] = 1;
            dataStore.addFriend(js);
        });
     }

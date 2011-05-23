@@ -30,7 +30,7 @@ exports.init = function(callback) {
 
 function openDB(callback) {
     currentDB.open('current.db', function(err) {
-        currentDB.execute('CREATE TABLE friends (id INTEGER PRIMARY KEY, profile TEXT);', callback);      
+        currentDB.execute('CREATE TABLE IF NOT EXISTS friends (id INTEGER PRIMARY KEY, profile TEXT);', callback);
     });
 }
 
@@ -39,10 +39,7 @@ function now() {
 }
 
 exports.addFriend = function(person) {
-    var status = person.status;
-    delete person.status;
     friends.addRecord({timeStamp:now(), type:'add', data:person});
-    person.status = status;
     addFriendToCurrent(person, function(err) {
         if(err)
             console.error(err);
@@ -54,8 +51,6 @@ exports.getFriendFromCurrent = function(id, callback) {
     currentDB.execute(sql, [id], callback);
 }
 
-// function getPeopleFromCurrent()
-
 function addFriendToCurrent(person, callback) {
     var sql = "INSERT OR REPLACE INTO friends(id, profile) VALUES (?, ?);";
     currentDB.execute(sql, [person.id, JSON.stringify(person)], callback);
@@ -63,7 +58,7 @@ function addFriendToCurrent(person, callback) {
 
 exports.logRemovePerson = function(id) {
     friends.addRecord({timeStamp:now(), type:'remove', data:{id_str:id, id:parseInt(id)}});
-    removePersonFromCurrent(type, id, function(err) {
+    removePersonFromCurrent(id, function(err) {
         if(err)
             console.error(err);
     })
@@ -78,10 +73,7 @@ function removePersonFromCurrent(id, callback) {
 }
 
 exports.logUpdatePerson = function(person) {
-    var status = person.status;
-    delete person.status;
     friends.addRecord({timeStamp:now(), type:'update', data:person});
-    person.status = status;
     updatePersonInCurrent(type, person, function(err) {
         if(err)
             console.error(err);
@@ -108,7 +100,7 @@ exports.getPeople = function(query, callback) {
     }
 }
 
-exports.getPeopleCurrent = function(type, callback) {
+exports.getPeopleCurrent = function(callback) {
     currentDB.execute('SELECT profile FROM friends;', function(err, profileStrs) {
         if(err) {
             callback(err, profileStrs);
@@ -123,13 +115,6 @@ exports.getPeopleCurrent = function(type, callback) {
             }
         }
         callback(err, profiles);
-    });
-}
-
-exports.getAllContacts = function(callback) {
-    exports.getPeople('friends', {recordID:-1}, function(err, friends) {
-        var allContacts = {friends:friends};
-        callback(allContacts);
     });
 }
 
