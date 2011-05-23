@@ -22,9 +22,10 @@ module.exports = function(theapp) {
 
 function authComplete(theauth) {
     auth = theauth;
-    sync.init(auth);
-    app.get('/friends', friends);
-    app.get('/checkins', checkins);
+    sync.init(auth, function() {
+        app.get('/friends', friends);
+        app.get('/checkins', checkins);
+    });
 }
 
 function index(req, res) {
@@ -41,7 +42,7 @@ function friends(req, res) {
     sync.syncFriends(function(err, friendCount) {
         locker.diary("syncing "+friendCount+" friends");
         locker.at('/friends', 3600);
-        res.end();
+        res.end("syncing "+friendCount+" new friends");
     });
 }
 
