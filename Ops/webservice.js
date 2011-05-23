@@ -13,11 +13,9 @@ var request = require('request');
 var lscheduler = require("lscheduler");
 var levents = require("levents");
 var serviceManager = require("lservicemanager");
-var keychain = require("lkeychain");
 var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
-var wwwdude = require('wwwdude');
 var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
@@ -26,14 +24,12 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 
 var proxy = new httpProxy.HttpProxy();
-var wwwdude_client = wwwdude.createClient({encoding: 'utf-8'});
 var scheduler = lscheduler.masterScheduler;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" ) { //||
-//                    req.url.substring(0, 10) == "/keychain/") {
+                if (req.url.substring(0, 6) == "/core/" ) {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -270,48 +266,6 @@ locker.post('/core/:svcId/event', function(req, res) {
     levents.fireEvent(type, svcId, obj);
     res.writeHead(200);
     res.end("OKTHXBI");
-});
-
-
-// KEYCHAIN
-// put an object in the keychain
-locker.post('/core/:svcId/keychain/putAuthToken', function(req, res) {
-    var authTokenID = keychain.putAuthToken(req.param('authToken'), req.param('serviceType'), req.param('descriptor'));
-    res.writeHead(200);
-    res.end(JSON.stringify({'authTokenID':authTokenID}));
-});
-
-// permission an object in the keychain
-locker.post('/core/:svcId/keychain/grantPermission', function(req, res) {
-    keychain.grantPermission(req.param('authTokenID'), req.param('serviceID'));
-    res.writeHead(200);
-    res.end(JSON.stringify({'success':true}));
-});
-
-// get all objects' meta for a given service type in the keychain
-locker.get('/core/:svcId/keychain/getTokenDescriptors', function(req, res) {
-    var meta = keychain.getTokenDescriptors(req.param('serviceType'));
-    res.writeHead(200, {
-        'Content-Type':'text/json'
-    });
-    res.end(JSON.stringify(meta));
-});
-
-// get all objects' meta for a given service type in the keychain
-locker.get('/core/:svcId/keychain/getAuthToken', function(req, res) {
-    try {
-        var meta = keychain.getAuthToken(req.param('authTokenID'), req.param('svcId'));
-        res.writeHead(200, {
-            'Content-Type':'text/json'
-        });
-        res.end(JSON.stringify(meta));
-    } catch(err) {
-        res.writeHead(401, {
-            'Content-Type':'text/json'
-        });
-        sys.debug(err);
-        res.end(JSON.stringify({error:'Permission denied'}));
-    }
 });
 
 

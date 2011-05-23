@@ -16,9 +16,10 @@ stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
-    app.listen(processInfo.port);
-    var returnedInfo = {port: processInfo.port};
-    console.log(JSON.stringify(returnedInfo));
+    app.listen(processInfo.port, function() {
+        var returnedInfo = {port: processInfo.port};
+        console.log(JSON.stringify(returnedInfo));
+    });
 });
 
 

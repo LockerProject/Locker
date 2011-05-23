@@ -9,11 +9,7 @@
 
 var fs = require('fs'),
     xml2js = require('xml2js'),
-    wwwdude = require('wwwdude');
-    
-var wwwdude_client = wwwdude.createClient({
-    encoding: 'binary'
-});
+    request = require('request');
 
 var debug = false;
 
@@ -46,46 +42,38 @@ var lastFM_ms = 0, parse_ms = 0;
 function pullTracks(user, page, limit, to, from) {
     try {
         var startLFM = now();
-        wwwdude_client.get('http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks' + 
+        request.get({uri:'http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks' + 
                                                             '&user=' + user + 
                                                             '&to=' + to +
                                                             (from ? '&from=' + from : '') + 
                                                             '&api_key=' + api_key + 
                                                             '&limit=' + limit + 
-                                                            '&page=' + page)
-        .addListener('error',
-        function(err) {
-            sys.puts('Network Error: ' + sys.inspect(err));
-        })
-        .addListener('http-error',
-        function(data, resp) {
-            sys.puts('HTTP Error for: ' + resp.host + ' code: ' + resp.statusCode + '\nData: ' + data);
-        })
-        .addListener('redirect',
-        function(data, resp) {
-            })
-        .addListener('success',
-        function(data, resp) {
-            try {
-                var parser = new xml2js.Parser();
-                parser.addListener('end', function(result) {
-                    var tracks = result.recenttracks.track;
-                    for(var i = 0; i < tracks.length; i++) {
-                        if(debug) console.log(JSON.stringify(tracks[i]) + '\n');
-                        allTracks.push(tracks[i]);
-                    }
-                    if(debug) console.log(JSON.stringify(result.recenttracks["@"]));
-                    console.log('downloaded ' + allTracks.length + ' of ' + result.recenttracks["@"].total);
-                    if(tracks.length >= limit) { //there's more
-                        pullTracks(user, page + 1, limit);
-                    } else { //done!
-                        writeTracks(user);
-                    }
-                });
-                parser.parseString(data);
-            } catch(err) {
-                //                  console.lo
+                                                            '&page=' + page},
+            function(err, resp, body) {
+            if(err)
+                sys.puts('Network Error: ' + sys.inspect(err));
+            else {
+                try {
+                    var parser = new xml2js.Parser();
+                    parser.addListener('end', function(result) {
+                        var tracks = result.recenttracks.track;
+                        for(var i = 0; i < tracks.length; i++) {
+                            if(debug) console.log(JSON.stringify(tracks[i]) + '\n');
+                            allTracks.push(tracks[i]);
+                        }
+                        if(debug) console.log(JSON.stringify(result.recenttracks["@"]));
+                        console.log('downloaded ' + allTracks.length + ' of ' + result.recenttracks["@"].total);
+                        if(tracks.length >= limit) { //there's more
+                            pullTracks(user, page + 1, limit);
+                        } else { //done!
+                            writeTracks(user);
+                        }
+                    });
+                    parser.parseString(body);
+                } catch(err) {
+                    //                  console.lo
                 }
+            }
         });
     } catch(err) {    
         sys.puts('Error: ' + sys.inspect(err));
