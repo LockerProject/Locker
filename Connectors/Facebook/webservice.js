@@ -12,66 +12,68 @@ var fs = require('fs'),
     querystring = require('querystring'),
     sys = require('sys'),
     request = require('request'),
-    locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     sync = require('./sync');
 
-var _debug = false;
+var app, auth;
 
-module.exports = function(app, auth) {
-    sync.init(auth);
-
+// Add the basic / head ups (or forward to /auth if needed)
+module.exports = function(theApp) {
+    app = theApp;
+    
     app.get('/', function (req, res) {
-        if(!(auth && auth.appID && auth.appSecret && auth.token))
+        if(!(auth && auth.consumerKey && auth.consumerSecret && auth.token)) {
             res.redirect(app.meData.uri + 'auth');
-        else {    
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end(displayHTML("found a token, <a href='./friends'>load friends</a>"));
-        }   
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end("<html>great! now you can:<br><li><a href='getNew/friends'>sync new friends</a></li>" + 
+                                                 "<li><a href='update/friends'>update existing friends</a></li>" + 
+                                                 "<li><a href='update/profile'>sync your profile</a></li>" +"</html>");
+        }
     });
-
-    app.get('/friends',
-    function(req, res) {
-        sync.getFriends(function(err) {
-            if(err) {
-                res.writeHead(500, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify(err));
-            } else {
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify({success:"sync'd all your friends, how sociable!"}));
-            }
-        });
-    });
-
-
-    app.get('/feed',
-    function(req, res) {
-        sync.pullNewsFeed(function() {
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end();
-        });
-    });
-    app.get('/photos',
-    function(req, res) {
-        sync.getAllPhotos(function() {
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end();
-        });
-    });
+    
+    this.authComplete = authComplete;
+    return this;
 }
 
+// Adds all of the sync API endpoints once the auth process is completed
+function authComplete(theAuth, callback) {
+    auth = theAuth;
+    sync.init(auth, function() {
 
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
-        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
-        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
+        // Sync the person's friend data
+        app.get('/getNew/:type', function(req, res) {
+            var type = req.params.type.toLowerCase();
+            if(type === 'friends') {
+                sync.syncUsersInfo(type, function() {  
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:"done fetching " + type}));
+                });             
+            }
+        });
+        
+        app.get('/update/:type', function(req, res) {
+            var type = req.params.type.toLowerCase();
+            if(type === 'friends') {
+                sync.updatePeople(type, function() {
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:'k, I\'m on it!'}));
+                });
+            } else if(type === 'profile') {
+                sync.syncProfile(function(err, userInfo) {
+                    res.writeHead(200, {'content-type':'application/json'});
+                    res.end(JSON.stringify({success:userInfo}));
+                });
+            }
+        })
+
+        // Rate limit status (not currently used anywhere, will be part of calming)
+        app.get('/rate_limit_status', function(req, res) {
+            sync.getRateLimitStatus(function(status) {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify(status));
+            });
+        });
+        callback();
+    });
 }

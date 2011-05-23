@@ -18,23 +18,24 @@ var facebookClient = require('facebook-js')();
 var uri, completedCallback;
 
 exports.auth = {};
-function isAuthed() {
+exports.isAuthed = function() {
     try {
-        if(!exports.hasOwnProperty("auth"))
+        if(!exports.hasOwnProperty('auth')) {
             exports.auth = {};
+        }
         
         // Already have the stuff read
-        if(exports.auth.hasOwnProperty("appID") && 
-           exports.auth.hasOwnProperty("appSecret") && 
-           exports.auth.hasOwnProperty("token")) {
+        if(exports.auth.hasOwnProperty('appID') && 
+           exports.auth.hasOwnProperty('appSecret') && 
+           exports.auth.hasOwnProperty('token')) {
             return true;
         }    
 
         // Try and read it in
-        var authData = JSON.parse(fs.readFileSync("auth.json"));
-        if(authData.hasOwnProperty("appID") && 
-           authData.hasOwnProperty("appSecret") && 
-           authData.hasOwnProperty("token")) {
+        var authData = JSON.parse(fs.readFileSync('auth.json'));
+        if(authData.hasOwnProperty('appID') && 
+           authData.hasOwnProperty('appSecret') && 
+           authData.hasOwnProperty('token')) {
             exports.auth = authData;
             return true;
         }
@@ -46,17 +47,17 @@ function isAuthed() {
 
 
 exports.authAndRun = function(app, onCompletedCallback) {
-    if (isAuthed()) {
+    if (exports.isAuthed()) {
         onCompletedCallback();
         return;
     }
     uri = app.meData.uri;
     completedCallback = onCompletedCallback;
-    app.get("/auth", handleAuth);
-    app.post("/saveAuth", saveAuth);
+    app.get('/auth', handleAuth);
+    app.post('/saveAuth', saveAuth);
 }
 
-exports.init = function(baseUri, storedAuth, app, onCompletedCallback) {
+exports.init = function(baseUri, storedAuth, app, onCompletedCallback) { 
     uri = baseUri;
     completedCallback = onCompletedCallback;
     auth = storedAuth || {};
@@ -69,9 +70,9 @@ exports.init = function(baseUri, storedAuth, app, onCompletedCallback) {
 }
     
 function handleAuth(req, res) {
-    if(!exports.auth)
+    if(!exports.auth) {
         exports.auth = {};
-
+    }
     if(!req.param('code')) {
         if(!(exports.auth.appID && exports.auth.appSecret)) {
             res.writeHead(200);
@@ -90,11 +91,11 @@ function handleAuth(req, res) {
             res.end(displayHTML(getGoFB()));
         }
         else
-            completedCallback(auth, req, res);
+            return completedCallback(auth, req, res);
     } else {
-        var OAuth = require("oauth").OAuth2;
+        var OAuth = require('oauth').OAuth2;
         var oa = new OAuth(exports.auth.appID, exports.auth.appSecret, 'https://graph.facebook.com');
-        oa.getOAuthAccessToken(req.param('code'), {redirect_uri: uri+"auth"}, function(err, token, refresh) {
+        oa.getOAuthAccessToken(req.param('code'), {redirect_uri: uri + 'auth'}, function(err, token, refresh) {
             if (err) {
                 res.writeHead(500, {'Content-Type': 'text/html'});
                 res.end(displayHTML("uhoh " + JSON.stringify(err)));
@@ -102,7 +103,8 @@ function handleAuth(req, res) {
                 exports.auth.token = token;
                 fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
                 res.redirect(uri);
-                completedCallback(exports.auth, req, res);
+                res.end();
+                return completedCallback(exports.auth, req, res);
             }
         });
     }
@@ -125,7 +127,7 @@ function getGoFB() {
 }
 
 function getAuthURI() {
-    return facebookClient.getAuthorizeUrl({client_id: exports.auth.appID, redirect_uri: uri+"auth",
+    return facebookClient.getAuthorizeUrl({client_id: exports.auth.appID, redirect_uri: uri + 'auth',
                 scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'});
 }
 
