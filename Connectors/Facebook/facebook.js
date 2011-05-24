@@ -7,63 +7,52 @@
 *
 */
 
-/**
- * web server/service to wrap interactions w/ FB open graph
- */
- 
 var express = require('express'),
     connect = require('connect'),
+    app = express.createServer(connect.bodyParser()),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
-    authLib = require('./auth');
-
-// Setup the basic web server
-var app = express.createServer(
-    connect.bodyParser(),
-    connect.cookieParser(),
-    connect.session({secret : "locker"})
-);    
-
-// This only adds the / endpoint, the rest are added in the authComplete function
-var webservice = require(__dirname + "/webservice.js")(app);
-var started = false;
-
+    authLib = require('./auth'),
+    syncApi = require(__dirname + "/sync-api.js")(app);
+    
+// Process the startup JSON object
 process.stdin.setEncoding('utf8');
-process.stdin.on('data', function (chunk) {
-	// Do the initialization bits
-    var processInfo = JSON.parse(chunk);
-   	// TODO:  Is there validation to do here?
+process.stdin.on('data', function(data) {
+    // Do the initialization bits
+    var processInfo = JSON.parse(data);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     
-    // We're adding this info to app for basic utility use
     app.meData = lfs.loadMeData();
     // Adds the internal API to the app because it should always be available
     require(__dirname + "/api.js")(app, function() {
-    
-        // If we're not authed, we add the auth routes, otherwise add the webservice
+        
         authLib.authAndRun(app, function() {
-            // Add the rest of the sync API (only / is added automatically)
-    	    webservice.authComplete(authLib.auth, function() {
-    	        if(!started) {
-    	            startWebServer();
-    	        }
-    	    });
+            syncApi.authComplete(authLib.auth, function() {
+                if (!started) {
+                    startWebServer();
+                }
+            });
         });
-    
-        if(!authLib.isAuthed() && !started) {
+        
+        if(!authLib.isAuthed())
             startWebServer();
-        }
-             
+        
+        var started = false;
         function startWebServer() {
             started = true;
             // Start the core web server
-    	    app.listen(processInfo.port, function() {
-    		    // Tell the locker core that we're done
-    		    var returnedInfo = {port: processInfo.port};
-    		    process.stdout.write(JSON.stringify(returnedInfo));
-    	    });
+            app.listen(processInfo.port, function() {
+                // Tell the locker core that we're done
+                var returnedInfo = {port: processInfo.port};
+                process.stdout.write(JSON.stringify(returnedInfo));
+            });
         }
     });
+    
+    
+    
+
+    // If we're not authed, we add the auth routes, otherwise add the webservice
 });
 process.stdin.resume();

@@ -6,32 +6,41 @@
 * Please see the LICENSE file for more information.
 *
 */
-var fs = require('fs');
-                    
-var facebookClient = require('facebook-js')();
-var uri, 
-    completedCallback = null;
+
+var request = require('request'),
+    lfs = require('../../Common/node/lfs.js'),
+    fs = require('fs');
+
+var completedCallback, me;
 
 exports.auth = {};
 
+exports.authAndRun = function(app, onCompletedCallback) {
+    me = app.meData;
+    if(exports.isAuthed()) {
+        onCompletedCallback();
+        return;
+    }
+    completedCallback = onCompletedCallback;
+    app.get('/gofb', gofb);
+    app.get('/auth', handleAuth);
+    app.post('/saveAuth', saveAuth);
+};
+
 exports.isAuthed = function() {
     try {
-        if(!exports.hasOwnProperty('auth')) {
+        if(!exports.auth)
             exports.auth = {};
-        }
         
         // Already have the stuff read
-        if(exports.auth.hasOwnProperty('appID') && 
-           exports.auth.hasOwnProperty('appSecret') && 
-           exports.auth.hasOwnProperty('token')) {
+        if(exports.auth.hasOwnProperty("accessToken"))
             return true;
-        }    
 
-        // Try and read it in
-        var authData = JSON.parse(fs.readFileSync('auth.json'));
-        if(authData.hasOwnProperty('appID') && 
-           authData.hasOwnProperty('appSecret') && 
-           authData.hasOwnProperty('token')) {
+        console.error('isAuthed.reading in from', process.cwd());
+        // Try to read it in
+        var authData = JSON.parse(fs.readFileSync("auth.json", 'utf-8'));
+        console.error('isAuthed.read and parsed', authData);
+        if(authData.hasOwnProperty("accessToken")) {
             exports.auth = authData;
             return true;
         }
@@ -39,94 +48,49 @@ exports.isAuthed = function() {
         // TODO:  Could actually check the error type here
     }
     return false;
-}
+};
 
-
-exports.authAndRun = function(app, onCompletedCallback) {
-    if (exports.isAuthed()) {
-        onCompletedCallback();
-        return;
-    }
-    uri = app.meData.uri;
-    completedCallback = onCompletedCallback;
-    app.get('/auth', handleAuth);
-    app.post('/saveAuth', saveAuth);
-}
-    
-function handleAuth(req, res) {
-    if(!exports.auth) {
-        exports.auth = {};
-    }
-    if(!req.param('code')) {
-        if(!(exports.auth.hasOwnProperty('appID') && 
-             exports.auth.hasOwnProperty('appSecret'))) {
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end(displayHTML("Enter your personal Facebook app info that will be used to sync your data" + 
-                    " (create a new one <a href='http://www.facebook.com/developers/createapp.php'>here</a>" +
-                    " using a callback url of http://" + url.parse(uri).host + "/) " +
-                    "<form method='post' action='saveAuth'>" +
-                        "App ID: <input name='appID'><br>" +
-                        "App Secret: <input name='appSecret'><br>" +
-                        "<input type='submit' value='Save'>" +
-                    "</form>"));
-            return;
-        }
-        if(!exports.auth.hasOwnProperty('token')) {
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            res.end(displayHTML(getGoFB()));
-        }
-        else {
-            completedCallback(exports.auth, req, res);
-        }
+function gofb(req, res) {
+    if(!(auth.appKey && auth.appSecret)) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end("<html>Enter your personal Facebook app info that will be used to sync your data" + 
+                " (create a new one <a href='http://www.facebook.com/developers/createapp.php'>here</a>" +
+                " using a callback url of http://" + me.uri + "auth) " +
+                "<form method='post' action='saveAuth'>" +
+                    "App ID: <input name='appKey'><br>" +
+                    "App Secret: <input name='appSecret'><br>" +
+                    "<input type='submit' value='Save'>" +
+                "</form></html>");
     } else {
-        var OAuth = require('oauth').OAuth2;
-        var oa = new OAuth(exports.auth.appID, exports.auth.appSecret, 'https://graph.facebook.com');
-        oa.getOAuthAccessToken(req.param('code'), {redirect_uri: uri + 'auth'}, function(err, token, refresh) {
-            if (err) {
-                res.writeHead(500, {'Content-Type': 'text/html'});
-                res.end(displayHTML("uhoh " + JSON.stringify(err)));
-            } else {
-                exports.auth.token = token;
-                fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
-                completedCallback(exports.auth, req, res);
-                res.redirect(uri);
-            }
-        });
+        sys.debug('redirecting to ' + me.uri + 'auth');
+        res.redirect('https://graph.facebook.com/oauth/authorize?client_id=' + auth.appKey + 
+                        '&response_type=code&redirect_uri=' + me.uri + 'auth&' + 
+                        'scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream');
     }
 }
+
+function handleAuth(req, res) {
+    request.get({uri:'https://graph.facebook.com/oauth/access_token' +
+                    '?client_id=' + auth.appKey +
+                    '&client_secret=' + auth.appSecret +
+                    '&grant_type=authorization_code' +
+                    '&redirect_uri=' + me.uri + 'auth' +
+                    '&code=' + req.param('code')}, function(err, resp, body) {
+        auth.accessToken = JSON.parse(body).access_token;
+        lfs.writeObjectToFile("auth.json", auth);
+        completedCallback(auth);
+        res.redirect(me.uri);
+    });
+}
+
 
 function saveAuth(req, res) {
-    if(!(req.body.appID && req.body.appSecret)) {
-        res.writeHead(400, {'Content-Type': 'text/html'});
-        res.end(displayHTML("missing field(s)?"));
+    // res.writeHead(200, {'Content-Type': 'text/html'});
+    if(!req.body.appKey || !req.body.appSecret) {
+        res.end("missing field(s)?");
         return;
     }
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    exports.auth.appID = req.body.appID;
-    exports.auth.appSecret = req.body.appSecret;
-    res.end(displayHTML(getGoFB()));
-}
-
-function getGoFB() {
-    return "you need to <a href='" + getAuthURI() + "'>auth w/ fb</a> yet";
-}
-
-function getAuthURI() {
-    return facebookClient.getAuthorizeUrl({client_id: exports.auth.appID, redirect_uri: uri + 'auth',
-                scope: 'email,offline_access,read_stream,user_photos,friends_photos,publish_stream'});
-}
-
-function displayHTML(content) {
-    return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        + "<meta name='description' content='Locker Facebook Connector' />"
-        + "<title>Facebook Connector - Locker</title>"
-        + "<style type='text/css'>"
-        + ".header{background:rgb(125,174,92);width: 100%;color: white;border-radius:50px;}" 
-        + " .goback{position:absolute;left:90%;top:3%;}" + " .body{background:rgb(125,174,92);border-radius:14px;color: white;}" 
-        + " .content{margin-left:1%;} h3{margin-left:1%;margin-bottom:0.5%;} a{color:white;} a:hover{color:rgb(199,199,199);}"
-        + "</style>"
-        + "</head><body>"
-        + "<div class='header'><h3>Facebook Connector</h3><div class='goback'>"
-        + "<a href='/'>Go back</a></div></div><div class='body'><div class='content'>"
-        + content + "</div></body></html>";
+    auth.appKey = req.param('appKey');
+    auth.appSecret = req.param('appSecret');
+    res.redirect(me.uri + 'gofb');
 }
