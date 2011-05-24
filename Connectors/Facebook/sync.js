@@ -81,8 +81,9 @@ exports.syncFriends = function(callback) {
                 }
                 fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                 downloadUsers(newIDs, auth.accessToken);
-                if(removedIDs.length > 0)
+                if(removedIDs.length > 0) {
                     logRemoved(removedIDs);
+                }
                 callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
             }
         });

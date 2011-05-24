@@ -9,7 +9,7 @@ var currentDir = process.cwd();
 vows.describe("Facebook sync").addBatch({
     "Can get friends" : {
         topic: function() {
-            process.chdir('./Me/Foursquare');
+            process.chdir('./Me/facebook');
             var that = this;
             sync.init({accessToken : 'abc'}, function() {
                 fakeweb.allowNetConnect = false;
@@ -18,18 +18,12 @@ vows.describe("Facebook sync").addBatch({
                     file : __dirname + '/fixtures/facebook/me.json' });
                 fakeweb.registerUri({
                     uri : 'https://graph.facebook.com/me/friends?access_token=abc',
-                    file : __dirname + '/fixtures/facebook/me-friends1.json' });
+                    file : __dirname + '/fixtures/facebook/me-friends.json' });
                 sync.syncFriends(that.callback); });
             },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "sync'd 6 new friends"); },
-        "successfully " : {
-            topic: function() {
-                sync.syncFriends(this.callback); },
-            "again" : function(err, repeatAfter, diaryEntry) {
-                assert.equal(repeatAfter, 3600);
-                assert.equal(diaryEntry, "sync'd 0 new friends"); }
+            assert.equal(diaryEntry, "sync'd 5 new friends"); 
         }
     }
 })
