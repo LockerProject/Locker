@@ -20,12 +20,15 @@ exports.init = function(callback) {
         people.followers = new IJOD('followers', INDEXED_FIELDS);
         people.friends = new IJOD('friends', INDEXED_FIELDS);
         statuses.home_timeline = new IJOD('home_timeline', INDEXED_FIELDS);
+        statuses.user_timeline = new IJOD('user_timeline', INDEXED_FIELDS);
         statuses.mentions = new IJOD('mentions', INDEXED_FIELDS);
         people.followers.init(function() {
             people.friends.init(function() {
                 statuses.home_timeline.init(function() {
-                    statuses.mentions.init(function() {
-                        openDB(callback);
+                    statuses.user_timeline.init(function() {
+                        statuses.mentions.init(function() {
+                            openDB(callback);
+                        });
                     });
                 });
             });
@@ -157,7 +160,7 @@ exports.getAllContacts = function(callback) {
         var allContacts = {friends:friends};
         exports.getPeople('followers', {recordID:-1}, function(err, followers) {
             allContacts.followers = followers;
-            callback(allContacts);
+            callback(null, allContacts);
         });
     });
 }

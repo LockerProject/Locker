@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var foursquare = require('../Connectors/foursquare/sync');
-foursquare.init({accessToken : 'abc'});
+var sync = require('../Connectors/foursquare/sync');
+var dataStore = require('../Connectors/foursquare/dataStore');
 var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
@@ -13,31 +13,32 @@ vows.describe("Foursquare sync").addBatch({
     "Can get checkins" : {
         topic: function() {
             process.chdir('./Me/Foursquare');
-            fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
-                body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
-            fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
-                file : __dirname + '/fixtures/foursquare/me.json' });
-            fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
-                file : __dirname + '/fixtures/foursquare/checkins_1.json' });
-            fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
-                file : __dirname + '/fixtures/foursquare/checkins_2.json' });
-            foursquare.syncCheckins(this.callback) },
-        "successfully" : function(err, response) {
-            assert.equal(response, 251); },
+            var that = this;
+            sync.init({accessToken : 'abc'}, function() {
+                fakeweb.allowNetConnect = false;
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
+                    body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
+                    file : __dirname + '/fixtures/foursquare/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_1.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+                sync.syncCheckins(that.callback) })
+            },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 600);
+            assert.equal(diaryEntry, "sync'd 251 new checkins"); },
         "successfully " : {
             topic: function() {
-                foursquare.syncCheckins(this.callback) },
-            "again" : function(err, response) {
-                assert.equal(response, 0);
-                fs.unlinkSync("places.json");
-                fs.unlinkSync("profile.json");
-                fs.unlinkSync("updateState.json");
-            }
+                sync.syncCheckins(this.callback) },
+            "again" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 0 new checkins"); }
         }
     }
 }).addBatch({
@@ -53,9 +54,86 @@ vows.describe("Foursquare sync").addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/2715557.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/2715557.json' });
-            foursquare.syncFriends(this.callback) },
-        "successfully" : function(err, response) {
-            assert.equal(response, 1);
+            sync.syncFriends(this.callback) },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 3600);
+            assert.equal(diaryEntry, "sync'd 1 new friends");
+        }
+    }
+}).addBatch({
+    "Datastore" : {
+        "getPeople returns all previously saved friends" : {
+            topic: function() {
+                var that = this;
+                dataStore.init(function() {
+                    dataStore.getPeople(that.callback);
+                })
+            },
+            'successfully': function(err, response) {
+                assert.equal(response.length, 1);
+                assert.equal(response[0].data.id, 2715557);
+                assert.equal(response[0].data.name, 'Jacob Mitchell');
+                assert.equal(response[0].type, 'add');
+            }
+        },
+        "getPlaces returns all previously saved checkins" : {
+            topic: function() {
+                var that = this;
+                dataStore.init(function() {
+                    dataStore.getPlaces(that.callback);
+                })
+            },
+            'successfully': function(err, response) {
+                assert.equal(response.length, 251);
+                assert.equal(response[0].data.id, "4d1dcbf7d7b0b1f7f37bfd9e");
+                assert.equal(response[0].data.venue.name, "Boston Logan International Airport (BOS)");
+                assert.equal(response[0].type, 'add');
+            }  
+        },
+        "getFriendFromCurrent returns the saved friend" : {
+            topic: function() {
+                var that = this;
+                dataStore.init(function() {
+                    dataStore.getFriendFromCurrent(2715557, that.callback);
+                })
+            },
+            'successfully': function(err, response) {
+                assert.equal(response.length, 1);
+            }
+        }
+    }
+}).addBatch({
+    "Handles defriending properly" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/no_friends.json' });
+            sync.syncFriends(this.callback) },
+        'successfully': function(err, repeatAfter, diaryEntry) {
+            assert.equal(diaryEntry, 'no new friends, removed 1 deleted friends');
+        },
+        "in the datastore" : {
+            "via getPeople" : {
+                topic: function() {
+                    dataStore.getPeople(this.callback);
+                },
+                "successfully" : function(err, response) {
+                    assert.equal(response.length, 2);
+                    assert.equal(response[0].data.id, 2715557);
+                    assert.equal(response[0].data.name, 'Jacob Mitchell');
+                    assert.equal(response[0].type, 'add');
+                    assert.equal(response[1].data.id, 2715557);
+                    assert.equal(response[1].type, 'remove');
+                }
+            },
+            "via getFriendFromCurrent" : {
+                topic: function() {
+                    dataStore.getFriendFromCurrent(2715557, this.callback);
+                },
+                "successfully" : function(err, response) {
+                    assert.equal(response.length, 0);
+                }
+            }
         }
     }
 }).addBatch({

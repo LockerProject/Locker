@@ -3,5 +3,6 @@
 	"action":"not much",
 	"desc":"just sayin hi and all",
 	"status":"stable",
-	"run":"node hello.js"
+	"run":"node hello.js",
+	"handle":"hello"
 }
