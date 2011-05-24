@@ -1,0 +1,352 @@
+
+/* Services --------------------------------------------------------------- */
+
+section#servicesSection
+{
+  display: none;
+}
+
+ul#servicesList
+{
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 200px;
+  z-index: 1;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  -webkit-border-radius: 0;
+  -webkit-border-bottom-left-radius: 3px;
+  -moz-border-radius: 0;
+  -moz-border-radius-bottomleft: 3px;
+  border-radius: 0;
+  border-bottom-left-radius: 3px;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  
+  background-color: rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+ul#servicesList li
+{
+  line-height: 32px;
+  height: 32px;
+  padding-left: 36px;
+  padding-right: 20px;
+  margin: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 0px rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  font-weight: bold;
+  cursor: default;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+ul#servicesList li:nth-of-type(odd)
+{
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+ul#servicesList li:hover
+{
+  color: rgba(0, 0, 0, 1);
+}
+
+ul#servicesList li.app
+{
+  background-image: url("../Images/App.png");
+}
+
+ul#servicesList li.collection
+{
+  background-image: url("../Images/Collection.png");
+}
+
+ul#servicesList li.connector
+{
+  background-image: url("../Images/Connector.png");
+}
+
+ul#servicesList .current
+{
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  background-position: 0 -32px, 0 0;
+
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 1);
+
+  -webkit-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+}
+
+ul#servicesList li.current.app
+{
+  background-image: url("../Images/App.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../Images/App.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/App.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/App.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/App.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+}
+
+ul#servicesList li.current.collection
+{
+  background-image: url("../Images/Collection.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../Images/Collection.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Collection.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Collection.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Collection.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+}
+
+ul#servicesList li.current.connector
+{
+  background-image: url("../Images/Connector.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../Images/Connector.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Connector.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Connector.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../Images/Connector.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+}
+
+#serviceInfo
+{
+  position: absolute;
+  left: 0px;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  padding: 20px;
+  margin-left: 201px;
+  color: rgba(0, 0, 0, 0.75) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light",
+               "Helvetica Neue", sans-serif;
+  font-weight: 300;
+}
+
+#serviceInfo h1
+{
+  margin: 0;
+  padding: 0;
+  font-size: 24px;
+  margin-bottom: 18px;
+  font-weight: 300;
+}
+
+#serviceInfo .description
+{
+  margin-bottom: 18px;
+  line-height: 24px;
+}
+
+#serviceInfo .details
+{
+  line-height: 18px;
+  list-style: none;
+  font-size: 10px;
+}
+
+#serviceInfo .value
+{
+  font-family: Menlo, Courier, monospace;
+}
+
+#serviceInfo #installButton
+{
+  position: absolute;
+  display: block;
+  top: 16px;
+  right: 20px;
+  font-size: 13px;
+  height: 32px;
+  line-height: 32px;
+  padding-left: 12px;
+  padding-right: 12px;
+
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+  -webkit-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+}
+
+#serviceInfo #installButton a
+{
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 1);
+  font-weight: bold;
+}
+
+#serviceInfo section#connectorInstancesSection
+{
+  position: absolute;
+  left: 21px;
+  right: 20px;
+  bottom: 21px;
+  top: 192px;
+}
+
+#serviceInfo section#connectorInstancesSection footer
+{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  line-height: 32px;
+}
+
+#serviceInfo section#connectorInstancesSection footer:before
+{
+  content: "";
+  display: block;
+  height: 1px;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 10px;
+}
+
+#serviceInfo section#connectorInstancesSection footer ul
+{
+  list-style: none;
+  line-height: inherit;
+  height: inherit;
+}
+
+#serviceInfo section#connectorInstancesSection footer li
+{
+  float: left;
+}
+
+#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton
+{
+  opacity: 0.5;
+  -webkit-transition-property: opacity;
+  -moz-transition-property: opacity;
+  -o-transition-property: opacity;
+  -webkit-transition-duration: 0.25s;
+  -moz-transition-property: 0.25s;
+  -o-transition-property: 0.25s;
+}
+
+#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton:hover
+{
+  opacity: 1;
+}
+
+#serviceInfo ul#connectorInstancesList
+{
+  list-style: none;
+}
+
+#serviceInfo ul#connectorInstancesList:before
+{
+  content: "";
+  display: block;
+  height: 1px;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 10px;
+}
+
+#serviceInfo ul#connectorInstancesList li
+{
+  position: relative;
+  font-size: 14px;
+  line-height: 36px;
+  padding-left: 10px;
+  margin-bottom: 8px;
+
+  background-color: rgba(255, 255, 255, 0.25);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.15)));
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+#serviceInfo ul#connectorInstancesList li .identifier
+{
+  position: absolute;
+  top: 0;
+  right: 52px;
+  bottom: 0;
+  font-size: 12px;
+  font-family: Menlo, Courier, monospace;
+  line-height: 38px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+#serviceInfo ul#connectorInstancesList li .page
+{
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+}
+
+#serviceInfo ul#connectorInstancesList li .page img
+{
+  margin-top: 10px;
+  margin-right: 10px;
+  opacity: 0.5;
+  -webkit-transition-property: opacity;
+  -moz-transition-property: opacity;
+  -o-transition-property: opacity;
+  -webkit-transition-duration: 0.25s;
+  -moz-transition-property: 0.25s;
+  -o-transition-property: 0.25s;
+}
+
+#serviceInfo ul#connectorInstancesList li .page img:hover
+{
+  opacity: 1.0;
+}
+
+/* Custom Scrollbars ------------------------------------------------------ */
+
+ul#servicesList::-webkit-scrollbar
+{
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}

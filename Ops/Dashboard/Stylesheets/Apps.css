@@ -6,15 +6,6 @@
   display: none;
 }
 
-/*
-#appSection > header h1:after
-{
-  content: "App";
-  margin-left: 10px;
-  color: rgba(255, 255, 255, 0.5);
-}
-*/
-
 #appFrame
 {
   position: absolute;
@@ -24,8 +15,4 @@
   bottom: 0;
   width: 100%;
   height: 100%;
-}
-
-#appFrame h1
-{
 }

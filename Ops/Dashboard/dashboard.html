@@ -11,24 +11,22 @@
     <script src="JavaScripts/Dashboard.js"></script>
     <link rel="stylesheet" href="Stylesheets/Reset.css" />
     <link rel="stylesheet" href="Stylesheets/Dashboard.css" />
-    <link rel="stylesheet" href="Stylesheets/Diary.css" />
-    <link rel="stylesheet" href="Stylesheets/Connectors.css" />
-    <link rel="stylesheet" href="Stylesheets/Collections.css" />
+    <link rel="stylesheet" href="Stylesheets/Logs.css" />
+    <link rel="stylesheet" href="Stylesheets/Services.css" />
     <link rel="stylesheet" href="Stylesheets/Apps.css" />
   </head>
   <body>
 
     <aside>
       <header>
-        <h1><img src="../Images/Lock.png" width="200" height="260" alt="" /></h1>
+        <h1><img src="../Images/Lock.png" width="200" height="200" alt="The Locker Project" /></h1>
       </header>
 
       <!-- Primary Sections Listing -->
       <nav id="primary">
         <ul>
-          <li id="diaryTab" class="tab current">Diary</li>
-          <li id="connectorsTab" class="tab">Connectors</li>
-          <li id="collectionsTab" class="tab">Collections</li>
+          <li id="logsTab" class="tab current">Logs</li>
+          <li id="servicesTab" class="tab">Services</li>
         </ul>
       </nav>
 
@@ -41,32 +39,32 @@
 
     <section id="mainSection">
 
-      <!-- Diary Section -->
-      <section id="diarySection" class="tabPage">
+      <!-- Logs Section -->
+      <section id="logsSection" class="tabPage">
         <header>
-          <h1>Locker Diary</h1>
+          <h1>Logs</h1>
           <ul class="actions">
-            <li onclick="javascript:refreshDiary()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
+            <li onclick="javascript:refreshLog()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
           </ul>
         </header>
         <section class="content">
-          <ul id="diaryEntriesList">
+          <ul id="logEntriesList">
           </ul>
-          <div id="diaryEntryTemplate">
-            <span class="diaryTimestamp"></span>
+          <div id="logEntryTemplate">
+            <span class="logTimestamp"></span>
           </div>
         </section>
       </section>
 
-      <!-- Connectors Section -->
-      <section id="connectorsSection" class="tabPage">
+      <!-- Services Section -->
+      <section id="servicesSection" class="tabPage">
         <header>
-          <h1>Connectors</h1>
+          <h1>Services</h1>
         </header>
         <section class="content">
-          <ul id="connectorsList">
+          <ul id="servicesList">
           </ul>
-          <div id="connectorInfo">
+          <div id="serviceInfo">
             <div>
               <h1>Name</h1>
             </div>
@@ -79,6 +77,9 @@
                 <strong>Provides:</strong> <span id="availProvides" class="value"></span>
               </li>
             </ul>
+            <div id="installButton">
+              <a href="#">Install</a>
+            </div>
             <section id="connectorInstancesSection">
               <!-- <header>
                 <h1>Configured</h1>
@@ -95,21 +96,13 @@
         </section>
       </section>
 
-      <!-- Collections Section -->
-      <section id="collectionsSection" class="tabPage">
-        <header>
-          <h1>Collections</h1>
-        </header>
-        <section class="content">
-          <ul id="collectionsList">
-          </ul>
-        </section>
-      </section>
-
       <!-- App Section -->
       <section id="appSection" class="tabPage">
         <header>
           <h1 id="appTitle">App Title</h1>
+          <ul class="actions">
+            <li id="zoomAppButton" onclick="#"><img src="../Images/Zoom.png" width="26" height="26" alt="Zoom" /></li>
+          </ul>
         </header>
         <section class="content">
           <iframe id="appFrame"></iframe>
