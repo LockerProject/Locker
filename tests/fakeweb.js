@@ -5,6 +5,10 @@ var fs = require('fs'),
     http = require('http'),
     EventEmitter = require('events').EventEmitter;
     
+var allowNetConnect = true,
+    allowLocalConnect = true,
+    interceptedUris = {};
+    
 
     
 function interceptable(uri) {
@@ -39,12 +43,8 @@ function httpModuleRequest(uri) {
     return thisRequest;
 }
 
-var Fakeweb = function() {
-    interceptedUris = {};
-    allowNetConnect = true;
-    allowLocalConnect = true;
-    
-    oldRequestGet = request.get;
+function Fakeweb() {
+    var oldRequestGet = request.get;
     request.get = function(options, callback) {
         if (interceptable(options.uri)) {
             return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
@@ -53,7 +53,7 @@ var Fakeweb = function() {
         }
     }
     
-    oldRequestPost = request.post;
+    var oldRequestPost = request.post;
     request.post = function(options, callback) {
         if (interceptable(options.uri)) {
             return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
@@ -61,7 +61,7 @@ var Fakeweb = function() {
             return oldRequestPost.call(request, options, callback);
         }
     }
-    oldHttpsRequest = https.request;
+    var oldHttpsRequest = https.request;
     https.request = function(options, callback) {
         var uri = "https://" + options.host + ":" + options.port + options.path;
         if (interceptable(uri)) {
@@ -70,7 +70,7 @@ var Fakeweb = function() {
             return oldHttpsRequest.call(https, options, callback);
         }
     }
-    oldHttpRequest = http.request;
+    var oldHttpRequest = http.request;
     http.request = function(options, callback) {
         var uri = "http://" + options.host + ":" + options.port + options.path;
         if (interceptable(uri)) {

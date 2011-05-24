@@ -69,7 +69,7 @@ app.get('/getSince/:type', function(req, res) {
             query = {recordID:-1};
         }
         getPeople(type, query, res);
-    } else if(type == 'home_timeline' || type == 'mentions') {
+    } else if(type == 'home_timeline' || type == 'mentions' || type == 'user_timeline') {
         var query = {};
         if(req.query.recordID) {
             query.recordID = req.query.recordID;
