@@ -138,9 +138,13 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                     removedIDs.push(knownID);
             }
             if(newIDs.length < 1) {
-                if(removedIDs.length > 0)
+                if(removedIDs.length > 0) {
                     logRemoved(friendsOrFollowers, removedIDs);
-                callback();
+                    callback(null, 600, 'removed ' + removedIDs.length + friendsOrFolloers);
+                }
+                else {
+                    callback(null, 600, 'synced 0 new ' + friendsOrFollowers);
+                }
             } else {
                 getUsersExtendedInfo(newIDs, function(usersInfo) {
                     addPeople(friendsOrFollowers, usersInfo, knownIDs);
