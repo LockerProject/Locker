@@ -60,7 +60,7 @@ function addTwitterContacts(contacts, type, callback) {
 }
 
 
-// get contacts of the given type (friend or follower) from a given Facebook Connector instance
+// get friends from a given Facebook Connector instance
 function getContactsFromFacebook(svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/friends'}, function(err, resp, body) {
         var friends = JSON.parse(body);
@@ -68,7 +68,7 @@ function getContactsFromFacebook(svcID, callback) {
     });
 }
 
-// Add the contacts from the Facebook Connector to the data store, one by one
+// Add the friends from the Facebook Connector to the data store, one by one
 function addFacebookContacts(contacts, callback) {
     if(!(contacts && contacts.length)) {
         callback();

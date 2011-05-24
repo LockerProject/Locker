@@ -56,7 +56,7 @@ exports.addFacebookData = function(facebookData, callback) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}];
-            collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
+            collection.update({$or:or}, {$push:{'accounts.facebook':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
                         {safe:true, upsert:true}, callback);
         } else {
             callback(err, doc);
