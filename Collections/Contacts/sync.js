@@ -39,14 +39,15 @@ exports.gatherContacts = function() {
 }
 
 
+// get contacts of the given type (friend or follower) from a given Twitter Connector instance
 function getContactsFromTwitter(svcID, type, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + type + 's'}, function(err, resp, body) {
-        console.error('get ' + type + ' from ' + svcID);
         var people = JSON.parse(body);
         addTwitterContacts(people, type, callback);
     });
 }
 
+// Add the contacts from the Twitter Connector to the data store, one by one
 function addTwitterContacts(contacts, type, callback) {
     if(!(contacts && contacts.length)) {
         callback();
@@ -54,6 +55,27 @@ function addTwitterContacts(contacts, type, callback) {
         var contact = contacts.shift();
         dataStore.addTwitterData(type, {data:contact}, function(err, doc) {
             addTwitterContacts(contacts, type, callback);
+        });
+    }
+}
+
+
+// get contacts of the given type (friend or follower) from a given Facebook Connector instance
+function getContactsFromFacebook(svcID, callback) {
+    request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/friends'}, function(err, resp, body) {
+        var friends = JSON.parse(body);
+        addFacebookContacts(friends, callback);
+    });
+}
+
+// Add the contacts from the Facebook Connector to the data store, one by one
+function addFacebookContacts(contacts, callback) {
+    if(!(contacts && contacts.length)) {
+        callback();
+    } else {
+        var contact = contacts.shift();
+        dataStore.addFacebookData({data:contact}, function(err, doc) {
+            addFacebookContacts(contacts, callback);
         });
     }
 }

@@ -34,6 +34,36 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     });
 }
 
+// {
+//    "id": "220439",
+//    "name": "Bret Taylor",
+//    "first_name": "Bret",
+//    "last_name": "Taylor",
+//    "link": "https://www.facebook.com/btaylor",
+//    "username": "btaylor",
+//    "gender": "male",
+//    "locale": "en_US"
+// }
+exports.addFacebookData = function(facebookData, callback) {
+    var fbID  = facebookData.data.id;
+    var cleanedName = cleanName(facebookData.data.name);
+    var query = {'accounts.facebook.data.id':fbID};
+    var set = {};
+    var baseObj = {data:facebookData.data, lastUpdated:facebookData.timeStamp || new Date().getTime()};
+    set['accounts.facebook.$'] = baseObj;
+    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+                        {safe:true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise
+            var or = [{'_matching.cleanedNames':cleanedName}];
+            collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
+                        {safe:true, upsert:true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+}
+
 
 function cleanName(name) {
     return name;
