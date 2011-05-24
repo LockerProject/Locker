@@ -199,7 +199,7 @@ function updatePeople(type, people) {
                 if(isDifferent) {
                     // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
                     dataStore.logUpdatePerson(type, profileFromTwitter);
-                    var eventObj = {source:type, type:'update', person:person};
+                    var eventObj = {source:type, type:'update', data:person};
                     exports.eventEmitter.emit('contact/twitter', eventObj);
                 } else {
                     // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
@@ -214,7 +214,7 @@ function addPeople(type, people, knownIDs) {
         var person = people[i];
         knownIDs[person.id_str] = 1;
         dataStore.addPerson(type, person);    
-        var eventObj = {source:type, type:'new', person:person};
+        var eventObj = {source:type, type:'new', data:person};
         exports.eventEmitter.emit('contact/twitter', eventObj);
     }
 }
@@ -225,7 +225,7 @@ function logRemoved(type, ids) {
     var knownIDs = allKnownIDs[type];
     ids.forEach(function(id) {
         dataStore.logRemovePerson(type, id);
-        var eventObj = {source:type, type:'delete', person:{id:id, deleted:true}};
+        var eventObj = {source:type, type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
     });

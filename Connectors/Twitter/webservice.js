@@ -28,6 +28,7 @@ module.exports = function(theApp) {
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end("<html>great! now you can:<br><li><a href='getNew/home_timeline'>sync new home_timeline entries</a></li>" + 
+                                                 "<li><a href='getNew/user_timeline'>sync new user_timeline entries</a></li>" + 
                                                  "<li><a href='getNew/mentions'>sync new mentions</a></li>" + 
                                                  "<li><a href='getNew/friends'>sync new friends</a></li>" + 
                                                  "<li><a href='getNew/followers'>sync new followers</a></li>" +
@@ -50,7 +51,7 @@ function authComplete(theAuth, callback) {
             var type = req.params.type.toLowerCase();
             if(type === 'friends' || type === 'followers')
                 people(type, res);
-            else if(type === 'mentions' || type === 'home_timeline') {
+            else if(type === 'mentions' || type === 'home_timeline' || type === 'user_timeline') {
                 statuses(type, res);                
             }
         });
