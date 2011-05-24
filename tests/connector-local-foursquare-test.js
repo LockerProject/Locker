@@ -173,19 +173,8 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
-        .discuss("get places")
-            .path(mePath + "/get_places")
-            .get()
-                .expect('returns checkins', function(err, res, body) {
-                    assert.isNull(err);
-                    var checkins = JSON.parse(body);
-                    assert.isNotNull(checkins);
-                    assert.equal(checkins.length, 251); 
-                })
-            .unpath()
-        .undiscuss()
         .discuss("get profile")
-            .path(mePath + "/get_profile")
+            .path(mePath + "/getCurrent/profile")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);

@@ -40,6 +40,13 @@ app.get('/getCurrent/friends', function(req, res) {
     });
 });
 
+app.get('/getCurrent/profile', function(req, res) {
+    lfs.readObjectFromFile('profile.json', function(userInfo) {
+        res.writeHead(200, {"Content-Type":"text/json"});
+        res.end(JSON.stringify(userInfo));        
+    });
+});
+
 // In adherence with the contact/* provider API
 app.get('/getAll/:type', function(req, res) {
     var type = req.params.type;
@@ -95,28 +102,6 @@ function getPlaces(query, res) {
         res.end(JSON.stringify(places));
     });
 }
-
-// Reads a list of checkins from disk
-function readPlaces(req, res) {
-    lfs.readObjectsFromFile('places/places.json', function(data) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        data.reverse();
-        res.end(JSON.stringify(data));
-    });
-}
-
-// Returns the person's checkins
-app.get('/get_places', function(req, res) {
-    readPlaces(req, res);
-});
-
-
-app.get('/get_profile', function(req, res) {
-    lfs.readObjectFromFile('profile.json', function(userInfo) {
-        res.writeHead(200, {"Content-Type":"text/json"});
-        res.end(JSON.stringify(userInfo));        
-    });
-});
 
 callback();
     
