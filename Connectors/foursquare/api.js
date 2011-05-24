@@ -8,30 +8,13 @@
 */
 
 var fs = require('fs'),
+    lfs = require("../../Common/node/lfs.js"),
     dataStore = require('./dataStore.js');
 
 
 module.exports = function(app, callback) {
 
 dataStore.init(function() {
-
-app.get('/allContacts',
-    function(req, res) {
-        res.writeHead(200, {
-            'Content-Type': 'text/plain'
-        });
-        fs.readFile("friends.json", "binary", function(err, file) {  
-            if(err) {  
-                res.end();  
-                return;  
-            }  
-            res.write("[");
-            res.write(file, "binary");  
-            res.write("]");
-            res.end();
-        });
-    }
-);
 
 // In adherence with the contact/* provider API
 // Returns a list of the current set of contacts (friends and followers)
@@ -96,8 +79,13 @@ app.get('/getSince/:type', function(req, res) {
 
 function getPeople(query, res) {
     dataStore.getPeople(query, function(err, allPeople) {
-        res.writeHead(200, {'content-type' : 'application/json'});
-        res.end(JSON.stringify(allPeople));
+        if(err) {
+            res.writeHead(500, {'content-type' : 'application/json'});
+            res.end(JSON.stringify(err));
+        } else {
+            res.writeHead(200, {'content-type' : 'application/json'});
+            res.end(JSON.stringify(allPeople));
+        }
     });
 }
 
@@ -110,7 +98,7 @@ function getPlaces(query, res) {
 
 // Reads a list of checkins from disk
 function readPlaces(req, res) {
-    lfs.readObjectsFromFile('places.json', function(data) {
+    lfs.readObjectsFromFile('places/places.json', function(data) {
         res.writeHead(200, {'Content-Type': 'application/json'});
         data.reverse();
         res.end(JSON.stringify(data));
@@ -124,7 +112,7 @@ app.get('/get_places', function(req, res) {
 
 
 app.get('/get_profile', function(req, res) {
-    lfs.readObjectFromFile('userInfo.json', function(userInfo) {
+    lfs.readObjectFromFile('profile.json', function(userInfo) {
         res.writeHead(200, {"Content-Type":"text/json"});
         res.end(JSON.stringify(userInfo));        
     });
