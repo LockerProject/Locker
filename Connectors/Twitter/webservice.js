@@ -88,7 +88,7 @@ function authComplete(theAuth, callback) {
         app.get('/update/:type', function(req, res) {
             var type = req.params.type.toLowerCase();
             if(type == 'friends' || type == 'followers') {
-                sync.updatePeople(type, function() {
+                sync.updateProfiles(type, function() {
                     res.writeHead(200, {'content-type':'application/json'});
                     res.end(JSON.stringify({success:'k, I\'m on it!'}));
                 });

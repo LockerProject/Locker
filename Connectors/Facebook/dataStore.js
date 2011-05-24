@@ -57,7 +57,7 @@ function addPersonToCurrent(person, callback) {
 }
 
 exports.logRemovePerson = function(id) {
-    friends.addRecord({timeStamp:now(), type:'remove', data:{id_str:id, id:parseInt(id)}});
+    friends.addRecord({timeStamp:now(), type:'remove', data:{id:parseInt(id)}});
     removePersonFromCurrent(id, function(err) {
         if(err)
             console.error(err);

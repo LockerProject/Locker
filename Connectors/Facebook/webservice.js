@@ -22,7 +22,7 @@ module.exports = function(theApp) {
     app = theApp;
     
     app.get('/', function (req, res) {
-        if(!(auth && auth.consumerKey && auth.consumerSecret && auth.token)) {
+        if(!(auth && auth.appID && auth.appSecret && auth.token)) {
             res.redirect(app.meData.uri + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });

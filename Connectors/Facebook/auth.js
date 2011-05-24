@@ -10,7 +10,7 @@ var fs = require('fs');
                     
 var facebookClient = require('facebook-js')();
 var uri, 
-		completedCallback = null;
+    completedCallback = null;
 
 exports.auth = {};
 
@@ -52,20 +52,6 @@ exports.authAndRun = function(app, onCompletedCallback) {
     app.get('/auth', handleAuth);
     app.post('/saveAuth', saveAuth);
 }
-
-/*
-exports.init = function(baseUri, storedAuth, app, onCompletedCallback) { 
-    uri = baseUri;
-    completedCallback = onCompletedCallback;
-    auth = storedAuth || {};
-    if(auth.appID && auth.appSecret && auth.token) {
-        completedCallback(auth, null, null);
-    } else {
-        app.get('/auth', handleAuth);
-        app.get('/saveAuth', saveAuth);
-    }
-}*/
-
     
 function handleAuth(req, res) {
     if(!exports.auth) {
@@ -102,8 +88,8 @@ function handleAuth(req, res) {
             } else {
                 exports.auth.token = token;
                 fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
-                res.redirect(uri);
                 completedCallback(exports.auth, req, res);
+                res.redirect(uri);
             }
         });
     }

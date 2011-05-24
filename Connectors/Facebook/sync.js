@@ -20,7 +20,7 @@ var request = require('request'),
     EventEmitter = require('events').EventEmitter;
     dataStore = require('./dataStore');
     
-var auth, userInfo, latests;
+var auth, userInfo;
 var facebookClient;
 var allKnownIDs;
 var requestCount = 0;
@@ -30,9 +30,6 @@ exports.eventEmitter = new EventEmitter();
 // Initialize the state
 exports.init = function(theAuth, callback) {
     auth = theAuth;
-    try {
-        latests = JSON.parse(fs.readFileSync('latests.json'));
-    } catch (err) { latests = {}; }
     try {
         userInfo = JSON.parse(fs.readFileSync('userInfo.json'));
     } catch (err) { userInfo = {}; }
@@ -49,8 +46,8 @@ exports.syncUsersInfo = function(callback) {
  
     getUserInfo(function(err, newUserInfo) {
         userInfo = newUserInfo;
-        lfs.writeObjectToFile('usersInfo.json', userInfo);
-        getIDs(userInfo.screen_name, function(err, ids) {
+        lfs.writeObjectToFile('userInfo.json', userInfo);
+        getIDs(function(err, ids) {
             // console.error('got ids:', ids);
             var newIDs = [];
             var knownIDs = allKnownIDs;
@@ -92,7 +89,7 @@ exports.syncUsersInfo = function(callback) {
     });
 }
 
-function updatePeople(people) {
+exports.updatePeople = function(people) {
     if(!people)
         return;
     people.forEach(function(profileFromFacebook) {
@@ -134,7 +131,7 @@ function addPeople(people, knownIDs) {
     for(var i in people) {
         var person = people[i];
         locker.event('contact/facebook', person);
-        knownIDs[person.id_str] = 1;
+        knownIDs[person.id] = 1;
         dataStore.addPerson(person);    
     }
 }
@@ -167,7 +164,7 @@ function getUserInfo(callback) {
 }
 
 // Gets the list of IDs of friends of the auth'd user
-function getIDs(screenName, callback) {
+function getIDs(callback) {
     getFacebookClient().apiCall('GET', '/me/friends', {access_token: auth.token}, function(err, result) {
         if(err) {
             console.error(err);
@@ -175,7 +172,7 @@ function getIDs(screenName, callback) {
         } else {
             var dataLength = result.data.length;
             var ids = [];
-            for (var i = 0; i < dataLeength; i++) {
+            for (var i = 0; i < dataLength; i++) {
                 if (result.data[i].id) {
                     ids.push(result.data[i].id);
                 }
@@ -194,20 +191,30 @@ function getUsersExtendedInfo(userIDs, callback) {
 function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
     if(!usersInfo)
         usersInfo = [];
-    var idString = "";
+    var idString = '';
     for(var i = 0; i < 100 && userIDs.length > 0; i++) {
         idString += userIDs.pop();
         if(i < 99) {
             idString += ',';
         }
     }
-    getFacebookClient().apiCall('GET', '?ids=' + idStr, {access_token: auth.token},
+    idString = idString.substring(0, idString.length - 1);
+    
+    console.log('Calling https://graph.facebook.com/?ids=' + idString + '&access_token=' + auth.token);
+    
+    getFacebookClient().apiCall('GET', '?ids=' + idString, {access_token: auth.token},
         function(error, result) {
             if(error) {
                 sys.debug('error! ' + JSON.stringify(error));
                 return;
             }
-            addAll(usersInfo, result.reverse());
+
+            for(var property in result) {
+                if (result.hasOwnProperty(property)) {
+                    usersInfo.push(property);
+                }
+            }
+            
             if(userIDs.length > 0) 
                 _getUsersExtendedInfo(userIDs, usersInfo, callback);
             else if(callback) {
@@ -244,16 +251,6 @@ exports.getRateLimitStatus = function(callback) {
         callback(limits);
     });
     */
-}
-
-// Concatenate arrays (is the some collection methods out there?)
-function addAll(target, anotherArray) {
-    if(!target) 
-        target = [];
-    if(!anotherArray || !anotherArray.length)
-        return;
-    for(var i = 0; i < anotherArray.length; i++)
-        target.push(anotherArray[i]);
 }
 
 // Nothing right now - will be part of calming routines
