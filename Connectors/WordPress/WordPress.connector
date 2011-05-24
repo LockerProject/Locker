@@ -4,5 +4,6 @@
 	"desc":"Export user info, posts, comments, pingbacks and trackback pings from my WordPress account.",
 	"run":"python service.py",
 	"status":"unstable",
+	"handle":"wordpress",
 	"provides":[]
 }

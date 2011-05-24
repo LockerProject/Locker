@@ -109,7 +109,7 @@ exports.findInstalled = function () {
             console.log("Installing " + js.id);
             serviceMap.installed[js.id] = js;
         } catch (E) {
-            console.error("Error parsing Me directory: " + E);
+            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
     }
 }
@@ -122,7 +122,8 @@ exports.install = function(metaData) {
     serviceMap.available.some(function(svcInfo) {
         console.log("Comparing " + svcInfo.srcdir + " to " + metaData.srcdir);
         if (svcInfo.srcdir == metaData.srcdir) {
-            serviceInfo = svcInfo;
+            serviceInfo = new Object();
+            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];};
             return true;
         }
         return false;
@@ -130,9 +131,26 @@ exports.install = function(metaData) {
     if (!serviceInfo) {
         return serviceInfo;
     }
-    var hash = crypto.createHash('md5');
-    hash.update(Math.random()+'');
-    serviceInfo.id = hash.digest('hex');
+    // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
+    if(serviceInfo.handle)
+    {
+        // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
+        var inc = 0;
+        try {
+            if(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle).isDirectory())
+            {
+                inc++;
+                while(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
+            }
+        } catch (E) {
+            var suffix = (inc > 0)?"-"+inc:"";
+            serviceInfo.id = serviceInfo.handle+suffix;
+        }
+    }else{
+        var hash = crypto.createHash('md5');
+        hash.update(Math.random()+'');
+        serviceInfo.id = hash.digest('hex');        
+    }
     serviceInfo.uri = lconfig.lockerBase+"/Me/"+serviceInfo.id+"/";
     serviceMap.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
