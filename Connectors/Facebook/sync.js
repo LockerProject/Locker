@@ -89,42 +89,52 @@ exports.syncUsersInfo = function(callback) {
     });
 }
 
-exports.updatePeople = function(people) {
-    if(!people)
-        return;
-    people.forEach(function(profileFromFacebook) {
-        dataStore.getPersonFromCurrent(profileFromFacebook.id, function(err, records) {
-            if(err) {
-                console.error('got error from dataStore.getPersonFromCurrent:', err);
-            } else if(!records) {
-                console.error('!records for id:', profileFromFacebook.id, '\nrecords:', records);
-            } else if(records.length !== 1) {
-                console.error('records.length !== 1 for id:', profileFromFacebook.id, '\nrecords:', records);
-            } else {
-                var profileFromSQL = JSON.parse(records[0].profile);
-                var isDifferent = false;
-                var keys = Object.keys(profileFromSQL);
-                if(keys.length != Object.keys(profileFromFacebook).length) {
-                    isDifferent = true;
+exports.updatePeople = function(callback) {
+    
+    var ids = [];
+    for(var i in allKnownIDs) {
+       ids.push(i);
+    }
+    getUsersExtendedInfo(ids, function(people) {
+   
+        if(!people) {
+            return;
+        }
+        
+        people.forEach(function(profileFromFacebook) {
+            dataStore.getPersonFromCurrent(profileFromFacebook.id, function(err, records) {
+                if(err) {
+                    console.error('got error from dataStore.getPersonFromCurrent:', err);
+                } else if(!records) {
+                    console.error('!records for id:', profileFromFacebook.id, '\nrecords:', records);
+                } else if(records.length !== 1) {
+                    console.error('records.length !== 1 for id:', profileFromFacebook.id, '\nrecords:', records);
                 } else {
-                    for(var key in profileFromFacebook) {
-                        if(key === 'status') //don't check status   
-                            continue;
-                        if(key !== 'status' && profileFromFacebook[key] !== profileFromSQL[key]) {
-                            isDifferent = true;
-                            break;
+                    var profileFromSQL = JSON.parse(records[0].profile);
+                    var isDifferent = false;
+                    var keys = Object.keys(profileFromSQL);
+                    if(keys.length != Object.keys(profileFromFacebook).length) {
+                        isDifferent = true;
+                    } else {
+                        for(var key in profileFromFacebook) {
+                            if(profileFromFacebook[key] !== profileFromSQL[key]) {
+                                isDifferent = true;
+                                break;
+                            }
                         }
                     }
+                    if(isDifferent) {
+                        // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromFacebook);
+                        dataStore.logUpdatePerson(profileFromFacebook);
+                    } else {
+                        // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromFacebook.description);
+                    }
                 }
-                if(isDifferent) {
-                    // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromFacebook);
-                    dataStore.logUpdatePerson(profileFromFacebook);
-                } else {
-                    // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromFacebook.description);
-                }
-            }
+            })
         })
-    })
+       
+       callback();
+    });
 }
 
 function addPeople(people, knownIDs) {
@@ -202,7 +212,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
     
     console.log('Calling https://graph.facebook.com/?ids=' + idString + '&access_token=' + auth.token);
     
-    getFacebookClient().apiCall('GET', '?ids=' + idString, {access_token: auth.token},
+    getFacebookClient().apiCall('GET', '/', {ids: idString, access_token: auth.token},
         function(error, result) {
             if(error) {
                 sys.debug('error! ' + JSON.stringify(error));
@@ -211,7 +221,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
 
             for(var property in result) {
                 if (result.hasOwnProperty(property)) {
-                    usersInfo.push(property);
+                    usersInfo.push(result[property]);
                 }
             }
             
