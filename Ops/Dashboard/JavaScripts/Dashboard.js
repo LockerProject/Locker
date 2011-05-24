@@ -117,6 +117,7 @@ $(document).ready(function()
         }));
       }
     });
+    selectAvailable(0);
   });
 
   refreshLog();
