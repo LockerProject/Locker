@@ -160,7 +160,7 @@ exports.getAllContacts = function(callback) {
         var allContacts = {friends:friends};
         exports.getPeople('followers', {recordID:-1}, function(err, followers) {
             allContacts.followers = followers;
-            callback(allContacts);
+            callback(null, allContacts);
         });
     });
 }
