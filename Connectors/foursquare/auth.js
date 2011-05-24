@@ -11,12 +11,14 @@ var request = require('request'),
     lfs = require('../../Common/node/lfs.js'),
     fs = require('fs');
 
-var auth, completedCallback, me;
+var completedCallback, me;
+
+exports.auth = {};
 
 exports.authAndRun = function(app, onCompletedCallback) {
     me = app.meData;
     if(isAuthed()) {
-        onCompletedCallback(auth);
+        onCompletedCallback();
         return;
     }
     completedCallback = onCompletedCallback;
@@ -26,13 +28,12 @@ exports.authAndRun = function(app, onCompletedCallback) {
 }
 
 function isAuthed() {
-    console.error('isAuthed');
     try {
-        if(!auth)
-            auth = {};
+        if(!exports.auth)
+            exports.auth = {};
         
         // Already have the stuff read
-        if(auth.hasOwnProperty("accessToken"))
+        if(exports.auth.hasOwnProperty("accessToken"))
             return true;
 
         console.error('isAuthed.reading in from', process.cwd());
@@ -40,7 +41,7 @@ function isAuthed() {
         var authData = JSON.parse(fs.readFileSync("auth.json", 'utf-8'));
         console.error('isAuthed.read and parsed', authData);
         if(authData.hasOwnProperty("accessToken")) {
-            auth = authData;
+            exports.auth = authData;
             return true;
         }
     } catch (E) {
@@ -48,6 +49,8 @@ function isAuthed() {
     }
     return false;
 }
+
+exports.isAuthed = isAuthed;
 
 function go4sq(req, res) {
     if(!(auth.appKey && auth.appSecret)) {

@@ -20,11 +20,15 @@ module.exports = function(theapp) {
     return this;
 }
 
-function authComplete(theauth) {
+function authComplete(theauth, callback) {
     auth = theauth;
-    sync.init(auth);
-    app.get('/friends', friends);
-    app.get('/checkins', checkins);
+    sync.init(auth, function() {
+        console.error('auth completed');
+        app.get('/friends', friends);
+        app.get('/checkins', checkins);
+        
+        callback();
+    });
 }
 
 function index(req, res) {
@@ -38,19 +42,19 @@ function index(req, res) {
 
 function friends(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    sync.syncFriends(function(err, friendCount) {
-        locker.diary("syncing "+friendCount+" friends");
-        locker.at('/friends', 3600);
-        res.end();
+    sync.syncFriends(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/friends', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching friends"}));
     });
 }
 
 
 function checkins(req, res) {
-    sync.syncCheckins(function(err, checkinCount) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        locker.diary("sync'd "+checkinCount+" new checkins");
-        locker.at('/checkins', 600);
-        res.end("got "+checkinCount+" new checkins!");
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncCheckins(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/checkins', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching checkins"}));
     });
 }
