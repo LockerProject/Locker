@@ -4,5 +4,6 @@
 	"desc":"Collect and sync my data from my Google contacts using the Google Data API",
 	"run":"python client.py",
 	"status":"unstable",
+	"handle":"gcontacts",
 	"provides":["contact/google"]
 }

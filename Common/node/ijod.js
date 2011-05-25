@@ -94,11 +94,11 @@ IJOD.prototype.getAfterFieldsValueEquals = function(fieldName, fieldValue, callb
 IJOD.prototype.close = function() {
     if(this.dataStream) {
         this.dataStream.end();
-        this.dataStream.destory();
+        this.dataStream.destroy();
     }
     if(this.indexStream) {
         this.indexStream.end();
-        this.indexStream.destory();
+        this.indexStream.destroy();
     }
 }
 
