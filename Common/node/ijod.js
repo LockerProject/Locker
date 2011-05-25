@@ -71,7 +71,7 @@ IJOD.prototype.getAfterTimeStamp = function(timeStamp, callback) {
 IJOD.prototype.close = function() {
     if(this.dataStream) {
         this.dataStream.end();
-        this.dataStream.destory();
+        this.dataStream.destroy();
     }
 }
 
