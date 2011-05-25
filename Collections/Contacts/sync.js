@@ -20,7 +20,7 @@ exports.init = function(theLockerUrl, mongoCollection) {
 
 exports.gatherContacts = function() {
     // This should really be timered, triggered, something else
-    locker.providers(['contact/facebook', 'contact/twitter', 'contact/google'], function(services) {
+    locker.providers(['contact/facebook', 'contact/twitter', 'contact/google', 'contact/foursquare'], function(services) {
         if (!services) return;
         services.forEach(function(svc) {
             if(svc.provides.indexOf('contact/facebook') >= 0) {
@@ -28,11 +28,15 @@ exports.gatherContacts = function() {
             } else if(svc.provides.indexOf('contact/twitter') >= 0) {
                 getContactsFromTwitter(svc.id, 'friend', function() {
                     getContactsFromTwitter(svc.id, 'follower', function() {
-                        console.error('done!');
+                        console.error('twitter done!');
                     });
                 });
             } else if(svc.provides.indexOf('contact/google') >= 0) {
                 // addContactsFromConn(svc.id, '/allContacts', 'contact/google');
+            } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
+                getContactsFromFoursquare(svc.id, function() {
+                    console.error('foursquare done!');
+                });
             }
         });
     });
@@ -59,6 +63,23 @@ function addTwitterContacts(contacts, type, callback) {
     }
 }
 
+function getContactsFromFoursquare(svcID, callback) {
+    request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/friends'}, function(err, resp, body) {
+        var people = JSON.parse(body);
+        addFoursquareContacts(people, callback);
+    })
+}
+
+function addFoursquareContacts(contacts, callback) {
+    if (!(contacts && contacts.length)) {
+        callback();
+    } else {
+        var contact = contacts.shift();
+        dataStore.addFoursquareData({data:contact}, function(err, doc) {
+            addFoursquareContacts(contacts, callback);
+        })
+    }
+}
 
 // get friends from a given Facebook Connector instance
 function getContactsFromFacebook(svcID, callback) {

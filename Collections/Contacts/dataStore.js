@@ -34,6 +34,25 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     });
 }
 
+exports.addFoursquareData = function(foursquareData, callback) {
+    var foursquareID = foursquareData.data.id;
+    var cleanedName = cleanName(foursquareData.data.name);
+    var query = {'accounts.foursquare.data.id':foursquareID};
+    var set = {};
+    var baseObj = {data:foursquareData.data, lastUpdated:foursquareData.timeStamp || new Date().getTime()};
+    set['accounts.foursquare.$'] = baseObj;
+    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+                             {safe: true}, function(err, doc) {
+        if (!doc) {
+            var or = [{'_matching.cleanedNames':cleanedName},{'accounts.twitter.data.screen_name':foursquareData.data.contact.twitter}];
+            collection.update({$or:or}, {$push:{'accounts.foursquare':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}},
+                              {safe: true, upsert: true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+}
+
 // {
 //    "id": "220439",
 //    "name": "Bret Taylor",
