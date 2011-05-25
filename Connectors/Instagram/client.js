@@ -22,7 +22,8 @@ var express = require('express'),
     ),
     http = require('http'),
     https = require('https'),
-    oauthclient = require('../../Common/node/node-oauth/index.js').OAuth2,
+    request = require('request'),
+    oauthclient = require('oauth').OAuth2,
     xml2js = require('xml2js'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js');
@@ -35,10 +36,13 @@ var oAuth;
 var state;
 
 function setupOAuthClient(clientId, clientSecret) {
-  oAuth = new oauthclient(clientId, clientSecret, 
-													'https://api.instagram.com',
-                          '/oauth/authorize',
-													'/oauth/access_token');
+    oAuth = new oauthclient(clientId, clientSecret, 
+                            'https://api.instagram.com',
+                            '/oauth/authorize',
+                            '/oauth/access_token');
+    oAuth.prototype.getAuthorizeUrl = function(params) {
+        
+    };
 }
 
 app.get('/',
@@ -67,14 +71,16 @@ function(req, res) {
                     '<input type="submit" value="Save">' +
                 '</form></html>');
     } else {
-				var params = { response_type: 'code',
-											 redirect_uri: me.uri + 'auth' };
-							
-				accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
+        var params = { response_type: 'code', redirect_uri: me.uri + 'auth' };                          
+        accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
         setupOAuthClient(accessData.clientId, accessData.clientSecret);
-				
         console.log('redirecting to ' + oAuth.getAuthorizeUrl(params));
-        res.redirect(oAuth.getAuthorizeUrl(params));
+        //res.redirect(oAuth.getAuthorizeUrl(params));
+        request.post({uri:oAuth.getAuthorizeUrl(params)}, 
+            function(err, resp, body) {
+                var newIDs = [];
+                var knownIDs = allKnownIDs;
+        });
         res.end();
     }
 });
@@ -100,10 +106,10 @@ function(req, res) {
 
     accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
     setupOAuthClient(accessData.clientId, accessData.clientSecret);
-		console.log(accessData);
+        console.log(accessData);
     oAuth.getOAuthAccessToken(req.param('code'), 
-															{ grant_type: 'authorization_code', 
-		    											  redirect_uri: me.uri + 'auth' }, 
+        { grant_type: 'authorization_code', 
+        redirect_uri: me.uri + 'auth' }, 
         function(err, oAuthAccessToken, oAuthRefreshToken) {
           if (err) {
             console.log(err);
@@ -132,10 +138,9 @@ function(req, res) {
         console.log(err);
         return false;
       }
-  
-			me.user_info = data;
-			lfs.syncMeData(me);
-			res.end('User profile: ' + JSON.stringify(data) + ': <br>');
+    me.user_info = data;
+    lfs.syncMeData(me);
+    res.end('User profile: ' + JSON.stringify(data) + ': <br>');
   });
 });
 
@@ -156,20 +161,19 @@ function(req, res) {
 
 app.get('/photos',
 function(req, res) {
-	
-		try {
-	      fs.mkdirSync('low_resolution', 0755);
-	      fs.mkdirSync('thumbnail', 0755);
-				fs.mkdirSync('standard', 0755);
-	  } catch(err) {
-	  	console.log('could not create directories to store photos');
-			return false;
-		}
-	
-		getPhotos(state.newest);
+  
+    try {
+      fs.mkdirSync('low_resolution', 755);
+      fs.mkdirSync('thumbnail', 755);
+            fs.mkdirSync('standard', 755);
+    } catch(err) {
+        console.log('could not create directories to store photos');
+        return false;
+    }
+
+    getPhotos(state.newest);
     lfs.writeObjectToFile('state.json', state);
     res.end(JSON.stringify(state));
-    });
 });
 
 app.get('/getphotos',
@@ -191,67 +195,67 @@ function(req, res) {
 function getPhotos(newest) {
 
     if(!newest) {
-			newest = 0;
-		}
-		
-		oAuth.getProtectedResource(
-      'https://api.instagram.com/v1/users/self/feed?max_id=' + newest,
-      accessData.tokenData.accessToken, 
-      function(err, data) {
-        if (err) {
-          console.log(err);
-          return false;
-        }
-		
-				var json = JSON.parse(data);
-		
-				if(!json || !json.data) {
-					console.log(data);
-					res.end();
-				}
+        newest = 0;
+    }
+        
+    oAuth.getProtectedResource('https://api.instagram.com/v1/users/self/feed?max_id=' + newest,
+        accessData.tokenData.accessToken, 
+        function(err, data) {
+            if (err) {
+              console.log(err);
+              return false;
+            }
+        
+            var json = JSON.parse(data);
 
-				lfs.appendObjectsToFile('photos.json', json.data);
+            if(!json || !json.data) {
+                console.log(data);
+                res.end();
+            }
 
-				for (var i=0, var length=json.data.length; i<length; ++i) {
+            lfs.appendObjectsToFile('photos.json', json.data);
 
-					function curl(photos, callback) {
-						if (!photos || photos.length < 1) {
-							return callback();
-						}
-						var photo = photos.pop();
-						var id = photo.id;
-						lfs.curlFile(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
-							if (err) {
-								sys.debug(err);
-							}
-							
-							lfs.curlFile(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
-								if (err) {
-									sys.debug(err);
-								}
-								
-								lfs.curlFile(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
-									if (err) {
-										sys.debug(err);
-									}
-									
-									console.log('got Instagram photo ' + id);
-									locker.event('photo/instagram', {"_id":id});
-								});
-							});
-						});
-					}
-				}
-				
-				curl(json.data, function() {});
-			});
+            var curl = function(photos) {
+                if (!photos || photos.length < 1) {
+                    return callback();
+                }
+                var photo = photos.pop();
+                var id = photo.id;
+                lfs.curlFile(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
+                    if (err) {
+                        sys.debug(err);
+                    }
+                
+                    lfs.curlFile(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
+                        if (err) {
+                            sys.debug(err);
+                        }
+                    
+                        lfs.curlFile(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
+                            if (err) {
+                                sys.debug(err);
+                            }
+                        
+                            console.log('got Instagram photo ' + id);
+                            locker.event('photo/instagram', {"_id":id});
+                        });
+                    });
+                });
+            };
+            
+            for (var i=0, len=json.data.length; i<len; ++i) {
+                curl(json.data);
+            }
+                
+                curl(json.data);
+    });
 }
 
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
     lockerInfo = JSON.parse(data);
-    if (!lockerInfo || !lockerInfo['workingDirectory']) {
+    if (!lockerInfo || !lockerInfo.workingDirectory) {
         process.stderr.write('Was not passed valid startup information.'+data+'\n');
         process.exit(1);
     }
@@ -264,9 +268,9 @@ process.stdin.on('data', function(data) {
     } catch (E) {
         accessData = {};
     }
-		lfs.readObjectFromFile('state.json', function(newestState) {
+    lfs.readObjectFromFile('state.json', function(newestState) {
         state = newestState;
-		}
+    });
     app.listen(lockerInfo.port, 'localhost', function() {
         process.stdout.write(data);
     });
