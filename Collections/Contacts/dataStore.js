@@ -25,8 +25,8 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
-            var or = [{'_matching.cleanedNames':cleanedName}];
-            //,{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
+            var or = [{'_matching.cleanedNames':cleanedName}, 
+                      {'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
             collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
                         {safe:true, upsert:true}, callback);
         } else {
@@ -45,9 +45,11 @@ exports.addFoursquareData = function(foursquareData, callback) {
     collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
                              {safe: true}, function(err, doc) {
         if (!doc) {
-            var or = [{'_matching.cleanedNames':cleanedName}]
-            // if(foursquareData.data.contact.twitter)
-            //     or.push({'accounts.twitter.data.screen_name':foursquareData.data.contact.twitter});
+            var or = [{'_matching.cleanedNames':cleanedName}];
+            if(foursquareData.data.contact.twitter)
+                or.push({'accounts.twitter.data.screen_name':foursquareData.data.contact.twitter});
+            if(foursquareData.data.contact.facebook)
+                or.push({'accounts.facebook.data.id':foursquareData.data.contact.facebook});
             collection.update({$or:or}, {$push:{'accounts.foursquare':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}},
                               {safe: true, upsert: true}, callback);
         } else {
@@ -56,16 +58,6 @@ exports.addFoursquareData = function(foursquareData, callback) {
     });
 }
 
-// {
-//    "id": "220439",
-//    "name": "Bret Taylor",
-//    "first_name": "Bret",
-//    "last_name": "Taylor",
-//    "link": "https://www.facebook.com/btaylor",
-//    "username": "btaylor",
-//    "gender": "male",
-//    "locale": "en_US"
-// }
 exports.addFacebookData = function(facebookData, callback) {
     var fbID  = facebookData.data.id;
     var cleanedName = cleanName(facebookData.data.name);
@@ -77,7 +69,8 @@ exports.addFacebookData = function(facebookData, callback) {
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
-            var or = [{'_matching.cleanedNames':cleanedName}];
+            var or = [{'_matching.cleanedNames':cleanedName}, 
+                      {'accounts.foursquare.data.contact.facebook':fbID}];
             collection.update({$or:or}, {$push:{'accounts.facebook':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
                         {safe:true, upsert:true}, callback);
         } else {
