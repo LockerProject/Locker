@@ -115,6 +115,6 @@ exports.getPeopleCurrent = function(callback) {
                 }
             }
         }
-        callback(pushErr, profiles);
+        callback(err, profiles);
     });
 };
