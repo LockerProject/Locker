@@ -5,6 +5,14 @@ var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
 var currentDir = process.cwd();
+var events = {checkin: 0, contact: 0};
+
+sync.eventEmitter.on('checkin/foursquare', function() {
+    events.checkin++;
+});
+sync.eventEmitter.on('contact/foursquare', function() {
+    events.contact++;
+})
 
 
 // figure out if this supports batch setup / teardown, which makes far more sense for this than doing it in each.
@@ -139,6 +147,10 @@ vows.describe("Foursquare sync").addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events.checkin, 251);
+            assert.equal(events.contact, 2);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');

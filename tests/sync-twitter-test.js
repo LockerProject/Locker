@@ -6,7 +6,14 @@ var vows = require("vows");
 var fs = require("fs");
 var currentDir = process.cwd();
 
+var events = {status: 0, contact: 0};
 
+twitter.eventEmitter.on('status/twitter', function() {
+    events.status++;
+});
+twitter.eventEmitter.on('contact/twitter', function() {
+    events.contact++;
+})
 
 vows.describe("Twitter sync").addBatch({
     "Can get" : {
@@ -199,6 +206,10 @@ vows.describe("Twitter sync").addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events.status, 3);
+            assert.equal(events.contact, 3);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');
