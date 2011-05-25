@@ -10,10 +10,12 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
-    dataStore = require('./dataStore');
-
+    dataStore = require('./dataStore'),
+    EventEmitter = require('events').EventEmitter;
     
 var updateState, auth, allKnownIDs;
+
+exports.eventEmitter = new EventEmitter();
 
 exports.init = function(theauth, callback) {
     auth = theauth;
@@ -92,6 +94,8 @@ function logRemoved(ids) {
         return;
     ids.forEach(function(id) {
         dataStore.logRemovePerson(id);
+        var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
+        exports.eventEmitter.emit('contact/foursquare', eventObj);
         delete allKnownIDs[id];
     });
     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
@@ -102,8 +106,11 @@ exports.syncCheckins = function (callback) {
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
         getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
-            for (var i = 0; i < checkins.length; i++)
+            for (var i = 0; i < checkins.length; i++) {
                 dataStore.addPlace(checkins[i]);
+                var eventObj = {source:'places', type:'new', status:checkins[i]};
+                exports.eventEmitter.emit('checkin/foursquare', eventObj);
+            }
             callback(err, 600, "sync'd " + checkins.length + " new checkins");
         });
     });
@@ -173,6 +180,8 @@ function downloadUsers(users, token, callback) {
                       fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
               });
            }
+           var eventObj = {source:'friends', type:'new', status:js};
+           exports.eventEmitter.emit('contact/foursquare', eventObj);
            dataStore.addFriend(js);
        });
     }
