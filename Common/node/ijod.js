@@ -18,9 +18,8 @@ var fs = require('fs'),
 
 function IJOD(name) {
     this.name = name;
-//    this.dataFile = name + '/' + name + '.json';
-    this.dataFileName = name + '.json';
-    this.dbFile = name + '/' + name + '.db';
+    this.dataFileName = name + '/data.json';
+    this.dbFile = name + '/index.db';
     this._currentByteOffset = 0;
     this.db = new sqlite.Database();
 }
@@ -30,33 +29,42 @@ exports.IJOD = IJOD;
 IJOD.prototype.init = function(callback) {
     var self = this;
     validateIJOD(self.name, function(err) {
-        self.dataStream = fs.createWriteStream(self.dataFile, {'flags':'a', 'encoding': 'utf-8'});
+        self.dataFile = fs.openSync(self.dataFileName, 'a');
         self.db.open(self.dbFile, function(error) {
             self._addIndices(function(err) {
-                callback();
+                self._getEndByteOffset(function(err, fileLength) {
+                    self.fileLength = fileLength || 0;
+                    callback();
+                })
             });
         });
     });
 }
 
-IJOD.prototype.addRecord = function(objectID, timeStamp, record) {
+IJOD.prototype.addRecord = function(objectID, timeStamp, record, callback) {
+    var self = this;
     var str = JSON.stringify(record) + '\n';
-    this.dataStream.write(str);
-    var end = Buffer.byteLength(str);
-    str = null;
-    this._getEndByteOffset(function(err, byteEnd) {
-        this._addIndexedValues(byteEnd, end,  record);
+    var b = new Buffer(str);
+    fs.write(self.dataFile, b, 0, b.length, self.fileLength, function(err) {
+        if(!err) {
+            str = null;
+            var start = self.fileLength
+            self.fileLength += b.length;
+            self._addIndexedValues(start, self.fileLength, timeStamp, objectID, callback);
+        } else {
+            callback(err);
+        }
     });
 }
 
 IJOD.prototype.getAfterTimeStamp = function(timeStamp, callback) {
+    var path = this.name + '/data.json';
     var sql = 'SELECT byteStart FROM indices WHERE timeStamp > ? ORDER BY byteStart LIMIT 1;';
     this.db.execute(sql, [timeStamp], function(err, docs) {
         if(err)
             callback(err, docs);
-        else {
-            readObjectsFromFile(this.name + '/' + this.name + '.json', docs[0].byteStart, null, callback);
-        }
+        else
+            readObjectsFromFile(path, docs[0].byteStart, null, callback);
     });
 }
 
@@ -77,14 +85,16 @@ IJOD.prototype._getEndByteOffset = function(callback) {
     this.db.execute(sql, function(err, docs) {
         if(err) {
             callback(err, docs);
-        } else {
+        } else if(docs.length && docs[0].byteEnd){
             callback(null, docs[0].byteEnd);
+        } else {
+            callback(null, 0);
         }
     });
 }
 
 IJOD.prototype._addIndices = function(callback) {
-    this.db.execute('CREATE TABLE indices (recordID INTEGER PRIMARY KEY, timeStamp INTEGER, objectID TEXT);', function(err) {
+    this.db.execute('CREATE TABLE indices (byteStart INTEGER, byteEnd INTEGER, timeStamp INTEGER, objectID TEXT);', function(err) {
         if(err && err.message != 'table indices already exists')
             console.error('err!', err);
         callback(err);
