@@ -25,7 +25,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
-            var or = [{'_matching.cleanedNames':cleanedName}];
+            var or = [{'_matching.cleanedNames':cleanedName},{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
             collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
                         {safe:true, upsert:true}, callback);
         } else {
