@@ -61,7 +61,7 @@ aside nav
 
 aside nav#applications
 {
-  top: 345px;
+  top: 340px;
   bottom: 0;
   overflow-x: hidden;
   overflow-y: auto;
@@ -142,31 +142,33 @@ aside nav li.current
 
 aside nav li#logsTab
 {
-  background-image: url("../Images/Diary.png");
+  background-image: url("../Images/Logs.png");
   background-repeat: no-repeat;
-  background-position: 13px 50%, 0 0;
+  background-position: 13px 50%;
   padding-left: 48px;
 }
 
 aside nav li#logsTab.current
 {
-  background-image: url("../Images/Diary.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
-  background-image: url("../Images/Diary.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Diary.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Diary.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Diary.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-position: 13px 50%, 0 0;
+  background-image: url("../Images/Logs.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: url("../Images/Logs.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../Images/Logs.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../Images/Logs.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../Images/Logs.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
 }
 
 aside nav li#servicesTab
 {
   background-image: url("../Images/Services.png");
   background-repeat: no-repeat;
-  background-position: 10px 50%, 0 0;
+  background-position: 10px 50%;
   padding-left: 48px;
 }
 
 aside nav li#servicesTab.current
 {
+  background-position: 10px 50%, 0 0;
   background-image: url("../Images/Services.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
   background-image: url("../Images/Services.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
   background-image: url("../Images/Services.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
@@ -233,10 +235,18 @@ section#mainSection header
                    inset -1px 0px 0px rgba(255, 255, 255, 0.05),
                    inset 0px -1px 0px rgba(0, 0, 0, 0.5);
 */
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
   box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
-              inset 1px 0px 0px rgba(255, 255, 255, 0.1),
-              inset -1px 0px 0px rgba(255, 255, 255, 0.1),
-              inset 0px -1px 0px rgba(0, 0, 0, 0.75);
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
 }
 
 section#mainSection header h1

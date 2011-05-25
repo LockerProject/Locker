@@ -71,6 +71,8 @@ $(document).ready(function()
   $.ajax({ url: "/map", dataType: "json" }).success(function(data) {
     serviceMap = data;
 
+    console.log(serviceMap);
+
     serviceMap.available.forEach(function(item) {
       switch (item.is)
       {
@@ -104,18 +106,18 @@ $(document).ready(function()
           console.log("Unknown service type \"" + item.is + "\"");
           break;
       }
-      if (item.uri)
-      {
-        $("#appsList").append($("<li class='' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
-          $("#appsList li, .tab").removeClass("current");
-          $(event.target).addClass("current");
-          $(".tabPage").hide();
-          $("#appSection").show();
-          $("#appTitle").html(item.title);
-          $("#appFrame").attr("src", item.uri || "");
-          $("#zoomAppButton").click(function() { window.open(item.uri) });
-        }));
-      }
+    });
+    $.each(serviceMap.installed, function(key, value) {
+      var item = value;
+      $("#appsList").append($("<li title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
+        $("#appsList li, .tab").removeClass("current");
+        $(event.target).addClass("current");
+        $(".tabPage").hide();
+        $("#appSection").show();
+        $("#appTitle").html(item.title);
+        $("#appFrame").attr("src", item.uri || "");
+        $("#zoomAppButton").click(function() { window.open(item.uri) });
+      }));
     });
     selectAvailable(0);
   });
