@@ -53,8 +53,9 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                     var contacts = JSON.parse(body);
                     assert.isNotNull(contacts);
                     assert.equal(contacts.length, 2); 
-                    assert.equal(contacts[0].type, 'add');
-                    assert.equal(contacts[1].type, 'remove');
+                    assert.equal(contacts[0].id, 1054551);
+                    assert.equal(contacts[1].id, 1054551);
+                    assert.equal(contacts[1].deleted, 1306354042558);
                 })
             .unpath()
         .undiscuss()
@@ -77,7 +78,7 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.equal(statuses.length, 1); 
-                    assert.equal(statuses[0].data.id, 71348168469643260);
+                    assert.equal(statuses[0].id, 71348168469643260);
                 })
             .unpath()
         .undiscuss()
@@ -89,7 +90,7 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.equal(statuses.length, 1); 
-                    assert.equal(statuses[0].data.id, 73034804081344510);
+                    assert.equal(statuses[0].id, 73034804081344510);
                 })
             .unpath()
         .undiscuss()
@@ -101,7 +102,7 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                     var statuses = JSON.parse(body);
                     assert.isNotNull(statuses);
                     assert.equal(statuses.length, 1); 
-                    assert.equal(statuses[0].data.id, 73036575310757890);
+                    assert.equal(statuses[0].id, 73036575310757890);
                 })
             .unpath()
         .undiscuss()   

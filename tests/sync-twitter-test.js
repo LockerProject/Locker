@@ -20,15 +20,46 @@ vows.describe("Twitter sync").addBatch({
         topic: function() {
             process.chdir('./Me/Twitter');
             fakeweb.allowNetConnect = false;
-            twitter.init({consumerKey : 'abc', consumerSecret : 'abc', token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, this.callback); },
+            
+            fakeweb.registerUri({
+                uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=1&include_entities=true",
+                file : __dirname + '/fixtures/twitter/home_timeline.js' });
+            fakeweb.registerUri({
+                uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=2&include_entities=true&max_id=71348168469643260",
+                body : '[]' });
+                
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/statuses/mentions.json?count=200&page=1&include_entities=true',
+                file : __dirname + '/fixtures/twitter/mentions.js' });
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/statuses/mentions.json?count=200&page=2&include_entities=true&max_id=73034804081344510',
+                body : '[]' });
+            
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?count=200&page=1&include_entities=true',
+                file : __dirname + '/fixtures/twitter/user_timeline.js' });
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?count=200&page=2&include_entities=true&max_id=73036575310757890',
+                body : '[]' });
+            
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?include_entities=true',
+                file : __dirname + '/fixtures/twitter/verify_credentials.js' });
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/friends/ids.json?screen_name=ctide&cursor=-1',
+                body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/users/lookup.json?user_id=1054551%2C&include_entities=true',
+                file : __dirname + '/fixtures/twitter/1054551.js' });
+                
+            fakeweb.registerUri({
+                uri : 'https://api.twitter.com:443/1/followers/ids.json?screen_name=ctide&cursor=-1',
+                body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
+            
+            twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
+                            token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, this.callback); },
         "home timeline": {
             topic: function() {
-                fakeweb.registerUri({
-                    uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=1&include_entities=true",
-                    file : __dirname + '/fixtures/twitter/home_timeline.js' });
-                fakeweb.registerUri({
-                    uri : "https://api.twitter.com:443/1/statuses/home_timeline.json?count=200&page=2&include_entities=true&max_id=71348168469643260",
-                    body : '[]' });
                 twitter.pullStatuses("home_timeline", this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.equal(repeatAfter, 60);
@@ -38,12 +69,6 @@ vows.describe("Twitter sync").addBatch({
         },
         "mentions" : {
             topic: function() {
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/statuses/mentions.json?count=200&page=1&include_entities=true',
-                    file : __dirname + '/fixtures/twitter/mentions.js' });
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/statuses/mentions.json?count=200&page=2&include_entities=true&max_id=73034804081344510',
-                    body : '[]' });
                 twitter.pullStatuses("mentions", this.callback); },
             "sucessfully": function(err, repeatAfter, response) {
                 assert.equal(repeatAfter, 120);
@@ -53,12 +78,6 @@ vows.describe("Twitter sync").addBatch({
         },
         "user timeline" : {
             topic: function() {
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?count=200&page=1&include_entities=true',
-                    file : __dirname + '/fixtures/twitter/user_timeline.js' });
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?count=200&page=2&include_entities=true&max_id=73036575310757890',
-                    body : '[]' });
                 twitter.pullStatuses("user_timeline", this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.isNull(err);
@@ -68,15 +87,6 @@ vows.describe("Twitter sync").addBatch({
         },
         "friends" : {
             topic: function() {
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?include_entities=true',
-                    file : __dirname + '/fixtures/twitter/verify_credentials.js' });
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/friends/ids.json?screen_name=ctide&cursor=-1',
-                    body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/users/lookup.json?user_id=1054551%2C&include_entities=true',
-                    file : __dirname + '/fixtures/twitter/1054551.js' });
                 twitter.syncUsersInfo("friends", this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.isNull(err);
@@ -86,9 +96,6 @@ vows.describe("Twitter sync").addBatch({
         },
         "followers" :  {
             topic : function() {
-                fakeweb.registerUri({
-                    uri : 'https://api.twitter.com:443/1/followers/ids.json?screen_name=ctide&cursor=-1',
-                    body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
                 twitter.syncUsersInfo("followers", this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.isNull(err);
@@ -104,33 +111,26 @@ vows.describe("Twitter sync").addBatch({
         },
         "getPeople returns" : {
             "followers" : {
-                topic: function() {
-                    dataStore.getPeople("followers", this.callback); },
-                "successfully": function(err, response) {
-                    assert.isNull(err);
-                    assert.equal(response.length, 1);
-                    assert.equal(response[0].data.id, '1054551');
-                }
-            },
+               topic: function() {
+                   dataStore.getPeople("followers", 0, this.callback); 
+                   // setTimeout(this.callback, 200);
+               },
+               "successfully": function(err, response) {
+                   // console.log('response:', response.length);
+                   assert.isNull(err);
+                   assert.equal(response.length, 1);
+                   assert.equal(response[0].id, '1054551');
+               }
+           },
             "friends" : {
-                topic: function() {
-                    dataStore.getPeople("friends", this.callback); },
-                "successfully": function(err, response) {
-                    assert.isNull(err);
-                    assert.equal(response.length, 1);
-                    assert.equal(response[0].data.id, '1054551');
-                }
-            }
-        },
-        "getAllContacts returns contacts": {
-            topic: function() {
-                dataStore.getAllContacts(this.callback); },
-            "successfully": function(err, response) {
-                assert.isNull(err);
-                assert.equal(response.friends.length, 1);
-                assert.equal(response.followers.length, 1);
-                assert.equal(response.friends[0].data.screen_name, response.followers[0].data.screen_name);
-            }
+                  topic: function() {
+                      dataStore.getPeople("friends", 0, this.callback); },
+                  "successfully": function(err, response) {
+                      assert.isNull(err);
+                      assert.equal(response.length, 1);
+                      assert.equal(response[0].id, '1054551');
+                  }
+              }
         },
         "getPeopleCurrent returns ": {
             "followers" : {
@@ -155,20 +155,20 @@ vows.describe("Twitter sync").addBatch({
         "getStatuses from ": {
             "home_timeline returns" : {
                 topic: function() {
-                    dataStore.getStatuses("home_timeline", this.callback); },
+                    dataStore.getStatuses("home_timeline", 0, this.callback); },
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].data.id, "71348168469643260");
+                    assert.equal(response[0].id, "71348168469643260");
                 }
             },
             "user_timeline returns" : {
                 topic: function() {
-                    dataStore.getStatuses("user_timeline", this.callback); },
+                    dataStore.getStatuses("user_timeline", 0, this.callback); },
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].data.id, "73036575310757890");
+                    assert.equal(response[0].id, "73036575310757890");
                 }
             },
             "mentions returns" : {
@@ -177,7 +177,7 @@ vows.describe("Twitter sync").addBatch({
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].data.id, "73034804081344510");
+                    assert.equal(response[0].id, "73034804081344510");
                 }
             }
         }
@@ -192,7 +192,7 @@ vows.describe("Twitter sync").addBatch({
         "successfully": function(err, repeatAfter, response) {
             assert.isNull(err);
             assert.equal(repeatAfter, 600);
-            assert.equal(response, "synced 0 new friends");
+            assert.equal(response, "removed 1 friends");
         },
         "and getPeopleCurrent returns" : {
             topic: function() {
