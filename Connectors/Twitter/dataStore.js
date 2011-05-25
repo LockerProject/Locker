@@ -80,7 +80,7 @@ function addPersonToCurrent(type, person, callback) {
 }
 
 exports.logRemovePerson = function(type, id, callback) {
-    people[type].addRecord(parseInt(id), now(), {id_str:id, id:parseInt(id)}, function(err) {
+    people[type].addRecord(parseInt(id), now(), {id_str:id, id:parseInt(id), deleted:now()}, function(err) {
         removePersonFromCurrent(type, id, callback);
     });
 }
