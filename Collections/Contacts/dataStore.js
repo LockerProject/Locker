@@ -25,7 +25,8 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
-            var or = [{'_matching.cleanedNames':cleanedName},{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
+            var or = [{'_matching.cleanedNames':cleanedName}];
+            //,{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
             collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
                         {safe:true, upsert:true}, callback);
         } else {
@@ -44,7 +45,9 @@ exports.addFoursquareData = function(foursquareData, callback) {
     collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
                              {safe: true}, function(err, doc) {
         if (!doc) {
-            var or = [{'_matching.cleanedNames':cleanedName},{'accounts.twitter.data.screen_name':foursquareData.data.contact.twitter}];
+            var or = [{'_matching.cleanedNames':cleanedName}]
+            // if(foursquareData.data.contact.twitter)
+            //     or.push({'accounts.twitter.data.screen_name':foursquareData.data.contact.twitter});
             collection.update({$or:or}, {$push:{'accounts.foursquare':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}},
                               {safe: true, upsert: true}, callback);
         } else {

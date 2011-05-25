@@ -24,7 +24,9 @@ exports.gatherContacts = function() {
         if (!services) return;
         services.forEach(function(svc) {
             if(svc.provides.indexOf('contact/facebook') >= 0) {
-                // addContactsFromConn(svc.id,'/allContacts','contact/facebook');
+                getContactsFromFacebook(svc.id, function() {
+                    console.error('facebook done!');
+                });
             } else if(svc.provides.indexOf('contact/twitter') >= 0) {
                 getContactsFromTwitter(svc.id, 'friend', function() {
                     getContactsFromTwitter(svc.id, 'follower', function() {
