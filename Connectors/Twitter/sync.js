@@ -39,9 +39,7 @@ exports.init = function(theAuth, callback) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
-    dataStore.init(function() {
-        callback();
-    });
+    dataStore.init(callback);
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
@@ -139,19 +137,23 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
             }
             if(newIDs.length < 1) {
                 if(removedIDs.length > 0) {
-                    logRemoved(friendsOrFollowers, removedIDs);
-                    callback(null, 600, 'removed ' + removedIDs.length + friendsOrFolloers);
+                    var num = removedIDs.length;
+                    logRemoved(friendsOrFollowers, removedIDs, function(err) {
+                        callback(null, 600, 'removed ' + num + ' ' + friendsOrFollowers);    
+                    });
                 }
                 else {
                     callback(null, 600, 'synced 0 new ' + friendsOrFollowers);
                 }
             } else {
                 getUsersExtendedInfo(newIDs, function(usersInfo) {
-                    addPeople(friendsOrFollowers, usersInfo, knownIDs);
-                    if(removedIDs.length > 0)
-                        logRemoved(friendsOrFollowers, removedIDs);
-                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                    callback(null, 600, 'synced ' + usersInfo.length + ' new ' + friendsOrFollowers);
+                    var newIDCount = usersInfo.length;
+                    addPeople(friendsOrFollowers, usersInfo, knownIDs, function() {
+                        if(removedIDs.length > 0)
+                            logRemoved(friendsOrFollowers, removedIDs);
+                        fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                        callback(null, 600, 'synced ' + newIDCount + ' new ' + friendsOrFollowers);
+                    });
                 });
             }
         });
@@ -213,27 +215,34 @@ function updatePeople(type, people) {
     })
 }
 
-function addPeople(type, people, knownIDs) {
-    for(var i in people) {
-        var person = people[i];
-        knownIDs[person.id_str] = 1;
-        dataStore.addPerson(type, person);    
+function addPeople(type, people, knownIDs, callback) {
+    if(!people.length) {
+        callback();
+        return;
+    }
+    var person = people.shift();
+    knownIDs[person.id_str] = 1;
+    dataStore.addPerson(type, person, function(err) {
         var eventObj = {source:type, type:'new', data:person};
         exports.eventEmitter.emit('contact/twitter', eventObj);
-    }
+        addPeople(type, people, knownIDs, callback);
+    });
 }
 
-function logRemoved(type, ids) {
-    if(!ids)
+function logRemoved(type, ids, callback) {
+    if(!ids || !ids.length) {
+        fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+        callback();
         return;
+    }
+    var id = ids.shift();
     var knownIDs = allKnownIDs[type];
-    ids.forEach(function(id) {
-        dataStore.logRemovePerson(type, id);
+    dataStore.logRemovePerson(type, id, function(err) {
         var eventObj = {source:type, type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
+        logRemoved(type, ids, callback);
     });
-    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
 }
 
 // Syncs the profile of the auth'd user
