@@ -60,12 +60,14 @@ exports.syncFriends = function(callback) {
             for(var i in friends) {
                 if (friends.hasOwnProperty(i)) {
                     queue.push(friends[i]);
-                    if(!knownIDs[friends[i].id])
+                    if(!knownIDs[friends[i].id]) {
                         newIDs.push(friends[i].id);
-                    else
+                    } else {
                         repeatedIDs[friends[i].id] = 1;
+                    }
                 }
             }
+
             for(var knownID in knownIDs) {
                 if(!repeatedIDs[knownID])
                     removedIDs.push(knownID);
@@ -80,11 +82,13 @@ exports.syncFriends = function(callback) {
                     allKnownIDs[newIDs[j]] = 1;
                 }
                 fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                var newIDsLength = newIDs.length;
+                
                 downloadUsers(newIDs, auth.accessToken);
                 if(removedIDs.length > 0) {
                     logRemoved(removedIDs);
                 }
-                callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
+                callback(err, 3600, "sync'd " + newIDsLength + " new friends");    
             }
         });
     });
@@ -104,38 +108,44 @@ function getMe(accessToken, callback) {
     request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken}, callback);
 }
 
-function downloadUsers(users, token) {
+function downloadUsers(theUsers, token) {
+    var users = theUsers;
     var idString = '';
-    
-    for (var i = 0; i < users.length && i < 100; i++) {
+    var length = users.length;
+    for (var i = 0; i < length && i < 100; i++) {
        idString += users.pop() + ',';
     }
     idString = idString.substring(0, idString.length - 1);
-    
+
     // get extra juicy contact info plz
     request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + token}, 
         function(err, resp, data) {
-               var response = JSON.parse(data);
-               if(response.hasOwnProperty('error')) {
-                   console.error(data);
-                   allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-                   
-                   var ids = idString.split(',');
-                   for(var j = 0; j < ids.length; j++) {
-                       delete allKnownIDs[ids[j]];
-                   }
-                   
-                   fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                   return;
-               }
-               var result = JSON.parse(data);
+            if (err) {
+                console.error(err);
+                return;
+            }
+            var response = JSON.parse(data);
+            if(response.hasOwnProperty('error')) {
+                
+               console.error(data);
+               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
                
-               for(var property in result) {
-                   if (result.hasOwnProperty(property)) {
-                       dataStore.addFriend(result[property]);
-                   }
-               } 
-           });
+               var ids = idString.split(',');
+               for(var j = 0; j < ids.length; j++) {
+                   delete allKnownIDs[ids[j]];
+               }
+               
+               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+               return;
+           }
+           var result = JSON.parse(data);
+       
+           for(var property in result) {
+               if (result.hasOwnProperty(property)) {
+                   dataStore.addFriend(result[property]);
+               }
+           } 
+       });
     
     if (users.length > 0) {
         downloadUsers(users, token);

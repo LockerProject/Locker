@@ -19,6 +19,9 @@ vows.describe("Facebook sync").addBatch({
                 fakeweb.registerUri({
                     uri : 'https://graph.facebook.com/me/friends?access_token=abc',
                     file : __dirname + '/fixtures/facebook/me-friends.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/?ids=1575983201,1199908083,684655824,604699113,103135&access_token=abc',
+                    file : __dirname + '/fixtures/facebook/ids.json' });
                 sync.syncFriends(that.callback); });
             },
         "successfully" : function(err, repeatAfter, diaryEntry) {
@@ -27,7 +30,6 @@ vows.describe("Facebook sync").addBatch({
         }
     }
 })
-/*
 .addBatch({
     "Datastore" : {
         "getPeople returns all previously saved friends" : {
@@ -35,42 +37,25 @@ vows.describe("Facebook sync").addBatch({
                 var that = this;
                 dataStore.init(function() {
                     dataStore.getPeople(that.callback);
-                })
+                });
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 1);
-                assert.equal(response[0].data.id, 2715557);
-                assert.equal(response[0].data.name, 'Jacob Mitchell');
-                assert.equal(response[0].type, 'add');
+                assert.equal(response.length, 5);
             }
-        },
-        "getPlaces returns all previously saved checkins" : {
-            topic: function() {
-                var that = this;
-                dataStore.init(function() {
-                    dataStore.getPlaces(that.callback);
-                })
-            },
-            'successfully': function(err, response) {
-                assert.equal(response.length, 251);
-                assert.equal(response[0].data.id, "4d1dcbf7d7b0b1f7f37bfd9e");
-                assert.equal(response[0].data.venue.name, "Boston Logan International Airport (BOS)");
-                assert.equal(response[0].type, 'add');
-            }  
         },
         "getFriendFromCurrent returns the saved friend" : {
             topic: function() {
                 var that = this;
                 dataStore.init(function() {
-                    dataStore.getFriendFromCurrent(2715557, that.callback);
-                })
+                    dataStore.getFriendFromCurrent(103135, that.callback);
+                });
             },
             'successfully': function(err, response) {
                 assert.equal(response.length, 1);
             }
         }
     }
-})*/
+})
 .addBatch({
     "Tears itself down" : {
         topic: [],
