@@ -7,217 +7,155 @@
 *
 */
 
-var request = require('request'),
-    fs = require('fs'),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+var fs = require('fs'),
+    lfs = require('../../Common/node/lfs.js'),
+    request = require('request'),
+    dataStore = require('./dataStore');
+
     
-var auth, userInfo, latests;
-var facebookClient;
+var updateState, auth, allKnownIDs;
 
-var _debug = false;
-
-exports.init = function(theAuth) {
-    auth = theAuth;
+exports.init = function(theauth, callback) {
+    auth = theauth;
     try {
-        latests = JSON.parse(fs.readFileSync('latests.json'));
-    } catch (err) { latests = {}; }
+        updateState = JSON.parse(fs.readFileSync('updateState.json'));
+    } catch (updateErr) { 
+        updateState = {checkins:{syncedThrough:0}}; }
     try {
-        userInfo = JSON.parse(fs.readFileSync('userInfo.json'));
-    } catch (err) { userInfo = {}; }    
-    facebookClient = require('facebook-js')();
-}
-
-
-
-
-var photoQueue = [];
-var photoIndex = 0;
-function downloadPhotos(userID) {
-    fs.mkdir('photos/', 0755);
-    downloadNextPhoto();
-}
-function downloadNextPhoto() {
-    if (photoIndex >= photoQueue.length) return;
-
-    var friendID = photoQueue[photoIndex].friendID;
-    photoIndex++;
-    lfs.curlFile('https://graph.facebook.com/' + friendID + '/picture', 'photos/' + friendID + '.jpg', downloadNextPhoto);
-}
-
-function doFQLQuery(access_token, query, callback) {
-    var fb = http.createClient(443, 'api.facebook.com', true);
-    var request = fb.request('GET', '/method/fql.query?format=json&access_token=' + access_token +
-                            '&query=' + escape(query),
-                            {'host': 'api.facebook.com'});
-    request.end();
-    var data = '';
-    request.on('response',
-    function(response) {
-        response.setEncoding('utf8');
-        response.on('data',
-        function(chunk) {
-            data += chunk;
-        });
-        response.on('end',
-        function() {
-            callback(data);
-        });
-    });
-}
-
-
-function getProfileInfo(userID, callback) {
-    if(!callback) {
-        callback = userID;
-        userID = 'Me';
-    }
-    facebookClient.apiCall('GET', '/' + userID, {access_token: auth.token}, callback);
-}
-
-exports.getAllPhotos = function(callback) {
-    getPhotoAlbums(function(err, albums) {
-        getNextPhotoAlbum(albums.data, function(albumError, album) { //get lists of photos in albums
-            var albumFolder = 'photos/Me/' + album.id;
-            try {
-                fs.mkdirSync('photos/Me', 0755);
-            } catch(err) { }
-            try {
-                fs.mkdirSync(albumFolder, 0755);
-            } catch(err) { }
-            //TODO check it dir exists
-            lfs.writeObjectToFile(albumFolder + '/meta.json', album);
-            getPhotos(albumFolder, album.photosList.data, function(photosError) {
-                if(err) sys.debug(photosError);
-            });
-        }, callback);
-    });
-}
-
-function getPhotoAlbums(userID, callback) {
-    if(!callback) {
-        callback = userID;
-        userID = 'Me';
-    }
-    facebookClient.apiCall('GET', '/' + userID + '/albums', {access_token: auth.token}, callback);
-}
-
-function getNextPhotoAlbum(albums, albumCallback, finalCallback) {
-    if(!albums || albums.length < 1) {
-        finalCallback();
-        return;
-    }
-    var album = albums.pop();
-    getPhotoAlbum(album.id, function(err, photosList) {
-        if(_debug) sys.debug('get album: ' + album.id);
-        if(err) sys.debug(sys.inspect(err));
-        album.photosList = photosList;
-        albumCallback(err, album);
-        getNextPhotoAlbum(albums, albumCallback, finalCallback);
-    });
-}
-
-function getPhotoAlbum(albumID, callback) {
-    if(_debug) sys.debug('getting album: ' + albumID);
-    facebookClient.apiCall('GET', '/' + albumID + '/photos', {access_token: auth.token}, callback);
-}
-
-function getPhotos(albumFolder, photos, callback) {
-    if(_debug) sys.debug('for ' + albumFolder + ', ' + photos.length + ' remaining.');
-    if(!photos || photos.length < 1) {
-        callback();
-        return;
-    }
-    var photo = photos.pop();
-    var largestURL = photo.images[0].source;
-    lfs.curlFile(largestURL, albumFolder + '/' + photo.id + '.jpg');
-    getPhotos(albumFolder, photos, callback);
-}
-
-exports.pullNewsFeed = function(callback) {
-    if(!latests.feed)
-        latests.feed = {};
-    var items = [];
-    pullNewsFeedPage(null, latests.feed.latest, items, function() {
-        items.reverse();
-        locker.diary("saving "+items.length+" new news items");
-        lfs.appendObjectsToFile('feed.json', items);
-        locker.at('/feed', 10);
+        allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+    } catch (idErr) { allKnownIDs = {}; }
+    dataStore.init(function() {
         callback();
     });
-}
+};
 
-function pullNewsFeedPage(until, since, items, callback) {
-    var params = {access_token: auth.token, limit: 1000};
-    if(until)
-        params.until = until;
-    if(since)
-        params.since = since;
-    facebookClient.apiCall('GET', '/me/home', params, 
-        function(err, result) {
-            if(err) {
-                console.error(JSON.stringify(err));
-                return;
+exports.syncFriends = function(callback) {
+    getMe(auth.accessToken, function(err, resp, data) {
+        if(err) {
+            // do something smrt
+            console.error(err);
+            return;
+        } else if(resp && resp.statusCode > 500) {
+            console.error(resp);
+            return;
+        }
+        var self = JSON.parse(data);
+        fs.writeFile('profile.json', JSON.stringify(self));
+        var userID = self.id;
+        request.get({uri:'https://graph.facebook.com/me/friends?access_token=' + auth.accessToken}, 
+        function(err, resp, body) {
+            var newIDs = [];
+            var knownIDs = allKnownIDs;
+            var repeatedIDs = [];
+            var removedIDs = [];
+            
+            var friends = JSON.parse(body).data;
+            var queue = [];
+            var users = {
+                'id': userID,
+                'queue': queue,
+                'token': auth.accessToken
+            };
+						
+            for (var i = 0; i < friends.length; i++) {                    
+                queue.push(friends[i]);
+                if(!knownIDs[friends[i].id]) {
+                    newIDs.push(friends[i].id);
+                } else {
+                    repeatedIDs[friends[i].id] = 1;
+                }
             }
-            if(result.data.length > 0) {
-                var t = result.data[0].updated_time;
-                if(!latests.feed.latest || t > latests.feed.latest)
-                    latests.feed.latest = t;
-                for(var i = 0; i < result.data.length; i++)
-                    items.push(result.data[i]);
-                var next = result.paging.next;
-                var until = unescape(next.substring(next.lastIndexOf("&until=") + 7));
-                pullNewsFeedPage(until, since, items, callback);
-            } else if(callback) {
-                lfs.writeObjectToFile('latests.json', latests);
-                callback();
+
+            for(var knownID in knownIDs) {
+                if(!repeatedIDs[knownID])
+                    removedIDs.push(knownID);
+            }
+            if(newIDs.length < 1) {
+                if(removedIDs.length > 0) {
+                    logRemoved(removedIDs);
+                }
+                callback(err, 3600, "no new friends, removed " + removedIDs.length + " deleted friends");
+            } else {
+                for (var j = 0; j < newIDs.length; j++) {
+                    allKnownIDs[newIDs[j]] = 1;
+                }
+                fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                var newIDsLength = newIDs.length;
+                
+                // Careful. downloadUsers has side-effects on newIDs array b/c it can be called recursively.
+                // This is why we grab the length above before the crazy shit starts to happen.
+                downloadUsers(newIDs, auth.accessToken);
+                if(removedIDs.length > 0) {
+                    logRemoved(removedIDs);
+                }
+                callback(err, 3600, "sync'd " + newIDsLength + " new friends");    
             }
         });
+    });
+};
+
+function logRemoved(ids) {
+    if(!ids)
+        return;
+    ids.forEach(function(id) {
+        dataStore.logRemovePerson(id);
+        delete allKnownIDs[id];
+    });
+    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
 }
 
-exports.getFriends = function(callback) {
-    facebookClient.apiCall('GET', '/me', {access_token: auth.token}, function(err, result) {
-        var userID = result.id;
-        facebookClient.apiCall('GET', '/me/friends', {access_token: auth.token}, function(err, result) {
-            if(err) {
+function getMe(accessToken, callback) {
+    request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken}, callback);
+}
+
+function downloadUsers(theUsers, token) {
+    var users = theUsers;
+    var idString = '';
+    var length = users.length;
+    for (var i = 0; i < length && i < 100; i++) {
+       idString += users.pop() + ',';
+    }
+    idString = idString.substring(0, idString.length - 1);
+
+    // get extra juicy contact info plz
+    request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + token}, 
+        function(err, resp, data) {
+            if (err) {
                 console.error(err);
-                callback(err);
                 return;
             }
-            locker.diary("syncing "+result.data.length+" friends");
-            var stream = fs.createWriteStream('contacts.json');
-            for (var i = 0; i < result.data.length; i++) {
-                if (result.data[i]) {
-                    stream.write(JSON.stringify(result.data[i]) + "\n");
-                    if (result.data[i].id) {
-                        photoQueue.push({
-                            'userID': userID,
-                            'friendID': result.data[i].id
-                        });
-                    }
-                }
-            }
-            stream.end();
-            downloadPhotos(userID);
-            locker.at('/friends', 3600);
-            callback();
-        });
-
-        facebookClient.apiCall(
-        'GET',
-        '/me/checkins',
-        {access_token: auth.token},
-        function(err, result) {
-            if(err) console.error(err);
-            locker.diary("syncing "+result.data.length+" places");
-            var stream = fs.createWriteStream('places.json');
-            for (var i = 0; i < result.data.length; i++) {
-                if (result.data[i]) {
-                    stream.write(JSON.stringify(result.data[i]) + "\n");
-                }
-            }
-            stream.end();
-        });
-    });
+            var response = JSON.parse(data);
+            if(response.hasOwnProperty('error')) {
+                
+               console.error(data);
+               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+               
+               var ids = idString.split(',');
+               for(var j = 0; j < ids.length; j++) {
+                   delete allKnownIDs[ids[j]];
+               }
+               
+               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+               return;
+           }
+           var result = JSON.parse(data);
+       
+           for(var property in result) {
+               if (result.hasOwnProperty(property)) {
+                   dataStore.addFriend(result[property]);
+               }
+           } 
+       });
     
+    if (users.length > 0) {
+        downloadUsers(users, token);
+    }
+}
+
+
+function addAll(thisArray, anotherArray) {
+    if(!(thisArray && anotherArray && anotherArray.length))
+        return;
+    for(var i = 0; i < anotherArray.length; i++)
+        thisArray.push(anotherArray[i]);
 }
