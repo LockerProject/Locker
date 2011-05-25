@@ -32,7 +32,7 @@ function authComplete(theauth, callback) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go4sq');
+        res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>found a token, load <a href='friends'>friends</a></html>");

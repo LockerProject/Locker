@@ -13,7 +13,8 @@ var express = require('express'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     authLib = require('./auth'),
-    syncApi = require(__dirname + "/sync-api.js")(app);
+    syncApi = require(__dirname + "/sync-api.js")(app),
+    started = false;
     
 // Process the startup JSON object
 process.stdin.setEncoding('utf8');
@@ -37,8 +38,7 @@ process.stdin.on('data', function(data) {
         
         if(!authLib.isAuthed())
             startWebServer();
-        
-        var started = false;
+
         function startWebServer() {
             started = true;
             // Start the core web server

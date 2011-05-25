@@ -56,15 +56,13 @@ exports.syncFriends = function(callback) {
                 'queue': queue,
                 'token': auth.accessToken
             };
-            
-            for(var i in friends) {
-                if (friends.hasOwnProperty(i)) {
-                    queue.push(friends[i]);
-                    if(!knownIDs[friends[i].id]) {
-                        newIDs.push(friends[i].id);
-                    } else {
-                        repeatedIDs[friends[i].id] = 1;
-                    }
+						
+            for (var i = 0; i < friends.length; i++) {                    
+                queue.push(friends[i]);
+                if(!knownIDs[friends[i].id]) {
+                    newIDs.push(friends[i].id);
+                } else {
+                    repeatedIDs[friends[i].id] = 1;
                 }
             }
 
@@ -84,6 +82,8 @@ exports.syncFriends = function(callback) {
                 fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                 var newIDsLength = newIDs.length;
                 
+                // Careful. downloadUsers has side-effects on newIDs array b/c it can be called recursively.
+                // This is why we grab the length above before the crazy shit starts to happen.
                 downloadUsers(newIDs, auth.accessToken);
                 if(removedIDs.length > 0) {
                     logRemoved(removedIDs);

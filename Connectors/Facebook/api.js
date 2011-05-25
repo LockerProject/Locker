@@ -33,8 +33,6 @@ app.get('/allContacts', function(req, res) {
 app.get('/getCurrent/friends', function(req, res) {
     dataStore.getPeopleCurrent(function(err, profiles) {
         if(err) {
-            console.error(err);
-            res.end(err);
         } else {
             res.writeHead(200, {'content-type' : 'application/json'});
             res.end(JSON.stringify(profiles));
