@@ -22,19 +22,6 @@ var mePath = '/Me/' + svcId;
 
 suite.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Twitter connector")
-        .discuss("all contacts")
-            .path(mePath + "/allContacts")
-            .get()
-                .expect('returns contacts', function(err, res, body) {
-                    assert.isNull(err);
-                    var contacts = JSON.parse(body);
-                    assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 2);
-                    assert.equal(contacts.friends.length, 1);
-                    assert.equal(contacts.followers.length, 0);
-                })
-            .unpath()
-        .undiscuss()
         .discuss("all current friends")
             .path(mePath + "/getCurrent/friends")
             .get()
