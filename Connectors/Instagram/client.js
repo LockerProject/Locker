@@ -31,7 +31,6 @@ var express = require('express'),
 var lockerInfo;
 var me;
 var accessData;
-var tokenData = {};
 var oAuth;
 var state;
 
@@ -40,9 +39,6 @@ function setupOAuthClient(clientId, clientSecret) {
                             'https://api.instagram.com',
                             '/oauth/authorize',
                             '/oauth/access_token');
-    oAuth.prototype.getAuthorizeUrl = function(params) {
-        
-    };
 }
 
 app.get('/',
@@ -50,7 +46,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    if (!accessData.tokenData || !accessData.tokenData.accessToken) {
+    if (!accessData.accessToken) {
         res.end('<html>you need to <a href="oauthrequest">auth w/ Instagram</a> still</html>');
     } else {
         res.end('<html>found a token, load <a href="profile">profile</a> or <a href="connections">photos</a></html>');
@@ -75,12 +71,7 @@ function(req, res) {
         accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
         setupOAuthClient(accessData.clientId, accessData.clientSecret);
         console.log('redirecting to ' + oAuth.getAuthorizeUrl(params));
-        //res.redirect(oAuth.getAuthorizeUrl(params));
-        request.post({uri:oAuth.getAuthorizeUrl(params)}, 
-            function(err, resp, body) {
-                var newIDs = [];
-                var knownIDs = allKnownIDs;
-        });
+        res.redirect(oAuth.getAuthorizeUrl(params));
         res.end();
     }
 });
@@ -102,37 +93,35 @@ function(req, res) {
 
 app.get('/auth',
 function(req, res) {
-    console.log('calling /auth');
-
     accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
     setupOAuthClient(accessData.clientId, accessData.clientSecret);
-        console.log(accessData);
-    oAuth.getOAuthAccessToken(req.param('code'), 
-        { grant_type: 'authorization_code', 
-        redirect_uri: me.uri + 'auth' }, 
-        function(err, oAuthAccessToken, oAuthRefreshToken) {
-          if (err) {
-            console.log(err);
-          } else {
-            tokenData = {};
-            tokenData.accessToken = oAuthAccessToken;
-            tokenData.refreshToken = oAuthRefreshToken;
-            accessData.tokenData = tokenData;
-            lfs.writeObjectsToFile('access.json', [accessData]);
-    
-            res.writeHead(200, {
-                'Content-Type': 'text/html'
-            });
-            res.end('<html>Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a></html>');
-          }
-      });
+    request({uri: 'https://api.instagram.com/oauth/access_token',
+             method: 'POST',
+             body: querystring.stringify({code: req.param('code'), 
+                                          grant_type: 'authorization_code',
+                                          redirect_uri: me.uri + 'auth',
+                                          client_id: accessData.clientId,
+                                          client_secret: accessData.clientSecret })}, 
+            function(err, resp, body) {
+                if (err) {
+                    console.log(err);
+                  } else {
+                    accessData.accessToken = JSON.parse(body).access_token;
+                    lfs.writeObjectsToFile('access.json', [accessData]);
+
+                    res.writeHead(200, {
+                        'Content-Type': 'text/html'
+                    });
+                    res.end('<html>Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a></html>');
+                  }
+             });
 });
 
 app.get('/profile',
 function(req, res) {
   oAuth.getProtectedResource(
     'https://api.instagram.com/v1/users/self',
-    accessData.tokenData.accessToken, 
+    accessData.accessToken, 
     function(err, data) {
       if (err) {
         console.log(err);
@@ -199,7 +188,7 @@ function getPhotos(newest) {
     }
         
     oAuth.getProtectedResource('https://api.instagram.com/v1/users/self/feed?max_id=' + newest,
-        accessData.tokenData.accessToken, 
+        accessData.accessToken, 
         function(err, data) {
             if (err) {
               console.log(err);
