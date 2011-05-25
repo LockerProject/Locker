@@ -92,8 +92,8 @@ function handleAuth(req, res) {
             if(newToken != null) {
                 exports.auth.token = newToken;
                 fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
-                res.redirect(uri);
                 completedCallback();
+                res.redirect(uri);
             }
         });    
     } else { 

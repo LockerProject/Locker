@@ -22,12 +22,13 @@ var app = express.createServer(
 
 // This only adds the / endpoint, the rest are added in the authComplete function
 var webservice = require(__dirname + "/webservice.js")(app);
+var started = false;
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
-	// Do the initialization bits
+    // Do the initialization bits
     var processInfo = JSON.parse(chunk);
-   	// TODO:  Is there validation to do here?
+    // TODO:  Is there validation to do here?
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     
@@ -39,24 +40,23 @@ process.stdin.on('data', function (chunk) {
         // If we're not authed, we add the auth routes, otherwise add the webservice
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
-    	    webservice.authComplete(authLib.auth, function() {
-    	        if(!started)
-    	            startWebServer();
-    	    });
+            webservice.authComplete(authLib.auth, function() {
+                if(!started)
+                    startWebServer();
+            });
         });
     
         if(!authLib.isAuthed())
             startWebServer();
         
-        var started = false;
         function startWebServer() {
             started = true;
             // Start the core web server
-    	    app.listen(processInfo.port, function() {
-    		    // Tell the locker core that we're done
-    		    var returnedInfo = {port: processInfo.port};
-    		    process.stdout.write(JSON.stringify(returnedInfo));
-    	    });
+            app.listen(processInfo.port, function() {
+                // Tell the locker core that we're done
+                var returnedInfo = {port: processInfo.port};
+                process.stdout.write(JSON.stringify(returnedInfo));
+            });
         }
     });
 });

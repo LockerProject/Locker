@@ -51,7 +51,7 @@ app.get('/getAll/:type', function(req, res) {
     var type = req.params.type;
     if(type == 'followers' || type == 'friends')
         getPeople(req.params.type, {recordID:-1}, res);
-    else if(type == 'home_timeline' || type == 'mentions')
+    else if(type == 'home_timeline' || type == 'mentions' || type == 'user_timeline')
         getStatuses(type, {recordID:-1}, res);
 });
 
@@ -69,7 +69,7 @@ app.get('/getSince/:type', function(req, res) {
             query = {recordID:-1};
         }
         getPeople(type, query, res);
-    } else if(type == 'home_timeline' || type == 'mentions') {
+    } else if(type == 'home_timeline' || type == 'mentions' || type == 'user_timeline') {
         var query = {};
         if(req.query.recordID) {
             query.recordID = req.query.recordID;

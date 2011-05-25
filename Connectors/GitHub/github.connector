@@ -4,5 +4,6 @@
     "desc":"Collect and sync my data from my Github account.",
     "run":"node github.js",
     "status":"unstable",
+	"handle":"github",
     "provides":["contact/github"]
 }

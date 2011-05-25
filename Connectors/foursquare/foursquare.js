@@ -13,6 +13,7 @@ var express = require('express'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     authLib = require('./auth'),
+    started = false,
     syncApi = require(__dirname + "/sync-api.js")(app);
     
 // Process the startup JSON object
@@ -25,12 +26,33 @@ process.stdin.on("data", function(data) {
     
     app.meData = lfs.loadMeData();
     // Adds the internal API to the app because it should always be available
-    require(__dirname + "/api.js")(app);
-    // If we're not authed, we add the auth routes, otherwise add the webservice
-    authLib.authAndRun(app, syncApi.authComplete);
-    
-    app.listen(processInfo.port, "localhost", function() {
-        process.stdout.write(data);
+    require(__dirname + "/api.js")(app, function() {
+        
+        authLib.authAndRun(app, function() {
+            syncApi.authComplete(authLib.auth, function() {
+                if (!started) {
+                    startWebServer();
+                }
+            });
+        });
+        
+        if(!authLib.isAuthed())
+            startWebServer();
+        
+        function startWebServer() {
+            started = true;
+            // Start the core web server
+            app.listen(processInfo.port, function() {
+                // Tell the locker core that we're done
+                var returnedInfo = {port: processInfo.port};
+                process.stdout.write(JSON.stringify(returnedInfo));
+            });
+        }
     });
+    
+    
+    
+
+    // If we're not authed, we add the auth routes, otherwise add the webservice
 });
 process.stdin.resume();
