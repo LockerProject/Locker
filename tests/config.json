@@ -14,7 +14,6 @@
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
-                              "connector-local-foursquare-test.js", 
                               "connector-local-github-test.js",
                               "connector-local-twitter-test.js"],
         "connectors-remote" : [],
@@ -22,12 +21,13 @@
                         "connector-facebook-test.js", 
                         "connector-flickr-test.js", 
                         "connector-github-test.js",
-                        "sync-foursquare-test.js",
                         "sync-twitter-test.js"],
         "collections" : [],
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
+        "connector-local-foursquare-test.js",
+        "sync-foursquare-test.js",
         "connector-local-XMPP-test.js"
     ], 
     "mongo" : {
