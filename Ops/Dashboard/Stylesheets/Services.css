@@ -332,13 +332,29 @@ ul#servicesList li.current.connector
 
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   color: rgba(0, 0, 0, 0.8);
+
+  cursor: default;
+}
+
+#serviceInfo ul#connectorInstancesList li:hover
+{
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+#serviceInfo ul#connectorInstancesList li:active
+{
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.15)), to(rgba(0, 0, 0, 0.05)));
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
 }
 
 #serviceInfo ul#connectorInstancesList li .identifier
 {
   position: absolute;
   top: 0;
-  right: 52px;
+  right: 10px;
   bottom: 0;
   font-size: 12px;
   font-family: Menlo, Courier, monospace;

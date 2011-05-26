@@ -93,7 +93,9 @@ function selectService(index)
     $("#addConnectorInstanceButton a").attr("href", "javascript:installService(" + index + ");");
     $.each(serviceMap.installed, function(key, value) {
       if (value["srcdir"] == item["srcdir"])
-        $("#connectorInstancesList").append("<li><span class='title'>" + value["title"] + "</span><span class='identifier'>" + value["id"] +  "</span><span class='page'><a href='" + value["uri"] + "'><img src='Images/Configure.png' /></a></span></li>");
+        $("#connectorInstancesList").append("<li><span class='title'>" + value["title"] + "</span><span class='identifier'>" + value["id"] +  "</span></li>").click(function(event) {
+          window.location.replace("#!/app/" + value.id);
+        });
     });
     $("#connectorInstancesSection").show();
     $("#installButton").hide();
