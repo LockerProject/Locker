@@ -118,7 +118,7 @@ function(req, res) {
     });
     if(!(auth.apiKey && auth.apiSecret)) {
         res.end("<html>Enter your personal Flickr app info that will be used to sync your data" + 
-                " (create a new one <a href='http://www.flickr.com/services/apps/create/apply/'>" + 
+                " (create a new one <a href='http://www.flickr.com/services/apps/create/apply/' target='_blank'>" + 
                 "here</a> using the callback url of " +
                 me.uri+"auth) " +
                 "<form method='get' action='save'>" +

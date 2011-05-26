@@ -205,7 +205,7 @@ function updatePeople(type, people) {
                 if(isDifferent) {
                     // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
                     dataStore.logUpdatePerson(type, profileFromTwitter);
-                    var eventObj = {source:type, type:'update', data:person};
+                    var eventObj = {source:type, type:'update', data:profileFromTwitter};
                     exports.eventEmitter.emit('contact/twitter', eventObj);
                 } else {
                     // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);

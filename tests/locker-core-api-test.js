@@ -211,7 +211,7 @@ tests.next()
     .get()
         .expect(200)
         .expect("that have full info", function(err, res, body) {
-            var diaryLine = JSON.parse(body);
+            var diaryLine = JSON.parse(body)[0];
             assert.include(diaryLine, "message");
             assert.include(diaryLine, "level");
             assert.include(diaryLine, "timestamp");
