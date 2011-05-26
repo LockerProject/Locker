@@ -16,6 +16,7 @@
 var lfs = require('../../Common/node/lfs.js');
 var fs = require('fs');
 var dataStore = require('./dataStore.js');
+var validTypes = [];
 
 module.exports = function(app, theMongoCollections) {
 
