@@ -15,6 +15,7 @@
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
                               "connector-local-github-test.js",
+                              "connector-local-foursquare-test.js",
                               "connector-local-twitter-test.js"],
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
@@ -24,8 +25,6 @@
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
-        "connector-local-foursquare-test.js",
-        "sync-foursquare-test.js",
         "connector-local-XMPP-test.js"
     ], 
     "mongo" : {

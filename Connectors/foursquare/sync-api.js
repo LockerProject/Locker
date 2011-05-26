@@ -20,15 +20,12 @@ module.exports = function(theapp) {
     return this;
 }
 
-function authComplete(theauth, callback) {
+function authComplete(theauth, mongoCollections) {
     auth = theauth;
-    sync.init(auth, function() {
-        console.error('auth completed');
-        app.get('/friends', friends);
-        app.get('/checkins', checkins);
-        
-        callback();
-    });
+    sync.init(auth, mongoCollections);
+
+    app.get('/friends', friends);
+    app.get('/checkins', checkins);
 }
 
 function index(req, res) {
