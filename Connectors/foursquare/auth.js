@@ -56,7 +56,7 @@ function go4sq(req, res) {
     if(!(exports.auth.appKey && exports.auth.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Foursquare app info that will be used to sync your data" + 
-                " (create a new one <a href='https://foursquare.com/oauth/register'>" + 
+                " (create a new one <a href='https://foursquare.com/oauth/register' target='_blank'>" + 
                 "here</a> using the callback url of " + me.uri+"auth) " +
                 "<form method='post' action='saveAuth'>" +
                     "Client ID: <input name='appKey'><br>" +

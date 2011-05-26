@@ -77,7 +77,7 @@ function handleAuth(req, res) {
          exports.auth.hasOwnProperty("consumerSecret"))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
-                " (create a new one <a href='http://dev.twitter.com/apps/new'>here</a> " +
+                " (create a new one <a href='http://dev.twitter.com/apps/new' target='_blank'>here</a> " +
                 "using the callback url of http://"+url.parse(uri).host.replace("localhost", "127.0.0.1")+"/) " +
                 "<form method='get' action='saveAuth'>" +
                     "Consumer Key: <input name='consumerKey'><br>" +
