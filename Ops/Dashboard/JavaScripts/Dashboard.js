@@ -107,6 +107,8 @@ function selectService(index)
     $("#installButton").show();
     $("#connectorInstancesSection").hide();
   }
+
+  $("#serviceInfo").show();
 }
 
 function installService(i)
