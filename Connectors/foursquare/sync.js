@@ -17,6 +17,8 @@ var fs = require('fs'),
     
 var updateState, auth, allKnownIDs;
 
+exports.eventEmitter = new EventEmitter();
+
 exports.init = function(theauth, mongoCollections) {
     auth = theauth;
     try {
@@ -125,9 +127,9 @@ function addCheckins(checkins, callback) {
     }
     var checkin = checkins.shift();
     dataStore.addObject("places", checkin, function(err) {
-        addCheckins(checkins, callback);
-        var eventObj = {source:'places', type:'new', status:checkins[i]};
+        var eventObj = {source:'places', type:'new', status:checkin};
         exports.eventEmitter.emit('checkin/foursquare', eventObj);
+        addCheckins(checkins, callback);
     })
 }
 

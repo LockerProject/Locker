@@ -37,7 +37,6 @@ suite.next().suite.addBatch({
             process.chdir('.' + mePath);
             var self = this;
             lmongoclient.connect(function(collections) {
-                console.log("collections", collections);
                 sync.init({accessToken : 'abc'}, collections);
                 dataStore.init("id", collections);
                 fakeweb.allowNetConnect = false;
