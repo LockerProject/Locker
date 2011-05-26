@@ -224,6 +224,7 @@ exports.spawn = function(serviceId, callback) {
     console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
     var processInformation = {
         port: svc.port, // This is just a suggested port
+        sourceDirectory: svc.srcdir,
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
