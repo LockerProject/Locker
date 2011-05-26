@@ -164,14 +164,8 @@ ul#servicesList li.current.connector
 #serviceInfo #installButton
 {
   position: absolute;
-  display: block;
   top: 16px;
   right: 20px;
-  font-size: 13px;
-  height: 32px;
-  line-height: 32px;
-  padding-left: 12px;
-  padding-right: 12px;
 
   background-color: rgba(0, 0, 0, 0.6) !important;
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35)));
@@ -191,10 +185,20 @@ ul#servicesList li.current.connector
 
 #serviceInfo #installButton a
 {
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.85) !important;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 1);
+  display: block;
+
+  padding-left: 12px;
+  padding-right: 12px;
+
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
   font-weight: bold;
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-decoration: none;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 1);
+
+  cursor: default;
 }
 
 #serviceInfo #installButton:hover
