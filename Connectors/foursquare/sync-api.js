@@ -26,6 +26,13 @@ function authComplete(theauth, mongoCollections) {
 
     app.get('/friends', friends);
     app.get('/checkins', checkins);
+    
+    sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
+        locker.event('checkin/foursquare', eventObj);
+    });
+    sync.eventEmitter.on('contact/foursquare', function(eventObj) {
+        locker.event('contact/foursquare', eventObj);
+    });
 }
 
 function index(req, res) {

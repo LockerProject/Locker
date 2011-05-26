@@ -12,6 +12,7 @@ var fs = require('fs'),
     request = require('request'),
     dataStore = require('../../Common/node/ldataStore'),
     app = require('../../Common/node/lapi');
+    EventEmitter = require('events').EventEmitter;
 
     
 var updateState, auth, allKnownIDs;
@@ -97,10 +98,11 @@ function logRemoved(ids, callback) {
         return;
     }
     var id = ids.shift();
-    var knownIDs = allKnownIDs;
     dataStore.removeObject("friends", id+'', function(err) {
-        delete knownIDs[id];
+        delete allKnownIDs[id];
         logRemoved(ids, callback);
+        var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
+        exports.eventEmitter.emit('contact/foursquare', eventObj);
     });
 }
 
@@ -124,6 +126,8 @@ function addCheckins(checkins, callback) {
     var checkin = checkins.shift();
     dataStore.addObject("places", checkin, function(err) {
         addCheckins(checkins, callback);
+        var eventObj = {source:'places', type:'new', status:checkins[i]};
+        exports.eventEmitter.emit('checkin/foursquare', eventObj);
     })
 }
 
@@ -194,6 +198,8 @@ function downloadUsers(users, token, callback) {
                             fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
                     });
                 }
+                var eventObj = {source:'friends', type:'new', status:js};
+                exports.eventEmitter.emit('contact/foursquare', eventObj);
                 dataStore.addObject("friends", js, function(err) {
                     if (coll.length == 0) {
                         callback();
