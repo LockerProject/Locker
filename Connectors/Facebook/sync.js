@@ -23,7 +23,9 @@ exports.init = function(theauth, callback) {
         updateState = {checkins:{syncedThrough:0}}; }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-    } catch (idErr) { allKnownIDs = {}; }
+    } catch (idErr) { 
+        allKnownIDs = {}; 
+    }
     dataStore.init(function() {
         callback();
     });
