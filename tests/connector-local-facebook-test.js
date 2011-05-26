@@ -31,8 +31,6 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 
-var mongoCollections;
-
 suite.next().suite.addBatch({
     "Can get" : {
         topic: function() {
@@ -51,15 +49,13 @@ suite.next().suite.addBatch({
                 
             var self = this;
             lmongoclient.connect(function(collections) {
-                mongoCollections = collections;
-                facebook.init({consumerKey : 'abc', consumerSecret : 'abc', accessToken: 'abc'}, collections);
-                dataStore.init(mongoCollections);
-                self.callback(); 
+                facebook.init({appKey: 'abc', appSecret: 'abc', accessToken: 'abc'}, collections);
+                //self.callback();
             });
         },                            
         "newsfeed": {
             topic: function() {
-                facebook.pullStatuses("newsfeed", this.callback); },
+                facebook.pullNewsfeed('newsfeed', this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.equal(repeatAfter, 60);
                 assert.isNull(err);
@@ -68,7 +64,7 @@ suite.next().suite.addBatch({
         },
         "wall": {
             topic: function() {
-                facebook.pullStatuses("wall", this.callback); },
+                facebook.pullWall("wall", this.callback); },
             "successfully": function(err, repeatAfter, response) {
                 assert.equal(repeatAfter, 60);
                 assert.isNull(err);

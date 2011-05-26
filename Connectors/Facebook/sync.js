@@ -15,23 +15,75 @@ var fs = require('fs'),
     
 var updateState, auth, allKnownIDs;
 
-exports.init = function(theauth, callback) {
-    auth = theauth;
+exports.init = function(theAuth, mongoCollections) {
+    console.log('sync.init');
+    auth = theAuth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
     } catch (updateErr) { 
-        updateState = {checkins:{syncedThrough:0}}; }
+        updateState = {links:{wall:{syncedThrough: 0}, newsfeed:{syncedThrough: 0}}};
+    }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (idErr) { 
-        allKnownIDs = {}; 
+        allKnownIDs = {friends:{}, links:{wall:{}, newsfeed:{}}};
     }
-    dataStore.init(function() {
-        callback();
-    });
+    dataStore.init(mongoCollections);
+};
+
+exports.pullNewsfeed = function(endpoint, max_id, since_id, page, items, callback) {
+    console.log('sync.pullNewsfeed');
+    // if(!page)
+    //         page = 1;
+    //     var params = {token: auth.token, count: 200, page: page, include_entities:true};
+    //     if(max_id)
+    //         params.max_id = max_id;
+    //     if(since_id)
+    //         params.since_id = since_id;
+    //     requestCount++;
+    //     getTwitterClient().apiCall('GET', '/statuses/' + endpoint + '.json', params, function(error, result) {
+    //         if(error) {
+    //             if(error.statusCode >= 500) { //failz-whalez, hang out for a bit
+    //                 setTimeout(function(){
+    //                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
+    //                 }, 10000);
+    //             }
+    //             require("sys").puts(error.stack );
+    //             sys.debug('error from twitter:' + sys.inspect(error));
+    //             return;
+    //         }
+    //         if(result.length > 0) {
+    //             var id = result[0].id;
+    //             if(!latests[endpoint].latest || id > latests[endpoint].latest)
+    //                 latests[endpoint].latest = id;
+    //             for(var i = 0; i < result.length; i++)
+    //                 items.push(result[i]);
+    // 
+    //             if(!max_id)
+    //                 max_id = result[0].id;
+    //             page++;
+    //             if(requestCount > 300) {
+    //                 sys.debug('sleeping a bit...');
+    //                 setTimeout(function() {
+    //                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
+    //                 }, 30000);
+    //             } else {
+    //                 pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
+    //             }
+    //         } else if(callback) {
+    //             lfs.writeObjectToFile('latests.json', latests);
+    //             callback();
+    //         }
+    //     });
+};
+
+exports.pullWall = function(endpoint, max_id, since_id, page, items, callback) {
+    console.log('sync.pullWall');
+   
 };
 
 exports.syncFriends = function(callback) {
+    console.log('sync.syncFriends');
     getMe(auth.accessToken, function(err, resp, data) {
         if(err) {
             // do something smrt

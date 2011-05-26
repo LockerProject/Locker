@@ -8,113 +8,90 @@
 */
 
 var IJOD = require('../../Common/node/ijod').IJOD;
-var sqlite = require('sqlite');
 
-var INDEXED_FIELDS = [{fieldName:'timeStamp', fieldType:'REAL'}, {fieldName:'data.id', fieldType:'REAL'}];
+var people = {};
+var links = {};
+var mongoCollections;
 
-var friends;
-var currentDB = new sqlite.Database();
-exports.init = function(callback) {
-    if(!friends) {
-        friends = new IJOD('friends', INDEXED_FIELDS);
-        friends.init(function() {
-            openDB(callback);
-        });
-    } else {
-        callback();
+var mongoID = 'id_str';
+
+exports.init = function(theMongoCollections, callback) {
+    console.log('dataStore.init');
+    mongoCollections = theMongoCollections;
+    if(!people.friends) {
+        people.friends = new IJOD('friends');
+        links.newsfeed = new IJOD('newsfeed');
+        links.wall = new IJOD('wall');
     }
 };
-
-function openDB(callback) {
-    currentDB.open('current.db', function(err) {
-        currentDB.execute('CREATE TABLE IF NOT EXISTS friends (id INTEGER PRIMARY KEY, profile TEXT);', callback);
-    });
-}
 
 function now() {
     return new Date().getTime();
 }
 
-exports.addFriend = function(person) {
-    friends.addRecord({timeStamp:now(), type:'add', data:person});
-    addFriendToCurrent(person, function(err) {
-        if(err)
-            console.error(err);
+exports.addPerson = function(type, person, callback) {
+    people[type].addRecord(now(), person, function(err) {
+        exports.setCurrent(type, person, callback);
     });
 };
 
-exports.getFriendFromCurrent = function(id, callback) {
-    var sql = "SELECT profile FROM friends WHERE id = ?;";
-    currentDB.execute(sql, [id], callback);
-};
 
-function addFriendToCurrent(person, callback) {
-    var sql = "INSERT OR REPLACE INTO friends(id, profile) VALUES (?, ?);";
-    currentDB.execute(sql, [person.id, JSON.stringify(person)], callback);
+function getMongo(type, id, callback) {
+    var mongo = mongoCollections[type];
+    if(!mongo) 
+        callback(new Error('invalid type:' + type), null);
+    else if(!(id && (typeof id === 'string' || typeof id === 'number')))
+        callback(new Error('bad id:' + id), null);
+    else
+        return mongo;
 }
 
-exports.logRemovePerson = function(id) {
-    friends.addRecord({timeStamp:now(), type:'remove', data:{id_str:id, id:parseInt(id)}});
-    removePersonFromCurrent(id, function(err) {
-        if(err) {
-            console.error(err);
-        }
+exports.getCurrent = function(type, id, callback) {
+    var mongo = getMongo(type, id, callback);
+    if(mongo)
+        mongo.findOne({'id':id}, callback);
+};
+
+exports.setCurrent = function(type, object, callback) {
+    var mongo = getMongo(type, object[mongoID], callback);
+    if(mongo) {
+        var query = {};
+        query[mongoID] = object[mongoID];
+        mongo.update(query, object, {upsert:true, safe:true}, callback);
+    }
+};
+
+exports.removeCurrent = function(type, id, callback) {
+    var mongo = getMongo(type, id, callback);
+    if(mongo) {
+        var query = {};
+        query[mongoID] = id;
+        mongo.remove(query, callback);
+    }
+};
+
+exports.getAllCurrent = function(type, callback) {
+    var mongo = mongoCollections[type];
+    if(!mongo) 
+        callback(new Error('invalid type:' + type), null);
+    else
+        mongo.find({}, {}).toArray(callback);
+};
+
+exports.logRemovePerson = function(type, id, callback) {
+    people[type].addRecord(now(), {id_str:id, id:Number(id), deleted:now()}, function(err) {
+        exports.removeCurrent(type, id, callback);
     });
 };
 
-function removePersonFromCurrent(id, callback) {
-    if(typeof id !== 'number') {
-        id = parseInt(id);
-    }
-    var sql = "DELETE FROM friends WHERE id = ?;";
-    currentDB.execute(sql, [id], callback);
-}
-
-exports.logUpdatePerson = function(person) {
-    friends.addRecord({timeStamp:now(), type:'update', data:person});
-    updatePersonInCurrent(type, person, function(err) {
-        if(err) {
-            console.error(err);
-        }
+exports.logUpdatePerson = function(type, person, callback) {
+    people[type].addRecord(now(), person, function(err) {
+        exports.setCurrent(type, person, callback);
     });
 };
 
-function updatePersonInCurrent(person, callback) {
-    var sql = "UPDATE friends SET profile = ? WHERE id = ?;";
-    currentDB.execute(sql, [JSON.stringify(person), person.id], callback);
-}
-
-
-exports.getPeople = function(query, callback) {
-    if(!callback && typeof query == 'function') {
-        callback = query;
-        query = {recordID:-1};
-    }
-    if(query.hasOwnProperty('recordID')) {
-        friends.getAfterRecordID(query.recordID, callback);
-    } else if(query.hasOwnProperty('timeStamp')) {
-        friends.getAfterFieldsValueEquals('timeStamp', query.timeStamp, callback);
-    } else {
-        callback(new Error('invalid query, must contain either a recordID or timeStamp'), null);
-    }
-};
-
-exports.getPeopleCurrent = function(callback) {
-    currentDB.execute('SELECT profile FROM friends;', function(err, profileStrs) {
-        if(err) {
-            callback(err, profileStrs);
-            return;
-        }
-        var profiles = [];
-        for(var i in profileStrs) {
-            if (profileStrs.hasOwnProperty(i)) {
-                try {
-                    profiles.push(JSON.parse(profileStrs[i].profile));
-                } catch(pushErr) {
-                    console.error(pushErr);
-                }
-            }
-        }
-        callback(err, profiles);
+exports.addLink = function(type, link, callback) {
+    links[type].addRecord(new Date(link.created_time).getTime(), link, function() {
+        exports.setCurrent(type, link, callback);
     });
 };
