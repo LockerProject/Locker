@@ -248,11 +248,10 @@ function updatePeople(type, people, callback) {
                         break;
                     }
                 }
-            }
-            if(isDifferent) {
-                // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
-                dataStore.logUpdatePerson(type, profileFromTwitter, function(err) {
-                    var eventObj = {source:type, type:'update', data:person};
+                if(isDifferent) {
+                    // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
+                    dataStore.logUpdatePerson(type, profileFromTwitter);
+                    var eventObj = {source:type, type:'update', data:profileFromTwitter};
                     exports.eventEmitter.emit('contact/twitter', eventObj);
                     updatePeople(type, people, callback);
                 });

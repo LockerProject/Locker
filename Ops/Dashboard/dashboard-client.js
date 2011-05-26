@@ -81,7 +81,7 @@ app.get('/post2install', function(req, res){
         });
         response.on('end', function() {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('<a href="/">back</a><br>Installed: '+data);
+            res.write('<a href="javascript:window.history.back()">back</a><br>Installed: '+data);
             res.end();
         });
     });
@@ -109,24 +109,8 @@ app.get('/*', function (req, res) {
 
             var fileExtension = filename.substring(filename.lastIndexOf(".") + 1);
             var contentType, contentLength;
-
-            switch (fileExtension)
-            {
-              case "png": contentType = "image/png";  break;
-              case "jpg": contentType = "image/jpeg"; break;
-              case "gif": contentType = "image/gif";  break;
-            }
-
-            if (contentType)
-            {
-              res.writeHead(200, { "Content-Type": contentType });
-              res.write(file);
-            }
-            else
-            {
-              res.writeHead(200);
-              res.write(file, "binary");
-            }
+            res.writeHead(200);
+            res.write(file, "binary");
             res.end();
         });
     });

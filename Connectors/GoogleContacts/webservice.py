@@ -17,10 +17,10 @@ import os
 
 app = Flask(__name__)
 
-@app.route("/allContacts")
+@app.route("/getCurrent/contacts")
 def allContacts():
-    if os.path.exists(app.lockerInfo["workingDirectory"] + "/contacts.json"):
-        fd = open("{0}/contacts.json".format(app.lockerInfo["workingDirectory"]), "r")
+    if os.path.exists(app.lockerInfo["workingDirectory"] + "/current.json"):
+        fd = open("current.json", "r")
         lines = fd.readlines()
         fd.close()
         return "[{0}]".format(",".join(lines))
@@ -40,16 +40,19 @@ def update():
         app.updatesStarted = True
         gdc = gcontacts.GoogleDataContacts()
         updateCount = gdc.updateAll()
-
+        me = lockerfs.loadMeData()
+        lockerBase = app.lockerInfo["lockerUrl"] + '/core/' + me["id"]
+        
         # Tell the diary how many contacts we updated
-        url = "{0}/diary".format(app.lockerInfo["lockerUrl"])
-        urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+        url = "{0}/diary?{1}".format(lockerBase, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+        # app.logger.warning('url: %s', url)
+        urllib2.urlopen(url)
 
         # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
-        me = lockerfs.loadMeData()
-        url = "{0}/at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
+        url = "{0}/at?at={1}&cb=/update".format(lockerBase, at)
+        # app.logger.warning('url: %s', url)
         urllib2.urlopen(url)
         return "Updated"
     else:
@@ -83,6 +86,6 @@ def runService(info):
     app.updateAt = datetime.datetime.now()
     app.updatesStarted = False
     app.meInfo = lockerfs.loadMeData()
-    #app.debug = True
+    app.debug = True
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 

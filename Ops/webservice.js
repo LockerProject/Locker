@@ -22,6 +22,8 @@ var fs = require("fs");
 var url = require('url');
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
+var lpquery = require("lpquery");
+var config = require("lconfig");
 
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
@@ -58,6 +60,32 @@ locker.get("/providers", function(req, res) {
     }
     res.writeHead(200, {"Content-Type":"application/json"});
     res.end(JSON.stringify(serviceManager.providers(req.param("types").split(","))));
+});
+
+// search interface
+locker.get("/query/:query", function(req, res) {
+    var data = decodeURIComponent(req.originalUrl.substr(6)).replace(/%21/g, '!').replace(/%27/g, "'").replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2a/ig, '*');
+    try {
+        var query = lpquery.buildMongoQuery(lpquery.parse(data));
+        var mongodb = require('mongodb');
+        db = new mongodb.Db('locker', new mongodb.Server(config.mongo.host, config.mongo.port, {}), {});
+        db.open(function(error, client) {
+           if (error) {
+               res.writeHead(500);
+               res.end("data store is unavailable: " + error);
+               db.close();
+               return;
+           }
+           console.log("Running " + query);
+           db.eval(query, function(error, queryResult) {
+               res.end(JSON.stringify(queryResult));
+               db.close();
+           });
+        });
+    } catch (E) {
+        res.writeHead(400);
+        res.end("Invalid query " + req.originalUrl.substr(6) + "<br />" + E);
+    }
 });
 
 // let any service schedule to be called, it can only have one per uri
@@ -195,7 +223,9 @@ locker.get("/diary", function(req, res) {
             res.end();
             return;
         }
-        res.write(file, "binary");
+        var rawLines   = file.toString().trim().split("\n");
+            diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
     res.write
