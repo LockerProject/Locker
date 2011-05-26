@@ -39,7 +39,7 @@ function noApp(req, res) {
     res.writeHead(200, {'content-type':'text/html'});
     res.write('<html>');
     //if(!(auth.clientID && auth.secret))
-        res.write('create an app at <a href="https://github.com/account/applications/new">github</a>' +
+        res.write('create an app at <a href="https://github.com/account/applications/new" target="_blank">github</a>' +
                 ' with a callback url of ' + uri + 'authComplete');
     res.write('<form method="POST" action="saveAuth">');
     //if(!(auth.clientID && auth.secret)) 
