@@ -40,21 +40,20 @@ def update():
         app.updatesStarted = True
         gdc = gcontacts.GoogleDataContacts()
         updateCount = gdc.updateAll()
-
+        me = lockerfs.loadMeData()
+        lockerBase = app.lockerInfo["lockerUrl"] + '/core/' + me["id"]
+        
         # Tell the diary how many contacts we updated
-        url = "{0}/diary".format(app.lockerInfo["lockerUrl"])
-        print 'url: %s' % (url)
-        print url
-        # urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+        url = "{0}/diary?{1}".format(lockerBase, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+        # app.logger.warning('url: %s', url)
+        urllib2.urlopen(url)
 
         # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
-        me = lockerfs.loadMeData()
-        url = "{0}/at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
-        # urllib2.urlopen(url)
-        print 'url: %s' % (url)
-        print url
+        url = "{0}/at?at={1}&cb=/update".format(lockerBase, at)
+        # app.logger.warning('url: %s', url)
+        urllib2.urlopen(url)
         return "Updated"
     else:
         return redirect(app.meInfo["uri"] + "setupAuth")
