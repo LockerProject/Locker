@@ -6,6 +6,7 @@ var RESTeasy = require('api-easy');
 var vows = require("vows");
 var fs = require("fs");
 var currentDir = process.cwd();
+var events = {checkin: 0, contact: 0};
 
 var suite = RESTeasy.describe("Foursquare Connector")
 
@@ -23,6 +24,12 @@ lconfig.load("config.json");
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 
+sync.eventEmitter.on('checkin/foursquare', function() {
+    events.checkin++;
+});
+sync.eventEmitter.on('contact/foursquare', function() {
+    events.contact++;
+})
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
@@ -30,9 +37,9 @@ suite.next().suite.addBatch({
             process.chdir('.' + mePath);
             var self = this;
             lmongoclient.connect(function(collections) {
-                mongoCollections = collections;
+                console.log("collections", collections);
                 sync.init({accessToken : 'abc'}, collections);
-                dataStore.init("id", mongoCollections);
+                dataStore.init("id", collections);
                 fakeweb.allowNetConnect = false;
                 fakeweb.registerUri({
                     uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
@@ -148,6 +155,10 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events.checkin, 251);
+            assert.equal(events.contact, 2);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');
