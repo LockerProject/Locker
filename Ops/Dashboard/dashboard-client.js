@@ -81,7 +81,7 @@ app.get('/post2install', function(req, res){
         });
         response.on('end', function() {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('<a href="/">back</a><br>Installed: '+data);
+            res.write('<a href="javascript:window.history.back()">back</a><br>Installed: '+data);
             res.end();
         });
     });
