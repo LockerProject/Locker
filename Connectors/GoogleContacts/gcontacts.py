@@ -108,10 +108,17 @@ class GoogleDataContacts:
             jsonObject["name"] = entry.title.text
             jsonFile.write(json.dumps(jsonObject) + '\n')
 
-    def write_entry_to_file(self, a_file, i, entry):
-        print '%s %s' % (i+1, entry.title.text)
-        jsonObject = self.convert_to_json(entry)
+    def write_entry_to_file(self, a_file, i, entry, isHistorical):
+        # print '%s %s' % (i+1, entry.title.text)
+        rawJSONObject = self.convert_to_json(entry)
         
+        jsonObject = {};
+        if isHistorical == True:
+            jsonObject['data'] = rawJSONObject
+            jsonObject['timeStamp'] = time.mktime(datetime.now().timetuple())
+        else :
+            jsonObject = rawJSONObject
+            
         a_file.write(json.dumps(jsonObject) + '\n')
     
     def convert_to_json(self, entry):
@@ -170,17 +177,17 @@ class GoogleDataContacts:
                 
         return jsonObject
         
-    def write_query_to_file(self, query, a_file, photos):
+    def write_query_to_file(self, query, a_file, dlPhotos, isHistorical):
         query.max_results = 3000
-        updates = self.gd_client.GetContactsFeed(query.ToUri())
-        if len(updates.entry) <= 0:
+        feed = self.gd_client.GetContactsFeed(query.ToUri())
+        if len(feed.entry) <= 0:
             return
-        if photos is True:
-            photoThread = gPhotoThread(self.gd_client, updates.entry)
+        if dlPhotos is True:
+            photoThread = gPhotoThread(self.gd_client, feed.entry)
             photoThread.start()
-        for i, entry in enumerate(updates.entry):
-            self.write_entry_to_file(a_file, i, entry)
-        
+        for i, entry in enumerate(feed.entry):
+            self.write_entry_to_file(a_file, i, entry, isHistorical)
+        return len(feed.entry)
     
     def write_feed_to_file(self):
         
@@ -188,7 +195,7 @@ class GoogleDataContacts:
         current = open('current.json', 'w')
         allQuery = gdata.contacts.service.ContactsQuery()
         allQuery.max_results = 3000
-        self.write_query_to_file(allQuery, current, False)
+        self.write_query_to_file(allQuery, current, False, False)
         current.close()
         
         # get only updates since the last time and append to the all.json file
@@ -197,9 +204,9 @@ class GoogleDataContacts:
         updatesQuery.updated_min = self.lastUpdate.isoformat()
         updatesQuery.max_results = 3000
         self.lastUpdate = datetime.now()
-        self.write_query_to_file(updatesQuery, allFile, False)
+        numUpdated = self.write_query_to_file(updatesQuery, allFile, False, True)
         allFile.close()
         
         lockerfs.saveJsonFile("status.json", {"lastUpdate":time.mktime(self.lastUpdate.timetuple())})
-        return 1
+        return numUpdated
 
