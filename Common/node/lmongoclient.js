@@ -10,15 +10,13 @@
 var mongodb = require('mongodb');
 
 module.exports = function(host, port, localServiceId, theCollectionNames) {
-    var db, dbClient;
-    var serviceID, collectionNames;
+    var mongo = {};
 
-    serviceID = localServiceId;
-    collectionNames = theCollectionNames;
-    db = new mongodb.Db('locker', new mongodb.Server(host, port, {}), {});
-    this.connect = connect;
+    mongo.serviceID = localServiceId;
+    mongo.collectionNames = theCollectionNames;
+    mongo.db = new mongodb.Db('locker', new mongodb.Server(host, port, {}), {});
     function connectToDB(callback, isRetry) {
-        db.open(function(error, client) {
+        mongo.db.open(function(error, client) {
             // in case the mongod process was a bit slow to start up
             if(error && !isRetry) { 
                 setTimeout(function() {
@@ -26,19 +24,19 @@ module.exports = function(host, port, localServiceId, theCollectionNames) {
                 }, 2000);
             } else if (error) 
                 throw error;
-            dbClient = client;
+            mongo.dbClient = client;
             callback();
         });
     }
     
-    function connect(callback) {
+    mongo.connect = function(callback) {
         connectToDB(function() {
             var collections = {};
-            for(var i in collectionNames)
-                collections[collectionNames[i]] = new mongodb.Collection(dbClient, 'a' + serviceID + '_' + collectionNames[i]);
+            for(var i in mongo.collectionNames)
+                collections[mongo.collectionNames[i]] = new mongodb.Collection(mongo.dbClient, 'a' + mongo.serviceID + '_' + mongo.collectionNames[i]);
             callback(collections);
         })
     }
     
-    return this;
+    return mongo;
 }

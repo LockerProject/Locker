@@ -126,11 +126,13 @@ function addCheckins(checkins, callback) {
         callback();
     }
     var checkin = checkins.shift();
-    dataStore.addObject("places", checkin, function(err) {
-        var eventObj = {source:'places', type:'new', status:checkin};
-        exports.eventEmitter.emit('checkin/foursquare', eventObj);
-        addCheckins(checkins, callback);
-    })
+    if (checkin != undefined) {
+        dataStore.addObject("places", checkin, function(err) {
+            var eventObj = {source:'places', type:'new', status:checkin};
+            exports.eventEmitter.emit('checkin/foursquare', eventObj);
+            addCheckins(checkins, callback);
+        })
+    }
 }
 
 function getMe(token, callback) {
