@@ -457,16 +457,19 @@ exports.buildMongoQuery = function(parseTree) {
             return "$or : [ " + node[1].map(treeTranslation.translateNode).join(",") + "]";
         },
         "-":function(node) {
-            return "{$lt:" + node[1] + "}";
+            return "{$lt:" + treeTranslation.translateNode(node[1]) + "}";
         },
         "-.":function(node) {
-            return "{$lte:" + node[1] + "}";
+            return "{$lte:" + treeTranslation.translateNode(node[1]) + "}";
         },
         "+":function(node) {
-            return "{$gt:" + node[1] + "}";
+            return "{$gt:" + treeTranslation.translateNode(node[1]) + "}";
         },
         "+.":function(node) {
-            return "{$gte:" + node[1] + "}";
+            return "{$gte:" + treeTranslation.translateNode(node[1]) + "}";
+        },
+        "!=":function(node) {
+            return "{$ne:" + treeTranslation.translateNode(node[1]) + "}";
         }
     };
     var query = "db.";
