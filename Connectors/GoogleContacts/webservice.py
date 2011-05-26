@@ -17,10 +17,10 @@ import os
 
 app = Flask(__name__)
 
-@app.route("/allContacts")
+@app.route("/getCurrent/contacts")
 def allContacts():
-    if os.path.exists(app.lockerInfo["workingDirectory"] + "/contacts.json"):
-        fd = open("{0}/contacts.json".format(app.lockerInfo["workingDirectory"]), "r")
+    if os.path.exists(app.lockerInfo["workingDirectory"] + "/current.json"):
+        fd = open("current.json", "r")
         lines = fd.readlines()
         fd.close()
         return "[{0}]".format(",".join(lines))

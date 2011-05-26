@@ -48,6 +48,7 @@ class gPhotoThread(threading.Thread):
         super(gPhotoThread, self).__init__()
         self.gd_client = gd_client
         self.entries = entries
+        self.shouldStop = False
     
     def run(self):    
         for i, entry in enumerate(self.entries):
@@ -62,6 +63,11 @@ class gPhotoThread(threading.Thread):
                     image_file.close()
             except gdata.service.RequestError:
                 pass
+            if shouldStop:
+                break
+    
+    def stop(self):
+        self.shouldStop = True
                     
                     
 class GoogleDataContacts:
@@ -111,7 +117,7 @@ class GoogleDataContacts:
         current = open('current.json', 'w')
         allQuery = gdata.contacts.service.ContactsQuery()
         allQuery.max_results = 3000
-        self.write_query_to_file(allQuery, current, False, False)
+        self.write_query_to_file(allQuery, current, False)
         current.close()
         
         # get only updates since the last time and append to the all.json file
@@ -123,18 +129,18 @@ class GoogleDataContacts:
         updatesQuery.orderby = 'lastmodified'
         updatesQuery.max_results = 3000
         self.lastUpdate = datetime.utcnow()
-        numUpdated = self.write_query_to_file(updatesQuery, allFile, False, True)
+        numUpdated = self.write_query_to_file(updatesQuery, allFile, True)
         allFile.close()
         
         lockerfs.saveJsonFile("status.json", {"lastUpdate":time.mktime(self.lastUpdate.timetuple())})
         return numUpdated
 
-    def write_query_to_file(self, query, a_file, dlPhotos, isHistorical):
+    def write_query_to_file(self, query, a_file, isHistorical):
         query.max_results = 3000
         feed = self.gd_client.GetContactsFeed(query.ToUri())
         if len(feed.entry) <= 0:
             return
-        if dlPhotos is True:
+        if isHistorical is True:
             photoThread = gPhotoThread(self.gd_client, feed.entry)
             photoThread.start()
         for i, entry in enumerate(feed.entry):
