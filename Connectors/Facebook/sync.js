@@ -10,80 +10,31 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
-    dataStore = require('./dataStore');
+    dataStore = require('../../Common/node/ldataStore'),
+    app = require('../../Common/node/lapi');
+    EventEmitter = require('events').EventEmitter;
 
     
 var updateState, auth, allKnownIDs;
 
+exports.eventEmitter = new EventEmitter();
+
 exports.init = function(theAuth, mongoCollections) {
-    console.log('sync.init');
     auth = theAuth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
     } catch (updateErr) { 
-        updateState = {links:{wall:{syncedThrough: 0}, newsfeed:{syncedThrough: 0}}};
+        updateState = {newsfeed:{syncedThrough:0}, wall:{syncedThrough:0}};
     }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-    } catch (idErr) { 
-        allKnownIDs = {friends:{}, links:{wall:{}, newsfeed:{}}};
+    } catch (idsError) { 
+        allKnownIDs = {}; 
     }
-    dataStore.init(mongoCollections);
-};
-
-exports.pullNewsfeed = function(endpoint, max_id, since_id, page, items, callback) {
-    console.log('sync.pullNewsfeed');
-    // if(!page)
-    //         page = 1;
-    //     var params = {token: auth.token, count: 200, page: page, include_entities:true};
-    //     if(max_id)
-    //         params.max_id = max_id;
-    //     if(since_id)
-    //         params.since_id = since_id;
-    //     requestCount++;
-    //     getTwitterClient().apiCall('GET', '/statuses/' + endpoint + '.json', params, function(error, result) {
-    //         if(error) {
-    //             if(error.statusCode >= 500) { //failz-whalez, hang out for a bit
-    //                 setTimeout(function(){
-    //                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
-    //                 }, 10000);
-    //             }
-    //             require("sys").puts(error.stack );
-    //             sys.debug('error from twitter:' + sys.inspect(error));
-    //             return;
-    //         }
-    //         if(result.length > 0) {
-    //             var id = result[0].id;
-    //             if(!latests[endpoint].latest || id > latests[endpoint].latest)
-    //                 latests[endpoint].latest = id;
-    //             for(var i = 0; i < result.length; i++)
-    //                 items.push(result[i]);
-    // 
-    //             if(!max_id)
-    //                 max_id = result[0].id;
-    //             page++;
-    //             if(requestCount > 300) {
-    //                 sys.debug('sleeping a bit...');
-    //                 setTimeout(function() {
-    //                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
-    //                 }, 30000);
-    //             } else {
-    //                 pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
-    //             }
-    //         } else if(callback) {
-    //             lfs.writeObjectToFile('latests.json', latests);
-    //             callback();
-    //         }
-    //     });
-};
-
-exports.pullWall = function(endpoint, max_id, since_id, page, items, callback) {
-    console.log('sync.pullWall');
-   
+    dataStore.init("id", mongoCollections);
 };
 
 exports.syncFriends = function(callback) {
-    console.log('sync.syncFriends');
     getMe(auth.accessToken, function(err, resp, data) {
         if(err) {
             // do something smrt
@@ -126,86 +77,163 @@ exports.syncFriends = function(callback) {
             }
             if(newIDs.length < 1) {
                 if(removedIDs.length > 0) {
-                    logRemoved(removedIDs);
+                    var removedCount = removedIDs.length;
+                    logRemoved(removedIDs, function(err) {
+                        callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
+                    });
                 }
-                callback(err, 3600, "no new friends, removed " + removedIDs.length + " deleted friends");
             } else {
-                for (var j = 0; j < newIDs.length; j++) {
+  
+               for (var j = 0; j < newIDs.length; j++) {
                     allKnownIDs[newIDs[j]] = 1;
                 }
                 fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                var newIDsLength = newIDs.length;
+                
+                if(removedIDs.length > 0) {
+                    logRemoved(removedIDs, function(err) {});
+                }
                 
                 // Careful. downloadUsers has side-effects on newIDs array b/c it can be called recursively.
-                // This is why we grab the length above before the crazy shit starts to happen.
-                downloadUsers(newIDs, auth.accessToken);
-                if(removedIDs.length > 0) {
-                    logRemoved(removedIDs);
-                }
-                callback(err, 3600, "sync'd " + newIDsLength + " new friends");    
+                // This is why we grab the length before the crazy shit starts to happen.
+                var newIDsLength = newIDs.length;
+                downloadUsers(newIDs, auth.accessToken, function(err) {
+                    callback(err, 3600, "sync'd " + newIDsLength + " new friends");    
+                });
             }
         });
     });
 };
 
-function logRemoved(ids) {
-    if(!ids)
+function logRemoved(ids, callback) {
+    if(!ids || !ids.length) {
+        fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+        callback();
         return;
-    ids.forEach(function(id) {
-        dataStore.logRemovePerson(id);
+    }
+    var id = ids.shift();
+    dataStore.removeObject("friends", id+'', function(err) {
         delete allKnownIDs[id];
+        logRemoved(ids, callback);
+        var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
+        exports.eventEmitter.emit('contact/facebook', eventObj);
     });
-    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+}
+
+exports.syncCheckins = function (callback) {
+    getMe(auth.accessToken, function(err, resp, data) {
+        var self = JSON.parse(data).response.user;
+        fs.writeFile('profile.json', JSON.stringify(self));
+        getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
+            var checkinCount = checkins.length;
+            addCheckins(checkins, function() {
+                callback(err, 600, "sync'd " + checkinCount + " new checkins");
+            });
+        });
+    });
+};
+
+function addCheckins(checkins, callback) {
+    if (!checkins || !checkins.length) {
+        callback();
+    }
+    var checkin = checkins.shift();
+    if (checkin !== undefined) {
+        dataStore.addObject("places", checkin, function(err) {
+            var eventObj = {source:'places', type:'new', status:checkin};
+            exports.eventEmitter.emit('checkin/foursquare', eventObj);
+            addCheckins(checkins, callback);
+        });
+    }
 }
 
 function getMe(accessToken, callback) {
     request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken}, callback);
 }
 
-function downloadUsers(theUsers, token) {
-    var users = theUsers;
-    var idString = '';
-    var length = users.length;
-    for (var i = 0; i < length && i < 100; i++) {
-       idString += users.pop() + ',';
-    }
-    idString = idString.substring(0, idString.length - 1);
-
-    // get extra juicy contact info plz
-    request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + token}, 
-        function(err, resp, data) {
-            if (err) {
-                console.error(err);
-                return;
+var checkins_limit = 250;
+function getCheckins(userID, token, offset, callback, checkins) {
+    if(!checkins)
+        checkins = [];
+    var latest = 1;
+    if(updateState.checkins && updateState.checkins.syncedThrough)
+        latest = updateState.checkins.syncedThrough;
+    request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + 
+                                                            '&oauth_token=' + token + '&afterTimestamp=' + latest},
+    function(err, resp, data) {
+        var response = JSON.parse(data).response;
+        if(!(response.checkins && response.checkins.items)) { //we got nothing
+            if(checkins.length > 0)
+                updateState.checkins.syncedThrough = checkins[0].createdAt;
+                lfs.writeObjectToFile('updateState.json', updateState);
+            callback(err, checkins.reverse());
+            return;
+        }
+        var newCheckins = response.checkins.items;
+        addAll(checkins, newCheckins);
+        if(newCheckins && newCheckins.length == checkins_limit) 
+            getCheckins(userID, token, offset + checkins_limit, callback, checkins);
+        else {
+            if (checkins[0]) {
+                updateState.checkins.syncedThrough = checkins[0].createdAt;
             }
-            var response = JSON.parse(data);
-            if(response.hasOwnProperty('error')) {
-                
-               console.error(data);
-               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-               
-               var ids = idString.split(',');
-               for(var j = 0; j < ids.length; j++) {
-                   delete allKnownIDs[ids[j]];
-               }
-               
-               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-               return;
-           }
-           var result = JSON.parse(data);
-       
-           for(var property in result) {
-               if (result.hasOwnProperty(property)) {
-                   dataStore.addFriend(result[property]);
-               }
-           } 
-       });
-    
-    if (users.length > 0) {
-        downloadUsers(users, token);
-    }
+            lfs.writeObjectToFile('updateState.json', updateState);
+            callback(err, checkins.reverse());
+        }
+    });
 }
 
+function downloadUsers(users, accessToken, callback) {
+    var coll = users.slice(0);
+    (function downloadUser() {
+        var friend = coll.splice(0, 1)[0];
+        try {
+            request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + accessToken},
+                         function(err, resp, data) {
+                var response = JSON.parse(data);
+                if(response.meta.code >= 400) {
+                    console.error(data);
+                    allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+                    delete allKnownIDs[id];
+                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                    if (coll.length === 0) {
+                        callback();
+                    } else {
+                        downloadUser();
+                    }
+                }
+                var js = JSON.parse(data);
+                js.name = js.first_name + " " + js.last_name;
+                if (js.photo.indexOf("userpix") > 0) {
+                    // fetch photo
+                    request.get({uri:js.photo}, function(err, resp, body) {
+                        if(err)
+                            console.error(err);
+                        else
+                            fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
+                    });
+                }
+                var eventObj = {source:'friends', type:'new', status:js};
+                exports.eventEmitter.emit('contact/facebook', eventObj);
+                dataStore.addObject('friends', js, function(err) {
+                    if (coll.length === 0) {
+                        callback();
+                    } else {
+                        downloadUser();
+                    }
+                });
+            });
+        } catch (exception) {
+            try {
+                allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+            } catch (err) { allKnownIDs = {}; }
+            for (var i = 0; i < coll.length; i++) {
+                delete allKnownIDs[coll[i]];
+            }
+            fs.writeFileSync('allKnownIDs.json', JSON.stringify(allKnownIDs));
+            callback(exception);
+        }
+    })();
+}
 
 function addAll(thisArray, anotherArray) {
     if(!(thisArray && anotherArray && anotherArray.length))

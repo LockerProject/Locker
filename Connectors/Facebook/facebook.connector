@@ -1,9 +1,10 @@
 {
 	"title":"Facebook Account",
 	"action":"Connect to a Facebook account",
-	"desc":"Collect and sync my (open graph) data from my Facebook account using Facebook Connect and a Facebook 'app' that I create just for myself.",
+	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Foursquare 'app' that I create just for myself.",
 	"run":"node facebook.js",
 	"status":"unstable",
 	"handle":"facebook",
-	"provides":["contact/facebook","status/facebook"]
+	"mongoCollections": ["friends", "newsfeed", "wall"],
+	"provides":["contact/facebook", "status/facebook"]
 }

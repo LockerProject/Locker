@@ -13,8 +13,8 @@ var express = require('express'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     authLib = require('./auth'),
-    syncApi = require(__dirname + "/sync-api.js")(app),
-    started = false;
+    started = false,
+    syncApi = require(__dirname + '/sync-api.js')(app);
     
 // Process the startup JSON object
 process.stdin.setEncoding('utf8');
@@ -25,17 +25,14 @@ process.stdin.on('data', function(data) {
     process.chdir(processInfo.workingDirectory);
     
     app.meData = lfs.loadMeData();
-    // Adds the internal API to the app because it should always be available
-    require(__dirname + "/api.js")(app, function() {
-        
+    locker.connectToMongo(function(collections) {
+        require("../../Common/node/lapi.js")(app, "id", collections);
         authLib.authAndRun(app, function() {
-            syncApi.authComplete(authLib.auth, function() {
-                if (!started) {
-                    startWebServer();
-                }
-            });
+            syncApi.authComplete(authLib.auth, collections);
+            if (!started) {
+                startWebServer();
+            }
         });
-        
         if(!authLib.isAuthed())
             startWebServer();
 
@@ -48,11 +45,7 @@ process.stdin.on('data', function(data) {
                 process.stdout.write(JSON.stringify(returnedInfo));
             });
         }
+        
     });
-    
-    
-    
-
-    // If we're not authed, we add the auth routes, otherwise add the webservice
 });
 process.stdin.resume();
