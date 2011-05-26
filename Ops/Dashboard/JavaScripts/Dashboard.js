@@ -84,6 +84,7 @@ function selectService(index)
   var item = serviceMap.available[index];
   $("#serviceInfo h1").html(item["title"]);
   $("#serviceInfo p").html(item["desc"]);
+  $("#availType").html(item["is"]);
   $("#availSrcDir").html(item["srcdir"]);
   if (item["provides"]) $("#availProvides").html(item["provides"].join(","));
   $("#connectorInstancesList").children().remove();
