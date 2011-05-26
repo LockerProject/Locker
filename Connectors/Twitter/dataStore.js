@@ -33,7 +33,7 @@ function now() {
 exports.addPerson = function(type, person, callback) {
     var status = person.status;
     delete person.status;
-    people[type].addRecord(person[mongoID], now(), person, function(err) {
+    people[type].addRecord(now(), person, function(err) {
         person.status = status;
         exports.setCurrent(type, person, callback);
     });
@@ -83,7 +83,7 @@ exports.getAllCurrent = function(type, callback) {
 }
 
 exports.logRemovePerson = function(type, id, callback) {
-    people[type].addRecord(parseInt(id), now(), {id_str:id, id:parseInt(id), deleted:now()}, function(err) {
+    people[type].addRecord(now(), {id_str:id, id:parseInt(id), deleted:now()}, function(err) {
         exports.removeCurrent(type, id, callback);
     });
 }
@@ -91,14 +91,14 @@ exports.logRemovePerson = function(type, id, callback) {
 exports.logUpdatePerson = function(type, person, callback) {
     var status = person.status;
     delete person.status;
-    people[type].addRecord(person[mongoID], now(), person, function(err) {
+    people[type].addRecord(now(), person, function(err) {
         person.status = status;
         exports.setCurrent(type, person, callback);
     });
 }
 
 exports.addStatus = function(type, status, callback) {
-    statuses[type].addRecord(status[mongoID], new Date(status.created_at).getTime(), status, function() {
+    statuses[type].addRecord(new Date(status.created_at).getTime(), status, function() {
         exports.setCurrent(type, status, callback);
     });
 }

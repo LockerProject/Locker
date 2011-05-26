@@ -23,7 +23,7 @@ function IJOD(name) {
 
 exports.IJOD = IJOD;
 
-IJOD.prototype.addRecord = function(_objectID, timeStamp, record, callback) {
+IJOD.prototype.addRecord = function(timeStamp, record, callback) {
     var str = JSON.stringify({timeStamp:timeStamp, data:record}) + '\n';
     var b = new Buffer(str);
     fs.write(this.dataFile, b, 0, b.length, this.fileLength, callback);
