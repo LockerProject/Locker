@@ -38,7 +38,7 @@ function connect(callback) {
     connectToDB(function() {
         var collections = {};
         for(var i in collectionNames)
-            collections[collectionNames[i]] = new mongodb.Collection(dbClient, serviceID + '-' + collectionNames[i]);
+            collections[collectionNames[i]] = new mongodb.Collection(dbClient, 'a' + serviceID + '_' + collectionNames[i]);
         callback(collections);
     })
 }

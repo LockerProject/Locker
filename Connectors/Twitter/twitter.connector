@@ -5,5 +5,6 @@
 	"run":"node twitter.js",
 	"status":"unstable",
 	"handle":"twitter",
+	"mongoCollections": ["friends", "followers", "home_timeline", "user_timeline", "mentions"],
 	"provides":["contact/twitter","status/twitter"]
 }
