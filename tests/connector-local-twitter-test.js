@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var twitter = require('../Connectors/Twitter/sync');
-var dataStore = require('../Connectors/Twitter/dataStore');
+var dataStore = require('../Common/node/ldataStore');
 var RESTeasy = require('api-easy');
 var assert = require("assert");
 var vows = require("vows");
@@ -68,7 +68,7 @@ suite.next().suite.addBatch({
                 mongoCollections = collections;
                 twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
                               token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, collections);
-                dataStore.init(mongoCollections);
+                dataStore.init("id_str", mongoCollections);
                 self.callback(); 
             });
         },
