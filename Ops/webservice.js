@@ -195,7 +195,9 @@ locker.get("/diary", function(req, res) {
             res.end();
             return;
         }
-        res.write(file, "binary");
+        var rawLines   = file.toString().trim().split("\n");
+            diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
     res.write

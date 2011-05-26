@@ -46,16 +46,14 @@ function refreshLog()
 {
   $("#logEntriesList").children().remove();
   $.ajax({ url: "/diary" }).success(function(data) {
-    data.split("\n").forEach(function(item) {
-      if (!item) return;
-      var line = JSON.parse(item);
-      if (!line || line.length == 0) return;
-      var ts = line["timestamp"].toDate();
+    var diaryLines = JSON.parse(data);
+    diaryLines.forEach(function(item) {
+      var ts = item.timestamp.toDate();
       var diaryLine = $("#logEntryTemplate").clone();
       diaryLine.attr("id", "");
       diaryLine.addClass("logEntry");
       diaryLine.children("span").append(ts.strftime("%B %d%o at %H:%MM %P"));
-      diaryLine.append(line["message"]);
+      diaryLine.append(item.message);
       diaryLine.appendTo("#logEntriesList");
       diaryLine.show();
     });
