@@ -26,6 +26,7 @@ import os
 import lockerfs
 from datetime import datetime
 import time
+import threading
 
 def testCredentials(username, password):
     me = lockerfs.loadMeData()
@@ -40,6 +41,27 @@ def testCredentials(username, password):
         return False
 
 
+class gPhotoThread(threading.Thread):
+    """Will download a photo."""
+    def __init__(self, gd_client, entries):
+        super(gPhotoThread, self).__init__()
+        self.gd_client = gd_client
+        self.entries = entries
+    
+    def run(self):    
+        for i, entry in enumerate(self.entries):
+            try:
+                indexOfSlash = entry.id.text.rfind("/")
+                id = entry.id.text[indexOfSlash+1:]
+                hosted_image_binary = self.gd_client.GetPhoto(entry)
+                #print hosted_image_binary
+                if hosted_image_binary:
+                    image_file = open('photos/{0}.jpg'.format(id), 'wb')
+                    image_file.write(hosted_image_binary)
+                    image_file.close()
+            except gdata.service.RequestError:
+                pass
+                    
 class GoogleDataContacts:
     def __init__(self):
         secrets = lockerfs.loadJsonFile("secrets.json");
@@ -86,14 +108,19 @@ class GoogleDataContacts:
             jsonFile.write(json.dumps(jsonObject) + '\n')
 
     def write_entry_to_file(self, i, entry):
+        print '%s %s' % (i+1, entry.title.text)
+        jsonObject = self.convert_to_json(entry)
+        
+        self.jsonFile.write(json.dumps(jsonObject) + '\n')
+    
+    def convert_to_json(self, entry):
         jsonObject = {}
         indexOfSlash = entry.id.text.rfind("/")
         jsonObject["id"] = entry.id.text[indexOfSlash+1:]
-        print '%s %s' % (i+1, entry.title.text)
-        
+
         if entry.title.text: jsonObject["name"] = entry.title.text
         if entry.nickname: jsonObject["nickname"] = entry.nickname
-            
+
         # Display the primary email address for the contact.
         if entry.email:
             jsonObject["email"] = []
@@ -105,7 +132,7 @@ class GoogleDataContacts:
                 label = label[indexOfHash+1:]
                 if label != 'other': jsonEmail["type"] = label
                 jsonObject["email"].append(jsonEmail)
-            
+
         if entry.phone_number:
             jsonObject["phone"] = []
             for phone in entry.phone_number:
@@ -116,7 +143,7 @@ class GoogleDataContacts:
                 label = label[indexOfHash+1:]
                 if label != 'other': jsonPhone["type"] = label
                 jsonObject["phone"].append(jsonPhone)
-                
+
         if entry.postal_address:
             jsonObject["address"] = []
             for postalAddress in entry.postal_address:
@@ -127,7 +154,11 @@ class GoogleDataContacts:
                 label = label[indexOfHash+1:]
                 if label != 'other': jsonAddress["type"] = label
                 jsonObject["address"].append(jsonAddress)
-                
+
+        if entry.gender:
+            print dir(entry.gender)
+            # jsonObject["address"] = entry.gender
+
 #        if entry.birthday:
 #            print entry.birthday
 #        print entry.system_group
@@ -135,27 +166,22 @@ class GoogleDataContacts:
             jsonObject["groups"] = []
             for group in entry.group_membership_info:
                 jsonObject["groups"].append(group.href[-16:])
+        # We have to use a thread here to see if the startup has finished to avoid race conditions
+                
+        return jsonObject
         
-        #print json.dumps(jsonObject)
-        self.jsonFile.write(json.dumps(jsonObject) + '\n')
-        try:
-            hosted_image_binary = self.gd_client.GetPhoto(entry)
-            #print hosted_image_binary
-            if hosted_image_binary:
-                image_file = open('photos/{0}.jpg'.format(jsonObject["id"]), 'wb')
-                image_file.write(hosted_image_binary)
-                image_file.close()
-        except gdata.service.RequestError:
-            pass
-        
+    
+    
     def write_feed_to_file(self):
-        self.jsonFile = open('contacts.json', 'w')
+        self.jsonFile = open('contacts.json', 'a')
         query = gdata.contacts.service.ContactsQuery()
-        #query.updated_min = self.lastUpdate.isoformat()
+        query.updated_min = self.lastUpdate.isoformat()
         query.max_results = 3000
         feed = self.gd_client.GetContactsFeed(query.ToUri())
         if len(feed.entry) <= 0:
             return
+        photoThread = gPhotoThread(self.gd_client, feed.entry)
+        photoThread.start()
         for i, entry in enumerate(feed.entry):
             self.write_entry_to_file(i, entry)
         self.jsonFile.close()

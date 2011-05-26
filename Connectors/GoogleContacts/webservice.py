@@ -43,13 +43,13 @@ def update():
 
         # Tell the diary how many contacts we updated
         url = "{0}/diary".format(app.lockerInfo["lockerUrl"])
-        urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
+        # urllib2.urlopen(url, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
 
         # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
         me = lockerfs.loadMeData()
-        url = "{0}/at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
+        # url = "{0}/at?at={1}&id={2}&cb=/update".format(app.lockerInfo["lockerUrl"], at, me["id"])
         urllib2.urlopen(url)
         return "Updated"
     else:
@@ -83,6 +83,6 @@ def runService(info):
     app.updateAt = datetime.datetime.now()
     app.updatesStarted = False
     app.meInfo = lockerfs.loadMeData()
-    #app.debug = True
+    app.debug = True
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 
