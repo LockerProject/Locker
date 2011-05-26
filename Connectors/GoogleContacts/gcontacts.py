@@ -20,7 +20,7 @@ import atom
 import gdata.contacts
 import gdata.contacts.service
 import json
-import hashlib
+# import hashlib
 import sys
 import os
 import lockerfs
@@ -62,6 +62,7 @@ class gPhotoThread(threading.Thread):
             except gdata.service.RequestError:
                 pass
                     
+                    
 class GoogleDataContacts:
     def __init__(self):
         secrets = lockerfs.loadJsonFile("secrets.json");
@@ -74,9 +75,9 @@ class GoogleDataContacts:
         self.gd_client.email = secrets["consumerKey"]
         self.gd_client.password = secrets["consumerSecret"]
         self.gd_client.source = 'locker-0.1'
-        m = hashlib.sha1()
-        m.update(self.gd_client.email)
-        self.uid = m.hexdigest()
+        # m = hashlib.sha1()
+        # m.update(self.gd_client.email)
+        # self.uid = m.hexdigest()
 
     def updateAll(self):
         try:
@@ -107,11 +108,11 @@ class GoogleDataContacts:
             jsonObject["name"] = entry.title.text
             jsonFile.write(json.dumps(jsonObject) + '\n')
 
-    def write_entry_to_file(self, i, entry):
+    def write_entry_to_file(self, a_file, i, entry):
         print '%s %s' % (i+1, entry.title.text)
         jsonObject = self.convert_to_json(entry)
         
-        self.jsonFile.write(json.dumps(jsonObject) + '\n')
+        a_file.write(json.dumps(jsonObject) + '\n')
     
     def convert_to_json(self, entry):
         jsonObject = {}
@@ -166,26 +167,39 @@ class GoogleDataContacts:
             jsonObject["groups"] = []
             for group in entry.group_membership_info:
                 jsonObject["groups"].append(group.href[-16:])
-        # We have to use a thread here to see if the startup has finished to avoid race conditions
                 
         return jsonObject
         
-    
+    def write_query_to_file(self, query, a_file, photos):
+        query.max_results = 3000
+        updates = self.gd_client.GetContactsFeed(query.ToUri())
+        if len(updates.entry) <= 0:
+            return
+        if photos is True:
+            photoThread = gPhotoThread(self.gd_client, updates.entry)
+            photoThread.start()
+        for i, entry in enumerate(updates.entry):
+            self.write_entry_to_file(a_file, i, entry)
+        
     
     def write_feed_to_file(self):
-        self.jsonFile = open('contacts.json', 'a')
-        query = gdata.contacts.service.ContactsQuery()
-        query.updated_min = self.lastUpdate.isoformat()
-        query.max_results = 3000
-        feed = self.gd_client.GetContactsFeed(query.ToUri())
-        if len(feed.entry) <= 0:
-            return
-        photoThread = gPhotoThread(self.gd_client, feed.entry)
-        photoThread.start()
-        for i, entry in enumerate(feed.entry):
-            self.write_entry_to_file(i, entry)
-        self.jsonFile.close()
+        
+        # get all contacts and write overwrite the current.json file
+        current = open('current.json', 'w')
+        allQuery = gdata.contacts.service.ContactsQuery()
+        allQuery.max_results = 3000
+        self.write_query_to_file(allQuery, current, False)
+        current.close()
+        
+        # get only updates since the last time and append to the all.json file
+        allFile = open('all.json', 'a')
+        updatesQuery = gdata.contacts.service.ContactsQuery()
+        updatesQuery.updated_min = self.lastUpdate.isoformat()
+        updatesQuery.max_results = 3000
         self.lastUpdate = datetime.now()
+        self.write_query_to_file(updatesQuery, allFile, False)
+        allFile.close()
+        
         lockerfs.saveJsonFile("status.json", {"lastUpdate":time.mktime(self.lastUpdate.timetuple())})
-        return len(feed.entry)
+        return 1
 
