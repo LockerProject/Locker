@@ -19,8 +19,7 @@
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
                         "connector-flickr-test.js",
-                        "connector-github-test.js",
-                        "sync-twitter-test.js"],
+                        "connector-github-test.js"],
         "collections" : [],
         "issues" : ["locker-issues-test.js"]
     },

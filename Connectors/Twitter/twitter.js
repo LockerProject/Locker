@@ -34,18 +34,17 @@ process.stdin.on('data', function (chunk) {
     
     // We're adding this info to app for basic utility use
     app.meData = lfs.loadMeData();
-    // Adds the internal API to the app because it should always be available
-    require(__dirname + "/api.js")(app, function() {
-    
+    locker.connectToMongo(function(collections) {
+        // Adds the internal API to the app because it should always be available
+        require(__dirname + "/api.js")(app, collections);
         // If we're not authed, we add the auth routes, otherwise add the webservice
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
-            webservice.authComplete(authLib.auth, function() {
-                if(!started)
-                    startWebServer();
-            });
+            webservice.authComplete(authLib.auth, collections);
+            if(!started)
+                startWebServer();
         });
-    
+        
         if(!authLib.isAuthed())
             startWebServer();
         
