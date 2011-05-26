@@ -57,7 +57,7 @@ function(req, res) {
     if (!(accessData.appKey && accessData.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end('<html>Enter your personal Linkedin app info that will be used to sync your data' + 
-                ' (create a new one <a href="https://www.linkedin.com/secure/developer">' + 
+                ' (create a new one <a href="https://www.linkedin.com/secure/developer" target="_blank">' + 
                 'here</a> using the callback url of ' +
                 me.uri+'auth) ' +
                 '<form method="get" action="save">' +
