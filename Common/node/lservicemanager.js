@@ -62,8 +62,27 @@ function mapMetaData(file, type) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
-    serviceMap["available"].push(metaData);
-    return metaData;
+    if(type == "collection")
+    {
+        if(!metaData.handle)
+        {
+            console.error("missing handle for "+file);
+            return;
+        }
+        fs.stat(lconfig.lockerDir+"/Me/"+metaData.handle,function(err,stat){
+            if(err || !stat)
+            {
+                metaData.id=metaData.handle;
+                metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                serviceMap.installed[metaData.id] = metaData;
+                fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
+                fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
+            }
+        });
+    }else{
+        serviceMap["available"].push(metaData);        
+        return metaData;
+    }
 }
     
 /**
