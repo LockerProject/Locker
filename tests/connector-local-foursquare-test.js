@@ -77,7 +77,7 @@ suite.next().suite.addBatch({
                 uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/friends.json' });
             fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/multi?requests=/users/2715557.json,/users/18387.json,&oauth_token=abc',
+                uri : 'https://api.foursquare.com/v2/multi?requests=/users/2715557,/users/18387,&oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/users.json' });
             sync.syncFriends(this.callback) },
         "successfully" : function(err, repeatAfter, diaryEntry) {
