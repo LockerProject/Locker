@@ -9,42 +9,41 @@
 
 var express = require('express'),
     connect = require('connect'),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js'),
-    authLib = require('./auth');
-
-// Setup the basic web server
-var app = express.createServer(
-    connect.bodyParser(),
-    connect.cookieParser(),
-    connect.session({secret : "locker"})
-);    
-
-// This only adds the / endpoint, the rest are added in the authComplete function
-var syncApi = require(__dirname + "/sync-api.js")(app);
-var started = false;
+    app,
+    locker = require('../locker.js'),
+    lfs = require('../lfs.js'),
+    started = false;
+    
+// Process the startup JSON object
 
 process.stdin.setEncoding('utf8');
-process.stdin.on('data', function (chunk) {
+process.stdin.on("data", function(data) {
     // Do the initialization bits
-    var processInfo = JSON.parse(chunk);
-    // TODO:  Is there validation to do here?
+    var processInfo = JSON.parse(data);
+    var processOptions = processInfo.processOptions;
+    if (processOptions.enableCookies) {
+        app = express.createServer(
+              connect.bodyParser(),
+              connect.cookieParser(),
+              connect.session({secret : "locker"}) );
+    } else {
+        app = express.createServer(connect.bodyParser());
+    }
+    var mongoId = processOptions.id || "id";
+    var authLib = require("../../../" + processInfo.sourceDirectory + "/auth.js");
+    var syncApi = require("../../../" + processInfo.sourceDirectory + "/sync-api.js")(app);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     
-    // We're adding this info to app for basic utility use
     app.meData = lfs.loadMeData();
     locker.connectToMongo(function(collections) {
-        // Adds the internal API to the app because it should always be available
-        require("../../Common/node/lapi.js")(app, "id_str", collections);
-        // If we're not authed, we add the auth routes, otherwise add the sync API
+        require("../lapi.js")(app, mongoId, collections);
         authLib.authAndRun(app, function() {
-            // Add the rest of the sync API (only / is added automatically)
             syncApi.authComplete(authLib.auth, collections);
-            if(!started)
+            if (!started) {
                 startWebServer();
+            }
         });
-        
         if(!authLib.isAuthed())
             startWebServer();
         
@@ -57,6 +56,6 @@ process.stdin.on('data', function (chunk) {
                 process.stdout.write(JSON.stringify(returnedInfo));
             });
         }
-    });
+    })
 });
 process.stdin.resume();

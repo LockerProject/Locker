@@ -74,7 +74,6 @@ exports.event = function(type, obj) {
     request.post({
         url:baseServiceUrl + "/event",
         json:{"type":type,"obj":obj}
-
     });
 }
 
