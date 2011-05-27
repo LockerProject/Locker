@@ -67,7 +67,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     var mongoOutput = "";
     var callback = function(data) {
         mongoOutput += data;
-        if(mongoOutput.match(/\[initandlisten\] waiting for connections on port/g)) {
+        if(mongoOutput.match(/ waiting for connections on port/g)) {
             mongoProcess.stdout.removeListener('data', callback);
             checkKeys();
         }
