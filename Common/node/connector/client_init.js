@@ -9,7 +9,7 @@
 
 var express = require('express'),
     connect = require('connect'),
-    app = express.createServer(connect.bodyParser()),
+    app,
     locker = require('../locker.js'),
     lfs = require('../lfs.js'),
     started = false;
@@ -20,6 +20,16 @@ process.stdin.setEncoding('utf8');
 process.stdin.on("data", function(data) {
     // Do the initialization bits
     var processInfo = JSON.parse(data);
+    var processOptions = processInfo.processOptions;
+    if (processOptions.enableCookies) {
+        app = express.createServer(
+              connect.bodyParser(),
+              connect.cookieParser(),
+              connect.session({secret : "locker"}) );
+    } else {
+        app = express.createServer(connect.bodyParser());
+    }
+    var mongoId = processOptions.id || "id";
     var authLib = require("../../../" + processInfo.sourceDirectory + "/auth.js");
     var syncApi = require("../../../" + processInfo.sourceDirectory + "/sync-api.js")(app);
     locker.initClient(processInfo);
@@ -27,7 +37,7 @@ process.stdin.on("data", function(data) {
     
     app.meData = lfs.loadMeData();
     locker.connectToMongo(function(collections) {
-        require("../lapi.js")(app, processInfo.id, collections);
+        require("../lapi.js")(app, mongoId, collections);
         authLib.authAndRun(app, function() {
             syncApi.authComplete(authLib.auth, collections);
             if (!started) {
