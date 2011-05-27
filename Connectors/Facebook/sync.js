@@ -29,7 +29,7 @@ exports.init = function(theAuth, mongoCollections) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (idsError) { 
-        allKnownIDs = {}; 
+        allKnownIDs = {};
     }
     dataStore.init("id", mongoCollections);
 };

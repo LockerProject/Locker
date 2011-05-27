@@ -40,8 +40,18 @@ sync.eventEmitter.on('contact/facebook', function() {
     events.contact++;
 });
 
+suite.next().suite.addBatch({
+    "Can setup the tests": {
+        topic: function() {
+            this.callback(null, true);
+        },
+        "successfully": function(err, test) {
+            assert.equal(test, true);
+        }
+    }
+});
 
-/*suite.next().suite
+suite.next().suite
 .addBatch({
     "Can get newsfeed" : {
         topic: function() {
@@ -60,7 +70,6 @@ sync.eventEmitter.on('contact/facebook', function() {
                 fakeweb.registerUri({
                     uri : 'https://graph.facebook.com/me/home?access_token=abc',
                     file : __dirname + '/fixtures/facebook/home.json' });
-                
                 sync.syncNewsfeed(self.callback);
             });
         },
@@ -76,8 +85,10 @@ sync.eventEmitter.on('contact/facebook', function() {
                 assert.equal(diaryEntry, "sync'd 0 new newsfeed posts"); }
         }
     }
-})
-.addBatch({
+});
+/*
+
+suite.next().suite.addBatch({
     "Can get friends" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
@@ -97,7 +108,10 @@ sync.eventEmitter.on('contact/facebook', function() {
             assert.equal(diaryEntry, "sync'd 5 new friends");
         }
     }
-})
+});
+*/
+
+/*
 .addBatch({
     "Datastore" : {
         "getPeopleCurrent returns all previously saved friends" : {
@@ -146,6 +160,8 @@ sync.eventEmitter.on('contact/facebook', function() {
     }
 });*/
 
+/*
+
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")
         .discuss("all contacts")
@@ -191,6 +207,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.equal(profile.id, "18514"); 
                 })
             .unpath()
-        .undiscuss();      
+        .undiscuss();      */
+
         
 suite.export(module);
