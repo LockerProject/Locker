@@ -79,28 +79,24 @@ exports.addFacebookData = function(facebookData, callback) {
     });
 }
 
-
 exports.addGoogleContactsData = function(googleContactsData, callback) {
-    console.error('would add gcontact:', googleContactsData);
-    process.nextTick(callback);
-    // var fbID  = googleContactsData.data.id;
-    //    var cleanedName = cleanName(facebookData.data.name);
-    //    var query = {'accounts.facebook.data.id':fbID};
-    //    var set = {};
-    //    var baseObj = {data:facebookData.data, lastUpdated:facebookData.timeStamp || new Date().getTime()};
-    //    set['accounts.facebook.$'] = baseObj;
-    //    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
-    //                        {safe:true}, function(err, doc) {
-    //        if(!doc) {
-    //            //match otherwise
-    //            var or = [{'_matching.cleanedNames':cleanedName}, 
-    //                      {'accounts.foursquare.data.contact.facebook':fbID}];
-    //            collection.update({$or:or}, {$push:{'accounts.facebook':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
-    //                        {safe:true, upsert:true}, callback);
-    //        } else {
-    //            callback(err, doc);
-    //        }
-    //    });
+    var gcID  = googleContactsData.data.id;
+    var cleanedName = cleanName(googleContactsData.data.name);
+    var query = {'accounts.googleContacts.data.id':gcID};
+    var set = {};
+    var baseObj = {data:googleContactsData.data, lastUpdated:googleContactsData.data.lastUpdated || new Date().getTime()};
+    set['accounts.googleContacts.$'] = baseObj;
+    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+                       {safe:true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise
+            var or = [{'_matching.cleanedNames':cleanedName}];
+            collection.update({$or:or}, {$push:{'accounts.googleContacts':baseObj}, $addToSet:{'_matching.cleanedNames':cleanedName}}, 
+                        {safe:true, upsert:true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
 }
 
 function cleanName(name) {
