@@ -17,8 +17,8 @@ var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
-    EventEmitter = require('events').EventEmitter;
-    dataStore = require('./dataStore');
+    EventEmitter = require('events').EventEmitter,
+    dataStore = require('../../Common/node/ldataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
@@ -28,7 +28,7 @@ var requestCount = 0;
 exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
-exports.init = function(theAuth, callback) {
+exports.init = function(theAuth, mongoCollections) {
     auth = theAuth;
     try {
         latests = JSON.parse(fs.readFileSync('latests.json'));
@@ -39,28 +39,40 @@ exports.init = function(theAuth, callback) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
-    dataStore.init(callback);
+    dataStore.init('id_str', mongoCollections);
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
-exports.pullStatuses = function(endpoint, callback) {
+exports.pullStatuses = function(type, callback) {
     if(!getTwitterClient()) {
         sys.debug('could not get Twitter Client');
         callback('missing auth info :(');
         return;
     }
-    if(!latests[endpoint])
-        latests[endpoint] = {};
+    if(!latests[type])
+        latests[type] = {};
     var items = [];
-    pullTimelinePage(endpoint, null, latests[endpoint].latest, null, items, function() {
+    pullTimelinePage(type, null, latests[type].latest, null, items, function() {
         items.reverse();
-        for(var i in items) {
-            dataStore.addStatus(endpoint, items[i]);
-            var eventObj = {source:endpoint, type:'new', status:items[i]};
-            exports.eventEmitter.emit('status/twitter', eventObj);
-        }
-        callback(null, (endpoint === 'home_timeline' ? 60 : 120), "synced "+endpoint+" with "+items.length+" new entries");
+        var num = items.length;
+        addStatuses(type, items, function() {
+            callback(null, (type === 'home_timeline' ? 60 : 120), "synced "+type+" with "+num+" new entries");
+        });
     });
+}
+
+function addStatuses(type, statuses, callback) {
+    if(!statuses || !statuses.length) {
+        callback();
+        return;
+    }
+    var status = statuses.shift();
+    dataStore.addObject(type, status, function(err) {
+        var eventObj = {source:type, type:'new', status:status};
+        exports.eventEmitter.emit('status/twitter', eventObj);
+        addStatuses(type, statuses, callback);
+    });
+    
 }
 
 // Pulls one page of a statuses endpoint
@@ -149,8 +161,12 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                 getUsersExtendedInfo(newIDs, function(usersInfo) {
                     var newIDCount = usersInfo.length;
                     addPeople(friendsOrFollowers, usersInfo, knownIDs, function() {
-                        if(removedIDs.length > 0)
-                            logRemoved(friendsOrFollowers, removedIDs);
+                        if(removedIDs.length > 0) {
+                            var num = removedIDs.length;
+                            logRemoved(friendsOrFollowers, removedIDs, function(err) {
+                                callback(null, 600, 'removed ' + num + ' ' + friendsOrFollowers);    
+                            });
+                        }
                         fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                         callback(null, 600, 'synced ' + newIDCount + ' new ' + friendsOrFollowers);
                     });
@@ -160,61 +176,6 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
     });
 }
 
-exports.updateProfiles = function(type, callback) {
-    if(!type || type.toLowerCase() != 'followers')
-        type = 'friends';
-        
-    var ids = [];
-    for(var i in allKnownIDs[type]) {
-        ids.push(i);
-    }
-    getUsersExtendedInfo(ids, function(usersInfo) {
-        updatePeople(type, usersInfo);
-        callback();
-    });
-}
-
-
-function updatePeople(type, people) {
-    if(!people)
-        return;
-    people.forEach(function(profileFromTwitter) {
-        dataStore.getPersonFromCurrent(type, profileFromTwitter.id, function(err, records) {
-            if(err) {
-                console.error('got error from dataStore.getPersonFromCurrent:', err);
-            } else if(!records) {
-                console.error('!records for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
-            } else if(records.length !== 1) {
-                console.error('records.length !== 1 for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
-            } else {
-                var profileFromSQL = JSON.parse(records[0].profile);
-                var isDifferent = false;
-                var keys = Object.keys(profileFromSQL);
-                if(keys.length != Object.keys(profileFromTwitter).length) {
-                    isDifferent = true;
-                } else {
-                    for(var key in profileFromTwitter) {
-                        if(key === 'status') //don't check status   
-                            continue;
-                        if(key !== 'status' && profileFromTwitter[key] !== profileFromSQL[key]) {
-                            isDifferent = true;
-                            break;
-                        }
-                    }
-                }
-                if(isDifferent) {
-                    // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
-                    dataStore.logUpdatePerson(type, profileFromTwitter);
-                    var eventObj = {source:type, type:'update', data:profileFromTwitter};
-                    exports.eventEmitter.emit('contact/twitter', eventObj);
-                } else {
-                    // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
-                }
-            }
-        })
-    })
-}
-
 function addPeople(type, people, knownIDs, callback) {
     if(!people.length) {
         callback();
@@ -222,7 +183,7 @@ function addPeople(type, people, knownIDs, callback) {
     }
     var person = people.shift();
     knownIDs[person.id_str] = 1;
-    dataStore.addPerson(type, person, function(err) {
+    dataStore.addObject(type, person, function(err) {
         var eventObj = {source:type, type:'new', data:person};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         addPeople(type, people, knownIDs, callback);
@@ -237,13 +198,71 @@ function logRemoved(type, ids, callback) {
     }
     var id = ids.shift();
     var knownIDs = allKnownIDs[type];
-    dataStore.logRemovePerson(type, id, function(err) {
+    dataStore.removeObject(type, ""+id, function(err) {
         var eventObj = {source:type, type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
         logRemoved(type, ids, callback);
     });
 }
+
+exports.updateProfiles = function(type, callback) {
+    if(!type || type.toLowerCase() != 'followers')
+        type = 'friends';
+        
+    var ids = [];
+    for(var i in allKnownIDs[type]) {
+        ids.push(i);
+    }
+    getUsersExtendedInfo(ids, function(usersInfo) {
+        updatePeople(type, usersInfo, callback);
+    });
+}
+
+
+function updatePeople(type, people, callback) {
+    if(!people || !people.length) {
+        callback();
+        return;
+    }
+    var profileFromTwitter = people.shift();
+    dataStore.getCurrent(type, profileFromTwitter.id_str, function(err, records) {
+        if(err) {
+            console.error('got error from dataStore.getPersonFromCurrent:', err);
+        } else if(!records) {
+            console.error('!records for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+        } else if(records.length !== 1) {
+            console.error('records.length !== 1 for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+        } else {
+            var profileFromMongo = JSON.parse(records[0]);
+            var isDifferent = false;
+            var keys = Object.keys(profileFromMongo);
+            if(keys.length != Object.keys(profileFromMongo).length) {
+                isDifferent = true;
+            } else {
+                for(var key in profileFromMongo) {
+                    if(key === 'status') //don't check status
+                        continue;
+                    if(key !== 'status' && profileFromTwitter[key] !== profileFromMongo[key]) {
+                        isDifferent = true;
+                        break;
+                    }
+                }
+            }
+            if(isDifferent) {
+                dataStore.addObject(type, profileFromTwitter, function(err) {
+                    var eventObj = {source:type, type:'update', data:profileFromTwitter};
+                    exports.eventEmitter.emit('contact/twitter', eventObj);
+                    updatePeople(type, people, callback);
+                });
+            } else {    
+                updatePeople(type, people, callback);
+            }
+        }
+    });
+}
+
+
 
 // Syncs the profile of the auth'd user
 exports.syncProfile = function(callback) {

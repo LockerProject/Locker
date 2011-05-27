@@ -21,7 +21,7 @@ var app = express.createServer(
 );    
 
 // This only adds the / endpoint, the rest are added in the authComplete function
-var webservice = require(__dirname + "/webservice.js")(app);
+var syncApi = require(__dirname + "/sync-api.js")(app);
 var started = false;
 
 process.stdin.setEncoding('utf8');
@@ -34,18 +34,17 @@ process.stdin.on('data', function (chunk) {
     
     // We're adding this info to app for basic utility use
     app.meData = lfs.loadMeData();
-    // Adds the internal API to the app because it should always be available
-    require(__dirname + "/api.js")(app, function() {
-    
-        // If we're not authed, we add the auth routes, otherwise add the webservice
+    locker.connectToMongo(function(collections) {
+        // Adds the internal API to the app because it should always be available
+        require("../../Common/node/lapi.js")(app, "id_str", collections);
+        // If we're not authed, we add the auth routes, otherwise add the sync API
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
-            webservice.authComplete(authLib.auth, function() {
-                if(!started)
-                    startWebServer();
-            });
+            sycnApi.authComplete(authLib.auth, collections);
+            if(!started)
+                startWebServer();
         });
-    
+        
         if(!authLib.isAuthed())
             startWebServer();
         
