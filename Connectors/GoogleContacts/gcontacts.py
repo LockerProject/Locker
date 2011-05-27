@@ -28,6 +28,10 @@ from datetime import datetime
 from datetime import tzinfo
 import time
 import threading
+import signal
+
+
+
 
 def testCredentials(username, password):
     me = lockerfs.loadMeData()
@@ -49,6 +53,8 @@ class gPhotoThread(threading.Thread):
         self.gd_client = gd_client
         self.entries = entries
         self.shouldStop = False
+        # this feels like a memory leak to me!
+        signal.signal(signal.SIGINT, self.signal_handler)
     
     def run(self):    
         for i, entry in enumerate(self.entries):
@@ -63,12 +69,12 @@ class gPhotoThread(threading.Thread):
                     image_file.close()
             except gdata.service.RequestError:
                 pass
-            if shouldStop:
+            if self.shouldStop is True:
                 break
     
-    def stop(self):
-        self.shouldStop = True
-                    
+    def signal_handler(self, signal, frame):
+        self.shouldStop
+        sys.exit(0);
                     
 class GoogleDataContacts:
     def __init__(self):
