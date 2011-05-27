@@ -10,6 +10,7 @@
                       "lscheduler-test-local.js", 
                       "lconsole-test-local.js", 
                       "ijod-test-local.js",
+                      "lpquery-test-local.js",
                       "mongo-test.js"],
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 

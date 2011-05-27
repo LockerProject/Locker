@@ -9,24 +9,35 @@
 
 var express = require('express'),
     connect = require('connect'),
-    app = express.createServer(connect.bodyParser()),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js'),
-    authLib = require('./auth'),
-    started = false,
-    syncApi = require(__dirname + "/sync-api.js")(app);
+    app,
+    locker = require('../locker.js'),
+    lfs = require('../lfs.js'),
+    started = false;
     
 // Process the startup JSON object
+
 process.stdin.setEncoding('utf8');
 process.stdin.on("data", function(data) {
     // Do the initialization bits
     var processInfo = JSON.parse(data);
+    var processOptions = processInfo.processOptions;
+    if (processOptions.enableCookies) {
+        app = express.createServer(
+              connect.bodyParser(),
+              connect.cookieParser(),
+              connect.session({secret : "locker"}) );
+    } else {
+        app = express.createServer(connect.bodyParser());
+    }
+    var mongoId = processOptions.id || "id";
+    var authLib = require("../../../" + processInfo.sourceDirectory + "/auth.js");
+    var syncApi = require("../../../" + processInfo.sourceDirectory + "/sync-api.js")(app);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     
     app.meData = lfs.loadMeData();
     locker.connectToMongo(function(collections) {
-        require("../../Common/node/lapi.js")(app, "id", collections);
+        require("../lapi.js")(app, mongoId, collections);
         authLib.authAndRun(app, function() {
             syncApi.authComplete(authLib.auth, collections);
             if (!started) {
@@ -45,7 +56,6 @@ process.stdin.on("data", function(data) {
                 process.stdout.write(JSON.stringify(returnedInfo));
             });
         }
-        
     })
 });
 process.stdin.resume();

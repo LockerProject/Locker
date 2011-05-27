@@ -79,10 +79,13 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/2715557.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/2715557.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/18387.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/18387.json' });
             sync.syncFriends(this.callback) },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "sync'd 1 new friends");
+            assert.equal(diaryEntry, "sync'd 2 new friends");
         }
     }
 }).addBatch({
@@ -92,10 +95,13 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent("friends", this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 1);
+                assert.equal(response.length, 2);
                 assert.equal(response[0].id, 2715557);
                 assert.equal(response[0].name, 'Jacob Mitchell');
                 assert.equal(response[0].type, 'user');
+                assert.equal(response[1].id, 18387);
+                assert.equal(response[1].name, 'William Warnecke');
+                assert.equal(response[1].type, 'user');
             }
         },
         "getPlaces returns all previously saved checkins" : {
@@ -130,7 +136,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/foursquare/no_friends.json' });
             sync.syncFriends(this.callback) },
         'successfully': function(err, repeatAfter, diaryEntry) {
-            assert.equal(diaryEntry, 'no new friends, removed 1 deleted friends');
+            assert.equal(diaryEntry, 'no new friends, removed 2 deleted friends');
         },
         "in the datastore" : {
             "via getPeople" : {
@@ -156,7 +162,7 @@ suite.next().suite.addBatch({
         topic: [],
         'after checking for proper number of events': function(topic) {
             assert.equal(events.checkin, 251);
-            assert.equal(events.contact, 2);
+            assert.equal(events.contact, 4);
         },
         'sucessfully': function(topic) {
             fakeweb.tearDown();

@@ -58,6 +58,13 @@ app.get('/update', function(req, res) {
     res.end('Updating');
 });
 
+app.get('/foursquareListener', function(req, res) {
+    console.log("req" + req.body);
+    sys.debug(req);
+    res.writeHead(200);
+    res.end('cool');
+});
+
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
@@ -74,6 +81,7 @@ process.stdin.on('data', function(data) {
         app.listen(lockerInfo.port, 'localhost', function() {
             sys.debug(data);
             process.stdout.write(data);
+            locker.listen('/foursquare/contact', 'foursquareListener');
             // gatherContacts();
         });
     });
