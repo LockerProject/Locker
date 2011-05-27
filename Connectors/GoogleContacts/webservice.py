@@ -45,14 +45,12 @@ def update():
         
         # Tell the diary how many contacts we updated
         url = "{0}/diary?{1}".format(lockerBase, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
-        # app.logger.warning('url: %s', url)
         urllib2.urlopen(url)
 
         # Schedule a new update
         at = time.mktime(datetime.datetime.now().timetuple()) + 720 # Just doing 10m updates for nwo
         app.updateAt = datetime.datetime.fromtimestamp(at)
         url = "{0}/at?at={1}&cb=/update".format(lockerBase, at)
-        # app.logger.warning('url: %s', url)
         urllib2.urlopen(url)
         return "Updated"
     else:
