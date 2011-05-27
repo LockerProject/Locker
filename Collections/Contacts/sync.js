@@ -104,6 +104,26 @@ function addFacebookContacts(contacts, callback) {
 }
 
 
+// get friends from a given Google Contacts Connector instance
+function getContactsFromGoogleContacts(svcID, callback) {
+    request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/contacts'}, function(err, resp, body) {
+        var contacts = JSON.parse(body);
+        addGoogleContacts(friends, contacts);
+    });
+}
+
+// Add the friends from the Google Contacts Connector to the data store, one by one
+function addGoogleContacts(contacts, callback) {
+    if(!(contacts && contacts.length)) {
+        callback();
+    } else {
+        var contact = contacts.shift();
+        dataStore.addFacebookData({data:contact}, function(err, doc) {
+            addFacebookContacts(contacts, callback);
+        });
+    }
+}
+
 var contacts = {};
 var debug = false;
 
