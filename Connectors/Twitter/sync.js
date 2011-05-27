@@ -166,9 +166,10 @@ exports.syncUsersInfo = function(friendsOrFollowers, callback) {
                             logRemoved(friendsOrFollowers, removedIDs, function(err) {
                                 callback(null, 600, 'removed ' + num + ' ' + friendsOrFollowers);    
                             });
+                        } else {
+                            callback(null, 600, 'synced ' + newIDCount + ' new ' + friendsOrFollowers);
                         }
                         fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                        callback(null, 600, 'synced ' + newIDCount + ' new ' + friendsOrFollowers);
                     });
                 });
             }
@@ -226,15 +227,13 @@ function updatePeople(type, people, callback) {
         return;
     }
     var profileFromTwitter = people.shift();
-    dataStore.getCurrent(type, profileFromTwitter.id_str, function(err, records) {
+    dataStore.getCurrent(type, profileFromTwitter.id_str, function(err, record) {
         if(err) {
             console.error('got error from dataStore.getPersonFromCurrent:', err);
-        } else if(!records) {
-            console.error('!records for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
-        } else if(records.length !== 1) {
-            console.error('records.length !== 1 for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+        } else if(!record) {
+            console.error('no record for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
         } else {
-            var profileFromMongo = JSON.parse(records[0]);
+            var profileFromMongo = record;
             var isDifferent = false;
             var keys = Object.keys(profileFromMongo);
             if(keys.length != Object.keys(profileFromMongo).length) {
