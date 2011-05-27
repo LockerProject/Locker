@@ -40,7 +40,7 @@ process.stdin.on('data', function (chunk) {
         // If we're not authed, we add the auth routes, otherwise add the sync API
         authLib.authAndRun(app, function() {
             // Add the rest of the sync API (only / is added automatically)
-            sycnApi.authComplete(authLib.auth, collections);
+            syncApi.authComplete(authLib.auth, collections);
             if(!started)
                 startWebServer();
         });
