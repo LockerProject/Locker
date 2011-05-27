@@ -17,8 +17,8 @@ var request = require('request'),
     fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
-    EventEmitter = require('events').EventEmitter;
-    dataStore = require('./dataStore');
+    EventEmitter = require('events').EventEmitter,
+    dataStore = require('../../Common/node/ldataStore');
     
 var auth, userInfo, latests;
 var twitterClient;
@@ -39,7 +39,7 @@ exports.init = function(theAuth, mongoCollections) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
-    dataStore.init(mongoCollections);
+    dataStore.init('id_str', mongoCollections);
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
@@ -67,7 +67,7 @@ function addStatuses(type, statuses, callback) {
         return;
     }
     var status = statuses.shift();
-    dataStore.addStatus(type, status, function(err) {
+    dataStore.addObject(type, status, function(err) {
         var eventObj = {source:type, type:'new', status:status};
         exports.eventEmitter.emit('status/twitter', eventObj);
         addStatuses(type, statuses, callback);
@@ -183,7 +183,7 @@ function addPeople(type, people, knownIDs, callback) {
     }
     var person = people.shift();
     knownIDs[person.id_str] = 1;
-    dataStore.addPerson(type, person, function(err) {
+    dataStore.addObject(type, person, function(err) {
         var eventObj = {source:type, type:'new', data:person};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         addPeople(type, people, knownIDs, callback);
@@ -198,7 +198,7 @@ function logRemoved(type, ids, callback) {
     }
     var id = ids.shift();
     var knownIDs = allKnownIDs[type];
-    dataStore.logRemovePerson(type, id, function(err) {
+    dataStore.removeObject(type, ""+id, function(err) {
         var eventObj = {source:type, type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/twitter', eventObj);
         delete knownIDs[id];
@@ -226,7 +226,7 @@ function updatePeople(type, people, callback) {
         return;
     }
     var profileFromTwitter = people.shift();
-    dataStore.getCurrent(type, profileFromTwitter.id, function(err, records) {
+    dataStore.getCurrent(type, profileFromTwitter.id_str, function(err, records) {
         if(err) {
             console.error('got error from dataStore.getPersonFromCurrent:', err);
         } else if(!records) {
@@ -250,15 +250,13 @@ function updatePeople(type, people, callback) {
                 }
             }
             if(isDifferent) {
-                // console.error('found updated profile, orig:', profileFromSQL, '\nnew:', profileFromTwitter);
-                dataStore.logUpdatePerson(type, profileFromTwitter, function(err) {
-                    var eventObj = {source:type, type:'update', data:person};
+                dataStore.addObject(type, profileFromTwitter, function(err) {
+                    var eventObj = {source:type, type:'update', data:profileFromTwitter};
                     exports.eventEmitter.emit('contact/twitter', eventObj);
                     updatePeople(type, people, callback);
                 });
             } else {    
                 updatePeople(type, people, callback);
-                // console.error('no update, sql:', profileFromSQL.description, ', tw:', profileFromTwitter.description);
             }
         }
     });
