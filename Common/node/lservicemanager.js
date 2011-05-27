@@ -243,6 +243,8 @@ exports.spawn = function(serviceId, callback) {
     console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
     var processInformation = {
         port: svc.port, // This is just a suggested port
+        sourceDirectory: svc.srcdir,
+        processOptions: {},
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
@@ -252,6 +254,9 @@ exports.spawn = function(serviceId, callback) {
             port: lconfig.mongo.port
         }
         processInformation.mongo.collections = serviceInfo.mongoCollections;
+    }
+    if (serviceInfo && serviceInfo.processOptions) {
+        processInformation.processOptions = serviceInfo.processOptions;
     }
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {

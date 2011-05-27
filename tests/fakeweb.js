@@ -20,9 +20,11 @@ function interceptable(uri) {
             if (allowLocalConnect == true && url.parse(uri).host == "localhost") {
                 return false;
             }
-            throw "Unhandled GET request to " + uri;
+            console.error("FAKEWEB: Unhandled GET request to " + uri);
+            throw "FAKEWEB: Unhandled GET request to " + uri;
         } else {
-            throw "Invalid request";
+            console.error("FAKEWEB: Invalid request");
+            throw "FAKEWEB: Invalid request";
         }
     } else {
         return false;
