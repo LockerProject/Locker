@@ -17,7 +17,7 @@ function interceptable(uri) {
     }
     if (allowNetConnect == false) {
         if (uri) {
-            if (allowLocalConnect == true && url.parse(uri).host == "localhost") {
+            if (allowLocalConnect == true && url.parse(uri).hostname == "localhost") {
                 return false;
             }
             console.error("FAKEWEB: Unhandled GET request to " + uri);

@@ -8,22 +8,183 @@
 */
 //testing for the Facebook connector
 
-var RESTeasy = require('api-easy');
-var lconfig = require('../Common/node/lconfig.js');
+var fakeweb = require(__dirname + '/fakeweb.js');
+var sync = require('../Connectors/facebook/sync');
+var dataStore = require('../Common/node/ldataStore');
 var assert = require('assert');
+var RESTeasy = require('api-easy');
+var vows = require('vows');
+var fs = require('fs');
+var currentDir = process.cwd();
+var events = {status: 0, contact: 0};
 
-var suite = RESTeasy.describe("Facebook Connector");
+var suite = RESTeasy.describe('Facebook Connector');
 
-var svcId = "facebook-test";
+process.on('uncaughtException',function(error){
+    sys.puts(error.stack);
+});
 
-lconfig.load('config.json');
-
+var svcId = 'facebook';
 var mePath = '/Me/' + svcId;
 
-suite.use(lconfig.lockerHost, lconfig.lockerPort)
+var thecollections = ['friends', 'newsfeed', 'wall'];
+var lconfig = require('../Common/node/lconfig');
+lconfig.load('config.json');
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
+var mongoCollections;
+
+sync.eventEmitter.on('status/facebook', function() {
+    events.status++;
+});
+sync.eventEmitter.on('contact/facebook', function() {
+    events.contact++;
+});
+
+suite.next().suite.addBatch({
+    "Can setup the tests": {
+        topic: function() {
+            process.chdir('.' + mePath);
+            var self = this;
+            fakeweb.allowNetConnect = false;
+            fakeweb.allowLocalConnect = true;
+            lmongoclient.connect(function(collections) {
+                sync.init({accessToken : 'abc'}, collections);
+                dataStore.init('id', collections);
+                self.callback(null, true);
+            });
+        },
+        "successfully": function(err, test) {
+            assert.equal(test, true);
+        }
+    }
+}).addBatch({
+    "Can get friends" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
+                file : __dirname + '/fixtures/facebook/me.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me/friends?access_token=abc&date_format=U',
+                file : __dirname + '/fixtures/facebook/friends.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/?ids=1575983201,1199908083,684655824,604699113,103135&access_token=abc&date_format=U',
+                file : __dirname + '/fixtures/facebook/ids.json' });
+            sync.syncFriends(this.callback);
+        },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 3600);
+            assert.equal(diaryEntry, "sync'd 5 new friends");
+        }
+    }
+}).addBatch({
+    "Can get newsfeed" : {
+        topic: function() { 
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
+                file : __dirname + '/fixtures/facebook/me.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1&date_format=U',
+                file : __dirname + '/fixtures/facebook/home.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
+                file : __dirname + '/fixtures/facebook/none.json' });
+                
+            sync.syncNewsfeed(this.callback);
+        },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 600);
+            assert.equal(diaryEntry, "sync'd 3 new newsfeed posts"); },
+        "again" : {
+            topic: function() {
+                sync.syncNewsfeed(this.callback);
+            },
+            "successfully" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 0 new newsfeed posts"); 
+            }
+         }
+    }
+}).addBatch({
+    "Can get wall" : {
+            topic: function() {
+                fakeweb.allowNetConnect = false;
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
+                    file : __dirname + '/fixtures/facebook/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me/feed?limit=250&offset=0&access_token=abc&since=1&date_format=U',
+                    file : __dirname + '/fixtures/facebook/feed.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me/feed?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
+                    file : __dirname + '/fixtures/facebook/none.json' });
+                
+                sync.syncWall(this.callback);
+            },
+            "successfully" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 4 new wall posts"); },
+            "again" : {
+                topic: function() {
+                    sync.syncWall(this.callback);
+                },
+                "successfully" : function(err, repeatAfter, diaryEntry) {
+                    assert.equal(repeatAfter, 600);
+                    assert.equal(diaryEntry, "sync'd 0 new wall posts"); }
+            }
+        }
+}).addBatch({
+    "Datastore" : {
+        "getPeopleCurrent returns all previously saved friends" : {
+            topic: function() {
+                dataStore.getAllCurrent('friends', this.callback);
+            },
+            'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.length, 5);
+                assert.equal(response[0].id, 103135);
+            }
+        },
+        "getNewsfeed returns all previously saved newsfeed posts" : {
+            topic: function() {
+                dataStore.getAllCurrent('newsfeed', this.callback);
+            },
+            'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.length, 3);
+                assert.equal(response[0].id, '100002438955325_224550747571079');
+            }  
+        },
+        "getWall returns all previously saved wall posts" : {
+            topic: function() {
+                dataStore.getAllCurrent('wall', this.callback);
+            },
+            'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.length, 4);
+                assert.equal(response[0].id, "100002438955325_224550747571079");
+            }  
+        },
+        "getFriendFromCurrent returns the saved friend" : {
+            topic: function() {
+                dataStore.getCurrent('friends', '103135', this.callback);
+            },
+            'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.id, 103135);
+                assert.equal(response.name, 'Ashley Doe');
+            }
+        }
+    }
+});
+
+suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")
         .discuss("all contacts")
-            .path(mePath + "/allContacts")
+            .path(mePath + "/getCurrent/friends")
             .get()
                 .expect('returns contacts', function(err, res, body) {
                     assert.isNull(err);
@@ -33,49 +194,39 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
-        .discuss("all current friends")
-            .path(mePath + "/getCurrent/friends")
+        .discuss("all newsfeed posts")
+            .path(mePath + "/getCurrent/newsfeed")
             .get()
-                .expect('returns contacts', function(err, res, body) {
+                .expect('returns newsfeed', function(err, res, body) {
                     assert.isNull(err);
-                    var contacts = JSON.parse(body);
-                    assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 5); 
+                    var newsfeed = JSON.parse(body);
+                    assert.isNotNull(newsfeed);
+                    assert.equal(newsfeed.length, 3); 
                 })
             .unpath()
         .undiscuss()
-        .discuss("all friends")
-            .path(mePath + "/getAll/friends")
+        .discuss("all wall posts")
+            .path(mePath + "/getCurrent/wall")
             .get()
-                .expect('returns contacts', function(err, res, body) {
+                .expect('returns wall', function(err, res, body) {
                     assert.isNull(err);
-                    var contacts = JSON.parse(body);
-                    assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 5); 
-                })
-            .unpath()
-        .undiscuss()
-        .discuss("friends since recordID 1")
-            .path(mePath + "/getSince/friends?recordID=1")
-            .get()
-                .expect('returns contacts', function(err, res, body) {
-                    assert.isNull(err);
-                    var contacts = JSON.parse(body);
-                    assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 3); 
+                    var wall = JSON.parse(body);
+                    assert.isNotNull(wall);
+                    assert.equal(wall.length, 4); 
                 })
             .unpath()
         .undiscuss()
         .discuss("get profile")
-            .path(mePath + "/getCurrent/profile")
+            .path(mePath + "/get_profile")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);
                     var profile = JSON.parse(body);
                     assert.isNotNull(profile);
-                    assert.equal(profile.id, "100002438955325"); 
+                    assert.equal(profile.id, '100002438955325'); 
                 })
             .unpath()
-        .undiscuss();      
+        .undiscuss();
+
         
 suite.export(module);
