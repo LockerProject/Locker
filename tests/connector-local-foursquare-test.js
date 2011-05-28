@@ -77,11 +77,8 @@ suite.next().suite.addBatch({
                 uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/friends.json' });
             fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/2715557.json?oauth_token=abc',
-                file : __dirname + '/fixtures/foursquare/2715557.json' });
-            fakeweb.registerUri({
-                uri : 'https://api.foursquare.com/v2/users/18387.json?oauth_token=abc',
-                file : __dirname + '/fixtures/foursquare/18387.json' });
+                uri : 'https://api.foursquare.com/v2/multi?requests=/users/2715557,/users/18387,&oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/users.json' });
             sync.syncFriends(this.callback) },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
@@ -96,11 +93,11 @@ suite.next().suite.addBatch({
             },
             'successfully': function(err, response) {
                 assert.equal(response.length, 2);
-                assert.equal(response[0].id, 2715557);
-                assert.equal(response[0].name, 'Jacob Mitchell');
+                assert.equal(response[0].id, 18387);
+                assert.equal(response[0].name, 'William Warnecke');
                 assert.equal(response[0].type, 'user');
-                assert.equal(response[1].id, 18387);
-                assert.equal(response[1].name, 'William Warnecke');
+                assert.equal(response[1].id, 2715557);
+                assert.equal(response[1].name, 'Jacob Mitchell');
                 assert.equal(response[1].type, 'user');
             }
         },
