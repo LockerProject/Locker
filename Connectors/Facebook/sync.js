@@ -24,7 +24,7 @@ exports.init = function(theAuth, mongoCollections) {
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
     } catch (updateErr) { 
-        updateState = {newsfeed:{syncedThrough:0}, wall:{syncedThrough:0}};
+        updateState = {home:{syncedThrough:0}, feed:{syncedThrough:0}};
     }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
@@ -47,7 +47,7 @@ exports.syncFriends = function(callback) {
         var self = JSON.parse(data);
         fs.writeFile('profile.json', JSON.stringify(self));
         var userID = self.id;
-        request.get({uri:'https://graph.facebook.com/me/friends?access_token=' + auth.accessToken}, 
+        request.get({uri:'https://graph.facebook.com/me/friends?access_token=' + auth.accessToken + '&date_format=U'}, 
         function(err, resp, body) {
             var newIDs = [];
             var knownIDs = allKnownIDs;
@@ -119,76 +119,13 @@ function logRemoved(ids, callback) {
     });
 }
 
-exports.syncCheckins = function (callback) {
-    getMe(auth.accessToken, function(err, resp, data) {
-        var self = JSON.parse(data).response.user;
-        fs.writeFile('profile.json', JSON.stringify(self));
-        getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
-            var checkinCount = checkins.length;
-            addCheckins(checkins, function() {
-                callback(err, 600, "sync'd " + checkinCount + " new checkins");
-            });
-        });
-    });
-};
-
-function addCheckins(checkins, callback) {
-    if (!checkins || !checkins.length) {
-        callback();
-    }
-    var checkin = checkins.shift();
-    if (checkin !== undefined) {
-        dataStore.addObject("places", checkin, function(err) {
-            var eventObj = {source:'places', type:'new', status:checkin};
-            exports.eventEmitter.emit('checkin/foursquare', eventObj);
-            addCheckins(checkins, callback);
-        });
-    }
-}
-
-function getMe(accessToken, callback) {
-    request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken}, callback);
-}
-
-var checkins_limit = 250;
-function getCheckins(userID, token, offset, callback, checkins) {
-    if(!checkins)
-        checkins = [];
-    var latest = 1;
-    if(updateState.checkins && updateState.checkins.syncedThrough)
-        latest = updateState.checkins.syncedThrough;
-    request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset + 
-                                                            '&oauth_token=' + token + '&afterTimestamp=' + latest},
-    function(err, resp, data) {
-        var response = JSON.parse(data).response;
-        if(!(response.checkins && response.checkins.items)) { //we got nothing
-            if(checkins.length > 0)
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
-                lfs.writeObjectToFile('updateState.json', updateState);
-            callback(err, checkins.reverse());
-            return;
-        }
-        var newCheckins = response.checkins.items;
-        addAll(checkins, newCheckins);
-        if(newCheckins && newCheckins.length == checkins_limit) 
-            getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {
-            if (checkins[0]) {
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
-            }
-            lfs.writeObjectToFile('updateState.json', updateState);
-            callback(err, checkins.reverse());
-        }
-    });
-}
-
 function downloadUsers(users, accessToken, callback) {
     var coll = users.slice(0);
     (function downloadUser() {
         var friend = coll.splice(0, 1)[0];
         try {
-            request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + accessToken},
-                         function(err, resp, data) {
+            request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + accessToken + '&date_format=U'},
+              function(err, resp, data) {
                 var response = JSON.parse(data);
                 if(response.meta.code >= 400) {
                     console.error(data);
@@ -202,16 +139,18 @@ function downloadUsers(users, accessToken, callback) {
                     }
                 }
                 var js = JSON.parse(data);
-                js.name = js.first_name + " " + js.last_name;
+                js.name = js.first_name + ' ' + js.last_name;
+                /*
                 if (js.photo.indexOf("userpix") > 0) {
-                    // fetch photo
-                    request.get({uri:js.photo}, function(err, resp, body) {
-                        if(err)
-                            console.error(err);
-                        else
-                            fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
-                    });
-                }
+                                    // fetch photo
+                                    request.get({uri:js.photo}, function(err, resp, body) {
+                                        if(err)
+                                            console.error(err);
+                                        else
+                                            fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
+                                    });
+                                }*/
+                
                 var eventObj = {source:'friends', type:'new', status:js};
                 exports.eventEmitter.emit('contact/facebook', eventObj);
                 dataStore.addObject('friends', js, function(err) {
@@ -233,6 +172,92 @@ function downloadUsers(users, accessToken, callback) {
             callback(exception);
         }
     })();
+}
+
+
+exports.syncNewsfeed = function (callback) {
+    getMe(auth.accessToken, function(err, resp, data) {
+        var self = JSON.parse(data);
+        fs.writeFile('profile.json', JSON.stringify(self));
+        getPosts(self.id, 'home', auth.accessToken, 0, function(err, posts) {
+            var postsCount = posts.length;
+            addNewsfeedPosts(posts, function() {
+                callback(err, 600, "sync'd " + postsCount + " new newsfeed posts");
+            });
+        });
+    });
+};
+
+function addNewsfeedPosts(posts, callback) {
+    if (!posts || !posts.length) {
+        callback();
+    }
+    var post = posts.shift();
+    if (post !== undefined) {
+        dataStore.addObject('newsfeed', post, function(err) {
+            var eventObj = {source:'status', type:'new', status:post};
+            exports.eventEmitter.emit('status/facebook', eventObj);
+            addNewsfeedPosts(posts, callback);
+        });
+    }
+}
+
+exports.syncWall = function (callback) {
+    getMe(auth.accessToken, function(err, resp, data) {
+        var self = JSON.parse(data);
+        fs.writeFile('profile.json', JSON.stringify(self));
+        getPosts(self.id, 'feed', auth.accessToken, 0, function(err, posts) {
+            var postsCount = posts.length;
+            addWallPosts(posts, function() {
+                callback(err, 600, "sync'd " + postsCount + " new wall posts");
+            });
+        });
+    });
+};
+
+function addWallPosts(posts, callback) {
+    if (!posts || !posts.length) {
+        callback();
+    }
+    var post = posts.shift();
+    if (post !== undefined) {
+        dataStore.addObject('wall', post, function(err) {
+            var eventObj = {source:'status', type:'new', status:post};
+            exports.eventEmitter.emit('status/facebook', eventObj);
+            addWallPosts(posts, callback);
+        });
+    }
+}
+
+function getMe(accessToken, callback) {
+    request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken + '&date_format=U'}, callback);
+}
+
+var postLimit = 250;
+function getPosts(userID, type, token, offset, callback, posts) {
+    if(!posts) {
+        posts = [];
+    }
+    var latest = 1;
+    if(updateState[type] && updateState[type].syncedThrough) {
+        latest = updateState[type].syncedThrough;
+    }
+    request.get({uri:'https://graph.facebook.com/me/' + type + '?limit=' + postLimit + '&offset=' + offset + 
+                                                            '&access_token=' + token + '&since=' + latest +
+                                                            '&date_format=U'},
+    function(err, resp, data) {
+        var newPosts = JSON.parse(data).data;
+        addAll(posts, newPosts.reverse());
+        if(newPosts && newPosts.length == postLimit) {
+            getPosts(userID, type, token, offset + postsLimit, callback, posts);
+        } else {
+            if (posts.length > 0) {
+                updateState[type].syncedThrough = posts[posts.length - 1].created_time;
+                lfs.writeObjectToFile('updateState.json', updateState);
+            }
+            callback(err, posts.reverse());
+        }
+    });
 }
 
 function addAll(thisArray, anotherArray) {

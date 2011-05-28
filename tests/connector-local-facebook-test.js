@@ -51,8 +51,7 @@ suite.next().suite.addBatch({
     }
 });
 
-suite.next().suite
-.addBatch({
+suite.next().suite.addBatch({
     "Can get newsfeed" : {
         topic: function() {
             process.chdir('.' + mePath);
@@ -62,44 +61,45 @@ suite.next().suite
                 dataStore.init("id", collections);
                 fakeweb.allowNetConnect = false;
                 fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me?access_token=abc',
+                    uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
                     file : __dirname + '/fixtures/facebook/me.json' });
                 fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me/feed?access_token=abc',
+                    uri : 'https://graph.facebook.com/me/feed?access_token=abc&date_format=U',
                     file : __dirname + '/fixtures/facebook/feed.json' });
                 fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me/home?access_token=abc',
+                    uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1&date_format=U',
                     file : __dirname + '/fixtures/facebook/home.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
+                    file : __dirname + '/fixtures/facebook/none.json' });
+                    
                 sync.syncNewsfeed(self.callback);
             });
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
-            assert.equal(diaryEntry, "sync'd 5 newsfeed posts"); },
-        "successfully " : {
+            assert.equal(diaryEntry, "sync'd 3 new newsfeed posts"); },
+        "again" : {
             topic: function() {
                 sync.syncNewsfeed(this.callback);
             },
-            "again" : function(err, repeatAfter, diaryEntry) {
+            "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 600);
                 assert.equal(diaryEntry, "sync'd 0 new newsfeed posts"); }
         }
     }
-});
-/*
-
-suite.next().suite.addBatch({
+}).addBatch({
     "Can get friends" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'https://graph.facebook.com/me?access_token=abc',
+                uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
                 file : __dirname + '/fixtures/facebook/me.json' });
             fakeweb.registerUri({
-                uri : 'https://graph.facebook.com/me/friends?access_token=abc',
+                uri : 'https://graph.facebook.com/me/friends?access_token=abc&date_format=U',
                 file : __dirname + '/fixtures/facebook/friends.json' });
             fakeweb.registerUri({
-                uri : 'https://graph.facebook.com/?ids=1575983201,1199908083,684655824,604699113,103135&access_token=abc',
+                uri : 'https://graph.facebook.com/?ids=1575983201,1199908083,684655824,604699113,103135&access_token=abc&date_format=U',
                 file : __dirname + '/fixtures/facebook/ids.json' });
             sync.syncFriends(this.callback);
         },
@@ -109,7 +109,6 @@ suite.next().suite.addBatch({
         }
     }
 });
-*/
 
 /*
 .addBatch({
