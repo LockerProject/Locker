@@ -108,20 +108,15 @@ suite.next().suite.addBatch({
             assert.equal(diaryEntry, "sync'd 5 new friends");
         }
     }
-});
-
-/*
-.addBatch({
+}).addBatch({
     "Datastore" : {
         "getPeopleCurrent returns all previously saved friends" : {
             topic: function() {
-                dataStore.getAllCurrent("friends", this.callback);
+                dataStore.getAllCurrent('friends', this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 1);
+                assert.equal(response.length, 5);
                 assert.equal(response[0].id, 2715557);
-                assert.equal(response[0].name, 'Jacob Mitchell');
-                assert.equal(response[0].type, 'user');
             }
         },
         "getNewsfeed returns all previously saved newsfeed posts" : {
@@ -129,10 +124,8 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent('newsfeed', this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 251);
-                assert.equal(response[0].id, "4d1dcbf7d7b0b1f7f37bfd9e");
-                assert.equal(response[0].venue.name, "Boston Logan International Airport (BOS)");
-                assert.equal(response[0].type, 'checkin');
+                assert.equal(response.length, 3);
+                assert.equal(response[0].id, '100002438955325_224550747571079');
             }  
         },
         "getWall returns all previously saved wall posts" : {
@@ -140,24 +133,22 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent('wall', this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 251);
+                assert.equal(response.length, 3);
+                console.error(response);
                 assert.equal(response[0].id, "4d1dcbf7d7b0b1f7f37bfd9e");
-                assert.equal(response[0].venue.name, "Boston Logan International Airport (BOS)");
-                assert.equal(response[0].type, 'checkin');
             }  
         },
         "getFriendFromCurrent returns the saved friend" : {
             topic: function() {
-                dataStore.getCurrent("friends", '2715557', this.callback);
+                dataStore.getCurrent('friends', '103135', this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.id, 2715557);
-                assert.equal(response.name, 'Jacob Mitchell');
-                assert.equal(response.type, 'user');
+                assert.equal(response.id, 103135);
+                assert.equal(response.name, 'Ashley Doe');
             }
         }
     }
-});*/
+});
 
 /*
 

@@ -31,7 +31,7 @@ exports.init = function(theAuth, mongoCollections) {
     } catch (idsError) { 
         allKnownIDs = {};
     }
-    dataStore.init("id", mongoCollections);
+    dataStore.init('id', mongoCollections);
 };
 
 exports.syncFriends = function(callback) {
@@ -111,69 +111,60 @@ function logRemoved(ids, callback) {
         return;
     }
     var id = ids.shift();
-    dataStore.removeObject("friends", id+'', function(err) {
+    dataStore.removeObject('friends', id + '', function(err) {
         delete allKnownIDs[id];
         logRemoved(ids, callback);
-        var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
+        var eventObj = {source:'friends', type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/facebook', eventObj);
     });
 }
 
-function downloadUsers(users, accessToken, callback) {
-    var coll = users.slice(0);
-    (function downloadUser() {
-        var friend = coll.splice(0, 1)[0];
-        try {
-            request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + accessToken + '&date_format=U'},
-              function(err, resp, data) {
-                var response = JSON.parse(data);
-                if(response.meta.code >= 400) {
-                    console.error(data);
-                    allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-                    delete allKnownIDs[id];
-                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                    if (coll.length === 0) {
-                        callback();
-                    } else {
-                        downloadUser();
-                    }
-                }
-                var js = JSON.parse(data);
-                js.name = js.first_name + ' ' + js.last_name;
-                /*
-                if (js.photo.indexOf("userpix") > 0) {
-                                    // fetch photo
-                                    request.get({uri:js.photo}, function(err, resp, body) {
-                                        if(err)
-                                            console.error(err);
-                                        else
-                                            fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
-                                    });
-                                }*/
-                
-                var eventObj = {source:'friends', type:'new', status:js};
-                exports.eventEmitter.emit('contact/facebook', eventObj);
-                dataStore.addObject('friends', js, function(err) {
-                    if (coll.length === 0) {
-                        callback();
-                    } else {
-                        downloadUser();
-                    }
-                });
-            });
-        } catch (exception) {
-            try {
-                allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-            } catch (err) { allKnownIDs = {}; }
-            for (var i = 0; i < coll.length; i++) {
-                delete allKnownIDs[coll[i]];
-            }
-            fs.writeFileSync('allKnownIDs.json', JSON.stringify(allKnownIDs));
-            callback(exception);
-        }
-    })();
-}
+function downloadUsers(users, token, callback) {
+    var idString = '';
+    
+    for (var i = 0; i < users.length; i++) {
+       idString += users.pop() + ',';
+    }
+    idString = idString.substring(0, idString.length - 1);
 
+    request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + token + '&date_format=U'}, 
+        function(err, resp, data) {
+            if (err) {
+                console.error(err);
+                callback(err);
+            }
+            var response = JSON.parse(data);
+            if(response.hasOwnProperty('error')) {
+                
+               console.error(data);
+               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+               
+               var ids = idString.split(',');
+               for(var j = 0; j < ids.length; j++) {
+                   delete allKnownIDs[ids[j]];
+               }
+               
+               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+               return;
+           }
+           var result = JSON.parse(data);
+           var eventCallback = function(err) {
+               var eventObj = {source:'friends', type:'new', data:result[property]};
+               exports.eventEmitter.emit('contact/facebook', eventObj);
+           };
+           
+           for(var property in result) {
+               if (result.hasOwnProperty(property)) {
+                   dataStore.addObject('friends', result[property], eventCallback());
+               }
+           } 
+       });
+    
+    if (users.length > 0) {
+        downloadUsers(users, token, callback);
+    }
+    callback(null);
+}
 
 exports.syncNewsfeed = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {

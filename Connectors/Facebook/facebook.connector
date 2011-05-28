@@ -1,10 +1,10 @@
 {
 	"title":"Facebook Account",
 	"action":"Connect to a Facebook account",
-	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Foursquare 'app' that I create just for myself.",
+	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
 	"run":"node ../../Common/node/connector/client_init.js",
 	"status":"unstable",
 	"handle":"facebook",
 	"mongoCollections": ["friends", "newsfeed", "wall"],
-	"provides":["contact/facebook", "status/facebook"]
+	"provides":["contact/facebook"]
 }
