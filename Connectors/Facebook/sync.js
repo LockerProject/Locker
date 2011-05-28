@@ -119,14 +119,14 @@ function logRemoved(ids, callback) {
     });
 }
 
-function downloadUsers(users, token, callback) {
+function downloadUsers(theUsers, token, callback) {
+    var users = theUsers;
     var idString = '';
-    
-    for (var i = 0; i < users.length; i++) {
+    var length = users.length;
+    for (var i = 0; i < length && i < 100; i++) {
        idString += users.pop() + ',';
     }
     idString = idString.substring(0, idString.length - 1);
-
     request.get({uri:'https://graph.facebook.com/?ids=' + idString + '&access_token=' + token + '&date_format=U'}, 
         function(err, resp, data) {
             if (err) {

@@ -43,55 +43,23 @@ sync.eventEmitter.on('contact/facebook', function() {
 suite.next().suite.addBatch({
     "Can setup the tests": {
         topic: function() {
-            this.callback(null, true);
+            process.chdir('.' + mePath);
+            var self = this;
+            fakeweb.allowNetConnect = false;
+            fakeweb.allowLocalConnect = true;
+            lmongoclient.connect(function(collections) {
+                sync.init({accessToken : 'abc'}, collections);
+                dataStore.init('id', collections);
+                self.callback(null, true);
+            });
         },
         "successfully": function(err, test) {
             assert.equal(test, true);
         }
     }
-});
-
-suite.next().suite.addBatch({
-    "Can get newsfeed" : {
-        topic: function() {
-            process.chdir('.' + mePath);
-            var self = this;
-            lmongoclient.connect(function(collections) {
-                sync.init({accessToken : 'abc'}, collections);
-                dataStore.init("id", collections);
-                fakeweb.allowNetConnect = false;
-                fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
-                    file : __dirname + '/fixtures/facebook/me.json' });
-                fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me/feed?access_token=abc&date_format=U',
-                    file : __dirname + '/fixtures/facebook/feed.json' });
-                fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1&date_format=U',
-                    file : __dirname + '/fixtures/facebook/home.json' });
-                fakeweb.registerUri({
-                    uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
-                    file : __dirname + '/fixtures/facebook/none.json' });
-                    
-                sync.syncNewsfeed(self.callback);
-            });
-        },
-        "successfully" : function(err, repeatAfter, diaryEntry) {
-            assert.equal(repeatAfter, 600);
-            assert.equal(diaryEntry, "sync'd 3 new newsfeed posts"); },
-        "again" : {
-            topic: function() {
-                sync.syncNewsfeed(this.callback);
-            },
-            "successfully" : function(err, repeatAfter, diaryEntry) {
-                assert.equal(repeatAfter, 600);
-                assert.equal(diaryEntry, "sync'd 0 new newsfeed posts"); }
-        }
-    }
 }).addBatch({
     "Can get friends" : {
         topic: function() {
-            fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
                 file : __dirname + '/fixtures/facebook/me.json' });
@@ -109,14 +77,72 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "Can get newsfeed" : {
+        topic: function() { 
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
+                file : __dirname + '/fixtures/facebook/me.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1&date_format=U',
+                file : __dirname + '/fixtures/facebook/home.json' });
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
+                file : __dirname + '/fixtures/facebook/none.json' });
+                
+            sync.syncNewsfeed(this.callback);
+        },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 600);
+            assert.equal(diaryEntry, "sync'd 3 new newsfeed posts"); },
+        "again" : {
+            topic: function() {
+                sync.syncNewsfeed(this.callback);
+            },
+            "successfully" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 0 new newsfeed posts"); 
+            }
+         }
+    }
+}).addBatch({
+    "Can get wall" : {
+            topic: function() {
+                fakeweb.allowNetConnect = false;
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
+                    file : __dirname + '/fixtures/facebook/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me/feed?limit=250&offset=0&access_token=abc&since=1&date_format=U',
+                    file : __dirname + '/fixtures/facebook/feed.json' });
+                fakeweb.registerUri({
+                    uri : 'https://graph.facebook.com/me/feed?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
+                    file : __dirname + '/fixtures/facebook/none.json' });
+                
+                sync.syncWall(this.callback);
+            },
+            "successfully" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 4 new wall posts"); },
+            "again" : {
+                topic: function() {
+                    sync.syncWall(this.callback);
+                },
+                "successfully" : function(err, repeatAfter, diaryEntry) {
+                    assert.equal(repeatAfter, 600);
+                    assert.equal(diaryEntry, "sync'd 0 new wall posts"); }
+            }
+        }
+}).addBatch({
     "Datastore" : {
         "getPeopleCurrent returns all previously saved friends" : {
             topic: function() {
                 dataStore.getAllCurrent('friends', this.callback);
             },
             'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
                 assert.equal(response.length, 5);
-                assert.equal(response[0].id, 2715557);
+                assert.equal(response[0].id, 103135);
             }
         },
         "getNewsfeed returns all previously saved newsfeed posts" : {
@@ -124,6 +150,8 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent('newsfeed', this.callback);
             },
             'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
                 assert.equal(response.length, 3);
                 assert.equal(response[0].id, '100002438955325_224550747571079');
             }  
@@ -133,9 +161,10 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent('wall', this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 3);
-                console.error(response);
-                assert.equal(response[0].id, "4d1dcbf7d7b0b1f7f37bfd9e");
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.length, 4);
+                assert.equal(response[0].id, "100002438955325_224550747571079");
             }  
         },
         "getFriendFromCurrent returns the saved friend" : {
@@ -143,14 +172,14 @@ suite.next().suite.addBatch({
                 dataStore.getCurrent('friends', '103135', this.callback);
             },
             'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
                 assert.equal(response.id, 103135);
                 assert.equal(response.name, 'Ashley Doe');
             }
         }
     }
 });
-
-/*
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")
@@ -161,7 +190,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var contacts = JSON.parse(body);
                     assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 0);
+                    assert.equal(contacts.length, 5);
                 })
             .unpath()
         .undiscuss()
@@ -172,7 +201,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var newsfeed = JSON.parse(body);
                     assert.isNotNull(newsfeed);
-                    assert.equal(newsfeed.length, 251); 
+                    assert.equal(newsfeed.length, 3); 
                 })
             .unpath()
         .undiscuss()
@@ -183,7 +212,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var wall = JSON.parse(body);
                     assert.isNotNull(wall);
-                    assert.equal(wall.length, 251); 
+                    assert.equal(wall.length, 4); 
                 })
             .unpath()
         .undiscuss()
@@ -194,10 +223,10 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var profile = JSON.parse(body);
                     assert.isNotNull(profile);
-                    assert.equal(profile.id, "18514"); 
+                    assert.equal(profile.id, '100002438955325'); 
                 })
             .unpath()
-        .undiscuss();      */
+        .undiscuss();
 
         
 suite.export(module);
