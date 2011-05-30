@@ -11,6 +11,7 @@ var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
     dataStore = require('../../Common/node/connector/dataStore'),
+    shallowCompare = require('../../Common/node/shallowCompare'),
     app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter;
 
@@ -222,12 +223,26 @@ function downloadUsers(users, token, callback) {
                                 fs.writeFileSync('photos/' + js.id + '.jpg', body, 'binary');
                         });
                     }
-                    var eventObj = {source:'friends', type:'new', status:js};
-                    exports.eventEmitter.emit('contact/foursquare', eventObj);
-                    dataStore.addObject("friends", js, function(err) {
-                        parseUser();
-                    });
-                    
+                    dataStore.getCurrent("friends", js.id, function(err, resp) {
+                        if (resp === undefined) {
+                            var eventObj = {source:'friends', type:'new', status:js};
+                            exports.eventEmitter.emit('contact/foursquare', eventObj);
+                            dataStore.addObject("friends", js, function(err) {
+                                parseUser();
+                            });
+                        } else {
+                            delete resp['_id'];
+                            if (shallowCompare(js, resp)) {
+                                parseUser();
+                            } else {
+                                var eventObj = {source:'friends', type:'update', status:js};
+                                exports.eventEmitter.emit('contact/foursquare', eventObj);
+                                dataStore.addObject("friends", js, function(err) {
+                                    parseUser();
+                                });                            
+                            }
+                        }
+                    })
                 })();
             });
         } catch (exception) {

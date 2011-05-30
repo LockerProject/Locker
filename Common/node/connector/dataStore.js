@@ -98,7 +98,6 @@ exports.getCurrent = function(type, id, callback) {
         query[mongoID] = id;
         mongo.findOne(query, callback);
     }
-        
 }
 
 setCurrent = function(type, object, callback) {
