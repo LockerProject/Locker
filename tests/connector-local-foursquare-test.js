@@ -86,6 +86,18 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "returns the proper response when no new/removed friends" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/friends.json' });
+            sync.syncFriends(this.callback) },
+        "successfully": function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 3600);
+            assert.equal(diaryEntry, "no new friends, updated 2 existing friends");
+        }
+    }
+}).addBatch({
     "Datastore" : {
         "getPeopleCurrent returns all previously saved friends" : {
             topic: function() {
@@ -159,7 +171,7 @@ suite.next().suite.addBatch({
         topic: [],
         'after checking for proper number of events': function(topic) {
             assert.equal(events.checkin, 251);
-            assert.equal(events.contact, 4);
+            assert.equal(events.contact, 6);
         },
         'sucessfully': function(topic) {
             fakeweb.tearDown();

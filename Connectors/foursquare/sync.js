@@ -64,10 +64,10 @@ exports.syncFriends = function(callback) {
                 if(!knownIDs[friends[i].id])
                     newIDs.push(friends[i].id);
                 else
-                    repeatedIDs[friends[i].id] = 1;
+                    repeatedIDs.push(friends[i].id);
             }
             for(var knownID in knownIDs) {
-                if(!repeatedIDs[knownID])
+                if(repeatedIDs.indexOf(knownID) === -1)
                     removedIDs.push(knownID);
             }
             if(newIDs.length < 1) {
@@ -77,7 +77,9 @@ exports.syncFriends = function(callback) {
                         callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
                     });
                 } else {
-                    callback(err, 3600, "no new friends");
+                    downloadUsers(repeatedIDs, auth.accessToken, function(err) {
+                        callback(err, 3600, "no new friends, updated " + repeatedIDs.length + " existing friends");
+                    })
                 }
             } else {
                 for (var i = 0; i < newIDs.length; i++) {
