@@ -5,6 +5,12 @@
 	"run":"node ../../Common/node/connector/client_init.js",
 	"status":"unstable",
 	"handle":"facebook",
+	"processOptions" : {"oauth2" :
+	    {"provider" : "Facebook",
+	     "endPoint" : "https://graph.facebook.com/oauth",
+	     "linkToCreate" : "http://www.facebook.com/developers/createapp.php",
+	     "extraParams" : "scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream"}
+    },
 	"mongoCollections": ["friends", "newsfeed", "wall"],
 	"provides":["contact/facebook"]
 }

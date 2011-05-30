@@ -240,7 +240,7 @@ function getPosts(userID, type, token, offset, callback, posts) {
         var newPosts = JSON.parse(data).data;
         addAll(posts, newPosts.reverse());
         if(newPosts && newPosts.length == postLimit) {
-            getPosts(userID, type, token, offset + postsLimit, callback, posts);
+            getPosts(userID, type, token, offset + postLimit, callback, posts);
         } else {
             if (posts.length > 0) {
                 updateState[type].syncedThrough = posts[posts.length - 1].created_time;

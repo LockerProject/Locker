@@ -6,5 +6,15 @@
 	"status":"unstable",
 	"handle":"foursquare",
 	"mongoCollections": ["friends", "places"],
+	"processOptions" : {"oauth2" :
+	    {"provider" : "Foursquare",
+	     "appIDName" : "Client ID",
+	     "appSecretName" : "Client Secret",
+	     "authEndpoint" : "authenticate",
+	     "accessTokenResponse" : "json",
+	     "endPoint" : "https://foursquare.com/oauth2/",
+	     "linkToCreate" : "https://foursquare.com/oauth/register",
+	     "grantType" : "authorization_code"}
+    },
 	"provides":["contact/foursquare", "checkin/foursquare"]
 }

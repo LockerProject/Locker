@@ -30,7 +30,13 @@ process.stdin.on("data", function(data) {
         app = express.createServer(connect.bodyParser());
     }
     var mongoId = processOptions.id || "id";
-    var authLib = require("../../../" + processInfo.sourceDirectory + "/auth.js");
+    var authLib = undefined;
+    if (processOptions.oauth2) {
+        authLib = require('./oauth2.js');
+        authLib.options = processOptions.oauth2;
+    } else {
+        authLib = require("../../../" + processInfo.sourceDirectory + "/auth.js");
+    }
     var syncApi = require("../../../" + processInfo.sourceDirectory + "/sync-api.js")(app);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
