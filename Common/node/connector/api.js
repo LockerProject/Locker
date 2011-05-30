@@ -8,8 +8,8 @@
 */
 
 var fs = require('fs'),
-    lfs = require("./lfs.js"),
-    dataStore = require('./ldataStore.js'),
+    lfs = require("../lfs.js"),
+    dataStore = require('./dataStore.js'),
     validTypes = [];
 
 

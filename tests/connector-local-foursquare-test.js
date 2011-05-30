@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var sync = require('../Connectors/foursquare/sync');
-var dataStore = require('../Common/node/ldataStore');
+var dataStore = require('../Common/node/connector/dataStore');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");

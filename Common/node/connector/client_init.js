@@ -37,7 +37,7 @@ process.stdin.on("data", function(data) {
     
     app.meData = lfs.loadMeData();
     locker.connectToMongo(function(collections) {
-        require("../lapi.js")(app, mongoId, collections);
+        require("./api.js")(app, mongoId, collections);
         authLib.authAndRun(app, function() {
             syncApi.authComplete(authLib.auth, collections);
             if (!started) {

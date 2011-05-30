@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var twitter = require('../Connectors/Twitter/sync');
-var dataStore = require('../Common/node/ldataStore');
+var dataStore = require('../Common/node/connector/dataStore');
 var RESTeasy = require('api-easy');
 var assert = require("assert");
 var vows = require("vows");

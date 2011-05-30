@@ -10,8 +10,8 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
-    dataStore = require('../../Common/node/ldataStore'),
-    app = require('../../Common/node/lapi');
+    dataStore = require('../../Common/node/connector/dataStore'),
+    app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter;
 
     
