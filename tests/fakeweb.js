@@ -5,8 +5,8 @@ var fs = require('fs'),
     http = require('http'),
     EventEmitter = require('events').EventEmitter;
     
-var allowNetConnect = true,
-    allowLocalConnect = true,
+var _allowNetConnect = true,
+    _allowLocalConnect = true,
     interceptedUris = {};
     
 
@@ -17,7 +17,7 @@ function interceptable(uri) {
     }
     if (allowNetConnect == false) {
         if (uri) {
-            if (allowLocalConnect == true && url.parse(uri).host == "localhost") {
+            if (allowLocalConnect == true && url.parse(uri).hostname == "localhost") {
                 return false;
             }
             console.error("FAKEWEB: Unhandled GET request to " + uri);
@@ -46,6 +46,8 @@ function httpModuleRequest(uri) {
 }
 
 function Fakeweb() {
+    this.allowNetConnect = _allowNetConnect;
+    this.allowLocalConnect = _allowLocalConnect;
     var oldRequestGet = request.get;
     request.get = function(options, callback) {
         if (interceptable(options.uri)) {

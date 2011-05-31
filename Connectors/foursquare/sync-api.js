@@ -21,6 +21,8 @@ module.exports = function(theapp) {
 }
 
 function authComplete(theauth, mongoCollections) {
+    locker.event('checkin/foursquare', "");
+    
     auth = theauth;
     sync.init(auth, mongoCollections);
 
@@ -37,7 +39,7 @@ function authComplete(theauth, mongoCollections) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go4sq');
+        res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");

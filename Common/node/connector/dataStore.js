@@ -7,7 +7,7 @@
 *
 */
 
-var IJOD = require('./ijod').IJOD;
+var IJOD = require('../ijod').IJOD;
 
 var ijodFiles = {};
 var mongoCollections;
@@ -98,7 +98,6 @@ exports.getCurrent = function(type, id, callback) {
         query[mongoID] = id;
         mongo.findOne(query, callback);
     }
-        
 }
 
 setCurrent = function(type, object, callback) {

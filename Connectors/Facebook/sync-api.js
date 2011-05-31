@@ -20,13 +20,19 @@ module.exports = function(theapp) {
     return this;
 };
 
-function authComplete(theauth, callback) {
+function authComplete(theauth, mongoCollections) {
     auth = theauth;
-    sync.init(auth, function() {
-        console.error('auth completed');
-        app.get('/friends', friends);
-        
-        callback();
+    sync.init(auth, mongoCollections);
+
+    app.get('/friends', friends);
+    app.get('/newsfeed', newsfeed);
+    app.get('/wall', wall);
+    
+    sync.eventEmitter.on('status/facebook', function(eventObj) {
+        locker.event('status/facebook', eventObj);
+    });
+    sync.eventEmitter.on('contact/facebook', function(eventObj) {
+        locker.event('contact/facebook', eventObj);
     });
 }
 
@@ -35,7 +41,7 @@ function index(req, res) {
         res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, load <a href='friends'>friends</a></html>");
+        res.end("<html>found a token, load <a href='friends'>friends</a>, your <a href='newsfeed'>newsfeed</a>, or your <a href='wall'>wall</a></html>");
     }
 }
 
@@ -45,5 +51,23 @@ function friends(req, res) {
         locker.diary(diaryEntry);
         locker.at('/friends', repeatAfter);
         res.end(JSON.stringify({success: "done fetching friends"}));
+    });
+}
+
+function newsfeed(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncNewsfeed(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/newsfeed', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching newsfeed"}));
+    });
+}
+
+function wall(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncWall(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/wall', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching wall"}));
     });
 }
