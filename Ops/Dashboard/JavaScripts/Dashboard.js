@@ -175,6 +175,7 @@ $(document).ready(function()
 
     // Populate Available Services List
     serviceMap.available.forEach(function(item) {
+      if (!item.installable) return;
       switch (item.is)
       {
         case "app":

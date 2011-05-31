@@ -106,7 +106,12 @@ function checkKeys() {
 
 function finishStartup() {
     // look for available things
-    lconfig.scannedDirs.forEach(serviceManager.scanDirectory);
+    lconfig.scannedDirs.forEach(function(dirToScan) {
+        console.log(dirToScan);
+        var installable = true;
+        if (dirToScan === "Collections") installable = false;
+        serviceManager.scanDirectory(dirToScan, installable);
+    });
 
     // look for existing things
     serviceManager.findInstalled();

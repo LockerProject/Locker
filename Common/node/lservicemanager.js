@@ -58,12 +58,13 @@ exports.providers = function(types) {
 /**
 * Map a meta data file JSON with a few more fields and make it available
 */
-function mapMetaData(file, type) {
+function mapMetaData(file, type, installable) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
-    if(type == "collection")
-    {
+    metaData.installable = installable;
+    serviceMap["available"].push(metaData);        
+    if (type === "collection") {
         if(!metaData.handle)
         {
             console.error("missing handle for "+file);
@@ -79,10 +80,9 @@ function mapMetaData(file, type) {
                 fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
             }
         });
-    }else{
-        serviceMap["available"].push(metaData);        
-        return metaData;
     }
+
+    return metaData;
 }
     
 /**
@@ -93,18 +93,22 @@ var scannedTypes = ["collection", "connector", "app"];
 /**
 * Scans a directory for available services
 */
-exports.scanDirectory = function(dir) {
+exports.scanDirectory = function(dir, installable) {
+    if (typeof(installable) == "undefined") {
+        installable = true;
+    }
+
     var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
         var stats = fs.statSync(fullPath);
         if(stats.isDirectory()) {
-            exports.scanDirectory(fullPath);
+            exports.scanDirectory(fullPath, installable);
             continue;
         }
         scannedTypes.forEach(function(scanType) {
             if (RegExp("\\." + scanType + "$").test(fullPath)) {
-                mapMetaData(fullPath, scanType);
+                mapMetaData(fullPath, scanType, installable);
             }
         });
     }
@@ -139,7 +143,6 @@ exports.findInstalled = function () {
 exports.install = function(metaData) {
     var serviceInfo = undefined;
     serviceMap.available.some(function(svcInfo) {
-        console.log("Comparing " + svcInfo.srcdir + " to " + metaData.srcdir);
         if (svcInfo.srcdir == metaData.srcdir) {
             serviceInfo = new Object();
             for(var a in svcInfo){serviceInfo[a]=svcInfo[a];};
@@ -147,7 +150,7 @@ exports.install = function(metaData) {
         }
         return false;
     });
-    if (!serviceInfo) {
+    if (!serviceInfo || !serviceInfo.installable) {
         return serviceInfo;
     }
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
@@ -222,12 +225,8 @@ exports.spawn = function(serviceId, callback) {
     }
     
     //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
-    // 5-31-2011 - temas:  Changing this to only used the passed in svc info so that preinstalled collections work again.
-    //                     Can't remember why this was repulling info from the available map.
-    var run = svc.run;
-    var serviceInfo = svc;
-    /*
-    console.log("Looking for " + serviceId + " have " + JSON.stringify(svc));
+    var run;
+    var serviceInfo;
     for(var i in serviceMap.available) {
         if(serviceMap.available[i].srcdir == svc.srcdir) {
             serviceInfo = serviceMap.available[i];
@@ -236,7 +235,6 @@ exports.spawn = function(serviceId, callback) {
         }
     }
     run = run || svc.run;
-    */
     if(!run) {
         console.error('Could not spawn service from source directory', svc.srcdir);
         return;
