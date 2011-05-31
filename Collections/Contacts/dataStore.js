@@ -17,6 +17,18 @@ exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
 
+exports.addData = function(type, data, callback) {
+    if (type == 'facebook') {
+        exports.addFacebookData(data, callback);
+    } else if (type == 'twitter') {
+        exports.addTwitterData(data, callback);
+    } else if (type == 'foursquare') {
+        exports.addFoursquareData(data, callback);
+    } else if (type == 'google') {
+        exports.addGoogleContactsData(data, callback);
+    }
+}
+
 exports.addTwitterData = function(relationship, twitterData, callback) {
     var twID  = twitterData.data.id;
     var cleanedName = cleanName(twitterData.data.name);
