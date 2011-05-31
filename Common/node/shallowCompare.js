@@ -28,8 +28,12 @@ module.exports = function Equals(obj1, obj2) {
     for (p in obj2) {
         if (typeof(obj1[p]) == 'undefined') {
             return false;
-        } else if (!Equals(obj2[p], obj1[p])) {
-            return false;
+        } else {
+            if (typeof obj2[p] == 'object') {
+                if (!Equals(obj2[p], obj1[p])){
+                    return false;
+                }
+            }
         }
     }
     
