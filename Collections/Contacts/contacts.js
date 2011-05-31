@@ -19,6 +19,7 @@ var fs = require('fs'),
     crypto = require('crypto');
     
 var sync = require('./sync');
+var dataStore = require("./dataStore");
 
 var lockerInfo;
 var express = require('express'),
@@ -31,13 +32,8 @@ app.get('/', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    lfs.readObjectsFromFile('contacts.json',function(contacts){
-        res.write('<html><p>Found '+contacts.length+' contacts: <ul>');
-        for(var i in contacts) {
-            res.write('<li>' + (contacts[i].name? '<b>' + contacts[i].name + ': </b>' : '') +
-                            JSON.stringify(contacts[i])+'</li>');
-        }
-        res.write('</ul></p></html>');
+    dataStore.getTotalCount(function(err, countInfo) {
+        res.write('<html><p>Tracking '+ countInfo +' contacts</p><p><a href="update">Update from Connectors</a></p></html>');
         res.end();
     });
 });

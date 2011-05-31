@@ -222,8 +222,12 @@ exports.spawn = function(serviceId, callback) {
     }
     
     //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
-    var run;
-    var serviceInfo;
+    // 5-31-2011 - temas:  Changing this to only used the passed in svc info so that preinstalled collections work again.
+    //                     Can't remember why this was repulling info from the available map.
+    var run = svc.run;
+    var serviceInfo = svc;
+    /*
+    console.log("Looking for " + serviceId + " have " + JSON.stringify(svc));
     for(var i in serviceMap.available) {
         if(serviceMap.available[i].srcdir == svc.srcdir) {
             serviceInfo = serviceMap.available[i];
@@ -232,6 +236,7 @@ exports.spawn = function(serviceId, callback) {
         }
     }
     run = run || svc.run;
+    */
     if(!run) {
         console.error('Could not spawn service from source directory', svc.srcdir);
         return;

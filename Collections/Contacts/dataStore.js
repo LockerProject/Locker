@@ -13,6 +13,10 @@ exports.init = function(mongoCollection) {
     collection = mongoCollection;
 }
 
+exports.getTotalCount = function(callback) {
+    collection.count(callback);
+}
+
 exports.addTwitterData = function(relationship, twitterData, callback) {
     var twID  = twitterData.data.id;
     var cleanedName = cleanName(twitterData.data.name);
