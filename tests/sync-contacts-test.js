@@ -118,6 +118,9 @@ vows.describe("Contacts collection sync").addBatch({
                 uri: 'http://localhost:8043/Me/twitter/getCurrent/followers',
                 file: __dirname + '/fixtures/contacts/twitter_followers.json' });
             var self = this;
+            // TODO: this should be using the query language when that's implemented.  Nothing should ever really
+            // be going direct to mongo like this in a test
+            //
             mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, function(err, resp) {
                 friend = resp;
                 contacts.getContacts("twitter", "followers", "twitter", function() {
