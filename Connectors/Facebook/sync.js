@@ -186,8 +186,6 @@ function addNewsfeedPosts(posts, callback) {
     var post = posts.shift();
     if (post !== undefined) {
         dataStore.addObject('newsfeed', post, function(err) {
-            var eventObj = {source:'status', type:'new', status:post};
-            exports.eventEmitter.emit('status/facebook', eventObj);
             addNewsfeedPosts(posts, callback);
         });
     }
@@ -213,8 +211,6 @@ function addWallPosts(posts, callback) {
     var post = posts.shift();
     if (post !== undefined) {
         dataStore.addObject('wall', post, function(err) {
-            var eventObj = {source:'status', type:'new', status:post};
-            exports.eventEmitter.emit('status/facebook', eventObj);
             addWallPosts(posts, callback);
         });
     }

@@ -16,7 +16,7 @@ var RESTeasy = require('api-easy');
 var vows = require('vows');
 var fs = require('fs');
 var currentDir = process.cwd();
-var events = {status: 0, contact: 0};
+var events = {contact: 0};
 
 var suite = RESTeasy.describe('Facebook Connector');
 
@@ -33,9 +33,6 @@ lconfig.load('config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 
-sync.eventEmitter.on('status/facebook', function() {
-    events.status++;
-});
 sync.eventEmitter.on('contact/facebook', function() {
     events.contact++;
 });
@@ -179,7 +176,20 @@ suite.next().suite.addBatch({
             }
         }
     }
+}).addBatch({
+    "Tears itself down" : {
+        topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events.contact, 5);
+        },
+        'sucessfully': function(topic) {
+            fakeweb.tearDown();
+            process.chdir('../..');
+            assert.equal(process.cwd(), currentDir);
+        }
+    }
 });
+
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")
