@@ -140,6 +140,7 @@ function showApp(app, event)
 
 function setLocation(location)
 {
+  if (!history.pushState) return;
   if (location == getLocation()) return;
   history.pushState({}, "", "#!/" + location);
 }
