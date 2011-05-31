@@ -51,17 +51,17 @@ exports.gatherContacts = function() {
 exports.getContacts = function(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint}, function(err, resp, body) {
         var contacts = JSON.parse(body);
-        addContacts(type, contacts, callback);
+        addContacts(type, endpoint, contacts, callback);
     });
 }
 
-function addContacts(type, contacts, callback) {
+function addContacts(type, endpoint, contacts, callback) {
     if (!(contacts && contacts.length)) {
         callback();
     } else {
         var contact = contacts.shift();
-        dataStore.addData(type, {data:contact}, function(err, doc) {
-            addContacts(type, contacts, callback);
+        dataStore.addData(type, endpoint, {data:contact}, function(err, doc) {
+            addContacts(type, endpoint, contacts, callback);
         })
     }
 }

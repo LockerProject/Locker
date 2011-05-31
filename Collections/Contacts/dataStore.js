@@ -17,11 +17,11 @@ exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
 
-exports.addData = function(type, data, callback) {
+exports.addData = function(type, endpoint, data, callback) {
     if (type == 'facebook') {
         exports.addFacebookData(data, callback);
     } else if (type == 'twitter') {
-        exports.addTwitterData(data, callback);
+        exports.addTwitterData(endpoint, data, callback);
     } else if (type == 'foursquare') {
         exports.addFoursquareData(data, callback);
     } else if (type == 'google') {
@@ -30,6 +30,7 @@ exports.addData = function(type, data, callback) {
 }
 
 exports.addTwitterData = function(relationship, twitterData, callback) {
+    relationship = relationship.substring(0, relationship.length - 1);
     var twID  = twitterData.data.id;
     var cleanedName = cleanName(twitterData.data.name);
     var query = {'accounts.twitter.data.id':twID};
