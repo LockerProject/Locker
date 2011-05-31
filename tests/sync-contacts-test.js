@@ -4,7 +4,10 @@ var assert = require("assert");
 var vows = require("vows");
 var currentDir = process.cwd();
 var fakeweb = require(__dirname + '/fakeweb.js');
+var mongoCollections;
 var svcId = 'contacts';
+var shallowCompare = require('../Common/node/shallowCompare.js');
+var friend;
 
 var thecollections = ['contacts'];
 var lconfig = require('../Common/node/lconfig');
@@ -24,8 +27,9 @@ vows.describe("Contacts collection sync").addBatch({
             process.chdir('./Me/contacts');
             var self = this;
             lmongoclient.connect(function(collections) {
-                contacts.init("", collections.contacts);
-                dataStore.init(collections.contacts);
+                mongoCollections = collections.contacts;
+                contacts.init("", mongoCollections);
+                dataStore.init(mongoCollections);
                 contacts.getContacts('foursquare', 'friends', 'foursquare', function() {
                     dataStore.getTotalCount(self.callback);
                 });
@@ -114,13 +118,18 @@ vows.describe("Contacts collection sync").addBatch({
                 uri: 'http://localhost:8043/Me/twitter/getCurrent/followers',
                 file: __dirname + '/fixtures/contacts/twitter_followers.json' });
             var self = this;
-            contacts.getContacts("twitter", "followers", "twitter", function() {
-                dataStore.getTotalCount(self.callback);
+            mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, function(err, resp) {
+                friend = resp;
+                contacts.getContacts("twitter", "followers", "twitter", function() {
+                    mongoCollections.findOne({'accounts.twitter.data.screen_name':'ww'}, self.callback);
+                });
             });
         },
         "successfully" : function(err, resp) {
             assert.isNull(err);
-            assert.equal(resp, 8);
+            assert.isTrue(shallowCompare(friend.accounts.foursquare, resp.accounts.foursquare));
+            assert.isFalse(shallowCompare(resp, friend));
+            
         }
     }
 }).addBatch({
