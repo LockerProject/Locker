@@ -8,15 +8,28 @@
 */
 
 var request = require('request'),
-    lfs = require('../../Common/node/lfs.js'),
-    fs = require('fs');
+    lfs = require('../lfs.js'),
+    fs = require('fs'),
+    options = {provider :            'Some oauth2 consumer',
+               endPoint :            'http://consumer.com/oauth/',
+               linkToCreate :        'http://change.me/',
+               appIDName :           'App ID',
+               authEndpoint :        'authorize', 
+               appSecretName :       'App Secret',
+               accessTokenResponse : 'text',
+               grantType :           '',
+               extraParams :         ''};
 
 var completedCallback, me;
 
 exports.auth = {};
+exports.options = {};
 
 exports.authAndRun = function(app, onCompletedCallback) {
     me = app.meData;
+    for (i in exports.options) {
+        options[i] = exports.options[i];
+    }
     if(exports.isAuthed()) {
         onCompletedCallback();
         return;
@@ -53,29 +66,40 @@ exports.isAuthed = function() {
 function go(req, res) {
     if(!(exports.auth.appKey && exports.auth.appSecret)) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Facebook app info that will be used to sync your data" + 
-                " (create a new one <a href='http://www.facebook.com/developers/createapp.php' target='_blank'>here</a>" +
+        res.end("<html>Enter your personal " + options.provider + " app info that will be used to sync your data" + 
+                " (create a new one <a href='" + options.linkToCreate + "' target='_blank'>here</a>" +
                 " using a callback url of " + me.uri + "auth/) " +
-                "<form method='post' action='saveAuth'>" +
-                    "App ID: <input name='appKey'><br>" +
-                    "App Secret: <input name='appSecret'><br>" +
+                "<form method='post' action='saveAuth'>" + 
+                    options.appIDName + ": <input name='appKey'><br>" +
+                    options.appSecretName + ": <input name='appSecret'><br>" +
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else {
         sys.debug('redirecting to ' + me.uri + 'auth');
-        res.redirect('https://graph.facebook.com/oauth/authorize?client_id=' + exports.auth.appKey + 
-                        '&response_type=code&redirect_uri=' + me.uri + 'auth/&' + 
-                        'scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream');
+        var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey + 
+                        '&response_type=code&redirect_uri=' + me.uri + 'auth/';
+        if (options.extraParams) {
+            newUrl += "&" + options.extraParams;
+        }
+        res.redirect(newUrl);
     }
 }
 
-function handleAuth(req, res) {                    
-    request.get({uri:'https://graph.facebook.com/oauth/access_token' +
+function handleAuth(req, res) {
+    var newUrl = options.endPoint + '/access_token' +
                     '?client_id=' + exports.auth.appKey +
                     '&client_secret=' + exports.auth.appSecret +
+                    '&grant_type=' + options.grantType +
                     '&redirect_uri=' + me.uri + 'auth/' +
-                    '&code=' + req.param('code')}, function(err, resp, body) {
-        exports.auth.accessToken = querystring.parse(body).access_token;
+                    '&code=' + req.param('code');
+    request.get({url:newUrl}, function(err, resp, body) {
+        if (options.accessTokenResponse == 'json') {
+            exports.auth.accessToken = JSON.parse(body).access_token;
+        } else {
+            console.log("resp", resp);
+            console.log("body", body);
+            exports.auth.accessToken = querystring.parse(body).access_token;
+        }
         lfs.writeObjectToFile("auth.json", exports.auth);
         completedCallback(exports.auth);
         res.redirect(me.uri);

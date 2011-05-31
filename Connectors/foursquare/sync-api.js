@@ -20,20 +20,26 @@ module.exports = function(theapp) {
     return this;
 }
 
-function authComplete(theauth, callback) {
+function authComplete(theauth, mongoCollections) {
+    locker.event('checkin/foursquare', "");
+    
     auth = theauth;
-    sync.init(auth, function() {
-        console.error('auth completed');
-        app.get('/friends', friends);
-        app.get('/checkins', checkins);
-        
-        callback();
+    sync.init(auth, mongoCollections);
+
+    app.get('/friends', friends);
+    app.get('/checkins', checkins);
+    
+    sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
+        locker.event('checkin/foursquare', eventObj);
+    });
+    sync.eventEmitter.on('contact/foursquare', function(eventObj) {
+        locker.event('contact/foursquare', eventObj);
     });
 }
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go4sq');
+        res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");

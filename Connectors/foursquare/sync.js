@@ -10,12 +10,17 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
-    dataStore = require('./dataStore');
+    dataStore = require('../../Common/node/connector/dataStore'),
+    shallowCompare = require('../../Common/node/shallowCompare'),
+    app = require('../../Common/node/connector/api');
+    EventEmitter = require('events').EventEmitter;
 
     
 var updateState, auth, allKnownIDs;
 
-exports.init = function(theauth, callback) {
+exports.eventEmitter = new EventEmitter();
+
+exports.init = function(theauth, mongoCollections) {
     auth = theauth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
@@ -24,9 +29,7 @@ exports.init = function(theauth, callback) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {}; }
-    dataStore.init(function() {
-        callback();
-    });
+    dataStore.init("id", mongoCollections);
 }
 
 
@@ -62,39 +65,52 @@ exports.syncFriends = function(callback) {
                 if(!knownIDs[friends[i].id])
                     newIDs.push(friends[i].id);
                 else
-                    repeatedIDs[friends[i].id] = 1;
+                    repeatedIDs.push(friends[i].id);
             }
             for(var knownID in knownIDs) {
-                if(!repeatedIDs[knownID])
+                if(repeatedIDs.indexOf(knownID) === -1)
                     removedIDs.push(knownID);
             }
             if(newIDs.length < 1) {
-                if(removedIDs.length > 0)
-                    logRemoved(removedIDs);
-                callback(err, 3600, "no new friends, removed " + removedIDs.length + " deleted friends");
+                if(removedIDs.length > 0) {
+                    var removedCount = removedIDs.length;
+                    logRemoved(removedIDs, function(err) {
+                        callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
+                    });
+                } else {
+                    downloadUsers(repeatedIDs, auth.accessToken, function(err) {
+                        callback(err, 3600, "no new friends, updated " + repeatedIDs.length + " existing friends");
+                    })
+                }
             } else {
                 for (var i = 0; i < newIDs.length; i++) {
                     allKnownIDs[newIDs[i]] = 1;
                 }
                 fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                downloadUsers(newIDs, auth.accessToken);
                 if(removedIDs.length > 0)
-                    logRemoved(removedIDs);
-                callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
+                    logRemoved(removedIDs, function(err) {});
+                downloadUsers(newIDs, auth.accessToken, function(err) {
+                    callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
+                });
             }
         });
     });
 }
 
 
-function logRemoved(ids) {
-    if(!ids)
+function logRemoved(ids, callback) {
+    if(!ids || !ids.length) {
+        fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+        callback();
         return;
-    ids.forEach(function(id) {
-        dataStore.logRemovePerson(id);
+    }
+    var id = ids.shift();
+    dataStore.removeObject("friends", id+'', function(err) {
         delete allKnownIDs[id];
+        logRemoved(ids, callback);
+        var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
+        exports.eventEmitter.emit('contact/foursquare', eventObj);
     });
-    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
 }
 
 exports.syncCheckins = function (callback) {
@@ -102,13 +118,27 @@ exports.syncCheckins = function (callback) {
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
         getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
-            for (var i = 0; i < checkins.length; i++)
-                dataStore.addPlace(checkins[i]);
-            callback(err, 600, "sync'd " + checkins.length + " new checkins");
+            var checkinCount = checkins.length;
+            addCheckins(checkins, function() {
+                callback(err, 600, "sync'd " + checkinCount + " new checkins");
+            });
         });
     });
 }
 
+function addCheckins(checkins, callback) {
+    if (!checkins || !checkins.length) {
+        callback();
+    }
+    var checkin = checkins.shift();
+    if (checkin != undefined) {
+        dataStore.addObject("places", checkin, function(err) {
+            var eventObj = {source:'places', type:'new', status:checkin};
+            exports.eventEmitter.emit('checkin/foursquare', eventObj);
+            addCheckins(checkins, callback);
+        })
+    }
+}
 
 function getMe(token, callback) {
     request.get({uri:'https://api.foursquare.com/v2/users/self.json?oauth_token=' + token}, callback);
@@ -148,34 +178,84 @@ function getCheckins(userID, token, offset, callback, checkins) {
 }
 
 function downloadUsers(users, token, callback) {
-    for (var i = 0; i < users.length; i++) {
-       var friend = users[i];
-
-       // get extra juicy contact info plz
-       request.get({uri:'https://api.foursquare.com/v2/users/' + friend + '.json?oauth_token=' + token},
-       function(err, resp, data) {
-           var response = JSON.parse(data);
-           if(response.meta.code >= 400) {
-               console.error(data);
-               allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-               delete allKnownIDs[id];
-               fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-               return;
-           }
-           var js = JSON.parse(data).response.user;
-           js.name = js.firstName + " " + js.lastName;
-           if (js.photo.indexOf("userpix") > 0) {
-               // fetch photo
-               request.get({uri:js.photo}, function(err, resp, body) {
-                  if(err)
-                      console.error(err);
-                  else
-                      fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
-              });
-           }
-           dataStore.addFriend(js);
-       });
-    }
+    var coll = users.slice(0);
+    (function downloadUser() {
+        if (coll.length == 0) {
+            callback();
+            return;
+        }
+        var friends = coll.splice(0, 5);
+        try {
+            var requestUrl = 'https://api.foursquare.com/v2/multi?requests=';
+            for (var i = 0; i < friends.length; i++) {
+                requestUrl += "/users/" + friends[i] + ",";
+            }
+            request.get({uri:requestUrl + "&oauth_token=" + token},
+                         function(err, resp, data) {
+                var response = JSON.parse(data);
+                if(response.meta.code >= 400) {
+                    allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+                    for (var i = 0; i < friends.length; i++) {
+                        delete allKnownIDs[friends[i]];
+                    }
+                    fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+                    if (coll.length == 0) {
+                        callback();
+                    } else {
+                        downloadUser();
+                    }
+                }
+                var responses = JSON.parse(data).response.responses;
+                (function parseUser() {
+                    var friend = responses.splice(0, 1)[0];
+                    if (friend == undefined || friend.response == undefined || friend.response.user == undefined) {
+                        downloadUser();
+                        return;
+                    }
+                    var js = friend.response.user;
+                    js.name = js.firstName + " " + js.lastName;
+                    if (js.photo.indexOf("userpix") > 0) {
+                        // fetch photo
+                        request.get({uri:js.photo, encoding: 'binary'}, function(err, resp, body) {
+                            if(err)
+                                console.error(err);
+                            else
+                                fs.writeFileSync('photos/' + js.id + '.jpg', body, 'binary');
+                        });
+                    }
+                    dataStore.getCurrent("friends", js.id, function(err, resp) {
+                        if (resp === undefined) {
+                            var eventObj = {source:'friends', type:'new', status:js};
+                            exports.eventEmitter.emit('contact/foursquare', eventObj);
+                            dataStore.addObject("friends", js, function(err) {
+                                parseUser();
+                            });
+                        } else {
+                            delete resp['_id'];
+                            if (shallowCompare(js, resp)) {
+                                parseUser();
+                            } else {
+                                var eventObj = {source:'friends', type:'update', status:js};
+                                exports.eventEmitter.emit('contact/foursquare', eventObj);
+                                dataStore.addObject("friends", js, function(err) {
+                                    parseUser();
+                                });                            
+                            }
+                        }
+                    })
+                })();
+            });
+        } catch (exception) {
+            try {
+                allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+            } catch (err) { allKnownIDs = {}; }
+            for (var i = 0; i < coll.length; i++) {
+                delete allKnownIDs[coll[i]];
+            }
+            fs.writeFileSync('allKnownIDs.json', JSON.stringify(allKnownIDs));
+            callback(exception);
+        }
+    })();
 }
 
 
