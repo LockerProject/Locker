@@ -28,7 +28,7 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addGoogleContactsData(data, callback);
     }
 }
-
+//profile_image_url
 exports.addTwitterData = function(relationship, twitterData, callback) {
     relationship = relationship.substring(0, relationship.length - 1);
     var data = twitterData.data;
@@ -41,14 +41,17 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     set['accounts.twitter.$'] = baseObj;
     if(data.name)
         set.name = data.name;
-    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+    var addToSet = {'_matching.cleanedNames':cleanedName};
+    if(data.profile_image_url)
+        addToSet.photos = data.profile_image_url;
+    collection.update(query, {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}, 
                       {'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
             collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, 
-                                         $addToSet:{'_matching.cleanedNames':cleanedName},
+                                         $addToSet:addToSet,
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);
         } else {
@@ -70,8 +73,14 @@ exports.addFoursquareData = function(foursquareData, callback) {
         set.name = name;
     if(data.gender)
         set.gender = data.gender;
-    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName,
-                                                    'photos':data.photo}},
+    var addToSet = {'_matching.cleanedNames':cleanedName};
+    if(data.photo)
+        addToSet.photos = data.photo;
+    if(data.contact.phone)
+        addToSet.phone = {value:data.contact.phone, type:'mobile'};
+    if(data.contact.email)
+        addToSet.email = {value:data.contact.email};
+    collection.update(query, {$set: set, $addToSet:addToSet},
                              {safe: true}, function(err, doc) {
         if (!doc) {
             var or = [{'_matching.cleanedNames':cleanedName}];
@@ -81,8 +90,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
                 or.push({'accounts.facebook.data.id':data.contact.facebook});
             var set = {};
             collection.update({$or:or}, {$push:{'accounts.foursquare':baseObj}, 
-                                         $addToSet:{'_matching.cleanedNames':cleanedName,
-                                                    'photos':data.photo},
+                                         $addToSet:addToSet,
                                          $set:{'name':data.name, 'gender':data.gender}},
                               {safe: true, upsert: true}, callback);
         } else {
@@ -127,13 +135,43 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     set['accounts.googleContacts.$'] = baseObj;
     if(data.name)
         set.name = data.name;
-    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+    
+    var addToSet = {'_matching.cleanedNames':cleanedName};
+    if(data.address) {
+        var addresses = [];
+        for(var i in data.address) {
+            if(!(data.address[i] && data.address[i].value))
+                continue;
+            addresses.push(data.address[i]);
+        }
+        addToSet.address = {$each:addresses};
+    }
+    if(data.phone) {
+        var phones = [];
+        for(var i in data.phone) {
+            if(!(data.phone[i] && data.phone[i].value))
+                continue;
+            phones.push(data.phone[i]);
+        }
+        addToSet.phone = {$each:phones};
+    }
+    if(data.email) {
+        var emails = [];
+        for(var i in data.email) {
+            if(!(data.email[i] && data.email[i].value))
+                continue;
+            data.email[i].value = data.email[i].value.toLowerCase();
+            emails.push(data.email[i]);
+        }
+        addToSet.email = {$each:emails};
+    }
+    collection.update(query, {$set: set, $addToSet:addToSet},
                        {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}];
             collection.update({$or:or}, {$push:{'accounts.googleContacts':baseObj}, 
-                                         $addToSet:{'_matching.cleanedNames':cleanedName},
+                                         $addToSet:addToSet,
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);
         } else {
