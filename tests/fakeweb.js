@@ -50,8 +50,9 @@ function Fakeweb() {
     this.allowLocalConnect = _allowLocalConnect;
     var oldRequestGet = request.get;
     request.get = function(options, callback) {
-        if (interceptable(options.uri)) {
-            return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
+        var url = options.uri || options.url;
+        if (interceptable(url)) {
+            return callback(null, {statusCode : interceptedUris[url].statusCode}, interceptedUris[url].response);
         } else {
             return oldRequestGet.call(request, options, callback);
         }
@@ -59,8 +60,9 @@ function Fakeweb() {
     
     var oldRequestPost = request.post;
     request.post = function(options, callback) {
-        if (interceptable(options.uri)) {
-            return callback(null, {statusCode : interceptedUris[options.uri].statusCode}, interceptedUris[options.uri].response);
+        var url = options.uri || options.url;
+        if (interceptable(url)) {
+            return callback(null, {statusCode : interceptedUris[url].statusCode}, interceptedUris[url].response);
         } else {
             return oldRequestPost.call(request, options, callback);
         }
