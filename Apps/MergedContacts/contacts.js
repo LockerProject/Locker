@@ -67,7 +67,6 @@ function readContacts(contactsReadCB) {
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
     request.get({url:lconfig.lockerBase + "/query/getAContacts_contacts?offset=0"}, function(err, res, data) {
-        console.log("Read data " + data);
         contactsReadCB(JSON.parse(data));
     });
 }
