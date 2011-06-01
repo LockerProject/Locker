@@ -67,6 +67,7 @@ locker.get("/query/:query", function(req, res) {
     var data = decodeURIComponent(req.originalUrl.substr(6)).replace(/%21/g, '!').replace(/%27/g, "'").replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2a/ig, '*');
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
+        console.log("Querying " + JSON.stringify(query));
         var mongodb = require('mongodb');
         db = new mongodb.Db('locker', new mongodb.Server(config.mongo.host, config.mongo.port, {}), {});
         db.open(function(error, client) {
@@ -76,10 +77,24 @@ locker.get("/query/:query", function(req, res) {
                db.close();
                return;
            }
-           console.log("Running " + query);
-           db.eval(query, function(error, queryResult) {
-               res.end(JSON.stringify(queryResult));
-               db.close();
+           var collection = new mongodb.Collection(client, query.collection);
+
+           var options = {};
+           if (query.limit) options.limit = query.limit;
+           if (query.offset) options.skip = query.offset;
+           collection.find(query.query, options, function(err, foundObjects) {
+               if (err) {
+                   res.writeHead(500);
+                   res.end(err);
+                   db.close();
+                   return;
+
+                }
+
+                foundObjects.toArray(function(err, objects) {
+                    res.end(JSON.stringify(objects));
+                    db.close();
+                });
            });
         });
     } catch (E) {
