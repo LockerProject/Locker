@@ -7,13 +7,17 @@ var fs = require('fs'),
     
 var _allowNetConnect = true,
     _allowLocalConnect = true,
-    interceptedUris = {};
+    interceptedUris = {},
+    ignoredUris = {};
     
 
     
 function interceptable(uri) {
     if (interceptedUris[uri]) {
         return true;
+    }
+    if (ignoredUris[uri]) {
+        return false;
     }
     if (allowNetConnect == false) {
         if (uri) {
@@ -101,6 +105,9 @@ function Fakeweb() {
             interceptedUris[options.uri].response = options.body;
         }
         interceptedUris[options.uri].statusCode = options.statusCode || 200;
+    }
+    ignoreUri = function(options) {
+        ignoredUris[options.uri] = true;
     }
     return this;
 };
