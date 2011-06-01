@@ -57,7 +57,7 @@ app.get('/sync/profile', function(req, res) {
     console.error('/sync/profile');
     console.log('/sync/profile');
     getGitHub().syncProfile(function(data) {
-        locker.diary("GitHub profile sync success");
+        locker.diary("Profile sync success");
         res.writeHead(200);
         res.end("got profile: "+JSON.stringify(data));
         locker.at('/sync/profile', 3600);
@@ -72,7 +72,7 @@ app.get('/get_profile', function(req, res) {
 });
 app.get('/sync/repos', function(req, res) {
     getGitHub().syncRepos(function(data) {
-        locker.diary("GitHub repo sync success");
+        locker.diary("Repo sync success");
         res.writeHead(200);
         res.end("got repos: "+JSON.stringify(data));
         locker.at('/sync/repos', 3600);
