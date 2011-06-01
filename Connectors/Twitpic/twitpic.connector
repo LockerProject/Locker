@@ -1,0 +1,9 @@
+{
+    "title":"Twitpic Connector",
+    "action":"Sync photos posted to your twitpic account.",
+    "desc":"Sync photos posted to your twitpic account",
+    "run":"node twitpic.js",
+    "status":"unstable",
+	"handle":"twitpic",
+    "provides":["photo/twitpic"]
+}
