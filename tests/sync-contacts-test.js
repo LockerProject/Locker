@@ -139,6 +139,8 @@ vows.describe("Contacts collection sync").addBatch({
     "Tears itself down" : {
         topic: [],
         'sucessfully': function(topic) {
+            fakeweb.allowLocalConnect = true;
+            fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
         }
