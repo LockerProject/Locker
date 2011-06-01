@@ -16,6 +16,9 @@ exports.init = function(mongoCollection) {
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
+exports.getAll = function(callback) {
+    collection.find({}, callback);
+}
 
 exports.addData = function(type, endpoint, data, callback) {
     if (type == 'facebook') {
