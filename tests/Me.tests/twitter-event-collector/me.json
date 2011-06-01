@@ -1,7 +1,0 @@
-{
-    "title":"Twitter Event Collector",
-    "srcdir":"Tests/twitter-event-collector",
-    "is":"connector",
-    "id":"twitter-event-collector", 
-    "uri":"http://localhost:8043/Me/twitter-event-collector"
-}

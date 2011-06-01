@@ -16,11 +16,14 @@ app.get('/', function(req, res) {
     res.end();
 });
 
-var events = {friends:[], followers:[], mentions:[], home_timeline:[]};
+var events = {};
 app.post('/event', function(req, res) {
     res.writeHead(200);
     res.end();
     if(req.body.obj.source) {
+        if (!events[req.body.obj.source]) {
+            events[req.body.obj.source] = [];
+        }
         events[req.body.obj.source].push(req.body);
     } else {
         console.error(req.body);
@@ -28,10 +31,20 @@ app.post('/event', function(req, res) {
 });
 
 app.get('/getEvents/:type', function(req, res) {
+    var type = unescape(req.params.type);
     res.writeHead(200);
-    console.error('getting ' + events[req.params.type].length + ' for type', req.params.type);
-    res.end(JSON.stringify(events[req.params.type].length));
+    console.error('getting ' + events[type].length + ' for type', type);
+    res.end(JSON.stringify(events[type].length));
 });
+
+app.get('/listen/:type', function(req, res) {
+    var type = unescape(req.params.type);
+    console.log('listening to events for ' + type);
+    locker.listen(type, '/event', function(err) {
+        res.writeHead(200);
+        res.end('Listening to ' + type);
+    });
+})
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
@@ -39,11 +52,7 @@ process.stdin.on('data', function (chunk) {
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     app.listen(processInfo.port, function() {
-        locker.listen('contact/twitter', '/event', function(err) {
-            locker.listen('status/twitter', '/event', function(err) {
-                process.stdout.write(JSON.stringify({port: processInfo.port}));
-            });
-        });
+        process.stdout.write(JSON.stringify({port: processInfo.port}));
     });
 });
 process.stdin.resume();
