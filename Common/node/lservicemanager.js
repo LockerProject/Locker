@@ -207,7 +207,7 @@ exports.install = function(metaData) {
 exports.spawn = function(serviceId, callback) {
     var svc = exports.metaInfo(serviceId);
     if (!svc) {
-        console.error("Attemtping to spawn an unknown service " + serviceId);
+        console.error("Attempting to spawn an unknown service " + serviceId);
         return;
     }
 
