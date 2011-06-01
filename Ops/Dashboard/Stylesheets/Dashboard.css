@@ -26,8 +26,6 @@ aside
   -moz-border-radius: 5px;
   border-radius: 5px;
 
-/*  background-color: rgba(255, 255, 255, 0.95); */
-
   color: white;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.8);
 }
@@ -78,7 +76,6 @@ aside nav#applications .placeholder
   line-height: 64px;
   text-align: center;
   color: rgba(255, 255, 255, 0.15);
-/*  text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.8);*/
   text-shadow: none;
 }
 
@@ -210,9 +207,6 @@ section#mainSection header
   line-height: 48px;
 
   background-color: rgba(0, 0, 0, 0.75);
-
-/*  background-color: rgba(255, 255, 255, 0.15);
-*/
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.15)), to(rgba(0, 0, 0, 0.65)));
   background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
   background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
@@ -226,15 +220,6 @@ section#mainSection header
   border-radius-top-left: 2px;
   border-radius-top-right: 2px;
 
-/*  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.05),
-                      inset 1px 0px 0px rgba(255, 255, 255, 0.05),
-                      inset -1px 0px 0px rgba(255, 255, 255, 0.05),
-                      inset 0px -1px 0px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.05),
-                   inset 1px 0px 0px rgba(255, 255, 255, 0.05),
-                   inset -1px 0px 0px rgba(255, 255, 255, 0.05),
-                   inset 0px -1px 0px rgba(0, 0, 0, 0.5);
-*/
   -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
     inset 1px 0px 0px rgba(255, 255, 255, 0.1),
     inset -1px 0px 0px rgba(255, 255, 255, 0.1),
@@ -255,11 +240,7 @@ section#mainSection header h1
   font-size: 18px;
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 0px -1px 1px rgba(0, 0, 0, 1);
-
-/*  font-family: "HelveticaNeue-Light", "Helvetica Neue Light",
-               "Helvetica Neue", sans-serif;
-  font-weight: 300;
-*/}
+}
 
 section#mainSection header ul.actions
 {
@@ -313,35 +294,8 @@ section#mainSection section.content
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
 
-/*  background-color: lightslategrey;
-*/  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.2)), to(rgba(255, 255, 255, 0.05)));
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.2)), to(rgba(255, 255, 255, 0.05)));
 }
-
-/*
-section#mainSection header ul.actions li a
-{
-  text-decoration: none;
-  color: rgba(255, 255, 255, 0.9);
-  display: block;
-
-  height: 26px;
-  line-height: 26px;
-
-  padding: 2px 12px;
-
-  background-color: rgba(255, 255, 255, 0.15);
-  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.15)));
-
-  border: 1px solid rgba(0, 0, 0, 0.5);
-  border-bottom-color: rgba(255, 255, 255, 0.015);
-
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-
-  -webkit-box-shadow: inset 0px 0px 1px rgba(255, 255, 255, 0.5), inset 0px -1px 0px rgba(0, 0, 0, 0.5);
-}
-*/
 
 body > footer
 {

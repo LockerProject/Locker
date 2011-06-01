@@ -65,6 +65,16 @@ section#logsSection #logEntriesList
   color: rgba(0, 0, 0, 0.8);
 }
 
+.logService
+{
+  font-weight: bold;
+}
+
+.logService:after
+{
+  content: ":";
+}
+
 .logTimestamp
 {
   position: absolute;
