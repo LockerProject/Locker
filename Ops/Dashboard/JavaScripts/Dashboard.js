@@ -53,7 +53,7 @@ function refreshLog()
       var diaryLine = $("#logEntryTemplate").clone();
       diaryLine.attr("id", "");
       diaryLine.addClass("logEntry");
-      diaryLine.children(".logService").append(service.title || "").attr("title", service.id);
+      diaryLine.children(".logService").append(service.title || "Unknown").attr("title", service.id || "Unknown Service ID");
       diaryLine.children(".logMessage").append(item.message);
       diaryLine.children(".logTimestamp").append(ts.strftime("%B %d%o at %H:%MM %P"));
       diaryLine.append(item.message);
