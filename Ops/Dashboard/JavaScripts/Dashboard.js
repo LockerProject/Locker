@@ -56,7 +56,6 @@ function refreshLog()
       diaryLine.children(".logService").append(service.title || "Unknown").attr("title", service.id || "Unknown Service ID");
       diaryLine.children(".logMessage").append(item.message);
       diaryLine.children(".logTimestamp").append(ts.strftime("%B %d%o at %H:%MM %P"));
-      diaryLine.append(item.message);
       diaryLine.appendTo("#logEntriesList");
       diaryLine.show();
     });
