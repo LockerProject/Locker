@@ -47,13 +47,13 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     var addToSet = {'_matching.cleanedNames':cleanedName};
     if(data.profile_image_url)
         addToSet.photos = data.profile_image_url;
-    collection.update(query, {$set: set, $addToSet:addToSet},
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}, 
                       {'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
-            collection.update({$or:or}, {$push:{'accounts.twitter':baseObj}, 
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.twitter':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);
@@ -83,7 +83,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
         addToSet.phone = {value:data.contact.phone, type:'mobile'};
     if(data.contact.email)
         addToSet.email = {value:data.contact.email};
-    collection.update(query, {$set: set, $addToSet:addToSet},
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                              {safe: true}, function(err, doc) {
         if (!doc) {
             var or = [{'_matching.cleanedNames':cleanedName}];
@@ -92,7 +92,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
             if(data.contact.facebook)
                 or.push({'accounts.facebook.data.id':data.contact.facebook});
             var set = {};
-            collection.update({$or:or}, {$push:{'accounts.foursquare':baseObj}, 
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.foursquare':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:{'name':data.name, 'gender':data.gender}},
                               {safe: true, upsert: true}, callback);
@@ -112,13 +112,13 @@ exports.addFacebookData = function(facebookData, callback) {
     set['accounts.facebook.$'] = baseObj;
     if(data.name)
         set.name = data.name;
-    collection.update(query, {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}, 
                       {'accounts.foursquare.data.contact.facebook':fbID}];
-            collection.update({$or:or}, {$push:{'accounts.facebook':baseObj}, 
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.facebook':baseObj}, 
                                          $addToSet:{'_matching.cleanedNames':cleanedName},
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);
@@ -168,12 +168,12 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         }
         addToSet.email = {$each:emails};
     }
-    collection.update(query, {$set: set, $addToSet:addToSet},
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                        {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}];
-            collection.update({$or:or}, {$push:{'accounts.googleContacts':baseObj}, 
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.googleContacts':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);

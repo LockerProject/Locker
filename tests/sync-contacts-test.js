@@ -24,24 +24,34 @@ lconfig.load("config.json");
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mePath = '/Me/' + svcId;
 
+var events = 0;
+
+
 
 suite.next().suite.addBatch({
     "Can pull in the contacts from foursquare" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.allowLocalConnect = false;
+            fakeweb.ignoreUri({
+                uri: 'http://localhost:8043/Me/event-collector/listen/contact%2Ffull' });
             fakeweb.registerUri({
                 uri: 'http://localhost:8043/Me/foursquare/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/foursquare_friends.json' });
             var self = this;
             process.chdir('./Me/contacts');
-            lmongoclient.connect(function(collections) {
-                mongoCollections = collections.contacts;
-                contacts.init("", mongoCollections);
-                dataStore.init(mongoCollections);
-                dataStore.clear();
-                contacts.getContacts('foursquare', 'friends', 'foursquare', function() {
-                    dataStore.getTotalCount(self.callback);
+            request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
+                lmongoclient.connect(function(collections) {
+                    mongoCollections = collections.contacts;
+                    contacts.init("", mongoCollections);
+                    dataStore.init(mongoCollections);
+                    dataStore.clear();
+                    contacts.eventEmitter.on('contact/full', function(obj) {
+                        events++;
+                    });
+                    contacts.getContacts('foursquare', 'friends', 'foursquare', function() {
+                        dataStore.getTotalCount(self.callback);
+                    });
                 });
             });
         },
@@ -153,6 +163,7 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
+            assert.equal(events, 9);
         }
     }
 }).addBatch({
@@ -162,11 +173,9 @@ suite.next().suite.addBatch({
         topic: function() {
             dataStore.clear();
             var self = this;
-            request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
-                request.post({
-                    url:lconfig.lockerBase + mePath + "/foursquareListener",
-                    json:{"obj":{"source":"friends","type":"add","data": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, self.callback);
-            })
+            request.post({
+                url:lconfig.lockerBase + mePath + "/foursquareListener",
+                json:{"obj":{"source":"friends","type":"add","data": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, self.callback);
         },
         "so I'll do it manually" : function (err, res, body) {
             assert.equal(res.statusCode, 200);

@@ -99,6 +99,9 @@ process.stdin.on('data', function(data) {
             sys.debug(data);
             process.stdout.write(data);
             locker.listen('contact/foursquare', '/foursquareListener');
+            sync.eventEmitter.on('contact/full', function(eventObj) {
+                locker.event('contact/full', eventObj);
+            });
             // gatherContacts();
         });
     });
