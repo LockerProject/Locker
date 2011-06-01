@@ -66,18 +66,9 @@ function readContacts(contactsReadCB) {
     var me = lfs.loadMeData();
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
-    var collectionId = undefined;
-    locker.providers("contact", function(services) {
-        services.forEach(function(service) {
-            if (service.is == "collection") {
-                collectionId = service.id;
-            }
-        });
-        if (!collectionId) return;
-        request.get({url:lconfig.lockerBase + "/Me/"+collectionId+"/allContacts"}, function(err, res, data) {
-            console.log("Read data " + data);
-            contactsReadCB(parseLinesOfJSON(data));
-        });
+    request.get({url:lconfig.lockerBase + "/query/getAContacts_contacts?offset=0"}, function(err, res, data) {
+        console.log("Read data " + data);
+        contactsReadCB(JSON.parse(data));
     });
 }
 
@@ -102,62 +93,57 @@ app.get('/', function (req, res) {
     console.log('reading contacts...');
     readContacts(function(contacts) {
         for (var i = 0; i < contacts.length; i++) {
-            var filename = null;
-            if(contacts[i].pic && contacts[i].pic.length > 0)
-                filename = path.join('cb/my/photos/', contacts[i].pic[0]);
+            var photos = null;
             res.write('<div class="contact">');
-            try {
-                var stats = fs.statSync(filename);
-                res.write('<img style="float:left; margin-right:5px" width="50px" height="50px"' + 
-                          ' src="' + filename + '">');
-            } catch(err) {
-                res.write('<div style="float:left; margin-right:5px; width:50px; height:50px;"></div>');
+            if(contacts[i].photos && contacts[i].photos.length > 0) {
+                res.write('<img style="float:left; margin-right:5px" width="56px" height="56px"' + 
+                          ' src="' + contacts[i].photos[0] + '">');
+            } else {
+                res.write('<div style="float:left; margin-right:5px; width:56px; height:56px;"></div>');
             }
-            if (contacts[i]) {
-                var contact = contacts[i];
-                if (contact.name)
-                    res.write('<div class="info"><b>' + contact.name + '</b><br>');
-                if (contact.phone) {
-                    for(var j = 0; j < contact.phone.length; j++)
-                        res.write(contact.phone[j].value + (j+1 < contact.phone.length ?', ' : '<br>'));
-                }
-                if (contact.email) {
-                    for(var j = 0; j < contact.email.length; j++) {
-                        res.write(contact.email[j].value + (j+1 < contact.email.length ?', ' : '<br>'));
-                    }
-                    res.write('<br>');
-                }
-                res.write('</div></div>\n\n');
+            var contact = contacts[i];
+            if (contact.name)
+                res.write('<div class="info"><b>' + contact.name + '</b><br>');
+            if (contact.phone) {
+                for(var j = 0; j < contact.phone.length; j++)
+                    res.write(contact.phone[j].value + (j+1 < contact.phone.length ?', ' : '<br>'));
             }
+            if (contact.email) {
+                for(var j = 0; j < contact.email.length; j++) {
+                    res.write(contact.email[j].value + (j+1 < contact.email.length ?', ' : '<br>'));
+                }
+                res.write('<br>');
+            }
+            res.write('</div></div>\n\n');
         }
         res.end("</body></html>");
     });
 });
-app.get('/photos', function (req, res) {    
-    var uri = url.parse(req.url).pathname;
-    var filename = path.join(process.cwd() + '/../contacts.book/my/', uri);  
-    path.exists(filename, function(exists) { 
-        if(!exists) {  
-            res.writeHead(404, {"Content-Type": "text/plain"});  
-            res.write("404 Not Found\n");  
-            res.end();  
-            return;  
-        }  
-
-        fs.readFile(filename, "binary", function(err, file) {  
-            if(err) {  
-                res.writeHead(500, {"Content-Type": "text/plain"});  
-                res.write(err + "\n");  
-                res.end();  
-                return;  
-            }  
-
-            res.writeHead(200);  
-            res.write(file, "binary");  
-            res.end();  
-        });  
-    });
-});
+// app.get('/photos', function (req, res) {    
+//     var uri = url.parse(req.url).pathname;
+//     var filename = path.join(process.cwd() + '/../contacts.book/my/', uri);  
+//     path.exists(filename, function(exists) { 
+//         if(!exists) {  
+//             res.writeHead(404, {"Content-Type": "text/plain"});  
+//             res.write("404 Not Found\n");  
+//             res.end();  
+//             return;  
+//         }  
+// 
+//         fs.readFile(filename, "binary", function(err, file) {  
+//             if(err) {  
+//                 res.writeHead(500, {"Content-Type": "text/plain"});  
+//                 res.write(err + "\n");  
+//                 res.end();  
+//                 return;  
+//             }  
+// 
+//             res.writeHead(200);  
+//             res.write(file, "binary");  
+//             res.end();  
+//         });  
+//     });
+// });
 app.get('/*', function (req, res) {
     var uri = url.parse(req.url).pathname;
     var filename = path.join(appDataDir, uri);  
