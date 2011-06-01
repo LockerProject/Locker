@@ -68,9 +68,15 @@ app.post('/foursquareListener', function(req, res) {
         case 'delete':
             break;
         default:
-            dataStore.addFoursquareData({data : req.body.obj.status}, function() {
+            dataStore.addFoursquareData(req.body.obj, function(err, doc) {
                 res.writeHead(200);
                 res.end('new object added');
+                // what event should this be?
+                // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
+                //
+                // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+                var eventObj = {source: "contacts", type:req.body.obj.type, data:doc};
+                locker.event("contact/full", eventObj);
             });
             break;
     }

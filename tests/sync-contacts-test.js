@@ -161,9 +161,12 @@ suite.next().suite.addBatch({
     "Posting an event to the foursquareListener" : {
         topic: function() {
             dataStore.clear();
-            request.post({
-                url:lconfig.lockerBase + mePath + "/foursquareListener",
-                json:{"obj":{"source":"friends","type":"add","status": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, this.callback);
+            var self = this;
+            request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
+                request.post({
+                    url:lconfig.lockerBase + mePath + "/foursquareListener",
+                    json:{"obj":{"source":"friends","type":"add","data": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, self.callback);
+            })
         },
         "so I'll do it manually" : function (err, res, body) {
             assert.equal(res.statusCode, 200);
@@ -175,6 +178,15 @@ suite.next().suite.addBatch({
             "successfully" : function(err, resp) {
                 assert.isNull(err);
                 assert.equal(resp.accounts.foursquare[0].data.id, 18387)
+            },
+            "and an event" : {
+                topic: function() {
+                    request.get({url:lconfig.lockerBase + "/Me/event-collector/getEvents/contacts"}, this.callback);
+                },
+                "was generated" : function(err, resp, data) {
+                    assert.isNull(err);
+                    assert.equal(data, 1);
+                }
             }
         }
     }

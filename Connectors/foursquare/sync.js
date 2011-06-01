@@ -225,7 +225,7 @@ function downloadUsers(users, token, callback) {
                     }
                     dataStore.getCurrent("friends", js.id, function(err, resp) {
                         if (resp === undefined) {
-                            var eventObj = {source:'friends', type:'new', status:js};
+                            var eventObj = {source:'friends', type:'new', data:js};
                             exports.eventEmitter.emit('contact/foursquare', eventObj);
                             dataStore.addObject("friends", js, function(err) {
                                 parseUser();
@@ -235,7 +235,7 @@ function downloadUsers(users, token, callback) {
                             if (shallowCompare(js, resp)) {
                                 parseUser();
                             } else {
-                                var eventObj = {source:'friends', type:'update', status:js};
+                                var eventObj = {source:'friends', type:'update', data:js};
                                 exports.eventEmitter.emit('contact/foursquare', eventObj);
                                 dataStore.addObject("friends", js, function(err) {
                                     parseUser();
