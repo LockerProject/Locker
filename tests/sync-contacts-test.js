@@ -1,3 +1,5 @@
+
+
 var contacts = require('../Collections/Contacts/sync.js');
 var dataStore = require('../Collections/Contacts/dataStore.js');
 var assert = require("assert");
@@ -6,6 +8,12 @@ var currentDir = process.cwd();
 var fakeweb = require(__dirname + '/fakeweb.js');
 var mongoCollections;
 var svcId = 'contacts';
+
+var request = require('request');
+
+var RESTeasy = require('api-easy');
+var suite = RESTeasy.describe("Contacts Collection")
+
 var shallowCompare = require('../Common/node/shallowCompare.js');
 var friend;
 
@@ -14,9 +22,10 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
+var mePath = '/Me/' + svcId;
 
 
-vows.describe("Contacts collection sync").addBatch({
+suite.next().suite.addBatch({
     "Can pull in the contacts from foursquare" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
@@ -24,12 +33,13 @@ vows.describe("Contacts collection sync").addBatch({
             fakeweb.registerUri({
                 uri: 'http://localhost:8043/Me/foursquare/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/foursquare_friends.json' });
-            process.chdir('./Me/contacts');
             var self = this;
+            process.chdir('./Me/contacts');
             lmongoclient.connect(function(collections) {
                 mongoCollections = collections.contacts;
                 contacts.init("", mongoCollections);
                 dataStore.init(mongoCollections);
+                dataStore.clear();
                 contacts.getContacts('foursquare', 'friends', 'foursquare', function() {
                     dataStore.getTotalCount(self.callback);
                 });
@@ -145,4 +155,29 @@ vows.describe("Contacts collection sync").addBatch({
             assert.equal(process.cwd(), currentDir);
         }
     }
-}).export(module);
+}).addBatch({
+    // TODO: this should all be going through the actual events system, this is a pretty fragile test currently
+    //
+    "Posting an event to the foursquareListener" : {
+        topic: function() {
+            dataStore.clear();
+            request.post({
+                url:lconfig.lockerBase + mePath + "/foursquareListener",
+                json:{"obj":{"source":"friends","type":"add","status": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, this.callback);
+        },
+        "so I'll do it manually" : function (err, res, body) {
+            assert.equal(res.statusCode, 200);
+        },
+        "and verify that my data arrived" : {
+            topic: function() {
+                mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, this.callback);
+            },
+            "successfully" : function(err, resp) {
+                assert.isNull(err);
+                assert.equal(resp.accounts.foursquare[0].data.id, 18387)
+            }
+        }
+    }
+})
+        
+suite.export(module);

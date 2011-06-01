@@ -55,11 +55,25 @@ app.get('/update', function(req, res) {
     res.end('Updating');
 });
 
-app.get('/foursquareListener', function(req, res) {
-    console.log("req" + req.body);
-    sys.debug(req);
-    res.writeHead(200);
-    res.end('cool');
+app.post('/foursquareListener', function(req, res) {
+    if (!req.body.obj.type) {
+        console.log('5 HUNDO');
+        res.writeHead(500);
+        res.end('bad data');
+        return;
+    }
+    switch (req.body.obj.type) {
+        // what do we want to do for a delete event?
+        //
+        case 'delete':
+            break;
+        default:
+            dataStore.addFoursquareData({data : req.body.obj.status}, function() {
+                res.writeHead(200);
+                res.end('new object added');
+            });
+            break;
+    }
 });
 
 // Process the startup JSON object
@@ -78,7 +92,7 @@ process.stdin.on('data', function(data) {
         app.listen(lockerInfo.port, 'localhost', function() {
             sys.debug(data);
             process.stdout.write(data);
-            locker.listen('/foursquare/contact', 'foursquareListener');
+            locker.listen('contact/foursquare', '/foursquareListener');
             // gatherContacts();
         });
     });
