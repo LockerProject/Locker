@@ -193,15 +193,28 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Verify that the contacts collection did what its supposed to do" : {
         topic: function() {
-            // these urls smell.
-            // also, this is a race condition as the contacts collection
-            // might not have processed all the events yet
-            request.get({uri: 'http://localhost:8043/Me/contacts/allContacts'}, this.callback);
+            // this test smells.
+            // if 2.5 seconds of delay isn't enough to handle race conditions, I guess we can bump it a little.
+            // need to think of a better way to test events, because this is bad news.
+            var self = this;
+            (function waitForEvents(url, retries, timeout, expectedValue, value, callback) {
+                if (retries == 0) {
+                    return callback(null, value);
+                }
+                if (expectedValue === value.length) {
+                    return callback(null, value.length);
+                }
+                setTimeout(function() {
+                    request.get({uri: url}, function(err, resp, data) {
+                        retries--;
+                        waitForEvents(url, retries, timeout, expectedValue, JSON.parse(data), callback); 
+                    });
+                }, timeout);
+            })('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, self.callback);
         },
-        "successfully": function(err, response, data) {
+        "successfully": function(err, data) {
             assert.isNotNull(data);
-            console.log(data);
-            assert.equal(JSON.parse(data).length, 2);
+            assert.equal(data, 2);
         }
     }
 })
