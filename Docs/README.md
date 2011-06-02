@@ -1,10 +1,10 @@
 Developer Quickstart
 ====================
 
-* Every runnable thing within the locker is it's own web service (written in node, python, and ruby to start)
+* Every runnable thing within the locker is its own web service (written in node, python, and ruby to start)
 * There is a core web service that coordinates stuff and handles startup, scheduling, etc
 * The types of services are generally: connectors, collections, and apps
-* Any service once it's "installed" is assigned it's own local directory for storing anything
+* Any service once it's "installed" is assigned its own local directory for storing anything
 * Connectors are probably the best way to add value fast to the platform, the more places we enable getting data from the better
 
 Connectors
