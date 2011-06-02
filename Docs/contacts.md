@@ -8,6 +8,7 @@ Common attributes of a contact
         im:set({type:string, value:string}),
         address:set({type:string, value:string}),
         birthday:date,
+        gender:string,
         groups:set(string),
         photo:set(string-urls),
         id:string

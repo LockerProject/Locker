@@ -47,6 +47,8 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     var addToSet = {'_matching.cleanedNames':cleanedName};
     if(data.profile_image_url)
         addToSet.photos = data.profile_image_url;
+    if(data.location)
+        addToSet.address = {type:'location', value:data.location};
     collection.update(query, {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
@@ -83,6 +85,8 @@ exports.addFoursquareData = function(foursquareData, callback) {
         addToSet.phone = {value:data.contact.phone, type:'mobile'};
     if(data.contact.email)
         addToSet.email = {value:data.contact.email};
+    if(data.homeCity)
+        addToSet.address = {type:'location', value:data.homeCity};
     collection.update(query, {$set: set, $addToSet:addToSet},
                              {safe: true}, function(err, doc) {
         if (!doc) {
