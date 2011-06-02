@@ -55,11 +55,33 @@ app.get('/update', function(req, res) {
     res.end('Updating');
 });
 
-app.get('/foursquareListener', function(req, res) {
-    console.log("req" + req.body);
-    sys.debug(req);
-    res.writeHead(200);
-    res.end('cool');
+app.post('/foursquareListener', function(req, res) {
+    if (!req.body.obj.type) {
+        console.log('5 HUNDO');
+        res.writeHead(500);
+        res.end('bad data');
+        return;
+    }
+    switch (req.body.obj.type) {
+        // what do we want to do for a delete event?
+        //
+        case 'delete':
+            res.writeHead(200);
+            res.end('not doing anything atm');
+            break;
+        default:
+            dataStore.addFoursquareData(req.body.obj, function(err, doc) {
+                res.writeHead(200);
+                res.end('new object added');
+                // what event should this be?
+                // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
+                //
+                // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+                var eventObj = {source: "contacts", type:req.body.obj.type, data:doc};
+                locker.event("contact/full", eventObj);
+            });
+            break;
+    }
 });
 
 // Process the startup JSON object
@@ -78,7 +100,10 @@ process.stdin.on('data', function(data) {
         app.listen(lockerInfo.port, 'localhost', function() {
             sys.debug(data);
             process.stdout.write(data);
-            locker.listen('/foursquare/contact', 'foursquareListener');
+            locker.listen('contact/foursquare', '/foursquareListener');
+            sync.eventEmitter.on('contact/full', function(eventObj) {
+                locker.event('contact/full', eventObj);
+            });
             // gatherContacts();
         });
     });

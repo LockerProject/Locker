@@ -77,7 +77,7 @@ vows.describe("Service Manager").addBatch({
         "gathered from the filesystem" : {
             topic:serviceManager.scanDirectory("Connectors"),
             "gathered 5 services": function() {
-                assert.equal(serviceManager.serviceMap().available.length, 12);
+                assert.equal(serviceManager.serviceMap().available.length, 14);
             },
             topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
             "can be installed" : {
