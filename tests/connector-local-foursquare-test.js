@@ -10,6 +10,7 @@ var events = {checkin: 0, contact: 0};
 require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var suite = RESTeasy.describe("Foursquare Connector");
+var utils = require('./test-utils');
 
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
@@ -33,7 +34,7 @@ sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
     locker.event('contact/foursquare', eventObj);
     events.contact++;
-})
+});
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
@@ -196,25 +197,11 @@ suite.next().suite.addBatch({
             // this test smells.
             // if 2.5 seconds of delay isn't enough to handle race conditions, I guess we can bump it a little.
             // need to think of a better way to test events, because this is bad news.
-            var self = this;
-            (function waitForEvents(url, retries, timeout, expectedValue, value, callback) {
-                if (retries == 0) {
-                    return callback(null, value);
-                }
-                if (expectedValue === value.length) {
-                    return callback(null, value.length);
-                }
-                setTimeout(function() {
-                    request.get({uri: url}, function(err, resp, data) {
-                        retries--;
-                        waitForEvents(url, retries, timeout, expectedValue, JSON.parse(data), callback); 
-                    });
-                }, timeout);
-            })('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, self.callback);
+            utils.waitForEvents('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, this.callback);
         },
         "successfully": function(err, data) {
             assert.isNotNull(data);
-            assert.equal(data, 2);
+            assert.equal(data.length, 2);
         }
     }
 })

@@ -6,9 +6,11 @@ var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
 var currentDir = process.cwd();
+var request = require('request');
+var locker = require('../Common/node/locker');
 
 var suite = RESTeasy.describe("Twitter Connector")
-
+var utils = require('./test-utils');
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });
@@ -22,10 +24,17 @@ lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
+var events = 0;
+
+twitter.eventEmitter.on('contact/twitter', function(eventObj) {
+    locker.event('contact/twitter', eventObj);
+    events++;
+});
 
 suite.next().suite.addBatch({
     "Can get" : {
         topic: function() {
+            locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             fakeweb.allowNetConnect = false;
             
@@ -64,12 +73,14 @@ suite.next().suite.addBatch({
                 uri : 'https://api.twitter.com:443/1/followers/ids.json?screen_name=ctide&cursor=-1',
                 body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
             var self = this;
-            lmongoclient.connect(function(collections) {
-                mongoCollections = collections;
-                twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
-                              token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, collections);
-                dataStore.init("id_str", mongoCollections);
-                self.callback(); 
+            request.get({uri:'http://localhost:8043/Me/contacts/'}, function() {
+                lmongoclient.connect(function(collections) {
+                    mongoCollections = collections;
+                    twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
+                                  token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, collections);
+                    dataStore.init("id_str", mongoCollections);
+                    self.callback(); 
+                });
             });
         },
                             
@@ -199,13 +210,28 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events, 3);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
         }
     }
-});
+}).addBatch({
+    "Verify that the contacts collection did what its supposed to do" : {
+        topic: function() {
+            // this test smells.
+            // required a much bigger delay, ugly
+            utils.waitForEvents('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, this.callback);
+        },
+        "successfully": function(err, data) {
+            assert.isNotNull(data);
+            assert.equal(data.length, 8);
+        }
+    }
+})
 
 
 
