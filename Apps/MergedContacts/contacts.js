@@ -42,25 +42,6 @@ process.stdin.on("data", function(data) {
     });
 });
 
-/**
- * Reads in a file (at path), splits by line, and parses each line as JSON.
- * return parsed objects in an arrayo
- *
- * XXX Duplicated code, needs to be made common
- */
-function parseLinesOfJSON(data) {
-    var objects = [];
-    var cs = data.split("\n");
-    for (var i = 0; i < cs.length; i++) {
-        if (cs[i].substr(0, 1) != "{") continue;
-        try {
-            objects.push(JSON.parse(cs[i]));
-        } catch(E) {
-            console.log("Error parsing a line(" + E + "): " + cs[i]);
-        }
-    }
-    return objects;
-}
 
 function readContacts(contactsReadCB) {
     var me = lfs.loadMeData();
