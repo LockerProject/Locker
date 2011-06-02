@@ -120,6 +120,8 @@ process.stdin.on('data', function(data) {
             sys.debug(data);
             process.stdout.write(data);
             locker.listen('contact/foursquare', '/events');
+            locker.listen('contact/facebook', '/events');
+            locker.listen('contact/twitter', '/events');
             sync.eventEmitter.on('contact/full', function(eventObj) {
                 locker.event('contact/full', eventObj);
             });
