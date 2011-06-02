@@ -8,5 +8,5 @@ locker core manages Me/ folder, default 8042
 	scan all Apps/Collections/Connectors dirs to make a map
 	is asked to run stuff, returns localhost:port of it running
 	notifies dashboard when anything is created
-	any service started is run in it's source directory and given a data directory as an argument
+	any service started is run in its source directory and given a data directory as an argument
 		contains me.json file with any details it needs
