@@ -177,7 +177,7 @@ suite.next().suite.addBatch({
                 url:lconfig.lockerBase + mePath + "/foursquareListener",
                 json:{"obj":{"source":"friends","type":"add","data": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, self.callback);
         },
-        "so I'll do it manually" : function (err, res, body) {
+        "returns a 200" : function (err, res, body) {
             assert.equal(res.statusCode, 200);
         },
         "and verify that my data arrived" : {
