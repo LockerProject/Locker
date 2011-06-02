@@ -66,6 +66,8 @@ app.post('/foursquareListener', function(req, res) {
         // what do we want to do for a delete event?
         //
         case 'delete':
+            res.writeHead(200);
+            res.end('not doing anything atm');
             break;
         default:
             dataStore.addFoursquareData(req.body.obj, function(err, doc) {
