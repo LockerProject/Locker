@@ -23,7 +23,6 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
 var locker = require('locker');
 var request = require('request');
-locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
@@ -39,6 +38,7 @@ sync.eventEmitter.on('contact/foursquare', function(eventObj) {
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
+            locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
             // these urls smell.
