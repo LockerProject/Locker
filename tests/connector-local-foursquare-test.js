@@ -194,11 +194,13 @@ suite.next().suite.addBatch({
     "Verify that the contacts collection did what its supposed to do" : {
         topic: function() {
             // these urls smell.
-            //
+            // also, this is a race condition as the contacts collection
+            // might not have processed all the events yet
             request.get({uri: 'http://localhost:8043/Me/contacts/allContacts'}, this.callback);
         },
         "successfully": function(err, response, data) {
             assert.isNotNull(data);
+            console.log(data);
             assert.equal(JSON.parse(data).length, 2);
         }
     }

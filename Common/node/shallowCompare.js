@@ -1,7 +1,7 @@
 module.exports = function Equals(obj1, obj2) {
     for (p in obj1) {
         if (typeof(obj2[p]) == 'undefined') {
-            return 'false';
+            return false;
         }
     }
     

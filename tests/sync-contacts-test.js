@@ -26,7 +26,25 @@ var mePath = '/Me/' + svcId;
 
 var events = 0;
 
-
+var data = {id: 18387, 
+            firstName: "William", 
+            lastName: "Warnecke",
+            photo: "https://foursquare.com/img/blank_boy.png",
+            gender: "male",
+            homeCity: "San Francisco, CA",
+            relationship: "friend",
+            type: "user",
+            pings: true,
+            contact: { "email": "lockerproject@sing.ly", "twitter": "ww" },
+            badges: { "count": 25 },
+            mayorships: { "count": 0, "items": [] },
+            checkins: { "count": 0 },
+            friends: { "count": 88, "groups": ["Object"] },
+            following: { "count": 13 },
+            tips: { "count": 5 },
+            todos: { "count": 1 },
+            scores: { "recent": 14, "max": 90,"checkinsCount": 4 },
+            name: "William Warnecke" };
 
 suite.next().suite.addBatch({
     "Can pull in the contacts from foursquare" : {
@@ -152,7 +170,6 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.isTrue(shallowCompare(friend.accounts.foursquare, resp.accounts.foursquare));
             assert.isFalse(shallowCompare(resp, friend));
-            
         }
     }
 }).addBatch({
@@ -175,7 +192,7 @@ suite.next().suite.addBatch({
             var self = this;
             request.post({
                 url:lconfig.lockerBase + mePath + "/foursquareListener",
-                json:{"obj":{"source":"friends","type":"add","data": {"id": 18387, "firstName": "William", "lastName": "Warnecke","photo": "https://foursquare.com/img/blank_boy.png","gender": "male","homeCity": "San Francisco, CA","relationship": "friend","type": "user","pings": true,"contact": { "email": "lockerproject@sing.ly", "twitter": "ww" },"badges": { "count": 25 },"mayorships": { "count": 0, "items": [] },"checkins": { "count": 0 },"friends": { "count": 88, "groups": ["Object"] },"following": { "count": 13 },"tips": { "count": 5 },"todos": { "count": 1 },"scores": { "recent": 14, "max": 90,"checkinsCount": 4 },"name": "William Warnecke" },"_via":["foursquare"]}}}, self.callback);
+                json:{"obj":{"source":"friends","type":"add","data": data,"_via":["foursquare"]}}}, self.callback);
         },
         "returns a 200" : function (err, res, body) {
             assert.equal(res.statusCode, 200);

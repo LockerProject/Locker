@@ -32,9 +32,14 @@ app.post('/event', function(req, res) {
 
 app.get('/getEvents/:type', function(req, res) {
     var type = unescape(req.params.type);
-    res.writeHead(200);
-    console.error('getting ' + events[type].length + ' for type', type);
-    res.end(JSON.stringify(events[type].length));
+    if(!events[type]) {
+        res.writeHead(500);
+        res.end(JSON.stringify(0));
+    } else {
+        res.writeHead(200);
+        console.error('getting ' + events[type].length + ' for type', type);
+        res.end(JSON.stringify(events[type].length));
+    }
 });
 
 app.get('/listen/:type', function(req, res) {

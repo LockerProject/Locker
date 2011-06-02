@@ -31,7 +31,7 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addGoogleContactsData(data, callback);
     }
 }
-//profile_image_url
+
 exports.addTwitterData = function(relationship, twitterData, callback) {
     relationship = relationship.substring(0, relationship.length - 1);
     var data = twitterData.data;
@@ -42,13 +42,19 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     var baseObj = {data:data, lastUpdated:twitterData.timeStamp || new Date().getTime()};
     baseObj[relationship] = true;
     set['accounts.twitter.$'] = baseObj;
+    //name
     if(data.name)
         set.name = data.name;
     var addToSet = {'_matching.cleanedNames':cleanedName};
+    //photos
     if(data.profile_image_url)
         addToSet.photos = data.profile_image_url;
+    //addresses
     if(data.location)
-        addToSet.address = {type:'location', value:data.location};
+        addToSet.addresses = {type:'location', value:data.location};
+    //nicknames
+    if(data.location)
+        addToSet.nicknames = data.screen_name;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
@@ -74,19 +80,25 @@ exports.addFoursquareData = function(foursquareData, callback) {
     var set = {};
     var baseObj = {data:data, lastUpdated:foursquareData.timeStamp || new Date().getTime()};
     set['accounts.foursquare.$'] = baseObj;
+    //name
     if(name)
         set.name = name;
+    //gender
     if(data.gender)
         set.gender = data.gender;
     var addToSet = {'_matching.cleanedNames':cleanedName};
+    //photos
     if(data.photo)
         addToSet.photos = data.photo;
+    //phoneNumbers
     if(data.contact.phone)
-        addToSet.phone = {value:data.contact.phone, type:'mobile'};
+        addToSet.phoneNumbers = {value:data.contact.phone, type:'mobile'};
+    //email
     if(data.contact.email)
-        addToSet.email = {value:data.contact.email};
+        addToSet.emails = {value:data.contact.email};
+    //addresses
     if(data.homeCity)
-        addToSet.address = {type:'location', value:data.homeCity};
+        addToSet.addresses = {type:'location', value:data.homeCity};
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                              {safe: true}, function(err, doc) {
         if (!doc) {
@@ -98,7 +110,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
             var set = {};
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.foursquare':baseObj}, 
                                          $addToSet:addToSet,
-                                         $set:{'name':data.name, 'gender':data.gender}},
+                                         $set:{name:name, gender:data.gender}},
                               {safe: true, upsert: true}, callback);
         } else {
             callback(err, doc);
@@ -114,6 +126,7 @@ exports.addFacebookData = function(facebookData, callback) {
     var set = {};
     var baseObj = {data:data, lastUpdated:facebookData.timeStamp || new Date().getTime()};
     set['accounts.facebook.$'] = baseObj;
+    //name
     if(data.name)
         set.name = data.name;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
@@ -124,7 +137,7 @@ exports.addFacebookData = function(facebookData, callback) {
                       {'accounts.foursquare.data.contact.facebook':fbID}];
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.facebook':baseObj}, 
                                          $addToSet:{'_matching.cleanedNames':cleanedName},
-                                         $set:{'name':data.name}}, 
+                                         $set:{name:data.name}}, 
                         {safe:true, upsert:true}, callback);
         } else {
             callback(err, doc);
@@ -151,7 +164,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
                 continue;
             addresses.push(data.address[i]);
         }
-        addToSet.address = {$each:addresses};
+        addToSet.addresses = {$each:addresses};
     }
     if(data.phone) {
         var phones = [];
@@ -160,7 +173,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
                 continue;
             phones.push(data.phone[i]);
         }
-        addToSet.phone = {$each:phones};
+        addToSet.phoneNumbers = {$each:phones};
     }
     if(data.email) {
         var emails = [];
@@ -170,7 +183,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             data.email[i].value = data.email[i].value.toLowerCase();
             emails.push(data.email[i]);
         }
-        addToSet.email = {$each:emails};
+        addToSet.emails = {$each:emails};
     }
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                        {safe:true}, function(err, doc) {
