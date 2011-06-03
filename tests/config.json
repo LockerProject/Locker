@@ -16,7 +16,6 @@
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
-                              "connector-local-github-test.js",
                               "connector-local-foursquare-test.js",
                               "connector-local-facebook-test.js",
                               "connector-local-twitter-test.js"],
