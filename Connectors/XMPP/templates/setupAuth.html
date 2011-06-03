@@ -1,0 +1,12 @@
+{% extends "baseLayout.html" %}
+
+{% block title %}Setup Credentials{% endblock %}
+
+{% block body %}
+Enter your personal XMPP credentials
+<form method='POST' action='save'>
+    Jid: <input name='jid'><br>
+    Password: <input type='password' name='password'><br>
+    <input type='submit' value='Save'>
+</form>
+{% endblock %}
