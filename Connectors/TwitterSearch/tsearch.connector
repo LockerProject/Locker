@@ -1,0 +1,9 @@
+{
+    "title":"Twitter Search",
+    "action":"Sync tweets matching a Twitter search",
+    "desc":"Collect and sync any tweets matching a search term from Twitter's search API",
+    "run":"node tsearch.js",
+    "status":"unstable",
+	"handle":"twitter-search",
+    "provides":["status/twitter"]
+}

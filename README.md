@@ -5,7 +5,7 @@ This is an open source project that helps me collect all of my personal data, fr
 
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress, and come hang out with us on freenode IRC in [#lockerproject](http://webchat.freenode.net/?channels=lockerproject).
 
-To get started I'll need [node](http://nodejs.org/#download) and [npm](https://github.com/isaacs/npm) installed, and then I also need a local copy of the Locker codebase:
+To get started I'll need [node](http://nodejs.org/#download), [npm](https://github.com/isaacs/npm), and [MongoDB](http://mongodb.org) installed, and then a local copy of the Locker codebase:
 
     git clone https://github.com/quartzjer/Locker.git
 	cd Locker

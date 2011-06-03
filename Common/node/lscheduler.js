@@ -27,7 +27,6 @@ exports.Scheduler.prototype.loadAndStart = function() {
     var self = this;
     lfs.readObjectsFromFile(this.filename, function(objects) {
         objects.forEach(function(action) {
-            if (serviceManager.isInstalled(action.serviceId)) return;
             self.scheduleURL(new Date(action.at), action.serviceId, action.url);
         });
     });

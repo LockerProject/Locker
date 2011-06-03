@@ -133,6 +133,16 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
     .undiscuss().unpath()
 
+    .path("/Me")
+    .discuss("spawn a valid service")
+        .get("/spawn-valid/")
+            .expect(200)
+    .undiscuss()
+    .discuss("not spawn an invalid service")
+        .get("/spawn-invalid/")
+            .expect(404)
+    .undiscuss().unpath()
+
     // Tests for the proxying
     .path("/Me")
     .discuss("proxy requests via GET to services")
@@ -201,7 +211,7 @@ tests.next()
     .get()
         .expect(200)
         .expect("that have full info", function(err, res, body) {
-            var diaryLine = JSON.parse(body);
+            var diaryLine = JSON.parse(body)[0];
             assert.include(diaryLine, "message");
             assert.include(diaryLine, "level");
             assert.include(diaryLine, "timestamp");

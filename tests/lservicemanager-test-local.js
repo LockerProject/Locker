@@ -75,11 +75,11 @@ vows.describe("Service Manager").addBatch({
     },
     "Available services" : {
         "gathered from the filesystem" : {
-            topic:serviceManager.scanDirectory("Collections"),
-            "gathered 1 services": function() {
-                assert.equal(serviceManager.serviceMap().available.length, 1);
+            topic:serviceManager.scanDirectory("Connectors"),
+            "gathered 5 services": function() {
+                assert.equal(serviceManager.serviceMap().available.length, 14);
             },
-            topic:serviceManager.install({srcdir:"Collections/Contacts"}),
+            topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
             "can be installed" : {
                 "giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");

@@ -34,7 +34,7 @@ var mePath = '/Me/' + svcId;
 suite.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Google Contacts connector")
         .discuss("can return all contacts")
-            .path(mePath + "/allContacts")
+            .path(mePath + "/getCurrent/contacts")
             .get()
                 .expect(200)
                 .expect([ 

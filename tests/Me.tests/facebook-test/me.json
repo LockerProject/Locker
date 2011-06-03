@@ -1,0 +1,12 @@
+{
+	"title":"Facebook Account",
+	"action":"Connect to a Facebook account",
+	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
+	"run":"node facebook.js",
+	"status":"unstable",
+	"provides":["contact/Facebook"],
+    "is":"connector",
+    "srcdir":"Connectors/facebook",
+    "id":"facebook-test",
+    "uri":"http://localhost:8043/Me/facebook-test"
+}

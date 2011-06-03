@@ -1,0 +1,8 @@
+{
+    "title":"Photos",
+    "desc":"A collection of photos both created and received from many sources.",
+    "run":"node photos.js",
+	"status":"stub",
+	"handle":"photos",
+    "provides":["photo"]
+}

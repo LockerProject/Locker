@@ -1,0 +1,8 @@
+{
+    "title":"Messages",
+    "desc":"A collection of messaging history/logs.",
+    "run":"node messages.js",
+	"status":"stub",
+	"handle":"messages",
+    "provides":["message"]
+}

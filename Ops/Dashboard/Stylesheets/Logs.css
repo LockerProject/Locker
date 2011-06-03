@@ -1,0 +1,85 @@
+
+/* Diary Section ---------------------------------------------------------- */
+
+section#logsSection
+{
+}
+
+section#logsSection #logEntryTemplate
+{
+  display: none;
+}
+
+section#logsSection
+{
+  display: none;
+}
+
+section#logsSection #logEntriesList
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 20px;
+
+  overflow-y: auto;
+}
+
+.logEntry
+{
+  position: relative;
+  padding-left: 10px;
+  font-size: 14px;
+  line-height: 36px;
+
+  margin-bottom: 8px;
+
+  background-color: rgba(255, 255, 255, 0.25);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.15)));
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.25),
+    0px 0px 1px rgba(0, 0, 0, 0.35);
+
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.logService
+{
+  font-weight: bold;
+}
+
+.logService:after
+{
+  content: ":";
+}
+
+.logTimestamp
+{
+  position: absolute;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  font-size: 12px;
+}

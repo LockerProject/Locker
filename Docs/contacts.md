@@ -3,13 +3,14 @@ Common attributes of a contact
     {
         name:string,
         nickname:string,
-        phone:array({type:string, value:string}),
-        email:array({type:string, value:string}),
-        im:array({type:string, value:string}),
-        address:array({type:string, value:string}),
+        phoneNumbers:set({type:string, value:string}),
+        emails:set({type:string, value:string}),
+        ims:set({type:string, value:string}),
+        addresses:set({type:string, value:string}),
         birthday:date,
-        groups:array(string),
-        avatar:array(string-urls),
+        gender:string,
+        groups:set(string),
+        photos:set(string-urls),
         id:string
     }
 

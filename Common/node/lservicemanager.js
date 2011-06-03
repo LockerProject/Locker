@@ -58,11 +58,30 @@ exports.providers = function(types) {
 /**
 * Map a meta data file JSON with a few more fields and make it available
 */
-function mapMetaData(file, type) {
+function mapMetaData(file, type, installable) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
-    serviceMap["available"].push(metaData);
+    metaData.installable = installable;
+    serviceMap["available"].push(metaData);        
+    if (type === "collection") {
+        if(!metaData.handle)
+        {
+            console.error("missing handle for "+file);
+            return;
+        }
+        fs.stat(lconfig.lockerDir+"/Me/"+metaData.handle,function(err,stat){
+            if(err || !stat)
+            {
+                metaData.id=metaData.handle;
+                metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                serviceMap.installed[metaData.id] = metaData;
+                fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
+                fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
+            }
+        });
+    }
+
     return metaData;
 }
     
@@ -74,18 +93,22 @@ var scannedTypes = ["collection", "connector", "app"];
 /**
 * Scans a directory for available services
 */
-exports.scanDirectory = function(dir) {
+exports.scanDirectory = function(dir, installable) {
+    if (typeof(installable) == "undefined") {
+        installable = true;
+    }
+
     var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
         var stats = fs.statSync(fullPath);
         if(stats.isDirectory()) {
-            exports.scanDirectory(fullPath);
+            exports.scanDirectory(fullPath, installable);
             continue;
         }
         scannedTypes.forEach(function(scanType) {
             if (RegExp("\\." + scanType + "$").test(fullPath)) {
-                mapMetaData(fullPath, scanType);
+                mapMetaData(fullPath, scanType, installable);
             }
         });
     }
@@ -109,7 +132,7 @@ exports.findInstalled = function () {
             console.log("Installing " + js.id);
             serviceMap.installed[js.id] = js;
         } catch (E) {
-            console.error("Error parsing Me directory: " + E);
+            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
     }
 }
@@ -120,19 +143,36 @@ exports.findInstalled = function () {
 exports.install = function(metaData) {
     var serviceInfo = undefined;
     serviceMap.available.some(function(svcInfo) {
-        console.log("Comparing " + svcInfo.srcdir + " to " + metaData.srcdir);
         if (svcInfo.srcdir == metaData.srcdir) {
-            serviceInfo = svcInfo;
+            serviceInfo = new Object();
+            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];};
             return true;
         }
         return false;
     });
-    if (!serviceInfo) {
+    if (!serviceInfo || !serviceInfo.installable) {
         return serviceInfo;
     }
-    var hash = crypto.createHash('md5');
-    hash.update(Math.random()+'');
-    serviceInfo.id = hash.digest('hex');
+    // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
+    if(serviceInfo.handle)
+    {
+        // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
+        var inc = 0;
+        try {
+            if(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle).isDirectory())
+            {
+                inc++;
+                while(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
+            }
+        } catch (E) {
+            var suffix = (inc > 0)?"-"+inc:"";
+            serviceInfo.id = serviceInfo.handle+suffix;
+        }
+    }else{
+        var hash = crypto.createHash('md5');
+        hash.update(Math.random()+'');
+        serviceInfo.id = hash.digest('hex');        
+    }
     serviceInfo.uri = lconfig.lockerBase+"/Me/"+serviceInfo.id+"/";
     serviceMap.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
@@ -167,7 +207,7 @@ exports.install = function(metaData) {
 exports.spawn = function(serviceId, callback) {
     var svc = exports.metaInfo(serviceId);
     if (!svc) {
-        console.error("Attemtping to spawn an unknown service " + serviceId);
+        console.error("Attempting to spawn an unknown service " + serviceId);
         return;
     }
 
@@ -183,15 +223,44 @@ exports.spawn = function(serviceId, callback) {
             svc.starting = [callback];
         }
     }
-    var run = svc.run.split(" "); // node foo.js
+    
+    //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
+    var run;
+    var serviceInfo;
+    for(var i in serviceMap.available) {
+        if(serviceMap.available[i].srcdir == svc.srcdir) {
+            serviceInfo = serviceMap.available[i];
+            run = serviceInfo.run;
+            break;
+        }
+    }
+    run = run || svc.run;
+    if(!run) {
+        console.error('Could not spawn service from source directory', svc.srcdir);
+        return;
+    }
+    
+    run = run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
     console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
     var processInformation = {
         port: svc.port, // This is just a suggested port
+        sourceDirectory: svc.srcdir,
+        processOptions: {},
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase
     };
+    if(serviceInfo && serviceInfo.mongoCollections) {
+        processInformation.mongo = {
+            host: lconfig.mongo.host,
+            port: lconfig.mongo.port
+        }
+        processInformation.mongo.collections = serviceInfo.mongoCollections;
+    }
+    if (serviceInfo && serviceInfo.processOptions) {
+        processInformation.processOptions = serviceInfo.processOptions;
+    }
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
         var mod = console.outputModule
@@ -210,9 +279,12 @@ exports.spawn = function(serviceId, callback) {
             try {
                 var returnedProcessInformation = JSON.parse(data);
 
-                if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port; // if they tell us a port, use that
+                // if they tell us a port, use that
+                if(returnedProcessInformation.port)
+                    svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
-                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
+                // save out all updated meta fields
+                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc));
                 // Set the pid after the write because it's transient to this locker instance only
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
@@ -241,8 +313,12 @@ exports.spawn = function(serviceId, callback) {
     app.on('exit', function (code) {
         console.log(svc.id + " process has ended.");
         var id = svc.id;
+        //remove transient fields
         delete svc.pid;
-        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc)); // save out all updated meta fields
+        delete svc.port;
+        delete svc.uriLocal;
+        // save out all updated meta fields (pretty print!)
+        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc, null, 4));
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
