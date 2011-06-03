@@ -1,0 +1,9 @@
+{
+    "title":"Dropbox Connector",
+    "action":"Store and retrieve files from your Dropbox account",
+    "desc":"Store and retrieve files from your Dropbox account",
+    "run":"node dropbox.js",
+    "status":"unstable",
+	"handle":"dropbox",
+    "provides":["store/dropbox"]
+}
