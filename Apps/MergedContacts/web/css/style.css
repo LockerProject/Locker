@@ -51,7 +51,6 @@ a {
     cursor:pointer;
 }
 #table #contacts .contact:hover {
-/*    background-color:#232526;*/
     background-color:#343739;
     
 }
@@ -67,17 +66,11 @@ a {
 #table #contacts .column {
     padding:2px 8px;
     margin:0px 0px;
-/*    overflow:hidden;*/
-/*    height:17px;*/
-/*    height:40px;*/
-/*    vertical-align:middle;*/
-/*    padding-top:10px;*/
 }
 #table #headers .photo {
     display:inline-block;
     width:36px;
     height:30px;
-/*    padding:6px;*/
 }
 #table #headers .photo img {
     display:inline;
@@ -90,7 +83,6 @@ a {
     width:36px;
     height:36px;
     float:left;
-/*    margin:1px;*/
 }
 #table .photo img {
     width:30px;
@@ -118,9 +110,6 @@ a {
     width:200px;
     padding-top:0px;
 }
-#table .klout {
-    width:70px;
-}
 #table .date {
     width:60px;
 }
@@ -142,14 +131,12 @@ a {
     text-align:center;
     font-size:18px;
     float:right;
-/*    width:125px;*/
     padding:10px;
 }
 
 
 .more_info {
     border-radius:3px;
-/*    width:1090px;*/
     border-top:1px solid #323434;
     border-bottom:1px solid #151617;
     background-color:#232526;
@@ -170,55 +157,15 @@ a {
 }
 .morebox .pic img {
     max-height:200px;
-/*    height:200px;*/
     max-width:200px;
 }
 .morebox {
     border-radius:3px;
-/*    height:220px;*/
     width:730px;
     margin:8px;
     padding:5px;
     display:inline-block;
     float:left;
-}
-.morebox .right_side {
-    float:right;
-    margin:10px;
-    width:150px;
-}
-
-.morebox .right_side .following {
-    float:right;
-    background-color:#3a3a3a;
-    padding:3px 5px;
-    padding-top:5px;
-    border-top:1px solid #323434;
-    border-bottom:1px solid #151617;
-}
-.morebox .right_side img {
-    height:30px;
-    width:30px;
-    border-radius:2px;
-    margin:1px;
-}
-.morebox .right_side .tags {
-    margin-top:10px;
-    float:right;
-}
-.morebox .right_side .tags input {
-    width:100%;
-    margin-bottom:5px;
-}
-.morebox .right_side .tags span:hover  {
-    background-color:#4a4a4a;
-}
-.morebox .right_side .tags span {
-    display:inline-block;
-    margin:2px;
-    padding:3px 6px;
-    background-color:#3a3a3a;
-    border-radius:2px;
 }
 
 .realname {
@@ -264,7 +211,7 @@ a {
 }
 
 .morebox .account-spacer {
-/*    float:left;*/
+
 }
 .morebox .github-details img {
     border-radius:2px;
@@ -272,18 +219,4 @@ a {
 
 .morebox .blog {
     padding-top:7px;
-}
-
-.notes {
-    display:block;
-    margin:13px;
-    padding:5px;
-}
-
-.notes .notes-text {
-    height:160px;
-    width:800px;
-    font-size:14px;
-    color:#ddd;
-    background-color:#000;
 }

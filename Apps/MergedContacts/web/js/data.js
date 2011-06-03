@@ -1,9 +1,7 @@
 var baseURL = 'http://localhost:8042/query';
 var data = {};
 
-// function getContacts(queryText, skip, limit, sort, callback) {
 function getContacts(skip, limit, callback) {
-    // $.getJSON(baseURL + '/contacts', {text:queryText, skip:skip, limit:limit, sort:[sort]}, callback);
     console.log(baseURL + '/getAcontacts_contacts'); //
     $.getJSON(baseURL + '/getAcontacts_contacts', {offset:skip, limit:100}, callback);
 }
@@ -24,8 +22,6 @@ function addRow(contact) {
     addTwitter(theDiv, contact);
     // addLinkedIn(theDiv, contact);
     // addGitHub(theDiv, contact);
-    // addKlout(theDiv, contact);
-    // addDate(theDiv, contact);
     contactsTable.append('<br>');
 }
 
@@ -81,84 +77,6 @@ function addFacebook(div, contact) {
     } else
         div.append('<span class="column twitter"></span>');
 }
-// 
-// function addGitHub(div, contact) {
-//     var githubUsername;
-//     if(contact.github && contact.github.data && contact.github.data.login)
-//         githubUsername = contact.github.data.login;
-//     else if(contact.rapportive && contact.rapportive.data && contact.rapportive.data.membership &&
-//             contact.rapportive.data.membership.github && contact.rapportive.data.membership.github.username)
-//         githubUsername = contact.rapportive.data.membership.github.username;
-//     
-//     if(githubUsername) {
-//         div.append('<span class="column github">' +
-//                          '<a target="_blank" href="https://github.com/' + githubUsername + '">' 
-//                          + githubUsername + '</a></span>');
-//     } else
-//         div.append('<span class="column github"></span>');
-// }
-// 
-// function addLinkedIn(div, contact) {
-//     var linkedin, occupations;
-//     if(contact.rapportive && contact.rapportive.data) {
-//         if(contact.rapportive.data.memberships)
-//             linkedin = contact.rapportive.data.memberships.linkedin;
-//         if(contact.rapportive.data.occupations)
-//             occupations = contact.rapportive.data.occupations;
-//     }
-//     if(linkedin) {
-//         var linkText = '';
-//         if(!occupations || occupations.length == 0) {
-//             linkText = 'Profile';
-//         } else if(occupations[0].job_title) {
-//             linkText = occupations[0].job_title;
-//             if(occupations[0].company)
-//                 linkText += ' at ' + occupations[0].company;
-//         } else if(occupations[0].company) {
-//             linkText = occupations[0].company;
-//         }
-// //        console.log(linkText);
-//         div.append('<span class="column linkedin">' +
-//                          '<a target="_blank" href="' + linkedin.profile_url + '">' + linkText + '</a></span>');
-//     } else
-//         div.append('<span class="column linkedin"></span>');
-// }
-// 
-// function addKlout(div, contact) {
-//     var klout = contact.klout;
-//     var score;
-//     
-//     if(klout && klout.data) {
-//         if(klout.data.score && klout.data.score.kscore)
-//             score = klout.data.score.kscore;
-//     }
-//     div.append('<span class="column klout">' + (score || '') + '</span>');
-// }
-// 
-// function addDate(div, contact) {
-//     var date = new Date().getTime();
-//     var min = date;
-//     if(contact.dates) {
-//         var dates = contact.dates;
-//         if(dates.rapportive && dates.rapportive.engaged)
-//             min = Math.min(min, dates.rapportive.engaged);
-//         if(dates.twitter && dates.twitter.engaged)
-//             min = Math.min(min, dates.twitter.engaged);
-//         if(dates.github && dates.github.engaged)
-//             min = Math.min(min, dates.github.engaged);
-//     }
-//     if(min < date)
-//         date = min;
-//     else
-//         date = null;
-//     if(date) {
-//         var d = new Date(date/1);
-// //        console.log(d);
-//         div.append('<span class="column date">' + (d.getMonth() + 1) + '/' + d.getDate() + '/' + (d.getFullYear() - 2000) + '</span>');
-//     }
-//     else
-//         div.append('<span class="column date"></span>');
-// }
 
 function getLocation(contact) {
     if(contact.addresses && contact.addresses) {
@@ -170,10 +88,7 @@ function getLocation(contact) {
     return '';
 }
 
-var sort = {'dates.rapportive.engaged':'desc', 
-            'klout.data.score.kscore':'asc', 
-            'rapportive.data.name':'desc', 
-            'rapportive.data.email':'desc'};
+var sort = {};
 
 var start = 0, end = 100, currentSort;
 
@@ -183,8 +98,6 @@ function reload(sortField, _start, _end, callback) {
     console.log('_start _end:', _start, _end);
     start = _start || 0; end = _end || 100;
     var queryText = $('#query-text').val();
-    // console.log(queryText);
-    // getContacts(queryText, start, end - start, usedSortField, function(contacts) {
     getContacts(start, end - start, function(contacts) {
        console.log('contacts',contacts);
         // console.log(contacts.length);
@@ -251,22 +164,13 @@ function getMoreDiv(newDiv, contact) {
     newDiv.find('.pic').html('<img src=\'' + getPhotoUrl(contact, true) + '\'>');
     newDiv.find('.name_and_loc .realname').html(contact.name);
     newDiv.find('.name_and_loc .location').html(getLocation(contact));
-    // if(contact.rapportive && contact.rapportive.data) {
-    //     console.log(contact.rapportive.data.occupations);
-    //     var occs = contact.rapportive.data.occupations;
-    //     for(var i in occs)
-    //         newDiv.find('.jobs').append(occs[i].job_title + ' at ' + occs[i].company + (i < occs.length - 1? "<br>" :""));
-    //         
-    //     var followingDiv = newDiv.find('.right_side .following')
-    //     console.log(contact.dates.rapportive.engaged);
-    //         if(contact.dates.rapportive && contact.dates.rapportive.engaged > 1)
-    //             followingDiv.find('.emaillist').css({display:'inline'});
-    // }
     
     if(contact.accounts.twitter)
         addTwitterDetails(newDiv, contact.accounts.twitter[0]);
     if(contact.accounts.facebook)
-        addFacebookDetails(newDiv, contact.accounts.facebook[0]);
+        addFacebookDetails(newDiv, contact.accounts.facebook[0]);    
+    if(contact.accounts.foursquare)
+        addFoursquareDetails(newDiv, contact.accounts.foursquare[0]);
     // addGithubDetails(newDiv, contact.github);
     // addBlogDetails(newDiv, contact);
     
@@ -294,21 +198,10 @@ function addTwitterDetails(newDiv, twitter) {
     console.log('twitter:', twitter);
     if(twitter && twitter.data) {
         newDiv.find('.twitter-details .username')
-                 .append('<a target="_blank" href="http://twitter.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
+                 .append('<a target="_blank" href="https://twitter.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
         newDiv.find('.twitter-details .followers').append(twitter.data.followers_count);
         newDiv.find('.twitter-details .following').append(twitter.data.friends_count);
         newDiv.find('.twitter-details .tagline').append(twitter.data.description);
-        
-        var followingDiv = newDiv.find('.right_side .following')
-        for(var i in twitter.following) {
-            var who = twitter.following[i];
-            console.log(who);
-            if(who == 'lockerproject')
-                followingDiv.find('.tw-tlp').css({display:'inline'});
-            else if(who == 'singlyinc')
-                followingDiv.find('.tw-singly').css({display:'inline'});
-        }
-        console.log(twitter);
     } else {
         newDiv.find('.twitter-details').css({display:'none'});
     }
@@ -319,47 +212,24 @@ function addFacebookDetails(newDiv, fb) {
     var name = fb.data.name || (fb.data.first_name + ' ' + fb.data.last_name);
     if(fb && fb.data) {
         newDiv.find('.facebook-details .name')
-                 .append('<a target="_blank" href="http://facebook.com/profile.php?id=' + fb.data.id + '">' + fb.data.name + '</a>');
+                 .append('<a target="_blank" href="https://facebook.com/profile.php?id=' + fb.data.id + '">' + name + '</a>');
     } else {
         newDiv.find('.facebook-details').css({display:'none'});
     }
 }
-// 
-// function addBlogDetails(newDiv, contact) {
-//     var blogUrl;
-//     if(contact.twitter && contact.twitter.data && contact.twitter.data.url) {
-//         blogUrl = contact.twitter.data.url;
-//     } else if(contact.github && contact.github.data && contact.github.data.blog) {
-//         blogUrl = contact.github.data.blog;
-//     }
-//     if(blogUrl) {
-//         console.log('found blogUrl:', blogUrl);
-//         newDiv.find('.blog-details').append('<a target="_blank" href="' + blogUrl + '">' + blogUrl + '</a>');
-//     } else {
-//         newDiv.find('.blog-details').css({display:'none'});
-//     }
-//     console.log('contact:', contact);
-// }
 
-function addTags(id, tags) {
-    if(!tags)
-        return;
-    tags.forEach(function(tag) {
-        appendTag(id, tag);
-    });
-}
-
-function appendTag(id, tag) {
-    var tagsDiv = $("#table #contacts #" + id + ' .tags');
-    tagsDiv.append('<span><span class=\'tag-val\'>' + tag + '</span>&nbsp;&nbsp;<a href="#" onclick="javascript:dropTag(\'' + id + '\',\'' + tag + '\');">x</a></span>');
-}
-function clearTag(id, tag) {
-    $("#table #contacts #" + id + ' .tags .tag-val').each(function(index) {
-        console.log($(this).html());
-        if($(this).html() == tag) {
-            $(this).parent().remove();
-        }
-    });
+function addFoursquareDetails(newDiv, foursquare) {
+    console.log('foursquare:', foursquare);
+    var name = foursquare.data.name || (foursquare.data.firstName + ' ' + foursquare.data.lastName);
+    console.log('foursquare.name:', name);
+    if(foursquare && foursquare.data) {
+        newDiv.find('.foursquare-details .name')
+                 .append('<a target="_blank" href="https://foursquare.com/user/' + foursquare.data.id + '">' + name + '</a>');
+        newDiv.find('.foursquare-details .checkins').append(foursquare.data.checkins.count);
+        newDiv.find('.foursquare-details .mayorships').append(foursquare.data.mayorships.count);
+    } else {
+        newDiv.find('.foursquare-details').css({display:'none'});
+    }
 }
 
 function showFull(id) {
@@ -370,37 +240,7 @@ function showFull(id) {
 }
 
 
-function doTag(id) {
-    var tag = $('#contacts #' + id + ' .more_info .right_side .add-tag').val();
-    addTag(id, tag);
-}
-
-// function addTag(id, tag) {
-//     $.get(baseURL + '/tags/add', {id:id, tag:tag}, function(data) {
-//         appendTag(id, tag);
-//         $("#table #contacts #" + id + ' .tags .add-tag').val('');
-//         console.log(data);
-//     });
-// }
-// 
-// function dropTag(id, tag) {
-//     $.get(baseURL + '/tags/drop', {id:id, tag:tag}, function(data) {
-//         clearTag(id, tag);
-//         $("#table #contacts #" + id + ' .tags .add-tag').val('');
-//         console.log(data);
-//     });
-// }
-// 
-// function setNotes(id, notes) {
-//     $.post(baseURL + '/update/notes', {id:id, notes:notes}, function(data) {
-// //        appendTag(id, tag);
-//         $("#table #contacts #" + id + ' .tags .add-tag').val('');
-//         console.log(data);
-//     });
-// }
-
 $(function() {
-    console.log('heeeelooo, jquery!');
     reload('dates.rapportive.engaged', start, end);
     $('#query-text').keyup(function(key) {
         if(key.keyCode == 13)
