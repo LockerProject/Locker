@@ -4,8 +4,9 @@
 	"desc":"Collect and sync my data from my IMAP account.",
 	"run":"node ../../Common/node/connector/client_init.js",
 	"status":"unstable",
-	"handle":"imap",
-	"processOptions" : {},
-	"mongoCollections": ["messages"],
-	"provides":["message/imap"]
+	"provides":["message/imap"],
+    "is":"connector",
+    "srcdir":"Connectors/IMAP",
+    "id":"imap",
+    "uri":"http://localhost:8043/Me/imap"
 }
