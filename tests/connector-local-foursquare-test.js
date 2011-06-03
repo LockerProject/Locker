@@ -22,7 +22,7 @@ var mePath = '/Me/' + svcId;
 var thecollections = ['friends', 'places'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
-var locker = require('locker');
+var locker = require('../Common/node/locker');
 var request = require('request');
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
