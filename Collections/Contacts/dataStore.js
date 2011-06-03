@@ -33,7 +33,13 @@ exports.addData = function(type, endpoint, data, callback) {
 }
 
 exports.addTwitterData = function(relationship, twitterData, callback) {
-    relationship = relationship.substring(0, relationship.length - 1);
+    if (typeof twitterData === 'function') {
+        callback = twitterData;
+        twitterData = relationship;
+        relationship = twitterData.source;
+    } else {
+        relationship = relationship.substring(0, relationship.length - 1);
+    }
     var data = twitterData.data;
     var twID  = data.id;
     var cleanedName = cleanName(data.name);

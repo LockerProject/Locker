@@ -18,6 +18,8 @@ var fs = require('fs');
 var currentDir = process.cwd();
 var events = {contact: 0};
 
+var utils = require('./test-utils');
+
 var suite = RESTeasy.describe('Facebook Connector');
 
 process.on('uncaughtException',function(error){
@@ -32,14 +34,17 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
+var locker = require('../Common/node/locker');
+var request = require('request');
 
-sync.eventEmitter.on('contact/facebook', function() {
+sync.eventEmitter.on('contact/facebook', function(eventObj) {
     events.contact++;
 });
 
 suite.next().suite.addBatch({
     "Can setup the tests": {
         topic: function() {
+            locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
             fakeweb.allowNetConnect = false;
@@ -188,8 +193,7 @@ suite.next().suite.addBatch({
             assert.equal(process.cwd(), currentDir);
         }
     }
-});
-
+})
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")

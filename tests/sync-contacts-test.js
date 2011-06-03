@@ -186,13 +186,13 @@ suite.next().suite.addBatch({
 }).addBatch({
     // TODO: this should all be going through the actual events system, this is a pretty fragile test currently
     //
-    "Posting an event to the foursquareListener" : {
+    "Posting an event to the contacts collection" : {
         topic: function() {
             dataStore.clear();
             var self = this;
             request.post({
-                url:lconfig.lockerBase + mePath + "/foursquareListener",
-                json:{"obj":{"source":"friends","type":"add","data": data,"_via":["foursquare"]}}}, self.callback);
+                url:lconfig.lockerBase + mePath + "/events",
+                json:{"obj":{"source":"friends","type":"add","data": data},"_via":["foursquare"]}}, self.callback);
         },
         "returns a 200" : function (err, res, body) {
             assert.equal(res.statusCode, 200);

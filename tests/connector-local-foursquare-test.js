@@ -10,6 +10,7 @@ var events = {checkin: 0, contact: 0};
 require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var suite = RESTeasy.describe("Foursquare Connector");
+var utils = require('./test-utils');
 
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
@@ -21,9 +22,8 @@ var mePath = '/Me/' + svcId;
 var thecollections = ['friends', 'places'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
-var locker = require('locker');
+var locker = require('../Common/node/locker');
 var request = require('request');
-locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
@@ -32,37 +32,33 @@ sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
     events.checkin++;
 });
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
-    locker.event('contact/foursquare', eventObj);
     events.contact++;
-})
+});
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
+            locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
-            // these urls smell.
-            //
-            request.get({uri:'http://localhost:8043/Me/contacts/'}, function() {
-                lmongoclient.connect(function(collections) {
-                    sync.init({accessToken : 'abc'}, collections);
-                    dataStore.init("id", collections);
-                    fakeweb.allowNetConnect = false;
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
-                        body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
-                        file : __dirname + '/fixtures/foursquare/me.json' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
-                        file : __dirname + '/fixtures/foursquare/checkins_1.json' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
-                        file : __dirname + '/fixtures/foursquare/checkins_2.json' });
-                    sync.syncCheckins(self.callback);
-                });
-            })
+            lmongoclient.connect(function(collections) {
+                sync.init({accessToken : 'abc'}, collections);
+                dataStore.init("id", collections);
+                fakeweb.allowNetConnect = false;
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
+                    body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
+                    file : __dirname + '/fixtures/foursquare/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_1.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+                sync.syncCheckins(self.callback);
+            });
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
@@ -188,20 +184,6 @@ suite.next().suite.addBatch({
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-        }
-    }
-}).addBatch({
-    "Verify that the contacts collection did what its supposed to do" : {
-        topic: function() {
-            // these urls smell.
-            // also, this is a race condition as the contacts collection
-            // might not have processed all the events yet
-            request.get({uri: 'http://localhost:8043/Me/contacts/allContacts'}, this.callback);
-        },
-        "successfully": function(err, response, data) {
-            assert.isNotNull(data);
-            console.log(data);
-            assert.equal(JSON.parse(data).length, 2);
         }
     }
 })

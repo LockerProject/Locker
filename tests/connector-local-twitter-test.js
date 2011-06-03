@@ -6,9 +6,11 @@ var assert = require("assert");
 var vows = require("vows");
 var fs = require("fs");
 var currentDir = process.cwd();
+var request = require('request');
+var locker = require('../Common/node/locker');
 
 var suite = RESTeasy.describe("Twitter Connector")
-
+var utils = require('./test-utils');
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });
@@ -22,10 +24,16 @@ lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
+var events = 0;
+
+twitter.eventEmitter.on('contact/twitter', function(eventObj) {
+    events++;
+});
 
 suite.next().suite.addBatch({
     "Can get" : {
         topic: function() {
+            locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             fakeweb.allowNetConnect = false;
             
@@ -199,14 +207,16 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events, 3);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
         }
     }
-});
-
+})
 
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
