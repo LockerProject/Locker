@@ -21,13 +21,13 @@
                               "connector-local-twitter-test.js"],
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
-                        "connector-flickr-test.js",
-                        "connector-github-test.js"],
+                        "connector-flickr-test.js"],
         "collections" : ["sync-contacts-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
-        "connector-local-XMPP-test.js"
+        "connector-local-XMPP-test.js",
+        "connector-github-test.js"
     ], 
     "mongo" : {
         "dataDir": "mongoTest",
