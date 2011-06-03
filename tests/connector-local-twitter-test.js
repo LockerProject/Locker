@@ -27,7 +27,6 @@ var mongoCollections;
 var events = 0;
 
 twitter.eventEmitter.on('contact/twitter', function(eventObj) {
-    locker.event('contact/twitter', eventObj);
     events++;
 });
 
@@ -73,14 +72,12 @@ suite.next().suite.addBatch({
                 uri : 'https://api.twitter.com:443/1/followers/ids.json?screen_name=ctide&cursor=-1',
                 body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
             var self = this;
-            request.get({uri:'http://localhost:8043/Me/contacts/'}, function() {
-                lmongoclient.connect(function(collections) {
-                    mongoCollections = collections;
-                    twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
-                                  token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, collections);
-                    dataStore.init("id_str", mongoCollections);
-                    self.callback(); 
-                });
+            lmongoclient.connect(function(collections) {
+                mongoCollections = collections;
+                twitter.init({consumerKey : 'abc', consumerSecret : 'abc', 
+                              token: {'oauth_token' : 'abc', 'oauth_token_secret' : 'abc'}}, collections);
+                dataStore.init("id_str", mongoCollections);
+                self.callback(); 
             });
         },
                             
@@ -219,20 +216,7 @@ suite.next().suite.addBatch({
             assert.equal(process.cwd(), currentDir);
         }
     }
-}).addBatch({
-    "Verify that the contacts collection did what its supposed to do" : {
-        topic: function() {
-            // this test smells.
-            // required a much bigger delay, ugly
-            utils.waitForEvents('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, this.callback);
-        },
-        "successfully": function(err, data) {
-            assert.isNotNull(data);
-            assert.equal(data.length, 8);
-        }
-    }
 })
-
 
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)

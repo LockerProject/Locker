@@ -38,7 +38,6 @@ var locker = require('../Common/node/locker');
 var request = require('request');
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
-    locker.event('contact/facebook', eventObj);
     events.contact++;
 });
 
@@ -50,12 +49,10 @@ suite.next().suite.addBatch({
             var self = this;
             fakeweb.allowNetConnect = false;
             fakeweb.allowLocalConnect = true;
-            request.get({uri:'http://localhost:8043/Me/contacts/'}, function() {
-                lmongoclient.connect(function(collections) {
-                    sync.init({accessToken : 'abc'}, collections);
-                    dataStore.init('id', collections);
-                    self.callback(null, true);
-                });
+            lmongoclient.connect(function(collections) {
+                sync.init({accessToken : 'abc'}, collections);
+                dataStore.init('id', collections);
+                self.callback(null, true);
             });
         },
         "successfully": function(err, test) {
@@ -194,20 +191,6 @@ suite.next().suite.addBatch({
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-        }
-    }
-}).addBatch({
-    "Verify that the contacts collection did what its supposed to do" : {
-        topic: function() {
-            // this test smells.
-            // required a much bigger delay, ugly
-            utils.waitForEvents('http://localhost:8043/Me/contacts/allContacts', 15, 500, 2, 0, this.callback);
-        },
-        "successfully": function(err, data) {
-            assert.isNotNull(data);
-            // these suck, how can i easily clear out mongo?  doesn't seem straightforward
-            // 
-            assert.equal(data.length, 7);
         }
     }
 })

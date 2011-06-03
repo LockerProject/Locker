@@ -32,7 +32,6 @@ sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
     events.checkin++;
 });
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
-    locker.event('contact/foursquare', eventObj);
     events.contact++;
 });
 
@@ -42,28 +41,24 @@ suite.next().suite.addBatch({
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
-            // these urls smell.
-            //
-            request.get({uri:'http://localhost:8043/Me/contacts/'}, function() {
-                lmongoclient.connect(function(collections) {
-                    sync.init({accessToken : 'abc'}, collections);
-                    dataStore.init("id", collections);
-                    fakeweb.allowNetConnect = false;
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
-                        body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
-                        file : __dirname + '/fixtures/foursquare/me.json' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
-                        file : __dirname + '/fixtures/foursquare/checkins_1.json' });
-                    fakeweb.registerUri({
-                        uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
-                        file : __dirname + '/fixtures/foursquare/checkins_2.json' });
-                    sync.syncCheckins(self.callback);
-                });
-            })
+            lmongoclient.connect(function(collections) {
+                sync.init({accessToken : 'abc'}, collections);
+                dataStore.init("id", collections);
+                fakeweb.allowNetConnect = false;
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
+                    body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
+                    file : __dirname + '/fixtures/foursquare/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_1.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
+                    file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+                sync.syncCheckins(self.callback);
+            });
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
@@ -189,19 +184,6 @@ suite.next().suite.addBatch({
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-        }
-    }
-}).addBatch({
-    "Verify that the contacts collection did what its supposed to do" : {
-        topic: function() {
-            // this test smells.
-            // if 2.5 seconds of delay isn't enough to handle race conditions, I guess we can bump it a little.
-            // need to think of a better way to test events, because this is bad news.
-            utils.waitForEvents('http://localhost:8043/Me/contacts/allContacts', 5, 500, 2, 0, this.callback);
-        },
-        "successfully": function(err, data) {
-            assert.isNotNull(data);
-            assert.equal(data.length, 2);
         }
     }
 })
