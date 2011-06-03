@@ -249,7 +249,7 @@ function getMoreDiv(newDiv, contact) {
     var text = $("#more_blank").html();
     newDiv.addClass('more_info').append(text);
     newDiv.find('.pic').html('<img src=\'' + getPhotoUrl(contact, true) + '\'>');
-    newDiv.find('.name_and_loc .realname').html(getName(contact));
+    newDiv.find('.name_and_loc .realname').html(contact.name);
     newDiv.find('.name_and_loc .location').html(getLocation(contact));
     // if(contact.rapportive && contact.rapportive.data) {
     //     console.log(contact.rapportive.data.occupations);
@@ -265,6 +265,8 @@ function getMoreDiv(newDiv, contact) {
     
     if(contact.accounts.twitter)
         addTwitterDetails(newDiv, contact.accounts.twitter[0]);
+    if(contact.accounts.facebook)
+        addFacebookDetails(newDiv, contact.accounts.facebook[0]);
     // addGithubDetails(newDiv, contact.github);
     // addBlogDetails(newDiv, contact);
     
@@ -289,6 +291,7 @@ function getMoreDiv(newDiv, contact) {
 }
 
 function addTwitterDetails(newDiv, twitter) {
+    console.log('twitter:', twitter);
     if(twitter && twitter.data) {
         newDiv.find('.twitter-details .username')
                  .append('<a target="_blank" href="http://twitter.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
@@ -308,6 +311,17 @@ function addTwitterDetails(newDiv, twitter) {
         console.log(twitter);
     } else {
         newDiv.find('.twitter-details').css({display:'none'});
+    }
+}
+
+function addFacebookDetails(newDiv, fb) {
+    console.log('fb:', fb);
+    var name = fb.data.name || (fb.data.first_name + ' ' + fb.data.last_name);
+    if(fb && fb.data) {
+        newDiv.find('.facebook-details .name')
+                 .append('<a target="_blank" href="http://facebook.com/profile.php?id=' + fb.data.id + '">' + fb.data.name + '</a>');
+    } else {
+        newDiv.find('.facebook-details').css({display:'none'});
     }
 }
 // 

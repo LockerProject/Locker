@@ -103,7 +103,7 @@ a {
 }
 
 #table .email {
-    width:200px;
+    width:240px;
 }
 
 #table .github {
@@ -111,7 +111,7 @@ a {
 }
 
 #table .twitter {
-    width:130px;
+    width:160px;
 }
 
 #table .linkedin {
@@ -176,7 +176,7 @@ a {
 .morebox {
     border-radius:3px;
 /*    height:220px;*/
-    width:1060px;
+    width:730px;
     margin:8px;
     padding:5px;
     display:inline-block;
@@ -235,7 +235,7 @@ a {
 }
 .morebox .twitter-details .tagline {
     display:block;
-    width:520px;
+    width:470px;
     height:17px;
     overflow:hidden;
     padding-top:2px;
