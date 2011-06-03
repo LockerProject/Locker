@@ -93,5 +93,14 @@ vows.describe("Service Manager").addBatch({
             }
         }
     },
+    "Collections" : {
+        "are preinstalled" : function() {
+            assert.includes(serviceManager.serviceMap().installed, "contacts");
+        },
+        topic:serviceManager.install({srcdir:"Collections/Contacts"}),
+        "are not installable" : function(svcInfo) {
+            assert.isUndefined(svcInfo);
+        }
+    }
 }).export(module);
 
