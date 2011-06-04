@@ -152,12 +152,12 @@ a {
     display:inline-block;
     margin:5px;
     margin-right:12px;
-    max-height:200px;
-    width:200px;
+    max-height:100px;
+    max-width:100px;
 }
 .morebox .pic img {
-    max-height:200px;
-    max-width:200px;
+    max-height:100px;
+    max-width:100px;
 }
 .morebox {
     border-radius:3px;
@@ -166,6 +166,12 @@ a {
     padding:5px;
     display:inline-block;
     float:left;
+}
+
+.name_and_loc {
+    display:block;
+    padding:5px;
+    height:100px;
 }
 
 .realname {
@@ -193,7 +199,7 @@ a {
     padding-top:4px;
 }
 .morebox .account {
-    display:block;
+    display:none;
     height:40px;
 }
 .morebox .srv-img {
