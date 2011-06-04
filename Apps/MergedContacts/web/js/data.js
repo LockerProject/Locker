@@ -171,27 +171,6 @@ function getMoreDiv(newDiv, contact) {
         addFacebookDetails(newDiv, contact.accounts.facebook[0]);    
     if(contact.accounts.foursquare)
         addFoursquareDetails(newDiv, contact.accounts.foursquare[0]);
-    // addGithubDetails(newDiv, contact.github);
-    // addBlogDetails(newDiv, contact);
-    
-    // addTags(contact._id, contact.tags);
-        // 
-        // $('#contacts #' + contact._id + ' .more_info .right_side .add-tag').keyup(function(key) {
-        //     if(key.keyCode == 13) {
-        //         doTag(contact._id);
-        //     }
-        //     console.log(key.keyCode);
-        // });
-    // 
-    // var notesForm = $('#contacts #' + contact._id + ' .notes .notes-form');
-    // if(contact.notes)
-    //     notesForm.find('.notes-text').val(contact.notes);
-    // console.log(notesForm.html());
-    // notesForm.find('.update-notes').click(function() {
-    //     var notes = notesForm.find('.notes-text').val();
-    //     console.log(notes);
-    //     setNotes(contact._id, notes);
-    // });
 }
 
 function addTwitterDetails(newDiv, twitter) {

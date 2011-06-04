@@ -135,14 +135,19 @@ exports.addFacebookData = function(facebookData, callback) {
     //name
     if(data.name)
         set.name = data.name;
-    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:{'_matching.cleanedNames':cleanedName}},
+        
+    var addToSet = {'_matching.cleanedNames':cleanedName};
+    //photos
+    if(data.id)
+        addToSet.photos = 'https://graph.facebook.com/' + data.id + '/picture';
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}, 
                       {'accounts.foursquare.data.contact.facebook':fbID}];
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.facebook':baseObj}, 
-                                         $addToSet:{'_matching.cleanedNames':cleanedName},
+                                         $addToSet:addToSet,
                                          $set:{name:data.name}}, 
                         {safe:true, upsert:true}, callback);
         } else {
@@ -163,6 +168,10 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         set.name = data.name;
     
     var addToSet = {'_matching.cleanedNames':cleanedName};
+    //photos
+    if(data.id)
+        addToSet.photos = '/Me/gcontacts/photo/' + data.id;
+    //addresses
     if(data.address) {
         var addresses = [];
         for(var i in data.address) {
@@ -172,6 +181,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         }
         addToSet.addresses = {$each:addresses};
     }
+    //phones
     if(data.phone) {
         var phones = [];
         for(var i in data.phone) {
@@ -181,6 +191,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         }
         addToSet.phoneNumbers = {$each:phones};
     }
+    //emails
     if(data.email) {
         var emails = [];
         for(var i in data.email) {
