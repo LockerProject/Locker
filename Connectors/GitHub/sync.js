@@ -1,4 +1,6 @@
-var github = require('./lib/github-lib.js');
+var GitHubApi = require("github").GitHubApi;
+var github = new GitHubApi(true);
+
 var fs = require('fs');
 var lfs = require('../../Common/node/lfs.js');
 var EventEmitter = require('events').EventEmitter;
@@ -16,7 +18,7 @@ function GHClient(newAuth) {
     lfs.readObjectFromFile('profile.json', function(profile) {
         self.profile = profile;
     });
-    github.setToken(this.auth.access_token);
+    github.authenticate(this.username, this.auth.access_token);
     return this;
 }
 
@@ -26,11 +28,25 @@ GHClient.prototype.syncRepos = function(callback) {
     
 }
 
+getNewWatchers = function(username, repoName, knownIDs, callback) {
+    github.getRepoApi().getRepoWatchers(self.username, repo, function(err, watchers) {
+        if(!err) {
+            var newWatchers = [];
+            watchers.forEach(function(watcher) {
+                if(!knownIDs[watcher.login])
+                    newWatchers.push(watcher);
+            });
+            getUsersInfo(newWatchers, callback);
+        }
+    });
+}
+
+
 GHClient.prototype.syncWatchersInfo = function(repo, callback) {
     var filePrefix = this.username + '-' + repo;
     var self = this;
     lfs.readObjectFromFile(filePrefix + '-watchersIDs.json', function(watchersIDs) {
-        github.getNewWatchers(self.username, repo, watchersIDs, function(newWatchers) {
+        getNewWatchers(self.username, repo, watchersIDs, function(newWatchers) {
             //sync watchers to disk
             lfs.appendObjectsToFile(filePrefix + '-watchers.json', newWatchers);
             //determine which watchers are new, emit events, and sync watchersIDs to disk
@@ -47,12 +63,11 @@ GHClient.prototype.syncWatchersInfo = function(repo, callback) {
 }
 
 GHClient.prototype.syncProfile = function(callback) {
-    github.getUserInfo(this.username, function(err, data) {
+    github.getUserApi().show(this.username, function(err, data) {
         if(!err) {
-            console.error(data);
             lfs.writeObjectToFile('profile.json', data);
-            callback(data);
         }
+        callback(err, data);
     });
 }
 
@@ -61,12 +76,12 @@ GHClient.prototype.getProfile = function(callback) {
 }
 
 GHClient.prototype.syncRepos = function(callback) {
-    github.getRepositories(this.username, function(err, data) {
+    github.getRepoApi().getUserRepos(this.username, function(err, data) {
         if(!err) {
             console.error(data);
             lfs.writeObjectsToFile('repos.json', data);
-            callback(data);
         }
+        callback(err, data);
     });
 }
 

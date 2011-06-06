@@ -6,6 +6,7 @@
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
         "connectors" : ["connector-IMAP-test.js",
+                        "connector-github-test.js",
                         "connector-flickr-test.js"],
         "core-lib" : ["lservicemanager-test-local.js", 
                       "lconfig-test-local.js", 
@@ -26,8 +27,7 @@
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
-        "connector-local-XMPP-test.js",
-        "connector-github-test.js"
+        "connector-local-XMPP-test.js"
     ], 
     "mongo" : {
         "dataDir": "mongoTest",

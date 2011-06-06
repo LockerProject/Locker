@@ -26,6 +26,9 @@ var fs = require('fs'),
     
 var ghsync = require('./sync.js');
 
+
+
+
 var me, auth, github;
 
 app.set('views', __dirname);
@@ -56,11 +59,17 @@ app.get('/syncrepo/:repo', function(req, res) {
 app.get('/sync/profile', function(req, res) {
     console.error('/sync/profile');
     console.log('/sync/profile');
-    getGitHub().syncProfile(function(data) {
-        locker.diary("Profile sync success");
-        res.writeHead(200);
-        res.end("got profile: "+JSON.stringify(data));
-        locker.at('/sync/profile', 3600);
+    getGitHub().syncProfile(function(err, data) {
+        if (!err) {
+            locker.diary("Profile sync success");
+            res.writeHead(200);
+            res.end("got profile: "+JSON.stringify(data));
+            locker.at('/sync/profile', 3600);
+        } else {
+            res.writeHead(err.status);
+            res.end("error : " + err.msg.error);
+            locker.diary("Received a " + err.status + " error from github trying to sync profile.");
+        }
     })
 });
 
@@ -71,11 +80,17 @@ app.get('/get_profile', function(req, res) {
     });
 });
 app.get('/sync/repos', function(req, res) {
-    getGitHub().syncRepos(function(data) {
-        locker.diary("Repo sync success");
-        res.writeHead(200);
-        res.end("got repos: "+JSON.stringify(data));
-        locker.at('/sync/repos', 3600);
+    getGitHub().syncRepos(function(err, data) {
+        if (!err) {
+            locker.diary("Repo sync success");
+            res.writeHead(200);
+            res.end("got repos: "+JSON.stringify(data));
+            locker.at('/sync/repos', 3600);
+        } else {
+            res.writeHead(err.status);
+            res.end("error : " + err.msg.error);
+            locker.diary("Received a " + err.status + " error from github trying to sync repos.");
+        }
     })
 });
 
