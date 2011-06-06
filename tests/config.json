@@ -5,8 +5,6 @@
     "scannedDirs" : ["Apps", "Connectors", "Collections", "Tests"],
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
-        "connectors" : ["connector-IMAP-test.js",
-                        "connector-flickr-test.js"],
         "core-lib" : ["lservicemanager-test-local.js", 
                       "lconfig-test-local.js", 
                       "lscheduler-test-local.js", 
@@ -22,6 +20,8 @@
                               "connector-local-facebook-test.js",
                               "connector-local-twitter-test.js"],
         "connectors-remote" : [],
+        "connectors" : ["connector-IMAP-test.js",
+                        "connector-flickr-test.js"],
         "collections" : ["sync-contacts-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
