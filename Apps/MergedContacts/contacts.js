@@ -47,7 +47,7 @@ function readContacts(contactsReadCB) {
     var me = lfs.loadMeData();
     var puri = url.parse(lockerInfo.lockerUrl);
     var httpClient = http.createClient(puri.port);
-    request.get({url:lconfig.lockerBase + "/query/getAContacts_contacts?offset=0"}, function(err, res, data) {
+    request.get({url:lconfig.lockerBase + "/query/getContact?offset=0"}, function(err, res, data) {
         contactsReadCB(JSON.parse(data));
     });
 }
