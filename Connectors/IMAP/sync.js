@@ -14,8 +14,7 @@ var fs = require('fs'),
     dataStore = require('../../Common/node/connector/dataStore'),
     app = require('../../Common/node/connector/api'),
     EventEmitter = require('events').EventEmitter,
-    ImapConnection = require('imap').ImapConnection, 
-    util = require('util');
+    ImapConnection = require('imap').ImapConnection;
 
 var updateState, auth, allKnownIDs, imap;
 
@@ -39,8 +38,6 @@ exports.init = function(theAuth, mongoCollections) {
     // auth.debug = function(msg) {
     //     console.error(msg);
     // };
-    
-    imap = new ImapConnection(auth);
 };
 
 exports.syncMessages = function (callback) {
@@ -53,6 +50,8 @@ exports.syncMessages = function (callback) {
 
     async.series({
         imap: function(seriesCallback) {
+            imap = new ImapConnection(auth);
+            
             var cb = function(err) {
                 if (err) {
                     console.error(err);
