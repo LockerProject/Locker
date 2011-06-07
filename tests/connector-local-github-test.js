@@ -28,12 +28,10 @@ var request = require('request');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 
-// sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
-//     events.checkin++;
-// });
-// sync.eventEmitter.on('contact/foursquare', function(eventObj) {
-//     events.contact++;
-// });
+sync.eventEmitter.on('contact/github', function(eventObj) {
+    console.log('obj', eventObj);
+    events.contact++;
+});
 
 suite.next().suite.addBatch({
     "Can get repos" : {
@@ -231,6 +229,10 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after checking for proper number of events': function(topic) {
+            // 3 new contact events, 1 deleted conatct events
+            assert.equal(events.contact, 4);
+        },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
             process.chdir('../..');

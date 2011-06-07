@@ -129,6 +129,8 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
                     dataStore.getCurrent(friendsOrFollowers, user.id, function(err, resp) {
                         if (resp === undefined) {
                             dataStore.addObject(friendsOrFollowers, user, function(err) {
+                                var eventObj = {source:friendsOrFollowers, type:'add', data:user};
+                                exports.eventEmitter.emit('contact/github', eventObj);
                                 added++;
                                 processUser(data);
                             });
@@ -138,6 +140,8 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
                                 processUser(data);
                             } else {
                                 dataStore.addObject(friendsOrFollowers, user, function(err) {
+                                    var eventObj = {source:friendsOrFollowers, type:'update', data:user};
+                                    exports.eventEmitter.emit('contact/github', eventObj);
                                     modified++;
                                     processUser(data);
                                 })
@@ -208,6 +212,8 @@ function logRemoved(type, ids, callback) {
         });
     } else {
         dataStore.removeObject(type, id+'', function(err) {
+            var eventObj = {source:type, type:'delete', data:{id:id, deleted: true}};
+            exports.eventEmitter.emit('contact/github', eventObj);
             delete allKnownIDs[type][id];
             logRemoved(type, ids, callback);
         });
