@@ -9,7 +9,7 @@
 //testing for the Facebook connector
 
 var fakeweb = require(__dirname + '/fakeweb.js');
-var sync = require('../Connectors/facebook/sync');
+var sync = require('../Connectors/Facebook/sync');
 var dataStore = require('../Common/node/connector/dataStore');
 var assert = require('assert');
 var RESTeasy = require('api-easy');

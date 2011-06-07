@@ -8,7 +8,7 @@
 */
 //testing for the IMAP connector against a live IMAP server
 
-var sync = require('../Connectors/imap/sync');
+var sync = require('../Connectors/IMAP/sync');
 var dataStore = require('../Common/node/connector/dataStore');
 var assert = require('assert');
 var RESTeasy = require('api-easy');
