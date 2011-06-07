@@ -24,6 +24,7 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
 var config = require("lconfig");
+var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
@@ -60,6 +61,25 @@ locker.get("/providers", function(req, res) {
     }
     res.writeHead(200, {"Content-Type":"application/json"});
     res.end(JSON.stringify(serviceManager.providers(req.param("types").split(","))));
+});
+
+locker.get("/encrypt", function(req, res) {
+    if (!req.param("s")) {
+        res.writeHead(400);
+        res.end();
+        return;
+    }
+    console.log("encrypting " + req.param("s"));
+    res.end(lcrypto.encrypt(req.param("s")));
+});
+
+locker.get("/decrypt", function(req, res) {
+    if (!req.param("s")) {
+        res.writeHead(400);
+        res.end();
+        return;
+    }
+    res.end(lcrypto.decrypt(req.param("s")));
 });
 
 // search interface
