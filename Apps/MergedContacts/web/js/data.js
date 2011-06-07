@@ -2,8 +2,8 @@ var baseURL = 'http://localhost:8042/query';
 var data = {};
 
 function getContacts(skip, limit, callback) {
-    console.log(baseURL + '/getAcontacts_contacts'); //
-    $.getJSON(baseURL + '/getAcontacts_contacts', {offset:skip, limit:100}, callback);
+    console.log(baseURL + '/getContact'); //
+    $.getJSON(baseURL + '/getContact', {offset:skip, limit:100}, callback);
 }
 
 function addRow(contact) {
