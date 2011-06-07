@@ -31,6 +31,9 @@ function authComplete(theauth, mongoCollections) {
     sync.eventEmitter.on('contact/facebook', function(eventObj) {
         locker.event('contact/facebook', eventObj);
     });
+    sync.eventEmitter.on('link/facebook', function(eventObj) {
+        locker.event('link/facebook', eventObj);
+    });
 }
 
 function index(req, res) {

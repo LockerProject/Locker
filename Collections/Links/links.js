@@ -7,32 +7,18 @@
 *
 */
 
-// Links from all sources
-var http = require('http'),
-    url = require('url'),
-    lfs = require('../../Common/node/lfs.js');
+// merge links from connectors
 
+var fs = require('fs'),
+    locker = require('../../Common/node/locker.js');
+    
+var sync = require('./sync');
+var dataStore = require("./dataStore");
 
 var lockerInfo;
-
-
-var express = require('express'),connect = require('connect');
-var app = express.createServer(connect.bodyParser(), connect.cookieParser(), connect.session({secret : "locker"}));
-
-// Process the startup JSON object
-process.stdin.resume();
-process.stdin.on("data", function(data) {
-    lockerInfo = JSON.parse(data);
-    if (!lockerInfo || !lockerInfo["workingDirectory"]) {
-        process.stderr.write("Was not passed valid startup information."+data+"\n");
-        process.exit(1);
-    }
-    process.chdir(lockerInfo.workingDirectory);
-    app.listen(lockerInfo.port, "localhost", function() {
-        process.stdout.write(data);
-        gatherLinks();
-    });
-});
+var express = require('express'),
+    connect = require('connect');
+var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
 
@@ -40,76 +26,99 @@ app.get('/', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    lfs.readObjectsFromFile("links.json",function(links){
-        res.write("<html><p>Found "+links.length+" links: <ul>");
-        for(var i in links)
-            res.write('<li>'+JSON.stringify(links[i])+"</li>");
-        res.write("</ul></p></html>");
+    dataStore.getTotalCount(function(err, countInfo) {
+        res.write('<html><p>Found '+ countInfo +' links</p><p><a href="update">Update from Connectors</a></p></html>');
         res.end();
     });
 });
 
-app.get("/allLinks", function(req, res) {
+app.get('/allLinks', function(req, res) {
     res.writeHead(200, {
-        "Content-Type":"text/javascript"
+        'Content-Type':'application/json'
     });
-    lfs.readObjectsFromFile('links.json', function(links) {
-        res.write(JSON.stringify(links));
-        res.end();
+    dataStore.getAll(function(err, cursor) {
+        cursor.toArray(function(err, items) {
+            res.end(JSON.stringify(items));
+        });
     });
 });
 
-app.get("/update", function(req, res) {
-    gatherLinks();
+app.get('/update', function(req, res) {
+    sync.gatherLinks();
     res.writeHead(200);
-    res.end("Updating");
+    res.end('Updating');
 });
+// 
+// app.post('/events', function(req, res) {
+//     var target;
+//     
+//     if (!req.body.obj.type || !req.body._via) {
+//         console.log('5 HUNDO');
+//         res.writeHead(500);
+//         res.end('bad data');
+//         return;
+//     }
+//     switch (req.body._via[0]) {
+//         case 'foursquare':
+//             target = dataStore.addFoursquareData;
+//             break;
+//         case 'facebook':
+//             target = dataStore.addFacebookData;
+//             break;
+//         case 'twitter':
+//             target = dataStore.addTwitterData;
+//             break;
+//         default:
+//             res.writeHead(500);
+//             console.log('event received by the contacts collection with an invalid type');
+//             res.end("Don't know what to do with this event");
+//             return;
+//             break;
+//     }
+//     switch (req.body.obj.type) {
+//         // what do we want to do for a delete event?
+//         //
+//         case 'delete':
+//             res.writeHead(200);
+//             res.end('not doing anything atm');
+//             break;
+//         default:
+//             target(req.body.obj, function(err, doc) {
+//                 res.writeHead(200);
+//                 res.end('new object added');
+//                 // what event should this be?
+//                 // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
+//                 //
+//                 // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+//                 var eventObj = {source: "contacts", type:req.body.obj.type, data:doc};
+//                 locker.event("contact/full", eventObj);
+//             });
+//             break;
+//     }
+// });
 
-function gatherLinks(){
-    // This should really be timered, triggered, something else
-    var me = lfs.loadMeData();
-    for(var conn in me.use)
-        addLinksFromConn(conn,'/allLinks',me.use[conn]);
-}
-
-var debug = false;
-
-/**
- * Reads in a file (at path), splits by line, and parses each line as JSON.
- * return parsed objects in an array
- */
-function parseLinesOfJSON(data) {
-    var objects = [];
-    var cs = data.split("\n");
-    for (var i = 0; i < cs.length; i++) {
-        if (cs[i].substr(0, 1) != "{") continue;
-        if(debug) console.log(cs[i]);
-        objects.push(JSON.parse(cs[i]));
+// Process the startup JSON object
+process.stdin.resume();
+process.stdin.on('data', function(data) {
+    lockerInfo = JSON.parse(data);
+    locker.initClient(lockerInfo);
+    if (!lockerInfo || !lockerInfo['workingDirectory']) {
+        process.stderr.write('Was not passed valid startup information.'+data+'\n');
+        process.exit(1);
     }
-    return objects;
-}
-
-function addLinksFromConn(conn, path, type) {
-    var puri = url.parse(lockerInfo.lockerUrl);
-    var httpClient = http.createClient(puri.port);
-    var request = httpClient.request('GET', '/Me/'+conn+path);
-    request.end();
-    request.on('response',
-    function(response) {
-        var data = '';
-        response.on('data',
-        function(chunk) {
-            data += chunk;
-        });
-        response.on('end',
-        function() {
-            var lnks = JSON.parse(data);
-            var links = [];
-            for (var i in lnks) {
-                lnks[i]["_via"] = [conn];
-                links.push(lnks[i]);
-            }
-            lfs.writeObjectsToFile('links.json', links);
+    process.chdir(lockerInfo.workingDirectory);
+    
+    locker.connectToMongo(function(thecollections) {
+        sync.init(lockerInfo.lockerUrl, thecollections.links);
+        app.listen(lockerInfo.port, 'localhost', function() {
+            process.stdout.write(data);
+            // locker.listen('contact/foursquare', '/events');
+            // locker.listen('contact/facebook', '/events');
+            // locker.listen('contact/twitter', '/events');
+            sync.eventEmitter.on('link/full', function(eventObj) {
+                locker.event('link/full', eventObj);
+            });
+            // gatherContacts();
         });
     });
-}
+});
