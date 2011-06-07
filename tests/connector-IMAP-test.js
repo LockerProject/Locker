@@ -6,112 +6,119 @@
 * Please see the LICENSE file for more information.
 *
 */
+//testing for the IMAP connector against a live IMAP server
 
-//tests for IMAP connector
-
+var sync = require('../Connectors/imap/sync');
+var dataStore = require('../Common/node/connector/dataStore');
 var assert = require('assert');
-var vows = require('vows');
 var RESTeasy = require('api-easy');
-var http = require('http');
-var querystring = require('querystring');
-var events = require('events');
+var vows = require('vows');
 var fs = require('fs');
-var request = require('request');
-var lfs = require('../Common/node/lfs.js');
-var locker = require('../Common/node/locker.js');
-var lconfig = require('../Common/node/lconfig.js');
-var path = require('path');
-var testUtils = require(__dirname + "/test-utils.js");
+var util = require('util');
+var currentDir = process.cwd();
+var events = {message: 0};
 
-var suite = RESTeasy.describe('IMAP Connector')
+var suite = RESTeasy.describe('IMAP Connector');
 
-var id = 'imap-test';
+process.on('uncaughtException',function(error){
+    sys.puts(error.stack);
+});
 
+var svcId = 'imap';
+var mePath = '/Me/' + svcId;
+
+var thecollections = ['messages'];
+var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
+var mongoCollections;
 
-//requires that the credentials be stored in a file in tests/Me/imap-auth.json
-//in the form of {"username":"address@domain.com", "password":"myWickedPassword", "server":"imap.gmail.com"}
-try {
-    var credstr = fs.readFileSync('Me/' + id + '/secrets.json');
-    if(credstr)
-        var auth = JSON.parse(credstr);
-} catch (E) {
-    var auth = undefined;
-}
+var auth = {
+    username: 'testmcchester@gmail.com',
+    password: 't3st3r!!',
+    host: 'imap.gmail.com',
+    port: '993',
+    secure: true,
+    debug: true
+};
 
-if(auth && auth.username && auth.password && auth.server) {
-    
+sync.eventEmitter.on('message/imap', function() {
+    events.message++;
+});
+
 suite.next().suite.addBatch({
-    'IMAP Connector can get all messages' : {
-        topic:function() {
-            var promise = new events.EventEmitter;
-        
-            request({uri:lconfig.lockerBase + '/Me/' + id + '/update'}, function(err, resp, body) {
-                if(err || resp.statusCode != 200) {
-                    promise.emit('error', err);
-                    return;
-                }
-                testUtils.waitForPathsToExist(['Me/' + id + '/' + auth.username,
-                                               'Me/' + id + '/' + auth.username + '/lastUIDS.json',
-                                               'Me/' + id + '/' + auth.username + '/INBOX',
-                                               'Me/' + id + '/' + auth.username + '/INBOX/attachments',
-//                                               'Me/' + id + '/' + auth.username + '/[Gmail]',
-  //                                             'Me/' + id + '/' + auth.username + '/[Gmail]/All Mail'
-                                              ], 12, 5000, function(success) {
-                    if(success == true)
-                        promise.emit('success', true);
-                    else
-                        promise.emit('error', new Error);
-                });
+    "Can setup the tests": { 
+        topic: function() {
+            process.chdir('.' + mePath);
+            var self = this;
+            lmongoclient.connect(function(collections) {
+                sync.init(auth, collections);
+                dataStore.init('id', collections);
+                self.callback(null, true);
             });
-            return promise;
         },
-        'and completes within 60 seconds':function(err, stat) {
-            assert.isNull(err);
+        "successfully": function(err, test) {
+            assert.equal(test, true);
+        }
+    }
+}).addBatch({
+    "Can get messages" : {
+        topic: function() {
+            sync.syncMessages(this.callback);
+        },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 600);
+            assert.equal(diaryEntry, "sync'd 5 new messages"); },
+        "again" : {
+            topic: function() {
+                sync.syncMessages(this.callback);
+            },
+            "successfully" : function(err, repeatAfter, diaryEntry) {
+                assert.equal(repeatAfter, 600);
+                assert.equal(diaryEntry, "sync'd 0 new messages"); 
+            }
+         }
+    }
+}).addBatch({
+    "Datastore" : {
+        "getMessages returns all previously saved messages" : {
+            topic: function() {
+                dataStore.getAllCurrent('messages', this.callback);
+            },
+            'successfully': function(err, response) {
+                assert.isNull(err);
+                assert.isNotNull(response);
+                assert.equal(response.length, 5);
+                assert.equal(response[0].id, '4');
+            }  
+        }
+    }
+}).addBatch({
+    "Tears itself down" : {
+        topic: [],
+        'after checking for proper number of events': function(topic) {
+            assert.equal(events.message, 5);
+        },
+        'sucessfully': function(topic) {
+            process.chdir('../..');
+            assert.equal(process.cwd(), currentDir);
         }
     }
 });
 
-var messages = [];
-var messagesWithAttachments = [];
+
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
-    .discuss('IMAP connector')
-        .discuss('can get INBOX messages')
-            .path('/Me/' + id + '/allMessages')
-            .get('', {box:'INBOX', start:0, end:100}) //INBOX and 0 to 100 are kind of arbitrary, this could be better
-                .expect(200)
-                .expect('returns messages from INBOX', function(err, res, body) {
+    .discuss("IMAP connector")
+        .discuss("all messages")
+            .path(mePath + "/getCurrent/messages")
+            .get()
+                .expect('returns all current messages', function(err, res, body) {
                     assert.isNull(err);
-                    messages = JSON.parse(body);
+                    var messages = JSON.parse(body);
                     assert.isNotNull(messages);
-                    assert.isNotNull(messages.length);
+                    assert.equal(messages.length, 5); 
                 })
             .unpath()
-        .undiscuss()
-        .discuss('can get INBOX messages with attachments')
-            .path('/Me/' + id + '/allMessages')
-             //INBOX, 0 to 500, and images are kind of arbitrary, this could be better
-            .get('', {box:'INBOX', start:0, end:500, attachmentTypes:'image/gif,image/jpg'})
-                .expect(200)
-                .expect('returns messages with attachments from INBOX', function(err, res, body) {
-                    assert.isNull(err);
-                    messagesWithAttachments = JSON.parse(body);
-                    assert.isNotNull(messagesWithAttachments);
-                })
-                .expect('all messages returned have attachments', function(err, res, body) {
-                    assert.isNull(err);
-                    var mssgs = JSON.parse(body);
-                    //ensure all messages have attachments
-                    for(var i in mssgs) {
-                        assert.isNotNull(mssgs[i]);
-                        assert.isNotNull(mssgs[i].attachments);
-                        assert.isNotNull(mssgs[i].attachments[i]);
-                    }
-                })
-            .unpath()
-        .undiscuss()
-    .undiscuss();
-
+        .undiscuss();
+        
 suite.export(module);
-
-}

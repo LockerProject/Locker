@@ -26,7 +26,7 @@ vows.describe("Query System").addBatch({
         },
         "can be turned into a mongoDB query":function(topic) {
             var mongoQuery = lpquery.buildMongoQuery(topic);
-            assert.equal(mongoQuery, "db.photos.find({\"keyword\":\"test\"});");
+            assert.deepEqual(mongoQuery, {collection:"photos", query:{keyword:"test"}});
         }
     },
     "Parsing an invalid query" : {
@@ -53,7 +53,20 @@ vows.describe("Query System").addBatch({
                 limit: 10 } ]);
         },
         "can be turned into a mongo query":function(topic) {
-            assert.equal(lpquery.buildMongoQuery(topic), 'db.photos.find({"gt":{$gt:21},"gte":{$gte:22},"lt":{$lt:20},"lte":{$lte:19},$or : [ "key":1,"key":2]}).limit(10);');
+            assert.deepEqual(lpquery.buildMongoQuery(topic), {
+                collection: 'photos',
+                query: {
+                    gt: { $gt: 21 },
+                    gte: { $gte: 22 },
+                    lt: { $lt: 20 },
+                    lte: { $lte: 19 },
+                    $or: [
+                        { key: 1 },
+                        { key: 2 }
+                    ]
+                },
+                limit: 10
+            });
         }
     }
 }).export(module);

@@ -1,0 +1,73 @@
+<html>
+<head>
+    <title>Contacts!</title>
+    <script src='http://code.jquery.com/jquery-1.5.2.min.js' type='text/javascript'> </script>
+    <script src='js/data.js' type='text/javascript'> </script>
+    <link href='css/style.css' rel='stylesheet'/>
+</head>
+
+<body>
+    <div id='search-header'>
+        <form action='#'>
+            <img src='img/search.png'><input id='query-text' type=text>
+        </form>
+    </div>
+    <div id='table'>
+        <div id='headers'>
+            <span class='column photo'><img src="img/silhouette.png"></span>
+            <span class='column name'><a href='#' onClick='javascript:reload("rapportive.data.name")'>Name</a></span>
+            <span class='column email'><a href='#' onClick='javascript:reload("rapportive.data.email")'>Email</a></span>
+            <span class='column twitter'><a href='#' onClick='javascript:reload("twitter.data._username_lowercase")'>Twitter</a></span>
+        </div>
+        <div id='contacts'>
+            
+        </div>
+        <div id='more_contacts'>
+            <span id='button' onclick="javascript:loadMore();">Load Maaawr!</span>
+        </div>
+    </div>
+    <div id='more_blank' style='display:none' class='more_info'>
+        <div class='morebox'>
+            <div class='pic'>
+            </div>
+            <div class='name_and_loc'><span class='realname'></span><br><span class='location'></span></div>
+            <div class='twitter-details account'>
+                <img src="http://twitter-badges.s3.amazonaws.com/t_logo-a.png" />
+                <div><span class='username'>
+                </span> -  
+                <span class='followers'></span> followers : : following <span class='following'></span>
+                </div>
+                <span class='tagline'></span>
+            </div>
+            <div class='facebook-details account'>
+                <img src="img/facebook-logo.png" />
+                <span class='name'>
+                </span>
+            </div>
+            <div class='foursquare-details account'>
+                <img src="img/foursquare-logo.png" />
+                <div><span class='name'>
+                </span> -  
+                                <span class='checkins'></span> checkins : : <span class='mayorships'></span> mayorships
+                                </div>
+            </div>
+            <!-- <div class='github-details account'>
+                <img src="img/github-logo-bg.png" />
+                <span class='username'>
+                </span> - 
+                <span class='repos'></span> repos
+            </div> -->
+            <!-- <div class='blog-details account'>
+                <img src="img/blogger-logo.png" />
+            </div> -->
+        </div>
+        <!-- <div class='notes'>
+            Notes:
+            <form class='notes-form'>
+                <textarea class='notes-text'> </textarea>
+                <input class='update-notes' type=button value="Save">
+            </form>
+        </div> -->
+    </div>
+</body>
+</html>

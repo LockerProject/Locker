@@ -56,9 +56,10 @@ app.get('/syncrepo/:repo', function(req, res) {
 app.get('/sync/profile', function(req, res) {
     console.error('/sync/profile');
     console.log('/sync/profile');
-    getGitHub().syncProfile(function() {
+    getGitHub().syncProfile(function(data) {
+        locker.diary("Profile sync success");
         res.writeHead(200);
-        res.end();
+        res.end("got profile: "+JSON.stringify(data));
         locker.at('/sync/profile', 3600);
     })
 });
@@ -70,9 +71,10 @@ app.get('/get_profile', function(req, res) {
     });
 });
 app.get('/sync/repos', function(req, res) {
-    getGitHub().syncRepos(function() {
+    getGitHub().syncRepos(function(data) {
+        locker.diary("Repo sync success");
         res.writeHead(200);
-        res.end();
+        res.end("got repos: "+JSON.stringify(data));
         locker.at('/sync/repos', 3600);
     })
 });

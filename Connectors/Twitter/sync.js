@@ -18,7 +18,7 @@ var request = require('request'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     EventEmitter = require('events').EventEmitter,
-    dataStore = require('../../Common/node/ldataStore');
+    dataStore = require('../../Common/node/connector/dataStore');
     
 var auth, userInfo, latests;
 var twitterClient;

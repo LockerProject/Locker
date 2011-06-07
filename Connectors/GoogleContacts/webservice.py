@@ -5,7 +5,7 @@
 # Please see the LICENSE file for more information.
 #
 
-from flask import Flask, render_template, url_for, request, redirect, send_file
+from flask import Flask, render_template, url_for, request, redirect, send_file, make_response
 import lockerfs
 import gcontacts
 import time
@@ -67,6 +67,13 @@ def saveAuth():
     app.consumerValidated = True
     return redirect(app.meInfo["uri"] + "/")
 
+
+@app.route("/photo/<id>")
+def send_photo(id):
+  response = make_response(open('photos/' + id + '.jpg').read())
+  response.headers["Content-type"] = "image/jpeg"
+  return response
+
 @app.route("/")
 def mainIndex():
     if app.consumerValidated:
@@ -84,6 +91,7 @@ def runService(info):
     app.updateAt = datetime.datetime.now()
     app.updatesStarted = False
     app.meInfo = lockerfs.loadMeData()
+    app.static_path = '/photos'
     app.debug = True
     app.run(port=app.lockerInfo["port"], use_reloader=False)
 

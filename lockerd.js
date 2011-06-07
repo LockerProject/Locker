@@ -36,6 +36,7 @@ var lscheduler = require("lscheduler");
 var serviceManager = require("lservicemanager");
 var dashboard = require(__dirname + "/Ops/dashboard.js");
 var webservice = require(__dirname + "/Ops/webservice.js");
+var lcrypto = require("lcrypto");
 
 
 if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
@@ -67,7 +68,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     var mongoOutput = "";
     var callback = function(data) {
         mongoOutput += data;
-        if(mongoOutput.match(/\[initandlisten\] waiting for connections on port/g)) {
+        if(mongoOutput.match(/ waiting for connections on port/g)) {
             mongoProcess.stdout.removeListener('data', callback);
             checkKeys();
         }
@@ -75,38 +76,31 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess.stdout.on('data', callback);
 });
 
-// load up private key or create if none, just KISS for now
-var idKey,idKeyPub;
-function loadKeys() {
-    idKey = fs.readFileSync('Me/key','utf-8');
-    idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
-    console.log("id keys loaded");
-    finishStartup();
-}
 
 function checkKeys() {
-    path.exists('Me/key',function(exists){
-        if(exists) {
-            loadKeys();
-        } else {
-            openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
-            console.log('generating id private key');
-    //        openssl.stdout.on('data',function (data){console.log(data);});
-    //        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
-            openssl.on('exit', function (code) {
-                console.log('generating id public key');
-                openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
-                openssl.on('exit', function (code) {
-                    loadKeys();
-                });
-            });
+    lcrypto.generateSymKey(function(hasKey) {
+        if (!hasKey) {
+            shutdown();
+            return;
         }
+        lcrypto.generatePKKeys(function(hasKeys) {
+            if (!hasKeys) {
+                shutdown();
+                return;
+            }
+            finishStartup();
+        });
     });
 }
 
 function finishStartup() {
     // look for available things
-    lconfig.scannedDirs.forEach(serviceManager.scanDirectory);
+    lconfig.scannedDirs.forEach(function(dirToScan) {
+        console.log(dirToScan);
+        var installable = true;
+        if (dirToScan === "Collections") installable = false;
+        serviceManager.scanDirectory(dirToScan, installable);
+    });
 
     // look for existing things
     serviceManager.findInstalled();

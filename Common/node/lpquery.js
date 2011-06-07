@@ -440,57 +440,78 @@ exports.buildMongoQuery = function(parseTree) {
                 if (typeof(node) == "number")
                     return Number(node);
                 else
-                    return "\"" + String(node) + "\"";
+                    return String(node);
             }
         },
         // The actual functions
         "keyValue":function(node) {
-            return "\"" + node[1] + "\":" + treeTranslation.translateNode(node[2]);
+            var ret = {};
+            ret[node[1]] = treeTranslation.translateNode(node[2]);
+            return ret;
         },
         "subset":function(node) {
-            return node[1].map(treeTranslation.translateNode).join(",");
+            var ret = {};
+            node[1].forEach(function(nodeTerm) {
+                var translatedNode = treeTranslation.translateNode(nodeTerm);
+                for (var key in translatedNode) {
+                    ret[key] = translatedNode[key];
+                }
+            });
+            return ret;
         },
         "AND":function(node) {
-            return "$and : [ " + node[1].map(treeTranslation.translateNode).join(",") + "]";
+            var ret = {$and:[]};
+            node[1].forEach(function(nodeTerm) {
+                ret["$and"].push(treeTranslation.translateNode(nodeTerm));
+            });
+            return ret;
         },
         "OR":function(node) {
-            return "$or : [ " + node[1].map(treeTranslation.translateNode).join(",") + "]";
+            var ret = {$or:[]};
+            node[1].forEach(function(nodeTerm) {
+                ret["$or"].push(treeTranslation.translateNode(nodeTerm));
+            });
+            return ret;
         },
         "-":function(node) {
-            return "{$lt:" + treeTranslation.translateNode(node[1]) + "}";
+            return {$lt:treeTranslation.translateNode(node[1])};
         },
         "-.":function(node) {
-            return "{$lte:" + treeTranslation.translateNode(node[1]) + "}";
+            return {$lte:treeTranslation.translateNode(node[1])};
         },
         "+":function(node) {
-            return "{$gt:" + treeTranslation.translateNode(node[1]) + "}";
+            return {$gt:treeTranslation.translateNode(node[1])};
         },
         "+.":function(node) {
-            return "{$gte:" + treeTranslation.translateNode(node[1]) + "}";
+            return {$gte:treeTranslation.translateNode(node[1])};
         },
         "!=":function(node) {
-            return "{$ne:" + treeTranslation.translateNode(node[1]) + "}";
+            return {$ne:treeTranslation.translateNode(node[1])};
         }
     };
-    var query = "db.";
-    // TODO:  This needs a lookup on the actual collection name
-    query += parseTree[0].toLowerCase(); // Add the collection we're looking into
+    var queryResult = {
+        // TODO:  This needs a lookup on the actual collection name
+        collection:parseTree[0].toLowerCase(), // Add the collection we're looking into
+        query:{}
+    }
     // If we have terms to query with, put them in
-    // It's probably an error if we don't have any
     if (parseTree[1].hasOwnProperty("terms")) {
-        query += ".find({" + parseTree[1]["terms"].map(treeTranslation.translateNode).join(",") + "})";
+        parseTree[1]["terms"].forEach(function(term) {
+            var termRet = treeTranslation.translateNode(term);
+            for (var key in termRet) {
+                queryResult.query[key] = termRet[key];
+            }
+        });
     }
     // If we have a limit put that on
     if (parseTree[1].hasOwnProperty("limit")) {
-        query += ".limit(" + Number(parseTree[1]["limit"]) + ")";
+        queryResult.limit = Number(parseTree[1]["limit"]);
     }
     // Skip into the offset supplied
     if (parseTree[1].hasOwnProperty("offset")) {
-        query +=- ".skip(" + Number(parseTree[1]["offset"]) + ")";
+        queryResult.skip = Number(parseTree[1]["offset"]);
     }
-    // Termination!
-    query += ";";
 
-    return query
+    return queryResult;
 }
 

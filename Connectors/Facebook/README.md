@@ -1,1 +1,0 @@
-Just minimal wrapper around facebook-js to start

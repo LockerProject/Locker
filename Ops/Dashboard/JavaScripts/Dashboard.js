@@ -48,12 +48,14 @@ function refreshLog()
   $.ajax({ url: "/diary" }).success(function(data) {
     var diaryLines = JSON.parse(data);
     diaryLines.forEach(function(item) {
+      var service = serviceMap.installed[item.service];
       var ts = item.timestamp.toDate();
       var diaryLine = $("#logEntryTemplate").clone();
       diaryLine.attr("id", "");
       diaryLine.addClass("logEntry");
-      diaryLine.children("span").append(ts.strftime("%B %d%o at %H:%MM %P"));
-      diaryLine.append(item.message);
+      diaryLine.children(".logService").append(service.title || "Unknown").attr("title", service.id || "Unknown Service ID");
+      diaryLine.children(".logMessage").append(item.message);
+      diaryLine.children(".logTimestamp").append(ts.strftime("%B %d%o at %H:%MM %P"));
       diaryLine.appendTo("#logEntriesList");
       diaryLine.show();
     });
@@ -140,6 +142,7 @@ function showApp(app, event)
 
 function setLocation(location)
 {
+  if (!history.pushState) return;
   if (location == getLocation()) return;
   history.pushState({}, "", "#!/" + location);
 }
@@ -175,6 +178,7 @@ $(document).ready(function()
 
     // Populate Available Services List
     serviceMap.available.forEach(function(item) {
+      if (!item.installable) return;
       switch (item.is)
       {
         case "app":

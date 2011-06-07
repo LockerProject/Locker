@@ -76,8 +76,8 @@ vows.describe("Service Manager").addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
             topic:serviceManager.scanDirectory("Connectors"),
-            "gathered 5 services": function() {
-                assert.equal(serviceManager.serviceMap().available.length, 12);
+            "gathered 15 services": function() {
+                assert.equal(serviceManager.serviceMap().available.length, 15);
             },
             topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
             "can be installed" : {
@@ -93,5 +93,14 @@ vows.describe("Service Manager").addBatch({
             }
         }
     },
+    "Collections" : {
+        "are preinstalled" : function() {
+            assert.includes(serviceManager.serviceMap().installed, "contacts");
+        },
+        topic:serviceManager.install({srcdir:"Collections/Contacts"}),
+        "are not installable" : function(svcInfo) {
+            assert.isUndefined(svcInfo);
+        }
+    }
 }).export(module);
 

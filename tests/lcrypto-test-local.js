@@ -1,0 +1,50 @@
+/*
+*
+* Copyright (C) 2011, The Locker Project
+* All rights reserved.
+*
+* Please see the LICENSE file for more information.
+*
+*/
+
+var vows = require("vows");
+var assert = require("assert");
+var fs = require("fs");
+var events = require("events");
+require.paths.push(__dirname + "/../Common/node");
+var lcrypto = require("lcrypto");
+
+vows.describe("Crypto Wrapper").addBatch({
+    "lcrypto" : {
+        "symmetric key": {
+            topic:function() {
+                var promise = new events.EventEmitter;
+                lcrypto.generateSymKey(function(result) {
+                    promise.emit("success", result);
+                });
+                return promise;
+            },
+            "generates a symmetric key":function(err, result) {
+                assert.isTrue(result);
+            },
+            "that can encrypt and decrypt data" : {
+                topic:function(err, result) {
+                    return lcrypto.decrypt(lcrypto.encrypt("a test string"));
+                },
+                "to the same value" : function(topic) {
+                    assert.equal(topic, "a test string");
+                }
+            }
+        },
+        topic:function() {
+            var promise = new events.EventEmitter;
+            lcrypto.generatePKKeys(function(result) {
+                promise.emit("success", result);
+            });
+            return promise;
+        },
+        "generates pk pair":function(err, result) {
+            assert.isTrue(result);
+        }
+    }
+}).export(module);

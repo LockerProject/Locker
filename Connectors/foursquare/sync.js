@@ -10,8 +10,9 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
-    dataStore = require('../../Common/node/ldataStore'),
-    app = require('../../Common/node/lapi');
+    dataStore = require('../../Common/node/connector/dataStore'),
+    shallowCompare = require('../../Common/node/shallowCompare'),
+    app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter;
 
     
@@ -64,10 +65,10 @@ exports.syncFriends = function(callback) {
                 if(!knownIDs[friends[i].id])
                     newIDs.push(friends[i].id);
                 else
-                    repeatedIDs[friends[i].id] = 1;
+                    repeatedIDs.push(friends[i].id);
             }
             for(var knownID in knownIDs) {
-                if(!repeatedIDs[knownID])
+                if(repeatedIDs.indexOf(knownID) === -1)
                     removedIDs.push(knownID);
             }
             if(newIDs.length < 1) {
@@ -76,6 +77,10 @@ exports.syncFriends = function(callback) {
                     logRemoved(removedIDs, function(err) {
                         callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
                     });
+                } else {
+                    downloadUsers(repeatedIDs, auth.accessToken, function(err) {
+                        callback(err, 3600, "no new friends, updated " + repeatedIDs.length + " existing friends");
+                    })
                 }
             } else {
                 for (var i = 0; i < newIDs.length; i++) {
@@ -175,15 +180,24 @@ function getCheckins(userID, token, offset, callback, checkins) {
 function downloadUsers(users, token, callback) {
     var coll = users.slice(0);
     (function downloadUser() {
-        var friend = coll.splice(0, 1)[0];
+        if (coll.length == 0) {
+            callback();
+            return;
+        }
+        var friends = coll.splice(0, 5);
         try {
-            request.get({uri:'https://api.foursquare.com/v2/users/' + friend + '.json?oauth_token=' + token},
+            var requestUrl = 'https://api.foursquare.com/v2/multi?requests=';
+            for (var i = 0; i < friends.length; i++) {
+                requestUrl += "/users/" + friends[i] + ",";
+            }
+            request.get({uri:requestUrl + "&oauth_token=" + token},
                          function(err, resp, data) {
                 var response = JSON.parse(data);
                 if(response.meta.code >= 400) {
-                    console.error(data);
                     allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-                    delete allKnownIDs[id];
+                    for (var i = 0; i < friends.length; i++) {
+                        delete allKnownIDs[friends[i]];
+                    }
                     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                     if (coll.length == 0) {
                         callback();
@@ -191,26 +205,45 @@ function downloadUsers(users, token, callback) {
                         downloadUser();
                     }
                 }
-                var js = JSON.parse(data).response.user;
-                js.name = js.firstName + " " + js.lastName;
-                if (js.photo.indexOf("userpix") > 0) {
-                    // fetch photo
-                    request.get({uri:js.photo}, function(err, resp, body) {
-                        if(err)
-                            console.error(err);
-                        else
-                            fs.writeFileSync('photos/' + friend + '.jpg', data, 'binary');
-                    });
-                }
-                var eventObj = {source:'friends', type:'new', status:js};
-                exports.eventEmitter.emit('contact/foursquare', eventObj);
-                dataStore.addObject("friends", js, function(err) {
-                    if (coll.length == 0) {
-                        callback();
-                    } else {
+                var responses = JSON.parse(data).response.responses;
+                (function parseUser() {
+                    var friend = responses.splice(0, 1)[0];
+                    if (friend == undefined || friend.response == undefined || friend.response.user == undefined) {
                         downloadUser();
+                        return;
                     }
-                });
+                    var js = friend.response.user;
+                    js.name = js.firstName + " " + js.lastName;
+                    if (js.photo.indexOf("userpix") > 0) {
+                        // fetch photo
+                        request.get({uri:js.photo, encoding: 'binary'}, function(err, resp, body) {
+                            if(err)
+                                console.error(err);
+                            else
+                                fs.writeFileSync('photos/' + js.id + '.jpg', body, 'binary');
+                        });
+                    }
+                    dataStore.getCurrent("friends", js.id, function(err, resp) {
+                        if (resp === undefined) {
+                            var eventObj = {source:'friends', type:'new', data:js};
+                            exports.eventEmitter.emit('contact/foursquare', eventObj);
+                            dataStore.addObject("friends", js, function(err) {
+                                parseUser();
+                            });
+                        } else {
+                            delete resp['_id'];
+                            if (shallowCompare(js, resp)) {
+                                parseUser();
+                            } else {
+                                var eventObj = {source:'friends', type:'update', data:js};
+                                exports.eventEmitter.emit('contact/foursquare', eventObj);
+                                dataStore.addObject("friends", js, function(err) {
+                                    parseUser();
+                                });                            
+                            }
+                        }
+                    })
+                })();
             });
         } catch (exception) {
             try {

@@ -11,6 +11,8 @@ var vows = require("vows");
 var assert = require("assert");
 var events = require("events");
 var fs = require('fs');
+var request = require('request');
+
 
 exports.timeoutAsyncCallback = function(timeout, startCallback, runCallback) {
     var context = {
@@ -98,6 +100,22 @@ exports.waitForFileToComplete = function(path, expectedSize, retries, timeout,  
                 callback(true);
                 return;
             }
+        });
+    }, timeout);
+}
+
+//wait for event response, count the number of responses
+exports.waitForEvents = function (url, retries, timeout, expectedResponses, value, callback) {
+    if (retries == 0) {
+        return callback(null, value);
+    }
+    if (expectedResponses === value.length) {
+        return callback(null, value);
+    }
+    setTimeout(function() {
+        request.get({uri: url}, function(err, resp, data) {
+            retries--;
+            exports.waitForEvents(url, retries, timeout, expectedResponses, JSON.parse(data), callback); 
         });
     }, timeout);
 }

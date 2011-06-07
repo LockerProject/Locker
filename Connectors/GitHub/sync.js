@@ -51,7 +51,7 @@ GHClient.prototype.syncProfile = function(callback) {
         if(!err) {
             console.error(data);
             lfs.writeObjectToFile('profile.json', data);
-            callback();
+            callback(data);
         }
     });
 }
@@ -65,7 +65,7 @@ GHClient.prototype.syncRepos = function(callback) {
         if(!err) {
             console.error(data);
             lfs.writeObjectsToFile('repos.json', data);
-            callback();
+            callback(data);
         }
     });
 }
