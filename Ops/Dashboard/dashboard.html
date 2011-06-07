@@ -5,21 +5,17 @@
     <meta charset="utf-8" />
     <meta name="description" content="Locker Dashboard" />
     <title>Locker &mdash; Dashboard</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
-    <script src="JavaScripts/Extensions/Date.js"></script>
-    <script src="JavaScripts/Extensions/String.js"></script>
-    <script src="JavaScripts/Dashboard.js"></script>
-    <link rel="stylesheet" href="Stylesheets/Reset.css" />
-    <link rel="stylesheet" href="Stylesheets/Dashboard.css" />
-    <link rel="stylesheet" href="Stylesheets/Logs.css" />
-    <link rel="stylesheet" href="Stylesheets/Services.css" />
-    <link rel="stylesheet" href="Stylesheets/Apps.css" />
+    <link rel="stylesheet" href="/static/css/reset.css" />
+    <link rel="stylesheet" href="dashboard-static/css/dashboard.css" />
+    <link rel="stylesheet" href="dashboard-static/css/logs.css" />
+    <link rel="stylesheet" href="dashboard-static/css/services.css" />
+    <link rel="stylesheet" href="dashboard-static/css/apps.css" />
   </head>
   <body>
 
     <aside>
       <header>
-        <h1><img src="../Images/Lock.png" width="200" height="200" alt="The Locker Project" /></h1>
+        <h1><img src="/static/img/Lock.png" width="200" height="200" alt="The Locker Project" /></h1>
       </header>
 
       <!-- Primary Sections Listing -->
@@ -44,7 +40,7 @@
         <header>
           <h1>Logs</h1>
           <ul class="actions">
-            <li onclick="javascript:refreshLog()"><img src="../Images/Refresh.png" width="21" height="26" alt="Refresh" /></li>
+            <li onclick="javascript:refreshLog()"><img src="/static/img/Refresh.png" width="21" height="26" alt="Refresh" /></li>
           </ul>
         </header>
         <section class="content">
@@ -90,7 +86,7 @@
               </ul>
               <footer>
                 <ul>
-                  <li id="addConnectorInstanceButton"><a href='javascript:installService(-1)'><img src="Images/Plus.png" /></a></li>
+                  <li id="addConnectorInstanceButton"><a href='javascript:installService(-1)'><img src="/static/img/Plus.png" /></a></li>
                 </ul>
               </footer>
             </section>
@@ -103,7 +99,7 @@
         <header>
           <h1 id="appTitle">App Title</h1>
           <ul class="actions">
-            <li id="zoomAppButton" onclick="#"><img src="../Images/Zoom.png" width="26" height="26" alt="Zoom" /></li>
+            <li id="zoomAppButton" onclick="#"><img src="/static/img/Zoom.png" width="26" height="26" alt="Zoom" /></li>
           </ul>
         </header>
         <section class="content">
@@ -116,5 +112,11 @@
     <footer>
       <small>&copy; 2011 The Locker Project</small>
     </footer>
+
+    <!-- backload javascript wherever possible -->
+    <script src="/static/js/jquery-1.6.1.min.js"></script>
+    <script src="/static/js/extensions/date.js"></script>
+    <script src="/static/js/extensions/string.js"></script>
+    <script src="/dashboard-static/js/dashboard.js"></script>
   </body>
 </html>
