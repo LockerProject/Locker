@@ -103,14 +103,14 @@ exports.addGithubData = function(relationship, data, callback) {
         addToSet.nicknames = data.login;
     //email
     if(data.email)
-        addToSet.email = data.email;
+        addToSet.email = {value:data.email};
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'_matching.cleanedNames':cleanedName}];
             if (data.email) {
-                or[1] = {'accounts.email':data.email}
+                or[1] = {'emails.value' : data.email}
             }
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.github':baseObj}, 
                                          $addToSet:addToSet,
@@ -146,7 +146,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
         addToSet.phoneNumbers = {value:data.contact.phone, type:'mobile'};
     //email
     if(data.contact.email)
-        addToSet.emails = data.contact.email;
+        addToSet.emails = {value:data.contact.email};
     //addresses
     if(data.homeCity)
         addToSet.addresses = {type:'location', value:data.homeCity};
