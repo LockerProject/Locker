@@ -16,6 +16,7 @@
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
+                              "connector-local-github-test.js",
                               "connector-local-foursquare-test.js",
                               "connector-local-facebook-test.js",
                               "connector-local-twitter-test.js"],
@@ -27,8 +28,7 @@
         "issues" : ["locker-issues-test.js"]
     },
     "disabledTests" : [
-        "connector-local-XMPP-test.js",
-        "connector-github-test.js"
+        "connector-local-XMPP-test.js"
     ], 
     "mongo" : {
         "dataDir": "mongoTest",
