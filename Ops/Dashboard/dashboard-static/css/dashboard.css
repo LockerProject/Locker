@@ -7,7 +7,7 @@ body
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
 
   background-color: rgb(30, 35, 40);
-  background-image: url("../Images/Background.png");
+  background-image: url("/static/img/Background.png");
 
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -139,7 +139,7 @@ aside nav li.current
 
 aside nav li#logsTab
 {
-  background-image: url("../Images/Logs.png");
+  background-image: url("/static/img/Logs.png");
   background-repeat: no-repeat;
   background-position: 13px 50%;
   padding-left: 48px;
@@ -148,16 +148,16 @@ aside nav li#logsTab
 aside nav li#logsTab.current
 {
   background-position: 13px 50%, 0 0;
-  background-image: url("../Images/Logs.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
-  background-image: url("../Images/Logs.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Logs.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Logs.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Logs.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Logs.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: url("/static/img/Logs.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Logs.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Logs.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Logs.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
 }
 
 aside nav li#servicesTab
 {
-  background-image: url("../Images/Services.png");
+  background-image: url("/static/img/Services.png");
   background-repeat: no-repeat;
   background-position: 10px 50%;
   padding-left: 48px;
@@ -166,11 +166,11 @@ aside nav li#servicesTab
 aside nav li#servicesTab.current
 {
   background-position: 10px 50%, 0 0;
-  background-image: url("../Images/Services.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
-  background-image: url("../Images/Services.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Services.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Services.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
-  background-image: url("../Images/Services.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Services.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: url("/static/img/Services.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Services.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Services.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("/static/img/Services.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
 }
 
 section#mainSection
@@ -185,7 +185,7 @@ section#mainSection
   padding-top: 68px;
 
   border: 1px solid black;
-  background-image: url("../Images/MainBackground.png");
+  background-image: url("/static/img/MainBackground.png");
 
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -335,24 +335,24 @@ body > footer
 
 ::-webkit-scrollbar-thumb
 {
-  -webkit-border-image: url("../Images/VerticalScrollbar.Thumb.png") 20 20 20 0;
+  -webkit-border-image: url("/static/img/VerticalScrollbar.Thumb.png") 20 20 20 0;
   border-width: 20px 0;
   min-height: 40px;
 }
 
 ::-webkit-scrollbar-thumb:hover
 {
-  -webkit-border-image: url("../Images/VerticalScrollbar.Thumb.png") 20 0 20 20;
+  -webkit-border-image: url("/static/img/VerticalScrollbar.Thumb.png") 20 0 20 20;
 }
 
 ::-webkit-scrollbar-thumb:horizontal
 {
-  -webkit-border-image: url("../Images/HorizontalScrollbar.Thumb.png") 0 20 20 20;
+  -webkit-border-image: url("/static/img/HorizontalScrollbar.Thumb.png") 0 20 20 20;
   border-width: 0 20px;
   min-width: 40px;
 }
 
 ::-webkit-scrollbar-thumb:horizontal:hover
 {
-  -webkit-border-image: url("../Images/HorizontalScrollbar.Thumb.png") 20 20 0 20;
+  -webkit-border-image: url("/static/img/HorizontalScrollbar.Thumb.png") 20 20 0 20;
 }
