@@ -9,9 +9,12 @@
 
 var request = require('request'),
     lfs = require('../../Common/node/lfs.js'),
+    lcrypto = require("../../Common/node/lcrypto"),
     fs = require('fs');
 
 var completedCallback, me;
+
+lcrypto.loadKeys();
 
 exports.auth = {};
 
@@ -45,6 +48,8 @@ exports.isAuthed = function() {
            authData.hasOwnProperty('password') && 
            authData.hasOwnProperty('host') && 
            authData.hasOwnProperty('port')) {
+            authData.username = lcrypto.decrypt(authData.username);
+            authData.password = lcrypto.decrypt(authData.password);
             exports.auth = authData;
             return true;
         }
@@ -78,12 +83,16 @@ function saveAuth(req, res) {
         res.end("missing field(s)?");
         return;
     }
-    exports.auth.username = req.param('username');
-    exports.auth.password = req.param('password');
+    // We put in the encrypted values for writing to the disk
+    exports.auth.username = lcrypto.encrypt(req.param('username'));
+    exports.auth.password = lcrypto.encrypt(req.param('password'));
     exports.auth.host = req.param('host');
     exports.auth.port = req.param('port');
     exports.auth.secure = req.param('secure');
     lfs.writeObjectToFile('auth.json', exports.auth);
+    // Put back the non encrypted values
+    exports.auth.username = req.param('username');
+    exports.auth.password = req.param('password');
     completedCallback(exports.auth);
     res.redirect(me.uri);
 }
