@@ -21,8 +21,6 @@ module.exports = function(theapp) {
 }
 
 function authComplete(theauth, mongoCollections) {
-    locker.event('checkin/foursquare', "");
-    
     auth = theauth;
     sync.init(auth, mongoCollections);
 

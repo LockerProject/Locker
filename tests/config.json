@@ -6,7 +6,6 @@
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
         "connectors" : ["connector-IMAP-test.js",
-                        "connector-github-test.js",
                         "connector-flickr-test.js"],
         "core-lib" : ["lservicemanager-test-local.js", 
                       "lconfig-test-local.js", 
@@ -19,6 +18,7 @@
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
+                              "connector-local-github-test.js",
                               "connector-local-foursquare-test.js",
                               "connector-local-facebook-test.js",
                               "connector-local-twitter-test.js"],

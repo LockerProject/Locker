@@ -35,16 +35,23 @@ function interceptable(uri) {
     }
 }
 
-function httpModuleRequest(uri) {
+function httpModuleRequest(uri, callback) {
     var thisRequest = new EventEmitter();
+    thisRequest.setEncoding = function() {};
+    
     thisRequest.end = function() {
         var thisResponse = new EventEmitter();
         thisResponse.setEncoding = function() {};
         thisResponse.statusCode = interceptedUris[uri].statusCode;
         thisRequest.emit('response', thisResponse);
         
+        if (callback) {
+            callback(thisResponse);
+        }
+        
         thisResponse.emit('data', interceptedUris[uri].response);
         thisResponse.emit('end');
+
     }
     return thisRequest;
 }
@@ -73,18 +80,26 @@ function Fakeweb() {
     }
     var oldHttpsRequest = https.request;
     https.request = function(options, callback) {
-        var uri = "https://" + options.host + ":" + options.port + options.path;
+        if (options.port) {
+            var uri = "https://" + options.host + ":" + options.port + options.path;
+        } else {
+            var uri = "https://" + options.host + options.path;
+        }
         if (interceptable(uri)) {
-            return httpModuleRequest(uri);
+            return httpModuleRequest(uri, callback);
         } else {
             return oldHttpsRequest.call(https, options, callback);
         }
     }
     var oldHttpRequest = http.request;
     http.request = function(options, callback) {
-        var uri = "http://" + options.host + ":" + options.port + options.path;
+        if (options.port) {
+            var uri = "http://" + options.host + ":" + options.port + options.path;
+        } else {
+            var uri = "http://" + options.host + options.path;
+        }
         if (interceptable(uri)) {
-            return httpModuleRequest(uri);
+            return httpModuleRequest(uri, callback);
         } else {
             return oldHttpRequest.call(http, options, callback);
         }

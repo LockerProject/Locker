@@ -2,8 +2,18 @@
     "title":"Github Account",
     "action":"Connect to a Github account",
     "desc":"Collect and sync my data from my Github account.",
-    "run":"node github.js",
+	"run":"node ../../Common/node/connector/client_init.js",
     "status":"unstable",
 	"handle":"github",
-    "provides":["contact/github"]
+    "provides":["contact/github"],
+    "mongoCollections": ["repos", "followers", "following"],
+	"processOptions" : {"oauth2" :
+	    {"provider" : "Github",
+	     "appIDName" : "Client ID",
+	     "promptForUsername" : true,
+	     "appSecretName" : "Secret",
+	     "authEndpoint" : "authorize",
+	     "endPoint" : "https://github.com/login/oauth",
+	     "linkToCreate" : "https://github.com/account/applications/new"}
+    }
 }
