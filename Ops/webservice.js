@@ -67,35 +67,37 @@ locker.get("/query/:query", function(req, res) {
     var data = decodeURIComponent(req.originalUrl.substr(6)).replace(/%21/g, '!').replace(/%27/g, "'").replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2a/ig, '*');
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
-        console.log("Querying " + JSON.stringify(query));
-        var mongodb = require('mongodb');
-        db = new mongodb.Db('locker', new mongodb.Server(config.mongo.host, config.mongo.port, {}), {});
-        db.open(function(error, client) {
-           if (error) {
-               res.writeHead(500);
-               res.end("data store is unavailable: " + error);
-               db.close();
-               return;
-           }
-           var collection = new mongodb.Collection(client, query.collection);
+        var providers = serviceManager.serviceMap().installed;
+        var provider = undefined;
+        for (var key in providers) {
+            if (providers.hasOwnProperty(key) && providers[key].provides && providers[key].provides.indexOf(query.collection) >= 0 )
+                provider = providers[key];
+        }
 
-           var options = {};
-           if (query.limit) options.limit = query.limit;
-           if (query.offset) options.skip = query.offset;
-           collection.find(query.query, options, function(err, foundObjects) {
-               if (err) {
-                   res.writeHead(500);
-                   res.end(err);
-                   db.close();
-                   return;
+        if (provider == undefined) {
+            res.writeHead(404);
+            res.end(query.collection + " not found to query");
+            return;
+        }
 
+        var mongo = require("lmongoclient")(config.mongo.host, config.mongo.port, provider.id, provider.mongoCollections);
+        mongo.connect(function(collections) {
+            var collection = collections[provider.mongoCollections[0]];
+            console.log("Querying " + JSON.stringify(query));
+            var options = {};
+            if (query.limit) options.limit = query.limit;
+            if (query.offset) options.skip = query.offset;
+            collection.find(query.query, options, function(err, foundObjects) {
+                if (err) {
+                    res.writeHead(500);
+                    res.end(err);
+                    return;
                 }
 
                 foundObjects.toArray(function(err, objects) {
                     res.end(JSON.stringify(objects));
-                    db.close();
                 });
-           });
+            });
         });
     } catch (E) {
         res.writeHead(400);
