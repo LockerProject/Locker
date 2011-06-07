@@ -42,7 +42,8 @@ function addData(svcID, data, url, callback) {
     // console.log('adding link ', url, 'from', svcID);
     collection.findAndModify({'url':url}, [['_id','asc']], 
                              {$set:{'url':url}, 
-                              $push:{sourceObjects:{'svcID':svcID, object:data}}}, 
+                             //TODO: this could get seriously expensive!!!
+                              $addToSet:{sourceObjects:{'svcID':svcID, object:data}}}, 
                              {safe:true, upsert:true}, callback);
 }
 

@@ -15,7 +15,7 @@ var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe("Links Collection")
 
 var shallowCompare = require('../Common/node/shallowCompare.js');
-var friend;
+var link;
 
 var thecollections = ['links'];
 var lconfig = require('../Common/node/lconfig');
@@ -25,26 +25,6 @@ var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host,
 var mePath = '/Me/' + svcId;
 
 var events = 0;
-
-var data = {id: 18387, 
-            firstName: "William", 
-            lastName: "Warnecke",
-            photo: "https://foursquare.com/img/blank_boy.png",
-            gender: "male",
-            homeCity: "San Francisco, CA",
-            relationship: "friend",
-            type: "user",
-            pings: true,
-            contact: { "email": "lockerproject@sing.ly", "twitter": "ww" },
-            badges: { "count": 25 },
-            mayorships: { "count": 0, "items": [] },
-            checkins: { "count": 0 },
-            friends: { "count": 88, "groups": ["Object"] },
-            following: { "count": 13 },
-            tips: { "count": 5 },
-            todos: { "count": 1 },
-            scores: { "recent": 14, "max": 90,"checkinsCount": 4 },
-            name: "William Warnecke" };
 
 suite.next().suite.addBatch({
     "Can pull in the links from twitter" : {
@@ -120,29 +100,30 @@ suite.next().suite.addBatch({
             assert.equal(resp, 2);
         }
     }    
-// }).addBatch({
-//     "Can successfully merge a contact from twitter + foursquare" : {
-//         topic : function() {
-//             fakeweb.registerUri({
-//                 uri: 'http://localhost:8043/Me/twitter/getCurrent/followers',
-//                 file: __dirname + '/fixtures/contacts/twitter_followers.json' });
-//             var self = this;
-//             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
-//             // be going direct to mongo like this in a test
-//             //
-//             mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, function(err, resp) {
-//                 friend = resp;
-//                 contacts.getContacts("twitter", "followers", "twitter", function() {
-//                     mongoCollections.findOne({'accounts.twitter.data.screen_name':'ww'}, self.callback);
-//                 });
-//             });
-//         },
-//         "successfully" : function(err, resp) {
-//             assert.isNull(err);
-//             assert.isTrue(shallowCompare(friend.accounts.foursquare, resp.accounts.foursquare));
-//             assert.isFalse(shallowCompare(resp, friend));
-//         }
-//     }
+}).addBatch({
+    "Can successfully merge a link from twitter + facebook" : {
+        topic : function() {
+            fakeweb.registerUri({
+                uri: 'http://localhost:8043/Me/facebook/getCurrent/newsfeed',
+                file: __dirname + '/fixtures/links/facebook_newsfeed.json' });
+            var self = this;
+            // TODO: this should be using the query language when that's implemented.  Nothing should ever really
+            // be going direct to mongo like this in a test
+            //
+            mongoCollections.findOne({'url':'http://bit.ly/k7XVcw'}, function(err, resp) {
+                link = resp;
+                links.getLinks("facebook", "newsfeed", "facebook", function() {
+                    mongoCollections.findOne({'url':'http://bit.ly/k7XVcw'}, self.callback);
+                });
+            });
+        },
+        "successfully" : function(err, resp) {
+            assert.isNull(err);
+            assert.equal(link.url, resp.url);
+            assert.isTrue(shallowCompare(link.sourceObjects[0], resp.sourceObjects[0]));
+            assert.isFalse(shallowCompare(link, resp));
+        }
+    }
 }).addBatch({
     "Tears itself down" : {
         topic: [],
@@ -151,7 +132,7 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 2);
+            assert.equal(events, 3);
         }
     }
 // }).addBatch({
