@@ -77,16 +77,15 @@ class gPhotoThread(threading.Thread):
         sys.exit(0);
                     
 class GoogleDataContacts:
-    def __init__(self):
-        secrets = lockerfs.loadJsonFile("secrets.json");
+    def __init__(self, email, password):
         statusData = lockerfs.loadJsonFile("status.json")
         if "lastUpdate" in statusData:
             self.lastUpdate = datetime.fromtimestamp(int(statusData["lastUpdate"]))
         else:
             self.lastUpdate = datetime.fromtimestamp(0)
         self.gd_client = gdata.contacts.service.ContactsService()
-        self.gd_client.email = secrets["consumerKey"]
-        self.gd_client.password = secrets["consumerSecret"]
+        self.gd_client.email = email
+        self.gd_client.password = password
         self.gd_client.source = 'locker-0.1'
         # m = hashlib.sha1()
         # m.update(self.gd_client.email)

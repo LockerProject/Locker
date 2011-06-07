@@ -13,6 +13,10 @@ var fs = require("fs");
 var events = require("events");
 require.paths.push(__dirname + "/../Common/node");
 var lcrypto = require("lcrypto");
+var request = require("request");
+var lconfig = require("lconfig");
+var querystring = require("querystring");
+lconfig.load("config.json");
 
 vows.describe("Crypto Wrapper").addBatch({
     "lcrypto" : {
@@ -33,6 +37,30 @@ vows.describe("Crypto Wrapper").addBatch({
                 },
                 "to the same value" : function(topic) {
                     assert.equal(topic, "a test string");
+                }
+            },
+            "API endpoint": {
+                topic:function() {
+                    var promise = new events.EventEmitter;
+                    request.get({url:lconfig.lockerBase + "/encrypt?" + querystring.stringify({s:"test"})}, function(error, result, body) {
+                        if (error) {
+                            promise.emit("error", error);
+                            return;
+                        }
+                        request.get({url:lconfig.lockerBase + "/decrypt?" + querystring.stringify({s:body})}, function(error, result, body) {
+                            if (error) {
+                                promise.emit("error", error);
+                                return;
+                            }
+                            promise.emit("success", body);
+                        });
+                    });
+
+                    return promise;
+                },
+                "can encrypt and decrypt":function(err, res) {
+                    assert.isNull(err);
+                    assert.equal(res, "test");
                 }
             }
         },

@@ -12,5 +12,5 @@
 	     "extraParams" : "scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream"}
     },
 	"mongoCollections": ["friends", "newsfeed", "wall"],
-	"provides":["contact/facebook"]
+	"provides":["contact/facebook", "link/facebook"]
 }

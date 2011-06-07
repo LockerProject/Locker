@@ -35,15 +35,16 @@ exports.generateSymKey = function(cb) {
 }
 
 // load up private key or create if none, just KISS for now
-function loadKeys() {
-    idKey = fs.readFileSync('Me/key','utf-8');
-    idKeyPub = fs.readFileSync('Me/key.pub','utf-8');
+exports.loadKeys = function() {
+    symKey = fs.readFileSync(__dirname + "/../../Me/symKey", "utf8");
+    idKey = fs.readFileSync(__dirname + '/../../Me/key','utf-8');
+    idKeyPub = fs.readFileSync(__dirname + '/../../Me/key.pub','utf-8');
 }
 
 exports.generatePKKeys = function(cb) {
     path.exists('Me/key',function(exists){
         if(exists) {
-            loadKeys();
+            exports.loadKeys();
             cb(true);
         } else {
             openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
@@ -58,7 +59,7 @@ exports.generatePKKeys = function(cb) {
                     if (code != 0) {
                         ret = false;
                     } else {
-                        loadKeys();
+                        exports.loadKeys();
                     }
                     cb(ret);
                 });
@@ -68,6 +69,10 @@ exports.generatePKKeys = function(cb) {
 }
 
 exports.encrypt = function(data) {
+    if (!data) {
+        console.warn("Error encrypting " + data);
+        return "";
+    }
     var cipher = crypto.createCipher("aes192", symKey);
     var ret = cipher.update(data, "utf8", "hex");
     ret += cipher.final("hex");
@@ -75,6 +80,10 @@ exports.encrypt = function(data) {
 }
 
 exports.decrypt = function(data) {
+    if (!data) {
+        console.warn("Error encrypting " + data);
+        return "";
+    }
     var cipher = crypto.createDecipher("aes192", symKey);
     var ret = cipher.update(data, "hex", "utf8");
     ret += cipher.final("utf8");

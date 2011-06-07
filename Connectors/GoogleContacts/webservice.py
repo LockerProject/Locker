@@ -37,11 +37,22 @@ def update():
     if app.consumerValidated:
         if datetime.datetime.now() < app.updateAt:
             return "Update already scheduled"
-        app.updatesStarted = True
-        gdc = gcontacts.GoogleDataContacts()
-        updateCount = gdc.updateAll()
         me = lockerfs.loadMeData()
         lockerBase = app.lockerInfo["lockerUrl"] + '/core/' + me["id"]
+
+        # Deobfuscate some bits
+        secrets = lockerfs.loadJsonFile("secrets.json");
+        url = app.lockerInfo["lockerUrl"] + "/decrypt?s={0}"
+        res = urllib2.urlopen(url.format(urllib.quote(secrets["consumerSecret"])))
+        password = res.read()
+
+        res = urllib2.urlopen(url.format(urllib.quote(secrets["consumerKey"])))
+        email = res.read()
+
+        # Let's do it
+        app.updatesStarted = True
+        gdc = gcontacts.GoogleDataContacts(email, password)
+        updateCount = gdc.updateAll()
         
         # Tell the diary how many contacts we updated
         url = "{0}/diary?{1}".format(lockerBase, urllib.urlencode([("message", "Updated {0} contacts in Google Contacts".format(updateCount))]))
@@ -61,8 +72,9 @@ def saveAuth():
     if not gcontacts.testCredentials(request.args["consumerKey"], request.args["consumerSecret"]):
         return redirect(app.meInfo["uri"] + "setupAuth")
     secrets = lockerfs.loadJsonFile("secrets.json");
-    secrets["consumerKey"] = request.args["consumerKey"]
-    secrets["consumerSecret"] = request.args["consumerSecret"]
+    url = app.lockerInfo["lockerUrl"] + "/encrypt?s={0}"
+    secrets["consumerKey"] = urllib2.urlopen(url.format(urllib.quote(request.args["consumerKey"]))).read()
+    secrets["consumerSecret"] = urllib2.urlopen(url.format(urllib.quote(request.args["consumerSecret"]))).read()
     lockerfs.saveJsonFile("secrets.json", secrets)
     app.consumerValidated = True
     return redirect(app.meInfo["uri"] + "/")

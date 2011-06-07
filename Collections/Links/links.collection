@@ -2,7 +2,8 @@
     "title":"Links",
     "desc":"A collection of links from many places.",
     "run":"node links.js",
-	"status":"unstable",
-	"handle":"links",
-    "provides":["link"]
+    "status":"unstable",
+    "handle":"links",
+    "provides":["link"],
+    "mongoCollections": ["links"]
 }

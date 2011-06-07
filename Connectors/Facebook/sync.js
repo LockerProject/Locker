@@ -186,6 +186,10 @@ function addNewsfeedPosts(posts, callback) {
     var post = posts.shift();
     if (post !== undefined) {
         dataStore.addObject('newsfeed', post, function(err) {
+            if(post.type === 'link') {
+                var eventObj = {source:'newsfeed', type:'new', data:post};
+                exports.eventEmitter.emit('link/facebook', eventObj);
+            }
             addNewsfeedPosts(posts, callback);
         });
     }
@@ -211,6 +215,10 @@ function addWallPosts(posts, callback) {
     var post = posts.shift();
     if (post !== undefined) {
         dataStore.addObject('wall', post, function(err) {
+            if(post.type === 'link') {
+                var eventObj = {source:'wall', type:'new', data:post};
+                exports.eventEmitter.emit('link/facebook', eventObj);
+            }
             addWallPosts(posts, callback);
         });
     }

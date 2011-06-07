@@ -7,16 +7,10 @@
 *
 */
 
-// merge contacts from journals
+// merge contacts from connectors
+
 var fs = require('fs'),
-    sys = require('sys'),
-    http = require('http'),
-    url = require('url'),
-    lfs = require('../../Common/node/lfs.js'),
-    locker = require('../../Common/node/locker.js'),
-    lconfig = require('../../Common/node/lconfig.js'),
-    request = require('request'),
-    crypto = require('crypto');
+    locker = require('../../Common/node/locker.js');
     
 var sync = require('./sync');
 var dataStore = require("./dataStore");
@@ -33,7 +27,7 @@ app.get('/', function(req, res) {
         'Content-Type': 'text/html'
     });
     dataStore.getTotalCount(function(err, countInfo) {
-        res.write('<html><p>Tracking '+ countInfo +' contacts</p><p><a href="update">Update from Connectors</a></p></html>');
+        res.write('<html><p>Found '+ countInfo +' contacts</p><p><a href="update">Update from Connectors</a></p></html>');
         res.end();
     });
 });
@@ -117,7 +111,6 @@ process.stdin.on('data', function(data) {
     locker.connectToMongo(function(thecollections) {
         sync.init(lockerInfo.lockerUrl, thecollections.contacts);
         app.listen(lockerInfo.port, 'localhost', function() {
-            sys.debug(data);
             process.stdout.write(data);
             locker.listen('contact/foursquare', '/events');
             locker.listen('contact/facebook', '/events');
