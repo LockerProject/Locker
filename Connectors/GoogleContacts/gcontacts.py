@@ -61,6 +61,9 @@ class gPhotoThread(threading.Thread):
             try:
                 indexOfSlash = entry.id.text.rfind("/")
                 id = entry.id.text[indexOfSlash+1:]
+                # sys.stderr.write("%s" % dir(entry))
+                sys.stderr.write("photo link for id %s:%s" % (id, entry.GetPhotoLink()))
+                sys.stderr.flush()
                 hosted_image_binary = self.gd_client.GetPhoto(entry)
                 #print hosted_image_binary
                 if hosted_image_binary:
@@ -212,8 +215,13 @@ class GoogleDataContacts:
                 jsonObject["address"].append(jsonAddress)
 
         if entry.gender:
-            print dir(entry.gender)
-            # jsonObject["address"] = entry.gender
+            sys.stderr.write("gender %s" % (entry.gender))
+            sys.stderr.flush()
+            
+        if entry.GetPhotoLink():
+            jsonObject["photo"] = True
+        else :
+            jsonObject["photo"] = False
 
 #        if entry.birthday:
 #            print entry.birthday

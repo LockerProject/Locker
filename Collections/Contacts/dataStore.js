@@ -214,7 +214,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     
     var addToSet = {'_matching.cleanedNames':cleanedName};
     //photos
-    if(data.id)
+    if(data.id && data.photo)
         addToSet.photos = '/Me/gcontacts/photo/' + data.id;
     //addresses
     if(data.address) {
