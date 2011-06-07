@@ -11,7 +11,7 @@ var fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lfs = require('../../Common/node/lfs.js'),
     EventEmitter = require('events').EventEmitter,
-    dataStore = require('../../Common/node/ldataStore');
+    dataStore = require('../../Common/node/connector/dataStore');
     
 var auth, userInfo, latests;
 var client;
@@ -34,33 +34,59 @@ exports.init = function(theAuth, mongoCollections) {
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
     dataStore.init('id_str', mongoCollections);
 }
+// 
+// exports.updateCurrent = function(type, callback) {
+//     if(!getClient()) {
+//         callback('missing auth info :(');
+//         return;
+//     }
+//     if(type === 'profile') {
+//         updateProfile(callback);
+//     } else if(type === 'sleepMinutesAsleep') {
+//         updateTimeSeries('sleep/minutesAsleep', callback);
+//     } else {
+//         callback('invalid type');
+//     }
+// }
 
-exports.updateCurrent = function(type, callback) {
+exports.update = function(type, callback) {
     if(!getClient()) {
         callback('missing auth info :(');
         return;
     }
-    if(type === '') {
-        
-    } else if(type === '') {
-        
+    if(type === 'profile') {
+        updateProfile(callback);
+    } else if(type === 'sleepMinutesAsleep') {
+        updateTimeSeries('sleep/minutesAsleep', callback);
     } else {
         callback('invalid type');
     }
 }
 
-exports.syncNew = function(type, callback) {
-    if(!getClient()) {
-        callback('missing auth info :(');
-        return;
-    }
-    if(type === '') {
+function updateProfile(callback) {
+    makeApiCall('/user/-/profile.json',  {}, function(err, resp) {
+        if(err) {
+            console.error(err);
+            callback(err, resp);
+        } else {
+            lfs.writeObjectToFile('profile.json',resp);
+            callback(null, resp);
+        }
+    });
+}
+
+function updateTimeSeries(endpoint, callback) {
+    makeApiCall('/user/-/' + endpoint + '/date/today/7d.json', {}, function(err, resp) {
+        if(err) {
+            console.error('err:', err, 'resp:', resp);
+            callback(err, resp);
+        } else {
+            console.error('got', resp);
+            // lfs.writeObjectToFile(endpoint + '.json',resp);
+            callback(null, resp);
+        }
         
-    } else if(type === '') {
-        
-    } else {
-        callback('invalid type');
-    }
+    })
 }
 
 function makeApiCall(endpoint, params, callback) {

@@ -10,6 +10,9 @@
 var locker = require('../../Common/node/locker.js'),
     sync = require('./sync');
 
+var validTypes = {profile:{update:true},
+                  //'sleepMinutesAsleep': {updateCurrent: true, getNew:true}
+                  };
 
 module.exports = function(app) {
     var handleIndex = function(res) { //before we auth
@@ -20,9 +23,11 @@ module.exports = function(app) {
     });
     
     var api = {};
-    api.authComplete = function(auth, mongoCollections, validTypes) {
+    api.authComplete = function(auth, mongoCollections) {
         sync.init(auth, mongoCollections);
+        console.error(validTypes);
         var index = getIndex(validTypes);
+        console.error(index);
         handleIndex = function(res) { //after we auth, change behavior
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(index);
@@ -30,8 +35,8 @@ module.exports = function(app) {
         
         // getNew or updateAll data
         app.get('/:method/:type', function(req, res) {
-            var type = req.params.type.toLowerCase();
-            var method = req.params.method.toLowerCase();
+            var type = req.params.type;
+            var method = req.params.method;
             if(!validTypes[type]) {
                 res.writeHead(401, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify({error:'invalid type "' + type + '"'}));
@@ -66,8 +71,8 @@ function getIndex(validTypes) {
     var index = "<html>";
     for(var type in validTypes) {
         for(var method in validTypes[type]) {
-            if(!validTypes[type][method])
-                index += '<li><a href="/'+method+'/'+type+'">'+method+'/'+type+'</a></li>';
+            if(validTypes[type][method])
+                index += '<li><a href="'+method+'/'+type+'">'+method+'/'+type+'</a></li>';
         }
     }
     return index + "</html>";
