@@ -109,7 +109,9 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
         addToSet.nicknames = data.login;
     //email
     if(data.email)
-        addToSet.email = {value:data.email};
+        addToSet.emails = {value:data.email};
+    if(data.gravatar_id)
+        addToSet.photos = 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
                         {safe:true}, function(err, doc) {
         if(!doc) {

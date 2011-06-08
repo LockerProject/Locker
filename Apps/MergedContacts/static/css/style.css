@@ -10,19 +10,6 @@ a {
     overflow:hidden;
 }
 
-#search-header #query-text {
-    font-size:18px;
-    width:300px;
-    border:1px solid;
-    border-radius:4px;
-    padding:4px;
-    color:#333;
-}
-#search-header img {
-    float:left;
-    margin:4px;
-}
-
 #table .contact div {
     border-radius:3px;
 }
@@ -104,11 +91,6 @@ a {
 
 #table .twitter {
     width:160px;
-}
-
-#table .linkedin {
-    width:200px;
-    padding-top:0px;
 }
 #table .date {
     width:60px;
