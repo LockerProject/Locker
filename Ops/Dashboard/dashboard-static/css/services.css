@@ -64,17 +64,17 @@ ul#servicesList li:hover
 
 ul#servicesList li.app
 {
-  background-image: url("../Images/App.png");
+  background-image: url("../img/App.png");
 }
 
 ul#servicesList li.collection
 {
-  background-image: url("../Images/Collection.png");
+  background-image: url("../img/Collection.png");
 }
 
 ul#servicesList li.connector
 {
-  background-image: url("../Images/Connector.png");
+  background-image: url("../img/Connector.png");
 }
 
 ul#servicesList .current
@@ -92,29 +92,29 @@ ul#servicesList .current
 
 ul#servicesList li.current.app
 {
-  background-image: url("../Images/App.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
-  background-image: url("../Images/App.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/App.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/App.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/App.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/App.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../img/App.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/App.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/App.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/App.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
 ul#servicesList li.current.collection
 {
-  background-image: url("../Images/Collection.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
-  background-image: url("../Images/Collection.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Collection.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Collection.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Collection.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Collection.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../img/Collection.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Collection.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Collection.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Collection.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
 ul#servicesList li.current.connector
 {
-  background-image: url("../Images/Connector.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
-  background-image: url("../Images/Connector.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Connector.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Connector.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
-  background-image: url("../Images/Connector.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Connector.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
+  background-image: url("../img/Connector.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Connector.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Connector.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: url("../img/Connector.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
 #serviceInfo
