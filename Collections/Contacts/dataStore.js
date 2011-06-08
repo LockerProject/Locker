@@ -80,7 +80,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
 }
 
 exports.addGithubData = function(relationship, data, callback) {
-    if (typeof githubData === 'function') {
+    if (typeof data === 'function') {
         callback = data;
         data = relationship;
         relationship = data.source;
