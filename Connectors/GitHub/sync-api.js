@@ -26,7 +26,7 @@ function authComplete(theauth, mongoCollections) {
 
     app.get('/followers', followers);
     app.get('/following', following);
-    app.geT('/profile', profile);
+    app.get('/profile', profile);
     app.get('/repos', repos);
     sync.eventEmitter.on('contact/github', function(eventObj) {
         locker.event('contact/github', eventObj);
