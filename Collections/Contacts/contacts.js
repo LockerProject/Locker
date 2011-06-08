@@ -68,6 +68,9 @@ app.post('/events', function(req, res) {
         case 'twitter':
             target = dataStore.addTwitterData;
             break;
+        case 'github':
+            target = dataStore.addGithubData;
+            break;
         default:
             res.writeHead(500);
             console.log('event received by the contacts collection with an invalid type');
@@ -115,6 +118,7 @@ process.stdin.on('data', function(data) {
             locker.listen('contact/foursquare', '/events');
             locker.listen('contact/facebook', '/events');
             locker.listen('contact/twitter', '/events');
+            locker.listen('contact/github', '/events');
             sync.eventEmitter.on('contact/full', function(eventObj) {
                 locker.event('contact/full', eventObj);
             });

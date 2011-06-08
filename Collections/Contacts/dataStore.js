@@ -29,6 +29,8 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addFoursquareData(data, callback);
     } else if (type == 'google') {
         exports.addGoogleContactsData(data, callback);
+    } else if (type == 'github') {
+        exports.addGithubData(endpoint, data, callback);
     }
 }
 
@@ -37,7 +39,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
         callback = twitterData;
         twitterData = relationship;
         relationship = twitterData.source;
-    } else {
+    } else if (relationship === 'followers') {
         relationship = relationship.substring(0, relationship.length - 1);
     }
     var data = twitterData.data;
@@ -68,6 +70,49 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
             var or = [{'_matching.cleanedNames':cleanedName}, 
                       {'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.twitter':baseObj}, 
+                                         $addToSet:addToSet,
+                                         $set:{'name':data.name}}, 
+                        {safe:true, upsert:true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+}
+
+exports.addGithubData = function(relationship, data, callback) {
+    if (typeof githubData === 'function') {
+        callback = data;
+        data = relationship;
+        relationship = data.source;
+    } else {
+        relationship = relationship.substring(0, relationship.length - 1);
+    }
+    console.log("ghd", data);
+    var cleanedName = cleanName(data.name);
+    var query = {'accounts.github.data.id':data.id};
+    var set = {};
+    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    baseObj[relationship] = true;
+    set['accounts.github.$'] = baseObj;
+    //name
+    if(data.name)
+        set.name = data.name;
+    var addToSet = {'_matching.cleanedNames':cleanedName};
+    //nicknames
+    if(data.login)
+        addToSet.nicknames = data.login;
+    //email
+    if(data.email)
+        addToSet.email = {value:data.email};
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
+                        {safe:true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise
+            var or = [{'_matching.cleanedNames':cleanedName}];
+            if (data.email) {
+                or[1] = {'emails.value' : data.email}
+            }
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.github':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:{'name':data.name}}, 
                         {safe:true, upsert:true}, callback);

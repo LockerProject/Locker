@@ -23,9 +23,10 @@ exports.init = function(theLockerUrl, mongoCollection) {
 exports.gatherContacts = function() {
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
-        locker.providers(['contact/facebook', 'contact/twitter', 'contact/google', 'contact/foursquare'], function(services) {
+        locker.providers(['contact/facebook', 'contact/twitter', 'contact/google', 'contact/foursquare', 'contact/github'], function(services) {
             if (!services) return;
             services.forEach(function(svc) {
+                console.log("svc", svc.id, svc.provides);
                 if(svc.provides.indexOf('contact/facebook') >= 0) {
                     exports.getContacts("facebook", "friends", svc.id, function() {
                         console.error('facebook done!');
@@ -45,6 +46,12 @@ exports.gatherContacts = function() {
                     exports.getContacts('foursquare', "friends", svc.id, function() {
                         console.error('foursquare done!');
                     });
+                } else if(svc.provides.indexOf('contact/github') >= 0) {
+                    exports.getContacts('github', 'following', svc.id, function() {
+                        exports.getContacts('github', 'followers', svc.id, function() {
+                            console.error('github done!');
+                        });
+                    })
                 }
             });
         });
