@@ -3,10 +3,6 @@ var log = function(msg) { if (console && console.log) console.debug(msg); }
 var baseURL = 'http://localhost:8042/query';
 var data = {};
 
-// used in reload
-var sort = {};
-var start = 0, end = 100, currentSort;
-
 // divClicked
 var showing = {};
 
@@ -16,9 +12,8 @@ var showing = {};
  * limit - limit used (unused)
  * callback
  */
-function getContacts(skip, limit, callback) {
-    log(baseURL + '/getContact'); 
-    $.getJSON(baseURL + '/getContact', {offset:skip, limit:100}, callback);
+function getContacts(offset, callback) {
+    $.getJSON(baseURL + '/getContact', {offset:offset}, callback);
 }
 
 /**
@@ -26,7 +21,8 @@ function getContacts(skip, limit, callback) {
  * contact
  */
 function addRow(contact) {
-    log('adding contact:', contact);
+    if(contact.accounts.github)
+        console.log('adding contact w/ gh:', contact);
     data[contact._id] = contact;
     var contactsTable = $("#table #contacts");
     contactsTable.append('<div id="' + contact._id + '" class="contact"><span class="basic-data"></span></div>');
@@ -63,9 +59,11 @@ function addPhoto(div, contact) {
  * fullsize - does nothing
  */
 function getPhotoUrl(contact, fullsize) {
-    if(contact.photos && contact.photos.length)
-        return contact.photos[0];
-    return 'img/silhouette.png';
+    var url = 'img/silhouette.png';
+    if(contact.photos && contact.photos.length) {
+        url = contact.photos[0];
+    }
+    return url;
 }
 
 /** 
@@ -95,6 +93,25 @@ function addEmail(div, contact) {
  * contact - contact obj
  */
 function addTwitter(div, contact) {
+    var twitterUsername;
+    if(contact.accounts.twitter && contact.accounts.twitter[0].data 
+        && contact.accounts.twitter[0].data.screen_name)
+        twitterUsername = contact.accounts.twitter[0].data.screen_name;
+    
+    if(twitterUsername) {
+        div.append('<span class="column twitter">' +
+                         '<a target="_blank" href="https://twitter.com/' + twitterUsername + '">@' 
+                         + twitterUsername + '</a></span>');
+    } else
+        div.append('<span class="column twitter"></span>');
+}
+
+/**
+ * Add the person's twitter username to a div
+ * div - $(HTMLElement)
+ * contact - contact obj
+ */
+function addGithub(div, contact) {
     var twitterUsername;
     if(contact.accounts.twitter && contact.accounts.twitter[0].data 
         && contact.accounts.twitter[0].data.screen_name)
@@ -148,64 +165,26 @@ function getLocation(contact) {
  * _end
  * callback
  */
-function reload(sortField, _start, _end, callback) {
-    var usedSortField = getSort(sortField);
-    log(usedSortField);
-    log('_start _end:', _start, _end);
-    start = _start || 0; end = _end || 100;
-    var queryText = $('#query-text').val();
+function reload(callback) {
     var getContactsCB = function(contacts) {
-	log('contacts',contacts);
+        console.log('contacts', contacts);
         var contactsTable = $("#table #contacts");
-        if(start == 0 || sortField) {
-            showing = {};
-            contactsTable.html('');
-        }
+        showing = {};
+        contactsTable.html('');
         for(var i in contacts)
             addRow(contacts[i]);
         if(callback) callback();
     };
-    getContacts(start, end - start, getContactsCB);
+    getContacts(0, getContactsCB);
 }
 
-/**
- * Get the sort info 
- * sortField 
- **/
-function getSort(sortField) {
-    if(sortField) {
-        var direction = 'asc';
-        if(sort[sortField]) {
-            if(sort[sortField] == 'asc') 
-                direction = 'desc';
-            else
-                direction = 'asc';
-        }
-        sort[sortField] = direction;
-        currentSort = [sortField, direction];
-    }
-    return currentSort;
-}
-
-/**
- * Load more users to the list. TODO: Add magic
- * callback - function
- */
-function loadMore(callback) {
-    log('loading maaawr!!!');
-    start = end;
-    end += 100;
-    reload(null, start, end, function() {
-        if(callback) callback();
-    });
-}
 
 /**
  * Div Clicked 
  * id 
  **/
 function divClicked(id) {
-    log(id);
+    console.log(id);
     if(showing[id] === undefined) {
         var div = $("#table #contacts #" + id);
         div.append('<div class="more_info"></div>');
@@ -238,7 +217,9 @@ function getMoreDiv(newDiv, contact) {
     newDiv.find('.name_and_loc .location').html(getLocation(contact));
     
     if(contact.accounts.twitter)
-        addTwitterDetails(newDiv, contact.accounts.twitter[0]);
+        addTwitterDetails(newDiv, contact.accounts.twitter[0]);    
+    if(contact.accounts.github)
+        addGithubDetails(newDiv, contact.accounts.github[0]);
     if(contact.accounts.facebook)
         addFacebookDetails(newDiv, contact.accounts.facebook[0]);    
     if(contact.accounts.foursquare)
@@ -251,7 +232,7 @@ function getMoreDiv(newDiv, contact) {
  * twitter
  */
 function addTwitterDetails(newDiv, twitter) {
-    log('twitter:', twitter);
+    console.log('twitter:', twitter);
     if(twitter && twitter.data) {
         newDiv.find('.twitter-details .username')
                  .append('<a target="_blank" href="https://twitter.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
@@ -263,12 +244,29 @@ function addTwitterDetails(newDiv, twitter) {
 }
 
 /**
+ * Add Github Details
+ * newDiv - 
+ * twitter
+ */
+function addGithubDetails(newDiv, github) {
+    console.log('github:', github);
+    return;
+    if(twitter && twitter.data) {
+        newDiv.find('.github-details .username')
+                 .append('<a target="_blank" href="https://github.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
+        newDiv.find('.github-details .followers').append(twitter.data.followers_count);
+        newDiv.find('.github-details .following').append(twitter.data.friends_count);
+        newDiv.find('.github-details .tagline').append(twitter.data.description);
+        newDiv.find('.github-details').css({display:'block'});
+    }
+}
+/**
  * Add Facebook Details
  * newDiv - 
  * fb - 
  */
 function addFacebookDetails(newDiv, fb) {
-    log('fb:', fb);
+    console.log('fb:', fb);
     var name = fb.data.name || (fb.data.first_name + ' ' + fb.data.last_name);
     if(fb && fb.data) {
         newDiv.find('.facebook-details .name')
@@ -283,9 +281,9 @@ function addFacebookDetails(newDiv, fb) {
  * foursquare - 
  */
 function addFoursquareDetails(newDiv, foursquare) {
-    log('foursquare:', foursquare);
+    console.log('foursquare:', foursquare);
     var name = foursquare.data.name || (foursquare.data.firstName + ' ' + foursquare.data.lastName);
-    log('foursquare.name:', name);
+    console.log('foursquare.name:', name);
     if(foursquare && foursquare.data) {
         newDiv.find('.foursquare-details .name')
                  .append('<a target="_blank" href="https://foursquare.com/user/' + foursquare.data.id + '">' + name + '</a>');
@@ -300,7 +298,7 @@ function addFoursquareDetails(newDiv, foursquare) {
  * id - 
  */
 function showFull(id) {
-    log(id);
+    console.log(id);
     var div = $("#table #contacts #" + id);
     div.css({'height':'400px'});
     div.append('<div>' + JSON.stringify(data[id]) + '</div>');
@@ -309,7 +307,7 @@ function showFull(id) {
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
     console.debug("dom ready");
-    reload('dates.rapportive.engaged', start, end);
+    reload();
     $('#query-text').keyup(function(key) {
         if(key.keyCode == 13)
             reload();

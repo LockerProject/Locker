@@ -240,7 +240,7 @@ function updatePeople(type, people, callback) {
         if(err) {
             console.error('got error from dataStore.getPersonFromCurrent:', err);
         } else if(!record) {
-            console.error('no record for type:', type, ' and id:', profileFromTwitter.id, '\nrecords:', records);
+            console.error('no record for type:', type, ' and id:', profileFromTwitter.id, '\nrecord:', record);
         } else {
             var profileFromMongo = record;
             var isDifferent = false;
