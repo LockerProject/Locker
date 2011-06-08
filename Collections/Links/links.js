@@ -48,11 +48,10 @@ app.get('/update', function(req, res) {
     res.writeHead(200);
     res.end('Updating');
 });
-// 
+
 app.post('/events', function(req, res) {
     var target;
     var body = req.body;
-    console.error('processing event:', body);
     var obj = body.obj;
     var via = body._via[0];
     if (!obj.type || !via) {
@@ -67,14 +66,6 @@ app.post('/events', function(req, res) {
         res.end("Don't know what to do with this event");
         return;
     }
-    // switch (obj.type) {
-    //     // what do we want to do for a delete event?
-    //     //
-    //     case 'delete':
-    //         res.writeHead(200);
-    //         res.end('not doing anything atm');
-    //         break;
-    //     default:
     dataStore.addLink(via, obj.data.sourceObject, obj.data.url, function(err, doc) {
         res.writeHead(200);
         res.end('new object added');
@@ -85,8 +76,6 @@ app.post('/events', function(req, res) {
         var eventObj = {source: "links", type:req.body.obj.type, data:doc};
         locker.event("link/full", eventObj);
     });
-            // break;
-    // }
 });
 
 // Process the startup JSON object

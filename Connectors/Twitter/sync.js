@@ -76,7 +76,6 @@ function addStatuses(type, statuses, callback) {
                 var eventObj = {source:type, type:'new', 
                                 data:{url:status.entities.urls[i],
                                       sourceObject:status}};
-                console.error('emitting link/twitter', eventObj);
                 exports.eventEmitter.emit('link/twitter', eventObj);
             }
         }
