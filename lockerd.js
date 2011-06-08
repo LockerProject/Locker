@@ -56,16 +56,16 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         console.error('mongod err: ' + data);
     });
     
+    var mongoOutput = "";
     var mongodExit = function(errorCode) {
         if(errorCode !== 0) {
-            console.error('mongod did not start successfully.');
+            console.error('mongod did not start successfully ('+errorCode+'), here was the stdout: '+mongoOutput);
             shutdown();
         }
     };
     mongoProcess.on('exit', mongodExit);
     
     // watch for mongo startup
-    var mongoOutput = "";
     var callback = function(data) {
         mongoOutput += data;
         if(mongoOutput.match(/ waiting for connections on port/g)) {
