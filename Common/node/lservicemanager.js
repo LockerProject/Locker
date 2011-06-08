@@ -129,10 +129,10 @@ exports.findInstalled = function () {
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             delete js.pid;
             delete js.starting;
-            console.log("Installing " + js.id);
+            console.log("Loaded " + js.id);
             serviceMap.installed[js.id] = js;
         } catch (E) {
-            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
+//            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
     }
 }
