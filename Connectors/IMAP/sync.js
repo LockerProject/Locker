@@ -13,10 +13,14 @@ var fs = require('fs'),
     request = require('request'),
     dataStore = require('../../Common/node/connector/dataStore'),
     app = require('../../Common/node/connector/api'),
+    util = require('util'),
     EventEmitter = require('events').EventEmitter,
     ImapConnection = require('imap').ImapConnection;
 
-var updateState, auth, allKnownIDs, imap;
+var updateState, 
+    auth, 
+    allKnownIDs, 
+    imap;
 
 exports.eventEmitter = new EventEmitter();
 
@@ -36,99 +40,118 @@ exports.init = function(theAuth, mongoCollections) {
     
     // Need IMAP raw debug output?  Uncomment this mofo
     // auth.debug = function(msg) {
-    //     console.error(msg);
+    //     console.log(msg);
     // };
 };
 
-exports.syncMessages = function (callback) {
-    var box, 
-        cmds, 
-        next = 0,
+exports.syncMessages = function (syncMessagesCallback) {
+    var results = null,
         msgCount = 0,
-        fetchedCount = 0;
-        messages = [];
+        fetchedCount = 0,
+        debug = false;
 
     async.series({
-        imap: function(seriesCallback) {
+        connect: function(callback) {
+            if (debug) console.log('connect');
             imap = new ImapConnection(auth);
-            
-            var cb = function(err) {
-                if (err) {
-                    console.error(err);
-                    seriesCallback(err, 'imap');
-                } else if (next < cmds.length) {
-                    cmds[next++].apply(this, Array.prototype.slice.call(arguments).slice(1));
-                }
-            };
-            cmds = [
-                function() { imap.connect(cb); },
-                function() { imap.openBox('INBOX', true, cb); },
-                function(result) { box = result; imap.search([ ['UID', 'SEARCH', (+updateState.messages.syncedThrough + 1) + ':*'] ], cb); },
-                function(results) {
-                    fetchedCount = results.length;
-                    var headerFetch = imap.fetch(results, { request: { headers: true } });
-                    headerFetch.on('message', function(headerMsg) {
-                        headerMsg.on('end', function() {
-                            var message = {};
-                            message = headerMsg;
+            imap.connect(function(err) {
+                callback(err, 'connect');
+            });
+        },
+        openbox: function(callback) {
+            if (debug) console.log('openbox');
+            imap.openBox('INBOX', true, function(err, result) {
+                callback(err, 'openbox');
+            });
+        },
+        search: function(callback) {
+            if (debug) console.log('search');
+            imap.search([ ['UID', 'SEARCH', (+updateState.messages.syncedThrough + 1) + ':*'] ], function(err, searchResults) {
+                results = searchResults;
+                callback(err, 'search');
+            });
+        },
+        fetch: function(callback) {
+            if (debug) console.log('fetch');
+            fetchedCount = results.length;
+            var headerFetch = imap.fetch(results, { request: { headers: true } });
+            headerFetch.on('message', function(headerMsg) {
+                headerMsg.on('end', function() {
+                    var message = headerMsg;
+                    var body = '';
+                    var partID = '1';
+                    var structure = message.structure;
+                    
+                    if (message.structure.length > 1) {
+                        structure.shift();
+                        structure = structure[0];
+                    }
+                    
+                    for (var i=0; i<structure.length; i++) {
+                        if (structure[i].hasOwnProperty('type') && 
+                            structure[i].type === 'text' &&
+                            structure[i].hasOwnProperty('subtype') && 
+                            structure[i].subtype === 'plain' &&
+                            structure[i].hasOwnProperty('params') &&
+                            structure[i].params !== null &&
+                            structure[i].params.hasOwnProperty('charset')) {
+                                partID = structure[i].partID;
+                        }
+                    }
+                    
+                    var bodyFetch = imap.fetch(headerMsg.id, { request: { headers: false, body: partID } });       
 
-                            var body = '';
-                            var bodyFetch = imap.fetch(headerMsg.id, { request: { headers: false, body: true } });       
-
-                             bodyFetch.on('message', function(bodyMsg) {
-                                 bodyMsg.on('data', function(chunk) {
-                                     //console.log('Got message chunk of size ' + chunk.length);
-                                     //mailParser.feed(chunk);
-                                     body += chunk;
-                                 });
-                                 bodyMsg.on('end', function() {
-                                     message.body = body.substring(0, 1024);
-                                     if (!allKnownIDs[message.id]) {
-                                         messages.push(message);
-                                         msgCount++;
-                                         allKnownIDs[message.id] = 1;
-                                         var eventObj = { source:'message/imap', 
-                                                          type:'add', 
-                                                          data: message };
-                                         exports.eventEmitter.emit('message/imap', eventObj);
+                     bodyFetch.on('message', function(bodyMsg) {
+                         bodyMsg.on('data', function(chunk) {
+                             body += chunk;
+                         });
+                         bodyMsg.on('end', function() {
+                             if (!allKnownIDs[message.id]) {
+                                 msgCount++;
+                                 message.body = body;                             
+                                 allKnownIDs[message.id] = 1;
+                                 
+                                 storeMessage(message, function(err) {
+                                     if (err) {
+                                         console.log(err);
                                      }
-                                     if (msgCount === 0 || msgCount === fetchedCount) {
-                                         seriesCallback(null, 'imap');
-                                     }
+                                     
+                                     var eventObj = { source:'message/imap', 
+                                                      type:'add', 
+                                                      data: message };
+                                     exports.eventEmitter.emit('message/imap', eventObj);
+                                      
+                                     lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                                  });
-                             });
+                             }
+                             if (debug) console.log(msgCount + ':' + fetchedCount);
+                             if (msgCount === 0 || msgCount === fetchedCount) {
+                                 callback(null, 'fetch');
+                             }
                         });
                     });
-                    headerFetch.on('end', function() {
-                        imap.logout(cb);
-                    });
-                }
-            ];
-            cb();
+                });
+            });
         },
-        store: function(seriesCallback) {
-            var count = messages.length;
-            storeMessages(messages, function() {
-                seriesCallback(null, {count: count});
+        logout: function(callback) {
+            if (debug) console.log('logout');
+            imap.logout(function(err) {
+                callback(err, 'logout');
             });
         }
     },
     function(err, results) {
-        lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
-        callback(err, 600, "sync'd " + results.store.count + " new messages");
+        if (err) {
+            console.error(err);
+        }
+        syncMessagesCallback(err, 3600, "sync'd " + msgCount + " new messages");
     });
 };
 
-function storeMessages(messages, callback) {
-    if (!messages || !messages.length) {
-        callback();
-    }
-    var message = messages.shift();
-    if (message !== undefined) {
-        dataStore.addObject('messages', message, function(err) {
-            updateState.messages.syncedThrough = message.id;
-            lfs.writeObjectToFile('updateState.json', updateState);
-            storeMessages(messages, callback);
-        });
-    }
+function storeMessage(message, callback) {
+    dataStore.addObject('messages', message, function(err) {
+        updateState.messages.syncedThrough = message.id;
+        lfs.writeObjectToFile('updateState.json', updateState);
+        callback(err);
+    });
 }
