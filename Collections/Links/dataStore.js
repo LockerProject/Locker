@@ -29,16 +29,16 @@ exports.addData = function(svcID, type, endpoint, data, callback) {
 }
 
 exports.addTwitterLink = function(svcID, twitterData, callback) {
-    addData(svcID, twitterData.data, 
+    exports.addLink(svcID, twitterData.data, 
             twitterData.data.entities.urls[0].expanded_url || twitterData.data.entities.urls[0].url,
             callback);
 }
 
 exports.addFacebookLink = function(svcID, facebookData, callback) {
-    addData(svcID, facebookData.data, facebookData.data.link, callback);
+    exports.addLink(svcID, facebookData.data, facebookData.data.link, callback);
 }
 
-function addData(svcID, data, url, callback) {
+exports.addLink = function(svcID, data, url, callback) {
     // console.log('adding link ', url, 'from', svcID);
     collection.findAndModify({'url':url}, [['_id','asc']], 
                              {$set:{'url':url}, 

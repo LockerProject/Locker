@@ -74,8 +74,9 @@ function addStatuses(type, statuses, callback) {
         if(status.entities && status.entities.urls && status.entities.urls.length) {
             for(var i in status.entities.urls) {
                 var eventObj = {source:type, type:'new', 
-                                link:{url:status.entities.urls[i],
+                                data:{url:status.entities.urls[i],
                                       sourceObject:status}};
+                console.error('emitting link/twitter', eventObj);
                 exports.eventEmitter.emit('link/twitter', eventObj);
             }
         }

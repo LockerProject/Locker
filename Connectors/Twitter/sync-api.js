@@ -115,4 +115,7 @@ function authComplete(theAuth, mongoCollections) {
     sync.eventEmitter.on('contact/twitter', function(eventObj) {
         locker.event('contact/twitter', eventObj);
     });
+    sync.eventEmitter.on('link/twitter', function(eventObj) {
+        locker.event('link/twitter', eventObj);
+    });
 }

@@ -49,53 +49,45 @@ app.get('/update', function(req, res) {
     res.end('Updating');
 });
 // 
-// app.post('/events', function(req, res) {
-//     var target;
-//     
-//     if (!req.body.obj.type || !req.body._via) {
-//         console.log('5 HUNDO');
-//         res.writeHead(500);
-//         res.end('bad data');
-//         return;
-//     }
-//     switch (req.body._via[0]) {
-//         case 'foursquare':
-//             target = dataStore.addFoursquareData;
-//             break;
-//         case 'facebook':
-//             target = dataStore.addFacebookData;
-//             break;
-//         case 'twitter':
-//             target = dataStore.addTwitterData;
-//             break;
-//         default:
-//             res.writeHead(500);
-//             console.log('event received by the contacts collection with an invalid type');
-//             res.end("Don't know what to do with this event");
-//             return;
-//             break;
-//     }
-//     switch (req.body.obj.type) {
-//         // what do we want to do for a delete event?
-//         //
-//         case 'delete':
-//             res.writeHead(200);
-//             res.end('not doing anything atm');
-//             break;
-//         default:
-//             target(req.body.obj, function(err, doc) {
-//                 res.writeHead(200);
-//                 res.end('new object added');
-//                 // what event should this be?
-//                 // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-//                 //
-//                 // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
-//                 var eventObj = {source: "contacts", type:req.body.obj.type, data:doc};
-//                 locker.event("contact/full", eventObj);
-//             });
-//             break;
-//     }
-// });
+app.post('/events', function(req, res) {
+    var target;
+    var body = req.body;
+    console.error('processing event:', body);
+    var obj = body.obj;
+    var via = body._via[0];
+    if (!obj.type || !via) {
+        console.log('5 HUNDO');
+        res.writeHead(500);
+        res.end('bad data');
+        return;
+    }
+    if(!(via.indexOf('facebook') === 0 || via.indexOf('twitter') === 0))  {
+        res.writeHead(500);
+        console.log('event received by the contacts collection with an invalid type');
+        res.end("Don't know what to do with this event");
+        return;
+    }
+    // switch (obj.type) {
+    //     // what do we want to do for a delete event?
+    //     //
+    //     case 'delete':
+    //         res.writeHead(200);
+    //         res.end('not doing anything atm');
+    //         break;
+    //     default:
+    dataStore.addLink(via, obj.data.sourceObject, obj.data.url, function(err, doc) {
+        res.writeHead(200);
+        res.end('new object added');
+        // what event should this be?
+        // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
+        //
+        // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+        var eventObj = {source: "links", type:req.body.obj.type, data:doc};
+        locker.event("link/full", eventObj);
+    });
+            // break;
+    // }
+});
 
 // Process the startup JSON object
 process.stdin.resume();
@@ -113,8 +105,8 @@ process.stdin.on('data', function(data) {
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
             // locker.listen('contact/foursquare', '/events');
-            // locker.listen('contact/facebook', '/events');
-            // locker.listen('contact/twitter', '/events');
+            locker.listen('link/facebook', '/events');
+            locker.listen('link/twitter', '/events');
             sync.eventEmitter.on('link/full', function(eventObj) {
                 locker.event('link/full', eventObj);
             });

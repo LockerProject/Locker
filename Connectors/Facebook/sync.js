@@ -195,7 +195,8 @@ function addPosts(type, posts, callback) {
     if (post !== undefined) {
         dataStore.addObject(type, post, function(err) {
             if(post.type === 'link') {
-                var eventObj = {source:type, type:'new', data:post};
+                var eventObj = {source:type, type:'new', data:{url:post.link, sourceObject:post}};
+                console.error('emitting link/facebook', eventObj);
                 exports.eventEmitter.emit('link/facebook', eventObj);
             }
             addPosts(type, posts, callback);
