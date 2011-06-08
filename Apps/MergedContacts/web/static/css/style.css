@@ -1,0 +1,228 @@
+body {
+    background-color:#000;
+    color:#ddd;
+    font-family:Arial,Tahoma, Geneva, sans-serif;
+    padding:10px;
+}
+a {
+    color:#aaa;
+    text-decoration:none;
+    overflow:hidden;
+}
+
+#search-header #query-text {
+    font-size:18px;
+    width:300px;
+    border:1px solid;
+    border-radius:4px;
+    padding:4px;
+    color:#333;
+}
+#search-header img {
+    float:left;
+    margin:4px;
+}
+
+#table .contact div {
+    border-radius:3px;
+}
+
+#table .column {
+    display:inline-block;
+}
+#table #headers .column {
+    border-top:1px solid #323434;
+    border-bottom:1px solid #151617;
+    background-color:#232526;
+    padding:2px 6px;
+    font-size:24px;
+    text-align:center;
+    overflow:hidden;
+}
+
+#table #contacts #text {
+    display:inline-block;
+}
+#table #contacts .contact .basic-data {
+    display:inline-block;
+    vertical-align:middle;
+    min-height:36px;
+    padding-top:3px;
+    cursor:pointer;
+}
+#table #contacts .contact:hover {
+    background-color:#343739;
+    
+}
+#table #contacts .contact {
+    border-top:1px solid #323434;
+    border-bottom:1px solid #151617;
+    background-color:#232526;
+    margin:2px 0px;
+}
+#table #contacts .contact {
+    display:inline-block;
+}
+#table #contacts .column {
+    padding:2px 8px;
+    margin:0px 0px;
+}
+#table #headers .photo {
+    display:inline-block;
+    width:36px;
+    height:30px;
+}
+#table #headers .photo img {
+    display:inline;
+    width:18px;
+    height:18px;
+    margin-top:0px;
+}
+#table #contacts .photo {
+    display:inline;
+    width:36px;
+    height:36px;
+    float:left;
+}
+#table .photo img {
+    width:30px;
+    height:30px;
+    margin:3px;
+}
+
+#table .name {
+    width:200px;
+}
+
+#table .email {
+    width:240px;
+}
+
+#table .github {
+    width:100px;
+}
+
+#table .twitter {
+    width:160px;
+}
+
+#table .linkedin {
+    width:200px;
+    padding-top:0px;
+}
+#table .date {
+    width:60px;
+}
+
+#table #more_contacts {
+    width:1124px;
+    margin:0px;
+    padding:0px;
+    height:80px;
+}
+
+#table #more_contacts #button {
+    cursor:pointer;
+    border-top:1px solid #323434;
+    border-bottom:1px solid #151617;
+    background-color:#232526;
+    margin:2px 0px;
+    display:inline-block;
+    text-align:center;
+    font-size:18px;
+    float:right;
+    padding:10px;
+}
+
+
+.more_info {
+    border-radius:3px;
+    border-top:1px solid #323434;
+    border-bottom:1px solid #151617;
+    background-color:#232526;
+    margin:2px 0px;
+}
+
+.more_info .title {
+    font-size:2em;
+    font-weight:bold;
+}
+.morebox .pic {
+    float:left;
+    display:inline-block;
+    margin:5px;
+    margin-right:12px;
+    max-height:100px;
+    max-width:100px;
+}
+.morebox .pic img {
+    max-height:100px;
+    max-width:100px;
+}
+.morebox {
+    border-radius:3px;
+    width:730px;
+    margin:8px;
+    padding:5px;
+    display:inline-block;
+    float:left;
+}
+
+.name_and_loc {
+    display:block;
+    padding:5px;
+    height:100px;
+}
+
+.realname {
+    padding-top:5px;
+    font-size:1.7em;
+}
+.username {
+    padding-top:2px;
+}
+
+.morebox .jobs {
+    margin-top:5px;
+    margin-bottom:5px;
+}
+.morebox .twitter-details .tagline {
+    display:block;
+    width:470px;
+    height:17px;
+    overflow:hidden;
+    padding-top:2px;
+    font-style:italic;
+    font-size:0.9em;
+}
+.morebox .twitter-details {
+    padding-top:4px;
+}
+.morebox .account {
+    display:none;
+    height:40px;
+}
+.morebox .srv-img {
+    display:inline-block;
+    height:32px;
+}
+.morebox .account img {
+    padding-right:5px;
+    float:left;
+    height:30px;
+    width:30px;
+}
+
+.morebox .location {
+}
+
+.morebox .account-spacer {
+
+}
+.morebox .github-details img {
+    border-radius:2px;
+}
+
+.morebox .blog {
+    padding-top:7px;
+}
