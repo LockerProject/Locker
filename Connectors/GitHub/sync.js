@@ -15,6 +15,7 @@ var fs = require('fs'),
     app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter,
     GitHubApi = require("github").GitHubApi,
+    utils = require('../../Common/node/connector/utils');
     github = new GitHubApi();
 
     
@@ -26,7 +27,7 @@ exports.init = function(theauth, mongoCollections) {
     auth = theauth;
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-    } catch (err) { allKnownIDs = {following:{}, followers:{}, repos:{}}; }    
+    } catch (err) { allKnownIDs = {following:[], followers:[], repos:[]}; }    
     dataStore.init("id", mongoCollections);
 }
 
@@ -36,8 +37,7 @@ exports.syncRepos = function(callback) {
         deleted = 0,
         modified = 0,
         newIDs = [],
-        knownIDs = allKnownIDs["repos"],
-        repeatedIDs = {};
+        knownIDs = allKnownIDs["repos"];
         
     var parseRepo = function(data) {
         if (data && data.length) {
@@ -74,31 +74,21 @@ exports.syncRepos = function(callback) {
 
     github.getRepoApi().getUserRepos(auth.username, function(err, data) {
         if(!err) {
-            if (data) {
-                total = data.length;
-                data.forEach(function(repo) {
-                    if (knownIDs[repo.url])
-                        repeatedIDs[repo.url] = 1;
-                });
-            }
-
-            var removedIDs = [];
-            for(var knownID in knownIDs) {
-                if(!repeatedIDs[knownID])
-                    removedIDs.push(knownID);
-            }
+            total = data.length || 0;
+            
+            var knownIDs = data.map(function(item) {return item.url});
+            var removedIDs = utils.checkDeletedIDs(allKnownIDs['repos'], knownIDs);
+            deleted = removedIDs.length;
+            
+            allKnownIDs["repos"] = knownIDs;
+            fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+            
             if(removedIDs.length > 0) {
-                deleted = removedIDs.length;
                 logRemoved("repos", removedIDs, function(err) {
                     parseRepo(data);
                 });
             }
             else {
-                data.forEach(function(repo) {
-                    knownIDs[repo.url] = 1;
-                });
-                allKnownIDs["repos"] = knownIDs;
-                fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                 parseRepo(data);
             }
         }
