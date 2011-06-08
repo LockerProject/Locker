@@ -40,9 +40,7 @@ exports.isAuthed = function() {
             return true;
         }
     
-        console.error('isAuthed.reading in from', process.cwd());
         var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
-        console.error('isAuthed.read and parsed ' + authData.username);
         
         if(authData.hasOwnProperty('username') && 
            authData.hasOwnProperty('password') && 
