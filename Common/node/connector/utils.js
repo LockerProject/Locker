@@ -1,5 +1,5 @@
 exports.checkDeletedIDs = function(knownIDs, returnedIDs) {
-    if (knownIDs) {
+    if (knownIDs && returnedIDs) {
         var newIDs = [],
             repeatedIDs = {},
             removedIDs = [];
@@ -15,6 +15,8 @@ exports.checkDeletedIDs = function(knownIDs, returnedIDs) {
         });
 
         return removedIDs;
+    } else if (knownIDs) {
+        return knownIDs;
     } else {
         return [];
     }

@@ -28,5 +28,19 @@ vows.describe("Checked Deleted IDs function").addBatch({
         'successfully' : function(topic) {
             assert.equal(topic[0], undefined);
         }
+    },
+    "returns everything when it receives no new IDs" : {
+        topic: function() { return utils.checkDeletedIDs(strings, []) },
+        'successfully' : function(topic) {
+            assert.equal(topic[0], strings[0]);
+            assert.equal(topic[1], strings[1]);
+        }
+    },
+    "returns everything when it only receives a set of known IDs" : {
+        topic: function() { return utils.checkDeletedIDs(strings) },
+        'successfully' : function(topic) {
+            assert.equal(topic[0], strings[0]);
+            assert.equal(topic[1], strings[1]);
+        }        
     }
 }).export(module);

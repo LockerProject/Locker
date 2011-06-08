@@ -108,13 +108,10 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
         friendsOrFollowers = 'following';
 
     var processData = function(err, data) {
-        var newIDs = [];
-        var knownIDs = allKnownIDs[friendsOrFollowers];
-        var repeatedIDs = {};
-        var total = data.length;
-        var added = 0;
-        var deleted = 0;
-        var modified = 0;
+        var total = data.length,
+            added = 0,
+            deleted = 0,
+            modified = 0;
         
         var processUser = function(data) {
             if (data && data.length) {
@@ -152,34 +149,19 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
             }
         };
         
-        if (data) {
-            data.forEach(function(name) {
-                if (knownIDs[name])
-                    repeatedIDs[name] = 1;
-            });
-        }
+        var removedIDs = utils.checkDeletedIDs(allKnownIDs[friendsOrFollowers], data);
+        deleted = removedIDs.length;
+        allKnownIDs[friendsOrFollowers] = data.slice(0);
         
-        var removedIDs = [];
-        for(var knownID in knownIDs) {
-            if(!repeatedIDs[knownID])
-                removedIDs.push(knownID);
-        }
         if(removedIDs.length > 0) {
-            deleted = removedIDs.length;
             logRemoved(friendsOrFollowers, removedIDs, function(err) {
                 processUser(data);
             });
         }
         else {
-            data.forEach(function(name) {
-                knownIDs[name] = 1;
-            });
-            allKnownIDs[friendsOrFollowers] = knownIDs;
-            fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+            fs.writeFileSync('allKnownIDs.json', JSON.stringify(allKnownIDs));
             processUser(data);
         }
-        
-        
     }
     
     if (friendsOrFollowers === 'following') github.getUserApi().getFollowing(auth.username, function(err, data) {
@@ -192,7 +174,7 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
 
 function logRemoved(type, ids, callback) {
     if(!ids || !ids.length) {
-        fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+        fs.writeFileSync('allKnownIDs.json', JSON.stringify(allKnownIDs));
         callback();
         return;
     }
@@ -200,7 +182,7 @@ function logRemoved(type, ids, callback) {
     if (type !== 'repos') {
         github.getUserApi().show(id, function(err, user) {
             dataStore.removeObject(type, user.id, function(err) {
-                delete allKnownIDs[type][id];
+                delete allKnownIDs[type][allKnownIDs[type].indexOf(id)];
                 logRemoved(type, ids, callback);
             });
         });
@@ -208,7 +190,7 @@ function logRemoved(type, ids, callback) {
         dataStore.removeObject(type, id+'', function(err) {
             var eventObj = {source:type, type:'delete', data:{id:id, deleted: true}};
             exports.eventEmitter.emit('contact/github', eventObj);
-            delete allKnownIDs[type][id];
+            delete allKnownIDs[type][allKnownIDs[type].indexOf(id)];
             logRemoved(type, ids, callback);
         });
     }
