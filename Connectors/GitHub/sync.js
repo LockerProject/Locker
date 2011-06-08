@@ -105,11 +105,15 @@ exports.syncRepos = function(callback) {
     });
 }
 
-exports.syncUsers = function(friendsOrFollowers, callback) {
+exports.syncProfile = function(callback) {
     github.getUserApi().show(auth.username, function(err, user) {
-        fs.writeFile('profile.json', JSON.stringify(user));
+        fs.writeFile('profile.json', JSON.stringify(user), function(err) {
+            return callback(err, 3600, "finished updating " + auth.username + "'s profile.");
+        });
     })
-    
+}
+
+exports.syncUsers = function(friendsOrFollowers, callback) {
     if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
         friendsOrFollowers = 'following';
 

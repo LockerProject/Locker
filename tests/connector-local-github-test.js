@@ -29,7 +29,6 @@ var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host,
 var mongoCollections;
 
 sync.eventEmitter.on('contact/github', function(eventObj) {
-    console.log('obj', eventObj);
     events.contact++;
 });
 
@@ -73,9 +72,6 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://github.com/api/v2/json/user/show/smurthas',
                 file : __dirname + '/fixtures/github/smurthas.json' });
-            fakeweb.registerUri({
-                uri : 'https://github.com/api/v2/json/user/show/ctide',
-                file : __dirname + '/fixtures/github/ctide.json' });
             sync.syncUsers("followers", this.callback) },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
@@ -83,9 +79,21 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "Can get profile" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://github.com/api/v2/json/user/show/ctide',
+                file : __dirname + '/fixtures/github/ctide.json' });
+            sync.syncProfile(this.callback) },
+        "successfully" : function(err, repeatAfter, diaryEntry) {
+            assert.equal(repeatAfter, 3600);
+            assert.equal(diaryEntry, "finished updating ctide's profile.")
+            assert.equal(err, undefined);
+        }
+    }
+}).addBatch({
     "Can get following" : {
         topic: function() {
-            fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 uri : 'https://github.com/api/v2/json/user/show/ctide/following',
                 file : __dirname + '/fixtures/github/following.json' });
