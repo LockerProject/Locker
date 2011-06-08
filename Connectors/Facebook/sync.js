@@ -224,6 +224,18 @@ function addWallPosts(posts, callback) {
     }
 }
 
+exports.syncProfile = function(callback) {
+    getMe(auth.accessToken, function(err, resp, data) {
+        if(err) {
+            callback(err, 3600, data);
+        } else {
+            var profile = JSON.parse(data);
+            lfs.writeObjectToFile('profile.json', profile);
+            callback(null, 3600, 'syncd profile');
+        }
+    });
+}
+
 function getMe(accessToken, callback) {
     request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken + '&date_format=U'}, callback);
 }

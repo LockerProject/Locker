@@ -27,6 +27,7 @@ function authComplete(theauth, mongoCollections) {
     app.get('/friends', friends);
     app.get('/newsfeed', newsfeed);
     app.get('/wall', wall);
+    app.get('/profile', profile);
 
     sync.eventEmitter.on('contact/facebook', function(eventObj) {
         locker.event('contact/facebook', eventObj);
@@ -41,7 +42,12 @@ function index(req, res) {
         res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, load <a href='friends'>friends</a>, your <a href='newsfeed'>newsfeed</a>, or your <a href='wall'>wall</a></html>");
+        res.end("<html>found a token, sync <br>" +
+                    "<li><a href='friends'>friends</a></li>" + 
+                    "<li><a href='newsfeed'>newsfeed</a></li>" + 
+                    "<li><a href='wall'>wall</a></li>" +
+                    "<li><a href='profile'>profile</a></li>" +
+                    "</html>");
     }
 }
 
@@ -69,5 +75,14 @@ function wall(req, res) {
         locker.diary(diaryEntry);
         locker.at('/wall', repeatAfter);
         res.end(JSON.stringify({success: "done fetching wall"}));
+    });
+}
+
+function profile(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncProfile(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/profile', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching profile"}));
     });
 }

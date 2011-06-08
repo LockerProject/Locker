@@ -23,7 +23,9 @@ exports.init = function(theLockerUrl, mongoCollection) {
 exports.gatherContacts = function() {
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
-        locker.providers(['contact/facebook', 'contact/twitter', 'contact/google', 'contact/foursquare', 'contact/github'], function(services) {
+        locker.providers(['contact/facebook', 'contact/twitter', 
+                          'contact/google', 'contact/foursquare', 
+                          'contact/github'], function(services) {
             if (!services) return;
             services.forEach(function(svc) {
                 console.log("svc", svc.id, svc.provides);

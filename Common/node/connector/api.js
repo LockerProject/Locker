@@ -43,7 +43,7 @@ app.get('/getCurrent/:type', function(req, res) {
 
 app.get('/get_profile', function(req, res) {
     lfs.readObjectFromFile('profile.json', function(userInfo) {
-        res.writeHead(200, {"Content-Type":"text/json"});
+        res.writeHead(200, {"Content-Type":"application/json"});
         res.end(JSON.stringify(userInfo));        
     });
 });
