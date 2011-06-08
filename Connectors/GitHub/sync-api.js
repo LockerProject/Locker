@@ -26,6 +26,7 @@ function authComplete(theauth, mongoCollections) {
 
     app.get('/followers', followers);
     app.get('/following', following);
+    app.geT('/profile', profile);
     app.get('/repos', repos);
     sync.eventEmitter.on('contact/github', function(eventObj) {
         locker.event('contact/github', eventObj);
@@ -65,5 +66,14 @@ function repos(req, res) {
         locker.diary(diaryEntry);
         locker.at('/repos', repeatAfter);
         res.end(JSON.stringify({success: "done fetching repos"}));
+    });
+}
+
+function profile(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncProfile(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/profile', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching profile"}));
     });
 }
