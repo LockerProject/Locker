@@ -41,7 +41,7 @@ process.stdin.on("data", function(data) {
         process.stdout.write(data);
     });
 });
-
+ 
 
 function readContacts(contactsReadCB) {
     var me = lfs.loadMeData();
@@ -68,7 +68,7 @@ function readGroups() {
 app.get('/', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.write('<html><head><title>Contacts!</title>\n' +
-              '<link rel="stylesheet" href="contacts.css">\n</head>\n\n<body>');
+              '<link rel="stylesheet" href="static/css/contacts.css">\n</head>\n\n<body>');
 //        var groups = readGroups();
     console.log('reading contacts...');
     readContacts(function(contacts) {

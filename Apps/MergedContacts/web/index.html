@@ -1,26 +1,24 @@
 <html>
-<head>
+  <head>
     <title>Contacts!</title>
-    <script src='http://code.jquery.com/jquery-1.5.2.min.js' type='text/javascript'> </script>
-    <script src='js/data.js' type='text/javascript'> </script>
-    <link href='css/style.css' rel='stylesheet'/>
-</head>
-
-<body>
+    <link href='static/css/style.css' rel='stylesheet'/>
+  </head>
+  
+  <body>
     <div id='search-header'>
-        <form action='#'>
-            <img src='img/search.png'><input id='query-text' type=text>
+      <form action='#'>
+	<img src='static/img/search.png'><input id='query-text' type=text>
         </form>
-    </div>
-    <div id='table'>
+      </div>
+      <div id='table'>
         <div id='headers'>
-            <span class='column photo'><img src="img/silhouette.png"></span>
-            <span class='column name'><a href='#' onClick='javascript:reload("rapportive.data.name")'>Name</a></span>
-            <span class='column email'><a href='#' onClick='javascript:reload("rapportive.data.email")'>Email</a></span>
-            <span class='column twitter'><a href='#' onClick='javascript:reload("twitter.data._username_lowercase")'>Twitter</a></span>
+	  <span class='column photo'><img src="static/img/silhouette.png"></span>
+	  <span class='column name'><a href='#' onClick='javascript:reload("rapportive.data.name")'>Name</a></span>
+	  <span class='column email'><a href='#' onClick='javascript:reload("rapportive.data.email")'>Email</a></span>
+	  <span class='column twitter'><a href='#' onClick='javascript:reload("twitter.data._username_lowercase")'>Twitter</a></span>
         </div>
         <div id='contacts'>
-            
+	  
         </div>
         <div id='more_contacts'>
             <span id='button' onclick="javascript:loadMore();">Load Maaawr!</span>
@@ -40,25 +38,25 @@
                 <span class='tagline'></span>
             </div>
             <div class='facebook-details account'>
-                <img src="img/facebook-logo.png" />
+                <img src="static/img/facebook-logo.png" />
                 <span class='name'>
                 </span>
             </div>
             <div class='foursquare-details account'>
-                <img src="img/foursquare-logo.png" />
+                <img src="static/img/foursquare-logo.png" />
                 <div><span class='name'>
                 </span> -  
                                 <span class='checkins'></span> checkins : : <span class='mayorships'></span> mayorships
                                 </div>
             </div>
             <!-- <div class='github-details account'>
-                <img src="img/github-logo-bg.png" />
+                <img src="static/img/github-logo-bg.png" />
                 <span class='username'>
                 </span> - 
                 <span class='repos'></span> repos
             </div> -->
             <!-- <div class='blog-details account'>
-                <img src="img/blogger-logo.png" />
+                <img src="static/img/blogger-logo.png" />
             </div> -->
         </div>
         <!-- <div class='notes'>
@@ -69,5 +67,8 @@
             </form>
         </div> -->
     </div>
-</body>
+    <script src='/static/js/jquery-1.6.1.min.js' type='text/javascript'> </script>
+    <script src='static/js/data.js' type='text/javascript'> </script>
+    
+    </body>
 </html>
