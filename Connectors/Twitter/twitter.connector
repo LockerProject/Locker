@@ -7,5 +7,5 @@
 	"handle":"twitter",
 	"mongoCollections": ["friends", "followers", "home_timeline", "user_timeline", "mentions"],
 	"processOptions" : {"enableCookies" : true, "id" : "id_str"},
-	"provides":["contact/twitter","status/twitter"]
+	"provides":["contact/twitter","status/twitter","link/twitter"]
 }

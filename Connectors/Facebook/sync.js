@@ -61,8 +61,8 @@ exports.syncFriends = function(callback) {
                 'queue': queue,
                 'token': auth.accessToken
             };
-						
-            for (var i = 0; i < friends.length; i++) {                    
+            
+            for (var i = 0; i < friends.length; i++) {
                 queue.push(friends[i]);
                 if(!knownIDs[friends[i].id]) {
                     newIDs.push(friends[i].id);
@@ -70,7 +70,7 @@ exports.syncFriends = function(callback) {
                     repeatedIDs[friends[i].id] = 1;
                 }
             }
-
+            
             for(var knownID in knownIDs) {
                 if(!repeatedIDs[knownID])
                     removedIDs.push(knownID);
@@ -83,7 +83,7 @@ exports.syncFriends = function(callback) {
                     });
                 }
             } else {
-  
+                
                for (var j = 0; j < newIDs.length; j++) {
                     allKnownIDs[newIDs[j]] = 1;
                 }
@@ -135,8 +135,6 @@ function downloadUsers(theUsers, token, callback) {
             }
             var response = JSON.parse(data);
             if(response.hasOwnProperty('error')) {
-                
-               console.error(data);
                allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
                
                var ids = idString.split(',');
@@ -167,61 +165,43 @@ function downloadUsers(theUsers, token, callback) {
 }
 
 exports.syncNewsfeed = function (callback) {
-    getMe(auth.accessToken, function(err, resp, data) {
-        var self = JSON.parse(data);
-        fs.writeFile('profile.json', JSON.stringify(self));
-        getPosts(self.id, 'home', auth.accessToken, 0, function(err, posts) {
-            var postsCount = posts.length;
-            addNewsfeedPosts(posts, function() {
-                callback(err, 600, "sync'd " + postsCount + " new newsfeed posts");
-            });
-        });
-    });
+    syncFeed('home', 'newsfeed', callback);
 };
-
-function addNewsfeedPosts(posts, callback) {
-    if (!posts || !posts.length) {
-        callback();
-    }
-    var post = posts.shift();
-    if (post !== undefined) {
-        dataStore.addObject('newsfeed', post, function(err) {
-            if(post.type === 'link') {
-                var eventObj = {source:'newsfeed', type:'new', data:post};
-                exports.eventEmitter.emit('link/facebook', eventObj);
-            }
-            addNewsfeedPosts(posts, callback);
-        });
-    }
-}
 
 exports.syncWall = function (callback) {
+    syncFeed('feed', 'wall', callback);
+};
+
+function syncFeed(feed, type, callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         var self = JSON.parse(data);
         fs.writeFile('profile.json', JSON.stringify(self));
-        getPosts(self.id, 'feed', auth.accessToken, 0, function(err, posts) {
+        getPosts(self.id, feed, auth.accessToken, 0, function(err, posts) {
             var postsCount = posts.length;
-            addWallPosts(posts, function() {
-                callback(err, 600, "sync'd " + postsCount + " new wall posts");
+            addPosts(type, posts, function() {
+                callback(err, 600, "sync'd " + postsCount + " new " + type + " posts");
             });
         });
     });
-};
+    
+}
 
-function addWallPosts(posts, callback) {
+function addPosts(type, posts, callback) {
     if (!posts || !posts.length) {
         callback();
+        return;
     }
     var post = posts.shift();
     if (post !== undefined) {
-        dataStore.addObject('wall', post, function(err) {
+        dataStore.addObject(type, post, function(err) {
             if(post.type === 'link') {
-                var eventObj = {source:'wall', type:'new', data:post};
+                var eventObj = {source:type, type:'new', data:post};
                 exports.eventEmitter.emit('link/facebook', eventObj);
             }
-            addWallPosts(posts, callback);
+            addPosts(type, posts, callback);
         });
     }
+    
 }
 
 exports.syncProfile = function(callback) {

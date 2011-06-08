@@ -70,6 +70,15 @@ function addStatuses(type, statuses, callback) {
     dataStore.addObject(type, status, function(err) {
         var eventObj = {source:type, type:'new', status:status};
         exports.eventEmitter.emit('status/twitter', eventObj);
+        // console.error('status', status);
+        if(status.entities && status.entities.urls && status.entities.urls.length) {
+            for(var i in status.entities.urls) {
+                var eventObj = {source:type, type:'new', 
+                                link:{url:status.entities.urls[i],
+                                      sourceObject:status}};
+                exports.eventEmitter.emit('link/twitter', eventObj);
+            }
+        }
         addStatuses(type, statuses, callback);
     });
     

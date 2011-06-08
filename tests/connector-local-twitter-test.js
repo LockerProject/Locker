@@ -24,10 +24,18 @@ lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
-var events = 0;
+var events = {contact:0, status:0, link:0};
 
 twitter.eventEmitter.on('contact/twitter', function(eventObj) {
-    events++;
+    events.contact++;
+});
+
+twitter.eventEmitter.on('status/twitter', function(eventObj) {
+    events.status++;
+});
+
+twitter.eventEmitter.on('link/twitter', function(eventObj) {
+    events.link++;
 });
 
 suite.next().suite.addBatch({
@@ -208,7 +216,9 @@ suite.next().suite.addBatch({
     "Tears itself down" : {
         topic: [],
         'after checking for proper number of events': function(topic) {
-            assert.equal(events, 3);
+            assert.equal(events.contact, 3);
+            assert.equal(events.status, 3);
+            assert.equal(events.link, 2);
         },
         'sucessfully': function(topic) {
             fakeweb.tearDown();

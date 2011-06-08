@@ -16,7 +16,7 @@ var RESTeasy = require('api-easy');
 var vows = require('vows');
 var fs = require('fs');
 var currentDir = process.cwd();
-var events = {contact: 0};
+var events = {contact: 0, link:0};
 
 var utils = require('./test-utils');
 
@@ -39,6 +39,10 @@ var request = require('request');
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
     events.contact++;
+});
+
+sync.eventEmitter.on('link/facebook', function(eventObj) {
+    events.link++;
 });
 
 suite.next().suite.addBatch({
@@ -186,6 +190,7 @@ suite.next().suite.addBatch({
         topic: [],
         'after checking for proper number of events': function(topic) {
             assert.equal(events.contact, 5);
+            assert.equal(events.link, 4);
         },
         'sucessfully': function(topic) {
             fakeweb.tearDown();
