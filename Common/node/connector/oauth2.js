@@ -50,10 +50,8 @@ exports.isAuthed = function() {
         if(exports.auth.hasOwnProperty("accessToken"))
             return true;
 
-        console.error('isAuthed.reading in from', process.cwd());
         // Try to read it in
         var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
-        console.error('isAuthed.read and parsed', authData);
         if(authData.hasOwnProperty("accessToken")) {
             exports.auth = authData;
             return true;
