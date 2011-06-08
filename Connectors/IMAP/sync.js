@@ -124,7 +124,7 @@ exports.syncMessages = function (syncMessagesCallback) {
                                      lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                                  });
                              }
-                             if (debug) console.log(msgCount + ':' + fetchedCount);
+                             if (debug) console.log(msgCount + ':' + fetchedCount + ' (message.id: ' + message.id + ')');
                              if (msgCount === 0 || msgCount === fetchedCount) {
                                  callback(null, 'fetch');
                              }
