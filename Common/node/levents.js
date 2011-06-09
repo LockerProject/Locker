@@ -9,7 +9,9 @@
 
 var http = require("http");
 var url = require("url");
-var locker = require('locker');
+require.paths.push(__dirname);
+
+var locker = require("locker");
 var serviceManager = require("lservicemanager");
 
 var eventListeners = {};
