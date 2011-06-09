@@ -154,8 +154,7 @@ function downloadUsers(users, token, callback) {
     var coll = users.slice(0);
     (function downloadUser() {
         if (coll.length == 0) {
-            callback();
-            return;
+            return callback();
         }
         var friends = coll.splice(0, 5);
         try {
@@ -169,11 +168,11 @@ function downloadUsers(users, token, callback) {
                 if(response.meta.code >= 400) {
                     allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
                     for (var i = 0; i < friends.length; i++) {
-                        delete allKnownIDs[friends[i]];
+                        delete allKnownIDs[allKnownIDs.indexOf(friends[i])];
                     }
                     fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
                     if (coll.length == 0) {
-                        callback();
+                        return callback();
                     } else {
                         downloadUser();
                     }
@@ -190,31 +189,27 @@ function downloadUsers(users, token, callback) {
                     if (js.photo.indexOf("userpix") > 0) {
                         // fetch photo
                         request.get({uri:js.photo, encoding: 'binary'}, function(err, resp, body) {
-                            if(err)
+                            if (err)
                                 console.error(err);
                             else
-                                fs.writeFileSync('photos/' + js.id + '.jpg', body, 'binary');
+                                fs.writeFile('photos/' + js.id + '.jpg', body, 'binary');
                         });
                     }
                     dataStore.getCurrent("friends", js.id, function(err, resp) {
-                        if (resp === undefined) {
-                            var eventObj = {source:'friends', type:'new', data:js};
-                            exports.eventEmitter.emit('contact/foursquare', eventObj);
-                            dataStore.addObject("friends", js, function(err) {
-                                parseUser();
-                            });
-                        } else {
+                        var eventObj = {};
+                        if (resp) {
                             delete resp['_id'];
                             if (shallowCompare(js, resp)) {
-                                parseUser();
-                            } else {
-                                var eventObj = {source:'friends', type:'update', data:js};
-                                exports.eventEmitter.emit('contact/foursquare', eventObj);
-                                dataStore.addObject("friends", js, function(err) {
-                                    parseUser();
-                                });                            
+                                return parseUser();
                             }
+                            eventObj = {source:'friends', type:'update', data:js};
+                        } else {
+                            eventObj = {source:'friends', type:'new', data:js};
                         }
+                        exports.eventEmitter.emit('contact/foursquare', eventObj);
+                        dataStore.addObject("friends", js, function(err) {
+                            parseUser();
+                        });                            
                     })
                 })();
             });
