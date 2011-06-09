@@ -38,6 +38,7 @@ var shallowCompare = require('../Common/node/shallowCompare');
 var request = require('request');
 var emittedEvents = [];
 var EventEmitter = require('events').EventEmitter;
+var oldfuncs = {};
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
     events.contact++;
@@ -53,6 +54,10 @@ suite.next().suite.addBatch({
     "Can setup the tests": {
         topic: function() {
             eventEmitter = new EventEmitter();
+            oldfuncs.isRunning = lservicemanager.isRunning;
+            oldfuncs.isInstalled = lservicemanager.isInstalled;
+            oldfuncs.metaInfo = lservicemanager.metaInfo;
+            oldfuncs.makeRequest = locker.makeRequest;
             lservicemanager.isRunning = function() { return true; };
             lservicemanager.isInstalled = function() { return true; };
             lservicemanager.metaInfo = function() { return {uriLocal: 'http://testing:80/'}};
@@ -222,6 +227,11 @@ suite.next().suite.addBatch({
             assert.equal(events.link, 4);
         },
         'sucessfully': function(topic) {
+            lservicemanager.isRunning = oldfuncs.isRunning
+            lservicemanager.isInstalled = oldfuncs.isInstalled;
+            lservicemanager.metaInfo = oldfuncs.metaInfo;
+            locker.makeRequest = oldfuncs.makeRequest;
+            
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
