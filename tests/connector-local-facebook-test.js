@@ -8,46 +8,60 @@
 */
 //testing for the Facebook connector
 
+var mongoCollections;
+var currentDir = process.cwd();
+var events = {contact: 0, link:0};
+var svcId = 'facebook';
+var mePath = '/Me/' + svcId;
+var thecollections = ['friends', 'newsfeed', 'wall'];
+process.on('uncaughtException',function(error){
+    sys.puts(error.stack);
+});
+require.paths.push(__dirname + "/Common/node");
+
 var fakeweb = require(__dirname + '/fakeweb.js');
 var sync = require('../Connectors/Facebook/sync');
 var dataStore = require('../Common/node/connector/dataStore');
 var assert = require('assert');
 var RESTeasy = require('api-easy');
+var suite = RESTeasy.describe('Facebook Connector');
 var vows = require('vows');
 var fs = require('fs');
-var currentDir = process.cwd();
-var events = {contact: 0, link:0};
-
 var utils = require('./test-utils');
-
-var suite = RESTeasy.describe('Facebook Connector');
-
-process.on('uncaughtException',function(error){
-    sys.puts(error.stack);
-});
-
-var svcId = 'facebook';
-var mePath = '/Me/' + svcId;
-
-var thecollections = ['friends', 'newsfeed', 'wall'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
-var mongoCollections;
 var locker = require('../Common/node/locker');
+var levents = require('../Common/node/levents');
+var lservicemanager = require('../Common/node/lservicemanager');
+var shallowCompare = require('../Common/node/shallowCompare');
 var request = require('request');
+var emittedEvents = [];
+var EventEmitter = require('events').EventEmitter;
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
     events.contact++;
+    levents.fireEvent('contact/facebook', 'facebook-test', eventObj);
 });
 
 sync.eventEmitter.on('link/facebook', function(eventObj) {
     events.link++;
+    levents.fireEvent('link/facebook', 'facebook-test', eventObj);
 });
 
 suite.next().suite.addBatch({
     "Can setup the tests": {
         topic: function() {
+            eventEmitter = new EventEmitter();
+            lservicemanager.isRunning = function() { return true; };
+            lservicemanager.isInstalled = function() { return true; };
+            lservicemanager.metaInfo = function() { return {uriLocal: 'http://testing:80/'}};
+            levents.addListener('link/facebook', 'facebook-test', 'http://testing:80/');
+            levents.addListener('contact/facebook', 'facebook-test', 'http://testing:80/');
+            locker.makeRequest = function(httpOpts, body) {
+                emittedEvents.push(body);
+            }
+            
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
@@ -80,6 +94,13 @@ suite.next().suite.addBatch({
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "sync'd 5 new friends");
+        },
+        "and emit correct events": function(err) {
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[0]), {"obj":{"source":"friends","type":"new","data":{"id":"103135","name":"Ashley Doe","first_name":"Ashley","last_name":"Doe","link":"http://www.facebook.com/profile.php?id=103135","gender":"female","locale":"en_US","updated_time":"2011-05-24T05:27:17+0000"}},"_via":["facebook-test"]}));
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[1]), {"obj":{"source":"friends","type":"new","data":{"id":"604699113","name":"Jose Doe","first_name":"Jose","last_name":"Doe","link":"http://www.facebook.com/profile.php?id=604699113","username":"jackswords","gender":"male","locale":"en_US","updated_time":"2011-05-19T05:17:02+0000"}},"_via":["facebook-test"]}));
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[2]), {"obj":{"source":"friends","type":"new","data":{"id":"684655824","name":"Brooke Doe","first_name":"Brooke","last_name":"Doe","link":"http://www.facebook.com/profile.php?id=684655824","gender":"female","locale":"en_US","updated_time":"2011-05-20T20:50:27+0000"}},"_via":["facebook-test"]}));
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[3]), {"obj":{"source":"friends","type":"new","data":{"id":"1199908083","name":"Joe Doe","first_name":"Joe","last_name":"Doe","link":"http://www.facebook.com/profile.php?id=1199908083","gender":"male","locale":"en_US","updated_time":"2011-05-22T19:56:05+0000"}},"_via":["facebook-test"]}));
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[4]), {"obj":{"source":"friends","type":"new","data":{"id":"1575983201","name":"Nate Doe","first_name":"Nate","last_name":"Doe","link":"http://www.facebook.com/profile.php?id=1575983201","gender":"male","locale":"en_US","updated_time":"2011-05-23T20:35:32+0000"}},"_via":["facebook-test"]}));
         }
     }
 }).addBatch({
@@ -94,12 +115,15 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://graph.facebook.com/me/home?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
                 file : __dirname + '/fixtures/facebook/none.json' });
-                
+            emittedEvents = [];
             sync.syncNewsfeed(this.callback);
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
             assert.equal(diaryEntry, "sync'd 3 new newsfeed posts"); },
+        "and emit correct events" : function() {
+            assert.ok(shallowCompare(JSON.parse(emittedEvents[0]), {"obj":{"source":"newsfeed","type":"new","data":{"url":"http://singly.com/","sourceObject":{"id":"100002438955325_224550747571079","from":{"name":"Eric Doe","id":"100002438955325"},"message":"Secret weapon!","link":"http://singly.com/","name":"Singly","caption":"singly.com","description":"Singly is the home of the Locker Project and personal data resources.","icon":"http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif","actions":[{"name":"Comment","link":"http://www.facebook.com/100002438955325/posts/101"},{"name":"Like","link":"http://www.facebook.com/100002438955325/posts/101"}],"privacy":{"description":"Friends Only","value":"ALL_FRIENDS"},"type":"link","created_time":1306369954,"updated_time":1306369954}}},"_via":["facebook-test"]}));
+        },
         "again" : {
             topic: function() {
                 sync.syncNewsfeed(this.callback);
@@ -123,12 +147,17 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({
                     uri : 'https://graph.facebook.com/me/feed?limit=250&offset=0&access_token=abc&since=1306369954&date_format=U',
                     file : __dirname + '/fixtures/facebook/none.json' });
-                
+                emittedEvents = [];
                 sync.syncWall(this.callback);
             },
             "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 600);
                 assert.equal(diaryEntry, "sync'd 4 new wall posts"); },
+            "and emit proper events" : function(err) {
+                assert.ok(shallowCompare(JSON.parse(emittedEvents[0]),  {"obj":{"source":"wall","type":"new","data":{"url":"http://singly.com/","sourceObject":{"id":"100002438955325_224550747571079","from":{"name":"Eric Doe","id":"100002438955325"},"message":"Secret weapon!","link":"http://singly.com/","name":"Singly","caption":"singly.com","description":"Singly is the home of the Locker Project and personal data resources.","icon":"http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif","actions":[{"name":"Comment","link":"http://www.facebook.com/100002438955325/posts/123"},{"name":"Like","link":"http://www.facebook.com/100002438955325/posts/123"}],"privacy":{"description":"Friends Only","value":"ALL_FRIENDS"},"type":"link","created_time":1306369954,"updated_time":1306369954}}},"_via":["facebook-test"]}));
+                assert.ok(shallowCompare(JSON.parse(emittedEvents[1]), {"obj":{"source":"wall","type":"new","data":{"url":"http://www.mymodernmet.com/profiles/blogs/yarn-bombs-26-clever-and-cool","sourceObject":{"id":"103135_185181881531357","from":{"name":"Ashley Doe","id":"103135"},"message":"All my knitter friends! I need you for an amazing installation for ArtTown. If you knit, I need you.  Message me if you\'re interested! Its going to be dope.  ","picture":"http://external.ak.fbcdn.net/safe_image.php?d=ce3fe4282ed07ceb672f024054aa9e68&w=90&h=90&url=http%3A%2F%2Fapi.ning.com%2Ffiles%2F9VKnrL3y87li8LdrJukKC5n0P3lOTcirjHOMKcaLb%2AHrFXGKVnpNSaVE4fma-ahCt81WfOmwupWI%2A-%2ALVSHmw7otvabghjm6%2Fyarnbomb.jpg","link":"http://www.mymodernmet.com/profiles/blogs/yarn-bombs-26-clever-and-cool","name":"Yarn Bombs (26 Clever and Cool Examples) - My Modern Metropolis","caption":"www.mymodernmet.com","description":"Call it crazy. Call it ridiculous. Call it Banksy meets Martha Stewart. Yarn bombing is gripping the nation and there\'s just no stopping it! Just who are thes…","icon":"http://static.ak.fbcdn.net/rsrc.php/v1/yS/r/3TBzrfVdgAR.gif","actions":[{"name":"Comment","link":"http://www.facebook.com/103135/posts/123"},{"name":"Like","link":"http://www.facebook.com/103135/posts/123"}],"type":"link","created_time":1306345485,"updated_time":1306345485}}},"_via":["facebook-test"]}));
+                assert.ok(shallowCompare(JSON.parse(emittedEvents[2]), {"obj":{"source":"wall","type":"new","data":{"url":"http://www.perpetualkid.com/ipad-etch-a-sketch-case.aspx?utm_source=facebook&utm_medium=facebook&utm_campaign=ipad+etch+a+sketch+case","sourceObject":{"id":"684655824_219338101429383","from":{"name":"Brooke Doe","id":"684655824"},"message":"Now I want an iPad more than ever!!","picture":"http://external.ak.fbcdn.net/safe_image.php?d=b78853a1485206001a189c040d375a27&w=90&h=90&url=http%3A%2F%2Fwww.perpetualkid.com%2Fproductimages%2Fsm2%2FCASE-0114.jpg","link":"http://www.perpetualkid.com/ipad-etch-a-sketch-case.aspx?utm_source=facebook&utm_medium=facebook&utm_campaign=ipad+etch+a+sketch+case","name":"IPAD ETCH-A-SKETCH CASE","caption":"www.perpetualkid.com","description":"You want a good cover for your iPad but one that represents your inner child at the same time!  How about the world’s favorite drawing toy, the Etch A Sketch?!?  Our Etch A Sketch iPad Cover is more than just cool!     Made of impact resistant plastic, this iPad cover also has rubber feet, felt back","icon":"http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif","actions":[{"name":"Comment","link":"http://www.facebook.com/684655824/posts/123"},{"name":"Like","link":"http://www.facebook.com/684655824/posts/123"}],"type":"link","created_time":1306340768,"updated_time":1306357478,"likes":{"data":[{"name":"Ashley Doe","id":"103135"},{"name":"Nate Doe","id":"1575983201"},{"name":"Katie Doe","id":"1547226016"}],"count":4},"comments":{"data":[{"id":"684655824_219338101429383_3321761","from":{"name":"Katie Doe","id":"1547226016"},"message":"I just got an iPad...and I want one now!!!","created_time":1306357478}],"count":1}}}},"_via":["facebook-test"]}));
+            },
             "again" : {
                 topic: function() {
                     sync.syncWall(this.callback);
