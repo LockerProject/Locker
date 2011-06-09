@@ -23,8 +23,14 @@ function reload(offset, limit, useJSON) {
 	// populate the list with our contacts
         for (var i in contacts) {
 	    contact = contacts[i];
-	    contactHTML = contact.name;
-	    if (useJSON) contactHTML = JSON.stringify(contact);
+	    
+	    log(contact);
+	    if (useJSON) {
+		contactHTML = JSON.stringify(contact);
+	    } else {
+		// get the contact name, but use the first email address if no name exists
+		contactHTML = contact.name || contact.emails[0].value;
+	    }
 	    liHTML = '<li id="' + contact._id + '" class="contact"><span class="basic-data">'+contactHTML+'</span></div>';
 	    contactsList.append(liHTML);
 	}

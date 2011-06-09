@@ -16,7 +16,7 @@ Common attributes that should be exposed by a contact service-type implementatio
 * **im** - *array of IM entries* - Every available instant messaging method
     * **type** - *string* - The service that the contact exists on such as aim, yahoo, msn, skype, xmpp
     * **value** - *string* - The actual address on the remote IM network
-* **address** - *array of address entries* - Ever available physical address
+* **address** - *array of address entries* - Every available physical address
     * **type** - *string* - A general type for this physical address such as work, home, other
     * **value** - *string* - The complete address, in American terms this would include street address, city, state and zip, but is agnostic to locale.
 * **birthday** - *date* - A string date of the birthday, for example "10/6/1980"

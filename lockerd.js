@@ -58,7 +58,8 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     
     var mongoOutput = "";
     var mongodExit = function(errorCode) {
-        if(errorCode !== 0) {
+        // 48 is the "error code" for when Mongo starts up.  Lame, but we don't want to fail if it's starting up.
+        if(errorCode !== 0 && errorCode !== 48) {
             console.error('mongod did not start successfully ('+errorCode+'), here was the stdout: '+mongoOutput);
             shutdown();
         }

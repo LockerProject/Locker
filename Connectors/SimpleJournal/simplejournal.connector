@@ -1,0 +1,9 @@
+{
+	"title":"Simple Journal",
+	"action":"Store and retrieve basic timestamped data",
+	"desc":"Stores user pushed basic JSON objects with a timestamp.",
+	"run":"node simplejournal.js",
+	"status":"unstable",
+	"handle":"simplejournal",
+	"provides":["journal/simple"]
+}

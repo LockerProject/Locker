@@ -51,6 +51,12 @@ exports.diary = function(message, level) {
     });
 }
 
+exports.makeRequest = function(httpOpts, body, callback) {
+    var req = http.request(httpOpts, callback);
+    req.write(body);
+    req.end();
+}
+
 exports.map = function(callback) {
     request.get({url:lockerBase + "/map"}, function(error, res, body) {
         callback(body ? JSON.parse(body) : undefined);
