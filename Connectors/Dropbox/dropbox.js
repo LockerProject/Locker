@@ -76,15 +76,13 @@ app.get('/save', function(req, res) {
         return;
     }
     console.log("saving "+req.param('file') );
+    res.writeHead(200);
+    res.end("ok, background uploading...");
     dapp.putFile(req.param('file'), '', function (err, data) {
-        if (err){
-            console.log(err);
-            res.writeHead(400);
-            res.end(err);
-            return;
-        }
-        res.writeHead(200);
-        res.end("ok");
+        if (err)
+            console.log("failed: "+err);
+        else
+            console.log("saved!");
     });
 });
 
