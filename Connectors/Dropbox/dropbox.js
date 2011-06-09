@@ -32,15 +32,12 @@ app.get('/', handleIndex);
 var dapp=false;
 function handleIndex(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    lfs.readObjectFromFile('auth.json', function(auth) {
-        if(auth.token)
-        {
-            res.end(fs.readFileSync(__dirname + '/ui/index.html'));
-            dapp = new dbox(auth.key, auth.ksecret, auth.token, auth.tsecret);
-        }else{
-            res.end(fs.readFileSync(__dirname + '/ui/init.html'));
-        }
-    });
+    if(dapp)
+    {
+        res.end(fs.readFileSync(__dirname + '/ui/index.html'));
+    }else{
+        res.end(fs.readFileSync(__dirname + '/ui/init.html'));
+    }
 }
 
 app.get('/init', function(req, res) {
@@ -99,8 +96,12 @@ stdin.on('data', function (chunk) {
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
-    app.listen(processInfo.port,function() {
-        var returnedInfo = {port: processInfo.port};
-        console.log(JSON.stringify(returnedInfo));
+    lfs.readObjectFromFile('auth.json', function(auth) {
+        if(auth.token) dapp = new dbox(auth.key, auth.ksecret, auth.token, auth.tsecret);
+        app.listen(processInfo.port,function() {
+            var returnedInfo = {port: processInfo.port};
+            console.log(JSON.stringify(returnedInfo));
+        });
     });
+
 });
