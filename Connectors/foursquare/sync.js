@@ -12,7 +12,8 @@ var fs = require('fs'),
     request = require('request'),
     dataStore = require('../../Common/node/connector/dataStore'),
     shallowCompare = require('../../Common/node/shallowCompare'),
-    app = require('../../Common/node/connector/api');
+    utils = require('../../Common/node/connector/utils'),
+    app = require('../../Common/node/connector/api'),
     EventEmitter = require('events').EventEmitter;
 
     
@@ -28,23 +29,19 @@ exports.init = function(theauth, mongoCollections) {
         updateState = {checkins:{syncedThrough:0}}; }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-    } catch (err) { allKnownIDs = {}; }
+    } catch (err) { allKnownIDs = []; }
     dataStore.init("id", mongoCollections);
 }
 
 
 exports.syncFriends = function(callback) {
     getMe(auth.accessToken, function(err, resp, data) {
-        var newIDs = [];
-        var knownIDs = allKnownIDs;
-        var repeatedIDs = [];
         if(err) {
-            // do something smrt
             console.error(err);
-            return;
+            return callback(err);
         } else if(resp && resp.statusCode > 500) { //fail whale
             console.error(resp);
-            return;
+            return callback(resp);
         }
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
@@ -52,45 +49,21 @@ exports.syncFriends = function(callback) {
         fs.mkdir('photos', 0755);
         request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, 
         function(err, resp, body) {
-            var friends = JSON.parse(body).response.friends.items;
-            var queue = [];
-            var users = {
-                'id': userID,
-                'queue': queue,
-                'token': auth.accessToken
-            };
-            var removedIDs = [];
-            for (var i = 0; i < friends.length; i++) {
-                queue.push(friends[i]);
-                if(!knownIDs[friends[i].id])
-                    newIDs.push(friends[i].id);
-                else
-                    repeatedIDs.push(friends[i].id);
-            }
-            for(var knownID in knownIDs) {
-                if(repeatedIDs.indexOf(knownID) === -1)
-                    removedIDs.push(knownID);
-            }
-            if(newIDs.length < 1) {
-                if(removedIDs.length > 0) {
-                    var removedCount = removedIDs.length;
-                    logRemoved(removedIDs, function(err) {
-                        callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
-                    });
-                } else {
-                    downloadUsers(repeatedIDs, auth.accessToken, function(err) {
-                        callback(err, 3600, "no new friends, updated " + repeatedIDs.length + " existing friends");
+            var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
+            var removedIDs = utils.checkDeletedIDs(allKnownIDs, friends);
+            var removedCount = removedIDs.length;
+            allKnownIDs = friends;
+            fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
+            
+            if (removedCount > 0) {
+                logRemoved(removedIDs, function(err) {
+                    downloadUsers(friends, auth.accessToken, function(err) {
+                        callback(err, 3600, "Updated " + friends.length + " existing friends, deleted " + removedCount + " friends");
                     })
-                }
+                });
             } else {
-                for (var i = 0; i < newIDs.length; i++) {
-                    allKnownIDs[newIDs[i]] = 1;
-                }
-                fs.writeFile('allKnownIDs.json', JSON.stringify(allKnownIDs));
-                if(removedIDs.length > 0)
-                    logRemoved(removedIDs, function(err) {});
-                downloadUsers(newIDs, auth.accessToken, function(err) {
-                    callback(err, 3600, "sync'd " + newIDs.length + " new friends");    
+                downloadUsers(friends, auth.accessToken, function(err) {
+                    callback(err, 3600, "Updated " + friends.length + " friends");    
                 });
             }
         });

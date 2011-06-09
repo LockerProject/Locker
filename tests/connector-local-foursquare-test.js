@@ -87,7 +87,7 @@ suite.next().suite.addBatch({
             sync.syncFriends(this.callback) },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "sync'd 2 new friends");
+            assert.equal(diaryEntry, "Updated 2 friends");
         }
     }
 }).addBatch({
@@ -99,7 +99,7 @@ suite.next().suite.addBatch({
             sync.syncFriends(this.callback) },
         "successfully": function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "no new friends, updated 2 existing friends");
+            assert.equal(diaryEntry, "Updated 2 friends");
         }
     }
 }).addBatch({
@@ -150,7 +150,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/foursquare/no_friends.json' });
             sync.syncFriends(this.callback) },
         'successfully': function(err, repeatAfter, diaryEntry) {
-            assert.equal(diaryEntry, 'no new friends, removed 2 deleted friends');
+            assert.equal(diaryEntry, 'Updated 0 existing friends, deleted 2 friends');
         },
         "in the datastore" : {
             "via getPeople" : {
