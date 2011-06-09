@@ -36,9 +36,21 @@ exports.generateSymKey = function(cb) {
 
 // load up private key or create if none, just KISS for now
 exports.loadKeys = function() {
-    symKey = fs.readFileSync(__dirname + "/../../Me/symKey", "utf8");
-    idKey = fs.readFileSync(__dirname + '/../../Me/key','utf-8');
-    idKeyPub = fs.readFileSync(__dirname + '/../../Me/key.pub','utf-8');
+    path.exists(__dirname + "/../../Me/symKey", function(exists) {
+        if (exists === true) {  
+            symKey = fs.readFileSync(__dirname + "/../../Me/symKey", "utf8");
+        }
+    });
+    path.exists(__dirname + "/../../Me/key", function(exists) {
+        if (exists === true) {  
+            idKey = fs.readFileSync(__dirname + '/../../Me/key','utf-8');
+        }
+    });
+    path.exists(__dirname + "/../../Me/key.pub", function(exists) {
+        if (exists === true) {  
+            idKeyPub = fs.readFileSync(__dirname + '/../../Me/key.pub','utf-8');
+        }
+    });
 }
 
 exports.generatePKKeys = function(cb) {

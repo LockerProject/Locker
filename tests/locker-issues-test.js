@@ -29,7 +29,7 @@ tests.discuss("Issues #11 - Proxy should respond to redirects")
             assert.equal(resp.headers.location, 'http://www.example.com');
         })
     .get('/Me/proxy-redirect-test/internal')
-        .expect(200)
+        .expect(302)
 .undiscuss();
 
 tests.discuss("Issues #15 - Services do not spawn when called through the proxy")
