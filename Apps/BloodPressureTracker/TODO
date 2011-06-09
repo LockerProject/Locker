@@ -1,0 +1,7 @@
+- Actually let them pick the journal to use if they have multiple
+- Adjustable window of data, currently last 7 days
+- trend line
+- table of specific data view
+- warning level colors: hypo, pre, t1, t2
+- edit bad entries
+- delete very bad entries
