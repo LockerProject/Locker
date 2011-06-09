@@ -9,6 +9,7 @@
 
 var http = require("http");
 var url = require("url");
+var locker = require('locker');
 var serviceManager = require("lservicemanager");
 
 var eventListeners = {};
@@ -44,9 +45,7 @@ exports.fireEvent = function(type, id, obj) {
                 }
             };
             console.log("Firing event to " + listener.id + " to " + listener.cb);
-            var req = http.request(httpOpts);
-            req.write(JSON.stringify({obj:obj, _via:[id]}));
-            req.end();
+            locker.makeRequest(httpOpts, JSON.stringify({obj:obj, _via:[id]}));
         }
         if (!serviceManager.isRunning(listener.id)) {
             serviceManager.spawn(listener.id, sendEvent);
