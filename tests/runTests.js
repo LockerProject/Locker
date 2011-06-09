@@ -134,7 +134,6 @@ setTimeout(function() {
     });
     vowsProcess.on("exit", function(code) {
         console.log("All tests done");
-        lockerd.shutdown();
-        process.exit(code);
+        lockerd.shutdown(code);
     });
 }, 1000);

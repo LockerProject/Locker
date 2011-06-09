@@ -59,9 +59,9 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     var mongoOutput = "";
     var mongodExit = function(errorCode) {
         // 48 is the "error code" for when Mongo starts up.  Lame, but we don't want to fail if it's starting up.
-        if(errorCode !== 0 && errorCode !== 48) {
+        if(errorCode !== 0) {
             console.error('mongod did not start successfully ('+errorCode+'), here was the stdout: '+mongoOutput);
-            shutdown();
+            shutdown(1);
         }
     };
     mongoProcess.on('exit', mongodExit);
@@ -81,12 +81,12 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
 function checkKeys() {
     lcrypto.generateSymKey(function(hasKey) {
         if (!hasKey) {
-            shutdown();
+            shutdown(1);
             return;
         }
         lcrypto.generatePKKeys(function(hasKeys) {
             if (!hasKeys) {
-                shutdown();
+                shutdown(1);
                 return;
             }
             finishStartup();
@@ -117,19 +117,19 @@ function finishStartup() {
     console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
 }
 
-function shutdown() {
+function shutdown(returnCode) {
     process.stdout.write("\n");
     shuttingDown_ = true;
     dashboard.instance.kill(dashboard.pid, "SIGINT");
     serviceManager.shutdown(function() {
         mongoProcess.kill();
         console.log("Shutdown complete.");
-        process.exit(0);
+        process.exit(returnCode);
     });
 }
 
 process.on("SIGINT", function() {
-    shutdown();
+    shutdown(0);
 });
 
 // Export some things so this can be used by other processes, mainly for the test runner
