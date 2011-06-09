@@ -29,14 +29,14 @@ var me;
 app.set('views', __dirname);
 app.get('/', handleIndex);
 
-var auth=false;
+var dapp=false;
 function handleIndex(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    lfs.readObjectFromFile('auth.json', function(newAuth) {
-        if(newAuth.token)
+    lfs.readObjectFromFile('auth.json', function(auth) {
+        if(auth.token)
         {
             res.end(fs.readFileSync(__dirname + '/ui/index.html'));
-            auth=newAuth;
+            dapp = new dbox(auth.key, auth.ksecret, auth.token, auth.tsecret);
         }else{
             res.end(fs.readFileSync(__dirname + '/ui/init.html'));
         }
@@ -50,17 +50,44 @@ app.get('/init', function(req, res) {
         return;
     }
     console.log("initializing for "+req.param('email') );
-    var dapp = new dbox(req.param('key'), req.param('secret'));
+    dapp = new dbox(req.param('key'), req.param('secret'));
     dapp.getAccessToken(req.param('email'), req.param('pass'), function(err, token, secret){
         if(err)
         {
             res.writeHead(500);
-            res.end("failed: "+err);
+            res.end("failed: "+JSON.stringify(err));
             return;
         }
-        fs.writeFileSync('auth.json', JSON.stringify({token:token, secret:secret}));
+        fs.writeFileSync('auth.json', JSON.stringify({key:req.param('key'), ksecret:req.param('secret'), token:token, tsecret:secret}));
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("saved access token "+token+", <a href='./'>continue</a>");        
+    });
+});
+
+app.get('/info', function(req, res) {
+    res.writeHead(200);
+    dapp.getAccountInfo(function (err, data) {
+      if (err) res.end('Error: ' + err)
+      else res.end(data.display_name + ', ' + data.email)
+    });
+});
+
+app.get('/save', function(req, res) {
+    if(!req.param('file')){
+        res.writeHead(400);
+        res.end('whats the file yo?');
+        return;
+    }
+    console.log("saving "+req.param('file') );
+    dapp.putFile(req.param('file'), '', function (err, data) {
+        if (err){
+            console.log(err);
+            res.writeHead(400);
+            res.end(err);
+            return;
+        }
+        res.writeHead(200);
+        res.end("ok");
     });
 });
 
