@@ -66,6 +66,7 @@ suite.next().suite.addBatch({
             assert.equal(repeatAfter, 600);
             assert.equal(diaryEntry, "updated 2 contacts"); },
         "generates a 2 contact events" : function(err) {
+            assert.equal(emittedEvents[0], '{"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"jer@jabber.org"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"_via":["gcontacts"]}');
             assert.equal(emittedEvents.length, 2);
             emittedEvents = [];
         }

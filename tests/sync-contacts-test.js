@@ -206,6 +206,18 @@ suite.next().suite.addBatch({
             assert.equal(object.data.accounts.github[0].data.name, 'James Burkhart');
         }
     }
+}).addBatch({
+    "Google Contacts ADD event with matching email" : {
+        topic: function() {
+            dataStore.addEvent(JSON.parse('{"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"fake@testdata.com"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"_via":["gcontacts"]}'), this.callback); },
+        "updates to the same account": function(err, object) {
+            assert.equal(object.data.accounts.foursquare[0].data.id, 2715557);
+            assert.equal(object.data.accounts.foursquare[0].data.name, 'Jake Mitchell');
+            assert.equal(object.data.name, 'Jeremie Miller');
+            assert.equal(object.data.accounts.github[0].data.name, 'James Burkhart');
+            assert.equal(object.data.accounts.googleContacts[0].data.name, 'Jeremie Miller')
+        }
+    }
 })
         
 suite.export(module);

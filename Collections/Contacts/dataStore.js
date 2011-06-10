@@ -36,6 +36,9 @@ exports.addEvent = function(eventBody, callback) {
         case 'github':
             target = exports.addGithubData;
             break;
+        case 'gcontacts':
+            target = exports.addGoogleContactsData;
+            break;
         default:
             return callback('event received by the contacts collection with an invalid type');
     }
@@ -303,9 +306,9 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         }
         addToSet.phoneNumbers = {$each:phones};
     }
+    var emails = [];
     //emails
     if(data.email) {
-        var emails = [];
         for(var i in data.email) {
             if(!(data.email[i] && data.email[i].value))
                 continue;
@@ -321,6 +324,11 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             var or = [{'accounts.googleContacts.data.id':gcID}];
             if(cleanedName)
                 or.push({'_matching.cleanedNames':cleanedName});
+            if (emails) {
+                for (var i in emails) {
+                    or.push({'emails.value' : emails[i].value});
+                }
+            }
             var set = {};
             if(data.name)
                 set.name = data.name;

@@ -90,6 +90,7 @@ process.stdin.on('data', function(data) {
             locker.listen('contact/facebook', '/events');
             locker.listen('contact/twitter', '/events');
             locker.listen('contact/github', '/events');
+            locker.listen('contact/google', '/events');
             sync.eventEmitter.on('contact/full', function(eventObj) {
                 locker.event('contact/full', eventObj);
             });
