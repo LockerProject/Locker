@@ -5,6 +5,6 @@
     "run":"node ../../Common/node/connector/client_init.js",
     "status":"unstable",
     "handle":"gcontacts",
-    "mongoCollections": ["contacts"],
+    "mongoCollections": ["contacts", "groups"],
     "provides":["contact/google"]
 }

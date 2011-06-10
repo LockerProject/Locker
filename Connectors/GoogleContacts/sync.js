@@ -31,9 +31,11 @@ exports.init = function(theAuth, mongoCollections) {
     auth = theAuth;
     try {
         status = JSON.parse(fs.readFileSync('status.json'));
-    } catch (err) { status = {}; }
-    if(!status.lastUpdate)
-        status.lastUpdate = 1;
+    } catch (err) { status = {contacts:{}, groups:{}}; }
+    if(!status.contacts.lastUpdate)
+        status.contacts.lastUpdate = 1;
+    if(!status.groups.lastUpdate)
+        status.groups.lastUpdate = 1;
     dataStore.init('id', mongoCollections);
 }
 
@@ -41,8 +43,8 @@ exports.syncContacts = function(callback) {
     try {
         fs.mkdirSync('photos');
     } catch(err) {}
-    console.error('"Checking for updates since', new Date(status.lastUpdate).toString());
-    var params = {'updated-min':getISODateString(new Date(status.lastUpdate)),
+    console.error('"Checking for updates since', new Date(status.contacts.lastUpdate).toString());
+    var params = {'updated-min':getISODateString(new Date(status.contacts.lastUpdate)),
                   'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
@@ -54,7 +56,7 @@ exports.syncContacts = function(callback) {
             if(result && !(err && result.error)) {
                 var count = 0;
                 if(result.feed && result.feed.entry) {
-                    status.lastUpdate = now;
+                    status.contacts.lastUpdate = now;
                     fs.writeFileSync('status.json', JSON.stringify(status));
                     count = result.feed.entry.length;
                     processFeed(result.feed.entry, function() {
@@ -69,6 +71,34 @@ exports.syncContacts = function(callback) {
         });
 }
 
+exports.syncGroups = function(callback) {
+    var params = {'updated-min':getISODateString(new Date(status.groups.lastUpdate)),
+                  'showdeleted':'true',
+                  'sortorder':'ascending',
+                  'orderby':'lastmodified',
+                  'max-results':3000
+                 };
+    var now = new Date().getTime();
+    getClient().getFeed('https://www.google.com/m8/feeds/groups/default/full', params,
+        function(err, result) {
+            if(result && !(err && result.error)) {
+                var count = 0;
+                if(result.feed && result.feed.entry) {
+                    status.groups.lastUpdate = now;
+                    fs.writeFileSync('status.json', JSON.stringify(status));
+                    count = result.feed.entry.length;
+                    processGroups(result.feed.entry, function() {
+                        callback(null, 600, 'updated ' + count + ' groups');
+                    });
+                } else {
+                    callback(null, 600);
+                }
+            } else {    
+                callback(null, 600, 'error updating contacts');
+            }
+        });
+}
+
 
 function processFeed(entries, callback) {
     if(!(entries && entries.length)) {
@@ -76,8 +106,8 @@ function processFeed(entries, callback) {
         return;
     }
     var entry = entries.shift();
-    //type, object, options, callback)
-    dataStore.addObject('contacts', convertEntry(entry), function() {
+    var obj = convertEntry(entry);
+    dataStore.addObject('contacts', obj, {timeStamp:obj.updated}, function() {
         processFeed(entries, callback);
     });
 }
@@ -87,6 +117,8 @@ function convertEntry(entry) {
     obj.id = getID(entry);
     if(entry.title && entry.title.$t)
         obj.name = entry.title.$t;
+    if(entry.updated && entry.updated.$t)
+        obj.updated = Date.parse(entry.updated.$t);
     if(entry.gd$email) {
         obj.email = [];
         for(var i in entry.gd$email) {
@@ -140,6 +172,27 @@ function convertEntry(entry) {
     return obj;
 }
 
+function processGroups(groups, callback) {
+    if(!(groups && groups.length)) {
+        process.nextTick(callback);
+        return;
+    }
+    var entry = groups.shift();
+    var obj = convertGroup(entry);
+    dataStore.addObject('groups', obj, {timeStamp:obj.updated}, function() {
+        processGroups(groups, callback);
+    });
+}
+
+function convertGroup(entry) {
+    var obj = {};
+    obj.id = getID(entry);
+    if(entry.title && entry.title.$t)
+        obj.name = entry.title.$t;
+    if(entry.updated && entry.updated.$t)
+        obj.updated = Date.parse(entry.updated.$t);
+    return obj;
+}
 
 function getID(entry) {
     return entry.id.$t.substring(entry.id.$t.lastIndexOf('/') + 1);
