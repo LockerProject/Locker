@@ -22,7 +22,7 @@ var fs = require('fs'),
     
     
 var gdataClient;
-var status;
+var status, auth;
 
 exports.eventEmitter = new EventEmitter();
 
@@ -42,8 +42,7 @@ exports.syncContacts = function(callback) {
         fs.mkdirSync('photos');
     } catch(err) {}
     console.error('"Checking for updates since', new Date(status.lastUpdate).toString());
-    var params = {oauth_token:auth.token.access_token,
-                  'updated-min':getISODateString(new Date(status.lastUpdate)),
+    var params = {'updated-min':getISODateString(new Date(status.lastUpdate)),
                   'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
@@ -57,12 +56,13 @@ exports.syncContacts = function(callback) {
                 if(result.feed && result.feed.entry) {
                     status.lastUpdate = now;
                     fs.writeFileSync('status.json', JSON.stringify(status));
-                    console.error('result',result);
                     count = result.feed.entry.length;
-                }
-                processFeed(result.feed.entry, function() {
-                    callback(null, 600, 'updated ' + count + ' contacts');
-                });
+                    processFeed(result.feed.entry, function() {
+                        callback(null, 600, 'updated ' + count + ' contacts');
+                    });
+                } else {
+                    callback(null, 600);
+                };
             } else {    
                 callback(null, 600, 'error updating contacts');
             }
@@ -85,12 +85,12 @@ function processFeed(entries, callback) {
 function convertEntry(entry) {
     var obj = {};
     obj.id = getID(entry);
-    if(entry.title)
+    if(entry.title && entry.title.$t)
         obj.name = entry.title.$t;
-    if(entry.emails) {
+    if(entry.gd$email) {
         obj.email = [];
-        for(var i in entry.emails) {
-            var em = entry.emails[i];
+        for(var i in entry.gd$email) {
+            var em = entry.gd$email[i];
             var email = {value:em.address};
             var label = em.label || em.rel;
             label = label.substring(label.lastIndexOf('#') + 1);
@@ -134,7 +134,7 @@ function convertEntry(entry) {
     if(entry.gContact$groupMembershipInfo) {
         obj.groups = [];
         entry.gContact$groupMembershipInfo.forEach(function(group) {
-            obj.groups.push(group.href.substring(group.href.lastIndexOf('/')));
+            obj.groups.push(group.href.substring(group.href.lastIndexOf('/') + 1));
         });
     }
     return obj;
@@ -142,7 +142,7 @@ function convertEntry(entry) {
 
 
 function getID(entry) {
-    return entry.id.$t.substring(entry.id.$t.lastIndexOf('/'));
+    return entry.id.$t.substring(entry.id.$t.lastIndexOf('/') + 1);
 }
 
 function getPhoto(id, href) {
@@ -157,8 +157,13 @@ function getPhoto(id, href) {
 }
 
 function getClient() {
-    if(auth && !gdataClient)
+    if(auth && !gdataClient) {
         gdataClient = require('gdata-js')(auth.clientID, auth.clientSecret, auth.redirectURI);
+        gdataClient.setToken(auth.token);
+        gdataClient.on('tokenRefresh', function() {
+            fs.writeFile('auth.json', JSON.stringify(auth));
+        });
+    }
     return gdataClient;
 }
 

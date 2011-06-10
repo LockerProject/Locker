@@ -38,7 +38,8 @@ function authComplete(theAuth, mongoCollections) {
         var type = req.params.type.toLowerCase();
         if(type === 'contacts') {
             sync.syncContacts(function(err, repeatAfter, diaryEntry) {
-                locker.diary(diaryEntry);
+                if(diaryEntry)
+                    locker.diary(diaryEntry);
                 locker.at('/getNew/' + type, repeatAfter);
             });
             res.writeHead(200, {'content-type':'application/json'});

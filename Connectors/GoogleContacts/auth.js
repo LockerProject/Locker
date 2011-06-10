@@ -35,13 +35,11 @@ function isAuthed() {
         }
         // Try and read it in
         var authData = JSON.parse(fs.readFileSync("auth.json"));
-        console.error('authData:', authData);
         if(authData.hasOwnProperty("clientID") && 
            authData.hasOwnProperty("clientSecret") && 
            authData.hasOwnProperty("redirectURI") &&
            authData.hasOwnProperty("token")) {
             exports.auth = authData;
-            console.error('ret true');
             return true;
         }
     } catch (E) {
