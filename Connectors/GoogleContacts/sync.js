@@ -43,7 +43,7 @@ exports.syncContacts = function(callback) {
     } catch(err) {}
     console.error('"Checking for updates since', new Date(status.lastUpdate).toString());
     var params = {oauth_token:auth.token.access_token,
-                  'updated-min':ISODateString(new Date(status.lastUpdate)),
+                  'updated-min':getISODateString(new Date(status.lastUpdate)),
                   'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
@@ -162,14 +162,14 @@ function getClient() {
     return gdataClient;
 }
 
-/* use a function for the exact format desired... */
-function ISODateString(d){
- function pad(n){return n<10 ? '0'+n : n}
- return d.getUTCFullYear()+'-'
-      + pad(d.getUTCMonth()+1)+'-'
-      + pad(d.getUTCDate())+'T'
-      + pad(d.getUTCHours())+':'
-      + pad(d.getUTCMinutes())+':'
-      + pad(d.getUTCSeconds())+'Z'}
-
-var d = new Date();
+function pad(n){
+    return n<10 ? '0'+n : n;
+}
+function getISODateString(dt){
+    return dt.getUTCFullYear() + '-' +
+           pad(dt.getUTCMonth() + 1) + '-' + 
+           pad(dt.getUTCDate()) + 'T' + 
+           pad(dt.getUTCHours()) + ':' + 
+           pad(dt.getUTCMinutes()) + ':' +
+           pad(dt.getUTCSeconds()) + 'Z';
+}
