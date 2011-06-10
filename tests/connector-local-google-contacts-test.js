@@ -44,7 +44,7 @@ sync.eventEmitter.on('contact/google', function(eventObj) {
 });
 
 suite.next().suite.addBatch({
-    "Can get contacts" : {
+    "Can sync contacts" : {
         topic: function() {
             utils.hijackEvents(['contact/google'], 'gcontacts');
             utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
