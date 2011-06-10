@@ -80,9 +80,9 @@ function logRemoved(ids, callback) {
     var id = ids.shift();
     dataStore.removeObject("friends", id+'', function(err) {
         delete allKnownIDs[id];
-        logRemoved(ids, callback);
         var eventObj = {source:"friends", type:'delete', data:{id:id, deleted:true}};
         exports.eventEmitter.emit('contact/foursquare', eventObj);
+        logRemoved(ids, callback);
     });
 }
 
