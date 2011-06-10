@@ -102,7 +102,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     if(data.location)
         addToSet.nicknames = data.screen_name;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
-                        {safe:true}, function(err, doc) {
+                        {safe:true, new: true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
@@ -114,7 +114,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.twitter':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set}, 
-                        {safe:true, upsert:true}, callback);
+                        {safe:true, upsert:true, new: true}, callback);
         } else {
             callback(err, doc);
         }
@@ -151,7 +151,7 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
     if(data.gravatar_id)
         addToSet.photos = 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
-                        {safe:true}, function(err, doc) {
+                        {safe:true, new: true}, function(err, doc) {
         if(!doc) {
             //match otherwise, first entry is just to ensure we never match on nothing
             var or = [{'accounts.github.data.id':data.id}];
@@ -165,7 +165,7 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.github':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set}, 
-                        {safe:true, upsert:true}, callback);
+                        {safe:true, upsert:true, new: true}, callback);
         } else {
             callback(err, doc);
         }
@@ -246,7 +246,7 @@ exports.addFacebookData = function(facebookData, callback) {
     if(data.id)
         addToSet.photos = 'https://graph.facebook.com/' + data.id + '/picture';
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
-                        {safe:true}, function(err, doc) {
+                        {safe:true, new: true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'accounts.foursquare.data.contact.facebook':fbID}];
@@ -259,7 +259,7 @@ exports.addFacebookData = function(facebookData, callback) {
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.facebook':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set}, 
-                        {safe:true, upsert:true}, callback);
+                        {safe:true, upsert:true, new: true}, callback);
         } else {
             callback(err, doc);
         }
@@ -315,7 +315,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         addToSet.emails = {$each:emails};
     }
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
-                       {safe:true}, function(err, doc) {
+                       {safe:true, new: true}, function(err, doc) {
         if(!doc) {
             //match otherwise
             var or = [{'accounts.googleContacts.data.id':gcID}];
@@ -327,7 +327,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.googleContacts':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set}, 
-                        {safe:true, upsert:true}, callback);
+                        {safe:true, upsert:true, new: true}, callback);
         } else {
             callback(err, doc);
         }

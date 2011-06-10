@@ -164,7 +164,7 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 11);
+            assert.equal(events, 17);
         }
     }
 }).addBatch({
