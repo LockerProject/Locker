@@ -41,8 +41,10 @@ exports.init = function(theAuth, mongoCollections) {
 
 exports.syncContacts = function(callback) {
     try {
-        fs.mkdirSync('photos');
-    } catch(err) {}
+        fs.mkdirSync('photos', 0755);
+    } catch(err) {
+        console.error('err', err);
+    }
     console.error('"Checking for updates since', new Date(status.contacts.lastUpdate).toString());
     var params = {'updated-min':getISODateString(new Date(status.contacts.lastUpdate)),
                   'showdeleted':'true',
@@ -160,7 +162,7 @@ function convertEntry(entry) {
     for(var i in entry.link) {
         if(entry.link[i].type === 'image/*' && entry.link[i].rel &&
            entry.link[i].rel.lastIndexOf('#photo') === entry.link[i].rel.length - 6) {
-            getPhoto(obj.id, entry.link[i].href);
+            queuePhoto(obj.id, entry.link[i].href);
             obj.photo = true;
             break;
         }
@@ -200,14 +202,33 @@ function getID(entry) {
     return entry.id.$t.substring(entry.id.$t.lastIndexOf('/') + 1);
 }
 
-function getPhoto(id, href) {
-    href += '?oauth_token=' + auth.access_token;
-    request.get({url:href}, function(err, resp, body) {
-        fs.writeFile(id + '.jpg', body, function(err) {
-            if(err) {
-                console.error('error downloading photo for id', id, 'and href', href, '\nerror:', err);
-            }
-        });
+var photosQueue = [];
+var gettingPhotos = false;
+
+function queuePhoto(id, href) {
+    photosQueue.push({id:id, href:href});
+    if(!gettingPhotos) {
+        gettingPhotos = true;
+        getPhotos();
+    }
+}
+
+function getPhotos() {
+    console.error('photosQueue', photosQueue.length);
+    if(!photosQueue.length) {
+        gettingPhotos = false;
+        return;
+    }
+    var photo = photosQueue.shift();
+    photo.href += '?oauth_token=' + auth.token.access_token;
+    lfs.writeContentsOfURLToFile(photo.href, 'photos/' + photo.id + '.jpg', function(err) {
+        // console.error('wrote cont!');
+        getPhotos();
+        // var stat = fs.statSync('photos/' + photo.id + '.jpg');
+        // console.error('stat', stat);
+        if(err) {
+            console.error('error downloading photo for id', id, 'and href', href, '\nerror:', err);
+        }
     });
 }
 

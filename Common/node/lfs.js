@@ -102,7 +102,7 @@ exports.loadMeData = function() {
     }
 }
 
-function getFile(requestURL, filename) {
+function getFile(requestURL, filename, callback) {
     var port = (url.parse(requestURL).protocol == 'http:') ? 80 : 443;
     var host = url.parse(requestURL).hostname;
     var client;
@@ -110,18 +110,17 @@ function getFile(requestURL, filename) {
         client = http;
     else 
         client = https;
-    var request = https.get({ host: host, path: url.parse(requestURL).pathname }, function(res) {
-        var downloadfile = fs.createWriteStream(filename, {'flags': 'a'});
-        res.setEncoding('binary');
-        res.on('data', function (chunk) {
-            downloadfile.write(chunk, encoding='binary');
-        });
+    var parsedUrl = url.parse(requestURL, true);
+    var request = client.get({ host: host, port:port, path: (parsedUrl.pathname + parsedUrl.search)}, function(res) {
+        var downloadfile = fs.createWriteStream(filename);
+        res.pipe(downloadfile);
         res.on('end', function() {
-            downloadfile.end();
+            callback();
         });
-    })    .on('error', function(error) {
-            console.log('errorrs!!! '+requestURL);
-        });;
+    })
+    request.on('error', function(error) {
+        console.log('errorrs!!! '+requestURL);
+    });
 }
 
 function curlFile(url, filename, callback) {
@@ -132,6 +131,7 @@ function curlFile(url, filename, callback) {
     var curl = spawn('curl', [url, '-o', filename, '-L']);
     if(callback) {
         curl.on('exit', function() {
+            console.log('curl done!')
             callback();
         });
     }
@@ -141,9 +141,9 @@ exports.curlFile = function(url, filename, callback) {
     curlFile(url, filename, callback);
 }
 
-exports.writeContentsOfURLToFile = function(url, filename, retryCount, encoding, callback) {
+exports.writeContentsOfURLToFile = function(url, filename, callback) {
 //    curlFile(url, filename);
-    getFile(url, filename);
+    getFile(url, filename, callback);
 }
 
 /**
