@@ -190,8 +190,9 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Tears itself down" : {
         topic: [],
+        'after ensuring no other events were emitted that we werent prepared for': function(topic) {
+            assert.equal(emittedEvents[0], undefined); },
         'sucessfully': function(topic) {
-            assert.equal(emittedEvents[0], undefined);
             utils.tearDown();
             fakeweb.tearDown();
             process.chdir('../..');
