@@ -26,19 +26,13 @@ var assert = require('assert');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Facebook Connector');
 var vows = require('vows');
-var fs = require('fs');
-var utils = require('./test-utils');
 var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
+var utils = require('./test-utils');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var locker = require('../Common/node/locker');
 var levents = require('../Common/node/levents');
-var lservicemanager = require('../Common/node/lservicemanager');
-var shallowCompare = require('../Common/node/shallowCompare');
-var request = require('request');
 var emittedEvents = [];
-var EventEmitter = require('events').EventEmitter;
-var oldfuncs = {};
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
     events.contact++;
@@ -53,20 +47,8 @@ sync.eventEmitter.on('link/facebook', function(eventObj) {
 suite.next().suite.addBatch({
     "Can setup the tests": {
         topic: function() {
-            eventEmitter = new EventEmitter();
-            oldfuncs.isRunning = lservicemanager.isRunning;
-            oldfuncs.isInstalled = lservicemanager.isInstalled;
-            oldfuncs.metaInfo = lservicemanager.metaInfo;
-            oldfuncs.makeRequest = locker.makeRequest;
-            lservicemanager.isRunning = function() { return true; };
-            lservicemanager.isInstalled = function() { return true; };
-            lservicemanager.metaInfo = function() { return {uriLocal: 'http://testing:80/'}};
-            levents.addListener('link/facebook', 'facebook-test', 'http://testing:80/');
-            levents.addListener('contact/facebook', 'facebook-test', 'http://testing:80/');
-            locker.makeRequest = function(httpOpts, body) {
-                emittedEvents.push(body);
-            }
-            
+            utils.hijackEvents(['link/facebook','contact/facebook'], 'facebook-test');
+            utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
             var self = this;
@@ -227,11 +209,7 @@ suite.next().suite.addBatch({
             assert.equal(events.link, 4);
         },
         'sucessfully': function(topic) {
-            lservicemanager.isRunning = oldfuncs.isRunning
-            lservicemanager.isInstalled = oldfuncs.isInstalled;
-            lservicemanager.metaInfo = oldfuncs.metaInfo;
-            locker.makeRequest = oldfuncs.makeRequest;
-            
+            utils.tearDown();
             fakeweb.tearDown();
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);

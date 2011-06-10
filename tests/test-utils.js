@@ -119,3 +119,34 @@ exports.waitForEvents = function (url, retries, timeout, expectedResponses, valu
         });
     }, timeout);
 }
+
+require.paths.push(__dirname + "/../Common/node");
+var EventEmitter = require('events').EventEmitter;
+exports.eventEmitter = new EventEmitter();
+
+var lservicemanager = require('lservicemanager');
+var locker = require('locker');
+var levents = require('levents');
+var oldFuncs = {};
+
+// types is an array of the event types to listen for
+exports.hijackEvents = function (types, svcId) {
+    
+    lservicemanager.isRunning = function() { return true; };
+    lservicemanager.isInstalled = function() { return true; };
+    lservicemanager.metaInfo = function() { return { uriLocal: 'http://testing:80/' }; };
+    locker.makeRequest = function(httpOpts, body) {
+        exports.eventEmitter.emit('event', body);
+    }
+    
+    for (var i = 0; i < types.length; i++) {
+        levents.addListener(types[i], svcId, 'https://testing:80/');
+    }
+}
+
+exports.tearDown = function() {
+    lservicemanager.isRunning = oldFuncs.isRunning;
+    lservicemanager.isInstalled = oldFuncs.isInstalled;
+    lservicemanager.metaInfo = oldFuncs.metaInfo;
+    locker.makeRequest = oldFuncs.makeRequest;
+}
