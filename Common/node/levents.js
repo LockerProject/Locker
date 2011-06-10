@@ -31,7 +31,7 @@ exports.removeListener = function(type, id, cb) {
 
 exports.fireEvent = function(type, id, obj) {
     if (!eventListeners.hasOwnProperty(type)) return;
-    console.log("Firing " + eventListeners[type].length + " listeners for " + type + " from " + id);
+    // console.log("Firing " + eventListeners[type].length + " listeners for " + type + " from " + id);
     eventListeners[type].forEach(function(listener) {
         if (!serviceManager.isInstalled(listener.id)) return;
         function sendEvent() {
@@ -46,7 +46,7 @@ exports.fireEvent = function(type, id, obj) {
                     "Content-Type":"application/json"
                 }
             };
-            console.log("Firing event to " + listener.id + " to " + listener.cb);
+            // console.log("Firing event to " + listener.id + " to " + listener.cb);
             locker.makeRequest(httpOpts, JSON.stringify({obj:obj, _via:[id]}));
         }
         if (!serviceManager.isRunning(listener.id)) {
