@@ -203,7 +203,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
     if(data.homeCity)
         addToSet.addresses = {type:'location', value:data.homeCity};
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
-                             {safe: true}, function(err, doc) {
+                             {safe: true, new: true}, function(err, doc) {
         if (!doc) {
             var or = [{'accounts.foursquare.data.id':foursquareID}];
             if(cleanedName)
@@ -220,7 +220,7 @@ exports.addFoursquareData = function(foursquareData, callback) {
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.foursquare':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set},
-                              {safe: true, upsert: true}, callback);
+                              {safe: true, upsert: true, new: true}, callback);
         } else {
             callback(err, doc);
         }

@@ -29,17 +29,21 @@ var levents = require('../Common/node/levents');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 
+var contactEvent1 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_1.json');
+var contactEvent2 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_2.json');
+var contactEvent3 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_3.json');
+
 sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
-    levents.fireEvent('checkin/foursquare', 'foursquare-test', eventObj);
+    levents.fireEvent('checkin/foursquare', 'foursquare', eventObj);
 });
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
-    levents.fireEvent('contact/foursquare', 'foursquare-test', eventObj);
+    levents.fireEvent('contact/foursquare', 'foursquare', eventObj);
 });
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
-            utils.hijackEvents(['checkin/foursquare','contact/foursquare'], 'foursquare-test');
+            utils.hijackEvents(['checkin/foursquare','contact/foursquare'], 'foursquare');
             utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
             
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
@@ -69,7 +73,7 @@ suite.next().suite.addBatch({
             assert.equal(diaryEntry, "sync'd 251 new checkins"); },
         "generates a ton of checkin events" : function(err) {
             assert.equal(emittedEvents.length, 251);
-            assert.equal(emittedEvents[0], '{"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"_via":["foursquare-test"]}');
+            assert.equal(emittedEvents[0], '{"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"_via":["foursquare"]}');
             emittedEvents = [];
         },
         "successfully " : {
@@ -95,8 +99,8 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/foursquare/users.json' });
             sync.syncFriends(this.callback) },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"new","data":{"id":"18387","firstName":"William","lastName":"Warnecke","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"San Francisco, CA","relationship":"friend","type":"user","pings":true,"contact":{"email":"lockerproject@sing.ly","twitter":"ww"},"badges":{"count":25},"mayorships":{"count":0,"items":[]},"checkins":{"count":0},"friends":{"count":88,"groups":[{"type":"friends","name":"mutual friends","count":0}]},"following":{"count":13},"tips":{"count":5},"todos":{"count":1},"scores":{"recent":14,"max":90,"checkinsCount":4},"name":"William Warnecke"}},"_via":["foursquare-test"]}');
-            assert.equal(emittedEvents[1], '{"obj":{"source":"friends","type":"new","data":{"id":"2715557","firstName":"Jacob","lastName":"Mitchell","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"Frederick, CO","relationship":"friend","type":"user","pings":true,"contact":{"email":"fake@testdata.com"},"badges":{"count":1},"mayorships":{"count":0,"items":[]},"checkins":{"count":1},"friends":{"count":6,"groups":[{"type":"others","name":"other friends","count":6,"items":[]}]},"following":{"count":0},"tips":{"count":0},"todos":{"count":0},"scores":{"recent":0,"max":0,"goal":50,"checkinsCount":0},"name":"Jacob Mitchell"}},"_via":["foursquare-test"]}');
+            assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"new","data":{"id":"18387","firstName":"William","lastName":"Warnecke","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"San Francisco, CA","relationship":"friend","type":"user","pings":true,"contact":{"email":"lockerproject@sing.ly","twitter":"ww"},"badges":{"count":25},"mayorships":{"count":0,"items":[]},"checkins":{"count":0},"friends":{"count":88,"groups":[{"type":"friends","name":"mutual friends","count":0}]},"following":{"count":13},"tips":{"count":5},"todos":{"count":1},"scores":{"recent":14,"max":90,"checkinsCount":4},"name":"William Warnecke"}},"_via":["foursquare"]}');
+            assert.equal(emittedEvents[1], contactEvent1);
             assert.equal(emittedEvents[2], undefined);
             emittedEvents = []; },
         "successfully" : function(err, repeatAfter, diaryEntry) {
@@ -115,7 +119,7 @@ suite.next().suite.addBatch({
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "Updated 2 friends"); },
         "and emit an update event" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"update","data":{"id":"2715557","firstName":"Jake","lastName":"Mitchell","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"Frederick, CO","relationship":"friend","type":"user","pings":true,"contact":{"email":"fake@testdata.com"},"badges":{"count":1},"mayorships":{"count":0,"items":[]},"checkins":{"count":1},"friends":{"count":6,"groups":[{"type":"others","name":"other friends","count":6,"items":[]}]},"following":{"count":0},"tips":{"count":0},"todos":{"count":0},"scores":{"recent":0,"max":0,"goal":50,"checkinsCount":0},"name":"Jake Mitchell"}},"_via":["foursquare-test"]}');
+            assert.equal(emittedEvents[0], contactEvent2);
             assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; 
         }
@@ -170,8 +174,8 @@ suite.next().suite.addBatch({
         'successfully': function(err, repeatAfter, diaryEntry) {
             assert.equal(diaryEntry, 'Updated 0 existing friends, deleted 2 friends'); },
         "and emits delete events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"delete","data":{"id":"2715557","deleted":true}},"_via":["foursquare-test"]}');
-            assert.equal(emittedEvents[1], '{"obj":{"source":"friends","type":"delete","data":{"id":"18387","deleted":true}},"_via":["foursquare-test"]}');
+            assert.equal(emittedEvents[0], contactEvent3);
+            assert.equal(emittedEvents[1], '{"obj":{"source":"friends","type":"delete","data":{"id":"18387","deleted":true}},"_via":["foursquare"]}');
             emittedEvents = []; },
         "in the datastore" : {
             "via getPeople" : {

@@ -25,26 +25,10 @@ var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host,
 var mePath = '/Me/' + svcId;
 
 var events = 0;
-
-var data = {id: 18387, 
-            firstName: "William", 
-            lastName: "Warnecke",
-            photo: "https://foursquare.com/img/blank_boy.png",
-            gender: "male",
-            homeCity: "San Francisco, CA",
-            relationship: "friend",
-            type: "user",
-            pings: true,
-            contact: { "email": "lockerproject@sing.ly", "twitter": "ww" },
-            badges: { "count": 25 },
-            mayorships: { "count": 0, "items": [] },
-            checkins: { "count": 0 },
-            friends: { "count": 88, "groups": ["Object"] },
-            following: { "count": 13 },
-            tips: { "count": 5 },
-            todos: { "count": 1 },
-            scores: { "recent": 14, "max": 90,"checkinsCount": 4 },
-            name: "William Warnecke" };
+var fs = require('fs');
+var foursquareEvent1 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_1.json');
+var foursquareEvent2 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_2.json');
+var foursquareEvent3 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_3.json');
 
 suite.next().suite.addBatch({
     "Can pull in the contacts from foursquare" : {
@@ -180,40 +164,37 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 9);
+            assert.equal(events, 11);
         }
     }
 }).addBatch({
-    // TODO: this should all be going through the actual events system, this is a pretty fragile test currently
-    //
-    "Posting an event to the contacts collection" : {
+    "Foursquare ADD event" : {
         topic: function() {
             dataStore.clear();
-            var self = this;
-            request.post({
-                url:lconfig.lockerBase + mePath + "/events",
-                json:{"obj":{"source":"friends","type":"add","data": data},"_via":["foursquare"]}}, self.callback);
-        },
-        "returns a 200" : function (err, res, body) {
-            assert.equal(res.statusCode, 200);
-        },
-        "and verify that my data arrived" : {
-            topic: function() {
-                mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, this.callback);
-            },
-            "successfully" : function(err, resp) {
-                assert.isNull(err);
-                assert.equal(resp.accounts.foursquare[0].data.id, 18387)
-            },
-            "and an event" : {
-                topic: function() {
-                    request.get({url:lconfig.lockerBase + "/Me/event-collector/getEvents/contacts"}, this.callback);
-                },
-                "was generated" : function(err, resp, data) {
-                    assert.isNull(err);
-                    assert.equal(data, 1);
-                }
-            }
+            dataStore.addEvent(JSON.parse(foursquareEvent1), this.callback); },
+        "is handled properly" : function(err, object) {
+            assert.equal(object.type, 'new');
+            assert.equal(object.data.name, 'Jacob Mitchell');
+        }
+    }
+}).addBatch({
+    "Foursquare UPDATE event" : {
+        topic: function() {
+            dataStore.clear();
+            dataStore.addEvent(JSON.parse(foursquareEvent2), this.callback); },
+        "is handled properly" : function(err, object) {
+            assert.equal(object.type, 'update');
+            assert.equal(object.data.name, 'Jake Mitchell');
+        }
+    }
+}).addBatch({
+    "Foursquare DELETE event" : {
+        topic: function() {
+            dataStore.clear();
+            dataStore.addEvent(JSON.parse(foursquareEvent3), this.callback); },
+        "is handled properly" : function(err, object) {
+            // currently not doing anything with delete events, just letting things linger in the collection
+            assert.equal(object, undefined);
         }
     }
 })
