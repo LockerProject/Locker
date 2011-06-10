@@ -182,14 +182,14 @@ function logRemoved(type, ids, callback) {
     if (type !== 'repos') {
         github.getUserApi().show(id, function(err, user) {
             dataStore.removeObject(type, user.id, function(err) {
+                var eventObj = {source:type, type:'delete', data:{id:id, deleted: true}};
+                exports.eventEmitter.emit('contact/github', eventObj);
                 delete allKnownIDs[type][allKnownIDs[type].indexOf(id)];
                 logRemoved(type, ids, callback);
             });
         });
     } else {
         dataStore.removeObject(type, id+'', function(err) {
-            var eventObj = {source:type, type:'delete', data:{id:id, deleted: true}};
-            exports.eventEmitter.emit('contact/github', eventObj);
             delete allKnownIDs[type][allKnownIDs[type].indexOf(id)];
             logRemoved(type, ids, callback);
         });
