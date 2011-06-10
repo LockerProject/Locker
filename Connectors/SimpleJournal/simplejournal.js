@@ -27,7 +27,7 @@ function doNothing(error, result) { }
 
 app.set('views', __dirname);
 app.get('/', function(req, res) {
-    
+    res.end("Ready.");
 });
 
 /**
