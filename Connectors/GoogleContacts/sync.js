@@ -108,6 +108,8 @@ function processFeed(entries, callback) {
     var entry = entries.shift();
     var obj = convertEntry(entry);
     dataStore.addObject('contacts', obj, {timeStamp:obj.updated}, function() {
+        var eventObj = {type:'update', data:obj};
+        exports.eventEmitter.emit('contact/google', eventObj);
         processFeed(entries, callback);
     });
 }
