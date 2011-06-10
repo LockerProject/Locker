@@ -39,7 +39,7 @@ sync.eventEmitter.on('contact/foursquare', function(eventObj) {
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
-            utils.hijackEvents(['checking/foursquare','contact/foursquare'], 'foursquare-test');
+            utils.hijackEvents(['checkin/foursquare','contact/foursquare'], 'foursquare-test');
             utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
             
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
