@@ -50,54 +50,25 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    var target;
-    
     if (!req.body.obj.type || !req.body._via) {
         console.log('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
         return;
     }
-    switch (req.body._via[0]) {
-        case 'foursquare':
-            target = dataStore.addFoursquareData;
-            break;
-        case 'facebook':
-            target = dataStore.addFacebookData;
-            break;
-        case 'twitter':
-            target = dataStore.addTwitterData;
-            break;
-        case 'github':
-            target = dataStore.addGithubData;
-            break;
-        default:
+    
+    dataStore.addEvent(req.body, function(err, eventObj) {
+        if (err) {
             res.writeHead(500);
-            console.log('event received by the contacts collection with an invalid type');
-            res.end("Don't know what to do with this event");
-            return;
-            break;
-    }
-    switch (req.body.obj.type) {
-        // what do we want to do for a delete event?
-        //
-        case 'delete':
-            res.writeHead(200);
-            res.end('not doing anything atm');
-            break;
-        default:
-            target(req.body.obj, function(err, doc) {
-                res.writeHead(200);
-                res.end('new object added');
-                // what event should this be?
-                // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-                //
-                // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
-                var eventObj = {source: "contacts", type:req.body.obj.type, data:doc};
+            res.end(err);
+        } else {
+            if (eventObj) {
                 locker.event("contact/full", eventObj);
-            });
-            break;
-    }
+            }
+            res.writeHead(200);
+            res.end('processed event');
+        }
+    });
 });
 
 // Process the startup JSON object

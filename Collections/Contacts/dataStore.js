@@ -20,6 +20,44 @@ exports.getAll = function(callback) {
     collection.find({}, callback);
 }
 
+exports.addEvent = function(eventBody, callback) {
+    var target;
+        
+    switch (eventBody._via[0]) {
+        case 'foursquare':
+            target = exports.addFoursquareData;
+            break;
+        case 'facebook':
+            target = exports.addFacebookData;
+            break;
+        case 'twitter':
+            target = exports.addTwitterData;
+            break;
+        case 'github':
+            target = exports.addGithubData;
+            break;
+        default:
+            return callback('event received by the contacts collection with an invalid type');
+    }
+    switch (eventBody.obj.type) {
+        // what do we want to do for a delete event?
+        //
+        case 'delete':
+            return callback();
+            break;
+        default:
+            target(eventBody.obj, function(err, doc) {
+                // what event should this be?
+                // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
+                //
+                // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+                var eventObj = {source: "contacts", type:eventBody.obj.type, data:doc};
+                return callback(undefined, eventObj);
+            });
+            break;
+    }
+}
+
 exports.addData = function(type, endpoint, data, callback) {
     if (type == 'facebook') {
         exports.addFacebookData(data, callback);
