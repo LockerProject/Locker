@@ -39,7 +39,7 @@ exports.addObject = function(type, object, options, callback) {
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
-        for (var i = 0; i < options['strip'].length; i++) {
+        for (var i in options['strip']) {
             object[options['strip'][i]].delete
         }
         if (options['timeStamp']) {
