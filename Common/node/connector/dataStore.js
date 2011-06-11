@@ -24,7 +24,8 @@ exports.init = function(mongoid, _mongo) {
 }
 
 exports.addCollection = function(name) {
-    mongo.addCollection(name);
+    if(!mongo.collections[name])
+        mongo.addCollection(name);
 }
 
 function now() {

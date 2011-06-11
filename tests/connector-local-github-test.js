@@ -34,7 +34,7 @@ sync.eventEmitter.on('contact/github', function(eventObj) {
 });
 
 suite.next().suite.addBatch({
-    "Can get repos" : {
+    "Can sync repos" : {
         topic: function() {
             utils.hijackEvents(['contact/github'], 'github-test');
             utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
@@ -49,18 +49,43 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({
                     uri : 'https://github.com/api/v2/json/repos/show/ctide',
                     file : __dirname + '/fixtures/github/repos.json' });
+                fakeweb.registerUri({
+                    uri :'https://github.com/api/v2/json/repos/show/ctide/arenarecapslibrary/watchers',
+                    file : __dirname + '/fixtures/github/arenarecapslibrary_watchers.json'});
+                fakeweb.registerUri({
+                    uri :'https://github.com/api/v2/json/repos/show/ctide/WoWCombatLogParser/watchers',
+                    file : __dirname + '/fixtures/github/WoWCombatLogParser_watchers.json'});
                 sync.syncRepos(self.callback);
             });
         },
+        "and emit proper events" : function(err) {
+            assert.equal(emittedEvents[0], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"ctide"}},"_via":["github-test"]}');
+            assert.equal(emittedEvents[1], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"_via":["github-test"]}');
+            assert.equal(emittedEvents[2], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/WoWCombatLogParser","login":"ctide"}},"_via":["github-test"]}');
+            emittedEvents = [];
+        },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "examined 9 repos, added 9 repos, and modified 0 repos."); },
-        "successfully " : {
+            assert.equal(diaryEntry, "examined 2 repos, added 2 repos, and modified 0 repos."); },
+        "again" : {
             topic: function() {
                 sync.syncRepos(this.callback) },
-            "again" : function(err, repeatAfter, diaryEntry) {
+            "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 3600);
-                assert.equal(diaryEntry, "examined 9 repos, added 0 repos, and modified 0 repos."); }
+                assert.equal(diaryEntry, "examined 2 repos, added 0 repos, and modified 0 repos."); }
+        }
+    }
+}).addBatch({
+    "Can handle unwatching" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri :'https://github.com/api/v2/json/repos/show/ctide/arenarecapslibrary/watchers',
+                file : __dirname + '/fixtures/github/arenarecapslibrary_watchers-1.json'});
+            sync.syncRepos(this.callback);
+        },
+        "and emit proper events" : function(err) {
+            assert.equal(emittedEvents[0], '{"obj":{"type":"delete","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"_via":["github-test"]}');
+            emittedEvents = [];
         }
     }
 }).addBatch({
@@ -76,15 +101,18 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://github.com/api/v2/json/user/show/smurthas',
                 file : __dirname + '/fixtures/github/smurthas.json' });
-            sync.syncUsers("followers", this.callback) },
+            sync.syncUsers("followers", this.callback)
+        },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "examined 2 users, added 2 new users, and modified 0 users."); },
+            assert.equal(diaryEntry, "examined 2 users, added 2 new users, and modified 0 users.");
+        },
         "and emit proper events" : function(err) {
             assert.equal(emittedEvents[0], '{"obj":{"source":"followers","type":"add","data":{"gravatar_id":"27e803a71a7774a00d14274def33f92c","company":"Focus.com","name":"James Burkhart","created_at":"2009/07/05 18:16:40 -0700","location":"San Francisco","public_repo_count":4,"public_gist_count":7,"blog":"www.jamesburkhart.com","following_count":8,"id":101964,"type":"User","permission":null,"followers_count":2,"login":"fourk","email":"j@hip.st"}},"_via":["github-test"]}');
             assert.equal(emittedEvents[1], '{"obj":{"source":"followers","type":"add","data":{"gravatar_id":"c0ffbda2aaf58c66407e55f9091acde8","company":null,"name":"Simon Murtha-Smith","created_at":"2010/09/14 15:05:26 -0700","location":"Brooklyn, NY","public_repo_count":4,"public_gist_count":0,"blog":"twitter.com/smurthas","following_count":11,"id":399496,"type":"User","permission":null,"followers_count":8,"login":"smurthas","email":null}},"_via":["github-test"]}');
             assert.equal(emittedEvents[2], undefined);
-            emittedEvents = []; }
+            emittedEvents = [];
+        }
     }
 }).addBatch({
     "Can get profile" : {
@@ -168,8 +196,8 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent("repos", this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 9);
-                assert.equal(response[0].id, "https://github.com/ctide/arenarecapslibrary");
+                assert.equal(response.length, 2);
+                assert.equal(response[0].id, "ctide/arenarecapslibrary");
                 assert.equal(response[0].owner, "ctide");
                 assert.equal(response[0].name, 'arenarecapslibrary');
             }  
@@ -194,6 +222,9 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://github.com/api/v2/json/user/show/ctide/followers',
                 file : __dirname + '/fixtures/github/less_followers.json' });
+            fakeweb.registerUri({
+                uri :'https://github.com/api/v2/json/repos/show/ctide/WoWCombatLogParser/watchers',
+                file : __dirname + '/fixtures/github/WoWCombatLogParser_watchers.json'});
             sync.syncUsers("followers", this.callback) },
         'successfully': function(err, repeatAfter, diaryEntry) {
             assert.equal(diaryEntry, 'examined 1 users, added 0 new users, modified 0 users, and removed 1 users.'); },
@@ -228,7 +259,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/github/less_repos.json' });
             sync.syncRepos(this.callback) },
         'successfully': function(err, repeatAfter, diaryEntry) {
-            assert.equal(diaryEntry, 'examined 8 repos, added 0 new repos, modified 0 repos, and deleted 1 repos.');
+            assert.equal(diaryEntry, 'examined 1 repos, added 0 new repos, modified 0 repos, and deleted 1 repos.');
         },
         "in the datastore" : {
             "via getRepos" : {
@@ -236,7 +267,7 @@ suite.next().suite.addBatch({
                     dataStore.getAllCurrent("repos", this.callback);
                 },
                 "successfully" : function(err, response) {
-                    assert.equal(response.length, 8);
+                    assert.equal(response.length, 1);
                 }
             },
             "via getRepoFromCurrent" : {
@@ -293,9 +324,9 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .get()
                 .expect('returns repos', function(err, res, body) {
                     assert.isNull(err);
-                    var checkins = JSON.parse(body);
-                    assert.isNotNull(checkins);
-                    assert.equal(checkins.length, 8); 
+                    var repos = JSON.parse(body);
+                    assert.isNotNull(repos);
+                    assert.equal(repos.length, 1); 
                 })
             .unpath()
         .undiscuss()
