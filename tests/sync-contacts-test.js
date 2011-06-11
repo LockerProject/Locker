@@ -43,8 +43,8 @@ suite.next().suite.addBatch({
             var self = this;
             process.chdir('./Me/contacts');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
-                lmongoclient.connect(function(collections) {
-                    mongoCollections = collections.contacts;
+                lmongoclient.connect(function(mongo) {
+                    mongoCollections = mongo.collections.contacts;
                     contacts.init("", mongoCollections);
                     dataStore.init(mongoCollections);
                     dataStore.clear();

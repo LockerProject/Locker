@@ -131,7 +131,6 @@ function curlFile(url, filename, callback) {
     var curl = spawn('curl', [url, '-o', filename, '-L']);
     if(callback) {
         curl.on('exit', function() {
-            console.log('curl done!')
             callback();
         });
     }

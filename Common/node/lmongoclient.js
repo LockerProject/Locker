@@ -14,6 +14,7 @@ module.exports = function(host, port, localServiceId, theCollectionNames) {
 
     mongo.serviceID = localServiceId;
     mongo.collectionNames = theCollectionNames;
+    mongo.collections = {};
     mongo.db = new mongodb.Db('locker', new mongodb.Server(host, port, {}), {});
     function connectToDB(callback, isRetry) {
         mongo.db.open(function(error, client) {
@@ -31,11 +32,14 @@ module.exports = function(host, port, localServiceId, theCollectionNames) {
     
     mongo.connect = function(callback) {
         connectToDB(function() {
-            var collections = {};
             for(var i in mongo.collectionNames)
-                collections[mongo.collectionNames[i]] = new mongodb.Collection(mongo.dbClient, 'a' + mongo.serviceID + '_' + mongo.collectionNames[i]);
-            callback(collections);
+                mongo.addCollection(mongo.collectionNames[i]);
+            callback(mongo);
         })
+    }
+    
+    mongo.addCollection = function(name) {
+        mongo.collections[name] = new mongodb.Collection(mongo.dbClient, 'a' + mongo.serviceID + '_' + name);
     }
     
     return mongo;
