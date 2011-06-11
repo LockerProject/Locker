@@ -34,13 +34,16 @@ exports.addEvent = function(eventBody, callback) {
             target = exports.addTwitterData;
             break;
         case 'github':
-            target = exports.addGithubData;
+            if(eventBody.obj.source !== 'watcher')
+                target = exports.addGithubData;
             break;
         case 'gcontacts':
             target = exports.addGoogleContactsData;
             break;
-        default:
-            return callback('event received by the contacts collection with an invalid type');
+    }
+    if(!target) {
+        callback('event received could not be processed by the contacts collection');
+        return;
     }
     switch (eventBody.obj.type) {
         // what do we want to do for a delete event?

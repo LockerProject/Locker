@@ -83,7 +83,6 @@ process.stdin.on('data', function(data) {
     process.chdir(lockerInfo.workingDirectory);
     
     locker.connectToMongo(function(mongo) {
-        console.error('mongo', mongo);
         sync.init(lockerInfo.lockerUrl, mongo.collections.contacts);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
