@@ -1,5 +1,5 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var sync = require('../Connectors/github/sync');
+var sync = require('../Connectors/GitHub/sync');
 var dataStore = require('../Common/node/connector/dataStore');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
