@@ -58,6 +58,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     
     var mongoOutput = "";
     var mongodExit = function(errorCode) {
+        if(shuttingDown_) return;
         if(errorCode !== 0) {
             console.error('mongod did not start successfully ('+errorCode+'), here was the stdout: '+mongoOutput);
             shutdown(1);
