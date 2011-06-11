@@ -46,6 +46,8 @@ app.get('/snap', function(req, res) {
         search.syncSearch(function(data){
             res.writeHead(200);
             res.end("got "+data.length+" tweets");
+            locker.diary("got "+data.length+" tweets for "+query);
+            locker.at("/snap?query="+query,3600);
         });
     });
 });
