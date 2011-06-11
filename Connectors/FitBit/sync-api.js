@@ -23,8 +23,8 @@ module.exports = function(app) {
     });
     
     var api = {};
-    api.authComplete = function(auth, mongoCollections) {
-        sync.init(auth, mongoCollections);
+    api.authComplete = function(auth, mongo) {
+        sync.init(auth, mongo);
         console.error(validTypes);
         var index = getIndex(validTypes);
         console.error(index);

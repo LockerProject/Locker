@@ -89,8 +89,8 @@ process.stdin.on('data', function(data) {
     }
     process.chdir(lockerInfo.workingDirectory);
     
-    locker.connectToMongo(function(thecollections) {
-        sync.init(lockerInfo.lockerUrl, thecollections.links);
+    locker.connectToMongo(function(mongo) {
+        sync.init(lockerInfo.lockerUrl, mongo.collections.links);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
             // locker.listen('contact/foursquare', '/events');

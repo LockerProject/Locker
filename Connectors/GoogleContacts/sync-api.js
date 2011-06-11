@@ -32,9 +32,9 @@ module.exports = function(theApp) {
 }
 
 // Adds all of the sync API endpoints once the auth process is completed
-function authComplete(theAuth, mongoCollections) {
+function authComplete(theAuth, mongo) {
     auth = theAuth;
-    sync.init(auth, mongoCollections);
+    sync.init(auth, mongo);
 
     // Sync the person's contact data
     app.get('/getNew/:type', function(req, res) {

@@ -70,8 +70,8 @@ suite.next().suite.addBatch({
             var self = this;
             process.chdir('./Me/links');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/link%2Ffull"}, function() {
-                lmongoclient.connect(function(collections) {
-                    mongoCollections = collections.links;
+                lmongoclient.connect(function(mongo) {
+                    mongoCollections = mongo.collections.links;
                     links.init("", mongoCollections);
                     dataStore.init(mongoCollections);
                     dataStore.clear();

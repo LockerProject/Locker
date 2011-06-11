@@ -27,7 +27,7 @@ var status, auth;
 exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
-exports.init = function(theAuth, mongoCollections) {
+exports.init = function(theAuth, mongo) {
     auth = theAuth;
     try {
         status = JSON.parse(fs.readFileSync('status.json'));
@@ -36,7 +36,7 @@ exports.init = function(theAuth, mongoCollections) {
         status.contacts.lastUpdate = 1;
     if(!status.groups.lastUpdate)
         status.groups.lastUpdate = 1;
-    dataStore.init('id', mongoCollections);
+    dataStore.init('id', mongo);
 }
 
 exports.syncContacts = function(callback) {

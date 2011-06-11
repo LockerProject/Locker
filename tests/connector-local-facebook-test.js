@@ -51,9 +51,9 @@ suite.next().suite.addBatch({
             var self = this;
             fakeweb.allowNetConnect = false;
             fakeweb.allowLocalConnect = true;
-            lmongoclient.connect(function(collections) {
-                sync.init({accessToken : 'abc'}, collections);
-                dataStore.init('id', collections);
+            lmongoclient.connect(function(mongo) {
+                sync.init({accessToken : 'abc'}, mongo);
+                dataStore.init('id', mongo);
                 self.callback(null, true);
             });
         },

@@ -51,9 +51,9 @@ suite.next().suite.addBatch({
         topic: function() {
             process.chdir('.' + mePath);
             var self = this;
-            lmongoclient.connect(function(collections) {
-                sync.init(auth, collections);
-                dataStore.init('id', collections);
+            lmongoclient.connect(function(mongo) {
+                sync.init(auth, mongo);
+                dataStore.init('id', mongo);
                 self.callback(null, true);
             });
         },
