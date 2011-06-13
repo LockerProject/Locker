@@ -1,0 +1,10 @@
+{
+    "twitter": {
+        "consumerKey": "twitterConsumerKey",
+        "consumerSecret": "twitterConsumerSecret"
+    },
+    "facebook": {
+        "appKey": "facebookAppKey",
+        "appSecret": "facebookAppSecret"
+    }
+}

@@ -89,6 +89,10 @@ vows.describe("Service Manager").addBatch({
                 },
                 "creates a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync("Me/" + svcMetaInfo.id);
+                },
+                "creates a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
+                    statInfo = fs.readFileSync("Me/" + svcMetaInfo.id + "/auth.json",'ascii');
+                    assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
                 }
             }
         }

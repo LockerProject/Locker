@@ -10,6 +10,8 @@
 var request = require('request'),
     lfs = require('../lfs.js'),
     fs = require('fs'),
+    sys = require('sys'),
+    querystring = require('querystring'),
     options = {provider :            'Some oauth2 consumer',
                endPoint :            'http://consumer.com/oauth/',
                linkToCreate :        'http://change.me/',
@@ -52,8 +54,8 @@ exports.isAuthed = function() {
 
         // Try to read it in
         var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
+        exports.auth = authData;
         if(authData.hasOwnProperty("accessToken")) {
-            exports.auth = authData;
             return true;
         }
     } catch (E) {
@@ -101,8 +103,6 @@ function handleAuth(req, res) {
         if (options.accessTokenResponse == 'json') {
             exports.auth.accessToken = JSON.parse(body).access_token;
         } else {
-            console.log("resp", resp);
-            console.log("body", body);
             exports.auth.accessToken = querystring.parse(body).access_token;
         }
         lfs.writeObjectToFile("auth.json", exports.auth);

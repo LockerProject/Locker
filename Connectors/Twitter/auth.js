@@ -15,6 +15,7 @@
 var fs = require("fs");
 
 var uri,
+    url = require('url'),
     completedCallback = null;
 
 exports.auth = {};
@@ -34,10 +35,10 @@ function isAuthed() {
         }
         // Try and read it in
         var authData = JSON.parse(fs.readFileSync("auth.json"));
+        exports.auth = authData;
         if(authData.hasOwnProperty("consumerKey") && 
            authData.hasOwnProperty("consumerSecret") && 
            authData.hasOwnProperty("token")) {
-            exports.auth = authData;
             return true;
         }
     } catch (E) {
