@@ -80,8 +80,13 @@ vows.describe("Locker Client API").addBatch({
                     }
                 }
                 
-                assert.equal(data[0].title, "Test /providers");
-                assert.equal(data[1].title, "Test /providers 2");
+                if (data[0].title === 'Test /providers') {
+                    assert.equal(data[0].title, "Test /providers");
+                    assert.equal(data[1].title, "Test /providers 2");
+                } else {
+                    assert.equal(data[1].title, "Test /providers");
+                    assert.equal(data[0].title, "Test /providers 2");
+                }
             }
         },
         "getting providers of types testtype " : {
@@ -101,9 +106,14 @@ vows.describe("Locker Client API").addBatch({
                         assert.include(data[i], "id");
                     }
                 }
-                
-                assert.equal(data[0].title, "Test /providers");
-                assert.equal(data[1].title, "Test /providers 2");
+
+                if (data[0].title === 'Test /providers') {
+                    assert.equal(data[0].title, "Test /providers");
+                    assert.equal(data[1].title, "Test /providers 2");
+                } else {
+                    assert.equal(data[1].title, "Test /providers");
+                    assert.equal(data[0].title, "Test /providers 2");
+                }
             }
         }
     }

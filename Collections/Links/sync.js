@@ -23,7 +23,7 @@ exports.init = function(theLockerUrl, mongoCollection) {
 exports.gatherLinks = function() {
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
-        locker.providers(['link/facebook', 'status/twitter'], function(services) {
+        locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
