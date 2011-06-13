@@ -50,7 +50,14 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    var target;
+    if (!req.body.obj.type || !req.body._via || !(req.body._via[0].indexOf('facebook') === 0 || req.body._via[0].indexOf('twitter') === 0)) {
+        console.log(req.body._via[0]);
+        console.log('5 HUNDO');
+        res.writeHead(500);
+        res.end('bad data');
+        return;
+    }
+    
     var body = req.body;
     var obj = body.obj;
     var via = body._via[0];

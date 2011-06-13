@@ -163,47 +163,19 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 3);
+            assert.equal(events, 5);
         }
     }
 }).addBatch({
-    // TODO: this should all be going through the actual events system, this is a pretty fragile test currently
-    //
-    "Posting an event to the links collection" : {
+    "Facebook ADD event" : {
         topic: function() {
             dataStore.clear();
-            var self = this;
-            request.post({
-                url:lconfig.lockerBase + mePath + "/events",
-                json:{obj:{
-                        source:"friends",
-                        type:"new",
-                        data: {url:'http://singly.com/', sourceObject:data}
-                      },
-                      '_via':["facebook-1"]}}, self.callback);
-        },
-        "returns a 200" : function (err, res, body) {
-            assert.equal(res.statusCode, 200);
-        },
-        "and verify that my data arrived" : {
-            topic: function() {
-                mongoCollections.findOne({'url':'http://singly.com/'}, this.callback);
-            },
-            "successfully" : function(err, resp) {
-                assert.isNull(err);
-                assert.equal(resp.url, 'http://singly.com/');
-            },
-            "and an event" : {
-                topic: function() {
-                    request.get({url:lconfig.lockerBase + "/Me/event-collector/getEvents/links"}, this.callback);
-                },
-                "was generated" : function(err, resp, data) {
-                    assert.isNull(err);
-                    assert.equal(data, 1);
-                }
-            }
+            dataStore.addData("facebook", "facebook", '', {data: data}, this.callback)},
+        "is handled properly" : function(err, object) {
+            assert.equal(object.sourceObjects[0].svcID, 'facebook');
+            assert.equal(object.url, 'http://singly.com/');
         }
     }
-})
+});
         
 suite.export(module);
