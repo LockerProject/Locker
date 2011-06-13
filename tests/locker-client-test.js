@@ -11,6 +11,7 @@ var vows = require("vows");
 var assert = require("assert");
 var events = require("events");
 var fs = require("fs");
+var path = require("path");
 var locker = require("../Common/node/locker.js");
 var lconfig = require("../Common/node/lconfig.js");
 var testUtils = require('./test-utils');
@@ -28,89 +29,81 @@ vows.describe("Locker Client API").addBatch({
     }
 }).addBatch({
     "Public APIs" : {
-        "map" : {
+        "making a call to locker.map" : {
             topic: function() {
-                var promise = new events.EventEmitter;
-                locker.map(function(svcMap) {
-                    if (!svcMap) promise.emit("error", svcMap);
-                    else promise.emit("success", svcMap);
-                });
-                return promise;
+                locker.map(this.callback);
             },
-            "can retrieve the service map" : function (err, data) {
+            "retrieves the service map" : function (err, data) {
                 assert.isNull(err);
                 assert.include(data, "installed");
                 assert.include(data, "available");
             }
         },
-        "providers" : {
+        "getting providers of type testtype/testproviders " : {
             topic: function() {
-                var promise = new events.EventEmitter;
-                locker.providers("testtype/testproviders", function(providers) {
-                    if (providers.length != 1) promise.emit("error", providers);
-                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
-                    else promise.emit("success", providers);
-                });
-                return promise;
+                locker.providers("testtype/testproviders", this.callback);
             },
-            "getting providers of type testtype/testproviders returns 1 valid service" : function (err, data) {
+            "returns 1 valid service" : function (err, data) {
                 assert.isNull(err);
                 assert.include(data[0], "title");
                 assert.include(data[0], "provides");
                 assert.include(data[0], "srcdir");
                 assert.include(data[0], "is");
                 assert.include(data[0], "id");
-            },
+                assert.equal(data[0].title, 'Test /providers');
+            }
+        },
+        "getting providers of type badtype/badsvc " : {
             topic: function() {
-                var promise = new events.EventEmitter;
-                locker.providers("badtype/badsvc", function(providers) {
-                    if (providers.length != 0) promise.emit("error", providers);
-                    else promise.emit("success", providers);
-                });
-                return promise;
+                locker.providers("badtype/badsvc", this.callback);
             },
-            "getting providers of type badtype/badsvc return an empty array" : function (err, data) {
+            "returns an empty array" : function (err, data) {
                 assert.isNull(err);
-            },
+                assert.length(data, 0);
+            }
+        },
+        "getting providers of types testtype/testproviders,testtype/anotherprovider" : {
             topic: function() {
-                var promise = new events.EventEmitter;
-                locker.providers("testtype/testproviders,testtype/anotherprovider", function(providers) {
-                    if (providers.length != 2) promise.emit("error", providers);
-                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
-                    else if (providers[1].title != "Test /providers 2") promise.emit("error", providers);
-                    else promise.emit("success", providers);
-                });
-                return promise;
+                locker.providers("testtype/testproviders,testtype/anotherprovider", this.callback);
             },
-            "getting providers of types testtype/testproviders,testtype/anotherprovider returns an array of 2 valid providers" : function (err, data) {
+            "returns an array of 2 valid providers" : function (err, data) {
                 assert.isNull(err);
+                assert.length(data, 2);
+                
                 for(var i in data) {
-                    assert.include(data[i], "title");
-                    assert.include(data[i], "provides");
-                    assert.include(data[i], "srcdir");
-                    assert.include(data[i], "is");
-                    assert.include(data[i], "id");
+                    if (data.hasOwnProperty(i)) {
+                        assert.include(data[i], "title");
+                        assert.include(data[i], "provides");
+                        assert.include(data[i], "srcdir");
+                        assert.include(data[i], "is");
+                        assert.include(data[i], "id");
+                    }
                 }
-            },
+                
+                assert.equal(data[0].title, "Test /providers");
+                assert.equal(data[1].title, "Test /providers 2");
+            }
+        },
+        "getting providers of types testtype " : {
             topic: function() {
-                var promise = new events.EventEmitter;
-                locker.providers("testtype", function(providers) {
-                    if (providers.length != 2) promise.emit("error", providers);
-                    else if (providers[0].title != "Test /providers") promise.emit("error", providers);
-                    else if (providers[1].title != "Test /providers 2") promise.emit("error", providers);
-                    else promise.emit("success", providers);
-                });
-                return promise;
+                locker.providers("testtype", this.callback);
             },
-            "getting providers of types testtype returns an array of 2 valid providers" : function (err, data) {
+            "returns an array of 2 valid providers" : function (err, data) {
                 assert.isNull(err);
+                assert.length(data, 2);
+                
                 for(var i in data) {
-                    assert.include(data[i], "title");
-                    assert.include(data[i], "provides");
-                    assert.include(data[i], "srcdir");
-                    assert.include(data[i], "is");
-                    assert.include(data[i], "id");
+                    if (data.hasOwnProperty(i)) {
+                        assert.include(data[i], "title");
+                        assert.include(data[i], "provides");
+                        assert.include(data[i], "srcdir");
+                        assert.include(data[i], "is");
+                        assert.include(data[i], "id");
+                    }
                 }
+                
+                assert.equal(data[0].title, "Test /providers");
+                assert.equal(data[1].title, "Test /providers 2");
             }
         }
     }
@@ -118,11 +111,15 @@ vows.describe("Locker Client API").addBatch({
     "Service APIs" : {
         "scheduler" : {
             topic:function() {
-                var promise = new events.EventEmitter;
+                var promise = new events.EventEmitter();
                 var fired = false;
 
                 try {
-                    fs.unlinkSync("Me/testURLCallback/result.json");
+                    path.exists("Me/testURLCallback/result.json", function (exists) {
+                        if (exists) {
+                            fs.unlinkSync("Me/testURLCallback/result.json");
+                        }
+                    }); 
                 } catch (E) {
                     // Make sure it's file not found and throw others
                 }
@@ -144,11 +141,15 @@ vows.describe("Locker Client API").addBatch({
         },
         "events" : {
             topic:function() {
-                var promise = new events.EventEmitter;
+                var promise = new events.EventEmitter();
                 var fired = false;
                 
                 try {
-                    fs.unlinkSync("Me/testURLCallback/event.json");
+                    path.exists("Me/testURLCallback/event.json", function (exists) {
+                        if (exists) {
+                            fs.unlinkSync("Me/testURLCallback/event.json");
+                        }
+                    });
                 } catch (E) {
                     console.error(E);
                     // test the error?
