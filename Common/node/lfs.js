@@ -111,6 +111,7 @@ function getFile(requestURL, filename, callback) {
     else 
         client = https;
     var parsedUrl = url.parse(requestURL, true);
+
     var request = client.get({ host: host, port:port, path: (parsedUrl.pathname + parsedUrl.search)}, function(res) {
         var downloadfile = fs.createWriteStream(filename);
         res.pipe(downloadfile);

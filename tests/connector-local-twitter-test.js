@@ -84,6 +84,10 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.twitter.com:443/1/followers/ids.json?screen_name=ctide&cursor=-1',
                 body : '{"next_cursor_str":"0","next_cursor":0,"previous_cursor_str":"0","previous_cursor":0,"ids":[1054551]}' });
+
+            fakeweb.registerUri({
+                uri : 'http://a0.twimg.com:80/profile_images/299352843/Picture_82_normal.png',
+                file : __dirname + '/fixtures/twitter/verify_credentials.js' });
             var self = this;
             lmongoclient.connect(function(collections) {
                 mongoCollections = collections;
