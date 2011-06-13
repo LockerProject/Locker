@@ -51,7 +51,6 @@ app.get('/update', function(req, res) {
 
 app.post('/events', function(req, res) {
     if (!req.body.obj.type || !req.body._via || !(req.body._via[0].indexOf('facebook') === 0 || req.body._via[0].indexOf('twitter') === 0)) {
-        console.log(req.body._via[0]);
         console.log('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
@@ -59,30 +58,17 @@ app.post('/events', function(req, res) {
     }
     
     var body = req.body;
-    var obj = body.obj;
-    var via = body._via[0];
-    if (!obj.type || !via) {
-        console.log('5 HUNDO');
-        res.writeHead(500);
-        res.end('bad data');
-        return;
-    }
-    if(!(via.indexOf('facebook') === 0 || via.indexOf('twitter') === 0))  {
-        res.writeHead(500);
-        console.log('event received by the contacts collection with an invalid type');
-        res.end("Don't know what to do with this event");
-        return;
-    }
-    dataStore.addLink(via, obj.data.sourceObject, obj.data.url, function(err, doc) {
-        res.writeHead(200);
-        res.end('new object added');
+
+    dataStore.addEvent(via, body, function(err, doc) {
         // what event should this be?
         // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
         //
         // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
         var eventObj = {source: "links", type:req.body.obj.type, data:doc};
         locker.event("link/full", eventObj);
-    });
+        res.writeHead(200);
+        res.end('new object added');
+    })
 });
 
 // Process the startup JSON object

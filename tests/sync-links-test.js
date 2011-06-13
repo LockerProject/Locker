@@ -26,36 +26,9 @@ var mePath = '/Me/' + svcId;
 
 var events = 0;
 
-var data = {
-    "id": "100002438955325_224550747571079",
-    "from": {
-        "name": "Eric Doe",
-        "id": "100002438955325"
-    },
-    "message": "Secret weapon!",
-    "link": "http://singly.com/",
-    "name": "Singly",
-    "caption": "singly.com",
-    "description": "Singly is the home of the Locker Project and personal data resources.",
-    "icon": "http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif",
-    "actions": [
-        {
-           "name": "Comment",
-           "link": "http://www.facebook.com/100002438955325/posts/101"
-        },
-        {
-           "name": "Like",
-           "link": "http://www.facebook.com/100002438955325/posts/101"
-        }
-    ],
-    "privacy": {
-        "description": "Friends Only",
-        "value": "ALL_FRIENDS"
-    },
-    "type": "link",
-     "created_time": 1306369954,
-     "updated_time": 1306369954
-};
+var fs = require('fs');
+var twitterEvent1 = fs.readFileSync('fixtures/events/links/twitter_event_1.json','ascii');
+var facebookEvent1 = fs.readFileSync('fixtures/events/links/facebook_event_1.json', 'ascii');
 
 suite.next().suite.addBatch({
     "Can pull in the links from twitter" : {
@@ -170,12 +143,21 @@ suite.next().suite.addBatch({
     "Facebook ADD event" : {
         topic: function() {
             dataStore.clear();
-            dataStore.addData("facebook", "facebook", '', {data: data}, this.callback)},
+            dataStore.addEvent("facebook", {data: JSON.parse(facebookEvent1)}, this.callback)},
         "is handled properly" : function(err, object) {
             assert.equal(object.sourceObjects[0].svcID, 'facebook');
             assert.equal(object.url, 'http://singly.com/');
         }
     }
-});
+}).addBatch({
+    "Twitter ADD event" : {
+        topic: function() {
+            dataStore.addEvent("twitter", {data: JSON.parse(twitterEvent1)}, this.callback)},
+        "is handled properly" : function(err, object) {
+            assert.equal(object.sourceObjects[0].svcID, 'twitter');
+            assert.equal(object.url, 'http://bit.ly/jBrrAe');
+        }
+    }
+})
         
 suite.export(module);
