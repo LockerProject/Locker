@@ -210,17 +210,17 @@ function getPhotos(newest) {
                 }
                 var photo = photos.pop();
                 var id = photo.id;
-                lfs.curlFile(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
+                lfs.saveUrl(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
                     if (err) {
                         sys.debug(err);
                     }
                 
-                    lfs.curlFile(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
+                    lfs.saveUrl(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
                         if (err) {
                             sys.debug(err);
                         }
                     
-                        lfs.curlFile(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
+                        lfs.saveUrl(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
                             if (err) {
                                 sys.debug(err);
                             }

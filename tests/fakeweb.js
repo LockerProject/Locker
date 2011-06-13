@@ -42,6 +42,10 @@ function httpModuleRequest(uri, callback) {
     thisRequest.end = function() {
         var thisResponse = new EventEmitter();
         thisResponse.setEncoding = function() {};
+        thisResponse.pipe = function(outputStream) {
+            outputStream.write(interceptedUris[uri].response);
+            outputStream.end();
+        };
         thisResponse.statusCode = interceptedUris[uri].statusCode;
         thisRequest.emit('response', thisResponse);
         

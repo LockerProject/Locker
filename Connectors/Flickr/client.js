@@ -228,10 +228,10 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
                     }
                     var photo = photos.pop();
                     var id = photo.id;
-                    lfs.curlFile(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function(err) {
+                    lfs.saveUrl(getPhotoThumbURL(photo), 'thumbs/' + id + '.jpg', function(err) {
                         if(err)
                             sys.debug(err)
-                        lfs.curlFile(getPhotoURL(photo), 'originals/' + id + '.jpg', function(err) {
+                        lfs.saveUrl(getPhotoURL(photo), 'originals/' + id + '.jpg', function(err) {
                             if(err)
                                 sys.debug(err)
                             log('got flickr photo ' + id);

@@ -123,25 +123,7 @@ function getFile(requestURL, filename, callback) {
     });
 }
 
-function curlFile(url, filename, callback) {
-    if(!url || !filename) {
-        callback(new Error);
-        return;
-    }
-    var curl = spawn('curl', [url, '-o', filename, '-L']);
-    if(callback) {
-        curl.on('exit', function() {
-            callback();
-        });
-    }
-}
-
-exports.curlFile = function(url, filename, callback) {
-    curlFile(url, filename, callback);
-}
-
-exports.writeContentsOfURLToFile = function(url, filename, callback) {
-//    curlFile(url, filename);
+exports.saveUrl = function(url, filename, callback) {
     getFile(url, filename, callback);
 }
 

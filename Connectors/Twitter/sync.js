@@ -354,7 +354,7 @@ function getPhotos(users) {
         if(!user)
             return;
         var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('/')+1);
-        lfs.curlFile(user.profile_image_url, 'photos/' + user.id_str + photoExt, function(success) {
+        lfs.saveUrl(user.profile_image_url, 'photos/' + user.id_str + photoExt, function(success) {
             _curlNext();
         });
     }
