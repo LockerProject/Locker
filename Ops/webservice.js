@@ -106,7 +106,7 @@ locker.get("/query/:query", function(req, res) {
             console.log("Querying " + JSON.stringify(query));
             var options = {};
             if (query.limit) options.limit = query.limit;
-            if (query.offset) options.skip = query.offset;
+            if (query.skip) options.skip = query.skip;
             collection.find(query.query, options, function(err, foundObjects) {
                 if (err) {
                     res.writeHead(500);
