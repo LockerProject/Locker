@@ -34,7 +34,7 @@ function getJournal(callback) {
         callback(true);
         return;
     } else {
-        locker.providers("journal", function(providers) {
+        locker.providers("journal", function(err, providers) {
             if (!providers) {
                 callback(false);
                 return;

@@ -25,7 +25,7 @@ exports.gatherContacts = function() {
         // This should really be timered, triggered, something else
         locker.providers(['contact/facebook', 'contact/twitter', 
                           'contact/google', 'contact/foursquare', 
-                          'contact/github'], function(services) {
+                          'contact/github'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 console.log("svc", svc.id, svc.provides);
