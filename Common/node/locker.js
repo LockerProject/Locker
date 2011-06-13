@@ -8,7 +8,7 @@
 */
 
 var request = require('request'),
-    fs = require("fs");
+    fs = require("fs"),
     sys = require('sys'),
     http = require("http"),
     url = require("url"),
@@ -17,8 +17,8 @@ var request = require('request'),
 var lmongoclient;
 
 var lockerBase;
-var localServiceId = undefined;
-var baseServiceUrl = undefined;
+var localServiceId;
+var baseServiceUrl;
 
 exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
@@ -31,7 +31,7 @@ exports.initClient = function(instanceInfo) {
                                                             localServiceId, instanceInfo.mongo.collections);
         exports.connectToMongo = lmongoclient.connect;
     }
-}
+};
 
 exports.at = function(uri, delayInSec) {
     request.get({
@@ -40,7 +40,7 @@ exports.at = function(uri, delayInSec) {
             at:((new Date().getTime() + (delayInSec * 1000))/1000)
             })
     });
-}
+};
 
 exports.diary = function(message, level) {
     request.get({
@@ -49,27 +49,27 @@ exports.diary = function(message, level) {
             level:level
         })
     });
-}
+};
 
 exports.makeRequest = function(httpOpts, body, callback) {
     var req = http.request(httpOpts, callback);
     req.write(body);
     req.end();
-}
+};
 
 exports.map = function(callback) {
     request.get({url:lockerBase + "/map"}, function(error, res, body) {
-        callback(body ? JSON.parse(body) : undefined);
+        callback(error, body ? JSON.parse(body) : undefined);
     });
-}
+};
 
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
     request.get({url:lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, 
     function(error, res, body) {
-        callback(body ? JSON.parse(body) : undefined);
+        callback(error, body ? JSON.parse(body) : undefined);
     });
-}
+};
 
 /**
  * Post an event
@@ -81,7 +81,7 @@ exports.event = function(type, obj) {
         url:baseServiceUrl + "/event",
         json:{"type":type,"obj":obj}
     });
-}
+};
 
 /**
  * Sign up to be notified of events
@@ -99,4 +99,4 @@ exports.listen = function(type, callbackEndpoint, callbackFunction) {
         if(error) sys.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
-}
+};
