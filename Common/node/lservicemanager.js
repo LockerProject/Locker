@@ -153,9 +153,12 @@ exports.install = function(metaData) {
     if (!serviceInfo || !serviceInfo.installable) {
         return serviceInfo;
     }
+    var authInfo;
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.handle)
     {
+        var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Me/apikeys.json", 'ascii'));
+        authInfo = apiKeys[serviceInfo.handle];
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
         var inc = 0;
         try {
@@ -177,7 +180,9 @@ exports.install = function(metaData) {
     serviceMap.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
     fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo));
-
+    if (authInfo) {
+        fs.writeFileSync(lconfig.lockerDir + "/Me/" + serviceInfo.id + '/auth.json', JSON.stringify(authInfo));
+    }
     return serviceInfo;
 }
 

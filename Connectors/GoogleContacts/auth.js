@@ -9,18 +9,17 @@
 
 /*
 * 
-* This module wraps all authentication functionality with the Twitter API
+* This module wraps all authentication functionality with the Google Contacts API
 */
 
 var fs = require("fs");
+var scope = 'https://www.google.com/m8/feeds/'; //contacts
 
-var uri,
-    url = require('url'),
-    completedCallback = null;
+var uri, completedCallback = null;
 
 exports.auth = {};
 
-// Check if exports.auth contains the required properties (consumerKey, consumerSecret, and token)
+// Check if exports.auth contains the required properties (clientID, clientSecret, and token)
 // if not, read it from disk and try again
 function isAuthed() {
     try {
@@ -28,17 +27,19 @@ function isAuthed() {
             exports.auth = {};
         
         // Already have the stuff read
-        if(exports.auth.hasOwnProperty("consumerKey") && 
-           exports.auth.hasOwnProperty("consumerSecret") && 
+        if(exports.auth.hasOwnProperty("clientID") && 
+           exports.auth.hasOwnProperty("clientSecret") && 
+           exports.auth.hasOwnProperty("redirectURI") &&
            exports.auth.hasOwnProperty("token")) {
             return true;
         }
         // Try and read it in
         var authData = JSON.parse(fs.readFileSync("auth.json"));
-        exports.auth = authData;
-        if(authData.hasOwnProperty("consumerKey") && 
-           authData.hasOwnProperty("consumerSecret") && 
+        if(authData.hasOwnProperty("clientID") && 
+           authData.hasOwnProperty("clientSecret") && 
+           authData.hasOwnProperty("redirectURI") &&
            authData.hasOwnProperty("token")) {
+            exports.auth = authData;
             return true;
         }
     } catch (E) {
@@ -73,30 +74,34 @@ exports.authAndRun = function(app, onCompletedCallback) {
 function handleAuth(req, res) {
     if(!exports.auth)
         exports.auth = {};
-        
-    if(!(exports.auth.hasOwnProperty("consumerKey") && 
-         exports.auth.hasOwnProperty("consumerSecret"))) {
+    
+    if(!(exports.auth.hasOwnProperty("clientID") && 
+         exports.auth.hasOwnProperty("clientSecret") &&
+         exports.auth.hasOwnProperty("redirectURI"))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
-                " (create a new one <a href='http://dev.twitter.com/apps/new' target='_blank'>here</a> " +
-                "using the callback url of http://"+url.parse(uri).host.replace("localhost", "127.0.0.1")+"/) " +
+        res.end("<html>Enter your personal Google app info that will be used to sync your data" + 
+                " (create a new one <a href='https://code.google.com/apis/console/' target='_blank'>here</a> " +
+                "using the callback url of http://"+uri+"auth. It's a bit finicky, but just type in a callback url, and " +
+                "let it change it, then hit \"Edit Settings...\" and fix it.) " +
                 "<form method='get' action='saveAuth'>" +
-                    "Consumer Key: <input name='consumerKey'><br>" +
-                    "Consumer Secret: <input name='consumerSecret'><br>" +
+                    "Client ID: <input name='clientID'><br>" +
+                    "Client Secret: <input name='clientSecret'><br>" +
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
     } else if(!exports.auth.token) {
-        require('./twitter_client')(exports.auth.consumerKey, exports.auth.consumerSecret, uri + 'auth')
-            .getAccessToken(req, res, function(err, newToken) {
-            if(err)
-                console.error(err);
-            if(newToken != null) {
-                exports.auth.token = newToken;
-                fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
-                completedCallback();
-                res.redirect(uri);
-            }
-        });    
+        require('gdata-js')(exports.auth.clientID, exports.auth.clientSecret, exports.auth.redirectURI)
+            .getAccessToken(scope, req, res, function(err, tkn) {
+                if(err) {
+                    console.error('oh noes!', err);
+                    res.writeHead(500);
+                    res.end('error: ' + JSON.stringify(err));
+                } else {
+                    exports.auth.token = tkn;
+                    fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
+                    completedCallback();
+                    res.redirect(uri);
+                }
+            });    
     } else { 
         completedCallback();
     }
@@ -104,14 +109,16 @@ function handleAuth(req, res) {
 
 // Save the consumerKey and consumerSecret
 function saveAuth(req, res) {
-    if(!req.param('consumerKey') || !req.param('consumerSecret')) {
+    if(!req.param('clientID') || !req.param('clientSecret')) {
         res.writeHead(400);
         res.end("missing field(s)?");
     } else {
         // res.writeHead(200, {'Content-Type': 'text/html'});
-        exports.auth.consumerKey = req.param('consumerKey');
-        exports.auth.consumerSecret = req.param('consumerSecret');
+        exports.auth.clientID = req.param('clientID');
+        exports.auth.clientSecret = req.param('clientSecret');
+        exports.auth.redirectURI = uri + 'auth'
         res.redirect(uri + 'auth');
         // res.end("<html>thanks, now we need to <a href='./auth'>auth that app to your account</a>.</html>");
     }
 }
+

@@ -20,39 +20,32 @@ exports.getAll = function(callback) {
     collection.find({}, callback);
 }
 
-exports.addData = function(svcID, type, endpoint, data, callback) {
+exports.addEvent = function(type, data, callback) {
     if (type === 'facebook') {
-        exports.addFacebookLink(svcID, data, callback);
+        exports.addLink(type, data.data.obj.data, data.data.obj.data.url, callback);
     } else if (type === 'twitter') {
-        exports.addTwitterLink(svcID, data, callback);
+        exports.addLink(type, data.data.obj.status, data.data.obj.status.entities.urls[0].expanded_url || data.data.obj.status.entities.urls[0].url, callback);
     }
 }
 
-exports.addTwitterLink = function(svcID, twitterData, callback) {
-    exports.addLink(svcID, twitterData.data, 
-            twitterData.data.entities.urls[0].expanded_url || twitterData.data.entities.urls[0].url,
-            callback);
-}
-
-exports.addFacebookLink = function(svcID, facebookData, callback) {
-    exports.addLink(svcID, facebookData.data, facebookData.data.link, callback);
+exports.addData = function(svcID, type, data, callback) {
+    if (type === 'facebook') {
+        exports.addLink(svcID, data.data, data.data.link, callback);
+    } else if (type === 'twitter') {
+        exports.addLink(svcID, data.data, 
+                data.data.entities.urls[0].expanded_url || data.data.entities.urls[0].url,
+                callback);
+    }
 }
 
 exports.addLink = function(svcID, data, url, callback) {
-    // console.log('adding link ', url, 'from', svcID);
     collection.findAndModify({'url':url}, [['_id','asc']], 
                              {$set:{'url':url}, 
                              //TODO: this could get seriously expensive!!!
                               $addToSet:{sourceObjects:{'svcID':svcID, object:data}}}, 
-                             {safe:true, upsert:true}, callback);
+                             {safe:true, upsert:true, new: true}, callback);
 }
 
 exports.clear = function(callback) {
     collection.drop(callback);
-}
-
-function cleanName(name) {
-    if(!name || typeof name != 'string')
-        return name;
-    return name.toLowerCase();
 }

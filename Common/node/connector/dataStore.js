@@ -10,18 +10,22 @@
 var IJOD = require('../ijod').IJOD;
 
 var ijodFiles = {};
-var mongoCollections;
-
+var mongo;
 var mongoID = 'id';
 
-exports.init = function(mongoid, theMongoCollections) {
+exports.init = function(mongoid, _mongo) {
+    mongo = _mongo;
     mongoID = mongoid;
-    mongoCollections = theMongoCollections;
-    for (var i in mongoCollections) {
+    for (var i in mongo.collections) {
         if (!ijodFiles[i]) {
             ijodFiles[i] = new IJOD(i);
         }
     }
+}
+
+exports.addCollection = function(name) {
+    if(!mongo.collections[name])
+        mongo.addCollection(name);
 }
 
 function now() {
@@ -39,7 +43,7 @@ exports.addObject = function(type, object, options, callback) {
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
-        for (var i = 0; i < options['strip'].length; i++) {
+        for (var i in options['strip']) {
             object[options['strip'][i]].delete
         }
         if (options['timeStamp']) {
@@ -74,46 +78,46 @@ exports.removeObject = function(type, id, options, callback) {
 
 // mongos
 function getMongo(type, id, callback) {
-    var mongo = mongoCollections[type];
-    if(!mongo) 
+    var m = mongo.collections[type];
+    if(!m) 
         callback(new Error('invalid type:' + type), null);
     else if(!(id && (typeof id === 'string' || typeof id === 'number')))
         callback(new Error('bad id:' + id), null);
     else
-        return mongo;
+        return m;
 }
 
 exports.getAllCurrent = function(type, callback) {
-    var mongo = mongoCollections[type];
-    if(!mongo) 
+    var m = mongo.collections[type];
+    if(!m) 
         callback(new Error('invalid type:' + type), null);
     else
-        mongo.find({}, {}).toArray(callback);
+        m.find({}, {}).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
-    var mongo = getMongo(type, id, callback);
-    if(mongo) {
+    var m = getMongo(type, id, callback);
+    if(m) {
         var query = {};
         query[mongoID] = id;
-        mongo.findOne(query, callback);
+        m.findOne(query, callback);
     }
 }
 
 setCurrent = function(type, object, callback) {
-    var mongo = getMongo(type, object[mongoID], callback);
-    if(mongo) {
+    var m = getMongo(type, object[mongoID], callback);
+    if(m) {
         var query = {};
         query[mongoID] = object[mongoID];
-        mongo.update(query, object, {upsert:true, safe:true}, callback);
+        m.update(query, object, {upsert:true, safe:true}, callback);
     }
 }
 
 removeCurrent = function(type, id, callback) {
-    var mongo = getMongo(type, id, callback);
-    if(mongo) {
+    var m = getMongo(type, id, callback);
+    if(m) {
         var query = {};
         query[mongoID] = id;
-        mongo.remove(query, callback);
+        m.remove(query, callback);
     }
 }

@@ -20,9 +20,9 @@ module.exports = function(theapp) {
     return this;
 };
 
-function authComplete(theauth, mongoCollections) {
+function authComplete(theauth, mongo) {
     auth = theauth;
-    sync.init(auth, mongoCollections);
+    sync.init(auth, mongo);
 
     app.get('/friends', friends);
     app.get('/newsfeed', newsfeed);

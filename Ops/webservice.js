@@ -101,8 +101,8 @@ locker.get("/query/:query", function(req, res) {
         }
 
         var mongo = require("lmongoclient")(config.mongo.host, config.mongo.port, provider.id, provider.mongoCollections);
-        mongo.connect(function(collections) {
-            var collection = collections[provider.mongoCollections[0]];
+        mongo.connect(function(mongo) {
+            var collection = mongo.collections[provider.mongoCollections[0]];
             console.log("Querying " + JSON.stringify(query));
             var options = {};
             if (query.limit) options.limit = query.limit;

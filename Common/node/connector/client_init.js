@@ -42,10 +42,10 @@ process.stdin.on("data", function(data) {
     process.chdir(processInfo.workingDirectory);
     
     app.meData = lfs.loadMeData();
-    locker.connectToMongo(function(collections) {
-        require("./api.js")(app, mongoId, collections);
+    locker.connectToMongo(function(mongo) {
+        require("./api.js")(app, mongoId, mongo);
         authLib.authAndRun(app, function() {
-            syncApi.authComplete(authLib.auth, collections);
+            syncApi.authComplete(authLib.auth, mongo);
             if (!started) {
                 startWebServer();
             }

@@ -21,7 +21,7 @@ var updateState, auth, allKnownIDs;
 
 exports.eventEmitter = new EventEmitter();
 
-exports.init = function(theauth, mongoCollections) {
+exports.init = function(theauth, mongo) {
     auth = theauth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
@@ -30,7 +30,7 @@ exports.init = function(theauth, mongoCollections) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = []; }
-    dataStore.init("id", mongoCollections);
+    dataStore.init("id", mongo);
 }
 
 

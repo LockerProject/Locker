@@ -26,36 +26,9 @@ var mePath = '/Me/' + svcId;
 
 var events = 0;
 
-var data = {
-    "id": "100002438955325_224550747571079",
-    "from": {
-        "name": "Eric Doe",
-        "id": "100002438955325"
-    },
-    "message": "Secret weapon!",
-    "link": "http://singly.com/",
-    "name": "Singly",
-    "caption": "singly.com",
-    "description": "Singly is the home of the Locker Project and personal data resources.",
-    "icon": "http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif",
-    "actions": [
-        {
-           "name": "Comment",
-           "link": "http://www.facebook.com/100002438955325/posts/101"
-        },
-        {
-           "name": "Like",
-           "link": "http://www.facebook.com/100002438955325/posts/101"
-        }
-    ],
-    "privacy": {
-        "description": "Friends Only",
-        "value": "ALL_FRIENDS"
-    },
-    "type": "link",
-     "created_time": 1306369954,
-     "updated_time": 1306369954
-};
+var fs = require('fs');
+var twitterEvent1 = fs.readFileSync('fixtures/events/links/twitter_event_1.json','ascii');
+var facebookEvent1 = fs.readFileSync('fixtures/events/links/facebook_event_1.json', 'ascii');
 
 suite.next().suite.addBatch({
     "Can pull in the links from twitter" : {
@@ -70,8 +43,8 @@ suite.next().suite.addBatch({
             var self = this;
             process.chdir('./Me/links');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/link%2Ffull"}, function() {
-                lmongoclient.connect(function(collections) {
-                    mongoCollections = collections.links;
+                lmongoclient.connect(function(mongo) {
+                    mongoCollections = mongo.collections.links;
                     links.init("", mongoCollections);
                     dataStore.init(mongoCollections);
                     dataStore.clear();
@@ -163,45 +136,26 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 3);
+            assert.equal(events, 5);
         }
     }
 }).addBatch({
-    // TODO: this should all be going through the actual events system, this is a pretty fragile test currently
-    //
-    "Posting an event to the links collection" : {
+    "Facebook ADD event" : {
         topic: function() {
             dataStore.clear();
-            var self = this;
-            request.post({
-                url:lconfig.lockerBase + mePath + "/events",
-                json:{obj:{
-                        source:"friends",
-                        type:"new",
-                        data: {url:'http://singly.com/', sourceObject:data}
-                      },
-                      '_via':["facebook-1"]}}, self.callback);
-        },
-        "returns a 200" : function (err, res, body) {
-            assert.equal(res.statusCode, 200);
-        },
-        "and verify that my data arrived" : {
-            topic: function() {
-                mongoCollections.findOne({'url':'http://singly.com/'}, this.callback);
-            },
-            "successfully" : function(err, resp) {
-                assert.isNull(err);
-                assert.equal(resp.url, 'http://singly.com/');
-            },
-            "and an event" : {
-                topic: function() {
-                    request.get({url:lconfig.lockerBase + "/Me/event-collector/getEvents/links"}, this.callback);
-                },
-                "was generated" : function(err, resp, data) {
-                    assert.isNull(err);
-                    assert.equal(data, 1);
-                }
-            }
+            dataStore.addEvent("facebook", {data: JSON.parse(facebookEvent1)}, this.callback)},
+        "is handled properly" : function(err, object) {
+            assert.equal(object.sourceObjects[0].svcID, 'facebook');
+            assert.equal(object.url, 'http://singly.com/');
+        }
+    }
+}).addBatch({
+    "Twitter ADD event" : {
+        topic: function() {
+            dataStore.addEvent("twitter", {data: JSON.parse(twitterEvent1)}, this.callback)},
+        "is handled properly" : function(err, object) {
+            assert.equal(object.sourceObjects[0].svcID, 'twitter');
+            assert.equal(object.url, 'http://bit.ly/jBrrAe');
         }
     }
 })

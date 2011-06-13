@@ -7,106 +7,133 @@
  * information, please see the LICENSE file in the root folder.
  */
 
-var url = require("url"),
-    http = require('http'),
-    OAuth = require('oauth').OAuth,
-    querystring = require("querystring");
+ var url = require('url')
+   , http = require('http')
+   , OAuth = require('oauth').OAuth
+   , querystring = require('querystring')
+   , memoize = {};
 
-module.exports = function (api_key, api_secret, callbackURI) {
-  var client = {version: '0.0.3'},
+ module.exports = function (key, secret) {
+   if (memoize[key + secret]) {
+     return memoize[key + secret];
+   }
 
-  // PRIVATE
-      oAuth = new OAuth(
-        'https://twitter.com/oauth/request_token',
-        'https://twitter.com/oauth/access_token',
-        api_key,
-        api_secret,
-        '1.0',
-        callbackURI,
-        'HMAC-SHA1',
-        null,
-        {'Accept': '*/*', 'Connection': 'close', 'User-Agent': 'twitter-js ' + client.version}
-      ),
-      rest_base = 'https://api.twitter.com/1',
+   var CLIENT = {
+     oauth: new OAuth(
+       'https://twitter.com/oauth/request_token'
+     , 'https://twitter.com/oauth/access_token'
+     , key
+     , secret
+     , '1.0'
+     , false
+     , 'HMAC-SHA1'
+     , null
+     , {'Accept': '*/*', 'Connection': 'close'}
+     )
+   }
 
-      requestCallback = function (callback) {
-        return function (error, data, response) {
-          if (error) {
-            callback(error, null);
-          } else {
-            try {
-              callback(null, JSON.parse(data));
-            } catch (exc) {
-              callback(exc, null);
-            }
-          }
-        };
-      },
+     , _rest_base = 'https://api.twitter.com/1';
 
-      get = function (path, params, token, callback) {
-        oAuth.get(rest_base + path + '?' + querystring.stringify(params), token.oauth_token, token.oauth_token_secret, requestCallback(callback));
-      },
+   memoize[key + secret] = CLIENT;
 
-      post = function (path, params, token, callback) {
-        oAuth.post(rest_base + path, token.oauth_token, token.oauth_token_secret, params, null, requestCallback(callback));
-      };
 
-  // PUBLIC
-  client.apiCall = function (method, path, params, callback) {
-    var token = params.token;
+   /* Does an API call to twitter and callbacks
+    * when the result is available.
+    *
+    * @param {String} method
+    * @param {String} path
+    * @param {Object} params
+    * @param {Function} callback
+    * @return {Request}
+    */
+   CLIENT.apiCall = function (method, path, params, callback) {
+     var token = params.token;
 
-    delete params.token;
+     delete params.token;
 
-    if (method === 'GET') {
-      get(path, params, token, callback);
-    } else if (method === 'POST') {
-      post(path, params, token, callback);
-    }
-  };
+     function requestCallback(callback) {
+       return function (error, data, response) {
+         if (error) {
+           callback(error, null);
+         } else {
+           try {
+             callback(null, JSON.parse(data));
+           } catch (exc) {
+             callback(exc, null);
+           }
+         }
+       };
+     }
 
-  client.getAccessToken = function (req, res, callback) {
+     if (method.toUpperCase() === 'GET') {
+       return CLIENT.oauth.get(
+         _rest_base + path + '?' + querystring.stringify(params)
+       , token.oauth_token
+       , token.oauth_token_secret
+       , requestCallback(callback)
+       );
+     } else if (method.toUpperCase() === 'POST') {
+       return CLIENT.oauth.post(
+         _rest_base + path
+       , token.oauth_token
+       , token.oauth_token_secret
+       , params
+       , 'application/json; charset=UTF-8'
+       , requestCallback(callback)
+       );
+     }
+   };
 
-    var parsedUrl = url.parse(req.url, true),
-        protocol = req.socket.encrypted ? 'https' : 'http',
-        callbackUrl = protocol + '://' + req.headers.host + parsedUrl.pathname,
-        has_token = parsedUrl.query && parsedUrl.query.oauth_token,
-        has_secret = req.session.auth && req.session.auth.twitter_oauth_token_secret;
+   /* Redirects to twitter to retrieve the token
+    * or callbacks with the proper token
+    *
+    * @param {Request} req
+    * @param {Response} res
+    * @param {Function} callback
+    */
+   CLIENT.getAccessToken = function (req, res, callback) {
 
-    // Acces token
-    if (has_token &&  has_secret) {
+     var parsed_url = url.parse(req.url, true)
+       , protocol = req.socket.encrypted ? 'https' : 'http'
+       , callback_url = protocol + '://' + req.headers.host + parsed_url.pathname
+       , has_token = parsed_url.query && parsed_url.query.oauth_token
+       , has_secret = req.session.auth && req.session.auth.twitter_oauth_token_secret;
 
-      oAuth.getOAuthAccessToken(
-        parsedUrl.query.oauth_token,
-        req.session.auth.twitter_oauth_token_secret,
-        parsedUrl.query.oauth_verifier,
-        function (error, oauth_token, oauth_token_secret, additionalParameters) {
-          if (error) {
-            callback(error, null);
-          } else {
-            callback(null, {oauth_token: oauth_token, oauth_token_secret: oauth_token_secret});
-          }
-        }
-      );
+     // Acces token
+     if (has_token &&  has_secret) {
 
-    // Request token
-    } else {
+       CLIENT.oauth.getOAuthAccessToken(
+         parsed_url.query.oauth_token,
+         req.session.auth.twitter_oauth_token_secret,
+         parsed_url.query.oauth_verifier,
+         function (error, oauth_token, oauth_token_secret, additionalParameters) {
+           if (error) {
+             callback(error, null);
+           } else {
+             callback(null, {oauth_token: oauth_token, oauth_token_secret: oauth_token_secret});
+           }
+         }
+       );
 
-      oAuth.getOAuthRequestToken(
-        { oauth_callback: callbackUrl },
-        function (error, oauth_token, oauth_token_secret, oauth_authorize_url, additionalParameters) {
-          if (!error) {
-            req.session.twitter_redirect_url = req.url;
-            req.session.auth = req.session.auth || {};
-            req.session.auth.twitter_oauth_token_secret = oauth_token_secret;
-            req.session.auth.twitter_oauth_token = oauth_token;
-            res.redirect("http://api.twitter.com/oauth/authorize?oauth_token=" + oauth_token);
-          } else {
-            callback(error, null);
-          }
-        }
-      );
-    }
-  };
+     // Request token
+     } else {
 
-  return client;
-};
+       CLIENT.oauth.getOAuthRequestToken(
+         { oauth_callback: callback_url },
+         function (error, oauth_token, oauth_token_secret, oauth_authorize_url, additionalParameters) {
+           if (!error) {
+             req.session.twitter_redirect_url = req.url;
+             req.session.auth = req.session.auth || {};
+             req.session.auth.twitter_oauth_token_secret = oauth_token_secret;
+             req.session.auth.twitter_oauth_token = oauth_token;
+             res.redirect("http://api.twitter.com/oauth/authorize?oauth_token=" + oauth_token);
+           } else {
+             callback(error, null);
+           }
+         }
+       );
+     }
+   };
+
+   return CLIENT;
+ };

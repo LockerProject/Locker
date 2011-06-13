@@ -23,7 +23,7 @@ exports.init = function(theLockerUrl, mongoCollection) {
 exports.gatherLinks = function() {
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
-        locker.providers(['link/facebook', 'status/twitter'], function(services) {
+        locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -56,7 +56,7 @@ function processData(svcID, type, endpoint, data, callback) {
     } else if(type === 'facebook'){
         var obj = data.shift();
         if(obj.type === 'link') {
-            dataStore.addData(svcID, type, endpoint, {data:obj}, function(err, doc) {
+            dataStore.addData(svcID, type, {data:obj}, function(err, doc) {
                 if (doc._id) {
                     var eventObj = {source: "links", type:endpoint, data:doc};
                     exports.eventEmitter.emit('link/full', eventObj);
@@ -70,7 +70,7 @@ function processData(svcID, type, endpoint, data, callback) {
     } else if(type === 'twitter') {
         var obj = data.shift();
         if(obj.entities && obj.entities.urls && obj.entities.urls.length) {
-            dataStore.addData(svcID, type, endpoint, {data:obj}, function(err, doc) {
+            dataStore.addData(svcID, type, {data:obj}, function(err, doc) {
                 if (doc._id) {
                     var eventObj = {source: "links", type:endpoint, data:doc};
                     exports.eventEmitter.emit('link/full', eventObj);

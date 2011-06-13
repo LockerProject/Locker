@@ -28,7 +28,7 @@ var requestCount = 0;
 exports.eventEmitter = new EventEmitter();
 
 // Initialize the state
-exports.init = function(theAuth, mongoCollections) {
+exports.init = function(theAuth, mongo) {
     auth = theAuth;
     try {
         latests = JSON.parse(fs.readFileSync('latests.json'));
@@ -39,7 +39,7 @@ exports.init = function(theAuth, mongoCollections) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
-    dataStore.init('id_str', mongoCollections);
+    dataStore.init('id_str', mongo);
 }
 
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
