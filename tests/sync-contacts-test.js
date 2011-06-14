@@ -14,7 +14,6 @@ var request = require('request');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe("Contacts Collection");
 
-var shallowCompare = require('../Common/node/shallowCompare.js');
 var friend;
 
 var thecollections = ['contacts'];
@@ -152,8 +151,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, resp) {
             assert.isNull(err);
-            assert.isTrue(shallowCompare(friend.accounts.foursquare, resp.accounts.foursquare));
-            assert.isFalse(shallowCompare(resp, friend));
+            assert.deepEqual(friend.accounts.foursquare, resp.accounts.foursquare);
+            assert.notDeepEqual(resp, friend);
         }
     }
 }).addBatch({

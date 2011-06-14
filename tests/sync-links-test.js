@@ -14,7 +14,6 @@ var request = require('request');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe("Links Collection");
 
-var shallowCompare = require('../Common/node/shallowCompare.js');
 var link;
 
 var thecollections = ['links'];
@@ -124,8 +123,8 @@ suite.next().suite.addBatch({
         "successfully" : function(err, resp) {
             assert.isNull(err);
             assert.equal(link.url, resp.url);
-            assert.isTrue(shallowCompare(link.sourceObjects[0], resp.sourceObjects[0]));
-            assert.isFalse(shallowCompare(link, resp));
+            assert.deepEqual(link.sourceObjects[0], resp.sourceObjects[0]);
+            assert.notDeepEqual(link, resp);
         }
     }
 }).addBatch({

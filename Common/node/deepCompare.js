@@ -4,7 +4,7 @@ module.exports = function Equals(obj1, obj2) {
             return false;
         }
     }
-    
+
     for (p in obj1) {
         if (obj1[p]) {
             switch(typeof(obj1[p])) {
@@ -24,7 +24,7 @@ module.exports = function Equals(obj1, obj2) {
             }
         }
     }
-    
+
     for (p in obj2) {
         if (typeof(obj1[p]) == 'undefined') {
             return false;
@@ -36,6 +36,6 @@ module.exports = function Equals(obj1, obj2) {
             }
         }
     }
-    
+
     return true;
 }

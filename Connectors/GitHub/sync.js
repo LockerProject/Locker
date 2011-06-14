@@ -11,7 +11,7 @@ var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
     dataStore = require('../../Common/node/connector/dataStore'),
-    shallowCompare = require('../../Common/node/shallowCompare'),
+    deepCompare = require('../../Common/node/deepCompare'),
     app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter,
     GitHubApi = require("github").GitHubApi,
@@ -86,7 +86,7 @@ exports.syncRepos = function(callback) {
                             }
                         }
                         knownWatchers[js.id] = newWatchers;
-                        if (!watchersChanged && shallowCompare(js, resp)) {
+                        if (!watchersChanged && deepCompare(js, resp)) {
                             parseRepo(data);
                         } else {
                             dataStore.addObject("repos", js, function(err) {
@@ -173,7 +173,7 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
                             });
                         } else {
                             delete resp['_id'];
-                            if (shallowCompare(user, resp)) {
+                            if (deepCompare(user, resp)) {
                                 processUser(data);
                             } else {
                                 dataStore.addObject(friendsOrFollowers, user, function(err) {
