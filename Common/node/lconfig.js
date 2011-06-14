@@ -21,6 +21,7 @@ exports.load = function(filepath) {
     exports.lockerPort = config.lockerPort || 8042;
     setLockerBase();
     exports.scannedDirs = config.scannedDirs;
+    exports.displayUnstable = config.displayUnstable;
     exports.mongo = config.mongo;
     exports.me = config.me;
     exports.lockerDir = process.cwd();

@@ -27,6 +27,7 @@
                          "sync-links-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
+    "displayUnstable" : true,
     "disabledTests" : [
         "connector-local-XMPP-test.js"
     ], 

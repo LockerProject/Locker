@@ -8,6 +8,7 @@ vows.describe("Locker Config").addBatch({
         topic: lconfig.load('config.json'),
         "loads value for lockerPort as 8043" : function() {
             assert.equal(lconfig.lockerPort, 8043);
+            assert.equal(lconfig.displayUnstable, true);
         }
     }
 }).export(module);

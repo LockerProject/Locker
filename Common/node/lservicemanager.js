@@ -63,23 +63,25 @@ function mapMetaData(file, type, installable) {
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
     metaData.installable = installable;
-    serviceMap["available"].push(metaData);        
-    if (type === "collection") {
-        if(!metaData.handle)
-        {
-            console.error("missing handle for "+file);
-            return;
-        }
-        fs.stat(lconfig.lockerDir+"/Me/"+metaData.handle,function(err,stat){
-            if(err || !stat)
+    if (lconfig.displayUnstable || metaData.status === 'stable') {
+        serviceMap["available"].push(metaData);        
+        if (type === "collection") {
+            if(!metaData.handle)
             {
-                metaData.id=metaData.handle;
-                metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
-                serviceMap.installed[metaData.id] = metaData;
-                fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
-                fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
+                console.error("missing handle for "+file);
+                return;
             }
-        });
+            fs.stat(lconfig.lockerDir+"/Me/"+metaData.handle,function(err,stat){
+                if(err || !stat)
+                {
+                    metaData.id=metaData.handle;
+                    metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                    serviceMap.installed[metaData.id] = metaData;
+                    fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
+                    fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
+                }
+            });
+        }
     }
 
     return metaData;
