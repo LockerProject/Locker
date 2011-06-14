@@ -19,7 +19,7 @@ var lconfig = require('../Common/node/lconfig.js');
 
 lconfig.load('config.json');
 
-var tests = RESTeasy.describe("Locker core API")
+var tests = RESTeasy.describe("Locker core API");
 
 tests.use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Core can")
@@ -152,7 +152,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .get("invalidServicename/test")
             .expect(404)
     .undiscuss().unpath()
-
+    
     .path("/Me")
     .discuss("proxy requests via POST to services")
         .post("testURLCallback/test", {test:"test"})
@@ -167,9 +167,10 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
             .get()
                 .expect(200)
                 .expect("returned unicode JSON should be parsable", function(err, res, body) {
+                    var json;
                     try {
-                        var json = JSON.parse(body);
-                    } catch(err) {
+                        json = JSON.parse(body);
+                    } catch(E) {
                         throw new Error('Could not parse json correctly: ' + body);
                     }
                     assert.isNotNull(json);
@@ -229,8 +230,8 @@ tests.next()
 tests.next().suite.addBatch({
     "Core can schedule a uri callback" : {
         topic:function() {
-            var promise = new events.EventEmitter;
-            var when = new Date;
+            var promise = new events.EventEmitter();
+            var when = new Date();
             when.setTime(when.getTime() + 250);
             var options = {
                 host:lconfig.lockerHost,
@@ -263,7 +264,7 @@ tests.next().suite.addBatch({
     },
     "Core can fire an event" : {
         topic:function() {
-            var promise = new events.EventEmitter;
+            var promise = new events.EventEmitter();
             var getOptions = {
                 host:lconfig.lockerHost,
                 port:lconfig.lockerPort,

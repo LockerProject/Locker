@@ -215,7 +215,7 @@ suite.next().suite.addBatch({
             assert.equal(process.cwd(), currentDir);
         }
     }
-})
+});
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")

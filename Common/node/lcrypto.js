@@ -22,7 +22,7 @@ exports.generateSymKey = function(cb) {
             var openssl = spawn("openssl", ["rand", "-out", "Me/symKey", "24"]);
             openssl.on("exit", function(code) {
                 var ret = true;
-                if (code != 0) {
+                if (code !== 0) {
                     ret = false;
                     console.error("could not generate a symmetric key");
                 } else {
@@ -68,7 +68,7 @@ exports.generatePKKeys = function(cb) {
                 openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
                 openssl.on('exit', function (code) {
                     var ret = true;
-                    if (code != 0) {
+                    if (code !== 0) {
                         ret = false;
                     } else {
                         exports.loadKeys();

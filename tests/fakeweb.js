@@ -19,9 +19,9 @@ function interceptable(uri) {
     if (ignoredUris[uri]) {
         return false;
     }
-    if (allowNetConnect == false) {
+    if (allowNetConnect === false) {
         if (uri) {
-            if (allowLocalConnect == true && url.parse(uri).hostname == "localhost") {
+            if (allowLocalConnect === true && url.parse(uri).hostname == "localhost") {
                 return false;
             }
             console.error("FAKEWEB: Unhandled GET request to " + uri);
@@ -84,10 +84,11 @@ function Fakeweb() {
     }
     var oldHttpsRequest = https.request;
     https.request = function(options, callback) {
+        var uri;
         if (options.port) {
-            var uri = "https://" + options.host + ":" + options.port + options.path;
+            uri = "https://" + options.host + ":" + options.port + options.path;
         } else {
-            var uri = "https://" + options.host + options.path;
+            uri = "https://" + options.host + options.path;
         }
         if (interceptable(uri)) {
             return httpModuleRequest(uri, callback);
@@ -97,10 +98,11 @@ function Fakeweb() {
     }
     var oldHttpRequest = http.request;
     http.request = function(options, callback) {
+        var uri;
         if (options.port) {
-            var uri = "http://" + options.host + ":" + options.port + options.path;
+            uri = "http://" + options.host + ":" + options.port + options.path;
         } else {
-            var uri = "http://" + options.host + options.path;
+            uri = "http://" + options.host + options.path;
         }
         if (interceptable(uri)) {
             return httpModuleRequest(uri, callback);

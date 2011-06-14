@@ -82,7 +82,7 @@ tests.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .get("/get")
                 .expect(200)
                 .expect("and can get an object from the collection with", function(err, resp, body) {
-                    if(!resp.statusCode == 200) {
+                    if(resp.statusCode !== 200) {
                         console.error('bad status code, body:', body);
                         assert.ok(false);
                     }

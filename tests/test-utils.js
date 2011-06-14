@@ -17,7 +17,7 @@ var request = require('request');
 exports.timeoutAsyncCallback = function(timeout, startCallback, runCallback) {
     var context = {
         topic: function (topic) {
-            var emitter = new(events.EventEmitter)
+            var emitter = new events.EventEmitter();
             var fired = false;
             startCallback(topic, timeout, function() {
                 if (runCallback) {
@@ -46,7 +46,7 @@ exports.timeoutAsyncCallback = function(timeout, startCallback, runCallback) {
 
 //checks to ensure a list of paths all exist
 exports.checkFiles = function(paths, callback) {
-    if(!paths || paths.length == 0) {
+    if(!paths || paths.length === 0) {
         callback();
         return;
     } else {
@@ -106,7 +106,7 @@ exports.waitForFileToComplete = function(path, expectedSize, retries, timeout,  
 
 //wait for event response, count the number of responses
 exports.waitForEvents = function (url, retries, timeout, expectedResponses, value, callback) {
-    if (retries == 0) {
+    if (retries === 0) {
         return callback(null, value);
     }
     if (expectedResponses === value.length) {

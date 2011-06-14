@@ -20,10 +20,9 @@ var processInfo;
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     processInfo = JSON.parse(chunk);
-    util.debug(util.inspect(me));
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
-    util.debug(util.inspect(me));
+    //util.debug(util.inspect(me));
     app.listen(processInfo.port);
     var returnedInfo = {port: processInfo.port};
     console.log(JSON.stringify(returnedInfo));

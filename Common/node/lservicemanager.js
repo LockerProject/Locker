@@ -28,7 +28,7 @@ exports.serviceMap = function() {
 }
 
 exports.providers = function(types) {
-    var services = []
+    var services = [];
     for(var svcId in serviceMap.installed) {
         if (!serviceMap.installed.hasOwnProperty(svcId))  continue;
         var service = serviceMap.installed[svcId];
@@ -64,7 +64,7 @@ function mapMetaData(file, type, installable) {
     metaData.is = type;
     metaData.installable = installable;
     if (lconfig.displayUnstable || metaData.status === 'stable') {
-        serviceMap["available"].push(metaData);        
+        serviceMap.available.push(metaData);        
         if (type === "collection") {
             if(!metaData.handle)
             {
@@ -143,11 +143,11 @@ exports.findInstalled = function () {
 * Install a service
 */
 exports.install = function(metaData) {
-    var serviceInfo = undefined;
+    var serviceInfo;
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == metaData.srcdir) {
-            serviceInfo = new Object();
-            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];};
+            serviceInfo = {};
+            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
             return true;
         }
         return false;
@@ -272,14 +272,14 @@ exports.spawn = function(serviceId, callback) {
     }
     app = spawn(run.shift(), run, {cwd: svc.srcdir});
     app.stderr.on('data', function (data) {
-        var mod = console.outputModule
-        console.outputModule = svc.title
+        var mod = console.outputModule;
+        console.outputModule = svc.title;
         console.error(data);
-        console.outputModule = mod
+        console.outputModule = mod;
     });
     app.stdout.on('data',function (data) {
-        var mod = console.outputModule
-        console.outputModule = svc.title
+        var mod = console.outputModule;
+        console.outputModule = svc.title;
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
             console.log(data);
@@ -371,7 +371,7 @@ exports.shutdown = function(cb) {
 * Return whether the service is running
 */
 exports.isRunning = function(serviceId) {
-    return exports.isInstalled(serviceId) && exports.metaInfo(serviceId).pid
+    return exports.isInstalled(serviceId) && exports.metaInfo(serviceId).pid;
 }
 
 function checkForShutdown() {

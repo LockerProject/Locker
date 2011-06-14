@@ -36,7 +36,6 @@ suite.addBatch({
             });
         },
         "successfully" : function() {
-            lfs.readObjectsFromDis
             assert.equal(errs.length, 0);
         }
     }

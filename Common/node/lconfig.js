@@ -28,6 +28,6 @@ exports.load = function(filepath) {
 }
 
 function setLockerBase() {
-    exports.lockerBase = 'http://' + exports.lockerHost 
-                                   + (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
+    exports.lockerBase = 'http://' + exports.lockerHost + 
+                         (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
 }

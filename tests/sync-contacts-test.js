@@ -12,7 +12,7 @@ var svcId = 'contacts';
 var request = require('request');
 
 var RESTeasy = require('api-easy');
-var suite = RESTeasy.describe("Contacts Collection")
+var suite = RESTeasy.describe("Contacts Collection");
 
 var shallowCompare = require('../Common/node/shallowCompare.js');
 var friend;
@@ -215,9 +215,9 @@ suite.next().suite.addBatch({
             assert.equal(object.data.accounts.foursquare[0].data.name, 'Jake Mitchell');
             assert.equal(object.data.name, 'Jeremie Miller');
             assert.equal(object.data.accounts.github[0].data.name, 'James Burkhart');
-            assert.equal(object.data.accounts.googleContacts[0].data.name, 'Jeremie Miller')
+            assert.equal(object.data.accounts.googleContacts[0].data.name, 'Jeremie Miller');
         }
     }
-})
+});
         
 suite.export(module);

@@ -36,40 +36,44 @@ vows.describe("Service Manager").addBatch({
                 assert.include(serviceManager.serviceMap().installed, "testURLCallback");
                 assert.isTrue(serviceManager.isInstalled("testURLCallback"));
             },
-            topic:function() {
-                var promise = new(events.EventEmitter);
-                var started = false;
-                serviceManager.spawn("testURLCallback", function() {
-                    started = true;
-                });
-                setTimeout(function() {
-                    if (started) {
-                        promise.emit("success", true);
-                    } else {
-                        promise.emit("error", false);
+            "and can be spawned" : {
+                topic:function() {
+                    var promise = new events.EventEmitter();
+                    var started = false;
+                    serviceManager.spawn("testURLCallback", function() {
+                        started = true;
+                    });
+                    setTimeout(function() {
+                        if (started) {
+                            promise.emit("success", true);
+                        } else {
+                            promise.emit("error", false);
+                        }
+                    }, 500);
+                    return promise;
+                },
+                "successfully" : function(err, stat) {
+                    assert.isNull(err);
+                    assert.isTrue(stat);
+                },
+                "and can be shut down" : {
+                    topic: function() {
+                        var promise = new events.EventEmitter();
+                        var shutdownComplete = false;
+                        serviceManager.shutdown(function() {
+                            shutdownComplete = true;
+                        });
+                        setTimeout(function() {
+                            if (shutdownComplete) promise.emit("success", true);
+                            else promise.emit("error", false);
+                        }, 1000);
+                        return promise;
+                    },
+                    "successfully" : function (err, stat) {
+                        assert.isNull(err);
+                        assert.isTrue(stat);
                     }
-                }, 500);
-                return promise;
-            },
-            "and can be spawned" : function(err, stat) {
-                assert.isNull(err);
-                assert.isTrue(stat);
-            },
-            topic: function() {
-                var promise = new(events.EventEmitter);
-                var shutdownComplete = false;
-                serviceManager.shutdown(function() {
-                    shutdownComplete = true;
-                });
-                setTimeout(function() {
-                    if (shutdownComplete) promise.emit("success", true);
-                    else promise.emit("error", false);
-                }, 1000);
-                return promise;
-            },
-            "and can be shutdown" : function (err, stat) {
-                assert.isNull(err);
-                assert.isTrue(stat);
+                }
             }
         }
     },
@@ -102,24 +106,24 @@ vows.describe("Service Manager").addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
             topic:serviceManager.scanDirectory("Connectors"),
-            "gathered at least 10 services": function() {
+            "found at least 10 services": function() {
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
-            topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
-            "can be installed" : {
-                "giving a valid install instance" : function(svcMetaInfo) {
+            "and can be installed" : {
+                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
-                "service map says it is installed" : function(svcMetaInfo) {
+                "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
                 },
-                "creates a valid service instance directory" : function(svcMetaInfo) {
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync("Me/" + svcMetaInfo.id);
                 },
-                "creates a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
+                "and by creating a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
                     statInfo = fs.readFileSync("Me/" + svcMetaInfo.id + "/auth.json",'ascii');
                     assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
-                }
+                }    
             }
         }
     },

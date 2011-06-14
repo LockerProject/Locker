@@ -27,7 +27,7 @@ exports.NotImplemented = function() {
 }
 exports.NotImplemented.prototype = new Error;
 
-exports.notImplemented = function() { throw new exports.NotImplemented; } 
+exports.notImplemented = function() { throw new exports.NotImplemented; }; 
 
 function TestDescription(description, cb) {
     events.EventEmitter.call(this);
@@ -116,7 +116,7 @@ exports.testSuite = {
     {
         var self = exports.testSuite;
         // Initial setup things
-        if (self.testPosition == 0) {
+        if (self.testPosition === 0) {
             self.startTime = new Date();
         }
         // Cleanup and output
@@ -134,8 +134,8 @@ exports.testSuite = {
         for (var i = 0; i < dots; ++i) output += ".";
         // Put this in a tmp directory
         if (test.isolatedDir) {
-            if (!fs.exists(test.isolatedDir)) fs.mkdirSync(test.isolatedDir, 0777);
-            process.chdir(test.isolatedDir)
+            if (!fs.exists(test.isolatedDir)) fs.mkdirSync(test.isolatedDir, 777);
+            process.chdir(test.isolatedDir);
         }
         process.stdout.write(output);
         test.on("success", self.passedTest);
@@ -150,7 +150,7 @@ exports.testSuite = {
 }
 
 exports.Test = function(description, cb) {
-    var testDescription = new TestDescription(description, cb)
+    var testDescription = new TestDescription(description, cb);
     exports.testSuite.tests.push(testDescription);
     return testDescription;
 }

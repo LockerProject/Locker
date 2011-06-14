@@ -73,7 +73,7 @@ exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
     if (typeof(atTime) == "number") {
         runTime = new Date;
         runTime.setTime(runTime.getTime() + atTime);
-        atTime = runTime
+        atTime = runTime;
     }
     var trackingInfo = {
         at:atTime,

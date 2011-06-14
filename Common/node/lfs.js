@@ -134,7 +134,7 @@ exports.saveUrl = function(url, filename, callback) {
 function listSubdirectories(path) {
     var files = fs.readdirSync(path);
     var dirs = [];
-    for(i in files) {    
+    for(var i in files) {    
         var fullPath = path + '/' + files[i];
         var stats = fs.statSync(fullPath);
         if(!stats.isDirectory())

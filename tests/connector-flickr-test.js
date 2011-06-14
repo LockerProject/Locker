@@ -16,10 +16,10 @@ var events = require("events");
 var fs = require("fs");
 var lfs = require('../Common/node/lfs.js');
 var locker = require('../Common/node/locker.js');
-var lconfig = require('../Common/node/lconfig.js')
+var lconfig = require('../Common/node/lconfig.js');
 var path = require('path');
 
-var suite = RESTeasy.describe("Flickr Connector")
+var suite = RESTeasy.describe("Flickr Connector");
 
 var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 

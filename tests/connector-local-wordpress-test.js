@@ -9,9 +9,9 @@
 //testing for the Wordpress connector
 
 var RESTeasy = require('api-easy');
-var lconfig = require('../Common/node/lconfig.js')
+var lconfig = require('../Common/node/lconfig.js');
 
-var suite = RESTeasy.describe("Wordpress Connector")
+var suite = RESTeasy.describe("Wordpress Connector");
 
 var svcId = "wordpress-test";
 
@@ -38,6 +38,6 @@ suite.use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
 
         // TODO: Add more API tests as the endpoints are decided upon
-    .undiscuss()
+    .undiscuss();
 
 suite.export(module);
