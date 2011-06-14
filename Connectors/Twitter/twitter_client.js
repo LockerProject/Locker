@@ -13,7 +13,7 @@
    , querystring = require('querystring')
    , memoize = {};
 
- module.exports = function (key, secret) {
+ module.exports = function (key, secret, callbackURI) {
    if (memoize[key + secret]) {
      return memoize[key + secret];
    }
@@ -25,7 +25,7 @@
      , key
      , secret
      , '1.0'
-     , false
+     , callbackURI
      , 'HMAC-SHA1'
      , null
      , {'Accept': '*/*', 'Connection': 'close'}
