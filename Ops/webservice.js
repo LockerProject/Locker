@@ -102,22 +102,27 @@ locker.get("/query/:query", function(req, res) {
 
         var mongo = require("lmongoclient")(config.mongo.host, config.mongo.port, provider.id, provider.mongoCollections);
         mongo.connect(function(mongo) {
-            var collection = mongo.collections[provider.mongoCollections[0]];
-            console.log("Querying " + JSON.stringify(query));
-            var options = {};
-            if (query.limit) options.limit = query.limit;
-            if (query.skip) options.skip = query.skip;
-            collection.find(query.query, options, function(err, foundObjects) {
-                if (err) {
-                    res.writeHead(500);
-                    res.end(err);
-                    return;
-                }
+            try {
+                var collection = mongo.collections[provider.mongoCollections[0]];
+                console.log("Querying " + JSON.stringify(query));
+                var options = {};
+                if (query.limit) options.limit = query.limit;
+                if (query.skip) options.skip = query.skip;
+                collection.find(query.query, options, function(err, foundObjects) {
+                    if (err) {
+                        res.writeHead(500);
+                        res.end(err);
+                        return;
+                    }
 
-                foundObjects.toArray(function(err, objects) {
-                    res.end(JSON.stringify(objects));
+                    foundObjects.toArray(function(err, objects) {
+                        res.end(JSON.stringify(objects));
+                    });
                 });
-            });
+            } catch (E) {
+                res.writeHead(500);
+                res.end('Something broke while trying to query Mongo : ' + E);
+            }
         });
     } catch (E) {
         res.writeHead(400);
