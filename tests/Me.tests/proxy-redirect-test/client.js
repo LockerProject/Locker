@@ -4,10 +4,10 @@ require.paths.push(__dirname + "/../../../Common/node");
 var http = require("http");
 var fs = require("fs");
 var lfs = require("lfs");
-var querystring = require("querystring");
+var querystring = require("querystring"),
     express = require('express'),
     connect = require('connect'),
-    sys = require('sys'),
+    util = require('util'),
     app = express.createServer(
                     connect.bodyParser(),
                     connect.cookieParser(),
@@ -20,9 +20,10 @@ var processInfo;
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     processInfo = JSON.parse(chunk);
+    util.debug(util.inspect(me));
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
-    sys.debug(sys.inspect(me));
+    util.debug(util.inspect(me));
     app.listen(processInfo.port);
     var returnedInfo = {port: processInfo.port};
     console.log(JSON.stringify(returnedInfo));

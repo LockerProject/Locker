@@ -14,15 +14,11 @@ var lconfig = require('../Common/node/lconfig.js');
 
 lconfig.load('config.json');
 
-var tests = RESTeasy.describe("Locker Core Issues")
+var tests = RESTeasy.describe("Locker Core Issues");
 
-tests.use(lconfig.lockerHost, lconfig.lockerPort);
-tests.outgoing
 tests.discuss("Issues #11 - Proxy should respond to redirects")
-    .before('Don\'t follow redirects', function(outgoing) {
-        outgoing.followRedirect = false;
-        return outgoing;
-    })
+    .use(lconfig.lockerHost, lconfig.lockerPort)
+    .followRedirect(false)
     .get("/Me/proxy-redirect-test/external")
         .expect(302)
         .expect("redirects to http://www.example.com", function(err, resp, body) {
@@ -33,6 +29,7 @@ tests.discuss("Issues #11 - Proxy should respond to redirects")
 .undiscuss();
 
 tests.discuss("Issues #15 - Services do not spawn when called through the proxy")
+    .use(lconfig.lockerHost, lconfig.lockerPort)
     // Two of these at once to test the error of the process stopping with multiple pending callbacks
     .get("/Me/slowStarter/firstPass")
         .expect(200)
