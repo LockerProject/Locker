@@ -45,7 +45,7 @@ exports.syncContacts = function(callback) {
     } catch(err) {
         console.error('err', err);
     }
-    console.error('"Checking for updates since', new Date(status.contacts.lastUpdate).toString());
+    //console.error('"Checking for updates since', new Date(status.contacts.lastUpdate).toString());
     var params = {'updated-min':getISODateString(new Date(status.contacts.lastUpdate)),
                   'showdeleted':'true',
                   'sortorder':'ascending',
