@@ -2,7 +2,7 @@
     "title":"Contacts Collection",
     "desc":"A collection of contacts from many places.",
     "run":"node contacts.js",
-    "status":"unstable",
+    "status":"stable",
     "handle":"contacts",
     "provides":["contact"],
     "mongoCollections": ["contacts"]
