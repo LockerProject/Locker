@@ -45,7 +45,7 @@ exports.init = function(theAuth, mongo) {
 // Pulls statuses from a given endpoint (home_timeline, mentions, etc via the /statuses twitter API endpoint)
 exports.pullStatuses = function(type, callback) {
     if(!getTwitterClient()) {
-        sys.debug('could not get Twitter Client');
+        console.error('could not get Twitter Client');
         callback('missing auth info :(');
         return;
     }
@@ -102,7 +102,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
                 }, 10000);
             }
             require("sys").puts( error.stack )
-            sys.debug('error from twitter:' + sys.inspect(error));
+            console.error('error from twitter:', error);
             return;
         }
         if(result.length > 0) {
@@ -116,7 +116,7 @@ function pullTimelinePage(endpoint, max_id, since_id, page, items, callback) {
                 max_id = result[0].id;
             page++;
             if(requestCount > 300) {
-                sys.debug('sleeping a bit...');
+                console.error('sleeping a bit...');
                 setTimeout(function() {
                     pullTimelinePage(endpoint, max_id, since_id, page, items, callback);
                 }, 30000);
@@ -326,7 +326,7 @@ function _getUsersExtendedInfo(userIDs, usersInfo, callback) {
         {token: auth.token, user_id: id_str, include_entities: true},
         function(error, result) {
             if(error) {
-                sys.debug('error! ' + JSON.stringify(error));
+                console.error('error! ', error);
                 return;
             }
             addAll(usersInfo, result.reverse());
