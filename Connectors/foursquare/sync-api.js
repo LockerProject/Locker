@@ -26,6 +26,7 @@ function authComplete(theauth, mongo) {
 
     app.get('/friends', friends);
     app.get('/checkins', checkins);
+    app.get('/recent', recent);
     
     sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
         locker.event('checkin/foursquare', eventObj);
@@ -40,7 +41,7 @@ function index(req, res) {
         res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, load <a href='friends'>friends</a> or <a href='checkins'>checkins</a></html>");
+        res.end("<html>found a token, load <a href='friends'>friends</a>, <a href='checkins'>my checkins</a>, and <a href='recent'>my friend's recent checkins</a></html>");
     }
 }
 
@@ -60,5 +61,14 @@ function checkins(req, res) {
         locker.diary(diaryEntry);
         locker.at('/checkins', repeatAfter);
         res.end(JSON.stringify({success: "done fetching checkins"}));
+    });
+}
+
+function recent(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncRecent(function(err, repeatAfter, diaryEntry) {
+        locker.diary(diaryEntry);
+        locker.at('/recent', repeatAfter);
+        res.end(JSON.stringify({success: "done fetching recent"}));
     });
 }

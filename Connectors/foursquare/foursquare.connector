@@ -5,6 +5,6 @@
 	"run":"node init.js",
 	"status":"stable",
 	"handle":"foursquare",
-	"mongoCollections": ["friends", "places"],
+	"mongoCollections": ["friends", "places", "recent"],
 	"provides":["contact/foursquare", "checkin/foursquare"]
 }

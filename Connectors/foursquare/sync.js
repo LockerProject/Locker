@@ -93,7 +93,7 @@ exports.syncCheckins = function (callback) {
         getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
             var checkinCount = checkins.length;
             addCheckins(checkins, function() {
-                callback(err, 600, "sync'd " + checkinCount + " new checkins");
+                callback(err, 600, "sync'd " + checkinCount + " new my checkins");
             });
         });
     });
@@ -117,6 +117,33 @@ function getMe(token, callback) {
     request.get({uri:'https://api.foursquare.com/v2/users/self.json?oauth_token=' + token}, callback);
 }
 
+exports.syncRecent = function (callback) {
+    getRecent(auth.accessToken, function(err, resp, data) {
+        var checkins = JSON.parse(data).response.recent;
+        var checkinCount = checkins.length;
+        addRecent(checkins, function() {
+            callback(err, 600, "sync'd " + checkinCount + " new friend's checkins");
+        });
+    });
+}
+
+function addRecent(checkins, callback) {
+    if (!checkins || !checkins.length) {
+        callback();
+    }
+    var checkin = checkins.shift();
+    if (checkin != undefined) {
+        dataStore.addObject("recent", checkin, function(err) {
+            var eventObj = {source:'recent', type:'new', status:checkin};
+            exports.eventEmitter.emit('checkin/foursquare', eventObj);
+            addRecent(checkins, callback);
+        })
+    }
+}
+
+function getRecent(token, callback) {
+    request.get({uri:'https://api.foursquare.com/v2/checkins/recent.json?limit=100&oauth_token=' + token}, callback);
+}
 
 var checkins_limit = 250;
 function getCheckins(userID, token, offset, callback, checkins) {
