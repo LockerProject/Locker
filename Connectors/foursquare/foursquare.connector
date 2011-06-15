@@ -2,19 +2,9 @@
 	"title":"Foursquare Account",
 	"action":"Connect to a Foursquare account",
 	"desc":"Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
-	"run":"node ../../Common/node/connector/client_init.js",
+	"run":"node init.js",
 	"status":"stable",
 	"handle":"foursquare",
 	"mongoCollections": ["friends", "places"],
-	"processOptions" : {"oauth2" :
-	    {"provider" : "Foursquare",
-	     "appIDName" : "Client ID",
-	     "appSecretName" : "Client Secret",
-	     "authEndpoint" : "authenticate",
-	     "accessTokenResponse" : "json",
-	     "endPoint" : "https://foursquare.com/oauth2/",
-	     "linkToCreate" : "https://foursquare.com/oauth/register",
-	     "grantType" : "authorization_code"}
-    },
 	"provides":["contact/foursquare", "checkin/foursquare"]
 }

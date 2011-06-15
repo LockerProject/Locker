@@ -8,7 +8,7 @@
 */
 
 var request = require('request'),
-    lfs = require('../lfs.js'),
+    lfs = require('lfs'),
     fs = require('fs'),
     sys = require('sys'),
     querystring = require('querystring'),

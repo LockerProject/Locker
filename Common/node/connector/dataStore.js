@@ -7,7 +7,7 @@
 *
 */
 
-var IJOD = require('../ijod').IJOD;
+var IJOD = require('ijod').IJOD;
 
 var ijodFiles = {};
 var mongo;

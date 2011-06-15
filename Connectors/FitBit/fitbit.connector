@@ -2,11 +2,8 @@
     "title":"FitBit Account",
     "action":"Connect to a FitBit account",
     "desc":"Collect and sync my data from my FitBit account.",
-    "run":"node ../../Common/node/connector/client_init.js",
+    "run":"node init.js",
     "status":"unstable",
     "mongoCollections": ["sleep"],
-    "handle":"fitbit",
-    "processOptions" : {
-        "enableCookies":true
-    }
+    "handle":"fitbit"
 }

@@ -1,6 +1,7 @@
 var fs = require("fs");
 var net = require("net");
 require.paths.push(__dirname + "/../Common/node");
+process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
 var lconfig = require("lconfig");
 lconfig.load("config.json");
 var lconsole = require("lconsole");

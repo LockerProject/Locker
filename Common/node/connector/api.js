@@ -8,8 +8,8 @@
 */
 
 var fs = require('fs'),
-    lfs = require("../lfs.js"),
-    dataStore = require('./dataStore.js'),
+    lfs = require("lfs"),
+    dataStore = require('connector/dataStore'),
     validTypes = [];
 
 

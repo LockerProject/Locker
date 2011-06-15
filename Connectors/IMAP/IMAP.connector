@@ -2,10 +2,9 @@
 	"title":"IMAP Account",
 	"action":"Connect to an IMAP account",
 	"desc":"Collect and sync my data from my IMAP account.",
-	"run":"node ../../Common/node/connector/client_init.js",
+	"run":"node init.js",
 	"status":"unstable",
 	"handle":"imap",
-	"processOptions" : {},
 	"mongoCollections": ["messages"],
 	"provides":["message/imap"]
 }
