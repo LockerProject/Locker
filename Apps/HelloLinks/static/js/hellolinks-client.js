@@ -21,6 +21,7 @@ function reload(offset, limit, useJSON) {
 	linksList.html('');
 	
 	// populate the list with our links
+	if (links.length == 0) linksList.append("<li>Sorry, no links found!</li>");
         for (var i in links) {
 	    link = links[i];
 	    

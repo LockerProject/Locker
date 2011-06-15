@@ -21,6 +21,7 @@ function reload(offset, limit, useJSON) {
 	contactsList.html('');
 	
 	// populate the list with our contacts
+	if (contacts.length == 0) contactsList.append("<li>Sorry, no contacts found!</li>");
         for (var i in contacts) {
 	    contact = contacts[i];
 	    
@@ -45,5 +46,5 @@ function reload(offset, limit, useJSON) {
 
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 9000, false);
+    reload(0, 9000, true);
 });

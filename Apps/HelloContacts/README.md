@@ -1,4 +1,4 @@
-This is a "static" example of a contacts locker app.
+# This is a "static" example of a contacts locker app. #
 
 It uses Boilerplate and jQuery for best practices, and is documented with YUI Doc comments.
 
