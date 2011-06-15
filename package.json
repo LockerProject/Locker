@@ -7,17 +7,17 @@
         "lib": "./Common/node"
     },
     "engines": {
-        "node": ">= 0.4.6"
+        "node": ">= 0.4.6  <=0.4.8"
     },
     "dependencies": {
         "connect": "=1.1.4",
         "express": "=2.1.0",
         "async": "=0.1.6",
-        "dropbox": ">=0.3.1",
+        "dropbox": "=0.3.1",
         "facebook-js": "=0.0.5",
         "flickr-reflection": "=0.0.1",
         "gdata-js": "=0.0.1",
-        "github": ">=0.0.6",
+        "github": "=0.0.6",
         "imap": "=0.2.3",
         "lastfm": "=0.4.3",
         "oauth": "=0.9.0",
@@ -28,10 +28,9 @@
         "api-easy": "=0.2.3",
         "http-proxy": "=0.5.10",
         "xml2js": "=0.1.6",
-        "vows": ">=0.5.8",
-        "vows": ">=0.5.8",
-        "wrench": ">=1.1.0",
-        "eyes": ">=0.1.6",
+        "vows": "=0.5.8",
+        "wrench": "=1.1.0",
+        "eyes": "=0.1.6",
         "mongodb": "=0.9.3"
     }
 }

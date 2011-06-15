@@ -70,7 +70,7 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
-            assert.equal(diaryEntry, "sync'd 251 new checkins"); },
+            assert.equal(diaryEntry, "sync'd 251 new my checkins"); },
         "generates a ton of checkin events" : function(err) {
             assert.equal(emittedEvents.length, 251);
             assert.equal(emittedEvents[0], '{"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"_via":["foursquare"]}');
@@ -81,7 +81,7 @@ suite.next().suite.addBatch({
                 sync.syncCheckins(this.callback) },
             "again" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 600);
-                assert.equal(diaryEntry, "sync'd 0 new checkins"); }
+                assert.equal(diaryEntry, "sync'd 0 new my checkins"); }
         }
     }
 }).addBatch({

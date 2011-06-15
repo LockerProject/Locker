@@ -7,12 +7,12 @@ STATUS: eager-developer-friendly only at this point, we're working hard to make 
 
 To get started I'll need [node](http://nodejs.org/#download), [npm](https://github.com/isaacs/npm), and [MongoDB](http://mongodb.org) installed, and then a local copy of the Locker codebase:
 
-    git clone https://github.com/quartzjer/Locker.git
-	cd Locker
+    git clone https://github.com/LockerProject/Locker.git
+    cd Locker
 
-This is the stable master branch by default, which should work smoothly on OSX/Ubuntu but is kinda minimal. If I want to try a lot more stuff that is on the bleeding edge I can also optionally checkout the dev branch:
+This is the stable master branch by default, which should work smoothly on OSX/Ubuntu but is kinda minimal. If I want to try a lot more stuff that is on the bleeding edge I can change the config setting:
 
-    git checkout dev
+    "displayUnstable":true
 
 Then I can install dependencies (this may take a little while):
 
@@ -29,6 +29,9 @@ To turn on my locker I run:
 Then I go to to the dashboard (and am amazed by the design!):
 
     http://localhost:8042/
+
+
+If you have any problems, take a look at the [troubleshooting page](https://github.com/LockerProject/Locker/wiki/Troubleshooting-faq)!
 
 
 ## What are these things? ##
