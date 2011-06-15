@@ -27,7 +27,7 @@ function reload(offset, limit, useJSON) {
 	    
 	    log(contact);
 	    if (useJSON) {
-		contactHTML = JSON.stringify(contact);
+		contactHTML = "<pre>"+ JSON.stringify(contact, null, 2) +"</pre>";
 	    } else {
 		// get the contact name, but use the first email address if no name exists
 		contactHTML = contact.name || contact.emails[0].value;

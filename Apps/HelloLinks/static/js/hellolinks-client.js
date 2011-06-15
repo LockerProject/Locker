@@ -27,7 +27,8 @@ function reload(offset, limit, useJSON) {
 	    
 	    log(link);
 	    if (useJSON) {
-		linkHTML = JSON.stringify(link);
+		
+		linkHTML = "<pre>"+ JSON.stringify(link, null, 2) +"</pre>";
 	    } else {
 		// get the link name, but use the first email address if no name exists
 		linkHTML = link.name || link.emails[0].value;
