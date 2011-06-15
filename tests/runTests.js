@@ -46,7 +46,7 @@ var logFd = fs.openSync("locker.log", "w+");
 // If we have args they can be either files or groups
 if (process.argv.length > 2) {
     // It's nice to be helpful
-    if (process.argv[2] == "-h") {
+    if (process.argv[2] == "-h" || process.argv[2] == "-?") {
         process.stdout.write("Usage: runTests [-l <group name>][-f] [files or groups to run]\n");
         process.stdout.write("  -h  You found me!\n");
         process.stdout.write("  -l  List all of the available groups when no group is given or\n");
