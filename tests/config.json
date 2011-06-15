@@ -12,7 +12,7 @@
                       "ijod-test-local.js",
                       "lpquery-test-local.js",
                       "mongo-test.js",
-                      "shallowCompare-test.js"],
+                      "deepCompare-test.js"],
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js", 
                               "connector-local-wordpress-test.js", 
