@@ -8,7 +8,7 @@
 */
 
 /**
- * web server/service to wrap interactions w/ GitHub API
+ * simple util connector to archive tweets via search.twitter.com's api, handy!
  */
 
 var fs = require('fs'),
@@ -19,8 +19,8 @@ var fs = require('fs'),
     app = express.createServer(
                     connect.bodyParser(),
                     connect.cookieParser()),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    locker = require('locker'),
+    lfs = require('lfs');
 
 var ts = require('./sync.js');
 

@@ -270,7 +270,9 @@ exports.spawn = function(serviceId, callback) {
     if (serviceInfo && serviceInfo.processOptions) {
         processInformation.processOptions = serviceInfo.processOptions;
     }
-    app = spawn(run.shift(), run, {cwd: svc.srcdir});
+    var env = process.env;
+    env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
+    app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
         console.outputModule = svc.title;
