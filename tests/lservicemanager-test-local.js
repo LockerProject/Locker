@@ -114,6 +114,9 @@ vows.describe("Service Manager").addBatch({
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
+                "setting a version number" : function(svcMetaInfo) {
+                    assert.isNotNull(svcMetaInfo.version);
+                },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
                 },
@@ -134,6 +137,21 @@ vows.describe("Service Manager").addBatch({
         topic:serviceManager.install({srcdir:"Collections/Contacts"}),
         "are not installable" : function(svcInfo) {
             assert.isUndefined(svcInfo);
+        }
+    },
+    "Migrates services that need it during the install" : {
+        topic: [],
+        "changing their version" : function(topic) {
+            assert.include(serviceManager.serviceMap().installed, "migration-test");
+            assert.isTrue(serviceManager.isInstalled("migration-test"));
+            assert.notEqual(serviceManager.serviceMap().installed['migration-test'], undefined);
+            assert.notEqual(serviceManager.serviceMap().installed['migration-test'].version, undefined);
+            assert.equal(serviceManager.serviceMap().installed['migration-test'].version, 1308079085972);
+        },
+        "and running the migration successfully" : function(topic) {
+            var me = JSON.parse(fs.readFileSync(process.cwd() + "/Me/migration-test/me.json", 'ascii'));
+            assert.notEqual(me.mongoCollections, undefined);
+            assert.equal(me.mongoCollections[0], 'new_collection');
         }
     }
 }).export(module);

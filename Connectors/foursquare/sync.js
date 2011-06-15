@@ -11,7 +11,7 @@ var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
     dataStore = require('../../Common/node/connector/dataStore'),
-    shallowCompare = require('../../Common/node/shallowCompare'),
+    deepCompare = require('../../Common/node/deepCompare'),
     utils = require('../../Common/node/connector/utils'),
     app = require('../../Common/node/connector/api'),
     EventEmitter = require('events').EventEmitter;
@@ -199,7 +199,7 @@ function downloadUsers(users, token, callback) {
                         var eventObj = {};
                         if (resp) {
                             delete resp['_id'];
-                            if (shallowCompare(js, resp)) {
+                            if (deepCompare(js, resp)) {
                                 return parseUser();
                             }
                             eventObj = {source:'friends', type:'update', data:js};
