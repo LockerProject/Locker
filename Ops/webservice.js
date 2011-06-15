@@ -182,7 +182,6 @@ locker.get('/Me/*', function(req,res){
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
-    console.log("Proxying a get to " + ppath + " to service " + req.url);
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
