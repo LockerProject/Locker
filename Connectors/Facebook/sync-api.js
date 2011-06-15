@@ -42,12 +42,17 @@ function index(req, res) {
         res.redirect(app.meData.uri + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, sync <br>" +
-                    "<li><a href='friends'>friends</a></li>" + 
-                    "<li><a href='newsfeed'>newsfeed</a></li>" + 
-                    "<li><a href='wall'>wall</a></li>" +
-                    "<li><a href='profile'>profile</a></li>" +
-                    "</html>");
+	
+	// TODO: move to template
+	var h = "<html><head><title>Facebook Connector</title></head><body>";
+	h += "Your Facebook Connector is all set up! You can manually sync data here:<br/><br/>";
+	h += "<li><a href='friends'>friends</a></li>";
+        h += "<li><a href='newsfeed'>newsfeed</a></li>";
+        h += "<li><a href='wall'>wall</a></li>";
+        h += "<li><a href='profile'>profile</a></li>";
+	h += "</body></html>"
+
+        res.end(h);
     }
 }
 

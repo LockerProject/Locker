@@ -77,14 +77,18 @@ function handleAuth(req, res) {
     if(!(exports.auth.hasOwnProperty("consumerKey") && 
          exports.auth.hasOwnProperty("consumerSecret"))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal Twitter app info that will be used to sync your data" + 
-                " (create a new one <a href='http://dev.twitter.com/apps/new' target='_blank'>here</a> " +
-                "using the callback url of http://"+url.parse(uri).host.replace("localhost", "127.0.0.1")+"/) " +
-                "<form method='get' action='saveAuth'>" +
-                    "Consumer Key: <input name='consumerKey'><br>" +
-                    "Consumer Secret: <input name='consumerSecret'><br>" +
-                    "<input type='submit' value='Save'>" +
-                "</form></html>");
+
+	var h = "<html><head><title>Twitter Connector</title></head><body>";
+	h += "Enter your personal Twitter app info that will be used to sync your data.<br/><br/>"
+        h += "Create a new one <a href='http://dev.twitter.com/apps/new' target='_blank'>here</a> " 
+        h += "using the callback url of <input type='text' readonly='true' value='http://"+url.parse(uri).host.replace("localhost", "127.0.0.1")+"/'/> <br/><br/>"
+        h += "<form method='get' action='saveAuth'>" 
+        h += "Consumer Key: <input name='consumerKey'><br/>"
+        h += "Consumer Secret: <input name='consumerSecret'><br/>"
+        h += "<br/><input type='submit' value='Save'>"
+        h += "</form></body></html>"
+
+        res.end(h);
     } else if(!exports.auth.token) {
         require('./twitter_client')(exports.auth.consumerKey, exports.auth.consumerSecret, uri + 'auth')
             .getAccessToken(req, res, function(err, newToken) {
