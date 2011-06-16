@@ -30,6 +30,8 @@ Then I go to to the dashboard (and am amazed by the design!):
 
     http://localhost:8042/
 
+To get started using the system, navigate to the 'Services' menu item, select an account to connect, and follow the instructions to start using that connector with your locker.
+
 
 If you have any problems, come ask us in [IRC](http://webchat.freenode.net/?channels=lockerproject), take a look at the [troubleshooting page](https://github.com/LockerProject/Locker/wiki/Troubleshooting-faq). If you solve any problems for yourself, please add your learnings!
 
