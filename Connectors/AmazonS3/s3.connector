@@ -1,0 +1,9 @@
+{
+    "title":"Amazon S3 Connector",
+    "action":"Store and retrieve files from an S3 bucket",
+    "desc":"Store and retrieve files from an S3 bucket",
+    "run":"node s3.js",
+    "status":"unstable",
+	"handle":"s3",
+    "provides":["store/s3"]
+}
