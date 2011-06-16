@@ -120,7 +120,7 @@ On a good day, all these tests will pass, resulting in something like:
 
     ✓ OK » 222 honored (56.306s)
 
-If, only a few fail, but it gets through the whole run, then chances are some just broke something with a late night checkin the previous evening. :).
+If, only a few fail, but it gets through the whole run, then chances are someone just broke something with a late night commit the previous evening. :).
 
 
 ## What are these things? ##
