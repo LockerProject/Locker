@@ -8,7 +8,7 @@ the core is focussed on the types of entries that would be found in an address b
 Common attributes that should be exposed by a contact service-type implementation.
 
 * **id** - *string* - System generated identifier for this entry
-* **fullname** - *string* - The full name, including first, middle, last, etc.
+* **name** - *string* - The full name, including first, middle, last, etc.
 * **nickname** - *array of strings* - Any nicknames or handles that are used, such as remote service usernames.
 * **email** - *array of email entries* - Every available email address
     * **type** - *string* - A general type for this email address such as work, home, other
@@ -27,7 +27,7 @@ Common attributes that should be exposed by a contact service-type implementatio
 In a quasi JSON representation:
 
     {
-        fullname:string,
+        name:string,
         nickname:array(string),
         phone:array({type:string, value:string}),
         email:array({type:string, value:string}),

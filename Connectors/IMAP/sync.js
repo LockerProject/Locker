@@ -38,10 +38,13 @@ exports.init = function(theAuth, mongo) {
     }
     dataStore.init('id', mongo);
     
+    auth.connTimeout = 30000;
+    
     // Need IMAP raw debug output?  Uncomment this mofo
     // auth.debug = function(msg) {
     //     console.log(msg);
     // };
+    
 };
 
 exports.syncMessages = function (syncMessagesCallback) {
