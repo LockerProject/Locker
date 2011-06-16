@@ -64,7 +64,7 @@ function go(req, res) {
                 "<form method='post' action='saveAuth'>" + 
                     "Username: <input name='username'><br>" +
                     "Password: <input type='password' name='password'><br>" +
-                    "Host: <input name='host'><br>" +
+                    "Host: <input name='host' value='imap.gmail.com'><br>" +
                     "Port: <input name='port' value='993'><br>" +
                     "Host uses SSL: <input type='checkbox' name='secure' checked='checked' value='true'><br>" +
                     "<input type='submit' value='Save'>" +

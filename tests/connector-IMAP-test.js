@@ -64,14 +64,14 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Can get messages" : {
         topic: function() {
-            sync.syncMessages(this.callback);
+            sync.syncMessages(null, this.callback);
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "sync'd 5 new messages"); },
         "again" : {
             topic: function() {
-                sync.syncMessages(this.callback);
+                sync.syncMessages(null, this.callback);
             },
             "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 3600);
