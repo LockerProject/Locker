@@ -12,8 +12,7 @@ var express = require('express'),
     locker = require('locker'),
     lfs = require('lfs');
 
-exports.init = function (processOptions)
-{
+exports.init = function (processOptions) {
     var started = false;
     var app;
     if(!processOptions) processOptions = {};

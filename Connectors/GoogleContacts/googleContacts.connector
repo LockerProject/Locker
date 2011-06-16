@@ -3,7 +3,7 @@
     "action":"Connect to Google contacts",
     "desc":"Collect and sync my data from my Google contacts using the Google Data API",
     "run":"node init.js",
-    "status":"unstable",
+    "status":"stable",
     "handle":"gcontacts",
     "mongoCollections": ["contacts", "groups"],
     "provides":["contact/google"]

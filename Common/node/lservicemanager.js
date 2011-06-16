@@ -78,7 +78,7 @@ function mapMetaData(file, type, installable) {
                     metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
                     serviceMap.installed[metaData.id] = metaData;
                     fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
-                    fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData));
+                    fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
                 }
             });
         }
@@ -214,7 +214,7 @@ exports.install = function(metaData) {
     serviceInfo.version = Date.now();
     serviceMap.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(lconfig.lockerDir + "/Me/"+serviceInfo.id,0755);
-    fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo));
+    fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo, null, 4));
     if (authInfo) {
         fs.writeFileSync(lconfig.lockerDir + "/Me/" + serviceInfo.id + '/auth.json', JSON.stringify(authInfo));
     }
@@ -322,7 +322,7 @@ exports.spawn = function(serviceId, callback) {
                     svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
                 // save out all updated meta fields
-                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc));
+                fs.writeFileSync(lconfig.lockerDir + "/Me/" + svc.id + '/me.json',JSON.stringify(svc, null, 4));
                 // Set the pid after the write because it's transient to this locker instance only
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
@@ -356,7 +356,7 @@ exports.spawn = function(serviceId, callback) {
         delete svc.port;
         delete svc.uriLocal;
         // save out all updated meta fields (pretty print!)
-        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json',JSON.stringify(svc, null, 4));
+        fs.writeFileSync(lconfig.lockerDir + "/Me/" + id + '/me.json', JSON.stringify(svc, null, 4));
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));

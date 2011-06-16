@@ -15,10 +15,10 @@
 
 var fs = require('fs'),
     request = require('request'),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js'),
+    locker = require('locker'),
+    lfs = require('lfs'),
     EventEmitter = require('events').EventEmitter,
-    dataStore = require('../../Common/node/connector/dataStore');
+    dataStore = require('connector/dataStore');
     
     
 var gdataClient;
@@ -43,7 +43,8 @@ exports.syncContacts = function(callback) {
     try {
         fs.mkdirSync('photos', 0755);
     } catch(err) {
-        console.error('err', err);
+        if(err.code !== 'EEXIST')
+            console.error('err', err);
     }
     //console.error('"Checking for updates since', new Date(status.contacts.lastUpdate).toString());
     var params = {'updated-min':getISODateString(new Date(status.contacts.lastUpdate)),
