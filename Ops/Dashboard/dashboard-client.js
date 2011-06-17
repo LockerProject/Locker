@@ -80,9 +80,15 @@ app.get('/post2install', function(req, res){
             data += chunk;
         });
         response.on('end', function() {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.write('<a href="javascript:window.history.back()">back</a><br>Installed: '+data);
-            res.end();
+            j = JSON.parse(data);
+            if(j && j.id)
+            {
+                res.redirect("/?"+Math.random()+"#!/app/"+j.id)
+            }else{
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.write('<a href="/">back</a><br>failed: '+data);
+                res.end();
+            }
         });
     });
 });
