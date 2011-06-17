@@ -23,13 +23,13 @@ var request = require('request'),
                grantType :           '',
                extraParams :         ''};
 
-var completedCallback, me;
+var completedCallback, externalUrl;
 
 exports.auth = {};
 exports.options = {};
 
-exports.authAndRun = function(app, onCompletedCallback) {
-    me = app.meData;
+exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
+    options.redirectURI = externalUrl;
     for (i in exports.options) {
         options[i] = exports.options[i];
     }
@@ -74,7 +74,7 @@ function go(req, res) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal " + options.provider + " app info that will be used to sync your data" + 
                 " (create a new one <a href='" + options.linkToCreate + "' target='_blank'>here</a>" +
-                " using a callback url of " + me.uri + "auth/) " +
+                " using a callback url of " + options.redirectURI + "auth/) " +
                 "<form method='post' action='saveAuth'>" + 
                     prompt +
                     options.appIDName + ": <input name='appKey'><br>" +
@@ -83,8 +83,8 @@ function go(req, res) {
                 "</form></html>");
     } else {
         var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey + 
-                        '&response_type=code&redirect_uri=' + me.uri + 'auth/';
-        sys.debug('redirecting to ' + newUrl + 'auth');
+                        '&response_type=code&redirect_uri=' + options.redirectURI + 'auth/';
+        sys.debug('redirecting to ' + newUrl);
         if (options.extraParams) {
             newUrl += "&" + options.extraParams;
         }
@@ -97,7 +97,7 @@ function handleAuth(req, res) {
                     '?client_id=' + exports.auth.appKey +
                     '&client_secret=' + exports.auth.appSecret +
                     '&grant_type=' + options.grantType +
-                    '&redirect_uri=' + me.uri + 'auth/' +
+                    '&redirect_uri=' + options.redirectURI + 'auth/' +
                     '&code=' + req.param('code');
     request.get({url:newUrl}, function(err, resp, body) {
         if (options.accessTokenResponse == 'json') {
@@ -107,7 +107,7 @@ function handleAuth(req, res) {
         }
         lfs.writeObjectToFile("auth.json", exports.auth);
         completedCallback(exports.auth);
-        res.redirect(me.uri);
+        res.redirect(options.redirectURI);
     });
 }
 
@@ -121,5 +121,5 @@ function saveAuth(req, res) {
     exports.auth.username = req.param('username') || '';
     exports.auth.appKey = req.param('appKey');
     exports.auth.appSecret = req.param('appSecret');
-    res.redirect(me.uri + 'go');
+    res.redirect(options.redirectURI + 'go');
 }

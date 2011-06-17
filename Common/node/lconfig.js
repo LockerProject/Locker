@@ -11,15 +11,21 @@
 var fs = require('fs');
 
 exports.lockerHost = 'localhost';
+exports.externalHost = 'localhost';
 exports.lockerPort = 8042;
-setLockerBase();
+exports.externalPort = 8042;
+exports.externalSecure = false;
+setBase();
 exports.lockerDir = process.cwd();
 
 exports.load = function(filepath) {
     var config = JSON.parse(fs.readFileSync(filepath));
-    exports.lockerHost = config.lockerHost || "localhost";
+    exports.lockerHost = config.lockerHost || 'localhost';
+    exports.externalHost = config.externalHost || 'localhost';
     exports.lockerPort = config.lockerPort || 8042;
-    setLockerBase();
+    exports.externalPort = config.externalPort || 8042;
+    exports.externalSecure = config.externalSecure;
+    setBase();
     exports.scannedDirs = config.scannedDirs;
     exports.displayUnstable = config.displayUnstable;
     exports.mongo = config.mongo;
@@ -27,7 +33,12 @@ exports.load = function(filepath) {
     exports.lockerDir = process.cwd();
 }
 
-function setLockerBase() {
+function setBase() {
     exports.lockerBase = 'http://' + exports.lockerHost + 
                          (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
+    exports.externalBase = 'http';
+    if(exports.externalSecure)
+        exports.externalBase += 's';
+    exports.externalBase += '://' + exports.externalHost + 
+                         (exports.externalPort && exports.externalPort != 80 ? ':' + exports.externalPort : '');
 }

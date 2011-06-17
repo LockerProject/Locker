@@ -15,7 +15,7 @@
 var fs = require("fs");
 var scope = 'https://www.google.com/m8/feeds/'; //contacts
 
-var uri, completedCallback = null;
+var completedCallback = null, uri;
 
 exports.auth = {};
 
@@ -23,24 +23,20 @@ exports.auth = {};
 // if not, read it from disk and try again
 function isAuthed() {
     try {
-        if(!exports.hasOwnProperty("auth"))
-            exports.auth = {};
-        
         // Already have the stuff read
-        if(exports.auth.hasOwnProperty("clientID") && 
-           exports.auth.hasOwnProperty("clientSecret") && 
-           exports.auth.hasOwnProperty("redirectURI") &&
+        if(hasAppCreds() &&
            exports.auth.hasOwnProperty("token")) {
             return true;
         }
         // Try and read it in
         var authData = JSON.parse(fs.readFileSync("auth.json"));
-        if(authData.hasOwnProperty("clientID") && 
-           authData.hasOwnProperty("clientSecret") && 
-           authData.hasOwnProperty("redirectURI") &&
-           authData.hasOwnProperty("token")) {
-            exports.auth = authData;
-            return true;
+        authData.redirectURI = exports.auth.redirectURI;
+        if(hasAppCreds(authData)) {
+            exports.auth.clientID = authData.clientID;
+            exports.auth.clientSecret = authData.clientSecret;
+            exports.auth.redirectURI = authData.redirectURI;
+            if(exports.auth.hasOwnProperty('token'))
+                return true;
         }
     } catch (E) {
         // TODO:  Could actually check the error type here
@@ -48,19 +44,26 @@ function isAuthed() {
     return false;
 }
 
+function hasAppCreds(auth) {
+    auth = auth || exports.auth
+    return auth.hasOwnProperty("clientID") && 
+       auth.hasOwnProperty("clientSecret") && 
+       auth.hasOwnProperty("redirectURI");
+}
+
 exports.isAuthed = isAuthed;
 
 // The required exported function
 // Checks if there is a valid auth, callback immediately (and synchronously) if there is
 // If there isn't, adds /auth and /saveAuth endpoint to the app
-exports.authAndRun = function(app, onCompletedCallback) {
+exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
     if (isAuthed()) {
         onCompletedCallback();
         return;
     }
-    
+    uri = externalUrl;
     // not auth'd yet, save the app's uri and the function to call back to later
-    uri = app.meData.uri;
+    exports.auth.redirectURI = uri + 'auth';
     completedCallback = onCompletedCallback;
     app.get("/auth", handleAuth);
     app.get("/saveAuth", saveAuth);
@@ -74,14 +77,14 @@ exports.authAndRun = function(app, onCompletedCallback) {
 function handleAuth(req, res) {
     if(!exports.auth)
         exports.auth = {};
-    
     if(!(exports.auth.hasOwnProperty("clientID") && 
          exports.auth.hasOwnProperty("clientSecret") &&
          exports.auth.hasOwnProperty("redirectURI"))) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end("<html>Enter your personal Google app info that will be used to sync your data" + 
                 " (create a new one <a href='https://code.google.com/apis/console/' target='_blank'>here</a> " +
-                "using the callback url of http://"+uri+"auth. It's a bit finicky, but just type in a callback url, and " +
+                "using the callback url of " + exports.auth.redirectURI +". " +
+                "It's a bit finicky, but just type in a callback url, and " +
                 "let it change it, then hit \"Edit Settings...\" and fix it.) " +
                 "<form method='get' action='saveAuth'>" +
                     "Client ID: <input name='clientID'><br>" +
@@ -116,8 +119,7 @@ function saveAuth(req, res) {
         // res.writeHead(200, {'Content-Type': 'text/html'});
         exports.auth.clientID = req.param('clientID');
         exports.auth.clientSecret = req.param('clientSecret');
-        exports.auth.redirectURI = uri + 'auth'
-        res.redirect(uri + 'auth');
+        res.redirect(exports.auth.redirectURI);
         // res.end("<html>thanks, now we need to <a href='./auth'>auth that app to your account</a>.</html>");
     }
 }
