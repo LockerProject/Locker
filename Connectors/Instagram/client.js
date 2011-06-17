@@ -13,24 +13,19 @@
 var fs = require('fs');
 var express = require('express'),
     connect = require('connect'),
-    url = require('url'),
-    sys = require('sys'),
     app = express.createServer(
         connect.bodyParser(),
         connect.cookieParser(),
         connect.session({secret : 'locker'})
     ),
-    http = require('http'),
-    https = require('https'),
     request = require('request'),
     oauthclient = require('oauth').OAuth2,
-    xml2js = require('xml2js'),
-    locker = require('../../Common/node/locker.js'),
-    lfs = require('../../Common/node/lfs.js');
+    locker = require('locker'),
+    lfs = require('lfs');
 
 var lockerInfo;
-var me;
 var accessData;
+var externalUrl;
 var oAuth;
 var state;
 
@@ -43,9 +38,7 @@ function setupOAuthClient(clientId, clientSecret) {
 
 app.get('/',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
+    res.writeHead(200, {'Content-Type': 'text/html'});
     if (!accessData.accessToken) {
         res.end('<html>you need to <a href="oauthrequest">auth w/ Instagram</a> still</html>');
     } else {
@@ -60,17 +53,17 @@ function(req, res) {
         res.end('<html>Enter your personal Instagram app info that will be used to sync your data' + 
                 ' (create a new one <a href="http://www.instagr.am/developer">' + 
                 'here</a> using the callback url of ' +
-                me.uri+'auth) ' +
+                externalUrl+'auth) ' +
                 '<form method="get" action="save">' +
                     'Client ID: <input name="clientId"><br>' +
                     'Client Secret: <input name="clientSecret"><br>' +
                     '<input type="submit" value="Save">' +
                 '</form></html>');
     } else {
-        var params = { response_type: 'code', redirect_uri: me.uri + 'auth' };                          
+        var params = { response_type: 'code', redirect_uri: externalUrl + 'auth' };                          
         accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
         setupOAuthClient(accessData.clientId, accessData.clientSecret);
-        console.log('redirecting to ' + oAuth.getAuthorizeUrl(params));
+        console.error('redirecting to ' + oAuth.getAuthorizeUrl(params));
         res.redirect(oAuth.getAuthorizeUrl(params));
         res.end();
     }
@@ -78,9 +71,7 @@ function(req, res) {
 
 app.get('/save',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
+    res.writeHead(200, {'Content-Type': 'text/html'});
     if (!req.param('clientId') || !req.param('clientSecret')) {
         res.end('missing field(s)?');
         return;
@@ -99,67 +90,55 @@ function(req, res) {
              method: 'POST',
              body: querystring.stringify({code: req.param('code'), 
                                           grant_type: 'authorization_code',
-                                          redirect_uri: me.uri + 'auth',
+                                          redirect_uri: externalUrl + 'auth',
                                           client_id: accessData.clientId,
                                           client_secret: accessData.clientSecret })}, 
-            function(err, resp, body) {
-                if (err) {
-                    console.log(err);
-                  } else {
-                    accessData.accessToken = JSON.parse(body).access_token;
-                    lfs.writeObjectsToFile('access.json', [accessData]);
-
-                    res.writeHead(200, {
-                        'Content-Type': 'text/html'
-                    });
-                    res.end('<html>Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a></html>');
-                  }
-             });
+        function(err, resp, body) {
+            if (err) {
+                console.error(err);
+            } else {
+                accessData.accessToken = JSON.parse(body).access_token;
+                lfs.writeObjectsToFile('access.json', [accessData]);
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end('<html>Did you see what I just did there? Now you can load your <a href="profile">profile</a> or <a href="photos">photos</a></html>');
+            }
+        });
 });
 
-app.get('/profile',
-function(req, res) {
-  oAuth.getProtectedResource(
-    'https://api.instagram.com/v1/users/self',
-    accessData.accessToken, 
-    function(err, data) {
-      if (err) {
-        console.log(err);
-        return false;
-      }
-    me.user_info = data;
-    lfs.syncMeData(me);
-    res.end('User profile: ' + JSON.stringify(data) + ': <br>');
-  });
+app.get('/profile', function(req, res) {
+    oAuth.getProtectedResource('https://api.instagram.com/v1/users/self', accessData.accessToken, function(err, data) {
+        if (err) {
+            console.error(err);
+            return false;
+        }
+        lfs.writeObjectToFile('profile.json', data);
+        res.end('User profile: ' + JSON.stringify(data) + ': <br>');
+    });
 });
 
 app.get('/getprofile',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/plain'
-    });
-    fs.readFile('me.json', 'binary', function(err, file) {  
-        if (err) {  
-            res.end();  
-            return;  
-        }  
-        res.write(file, 'binary');  
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    fs.readFile('profile.json', 'utf-8', function(err, file) {  
+        if (err) {
+            res.end();
+            return;
+        }
+        res.write(file.toString());
         res.end();
     });
 });
 
 app.get('/photos',
 function(req, res) {
-  
     try {
-      fs.mkdirSync('low_resolution', 755);
-      fs.mkdirSync('thumbnail', 755);
-            fs.mkdirSync('standard', 755);
+        fs.mkdirSync('low_resolution', 755);
+        fs.mkdirSync('thumbnail', 755);
+        fs.mkdirSync('standard', 755);
     } catch(err) {
-        console.log('could not create directories to store photos');
+        console.error('could not create directories to store photos');
         return false;
     }
-
     getPhotos(state.newest);
     lfs.writeObjectToFile('state.json', state);
     res.end(JSON.stringify(state));
@@ -167,65 +146,55 @@ function(req, res) {
 
 app.get('/getphotos',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/plain'
-    });
-    fs.readFile('connections.json', 'binary', function(err, file) {  
-        if(err) {  
-            res.end();  
-            return;  
-        }  
-        res.write(file, 'binary');  
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    fs.readFile('connections.json', 'utf-8', function(err, file) {  
+        if(err) {
+            res.end();
+            return;
+        }
+        res.write(file.toString());
         res.end();
     });
 });
 
 //get a page of photos and recurse until all pages are completed
 function getPhotos(newest) {
-
     if(!newest) {
         newest = 0;
-    }
-        
+    
     oAuth.getProtectedResource('https://api.instagram.com/v1/users/self/feed?max_id=' + newest,
         accessData.accessToken, 
         function(err, data) {
             if (err) {
-              console.log(err);
-              return false;
+                console.error(err);
+                return false;
             }
-        
             var json = JSON.parse(data);
-
+            
             if(!json || !json.data) {
-                console.log(data);
+                console.error(data);
                 res.end();
             }
-
+            
             lfs.appendObjectsToFile('photos.json', json.data);
-
+            
             var curl = function(photos) {
                 if (!photos || photos.length < 1) {
-                    return callback();
+                    callback();
+                    return;
                 }
                 var photo = photos.pop();
                 var id = photo.id;
                 lfs.saveUrl(photo.images.low_resolution.url, 'low_resolution/' + id + '.jpg', function(err) {
-                    if (err) {
-                        sys.debug(err);
-                    }
-                
+                    if (err)
+                        console.error(err);
                     lfs.saveUrl(photo.images.thumbnail.url, 'thumbnail/' + id + '.jpg', function(err) {
-                        if (err) {
-                            sys.debug(err);
-                        }
-                    
+                        if (err)
+                            console.error(err);
                         lfs.saveUrl(photo.images.standard.url, 'standard/' + id + '.jpg', function(err) {
-                            if (err) {
-                                sys.debug(err);
-                            }
-                        
-                            console.log('got Instagram photo ' + id);
+                            if (err)
+                                console.error(err);
+                            console.error('got Instagram photo ' + id);
                             locker.event('photo/instagram', {"_id":id});
                         });
                     });
@@ -235,8 +204,8 @@ function getPhotos(newest) {
             for (var i=0, len=json.data.length; i<len; ++i) {
                 curl(json.data);
             }
-                
-                curl(json.data);
+            
+            curl(json.data);
     });
 }
 
@@ -248,9 +217,9 @@ process.stdin.on('data', function(data) {
         process.stderr.write('Was not passed valid startup information.'+data+'\n');
         process.exit(1);
     }
+    externalUrl = lockerInfo.externalBase;
     locker.initClient(lockerInfo);
     process.chdir(lockerInfo.workingDirectory);
-    me = lfs.loadMeData();
     try {
         accessData = JSON.parse(fs.readFileSync('access.json', 'utf8'));
         setupOAuthClient(accessData.clientId, accessData.clientSecret);

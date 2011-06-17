@@ -30,7 +30,7 @@ var crypto = require('crypto'),
     lfs = require('../../Common/node/lfs.js');
 
 
-var me, state, userInfo;
+var state, userInfo, externalUrl;
 
 function getSignature(params) {
     var hash = crypto.createHash('md5');
@@ -120,7 +120,7 @@ function(req, res) {
         res.end("<html>Enter your personal Flickr app info that will be used to sync your data" + 
                 " (create a new one <a href='http://www.flickr.com/services/apps/create/apply/' target='_blank'>" + 
                 "here</a> using the callback url of " +
-                me.uri+"auth) " +
+                externalUrl+"auth) " +
                 "<form method='get' action='save'>" +
                     "API Key: <input name='apiKey'><br>" +
                     "API Secret: <input name='apiSecret'><br>" +
@@ -334,6 +334,7 @@ stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
+    externalUrl = processInfo.externalBase;
     process.chdir(processInfo.workingDirectory);
     lfs.readObjectFromFile('auth.json', function(newAuth) {
         auth = newAuth;
@@ -341,7 +342,6 @@ stdin.on('data', function (chunk) {
             state = newLatests;
             lfs.readObjectFromFile('userInfo.json', function(newUserInfo) {
                 userInfo = newUserInfo;
-                me = lfs.loadMeData();
                 app.listen(processInfo.port, function() {
                     var returnedInfo = {port: processInfo.port};
                     console.log(JSON.stringify(returnedInfo));

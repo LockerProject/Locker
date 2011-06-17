@@ -27,7 +27,7 @@ var fs = require('fs'),
     sort = require('../../Common/node/sort.js').quickSort,
     sqlite = require('sqlite');
 
-var me, latests;    
+var externalBase, latests;    
 
 app.get('/', 
 function(req, res) {
@@ -125,7 +125,7 @@ stdin.on('data', function (chunk) {
     process.chdir(processInfo.workingDirectory);
     db.open("history.db", function (error) {
         createTable(function () {
-            me = lfs.loadMeData();
+            externalBase = processInfo.externalBase;
             port = processInfo.port;
             var returnedInfo = {port: processInfo.port};
             app.listen(processInfo.port);
@@ -140,7 +140,7 @@ var manifest = function(){ return '{\n' +
 '  "description": "Locker Chrome browser History",\n' +
 '  "background_page" : "background.html",\n' +
 '  "permissions": [\n' +
-'    "' + me.uri + '",\n' +
+'    "' + externalBase + '",\n' +
 '    "http://code.jquery.com/",\n' +
 '    "history"\n' +
 '  ]\n' +
@@ -149,7 +149,7 @@ var background = function() {
     var cwd = process.cwd();
     var lockerDir = cwd.substring(0, cwd.lastIndexOf('/Me/')) + '/';
     var bg = fs.readFileSync(lockerDir + '/Connectors/ChromeHistory/extension/background.html');
-    bg = bg.toString().replace('__INSERT_ME_DOT_URI_HERE__', me.uri);
+    bg = bg.toString().replace('__INSERT_ME_DOT_URI_HERE__', externalBase);
     return bg;
 };
 
