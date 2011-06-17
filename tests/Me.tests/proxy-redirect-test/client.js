@@ -23,8 +23,8 @@ stdin.on('data', function (chunk) {
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
     //util.debug(util.inspect(me));
-    app.listen(processInfo.port);
-    var returnedInfo = {port: processInfo.port};
+    app.listen(0);
+    var returnedInfo = {port: app.address().port};
     console.log(JSON.stringify(returnedInfo));
 });
 
