@@ -102,7 +102,7 @@ exports.loadMeData = function() {
     }
 }
 
-exports.getFile = function(requestURL, filename, callback) {
+exports.saveUrl = function(requestURL, filename, callback) {
     var port = (url.parse(requestURL).protocol == 'http:') ? 80 : 443;
     var host = url.parse(requestURL).hostname;
     var client;
@@ -122,10 +122,6 @@ exports.getFile = function(requestURL, filename, callback) {
     request.on('error', function(error) {
         console.log('errorrs!!! '+requestURL);
     });
-}
-
-exports.saveUrl = function(url, filename, callback) {
-    getFile(url, filename, callback);
 }
 
 /**
