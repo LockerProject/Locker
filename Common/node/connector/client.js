@@ -45,7 +45,7 @@ exports.init = function (processOptions) {
         app.meData = lfs.loadMeData();
         locker.connectToMongo(function(mongo) {
             require("connector/api")(app, mongoId, mongo);
-            authLib.authAndRun(app, function() {
+            authLib.authAndRun(app, processInfo.externalBase, function() {
                 syncApi.authComplete(authLib.auth, mongo);
                 if (!started) {
                     startWebServer();

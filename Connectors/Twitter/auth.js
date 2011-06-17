@@ -52,14 +52,14 @@ exports.isAuthed = isAuthed;
 // The required exported function
 // Checks if there is a valid auth, callback immediately (and synchronously) if there is
 // If there isn't, adds /auth and /saveAuth endpoint to the app
-exports.authAndRun = function(app, onCompletedCallback) {
+exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
     if (isAuthed()) {
         onCompletedCallback();
         return;
     }
     
     // not auth'd yet, save the app's uri and the function to call back to later
-    uri = app.meData.uri;
+    uri = externalUrl;
     completedCallback = onCompletedCallback;
     app.get("/auth", handleAuth);
     app.get("/saveAuth", saveAuth);

@@ -188,8 +188,7 @@ exports.install = function(metaData) {
     }
     var authInfo;
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
-    if(serviceInfo.handle)
-    {
+    if(serviceInfo.handle) {
         try {
             var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Me/apikeys.json", 'ascii'));
             authInfo = apiKeys[serviceInfo.handle];
@@ -197,8 +196,7 @@ exports.install = function(metaData) {
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
         var inc = 0;
         try {
-            if(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle).isDirectory())
-            {
+            if(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle).isDirectory()) {
                 inc++;
                 while(fs.statSync(lconfig.lockerDir+"/Me/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
             }
@@ -206,7 +204,7 @@ exports.install = function(metaData) {
             var suffix = (inc > 0)?"-"+inc:"";
             serviceInfo.id = serviceInfo.handle+suffix;
         }
-    }else{
+    } else {
         var hash = crypto.createHash('md5');
         hash.update(Math.random()+'');
         serviceInfo.id = hash.digest('hex');        
@@ -289,7 +287,8 @@ exports.spawn = function(serviceId, callback) {
         port: svc.port, // This is just a suggested port
         sourceDirectory: svc.srcdir,
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
-        lockerUrl:lconfig.lockerBase
+        lockerUrl:lconfig.lockerBase,
+        externalBase:lconfig.externalBase + '/Me/' + svc.id + '/'
     };
     if(serviceInfo && serviceInfo.mongoCollections) {
         processInformation.mongo = {
