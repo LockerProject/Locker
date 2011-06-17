@@ -102,7 +102,7 @@ exports.loadMeData = function() {
     }
 }
 
-function getFile(requestURL, filename, callback) {
+exports.getFile = function(requestURL, filename, callback) {
     var port = (url.parse(requestURL).protocol == 'http:') ? 80 : 443;
     var host = url.parse(requestURL).hostname;
     var client;
