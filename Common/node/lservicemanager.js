@@ -11,6 +11,7 @@ var fs = require("fs");
 var path = require("path");
 var lconfig = require("lconfig");
 var crypto = require("crypto");
+var util = require("util");
 var spawn = require('child_process').spawn;
 
 var serviceMap = {
@@ -316,7 +317,6 @@ exports.spawn = function(serviceId, callback) {
             // Process the startup json info
             try {
                 var returnedProcessInformation = JSON.parse(data);
-
                 // if they tell us a port, use that
                 if(returnedProcessInformation.port)
                     svc.port = returnedProcessInformation.port;
@@ -408,7 +408,7 @@ function checkForShutdown() {
     for(var mapEntry in serviceMap.installed) {
         var svc = serviceMap.installed[mapEntry];
         if (svc.pid)  {
-            console.log(svc.id + " is still running can not complete shutdown.");
+            console.log(svc.id + " is still running, cannot complete shutdown.");
             return;
         }
     }

@@ -1,6 +1,7 @@
 var http = require("http");
 var fs = require("fs");
 var querystring = require("querystring");
+var util = require("util");
 
 // Startup shiz
 process.stdin.resume();
@@ -32,7 +33,10 @@ process.stdin.on("data", function(data) {
         }
         res.writeHead(200, {"Content-Type":"application/json"});
         res.end('{"url":"'+req.url+'","method":"'+req.method+'"}');
-    }).listen(info.port, "127.0.0.1", function() {
+    }).listen(0, "127.0.0.1", function() {
+        var address = this.address();
+        info.port = address.port;
+        data = JSON.stringify(info);
         process.stdout.write(data);
     });
 });
