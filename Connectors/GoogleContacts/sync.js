@@ -222,7 +222,7 @@ function getPhotos() {
     }
     var photo = photosQueue.shift();
     photo.href += '?oauth_token=' + auth.token.access_token;
-    lfs.getFile(photo.href, 'photos/' + photo.id + '.jpg', function(err) {
+    lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', function(err) {
         // console.error('wrote cont!');
         getPhotos();
         // var stat = fs.statSync('photos/' + photo.id + '.jpg');
