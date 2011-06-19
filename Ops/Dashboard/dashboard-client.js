@@ -13,6 +13,8 @@
 var rootHost = process.argv[2];
 var lockerPort = process.argv[3];
 var rootPort = process.argv[4];
+var externalBase = process.argv[5];
+
 if (!rootHost || !rootPort) {
     process.stderr.write("missing host and port arguments\n");
     process.exit(1);
@@ -50,9 +52,10 @@ app.get('/', function (req, res) {
 app.get('/config.js', function (req, res) {    
     res.writeHead(200, { 'Content-Type': 'text/javascript','Access-Control-Allow-Origin' : '*' });
     //this might be a potential script injection attack, just sayin.
-    var config = {'lockerHost':rootHost,
-                  'lockerPort':rootPort,
-                  'lockerBase':lockerBase};
+    var config = {lockerHost:rootHost,
+                  lockerPort:rootPort,
+                  lockerBase:lockerBase,
+                  externalBase:externalBase};
     res.end('var config = ' + JSON.stringify(config) + ';');
 });
 
@@ -81,10 +84,9 @@ app.get('/post2install', function(req, res){
         });
         response.on('end', function() {
             j = JSON.parse(data);
-            if(j && j.id)
-            {
-                res.redirect("/?"+Math.random()+"#!/app/"+j.id)
-            }else{
+            if(j && j.id) {
+                res.redirect(externalBase + "/?"+Math.random()+"#!/app/"+j.id)
+            } else {
                 res.writeHead(200, { 'Content-Type': 'text/html' });
                 res.write('<a href="/">back</a><br>failed: '+data);
                 res.end();

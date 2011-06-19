@@ -11,11 +11,16 @@ var spawn = require('child_process').spawn;
 var lconfig = require('../Common/node/lconfig.js');
 var dashboard;
 
+lconfig.load('config.json');
+
+console.error('lconfig', lconfig);
+
 exports.instance = dashboard;
 
 exports.start = function(port) {
     // start dashboard
-    dashboard  = spawn('node', ['dashboard-client.js', lconfig.lockerHost, lconfig.lockerPort, port], {cwd: __dirname + '/Dashboard'});
+    dashboard  = spawn('node', ['dashboard-client.js', lconfig.lockerHost, lconfig.lockerPort, port, lconfig.externalBase],
+                            {cwd: __dirname + '/Dashboard'});
     dashboard.uriLocal = 'http://' + lconfig.lockerHost + ':' + port;
     dashboard.port = port;
     console.log('Spawned dashboard pid: ' + dashboard.pid);

@@ -45,7 +45,7 @@ function showLogsSection()
 function refreshLog()
 {
   $("#logEntriesList").children().remove();
-  $.ajax({ url: "/diary" }).success(function(data) {
+  $.ajax({ url: "diary" }).success(function(data) {
     var diaryLines = JSON.parse(data);
     diaryLines.forEach(function(item) {
       var service = serviceMap.installed[item.service];
@@ -115,7 +115,7 @@ function selectService(index)
 
 function installService(i)
 {
-  document.location = "/post2install?id=" + i;
+  document.location = "post2install?id=" + i;
 }
 
 // Apps ----------------------------------------------------------------------
@@ -173,7 +173,7 @@ $(document).ready(function()
   var previousLocation = getLocation();
 
   // Update Interface from Service Map
-  $.ajax({ url: "/map", dataType: "json" }).success(function(data) {
+  $.ajax({ url: "map", dataType: "json" }).success(function(data) {
     serviceMap = data;
 
     // Populate Available Services List

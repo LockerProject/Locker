@@ -14,6 +14,7 @@ exports.lockerHost = 'localhost';
 exports.externalHost = 'localhost';
 exports.lockerPort = 8042;
 exports.externalPort = 8042;
+exports.externalPath = '';
 exports.externalSecure = false;
 setBase();
 exports.lockerDir = process.cwd();
@@ -25,6 +26,7 @@ exports.load = function(filepath) {
     exports.lockerPort = config.lockerPort || 8042;
     exports.externalPort = config.externalPort || 8042;
     exports.externalSecure = config.externalSecure;
+    exports.externalPath = config.externalPath;
     setBase();
     exports.scannedDirs = config.scannedDirs;
     exports.displayUnstable = config.displayUnstable;
@@ -41,4 +43,6 @@ function setBase() {
         exports.externalBase += 's';
     exports.externalBase += '://' + exports.externalHost + 
                          (exports.externalPort && exports.externalPort != 80 ? ':' + exports.externalPort : '');
+    if(exports.externalPath)
+        exports.externalBase += exports.externalPath;
 }
