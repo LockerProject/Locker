@@ -133,8 +133,8 @@ function showApp(app, event)
   $("#appSection").show();
   $("#appTitle").html(app.title);
   // $("#appFrame").attr("src", app.uri || "");
-  $("#appFrame")[0].contentWindow.location.replace(app.uri || "");
-  $("#zoomAppButton").unbind("click").click(function() { window.open(app.uri) });
+  $("#appFrame")[0].contentWindow.location.replace(app.externalUri || "");
+  $("#zoomAppButton").unbind("click").click(function() { window.open(app.externalUri) });
 
 }
 

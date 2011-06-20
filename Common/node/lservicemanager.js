@@ -77,6 +77,7 @@ function mapMetaData(file, type, installable) {
                 {
                     metaData.id=metaData.handle;
                     metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                    metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
                     serviceMap.installed[metaData.id] = metaData;
                     fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
                     fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
@@ -132,6 +133,7 @@ exports.findInstalled = function () {
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             delete js.pid;
             delete js.starting;
+            js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
             exports.migrate(dir, js);
             console.log("Loaded " + js.id);
             serviceMap.installed[js.id] = js;
