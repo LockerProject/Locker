@@ -11,6 +11,7 @@ require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var suite = RESTeasy.describe("Foursquare Connector");
 var utils = require('./test-utils');
+var fs = require('fs');
 
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
@@ -97,6 +98,9 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/multi?requests=/users/2715557,/users/18387,&oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/users.json' });
+            fakeweb.registerUri({
+                uri : 'https://playfoursquare.s3.amazonaws.com/userpix_thumbs/UFTTLGSOZMNGZZ3T.png',
+                file : __dirname + '/fixtures/foursquare/ctide.png' });
             sync.syncFriends(this.callback) },
         "and emit proper events" : function(err) {
             assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"new","data":{"id":"18387","firstName":"William","lastName":"Warnecke","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"San Francisco, CA","relationship":"friend","type":"user","pings":true,"contact":{"email":"lockerproject@sing.ly","twitter":"ww"},"badges":{"count":25},"mayorships":{"count":0,"items":[]},"checkins":{"count":0},"friends":{"count":88,"groups":[{"type":"friends","name":"mutual friends","count":0}]},"following":{"count":13},"tips":{"count":5},"todos":{"count":1},"scores":{"recent":14,"max":90,"checkinsCount":4},"name":"William Warnecke"}},"_via":["foursquare"]}');
@@ -169,13 +173,16 @@ suite.next().suite.addBatch({
         topic: function() {
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
-                file : __dirname + '/fixtures/foursquare/no_friends.json' });
+                file : __dirname + '/fixtures/foursquare/one_friend.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/multi?requests=/users/18387,&oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/final_users.json' });
             sync.syncFriends(this.callback) },
         'successfully': function(err, repeatAfter, diaryEntry) {
-            assert.equal(diaryEntry, 'Updated 0 existing friends, deleted 2 friends'); },
+            assert.equal(diaryEntry, 'Updated 1 existing friends, deleted 1 friends'); },
         "and emits delete events" : function(err) {
             assert.equal(emittedEvents[0], contactEvent3);
-            assert.equal(emittedEvents[1], '{"obj":{"source":"friends","type":"delete","data":{"id":"18387","deleted":true}},"_via":["foursquare"]}');
+            assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; },
         "in the datastore" : {
             "via getPeople" : {
@@ -183,7 +190,7 @@ suite.next().suite.addBatch({
                     dataStore.getAllCurrent("friends", this.callback);
                 },
                 "successfully" : function(err, response) {
-                    assert.equal(response.length, 0);
+                    assert.equal(response.length, 1);
                 }
             },
             "via getFriendFromCurrent" : {
@@ -212,6 +219,17 @@ suite.next().suite.addBatch({
 
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Foursquare connector")
+        .discuss("get photo")
+            .path(mePath + "/getPhoto/18514")
+            .get()
+                .expect("returns the user's profile", function(err, res, body) {
+                    assert.isNull(err);
+                    assert.equal(res.statusCode, 200);
+                    var me = fs.readFileSync('./fixtures/foursquare/ctide.png');
+                    assert.equal(body, me);
+                })
+            .unpath()
+        .undiscuss()
         .discuss("all contacts")
             .path(mePath + "/getCurrent/friends")
             .get()
@@ -219,7 +237,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var contacts = JSON.parse(body);
                     assert.isNotNull(contacts);
-                    assert.equal(contacts.length, 0);
+                    assert.equal(contacts.length, 1);
                 })
             .unpath()
         .undiscuss()
