@@ -35,6 +35,7 @@ exports.init = function(theAuth, mongo) {
 };
 
 exports.syncFriends = function(callback) {
+    fs.mkdir('photos', 0755);
     getMe(auth.accessToken, function(err, resp, data) {
         if(err) {
             // do something smrt
@@ -45,6 +46,11 @@ exports.syncFriends = function(callback) {
             return;
         }
         var self = JSON.parse(data);
+        request.get({uri:'https://graph.facebook.com/' + self.id + '/picture?access_token=' + auth.accessToken}, function(err, resp, body) {
+            var ct = resp.headers['content-type'];
+            var photoExt = ct.substring(ct.lastIndexOf('/')+1);
+            fs.writeFile('photos/' + self.id + "." + photoExt, body, 'binary');
+        })
         fs.writeFile('profile.json', JSON.stringify(self));
         var userID = self.id;
         request.get({uri:'https://graph.facebook.com/me/friends?access_token=' + auth.accessToken + '&date_format=U'}, 

@@ -47,6 +47,9 @@ function httpModuleRequest(uri, callback) {
             outputStream.end();
         };
         thisResponse.statusCode = interceptedUris[uri].statusCode;
+        if (options.contentType) {
+            thisResponse.headers['content-type'] = interceptedUris[uri].contentType;
+        }
         thisRequest.emit('response', thisResponse);
         
         if (callback) {
@@ -67,7 +70,11 @@ function Fakeweb() {
     request.get = function(options, callback) {
         var url = options.uri || options.url;
         if (interceptable(url)) {
-            return callback(null, {statusCode : interceptedUris[url].statusCode}, interceptedUris[url].response);
+            var resp = {statusCode : interceptedUris[url].statusCode};
+            if (interceptedUris[url].contentType) {
+                resp.headers = {'content-type' : interceptedUris[url].contentType};
+            }
+            return callback(null, resp, interceptedUris[url].response);
         } else {
             return oldRequestGet.call(request, options, callback);
         }
@@ -77,7 +84,11 @@ function Fakeweb() {
     request.post = function(options, callback) {
         var url = options.uri || options.url;
         if (interceptable(url)) {
-            return callback(null, {statusCode : interceptedUris[url].statusCode}, interceptedUris[url].response);
+            var resp = {statusCode : interceptedUris[url].statusCode};
+            if (interceptedUris[url].contentType) {
+                resp.headers = {'content-type' : interceptedUris[url].contentType};
+            }
+            return callback(null, resp, interceptedUris[url].response);
         } else {
             return oldRequestPost.call(request, options, callback);
         }
@@ -126,6 +137,7 @@ function Fakeweb() {
             interceptedUris[options.uri].response = options.body;
         }
         interceptedUris[options.uri].statusCode = options.statusCode || 200;
+        interceptedUris[options.uri].contentType = options.contentType;
     }
     ignoreUri = function(options) {
         ignoredUris[options.uri] = true;
