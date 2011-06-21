@@ -48,4 +48,36 @@ app.get('/get_profile', function(req, res) {
     });
 });
 
+app.get('/getPhoto/:id', function(req, res) {
+    fs.readdir('photos', function(err, files) {
+        var file;
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].match(req.param('id'))) {
+                file = files[i];
+            }
+        }
+        if (file) {
+            var stream = fs.createReadStream('photos/' + file);
+            var head = false;
+            stream.on('data', function(chunk) {
+                if(!head) {
+                    head = true;
+                    res.writeHead(200, {'Content-Disposition': 'attachment; filename=' + file});
+                }
+                res.write(chunk, "binary");
+            });
+            stream.on('error', function() {
+                res.writeHead(404);
+                res.end();
+            });
+            stream.on('end', function() {
+                res.end();
+            });
+        } else {
+            res.writeHead(404);
+            res.end();
+        }
+    });
+});
+
 }
