@@ -83,6 +83,7 @@ exports.syncMessages = function (query, syncMessagesCallback) {
         }
     },
     function(err, results) {
+        console.log(results);
         if (err) {
             console.error(err);
         }
@@ -150,15 +151,15 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                                  body += chunk;
                              });
                              bodyMsg.on('end', function() {
-                                 if (!allKnownIDs[message.id]) {
+                                 if (!allKnownIDs[message.headers['message-id']]) {
                                      msgCount++;
                                      totalMsgCount++;
                                      message.body = body;                             
-                                     allKnownIDs[message.id] = 1;
+                                     allKnownIDs[message.headers['message-id']] = 1;
                                      storeMessage(message);
                                      lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                                  }
-                                 if (debug) console.log(msgCount + ':' + fetchedCount + ' (message.id: ' + message.id + ')');
+                                 if (debug) console.log(msgCount + ':' + fetchedCount + ' (message-id: ' + message.headers['message-id'] + ')');
                                  if (msgCount === 0 || msgCount === fetchedCount) {
                                      callback(null, 'fetch');
                                  }
@@ -178,6 +179,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
         }
     },
     function(err, results) {
+        console.log(results);
         if (err) {
             console.error(err);
         }
@@ -186,8 +188,9 @@ function fetchMessages(mailbox, fetchMessageCallback) {
 }
 
 function storeMessage(message) {
-    if (debug) console.log('storeMessage: ' + message.id);
+    if (debug) console.log('storeMessage: ' + message.headers['message-id']);
     
+    // TODO: Add per-mailbox syncedThrough support
     dataStore.addObject('messages', message, function(err) {
         updateState.messages.syncedThrough = message.id;
         lfs.writeObjectToFile('updateState.json', updateState);
@@ -207,7 +210,7 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
-            if (results[i].attribs.indexOf('NOSELECT') === -1) {
+            if (results[i].attribs.indexOf('NOSELECT') === -1 && i !== 'All Mail' && i !== 'Sent Mail') {
                 mailboxes.push(prefix + i);
             }
             if (results[i].children !== null) {
