@@ -22,7 +22,6 @@ aside {
     margin: 0px;
     padding: 15px;
     border-right: 5px solid #aaa;
-    background: #fff;
 }  
     
 aside h1 {
@@ -93,7 +92,6 @@ aside div.detail {
     padding-bottom: 10px;
     padding-left: 10px;
     border-bottom: 5px solid #bbb;
-    background: white;
     width: 100%;
 }
 
