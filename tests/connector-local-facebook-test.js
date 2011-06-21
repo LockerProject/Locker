@@ -32,6 +32,7 @@ var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host,
 var locker = require('../Common/node/locker');
 var levents = require('../Common/node/levents');
 var emittedEvents = [];
+var fs = require('fs');
 
 sync.eventEmitter.on('contact/facebook', function(eventObj) {
     levents.fireEvent('contact/facebook', 'facebook-test', eventObj);
@@ -64,6 +65,10 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Can get friends" : {
         topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://graph.facebook.com/100002438955325/picture?access_token=abc',
+                file : __dirname + '/fixtures/facebook/photo.gif',
+                contentType : 'image/gif' });
             fakeweb.registerUri({
                 uri : 'https://graph.facebook.com/me?access_token=abc&date_format=U',
                 file : __dirname + '/fixtures/facebook/me.json' });
@@ -260,6 +265,16 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     var profile = JSON.parse(body);
                     assert.isNotNull(profile);
                     assert.equal(profile.id, '100002438955325'); 
+                })
+            .unpath()
+        .discuss("get photo")
+            .path(mePath + "/getPhoto/100002438955325")
+            .get()
+                .expect("returns a photo", function(err, res, body) {
+                    assert.isNull(err);
+                    assert.equal(res.statusCode, 200);
+                    var me = fs.readFileSync('./fixtures/facebook/photo.gif');
+                    assert.equal(body, me);
                 })
             .unpath()
         .undiscuss();
