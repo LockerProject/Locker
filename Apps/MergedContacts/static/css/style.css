@@ -1,5 +1,6 @@
 body {
-    font-family: 13.34px helvetica,arial,freesans,clean,sans-serif
+    font-family: 13.34px helvetica,arial,freesans,clean,sans-serif;
+    background: rgb(206,220,231);
     padding:10px;
     margin: 0px;
 }
@@ -17,7 +18,6 @@ aside {
     height: 100%;
     position: fixed;
     top: 0;
-    background-color: rgba(0, 0, 0, 0.25);    
     float: left;
     margin: 0px;
     padding: 15px;
