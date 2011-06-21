@@ -16,7 +16,7 @@ var validTypes = {profile:{update:true},
 
 module.exports = function(app) {
     var handleIndex = function(res) { //before we auth
-        res.redirect(app.meData.uri + 'auth');
+        res.redirect(app.externalBase + 'auth');
     }
     app.get('/', function (req, res) {
         handleIndex(res);
