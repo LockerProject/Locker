@@ -34,8 +34,6 @@ var fs = require('fs'),
 
 var app = express.createServer();
 app.use(connect.bodyParser());
-app.use(connect.cookieParser());
-app.use(connect.session({secret : "locker"}));
 
 var map;
 app.get('/', function (req, res) {    
@@ -56,7 +54,7 @@ app.get('/config.js', function (req, res) {
                   lockerPort:rootPort,
                   lockerBase:lockerBase,
                   externalBase:externalBase};
-    res.end('var config = ' + JSON.stringify(config) + ';');
+    res.end('lconfig = ' + JSON.stringify(config) + ';');
 });
 
 // doesn't this exist somewhere? was easier to write than find out, meh!
@@ -68,7 +66,7 @@ function intersect(a,b) {
     return false;
 }
 
-app.get('/post2install', function(req, res){
+app.get('/install', function(req, res){
     var id = parseInt(req.param('id'));
     var js = map.available[id];
     var httpClient = http.createClient(lockerPort);
@@ -85,11 +83,12 @@ app.get('/post2install', function(req, res){
         response.on('end', function() {
             j = JSON.parse(data);
             if(j && j.id) {
-                res.redirect(externalBase + "/?"+Math.random()+"#!/app/"+j.id)
+                res.writeHead(200, { 'Content-Type': 'application/json','Access-Control-Allow-Origin' : '*'});
+                res.end(JSON.stringify({success:j}));
+                // res.redirect(externalBase + "/?"+Math.random()+"#!/app/"+j.id)
             } else {
-                res.writeHead(200, { 'Content-Type': 'text/html' });
-                res.write('<a href="/">back</a><br>failed: '+data);
-                res.end();
+                res.writeHead(200, { 'Content-Type': 'application/json','Access-Control-Allow-Origin' : '*'});
+                res.end(JSON.stringify({error:j}));
             }
         });
     });

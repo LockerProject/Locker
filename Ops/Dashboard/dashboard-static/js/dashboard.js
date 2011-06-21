@@ -6,15 +6,12 @@
 * Please see the LICENSE file for more information.
 *
 */
-
 var serviceMap;
 
 // Sections ------------------------------------------------------------------
 
-function switchSection(section)
-{
-  switch (section)
-  {
+function switchSection(section) {
+  switch (section) {
     case "logs": showLogsSection(); break;
     case "services": showServicesSection(); break;
     default:
@@ -25,8 +22,7 @@ function switchSection(section)
 
 // Logs Section --------------------------------------------------------------
 
-function showLogsSection()
-{
+function showLogsSection() {
 
   // Refresh the Log Data
   refreshLog();
@@ -42,8 +38,7 @@ function showLogsSection()
 
 }
 
-function refreshLog()
-{
+function refreshLog() {
   $("#logEntriesList").children().remove();
   $.ajax({ url: "diary" }).success(function(data) {
     var diaryLines = JSON.parse(data);
@@ -67,8 +62,7 @@ function refreshLog()
 
 // Services Section ----------------------------------------------------------
 
-function showServicesSection()
-{
+function showServicesSection() {
 
   // Set History
   setLocation("services");
@@ -81,8 +75,7 @@ function showServicesSection()
 
 }
 
-function selectService(index)
-{
+function selectService(index) {
   var item = serviceMap.available[index];
   $("#serviceInfo h1").html(item["title"]);
   $("#serviceInfo p").html(item["desc"]);
@@ -91,8 +84,7 @@ function selectService(index)
   if (item["provides"]) $("#availProvides").html(item["provides"].join(","));
   $("#connectorInstancesList").children().remove();
 
-  if (item.is == "connector")
-  {
+  if (item.is == "connector") {
     $("#addConnectorInstanceButton a").attr("href", "javascript:installService(" + index + ");");
     $.each(serviceMap.installed, function(key, value) {
       if (value["srcdir"] == item["srcdir"])
@@ -103,8 +95,7 @@ function selectService(index)
     $("#connectorInstancesSection").show();
     $("#installButton").hide();
   }
-  else
-  {
+  else {
     $("#installButton a").attr("href", "javascript:installService(" + index + ");");
     $("#installButton").show();
     $("#connectorInstancesSection").hide();
@@ -113,15 +104,24 @@ function selectService(index)
   $("#serviceInfo").show();
 }
 
-function installService(i)
-{
-  document.location = "post2install?id=" + i;
+function installService(i) {
+    $.getJSON("install", {id:i}, function(data, err, resp) {
+        if(data && data.success) {
+            var svc = data.success;
+            var previousLocation = getLocation();
+            updateServiceMap(previousLocation, function() {
+                showApp(svc);
+            });
+        } else {
+            alert('error:' + JSON.string(data));
+        }
+    });
+
 }
 
 // Apps ----------------------------------------------------------------------
 
-function showApp(app, event)
-{
+function showApp(app, event) {
 
   // Set History
   setLocation("app/" + app.id);
@@ -140,23 +140,19 @@ function showApp(app, event)
 
 // History (Location) Management ---------------------------------------------
 
-function setLocation(location)
-{
+function setLocation(location) {
   if (!history.pushState) return;
   if (location == getLocation()) return;
   history.pushState({}, "", "#!/" + location);
 }
 
-function getLocation()
-{
+function getLocation() {
   return document.location.hash.substr(3); // Strip "#!/"
 }
 
-window.onpopstate = function(event)
-{
+window.onpopstate = function(event) {
   var location = getLocation();
-  if (location.match(/^app/))
-  {
+  if (serviceMap && serviceMap.installed && location.match(/^app/)) {
     var appId = location.substr(4),
         app   = serviceMap.installed[appId];
 
@@ -166,82 +162,85 @@ window.onpopstate = function(event)
     switchSection(location);
 }
 
+
+function updateServiceMap(previousLocation, callback) {
+    // Update Interface from Service Map
+    $.ajax({ url: "map", dataType: "json" }).success(function(data) {
+      serviceMap = data;
+
+      $("#servicesList").html('');
+      // Populate Available Services List
+      serviceMap.available.forEach(function(item) {
+        if (!item.installable) return;
+        switch (item.is) {
+          case "app":
+            $("#servicesList").append($("<li class='app' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
+              $("#servicesList li").removeClass("current");
+              $(event.target).addClass("current");
+              $("#installButton a").html("Install App");
+              selectService(serviceMap.available.indexOf(item));
+            }));
+            break;
+
+          case "connector":
+            $("#servicesList").append($("<li class='connector' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
+              $("#servicesList li").removeClass("current");
+              $(event.target).addClass("current");
+              selectService(serviceMap.available.indexOf(item));
+            }));
+            break;
+
+          case "collection":
+            $("#servicesList").append($("<li class='collection' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
+              $("#servicesList li").removeClass("current");
+              $(event.target).addClass("current");
+              $("#installButton a").html("Install Collection");
+              selectService(serviceMap.available.indexOf(item));
+            }));
+            break;
+
+          default:
+            console.log("Unknown service type \"" + item.is + "\"");
+            break;
+        }
+      });
+
+      
+      $("#appsList").html('');
+      // Populate Installed Apps List
+      $.each(serviceMap.installed, function(key, value) {
+        var item = value;
+        $("#appsList").append($("<li title='" + item.title + "' data-app-id='" + item.id + "'>" + item.title + "</li>").click(function(event) {
+          showApp(item, event);
+        }));
+      });
+
+      // Restore Previously Selected App
+      if (previousLocation.match(/^app/)) {
+        var appId = previousLocation.substr(4),
+            app   = serviceMap.installed[appId];
+
+        if (app) showApp(app);
+      }
+      callback();
+    });
+}
 // ---------------------------------------------------------------------------
 
-$(document).ready(function()
-{
+$(document).ready(function() {
   var previousLocation = getLocation();
+  updateServiceMap(previousLocation, function() {
+      // Setup Section Navigation Observers
+      $("#logsTab").click(showLogsSection);
+      $("#servicesTab").click(showServicesSection);
 
-  // Update Interface from Service Map
-  $.ajax({ url: "map", dataType: "json" }).success(function(data) {
-    serviceMap = data;
-
-    // Populate Available Services List
-    serviceMap.available.forEach(function(item) {
-      if (!item.installable) return;
-      switch (item.is)
-      {
-        case "app":
-          $("#servicesList").append($("<li class='app' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
-            $("#servicesList li").removeClass("current");
-            $(event.target).addClass("current");
-            $("#installButton a").html("Install App");
-            selectService(serviceMap.available.indexOf(item));
-          }));
-          break;
-
-        case "connector":
-          $("#servicesList").append($("<li class='connector' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
-            $("#servicesList li").removeClass("current");
-            $(event.target).addClass("current");
-            selectService(serviceMap.available.indexOf(item));
-          }));
-          break;
-
-        case "collection":
-          $("#servicesList").append($("<li class='collection' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {
-            $("#servicesList li").removeClass("current");
-            $(event.target).addClass("current");
-            $("#installButton a").html("Install Collection");
-            selectService(serviceMap.available.indexOf(item));
-          }));
-          break;
-
-        default:
-          console.log("Unknown service type \"" + item.is + "\"");
-          break;
+      // Restore Previously Selected Section
+      if (!previousLocation.match(/^app/)) {
+        if (previousLocation)
+          switchSection(getLocation());
+        else
+          showLogsSection();
       }
-    });
-
-    // Populate Installed Apps List
-    $.each(serviceMap.installed, function(key, value) {
-      var item = value;
-      $("#appsList").append($("<li title='" + item.title + "' data-app-id='" + item.id + "'>" + item.title + "</li>").click(function(event) {
-        showApp(item, event);
-      }));
-    });
-
-    // Restore Previously Selected App
-    if (previousLocation.match(/^app/))
-    {
-      var appId = previousLocation.substr(4),
-          app   = serviceMap.installed[appId];
-
-      if (app) showApp(app);
-    }
   });
-
-  // Setup Section Navigation Observers
-  $("#logsTab").click(showLogsSection);
-  $("#servicesTab").click(showServicesSection);
-
-  // Restore Previously Selected Section
-  if (!previousLocation.match(/^app/))
-  {
-    if (previousLocation)
-      switchSection(getLocation());
-    else
-      showLogsSection();
-  }
 
 });
