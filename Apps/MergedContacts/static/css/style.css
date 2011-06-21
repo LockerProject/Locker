@@ -14,10 +14,10 @@ body {
 }  
 
 aside {  
-    width: 335px;
+    width: 340px;
     height: 100%;
     position: fixed;
-    top: 0;
+    top: 0; left: 0;
     float: left;
     margin: 0px;
     padding: 15px;
@@ -177,12 +177,16 @@ a.social_link {
     float: right;
     height: 48px;
     width: 48px;
+    opacity: 0.5;
+}
+
+a.social_link:hover {
+    opacity: 1;
 }
 
 a.facebook {
     cursor: pointer;
     background: url('../img/www.addictedtocoffee.de/facebook.png');
-
 }
 
 a.facebook:hover {
