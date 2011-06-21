@@ -47,9 +47,9 @@ function httpModuleRequest(uri, callback) {
             outputStream.end();
         };
         thisResponse.statusCode = interceptedUris[uri].statusCode;
-        if (options.contentType) {
-            thisResponse.headers['content-type'] = interceptedUris[uri].contentType;
-        }
+        // if (options.contentType) {
+        //     thisResponse.headers['content-type'] = interceptedUris[uri].contentType;
+        // }
         thisRequest.emit('response', thisResponse);
         
         if (callback) {
