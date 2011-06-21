@@ -18,6 +18,8 @@ var util = require('util');
 var currentDir = process.cwd();
 var events = {message: 0};
 
+var mockMailboxResults = fs.readFileSync('fixtures/imap/mailboxes.json');
+
 var suite = RESTeasy.describe('IMAP Connector');
 
 process.on('uncaughtException',function(error){
@@ -59,6 +61,22 @@ suite.next().suite.addBatch({
         },
         "successfully": function(err, test) {
             assert.equal(test, true);
+        }
+    }
+}).addBatch({
+    "Can parse N-depth mailbox tree": { 
+        topic: function() {
+            mockMailboxResults = JSON.parse(mockMailboxResults);
+            var mailboxes = [];
+            sync.getMailboxPaths(mailboxes, mockMailboxResults);
+            return mailboxes;
+        },
+        "successfully": function(mailboxes) {
+            assert.length(mailboxes, 9);
+            assert.include(mailboxes, 'INBOX');
+            assert.include(mailboxes, 'Work');
+            assert.include(mailboxes, '[Gmail]/Spam');
+            assert.include(mailboxes, '[Gmail]/Spam/Junk');
         }
     }
 }).addBatch({
@@ -106,7 +124,6 @@ suite.next().suite.addBatch({
     }
 });
 
-
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("IMAP connector")
         .discuss("all messages")
@@ -120,5 +137,5 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss();
-        
+
 suite.export(module);

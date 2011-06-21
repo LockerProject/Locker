@@ -1,0 +1,63 @@
+{ "INBOX":
+   { "attribs": [] 
+   , "delim": "/" 
+   , "children": null
+   , "parent": null
+}
+, "Work":
+   { "attribs": []
+   , "delim": "/"
+   , "children": null
+   , "parent": null
+   }
+, "[Gmail]":
+   { "attribs": [ "NOSELECT" ]
+   , "delim": "/"
+   , "children":
+      { "All Mail":
+         { "attribs": []
+         , "delim": "/"
+         , "children": null
+         , "parent": null
+         }
+      , "Drafts":
+         { "attribs": []
+         , "delim": "/"
+         , "children": null
+         , "parent": null
+         }
+      , "Sent Mail":
+         { "attribs": []
+         , "delim": "/"
+         , "children": null
+         , "parent": null
+         }
+      , "Spam":
+         { "attribs": []
+         , "delim": "/"
+         , "children": 
+            { "Junk": 
+                { "attribs": []
+                , "delim": "/"
+                , "children": null
+                , "parent": null
+                }
+            }
+         , "parent": null
+         }
+      , "Starred":
+         { "attribs": []
+         , "delim": "/"
+         , "children": null
+         , "parent": null
+         }
+      , "Trash":
+         { "attribs": []
+         , "delim": "/"
+         , "children": null
+         , "parent": null
+         }
+      }
+   , "parent": null
+   }
+}
