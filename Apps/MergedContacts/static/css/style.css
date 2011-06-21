@@ -17,7 +17,7 @@ aside {
     height: 100%;
     position: fixed;
     top: 0;
-    
+    background-color: rgba(0, 0, 0, 0.25);    
     float: left;
     margin: 0px;
     padding: 15px;
@@ -69,7 +69,6 @@ aside div.detail {
     font-size: 20px;
 }
 
-
 .contact div.contactActions {
     float: right;
     width: 250px;
@@ -93,6 +92,7 @@ aside div.detail {
     padding-left: 10px;
     border-bottom: 5px solid #bbb;
     width: 100%;
+    background: rgb(206,220,231);
 }
 
 #searchBox * {
@@ -124,7 +124,6 @@ aside div.detail {
 #searchBox label {
 }
 
-
 #searchBox input {
     padding: 0px;
 }
@@ -136,6 +135,10 @@ header div {
 
 .clear {
     clear: both;
+}
+
+#contacts {
+    background: rgb(206,220,231);
 }
 
 #contacts li img {
@@ -164,12 +167,14 @@ a {
     overflow:hidden;
 }
 
+/* Social Links */
+
 a.social_link {
     font-size: 0px;
     text-indent: -99999999999999999999px;
     text-shadow: none;
     display: block;
-    float: left;
+    float: right;
     height: 48px;
     width: 48px;
 }
@@ -181,4 +186,16 @@ a.facebook {
 }
 
 a.facebook:hover {
+}
+
+
+.blueGreyGrad {
+    background: rgb(206,220,231); /* Old browsers */
+    background: -moz-linear-gradient(top, rgba(206,220,231,1) 0%, rgba(89,106,114,1) 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(206,220,231,1)), color-stop(100%,rgba(89,106,114,1))); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, rgba(206,220,231,1) 0%,rgba(89,106,114,1) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, rgba(206,220,231,1) 0%,rgba(89,106,114,1) 100%); /* Opera11.10+ */
+    background: -ms-linear-gradient(top, rgba(206,220,231,1) 0%,rgba(89,106,114,1) 100%); /* IE10+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cedce7', endColorstr='#596a72',GradientType=0 ); /* IE6-9 */
+    background: linear-gradient(top, rgba(206,220,231,1) 0%,rgba(89,106,114,1) 100%); /* W3C */
 }
