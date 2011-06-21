@@ -200,15 +200,18 @@ function fetchMessages(mailbox, fetchMessageCallback) {
     });
 }
 
-function storeMessage(mailbox, message) {
-    if (debug) console.log('storeMessage from ' + mailbox + ' (message.id: ' + message.id + ')');
+function storeMessage(mailbox, msg) {
+    if (debug) console.log('storeMessage from ' + mailbox + ' (message.id: ' + msg.id + ')');
+    var message = lutil.extend({'messageId': msg.id}, msg);
+    message.id = mailbox + '||' + msg.id;
     
     dataStore.addObject('messages', message, function(err) {
-        updateState.messages[mailbox].syncedThrough = message.id;
-        lfs.writeObjectToFile('updateState.json', updateState);
         if (err) {
             console.log(err);
-        }
+        }   
+        updateState.messages[mailbox].syncedThrough = message.messageId;
+        lfs.writeObjectToFile('updateState.json', updateState);
+        
         var eventObj = { source:'message/imap',
                          type:'add',
                          data: message };
@@ -222,11 +225,9 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
-            // hardwire skipping Trash and Spam/Junk IMAP folders
+            // hardwire skipping Trash, Spam/Junk, and Gmail's "All Mail" IMAP folders
             if (results[i].attribs.indexOf('NOSELECT') === -1 && 
-                i !== 'Trash' && i !== 'Spam' && i !== 'Junk' &&
-                i !== 'All Mail' &&
-                i !== 'Sent Mail') {
+                i !== 'Trash' && i !== 'Spam' && i !== 'Junk' && i !== 'All Mail') {
                 mailboxes.push(prefix + i);
             }
             if (results[i].children !== null) {
