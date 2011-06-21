@@ -41,7 +41,7 @@ var auth = {
     host: 'imap.gmail.com',
     port: '993',
     secure: true,
-    debug: true
+    debug: false
 };
 
 sync.eventEmitter.on('message/imap', function() {
@@ -72,11 +72,11 @@ suite.next().suite.addBatch({
             return mailboxes;
         },
         "successfully": function(mailboxes) {
-            assert.length(mailboxes, 9);
+            assert.length(mailboxes, 4);
             assert.include(mailboxes, 'INBOX');
             assert.include(mailboxes, 'Work');
-            assert.include(mailboxes, '[Gmail]/Spam');
-            assert.include(mailboxes, '[Gmail]/Spam/Junk');
+            assert.include(mailboxes, '[Gmail]/Drafts');
+            assert.include(mailboxes, '[Gmail]/Starred');
         }
     }
 }).addBatch({
@@ -86,7 +86,7 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "sync'd 5 new messages"); },
+            assert.equal(diaryEntry, "sync'd 6 new messages"); },
         "again" : {
             topic: function() {
                 sync.syncMessages(null, this.callback);
@@ -106,7 +106,7 @@ suite.next().suite.addBatch({
             'successfully': function(err, response) {
                 assert.isNull(err);
                 assert.isNotNull(response);
-                assert.equal(response.length, 5);
+                assert.equal(response.length, 6);
                 assert.equal(response[0].id, '4');
             }  
         }
@@ -115,7 +115,7 @@ suite.next().suite.addBatch({
     "Tears itself down" : {
         topic: [],
         'after checking for proper number of events': function(topic) {
-            assert.equal(events.message, 5);
+            assert.equal(events.message, 6);
         },
         'sucessfully': function(topic) {
             process.chdir('../..');
@@ -133,7 +133,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var messages = JSON.parse(body);
                     assert.isNotNull(messages);
-                    assert.equal(messages.length, 5); 
+                    assert.equal(messages.length, 6); 
                 })
             .unpath()
         .undiscuss();

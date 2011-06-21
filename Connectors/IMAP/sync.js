@@ -27,9 +27,9 @@ var updateState,
     searchQuery,
     auth, 
     allKnownIDs,
-    totalMsgCount = 0,
+    totalMsgCount,
     imap,
-    debug = true;
+    debug = false;
     
 exports.eventEmitter = new EventEmitter();
 
@@ -58,7 +58,8 @@ exports.init = function(theAuth, mongo) {
 
 exports.syncMessages = function (query, syncMessagesCallback) {
     searchQuery = query;
-
+    totalMsgCount = 0;
+    
     async.series({
         connect: function(callback) {
             if (debug) console.log('connect');
@@ -99,7 +100,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
     var results = null,
         fetchedCount = 0,
         msgCount = 0;
-    if (debug) console.log('fetchMessages: ' + mailbox);
+    if (debug) console.log('fetchMessages');
     
     if (!updateState.messages.hasOwnProperty(mailbox)) {
         updateState.messages[mailbox] = {};
@@ -112,7 +113,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
     
     async.series({
         openbox: function(callback) {
-            if (debug) console.log('openbox');
+            if (debug) console.log('openbox: ' + mailbox);
             imap.openBox(mailbox, true, function(err, result) {
                 callback(err, 'openbox');
             });
@@ -164,8 +165,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                                  body += chunk;
                              });
                              bodyMsg.on('end', function() {
-                                 console.log(util.inspect(allKnownIDs));
-                                 if (!allKnownIDs[mailbox][message.id]) {
+                                 if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
                                      msgCount++;
                                      totalMsgCount++;
                                      message.body = body;                             
@@ -173,7 +173,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                                      storeMessage(mailbox, message);
                                      lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                                  }
-                                 if (debug) console.log(msgCount + ':' + fetchedCount + ' (message.id: ' + message.id + ')');
+                                 if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
                                  if (msgCount === 0 || msgCount === fetchedCount) {
                                      callback(null, 'fetch');
                                  }
@@ -201,9 +201,8 @@ function fetchMessages(mailbox, fetchMessageCallback) {
 }
 
 function storeMessage(mailbox, message) {
-    if (debug) console.log('storeMessage: ' + mailbox + ': ' + message.id);
+    if (debug) console.log('storeMessage from ' + mailbox + ' (message.id: ' + message.id + ')');
     
-    // TODO: Add per-mailbox syncedThrough support
     dataStore.addObject('messages', message, function(err) {
         updateState.messages[mailbox].syncedThrough = message.id;
         lfs.writeObjectToFile('updateState.json', updateState);
@@ -223,7 +222,11 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
-            if (results[i].attribs.indexOf('NOSELECT') === -1 && i !== 'All Mail' && i !== 'Sent Mail') {
+            // hardwire skipping Trash and Spam/Junk IMAP folders
+            if (results[i].attribs.indexOf('NOSELECT') === -1 && 
+                i !== 'Trash' && i !== 'Spam' && i !== 'Junk' &&
+                i !== 'All Mail' &&
+                i !== 'Sent Mail') {
                 mailboxes.push(prefix + i);
             }
             if (results[i].children !== null) {
