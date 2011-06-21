@@ -1,59 +1,81 @@
-<html>
-  <head>
-    <title>Contacts!</title>
-    <link href='css/style.css' rel='stylesheet'/>
-  </head>
-  
-  <body>
-        <div id='table'>
-            <div id='headers'>
-                <span class='column photo'><img src="img/silhouette.png"></span>
-                <span class='column name'>Name</span>
-                <span class='column email'>Email</span>
-                <span class='column twitter'>Twitter</span>
-                <span class='column github'>Github</span>
-            </div>
-        <div id='contacts'>
-        </div>
-        <div id='more_contacts'>
-            <span id='button' onclick="javascript:loadMore();">Load Maaawr!</span>
-        </div>
-    </div>
-    <div id='more_blank' style='display:none' class='more_info'>
-        <div class='morebox'>
-            <div class='pic'>
-            </div>
-            <div class='name_and_loc'><span class='realname'></span><br><span class='location'></span></div>
-            <div class='twitter-details account'>
-                <img src="http://twitter-badges.s3.amazonaws.com/t_logo-a.png" />
-                <div><span class='username'>
-                </span> -  
-                <span class='followers'></span> followers : : following <span class='following'></span>
-                </div>
-                <span class='tagline'></span>
-            </div>
-            <div class='facebook-details account'>
-                <img src="img/facebook-logo.png" />
-                <span class='name'>
-                </span>
-            </div>
-            <div class='foursquare-details account'>
-                <img src="img/foursquare-logo.png" />
-                <div><span class='name'>
-                </span> -  
-                                <span class='checkins'></span> checkins : : <span class='mayorships'></span> mayorships
-                                </div>
-            </div>
-            <div class='github-details account'>
-                <img src="img/github-logo-bg.png" />
-                <span class='login'>
-                </span> - <span class='repos'></span> repos, 
-                <span class='followers'></span> followers : : following <span class='following'></span>
-            </div>
-        </div>
-    </div>
-    <script src='/static/js/jquery-1.6.1.min.js' type='text/javascript'> </script>
-    <script src='js/data.js' type='text/javascript'> </script>
+<!doctype html>
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>Merged Contacts Viewer</title>
+  <meta name="description" content="Taking your contacts and merging
+  them to make an even better contacts list!">
+  <meta name="author" content="Singly">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="css/style.css?v=2">
+  <script src="/static/js/boilerplate/libs/modernizr-1.7.min.js"></script>
+</head>
+
+<body>
+  <div id="container">
+    <header>   
+    </header>
     
-    </body>
+    <section id="main" role="main">
+    <!-- Main content area -->
+    <div id="searchBox">
+      <input type="text" id="search"/>
+      <div id="count">0</div>
+      <label for="showJSON">Debug:</label>
+      <input type="checkbox" id="showJSON"/>
+      <label for="sort">Sort by:</label>
+      <select id="sort">
+	<option value="firstname">First name</option>
+	<option value="lastname">Last name</option>
+	<option value="email">Email address</option>
+	<option value="sex">Gender</option>
+      </select>
+      
+      <div class="clear"></div>
+
+    </div>
+    <ul id='contacts'>
+    </ul>
+    </section>
+    
+    <aside>  
+      <!-- Sidebar -->
+      <h1>Merged Contacts Viewer</h1>
+      
+      <div class="detail">This is an example app, and is in active
+	development. <br/><br/>
+	If you find an error, please email <a href="mailto:nym@singly.com">nym@singly.com</a>, or
+	come onto our IRC chat room on <a
+	href="http://webchat.freenode.net/" target="_blank">irc.freenode.net</a>, channel
+	#lockerproject. <br/><br/>Thanks!
+      </div>
+    </aside>
+
+      <footer>
+    </footer>
+  </div> <!-- eo #container -->
+  
+  <script src='/static/js/jquery-1.6.1.min.js' type='text/javascript'> </script>
+  <script>window.jQuery || document.write("<script src='/static/js/jquery-1.6.1.min.js'>\x3C/script>")</script>
+
+  <script src='/static/js/underscore-1.1.6.min.js' type='text/javascript'> </script>
+  <script src='/static/js/backbone-0.3.3.min.js' type='text/javascript'> </script>
+  <script src='js/client.js' type='text/javascript'> </script>
+
+  <!--[if lt IE 7 ]>
+    <script src="/static/js/boilerplate/libs/dd_belatedpng.js"></script>
+    <script>DD_belatedPNG.fix("img, .png_bg");</script>
+  <![endif]-->
+
+    
+</body>
 </html>

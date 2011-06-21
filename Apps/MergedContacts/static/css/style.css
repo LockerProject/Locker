@@ -1,210 +1,186 @@
 body {
-    background-color:#000;
-    color:#ddd;
-    font-family:Arial,Tahoma, Geneva, sans-serif;
+    font-family: 13.34px helvetica,arial,freesans,clean,sans-serif
     padding:10px;
+    margin: 0px;
 }
+
+#content {  
+    display: table;  
+}  
+  
+#main {  
+    margin-left: 365px;
+}  
+
+aside {  
+    width: 335px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    
+    float: left;
+    margin: 0px;
+    padding: 15px;
+    border-right: 5px solid #aaa;
+    background: #fff;
+}  
+    
+aside h1 {
+    margin: 0px;
+    height: 50px;
+}
+
+aside div.detail {
+}
+
+
+#contacts {
+    margin: 0px;
+    margin-left: 5px;
+    margin-top: 65px;
+    padding: 0px;
+    list-style:none;
+    display: none;
+}
+
+.contact div.contactSummary {
+    display:inline-block;
+    width: 400px;
+}
+
+.contact div.contactSummary img {
+    float: left;
+    height: 50px;
+    width: 50px;
+
+    /* todo: clean this up */
+    -webkit-box-shadow: rgb(170, 170, 170) 0px 0px 4px; box-shadow: rgb(170, 170, 170) 0px 0px 4px; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 13.8px; border-left-width: 2px; border-top-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255); border-left-color: rgb(255, 255, 255); border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; 
+}
+
+#contacts .contact pre {
+    display: none;
+    font-size: 10px;
+}
+
+#contacts.showJSON .contact pre {
+    display: block;
+}
+
+.contact div.contactSummary strong {
+    font-size: 20px;
+}
+
+
+.contact div.contactActions {
+    float: right;
+    width: 250px;
+    padding-right: 10px;
+    text-align: right;
+}
+
+#main {
+    margin-top: 10px;
+}
+
+/* Search Box */
+
+#searchBox {
+    font-family: 13.34px helvetica,arial,freesans,clean,sans-serif
+    display: none;
+    position: fixed;
+    top: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    border-bottom: 5px solid #bbb;
+    background: white;
+    width: 100%;
+}
+
+#searchBox * {
+    float: left;
+    font-size: 20px;
+}
+
+#searchBox #search.inactive {
+    color: #ccc;
+    padding: 2px;
+}
+
+#searchBox select {
+    font-size: 30px;
+}
+
+#searchBox .clear {
+    float: none;
+}
+
+#searchBox #count {
+    color: #aaa;
+    width: 80px;
+    height: 39px;
+    padding: 0px 5px 0px 5px;
+    margin-top: 1px;
+}
+
+#searchBox label {
+}
+
+
+#searchBox input {
+    padding: 0px;
+}
+
+
+header div {
+    color: grey;
+}
+
+.clear {
+    clear: both;
+}
+
+#contacts li img {
+    margin-right: 10px;
+}
+
+#contacts li {
+    margin: 0px;
+    padding-left: 9px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    border-bottom: 1px solid #bbb;
+}
+
+#contacts li:hover {
+    background-color: #999;
+    color: white;
+}
+
+#contacts li:hover a {
+    color: white;
+}
+
 a {
     color:#aaa;
-    text-decoration:none;
     overflow:hidden;
 }
 
-#table .contact div {
-    border-radius:3px;
+a.social_link {
+    font-size: 0px;
+    text-indent: -99999999999999999999px;
+    text-shadow: none;
+    display: block;
+    float: left;
+    height: 48px;
+    width: 48px;
 }
 
-#table .column {
-    display:inline-block;
-}
-#table #headers .column {
-    border-top:1px solid #323434;
-    border-bottom:1px solid #151617;
-    background-color:#232526;
-    padding:2px 6px;
-    font-size:24px;
-    text-align:center;
-    overflow:hidden;
-}
-
-#table #contacts #text {
-    display:inline-block;
-}
-#table #contacts .contact .basic-data {
-    display:inline-block;
-    vertical-align:middle;
-    min-height:36px;
-    padding-top:3px;
-    cursor:pointer;
-}
-#table #contacts .contact:hover {
-    background-color:#343739;
-    
-}
-#table #contacts .contact {
-    border-top:1px solid #323434;
-    border-bottom:1px solid #151617;
-    background-color:#232526;
-    margin:2px 0px;
-}
-#table #contacts .contact {
-    display:inline-block;
-}
-#table #contacts .column {
-    padding:2px 8px;
-    margin:0px 0px;
-}
-#table #headers .photo {
-    display:inline-block;
-    width:36px;
-    height:30px;
-}
-#table #headers .photo img {
-    display:inline;
-    width:18px;
-    height:18px;
-    margin-top:0px;
-}
-#table #contacts .photo {
-    display:inline;
-    width:36px;
-    height:36px;
-    float:left;
-}
-#table .photo img {
-    width:30px;
-    height:30px;
-    margin:3px;
-}
-
-#table .name {
-    width:200px;
-}
-
-#table .email {
-    width:240px;
-}
-
-#table .github {
-    width:100px;
-}
-
-#table .twitter {
-    width:160px;
-}
-#table .date {
-    width:60px;
-}
-
-#table #more_contacts {
-    width:1124px;
-    margin:0px;
-    padding:0px;
-    height:80px;
-}
-
-#table #more_contacts #button {
-    cursor:pointer;
-    border-top:1px solid #323434;
-    border-bottom:1px solid #151617;
-    background-color:#232526;
-    margin:2px 0px;
-    display:inline-block;
-    text-align:center;
-    font-size:18px;
-    float:right;
-    padding:10px;
-}
-
-
-.more_info {
-    border-radius:3px;
-    border-top:1px solid #323434;
-    border-bottom:1px solid #151617;
-    background-color:#232526;
-    margin:2px 0px;
-}
-
-.more_info .title {
-    font-size:2em;
-    font-weight:bold;
-}
-.morebox .pic {
-    float:left;
-    display:inline-block;
-    margin:5px;
-    margin-right:12px;
-    max-height:100px;
-    max-width:100px;
-}
-.morebox .pic img {
-    max-height:100px;
-    max-width:100px;
-}
-.morebox {
-    border-radius:3px;
-    width:730px;
-    margin:8px;
-    padding:5px;
-    display:inline-block;
-    float:left;
-}
-
-.name_and_loc {
-    display:block;
-    padding:5px;
-    height:100px;
-}
-
-.realname {
-    padding-top:5px;
-    font-size:1.7em;
-}
-.username {
-    padding-top:2px;
-}
-
-.morebox .jobs {
-    margin-top:5px;
-    margin-bottom:5px;
-}
-.morebox .twitter-details .tagline {
-    display:block;
-    width:470px;
-    height:17px;
-    overflow:hidden;
-    padding-top:2px;
-    font-style:italic;
-    font-size:0.9em;
-}
-.morebox .twitter-details {
-    padding-top:4px;
-}
-.morebox .account {
-    display:none;
-    height:40px;
-}
-.morebox .srv-img {
-    display:inline-block;
-    height:32px;
-}
-.morebox .account img {
-    padding-right:5px;
-    float:left;
-    height:30px;
-    width:30px;
-}
-
-.morebox .location {
-}
-
-.morebox .account-spacer {
+a.facebook {
+    cursor: pointer;
+    background: url('../img/www.addictedtocoffee.de/facebook.png');
 
 }
-.morebox .github-details img {
-    border-radius:2px;
-}
 
-.morebox .blog {
-    padding-top:7px;
+a.facebook:hover {
 }
