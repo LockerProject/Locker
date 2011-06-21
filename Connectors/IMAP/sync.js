@@ -18,6 +18,11 @@ var fs = require('fs'),
     EventEmitter = require('events').EventEmitter,
     ImapConnection = require('./imap').ImapConnection;
 
+process.on('uncaughtException', function(err) {
+  console.error(err);
+  console.error(err.stack);
+});
+
 var updateState, 
     searchQuery,
     auth, 
@@ -33,7 +38,7 @@ exports.init = function(theAuth, mongo) {
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
     } catch (updateErr) { 
-        updateState = {messages:{syncedThrough:0}};
+        updateState = {messages: {}};
     }
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
@@ -53,7 +58,7 @@ exports.init = function(theAuth, mongo) {
 
 exports.syncMessages = function (query, syncMessagesCallback) {
     searchQuery = query;
-    
+
     async.series({
         connect: function(callback) {
             if (debug) console.log('connect');
@@ -83,11 +88,10 @@ exports.syncMessages = function (query, syncMessagesCallback) {
         }
     },
     function(err, results) {
-        console.log(results);
         if (err) {
             console.error(err);
         }
-        syncMessagesCallback(err, 3600, "sync'd " + msgCount + " new messages");
+        syncMessagesCallback(err, 3600, "sync'd " + totalMsgCount + " new messages");
     });
 };
 
@@ -97,6 +101,15 @@ function fetchMessages(mailbox, fetchMessageCallback) {
         msgCount = 0;
     if (debug) console.log('fetchMessages: ' + mailbox);
     
+    if (!updateState.messages.hasOwnProperty(mailbox)) {
+        updateState.messages[mailbox] = {};
+        updateState.messages[mailbox].syncedThrough = 0;
+    }
+    
+    if (!allKnownIDs.hasOwnProperty(mailbox)) {
+        allKnownIDs[mailbox] = {};
+    }
+    
     async.series({
         openbox: function(callback) {
             if (debug) console.log('openbox');
@@ -105,10 +118,10 @@ function fetchMessages(mailbox, fetchMessageCallback) {
             });
         },
         search: function(callback) {
-            if (searchQuery === null) {
-                searchQuery = (+updateState.messages.syncedThrough + 1) + ':*';
-            }
             if (debug) console.log('search: ' + searchQuery);
+            if (searchQuery === null) {
+                searchQuery = (+updateState.messages[mailbox].syncedThrough + 1) + ':*';
+            }
             imap.search([ ['UID', 'SEARCH', searchQuery] ], function(err, searchResults) {
                 results = searchResults;
                 callback(err, 'search');
@@ -151,15 +164,16 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                                  body += chunk;
                              });
                              bodyMsg.on('end', function() {
-                                 if (!allKnownIDs[message.headers['message-id']]) {
+                                 console.log(util.inspect(allKnownIDs));
+                                 if (!allKnownIDs[mailbox][message.id]) {
                                      msgCount++;
                                      totalMsgCount++;
                                      message.body = body;                             
-                                     allKnownIDs[message.headers['message-id']] = 1;
-                                     storeMessage(message);
+                                     allKnownIDs[mailbox][message.id] = 1;
+                                     storeMessage(mailbox, message);
                                      lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                                  }
-                                 if (debug) console.log(msgCount + ':' + fetchedCount + ' (message-id: ' + message.headers['message-id'] + ')');
+                                 if (debug) console.log(msgCount + ':' + fetchedCount + ' (message.id: ' + message.id + ')');
                                  if (msgCount === 0 || msgCount === fetchedCount) {
                                      callback(null, 'fetch');
                                  }
@@ -179,7 +193,6 @@ function fetchMessages(mailbox, fetchMessageCallback) {
         }
     },
     function(err, results) {
-        console.log(results);
         if (err) {
             console.error(err);
         }
@@ -187,12 +200,12 @@ function fetchMessages(mailbox, fetchMessageCallback) {
     });
 }
 
-function storeMessage(message) {
-    if (debug) console.log('storeMessage: ' + message.headers['message-id']);
+function storeMessage(mailbox, message) {
+    if (debug) console.log('storeMessage: ' + mailbox + ': ' + message.id);
     
     // TODO: Add per-mailbox syncedThrough support
     dataStore.addObject('messages', message, function(err) {
-        updateState.messages.syncedThrough = message.id;
+        updateState.messages[mailbox].syncedThrough = message.id;
         lfs.writeObjectToFile('updateState.json', updateState);
         if (err) {
             console.log(err);
