@@ -314,7 +314,7 @@ $(function() {
 		   facebookHandle.indexOf(config.q) != -1) return true;
 		
 		return false;
-	    }
+	    };
 
 	    // I could put this in a script tag on the page, 
 	    // but i kind of like being able to comment lines
@@ -326,6 +326,7 @@ $(function() {
 	    contactTemplate += '<div class="contactActions">';
 	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b">Email</a><% } %> ';
 	    contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
+	    contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
 	    contactTemplate += '</div>';
 	    contactTemplate += '<br/><pre><%= json %></pre>';
 	    contactTemplate += '<div class="clear"></div></li>';

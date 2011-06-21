@@ -1,7 +1,7 @@
 body {
     font-family: 13.34px helvetica,arial,freesans,clean,sans-serif;
     background: rgb(206,220,231);
-    padding:10px;
+    padding:0px;
     margin: 0px;
 }
 
@@ -10,19 +10,22 @@ body {
 }  
   
 #main {  
-    margin-left: 365px;
+    margin-right: 375px;
 }  
 
 aside {  
     width: 340px;
     height: 100%;
     position: fixed;
-    top: 0; left: 0;
+    top: 0; right: 0;
     float: left;
     margin: 0px;
     padding: 15px;
-    border-right: 5px solid #aaa;
+    border-left: 5px solid #aaa;
 }  
+aside a {
+    color: white;
+}
     
 aside h1 {
     margin: 0px;
@@ -35,8 +38,8 @@ aside div.detail {
 
 #contacts {
     margin: 0px;
-    margin-left: 5px;
-    margin-top: 65px;
+    margin-left: 0px;
+    margin-top: 55px;
     padding: 0px;
     list-style:none;
     display: none;
@@ -177,20 +180,25 @@ a.social_link {
     float: right;
     height: 48px;
     width: 48px;
-    opacity: 0.5;
+/*    opacity: 0.5; */
 }
 
 a.social_link:hover {
     opacity: 1;
+    cursor: pointer;
 }
 
 a.facebook {
-    cursor: pointer;
     background: url('../img/www.addictedtocoffee.de/facebook.png');
 }
 
 a.facebook:hover {
 }
+
+a.twitter {
+    background: url('../img/www.addictedtocoffee.de/twitter.png');
+}
+
 
 
 .blueGreyGrad {
