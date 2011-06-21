@@ -179,11 +179,12 @@ $(function() {
 	    var baseURL = 'http://localhost:8042/query';
 
 	    var getContactsCB = function(contacts) {
-		if (contacts.length > 1000) {
-		    //alert("Whoha... that's a lot of contacts!");
+		if (contacts.length > 3000) {
+		    alert("Whoha... that's a lot of contacts! Please be patient.");
 		}
 		for(var i in contacts) {
 		    // only add contacts if they have a name or email. might change this.
+		    if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
 		    if (contacts[i].emails || contacts[i].name) {
 			that.addContact(contacts[i]);
 		    }
@@ -327,6 +328,7 @@ $(function() {
 	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b">Email</a><% } %> ';
 	    contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
 	    contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
+	    contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_b">GitHub Profile</a><% } %>';
 	    contactTemplate += '</div>';
 	    contactTemplate += '<br/><pre><%= json %></pre>';
 	    contactTemplate += '<div class="clear"></div></li>';

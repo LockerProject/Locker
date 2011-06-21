@@ -184,7 +184,6 @@ a.social_link {
 }
 
 a.social_link:hover {
-    opacity: 1;
     cursor: pointer;
 }
 
@@ -199,6 +198,9 @@ a.twitter {
     background: url('../img/www.addictedtocoffee.de/twitter.png');
 }
 
+a.github {
+    background: url('../img/www.addictedtocoffee.de/github.png');
+}
 
 
 .blueGreyGrad {
