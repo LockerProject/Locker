@@ -12,9 +12,6 @@ var lconfig = require('../Common/node/lconfig.js');
 var dashboard;
 
 lconfig.load('config.json');
-
-console.error('lconfig', lconfig);
-
 exports.instance = dashboard;
 
 exports.start = function(port) {
