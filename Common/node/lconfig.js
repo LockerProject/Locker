@@ -39,10 +39,10 @@ function setBase() {
     exports.lockerBase = 'http://' + exports.lockerHost + 
                          (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
     exports.externalBase = 'http';
-    if(exports.externalSecure)
+    if(exports.externalSecure === true || (exports.externalPort == 443 && exports.externalSecure !== false))
         exports.externalBase += 's';
     exports.externalBase += '://' + exports.externalHost + 
-                         (exports.externalPort && exports.externalPort != 80 ? ':' + exports.externalPort : '');
+                         (exports.externalPort && exports.externalPort != 80 && exports.externalPort != 443 ? ':' + exports.externalPort : '');
     if(exports.externalPath)
         exports.externalBase += exports.externalPath;
 }
