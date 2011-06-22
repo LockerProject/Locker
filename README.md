@@ -5,6 +5,29 @@ This is an open source project that helps me collect all of my personal data, fr
 
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress, and come hang out with us on freenode IRC in [#lockerproject](http://webchat.freenode.net/?channels=lockerproject).
 
+
+## Getting Started
+
+### The Fast Way
+
+Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get all the high-level dependencies installed at once. It will make a single directory called lockerbox and get everything set up inside of there.
+
+    curl https://raw.github.com/smurthas/lockerbox/master/lockerbox.sh > lockerbox.sh
+    chmod 0755 lockerbox.sh
+    ./lockerbox.sh
+
+When that successfully completes, add lockerbox/local/bin to your path. Then:
+    
+    cd lockerbox/Locker
+    #check to make sure everything worked
+    ./checkEnv.sh
+    node lockerd.js
+
+now open [http://localhost:8042/](http://localhost:8042/) in your browser!
+
+
+### The _"Real"_ Way
+
 To get started I'll need [node (v0.4.6 - v0.4.8)](http://nodejs.org/dist/node-v0.4.8.tar.gz), [npm (v1.0+)](https://github.com/isaacs/npm), and [MongoDB (v1.4+) ](http://mongodb.org) installed, and then a local copy of the Locker codebase:
 
     git clone https://github.com/LockerProject/Locker.git
@@ -26,7 +49,7 @@ To turn on my locker I run:
 
     node lockerd.js
 
-Then I go to to the dashboard (and am amazed by the design!):
+Then I go to to the dashboard:
 
     http://localhost:8042/
 

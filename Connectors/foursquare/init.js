@@ -8,5 +8,4 @@ require('connector/client').init({"oauth2" :
      "accessTokenResponse" : "json",
      "endPoint" : "https://foursquare.com/oauth2/",
      "linkToCreate" : "https://foursquare.com/oauth/register",
-     "grantType" : "authorization_code"}
-});
+     "grantType" : "authorization_code"}});

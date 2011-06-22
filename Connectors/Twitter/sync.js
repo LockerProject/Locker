@@ -353,7 +353,7 @@ function getPhotos(users) {
         var user = userz.pop();
         if(!user)
             return;
-        var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('/')+1);
+        var photoExt = user.profile_image_url.substring(user.profile_image_url.lastIndexOf('.'));
         lfs.saveUrl(user.profile_image_url, 'photos/' + user.id_str + photoExt, function(success) {
             _curlNext();
         });

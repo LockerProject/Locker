@@ -131,6 +131,7 @@ setTimeout(function() {
     if (process.argv[2] == "-x") {
         vowsArgument = '--xunit';
     }
+
     var vowsProcess = require("child_process").spawn("vows", [vowsArgument].concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
         process.stdout.write(data);

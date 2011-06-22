@@ -35,7 +35,7 @@ function authComplete(theauth, mongo) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go');
+        res.redirect(app.externalBase + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>found a token, load <a href='followers'>followers</a>, or <a href='following'>following</a>, or <a href='repos'>repos</a></html>");

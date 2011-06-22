@@ -48,8 +48,16 @@ var shuttingDown_ = false;
 
 var mongoProcess;
 path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
-    if(!exists)
+    if(!exists) {
+        try {
+            //ensure there is a Me dir
+            fs.mkdirSync(lconfig.me, 0755);
+        } catch(err) {
+            if(err.code !== 'EEXIST')
+                console.error('err', err);
+        }
         fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
+    }
     mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir, 
                                     '--port', lconfig.mongo.port]);
     mongoProcess.stderr.on('data', function(data) {

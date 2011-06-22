@@ -47,6 +47,15 @@ exports.syncFriends = function(callback) {
         fs.writeFile('profile.json', JSON.stringify(self));
         var userID = self.id;
         fs.mkdir('photos', 0755);
+        if (self.photo.indexOf("userpix") > 0) {
+            // fetch photo
+            request.get({uri:self.photo, encoding: 'binary'}, function(err, resp, body) {
+                if (err)
+                    console.error(err);
+                else
+                    fs.writeFile('photos/' + self.id + '.jpg', body, 'binary');
+            });
+        }
         request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, 
         function(err, resp, body) {
             var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});

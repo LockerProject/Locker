@@ -46,6 +46,7 @@ exports.init = function (processOptions, callback) {
         app.meData = lfs.loadMeData();
         locker.connectToMongo(function(mongo) {
             require("connector/api")(app, mongoId, mongo);
+            app.externalBase = processInfo.externalBase;
             authLib.authAndRun(app, processInfo.externalBase, function() {
                 syncApi.authComplete(authLib.auth, mongo);
                 if (!started) {
@@ -67,5 +68,5 @@ exports.init = function (processOptions, callback) {
             }
         })
     });
-    process.stdin.resume();    
+    process.stdin.resume();
 }

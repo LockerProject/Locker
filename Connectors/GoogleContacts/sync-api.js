@@ -18,7 +18,7 @@ module.exports = function(theApp) {
     
     app.get('/', function (req, res) {
         if(!(auth && auth.clientID && auth.clientSecret && auth.redirectURI && auth.token)) {
-            res.redirect(app.meData.uri + 'auth');
+            res.redirect(app.externalBase + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end("<html>great! now you can:<br>" + 

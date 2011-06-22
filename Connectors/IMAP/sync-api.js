@@ -33,7 +33,7 @@ function authComplete(theAuth, mongo) {
 
 function index(req, res) {
     if(!(auth && auth.username && auth.password && auth.host && auth.port)) {
-        res.redirect(app.meData.uri + 'go');
+        res.redirect(app.externalBase + 'go');
     } else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>Found valid authentication, sync up your <a href='messages'>mail messages</a></html>");

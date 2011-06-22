@@ -1,312 +1,216 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); }
 
-var baseURL = 'http://localhost:8042/query';
-var data = {};
-
-// divClicked
-var showing = {};
-
-/**
- * Pulls contacts from Locker API
- * skip - offset number
- * limit - limit used (unused)
- * callback
- */
-function getContacts(offset, callback) {
-    $.getJSON(baseURL + '/getContact', {offset:offset}, callback);
-}
-
-/**
- * Adds a Row to the contactsTable.
- * contact
- */
-function addRow(contact) {
-    data[contact._id] = contact;
-    var contactsTable = $("#table #contacts");
-    contactsTable.append('<div id="' + contact._id + '" class="contact"><span class="basic-data"></span></div>');
-    var theNewDiv = $("#table #contacts #" + contact._id);
-    var theDiv = theNewDiv.find('.basic-data');
-    theDiv.click(function() {
-        divClicked(contact._id);
-    });
-    addPhoto(theNewDiv, contact);
-    addName(theDiv, contact);
-    addEmail(theDiv, contact);
-    addTwitter(theDiv, contact);
-    contactsTable.append('<br>');
-}
-
-/**
- * Adds a photo or silhouette to the div
- * div - $(HTMLElement) to append to
- * contact - contact obj
- */
-function addPhoto(div, contact) {
-    var image_url = getPhotoUrl(contact);
-    
-    if(image_url)
-        div.append('<span class="column photo"><img src="' + image_url + '"></span>');
-    else
-        div.append('<span class="column photo"><img src="img/silhouette.png"></span>');
-}
-
-/**
- * Get the URL for a contact 
- * contact - contact obj
- * fullsize - does nothing
- */
-function getPhotoUrl(contact, fullsize) {
-    var url = 'img/silhouette.png';
-    if(contact.photos && contact.photos.length) {
-        url = contact.photos[0];
-        //twitter
-        if(fullsize && url.match(/_normal\.(jpg||png)/) && !url.match(/.*default_profile_([0-9])_normal\.png/))
-            url = url.replace(/_normal\.(jpg||png)/, '.$1');
-        else if(url.indexOf('https://graph.facebook.com/') === 0) {
-            if(fullsize)
-                url = url += "?return_ssl_resources=1&type=large";
-            else
-                url = url += "?return_ssl_resources=1&type=square";
-        }
-    }
-    return url;
-}
-
-/** 
- * add the person's name to a div
- * div - $(HTMLElement) to append to
- * contact - contact obj
- */
-function addName(div, contact) {
-    div.append('<span class="column name">' + (contact.name || '') + '</span>');
-}
-
-/**
- * Add the person's email to a div
- * div - $(HTMLElement)
- * contact - contact obj
- */
-function addEmail(div, contact) {
-    var email;
-    if(contact.emails && contact.emails.length)
-        email = contact.emails[0].value;
-    div.append('<span class="column email">' + (email || '&nbsp;') + '</span>');
-}
-
-/**
- * Add the person's twitter username to a div
- * div - $(HTMLElement)
- * contact - contact obj
- */
-function addTwitter(div, contact) {
-    var twitterUsername;
-    if(contact.accounts.twitter && contact.accounts.twitter[0].data 
-        && contact.accounts.twitter[0].data.screen_name)
-        twitterUsername = contact.accounts.twitter[0].data.screen_name;
-    
-    if(twitterUsername) {
-        div.append('<span class="column twitter">' +
-                         '<a target="_blank" href="https://twitter.com/' + twitterUsername + '">@' 
-                         + twitterUsername + '</a></span>');
-    } else
-        div.append('<span class="column twitter"></span>');
-}
-
-/**
- * Add the person's twitter username to a div
- * div - $(HTMLElement)
- * contact - contact obj
- */
-function addGithub(div, contact) {
-    var twitterUsername;
-    if(contact.accounts.twitter && contact.accounts.twitter[0].data 
-        && contact.accounts.twitter[0].data.screen_name)
-        twitterUsername = contact.accounts.twitter[0].data.screen_name;
-    
-    if(twitterUsername) {
-        div.append('<span class="column twitter">' +
-                         '<a target="_blank" href="https://twitter.com/' + twitterUsername + '">@' 
-                         + twitterUsername + '</a></span>');
-    } else
-        div.append('<span class="column twitter"></span>');
-}
-
-/**
- * Add the person's facebook details to a div
- * div
- * contact 
- */
-function addFacebook(div, contact) {
-    var facebookUsername;
-    if(contact.accounts.twitter && contact.accounts.twitter[0].data 
-        && contact.accounts.twitter[0].data.screen_name)
-        twitterUsername = contact.accounts.twitter[0].data.screen_name;
-    
-    if(twitterUsername) {
-        div.append('<span class="column twitter">' +
-                         '<a target="_blank" href="https://twitter.com/' + twitterUsername + '">@' 
-                         + twitterUsername + '</a></span>');
-    } else
-        div.append('<span class="column twitter"></span>');
-}
-
-/**
- * get the location of a contact 
- * contact - contact obj
- */
-function getLocation(contact) {
-    if(contact.addresses && contact.addresses) {
-        for(var i in contact.addresses) {
-            if(contact.addresses[i].type === 'location')
-                return contact.addresses[i].value;
-        }
-    }
-    return '';
-}
-
-/**
- * Reload the display (get contacts, render them)
- * sortField
- * _start
- * _end
- * callback
- */
-function reload(callback) {
-    var getContactsCB = function(contacts) {
-        var contactsTable = $("#table #contacts");
-        showing = {};
-        contactsTable.html('');
-        for(var i in contacts)
-            addRow(contacts[i]);
-        if(callback) callback();
-    };
-    getContacts(0, getContactsCB);
-}
-
-
-/**
- * Div Clicked 
- * id 
- **/
-function divClicked(id) {
-    if(showing[id] === undefined) {
-        var div = $("#table #contacts #" + id);
-        div.append('<div class="more_info"></div>');
-        var newDiv = $("#table #contacts #" + id + " .more_info");
-        getMoreDiv(newDiv, data[id]);
-        showing[id] = true;
-    } else if(showing[id] === true) {
-        var div = $("#table #contacts #" + id + " .more_info");
-        div.hide();
-        showing[id] = false;
-    } else { //showing[id] === false
-        var div = $("#table #contacts #" + id + " .more_info");
-        div.show();
-        showing[id] = true;
-    }
-
-}
-
-/**
- * Get More Div
- * newDiv - 
- * contact - 
- **/
-var moreDiv = '<div.'
-function getMoreDiv(newDiv, contact) {
-    var text = $("#more_blank").html();
-    newDiv.addClass('more_info').append(text);
-    newDiv.find('.pic').html('<img src=\'' + getPhotoUrl(contact, true) + '\'>');
-    newDiv.find('.name_and_loc .realname').html(contact.name);
-    newDiv.find('.name_and_loc .location').html(getLocation(contact));
-    
-    if(contact.accounts.twitter)
-        addTwitterDetails(newDiv, contact.accounts.twitter[0]);    
-    if(contact.accounts.github)
-        addGithubDetails(newDiv, contact.accounts.github[0]);
-    if(contact.accounts.facebook)
-        addFacebookDetails(newDiv, contact.accounts.facebook[0]);    
-    if(contact.accounts.foursquare)
-        addFoursquareDetails(newDiv, contact.accounts.foursquare[0]);
-}
-
-/**
- * Add Twitter Details
- * newDiv - 
- * twitter
- */
-function addTwitterDetails(newDiv, twitter) {
-    if(twitter && twitter.data) {
-        newDiv.find('.twitter-details .username')
-                 .append('<a target="_blank" href="https://twitter.com/' + twitter.data.screen_name + '">@' + twitter.data.screen_name + '</a>');
-        newDiv.find('.twitter-details .followers').append(twitter.data.followers_count);
-        newDiv.find('.twitter-details .following').append(twitter.data.friends_count);
-        newDiv.find('.twitter-details .tagline').append(twitter.data.description);
-        newDiv.find('.twitter-details').css({display:'block'});
-    }
-}
-
-/**
- * Add Github Details
- * newDiv - 
- * twitter
- */
-function addGithubDetails(newDiv, github) {
-    if(github && github.data) {
-        newDiv.find('.github-details .login')
-                 .append('<a target="_blank" href="https://github.com/' + github.data.login + '">' + github.data.login + '</a>');
-        newDiv.find('.github-details .followers').append(github.data.followers_count);
-        newDiv.find('.github-details .following').append(github.data.following_count);
-        newDiv.find('.github-details .repos').append(github.data.public_repo_count);
-        newDiv.find('.github-details').css({display:'block'});
-    }
-}
-/**
- * Add Facebook Details
- * newDiv - 
- * fb - 
- */
-function addFacebookDetails(newDiv, fb) {
-    var name = fb.data.name || (fb.data.first_name + ' ' + fb.data.last_name);
-    if(fb && fb.data) {
-        newDiv.find('.facebook-details .name')
-                 .append('<a target="_blank" href="https://facebook.com/profile.php?id=' + fb.data.id + '">' + name + '</a>');
-        newDiv.find('.facebook-details').css({display:'block'});
-    }
-}
-
-/**
- * Add Foursquare Details
- * newDiv - 
- * foursquare - 
- */
-function addFoursquareDetails(newDiv, foursquare) {
-    var name = foursquare.data.name || (foursquare.data.firstName + ' ' + foursquare.data.lastName);
-    if(foursquare && foursquare.data) {
-        newDiv.find('.foursquare-details .name')
-                 .append('<a target="_blank" href="https://foursquare.com/user/' + foursquare.data.id + '">' + name + '</a>');
-        newDiv.find('.foursquare-details .checkins').append(foursquare.data.checkins.count);
-        newDiv.find('.foursquare-details .mayorships').append(foursquare.data.mayorships.count);
-        newDiv.find('.foursquare-details').css({display:'block'});
-    }
-}
-
-/** 
- * Show Full
- * id - 
- */
-function showFull(id) {
-    var div = $("#table #contacts #" + id);
-    div.css({'height':'400px'});
-    div.append('<div>' + JSON.stringify(data[id]) + '</div>');
-}
-
-/* jQuery syntactic sugar for onDomReady */
 $(function() {
-    console.debug("dom ready");
-    reload();
-    $('#query-text').keyup(function(key) {
-        if(key.keyCode == 13)
-            reload();
+
+    var example = 
+	{"_id":"4df024696a35e24d730a5470",
+	 "_matching":{"cleanedNames":["alex kawas"]},
+	 "accounts":{
+	     "facebook":[
+		 {
+		     "data":{
+			 "_id":"4dee617705ab406bcd57df01",
+			 "id":"3324802",
+			 "name":"Alex Kawas",
+			 "first_name":"Alex","last_name":"Kawas",
+			 "link":"http://www.facebook.com/kawas.alex",
+			 "username":"kawas.alex",
+			 "gender":"male",
+			 "locale":"en_US",
+			 "updated_time":1307085471
+		     },
+		     "lastUpdated":"1307583593099"}
+	     ]
+	 },
+	 "name":"Alex Kawas",
+	 "photos":["https://graph.facebook.com/3324802/picture"]
+	}
+    
+    var Contact = Backbone.Model.extend({
+	defaults: {}
+    });      
+
+    var AddressBook = Backbone.Collection.extend({
+	model: Contact
     });
+
+    var ListView = Backbone.View.extend({ 
+	el: $('body'), // attaches `this.el` to an existing element.
+
+	events: {
+	    'keyup input#search': 'searchChangeHandler'
+	},
+	
+	searchChangeHandler: function() {
+	    var q = $("input#search").val();
+	    if (q.length > 0) {
+		this.render({q: q})
+	    } else {
+		this.render();
+	    }
+	},
+
+	addContact: function(cObj) {
+	    var newContact = new Contact();
+	    
+	    newContact.set({
+		name: cObj.name,
+		id: cObj._id
+	    });
+
+	    if (cObj.emails) {
+		newContact.set({
+		    email: cObj.emails[0].value
+		});
+	    }
+
+	    if (cObj.accounts && cObj.accounts.facebook && cObj.accounts.facebook[0] && cObj.accounts.facebook[0].data && cObj.accounts.facebook[0].data.link) {
+		newContact.set({
+		    facebookLink: cObj.accounts.facebook[0].data.link
+		});
+	    }
+
+	    
+	    if (cObj.photos) {
+		newContact.set({
+		    photos: cObj.photos
+		});
+	    }
+
+	    this.collection.add(newContact); // add item to collection; view is updated via event 'add'
+	},
+	
+	appendContact: function(contact) {
+	    var contactHTML = '<div class="contact">';
+	    if (contact.get('name')) {
+		contactHTML += contact.get('name') + "<br/>";
+	    }
+	    if (contact.get('email')) {
+		contactHTML += contact.get('email') + "<br/>";
+	    }
+
+	    //$("#contacts").append(contactHTML);
+	},
+	    
+	initialize: function(){
+	    _.bindAll(this, 'searchChangeHandler', 'load', 'render', 'addContact'); // fixes loss of context for 'this' within methods
+
+	    this.collection = new AddressBook();
+	    this.collection.bind('add', this.appendContact); // collection event binder
+	    
+	    this.load();
+	},
+
+	/**
+	 * Load the contacts data (get contacts)
+	 * @param callback
+	 */
+	load: function load(callback) {
+	    var that = this;
+	    var baseURL = 'http://localhost:8042/query';
+
+	    var getContactsCB = function(contacts) {
+		if (contacts.length > 10000) {
+		    alert("Whoha... that's a lot of contacts!");
+		}
+		for(var i in contacts) {
+		    // only add contacts if they have a name or email. might change this.
+		    if (contacts[i].emails || contacts[i].name) {
+			that.addContact(contacts[i]);
+		    } else {
+		    }
+		}
+		// todo, add sorting
+		// that.contacts.sort(function(s))
+		that.render();
+	    };
+	    
+	    // chunk it for the very start, want instant results
+	    $.getJSON(baseURL + '/getContact', {offset:0, limit:100}, getContactsCB);
+	    // $.getJSON(baseURL + '/getContact', {offset:100, limit:200}, getContactsCB);
+	    $.getJSON(baseURL + '/getContact', {offset:100, limit:10001}, getContactsCB);
+	},
+	
+	render: function(config){
+	    // default to empty
+	    config = config || {};
+	    var filteredCollection,
+	        contactsEl, contactTemplate, contactsHTML,
+	        searchFilter, addContactToHTML;
+
+	    filteredCollection = this.collection;
+	    contactsEl = $("#contacts");
+	    countEl = $("#count");
+	    contactsEl.html('');
+	    contactsHTML = "";
+	    
+	    /**
+	     * Truthy function for filtering down our collection based on config
+	     * @param c {Object} Contact object
+	     * @returns {Boolean} Pass or fail
+	     */
+	    searchFilter = function(c) {
+		// test to see if we have a query, otherwise everything passes
+		if (typeof(config.q) == "undefined") return true;
+		else config.q = (config.q+'').toLowerCase();
+
+		// make everything lowercase so search isn't case sensititive
+		var name = c.get('name');
+		if (name) name = name.toLowerCase();
+		var email = c.get('email');
+		if (email) email = email.toLowerCase();
+		
+		//search by name
+		if (typeof(name) != "undefined" &&
+		    name.indexOf(config.q) != -1) return true;
+		
+		// search by email
+		if(typeof(email) != "undefined" &&
+		   email.indexOf(config.q) != -1) return true;
+		
+		// search by twitter handle
+		// TODO
+		
+		// search by facebook handle
+		// TODO
+		
+		return false;
+	    }
+
+	    // I could put this in a script tag on the page, 
+	    // but i kind of like being able to comment lines
+	    contactTemplate = '<li class="contact">';
+	    contactTemplate += '<img src="<% if (typeof(smallPhoto) != "undefined" ) { %><%= smallPhoto %><% } else { %>/static/img/lock.png<% } %>" style="height: 30px; width: 30px;"/>';
+	    contactTemplate += '<strong><% if (true) { %><%= name %><% } else { %><% } %></strong>';
+	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>">email</a><% } %> ';
+	    contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>">facebook</a><% } %>';
+	    //	    contactTemplate += '<br/><pre><%= json %></pre>';
+	    contactTemplate += '</li>';
+	    
+	    addContactToHTML = function(c) {
+		// create a simple json obj to use for creating the template (if necessary)
+		if (typeof(c.get('html')) == "undefined") {
+		    var tmpJSON = c.toJSON();
+		    if (tmpJSON.photos && tmpJSON.photos[0]) {
+			tmpJSON.smallPhoto = tmpJSON.photos[0]
+		    }
+		    tmpJSON.json = JSON.stringify(tmpJSON);
+		    
+		    // cache compiled template to the model
+		    var compiledTemplate = _.template(contactTemplate, tmpJSON);
+		    c.set({'html': compiledTemplate});
+		    contactsHTML += compiledTemplate;
+		} else {
+		    // just get the rendered html from our model
+		    contactsHTML += c.get('html');
+		}
+	    }
+	    
+	    var tmp = filteredCollection.filter(searchFilter);
+	    _.each(tmp, addContactToHTML);
+	    contactsEl.html(contactsHTML);
+	    countEl.html(tmp.length);
+	}
+    });
+    var listView = new ListView();
 });

@@ -24,7 +24,7 @@ module.exports = function(theApp) {
     
     app.get('/', function (req, res) {
         if(!(auth && auth.consumerKey && auth.consumerSecret && auth.token)) {
-            res.redirect(app.meData.uri + 'auth');
+            res.redirect(app.externalBase + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end("<html>great! now you can:<br><li><a href='getNew/home_timeline'>sync new home_timeline entries</a></li>" + 

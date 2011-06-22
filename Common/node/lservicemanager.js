@@ -65,18 +65,18 @@ function mapMetaData(file, type, installable) {
     metaData.is = type;
     metaData.installable = installable;
     if (lconfig.displayUnstable || metaData.status === 'stable') {
-        serviceMap.available.push(metaData);        
+        metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
+        serviceMap.available.push(metaData);
         if (type === "collection") {
-            if(!metaData.handle)
-            {
+            if(!metaData.handle) {
                 console.error("missing handle for "+file);
                 return;
             }
             fs.stat(lconfig.lockerDir+"/Me/"+metaData.handle,function(err,stat){
-                if(err || !stat)
-                {
+                if(err || !stat) {
                     metaData.id=metaData.handle;
                     metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                    metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
                     serviceMap.installed[metaData.id] = metaData;
                     fs.mkdirSync(lconfig.lockerDir + "/Me/"+metaData.id,0755);
                     fs.writeFileSync(lconfig.lockerDir + "/Me/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
@@ -132,6 +132,7 @@ exports.findInstalled = function () {
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             delete js.pid;
             delete js.starting;
+            js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
             exports.migrate(dir, js);
             console.log("Loaded " + js.id);
             serviceMap.installed[js.id] = js;
@@ -216,7 +217,8 @@ exports.install = function(metaData) {
     fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo, null, 4));
     if (authInfo) {
         fs.writeFileSync(lconfig.lockerDir + "/Me/" + serviceInfo.id + '/auth.json', JSON.stringify(authInfo));
-    }
+    }    
+    serviceInfo.externalUri = lconfig.externalBase+"/Me/"+serviceInfo.id+"/";
     return serviceInfo;
 }
 
