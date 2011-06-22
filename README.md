@@ -16,12 +16,14 @@ Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get
     chmod 0755 lockerbox.sh
     ./lockerbox.sh
 
-When that successfully completes
+When that successfully completes, add lockerbox/local/bin to your path. Then:
     
     cd lockerbox/Locker
+    #check to make sure everything worked
+    ./checkEnv.sh
     node lockerd.js
 
-then open [http://localhost:8042/](http://localhost:8042/) in your browser!
+now open [http://localhost:8042/](http://localhost:8042/) in your browser!
 
 
 ### The _"Real"_ Way
@@ -47,7 +49,7 @@ To turn on my locker I run:
 
     node lockerd.js
 
-Then I go to to the dashboard (and am amazed by the design!):
+Then I go to to the dashboard:
 
     http://localhost:8042/
 
