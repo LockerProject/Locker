@@ -16,7 +16,7 @@ var fs = require('fs'),
     util = require('util'),
     lutil = require('../../Common/node/lutil.js'),
     EventEmitter = require('events').EventEmitter,
-    ImapConnection = require('./imap').ImapConnection;
+    ImapConnection = require('imap').ImapConnection;
 
 process.on('uncaughtException', function(err) {
   console.error(err);
@@ -29,7 +29,7 @@ var updateState,
     allKnownIDs,
     totalMsgCount,
     imap,
-    debug = false;
+    debug = true;
     
 exports.eventEmitter = new EventEmitter();
 
@@ -94,7 +94,7 @@ exports.syncMessages = function(syncMessagesCallback) {
         logout: function(callback) {
             if (debug) console.log('logout');
             imap.logout(function(err) {
-                callback(err, 'logout');
+                return callback(err, 'logout');
             });
         }
     },

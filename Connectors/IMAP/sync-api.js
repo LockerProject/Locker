@@ -51,7 +51,7 @@ function friends(req, res) {
 
 function messages(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    sync.syncMessages(null, function(err, repeatAfter, diaryEntry) {
+    sync.syncMessages(function(err, repeatAfter, diaryEntry) {
         locker.diary(diaryEntry);
         locker.at('/messages', repeatAfter);
         res.end(JSON.stringify({success: "done fetching messages"}));
