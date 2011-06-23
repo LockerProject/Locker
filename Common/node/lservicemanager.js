@@ -271,7 +271,11 @@ exports.spawn = function(serviceId, callback) {
     for(var i in serviceMap.available) {
         if(serviceMap.available[i].srcdir == svc.srcdir) {
             serviceInfo = serviceMap.available[i];
-            run = serviceInfo.run;
+            if (serviceInfo.static == "true") {
+                run = "node " + __dirname + "/app/static.js";
+            } else {
+                run = serviceInfo.run;
+            }
             break;
         }
     }
@@ -287,7 +291,7 @@ exports.spawn = function(serviceId, callback) {
     console.log('spawning into: ' + lconfig.lockerDir + '/Me/' + svc.id);
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        sourceDirectory: svc.srcdir,
+        sourceDirectory: lconfig.lockerDir + "/" + svc.srcdir,
         workingDirectory: lconfig.lockerDir + '/Me/' + svc.id, // A path into the me directory
         lockerUrl:lconfig.lockerBase,
         externalBase:lconfig.externalBase + '/Me/' + svc.id + '/'
