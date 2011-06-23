@@ -16,7 +16,7 @@ var fs = require('fs'),
     util = require('util'),
     lutil = require('../../Common/node/lutil.js'),
     EventEmitter = require('events').EventEmitter,
-    ImapConnection = require('imap').ImapConnection;
+    ImapConnection = require('./imap').ImapConnection;
 
 process.on('uncaughtException', function(err) {
   console.error(err);
