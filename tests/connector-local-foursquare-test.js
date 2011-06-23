@@ -225,7 +225,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);
                     assert.equal(res.statusCode, 200);
-                    var me = fs.readFileSync('./fixtures/foursquare/ctide.png');
+                    var me = fs.readFileSync('./fixtures/foursquare/ctide.png', 'binary');
                     assert.equal(body, me);
                 })
             .unpath()

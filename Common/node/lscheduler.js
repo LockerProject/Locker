@@ -67,10 +67,15 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
         });
     }
     setTimeout(function() {
-        if (!serviceManager.isRunning(serviceID)) {
-            serviceManager.spawn(serviceID, runUrl);
+        if (!serviceManager.isInstalled(serviceID)) {
+            self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
+            self.savePending();
         } else {
-            runUrl();
+            if (!serviceManager.isRunning(serviceID)) {
+                serviceManager.spawn(serviceID, runUrl);
+            } else {
+                runUrl();
+            }
         }
     }, milliseconds);
 }
