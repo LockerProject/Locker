@@ -56,4 +56,14 @@ vows.describe("Locker Config").addBatch({
             assert.equal(lconfig.externalBase, "https://example.com:8443");
         }
     }
+}).addBatch({
+    "Can reload original config" : {
+        topic: function() {
+            lconfig.load("config.json");
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.lockerBase, 'http://localhost:8043');
+        }
+    }
 }).export(module);
