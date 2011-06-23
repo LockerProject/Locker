@@ -23,6 +23,7 @@ var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
 lconfig.load("config.json");
 
+var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
     "has a map of the available services" : function() {
         assert.include(serviceManager, "serviceMap");
@@ -152,6 +153,17 @@ vows.describe("Service Manager").addBatch({
             var me = JSON.parse(fs.readFileSync(process.cwd() + "/Me/migration-test/me.json", 'ascii'));
             assert.notEqual(me.mongoCollections, undefined);
             assert.equal(me.mongoCollections[0], 'new_collection');
+        }
+    }
+}).addBatch({
+    "Spawning a service": {
+        topic : function() {
+            var that = this;
+            request({url:lconfig.lockerBase + '/Me/echo-config/'}, that.callback);
+        },
+        "passes the externalBase with the process info": function(err, resp, body) {
+            var json = JSON.parse(body);
+            assert.equal(json.externalBase, lconfig.externalBase + '/Me/echo-config/');
         }
     }
 }).export(module);

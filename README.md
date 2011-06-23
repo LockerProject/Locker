@@ -16,7 +16,12 @@ Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get
     chmod 0755 lockerbox.sh
     ./lockerbox.sh
 
-When that successfully completes, add lockerbox/local/bin to your path. Then:
+When that successfully completes, add lockerbox/local/bin to your path:
+
+    echo 'export PATH=$PATH:'`pwd`/lockerbox/local/bin >> ~/.profile
+    source ~/.profile
+
+Then:
     
     cd lockerbox/Locker
     #check to make sure everything worked
