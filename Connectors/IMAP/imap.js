@@ -63,7 +63,7 @@ function ImapConnection (options) {
     debug = this._options.debug;
   this.delim = null;
   this.namespaces = { personal: [], other: [], shared: [] };
-}
+};
 util.inherits(ImapConnection, EventEmitter);
 exports.ImapConnection = ImapConnection;
 
@@ -123,6 +123,7 @@ ImapConnection.prototype.connect = function(loginCb) {
     if (data.length === 0) return;
     var trailingCRLF = false, literalInfo;
     debug('\n<<RECEIVED>>: ' + util.inspect(data) + '\n');
+   
     if (self._state.curExpected === 0) {
       if (data.indexOf(CRLF) === -1) {
         self._state.curData += data;
@@ -133,6 +134,7 @@ ImapConnection.prototype.connect = function(loginCb) {
         self._state.curData = '';
       }
     }
+
     // Don't mess with incoming data if it's part of a literal
     if (self._state.curExpected > 0) {
       var curReq = self._state.requests[0];
@@ -150,6 +152,7 @@ ImapConnection.prototype.connect = function(loginCb) {
           data = extra;
           curReq._done = 1;
         }
+
         if (chunk) {
           if (curReq._msgtype === 'headers')
             self._state.curData += chunk;
@@ -166,6 +169,7 @@ ImapConnection.prototype.connect = function(loginCb) {
           curReq._done = true;
         }
         self._state.curData += data;
+
         if (restDesc = self._state.curData.match(/^(.*?)\)\r\n/)) {
           if (restDesc[1]) {
             restDesc[1] = restDesc[1].trim();
@@ -184,14 +188,12 @@ ImapConnection.prototype.connect = function(loginCb) {
             self._state.conn.cleartext.emit('data', data);
             return;
           }
-        } else {
+        } else
           return;
-        }
-      } else {
+      } else
         return;
-      }
-    } else if (self._state.curExpected === 0 &&
-              (literalInfo = data.match(/^\* \d+ FETCH .+? \{(\d+)\}\r\n/))) {                  
+    } else if (self._state.curExpected === 0
+               && (literalInfo = data.match(/^\* \d+ FETCH .+? \{(\d+)\}\r\n/))) {
       self._state.curExpected = parseInt(literalInfo[1], 10);
       var idxCRLF = data.indexOf(CRLF),
           curReq = self._state.requests[0],
@@ -992,7 +994,6 @@ function parseBodyStructure(cur, prefix, partID) {
       ret = parseBodyStructure(result, '', 1);
   } else {
     var part, partLen = cur.length, next;
-    //console.log('parseBodyStructure (Body): ' + prefix+"\t"+partID+"\t"+JSON.stringify(cur));
     if (Array.isArray(cur[0])) { // multipart
       next = -1;
       while (Array.isArray(cur[++next]))
@@ -1016,7 +1017,6 @@ function parseBodyStructure(cur, prefix, partID) {
 
         // required fields as per RFC 3501 -- null or otherwise
         type: cur[0].toLowerCase(),
-        //subtype: cur[1].toLowerCase(),
         params: null, id: cur[3], description: cur[4], encoding: cur[5],
         size: cur[6]
       }
@@ -1175,13 +1175,11 @@ function isNotEmpty(str) {
 }
 
 function escape(str) {
-  //return str.replace('\\', '\\\\').replace('"', '\"');
-  return str.replace('/\/g', '\\').replace('/"/g', '\"');
+  return str.replace('\\', '\\\\').replace('"', '\"');
 }
 
 function unescape(str) {
-  //return str.replace('\"', '"').replace('\\\\', '\\');
-  return str.replace('/"/g', '"').replace('/\\/g', '"\"');
+  return str.replace('\"', '"').replace('\\\\', '\\');
 }
 
 function up(str) {

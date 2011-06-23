@@ -91,14 +91,14 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Can get messages" : {
         topic: function() {
-            sync.syncMessages(null, this.callback);
+            sync.syncMessages(this.callback);
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "sync'd 7 new messages"); },
         "again with no duplicates" : {
             topic: function() {
-                sync.syncMessages(null, this.callback);
+                sync.syncMessages(this.callback);
             },
             "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 3600);
