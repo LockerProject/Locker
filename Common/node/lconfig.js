@@ -24,7 +24,7 @@ exports.load = function(filepath) {
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerPort = config.lockerPort || 8042;
-    exports.externalPort = config.externalPort || 8042;
+    exports.externalPort = config.externalPort || exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.externalPath = config.externalPath;
     setBase();

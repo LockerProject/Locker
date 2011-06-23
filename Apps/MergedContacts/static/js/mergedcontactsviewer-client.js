@@ -96,7 +96,7 @@ $(function() {
 	    _.bindAll(this, 'searchChangeHandler', 'load', 'render', 'addContact'); // fixes loss of context for 'this' within methods
 
 	    this.collection = new AddressBook();
-	    this.collection.bind('add', this.appendContact); // collection event binder
+//	    this.collection.bind('add', this.appendContact); // collection event binder
 	    
 	    this.load();
 	},
@@ -131,6 +131,28 @@ $(function() {
 	    $.getJSON(baseURL + '/getContact', {offset:100, limit:10001}, getContactsCB);
 	},
 	
+	/**
+	 * Convience function to get the url from an object
+	 * @param contact {Object} Contact object (json)
+	 * @param fullsize {Boolean} Optional, default false. Use a large photo instead of small
+	 */
+	getPhoto: function(contact, fullsize) {
+	    var url = 'img/silhouette.png';
+	    if(contact.photos && contact.photos.length) {
+		url = contact.photos[0];
+		//twitter
+		if(fullsize && url.match(/_normal\.(jpg||png)/) && !url.match(/.*default_profile_([0-9])_normal\.png/))
+		    url = url.replace(/_normal\.(jpg||png)/, '.$1');
+		else if(url.indexOf('https://graph.facebook.com/') === 0) {
+		    if(fullsize)
+			url = url += "?return_ssl_resources=1&type=large";
+		    else
+			url = url += "?return_ssl_resources=1&type=square";
+		}
+	    }
+	    return url;
+	},
+
 	render: function(config){
 	    // default to empty
 	    config = config || {};
@@ -181,7 +203,7 @@ $(function() {
 	    // but i kind of like being able to comment lines
 	    contactTemplate = '<li class="contact">';
 	    contactTemplate += '<img src="<% if (typeof(smallPhoto) != "undefined" ) { %><%= smallPhoto %><% } else { %>/static/img/lock.png<% } %>" style="height: 30px; width: 30px;"/>';
-	    contactTemplate += '<strong><% if (true) { %><%= name %><% } else { %><% } %></strong>';
+	    contactTemplate += '<strong><% if (name) { %><%= name %><% } else { %><% } %></strong>';
 	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>">email</a><% } %> ';
 	    contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>">facebook</a><% } %>';
 	    //	    contactTemplate += '<br/><pre><%= json %></pre>';
@@ -191,6 +213,7 @@ $(function() {
 		// create a simple json obj to use for creating the template (if necessary)
 		if (typeof(c.get('html')) == "undefined") {
 		    var tmpJSON = c.toJSON();
+		    log(this.getPhotoUrl(tmpJSON, true);
 		    if (tmpJSON.photos && tmpJSON.photos[0]) {
 			tmpJSON.smallPhoto = tmpJSON.photos[0]
 		    }
@@ -205,7 +228,7 @@ $(function() {
 		    contactsHTML += c.get('html');
 		}
 	    }
-	    
+
 	    var tmp = filteredCollection.filter(searchFilter);
 	    _.each(tmp, addContactToHTML);
 	    contactsEl.html(contactsHTML);

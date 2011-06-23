@@ -335,7 +335,18 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.equal(statuses[0].id, 73036575310757890);
                 })
             .unpath()
-        .undiscuss()   
+        .undiscuss()
+        .discuss("get photos")
+            .path(mePath + "/getPhoto/1054551")
+            .get()
+                .expect('returns the photo fixture', function(err, res, body) {
+                    assert.isNull(err);
+                    assert.equal(res.statusCode, 200);
+                    var photo = fs.readFileSync('./fixtures/twitter/verify_credentials.js')
+                    assert.equal(photo, body);
+                })
+            .unpath()
+        .undiscuss()
 
 
 suite.export(module);

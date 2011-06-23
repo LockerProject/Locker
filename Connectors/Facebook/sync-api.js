@@ -39,7 +39,7 @@ function authComplete(theauth, mongo) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go');
+        res.redirect(app.externalBase + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
 	

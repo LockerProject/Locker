@@ -38,7 +38,7 @@ function authComplete(theauth, mongo) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.meData.uri + 'go');
+        res.redirect(app.externalBase + 'go');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("<html>found a token, load <a href='friends'>friends</a>, <a href='checkins'>my checkins</a>, and <a href='recent'>my friend's recent checkins</a></html>");

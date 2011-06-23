@@ -68,5 +68,5 @@ exports.init = function (processOptions, callback) {
             }
         })
     });
-    process.stdin.resume();    
+    process.stdin.resume();
 }
