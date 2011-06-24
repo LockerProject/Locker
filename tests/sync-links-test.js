@@ -142,7 +142,7 @@ suite.next().suite.addBatch({
     "Facebook ADD event" : {
         topic: function() {
             dataStore.clear();
-            dataStore.addEvent("facebook", {data: JSON.parse(facebookEvent1)}, this.callback);},
+            dataStore.addEvent({data: JSON.parse(facebookEvent1)}, this.callback);},
         "is handled properly" : function(err, object) {
             assert.equal(object.sourceObjects[0].svcID, 'facebook');
             assert.equal(object.url, 'http://singly.com/');
@@ -151,7 +151,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Twitter ADD event" : {
         topic: function() {
-            dataStore.addEvent("twitter", {data: JSON.parse(twitterEvent1)}, this.callback);},
+            dataStore.addEvent({data: JSON.parse(twitterEvent1)}, this.callback);},
         "is handled properly" : function(err, object) {
             assert.equal(object.sourceObjects[0].svcID, 'twitter');
             assert.equal(object.url, 'http://bit.ly/jBrrAe');

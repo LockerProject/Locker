@@ -51,8 +51,14 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
         url:callbackURL
     };
     this.scheduledActions.push(trackingInfo);
+    if (typeof(atTime) == "number") {
+        runTime = new Date;
+        runTime.setTime(runTime.getTime() + atTime);
+        atTime = runTime;
+    }
     var milliseconds = atTime.getTime() - Date.now();
     if (milliseconds < 0) milliseconds = 0;
+
     var self = this;
     function runUrl() {
         request.get({url:lconfig.lockerBase + "/Me/" + serviceID + callbackURL}, function() {
@@ -61,10 +67,15 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
         });
     }
     setTimeout(function() {
-        if (!serviceManager.isRunning(serviceID)) {
-            serviceManager.spawn(serviceID, runUrl);
+        if (!serviceManager.isInstalled(serviceID)) {
+            self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
+            self.savePending();
         } else {
-            runUrl();
+            if (!serviceManager.isRunning(serviceID)) {
+                serviceManager.spawn(serviceID, runUrl);
+            } else {
+                runUrl();
+            }
         }
     }, milliseconds);
 }

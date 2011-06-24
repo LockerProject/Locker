@@ -57,9 +57,7 @@ app.post('/events', function(req, res) {
         return;
     }
     
-    var body = req.body;
-
-    dataStore.addEvent(via, body, function(err, doc) {
+    dataStore.addEvent(req.body, function(err, doc) {
         // what event should this be?
         // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
         //

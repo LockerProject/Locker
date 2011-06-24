@@ -1,0 +1,8 @@
+{
+    "lockerHost" : "localhost",
+    "lockerPort" : 4242,
+    "displayUnstable" : true,
+    "externalHost" : "example.com",
+    "externalPort" : "80",
+    "externalSecure" : false
+}
