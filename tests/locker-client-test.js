@@ -14,6 +14,7 @@ var fs = require("fs");
 var path = require("path");
 var locker = require("../Common/node/locker.js");
 var lconfig = require("../Common/node/lconfig.js");
+var request = require('request');
 var testUtils = require('./test-utils');
 
 lconfig.load("config.json");
@@ -178,6 +179,34 @@ vows.describe("Locker Client API").addBatch({
             "fires an event callback": function(err, result) {
                 assert.isNull(err);
                 assert.isTrue(result);
+            },
+            "have listeners defined via config files" : {
+                topic: function() {
+                    var post = JSON.stringify();
+                    console.log(post);
+                    request.post({uri : 'http://localhost:8043/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
+                    // locker.event('configuration/listener', {"some":"event"});
+                    var promise = new events.EventEmitter();
+                    var fired = false;
+                    setTimeout(function() {
+                        request.get({uri : 'http://localhost:8043/Me/event-collector/getEvents/testing'}, function(err, resp, body) {
+                            if (err == null && body == 1) {
+                                promise.emit('success', true);
+                            } else {
+                                if (err != null) {
+                                    promise.emit('error', err);
+                                } else {
+                                    promise.emit('error', 'body was equal to ' + body + ' instead of 1');
+                                }
+                            }
+                        });
+                    }, 500);
+                    return promise;
+                },
+                "successfully": function(err, fired) {
+                    assert.isNull(err);
+                    assert.isTrue(fired);
+                }
             }
         }
     }

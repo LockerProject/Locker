@@ -1,4 +1,5 @@
 {
-	"title":"Collect Twitter Events",
-	"run":"node event-collector.js"
+    "title":"Collect Twitter Events",
+    "run":"node event-collector.js",
+    "events":[["configuration/listener","/event"]]
 }

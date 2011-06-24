@@ -13,6 +13,7 @@ var lconfig = require("lconfig");
 var crypto = require("crypto");
 var util = require("util");
 var spawn = require('child_process').spawn;
+var levents = require('levents');
 
 var serviceMap = {
     available:[],
@@ -134,12 +135,23 @@ exports.findInstalled = function () {
             delete js.starting;
             js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
             exports.migrate(dir, js);
+            addEvents(js);
             console.log("Loaded " + js.id);
             serviceMap.installed[js.id] = js;
         } catch (E) {
 //            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
     }
+}
+
+addEvents = function(info) {
+    if (info.events) {
+        for (var i = 0; i < info.events.length; i++) {
+            var ev = info.events[i];
+            levents.addListener(ev[0], info.id, ev[1]);
+        }
+    }
+    
 }
 
 /**
@@ -217,7 +229,8 @@ exports.install = function(metaData) {
     fs.writeFileSync(lconfig.lockerDir + "/Me/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo, null, 4));
     if (authInfo) {
         fs.writeFileSync(lconfig.lockerDir + "/Me/" + serviceInfo.id + '/auth.json', JSON.stringify(authInfo));
-    }    
+    }
+    addEvents(serviceInfo);
     serviceInfo.externalUri = lconfig.externalBase+"/Me/"+serviceInfo.id+"/";
     return serviceInfo;
 }
