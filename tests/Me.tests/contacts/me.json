@@ -13,5 +13,6 @@
     "srcdir": "Collections/Contacts",
     "is": "collection",
     "id": "contacts",
-    "uri": "http://localhost:8043/Me/contacts/"
+    "uri": "http://localhost:8043/Me/contacts/",
+    "version":"1308942327129"
 }
