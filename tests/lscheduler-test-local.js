@@ -38,7 +38,7 @@ vows.describe("Locker Scheduling System").addBatch({
                             }
                         }
                     });
-                }, 500);
+                }, 1500);
                 return emitter;
             },
             "successfully" : function(err, fired) {
