@@ -68,7 +68,17 @@ function intersect(a,b) {
 
 app.get('/install', function(req, res){
     var id = parseInt(req.param('id'));
-    var js = map.available[id];
+    if (!map || !map.available) {
+        request.get({uri:lockerBase + '/map'}, function(err, resp, body) {
+            map = JSON.parse(body);
+            install(req, res);
+        });
+    } else {
+        install(req, res);
+    }
+});
+
+function install(req, res) {
     var httpClient = http.createClient(lockerPort);
     var request = httpClient.request('POST', '/core/Dashboard/install', {'Content-Type':'application/json'});
     var item = JSON.stringify(map.available[req.param('id')]);
@@ -92,7 +102,7 @@ app.get('/install', function(req, res){
             }
         });
     });
-});
+}
 
 
 app.use(express.static(__dirname));
