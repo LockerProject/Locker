@@ -1,0 +1,17 @@
+{
+    "title": "Foursquare Account",
+    "action": "Connect to a Foursquare account",
+    "desc": "Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
+    "run": "node client.js",
+    "status": "unstable",
+    "provides": [
+        "contact/foursquare",
+        "checkin/foursquare"
+    ],
+    "is": "connector",
+    "srcdir": "Connectors/foursquare",
+    "id": "foursquare",
+    "uri": "http://localhost:8043/Me/foursquare",
+    "externalUri": "http://localhost:8043/Me/foursquare/",
+    "version": 1
+}

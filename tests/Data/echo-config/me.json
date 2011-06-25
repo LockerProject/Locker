@@ -1,0 +1,9 @@
+{
+    "title": "Test Run Command",
+    "srcdir": "Tests/echo-config",
+    "is": "connector",
+    "id": "echo-config",
+    "uri": "http://localhost:8043/Me/echo-config",
+    "externalUri": "http://localhost:8043/Me/echo-config/",
+    "version": 1
+}

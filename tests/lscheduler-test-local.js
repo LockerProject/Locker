@@ -15,6 +15,7 @@ var lscheduler = require("lscheduler.js");
 var fs = require('fs');
 var locker = require('locker');
 var events = require('events');
+var lconfig = require('lconfig');
 
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {
@@ -57,7 +58,7 @@ vows.describe("Locker Scheduling System").addBatch({
                 var emitter = new events.EventEmitter();
                 request.get({uri: 'http://localhost:8043/core/foursquare/at?at=2500&cb=whatever'}, function() {
                     setTimeout(function() {
-                        var scheduled = fs.readFileSync('Me/scheduler.json', 'ascii');
+                        var scheduled = fs.readFileSync(lconfig.me + '/scheduler.json', 'ascii');
                         if (scheduled != '') {
                             emitter.emit('error', scheduled);
                         } else {

@@ -1,0 +1,15 @@
+{
+    "title": "Hello World",
+    "action": "not much",
+    "desc": "just sayin hi and all",
+    "status": "stable",
+    "run": "node hello.js",
+    "handle": "hello",
+    "srcdir": "Apps/HelloWorld",
+    "is": "app",
+    "installable": true,
+    "externalUri": "http://localhost:8043/Me/undefined/",
+    "id": "hello",
+    "uri": "http://localhost:8043/Me/hello/",
+    "version": 1308961473735
+}

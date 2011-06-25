@@ -1,0 +1,15 @@
+{
+    "title": "Event Collector",
+    "srcdir": "Tests/event-collector",
+    "is": "connector",
+    "id": "event-collector",
+    "uri": "http://localhost:8043/Me/event-collector",
+    "events": [
+        [
+            "configuration/listener",
+            "/event"
+        ]
+    ],
+    "externalUri": "http://localhost:8043/Me/event-collector/",
+    "version": 1
+}

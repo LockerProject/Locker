@@ -13,6 +13,7 @@ var express = require('express'),connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 var locker = require('../../Common/node/locker.js');
 var lfs = require('../../Common/node/lfs.js');
+var lconfig = require('../../Common/node/lconfig.js');
 var exec = require('child_process').exec;
 var util = require('util');
 var request = require('request');
@@ -46,13 +47,13 @@ app.get('/backup',function(req, res) {
         'Content-Type': 'text/html'
     });
     res.write("<p>hold on, backing up in progress...\n");
-    var child = exec('rm -f /tmp/Me_bu.tgz && tar -cvzf /tmp/Me_bu.tgz ./Me', {cwd: '../../'}, function (error, stdout, stderr) {
+    var child = exec('rm -f /tmp/Me_bu.tgz && tar -cvzf /tmp/Me_bu.tgz ./' + lconfig.me, {cwd: '../../'}, function (error, stdout, stderr) {
         if (error !== null) {
             res.end("failed: "+error+" stdout: "+stdout+" stderr: "+stderr);
             return;
         }
         res.write("<p>tgz created, dropboxing now...\n");
-        var url = lockerBase+'/Me/'+dbox+'/save?file=/tmp/Me_bu.tgz';
+        var url = lockerBase+'/' + lconfig.me + '/'+dbox+'/save?file=/tmp/Me_bu.tgz';
         console.log("calling "+url);
         request.get({uri:url}, function(err, resp, body) {
             if(err)

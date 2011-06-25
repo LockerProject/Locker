@@ -1,0 +1,9 @@
+{
+    "run": "node client.js",
+    "is": "app",
+    "id": "testCookies",
+    "srcdir": "Data/testCookies",
+    "title": "Test Proxy Cookie Stuff",
+    "externalUri": "http://localhost:8043/Me/testCookies/",
+    "version": 1
+}

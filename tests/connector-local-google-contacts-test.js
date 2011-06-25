@@ -27,7 +27,7 @@ process.on('uncaughtException',function(error){
 });
 
 var svcId = "google-contacts-test";
-var mePath = '/Me/' + svcId;
+var mePath = '/Data/' + svcId;
 
 var thecollections = ['contacts', 'groups'];
 var lconfig = require('../Common/node/lconfig');
@@ -105,7 +105,7 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Google Contacts connector")
         .discuss("all contacts")
-            .path(mePath + "/getCurrent/contacts")
+            .path("/Me/" + svcId + "/getCurrent/contacts")
             .get()
                 .expect('returns contacts', function(err, res, body) {
                     assert.isNull(err);

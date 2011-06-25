@@ -1,0 +1,9 @@
+{
+    "run": "node client.js",
+    "is": "app",
+    "id": "slowStarter",
+    "srcdir": "Data/slowStarter",
+    "title": "Slow Starter Test",
+    "externalUri": "http://localhost:8043/Me/slowStarter/",
+    "version": 1
+}

@@ -1,0 +1,1 @@
+{"title":"Test migrating services from one version to the next","srcdir":"Tests/migration-test","is":"connector","id":"migration-test","uri":"http://localhost:8043/Me/migration-test","version":"1308078974481","mongoCollections":["new_collection","new_collection"]}

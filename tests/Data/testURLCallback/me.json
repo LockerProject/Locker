@@ -1,0 +1,10 @@
+{
+    "run": "node client.js",
+    "is": "app",
+    "id": "testURLCallback",
+    "srcdir": "Data/testURLCallback",
+    "me": "Data/testURLCallback",
+    "title": "Test Stuff",
+    "externalUri": "http://localhost:8043/Me/testURLCallback/",
+    "version": 1
+}

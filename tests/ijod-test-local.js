@@ -12,9 +12,10 @@ var assert = require("assert");
 var fs = require('fs');
 
 var IJOD = require("../Common/node/ijod.js").IJOD;
-var lfs = require("../Common/node/lfs");
+var lfs = require("../Common/node/lfs.js");
+var lconfig = require('../Common/node/lconfig.js');
 
-var myIJOD = new IJOD('Me/ijodtest');
+var myIJOD;
 
 var suite = vows.describe("IJOD Module");
 
@@ -26,6 +27,7 @@ var errs = [];
 suite.addBatch({
     'Can add records to the IJOD': {
         topic: function() {
+            myIJOD = new IJOD(lconfig.me + '/ijodtest');
             var self = this;
             myIJOD.addRecord(events[0].timeStamp, events[0].data, function(err) {
                 if(err) errs.push(err);

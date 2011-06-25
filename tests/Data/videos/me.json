@@ -1,0 +1,16 @@
+{
+    "title": "Videos",
+    "desc": "A collection of videos created, shared, received, and viewed.",
+    "run": "node videos.js",
+    "status": "stub",
+    "handle": "videos",
+    "provides": [
+        "video"
+    ],
+    "srcdir": "Collections/Videos",
+    "is": "collection",
+    "installable": false,
+    "externalUri": "http://localhost:8043/Me/videos/",
+    "id": "videos",
+    "uri": "http://localhost:8043/Me/videos/"
+}

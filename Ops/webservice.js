@@ -23,7 +23,8 @@ var url = require('url');
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
-var config = require("lconfig");
+var lconfig = require("lconfig");
+
 var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.HttpProxy();
@@ -100,7 +101,7 @@ locker.get("/query/:query", function(req, res) {
             return;
         }
 
-        var mongo = require("lmongoclient")(config.mongo.host, config.mongo.port, provider.id, provider.mongoCollections);
+        var mongo = require("lmongoclient")(lconfig.mongo.host, lconfig.mongo.port, provider.id, provider.mongoCollections);
         mongo.connect(function(mongo) {
             try {
                 var collection = mongo.collections[provider.mongoCollections[0]];
@@ -234,15 +235,15 @@ locker.get("/core/:svcId/diary", function(req, res) {
 
     var now = new Date;
     try {
-        fs.mkdirSync("Me/diary", 0700, function(err) {
+        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
             if (err && err.errno != process.EEXIST) console.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
-    fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
+        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+            var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
             res.end("{}");
@@ -253,7 +254,7 @@ locker.get("/core/:svcId/diary", function(req, res) {
 // Retrieve the current days diary or the given range
 locker.get("/diary", function(req, res) {
     var now = new Date;
-    var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+    var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
         "Access-Control-Allow-Origin" : "*" 

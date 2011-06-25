@@ -21,7 +21,6 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
-var mePath = '/Me/' + svcId;
 
 var events = 0;
 
@@ -40,7 +39,7 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/home_timeline',
                 file: __dirname + '/fixtures/links/twitter_home_timeline.json' });
             var self = this;
-            process.chdir('./Me/links');
+            process.chdir('./' + lconfig.me + '/links');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/link%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.links;

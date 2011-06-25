@@ -23,9 +23,9 @@ vows.describe("Locker Client API").addBatch({
     "Initialization" : {
         "sets the base service URL" : function() {
             var baseURL = lconfig.lockerBase;
-            locker.initClient({workingDirectory:"Me/testURLCallback", lockerUrl:"test"});
+            locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:"test"});
 //            assert.equal(lconfig.lockerBase, "test");
-            locker.initClient({workingDirectory:"Me/testURLCallback", lockerUrl:baseURL});
+            locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:baseURL});
         }
     }
 }).addBatch({
@@ -124,11 +124,10 @@ vows.describe("Locker Client API").addBatch({
             topic:function() {
                 var promise = new events.EventEmitter();
                 var fired = false;
-
                 try {
-                    path.exists("Me/testURLCallback/result.json", function (exists) {
+                    path.exists(lconfig.me + "/testURLCallback/result.json", function (exists) {
                         if (exists) {
-                            fs.unlinkSync("Me/testURLCallback/result.json");
+                            fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
                         }
                     }); 
                 } catch (E) {
@@ -136,7 +135,7 @@ vows.describe("Locker Client API").addBatch({
                 }
                 locker.at("/write", 1);
                 setTimeout(function() {
-                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat(lconfig.me + "/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -156,9 +155,9 @@ vows.describe("Locker Client API").addBatch({
                 var fired = false;
                 
                 try {
-                    path.exists("Me/testURLCallback/event.json", function (exists) {
+                    path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
                         if (exists) {
-                            fs.unlinkSync("Me/testURLCallback/event.json");
+                            fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
                         }
                     });
                 } catch (E) {
@@ -167,7 +166,7 @@ vows.describe("Locker Client API").addBatch({
                 }
                 locker.listen("test/event", "/event", function(err, resp, body) {
                     locker.event("test/event", {"test":"value"});
-                    testUtils.waitForPathsToExist(["Me/testURLCallback/event.json"], 10, 1000, function(success) {
+                    testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
                         if(success)
                             promise.emit("success", true);
                         else
@@ -182,10 +181,7 @@ vows.describe("Locker Client API").addBatch({
             },
             "have listeners defined via config files" : {
                 topic: function() {
-                    var post = JSON.stringify();
-                    console.log(post);
                     request.post({uri : 'http://localhost:8043/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
-                    // locker.event('configuration/listener', {"some":"event"});
                     var promise = new events.EventEmitter();
                     var fired = false;
                     setTimeout(function() {
