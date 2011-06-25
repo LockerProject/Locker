@@ -5,5 +5,10 @@
     "status":"stable",
     "handle":"contacts",
     "provides":["contact"],
-    "mongoCollections": ["contacts"]
+    "mongoCollections": ["contacts"],
+    "events":[["contact/foursquare", "/events"],
+        ["contact/facebook", "/events"],
+        ["contact/twitter", "/events"],
+        ["contact/github", "/events"],
+        ["contact/google", "/events"]]
 }

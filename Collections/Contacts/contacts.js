@@ -86,11 +86,6 @@ process.stdin.on('data', function(data) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.contacts);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
-            locker.listen('contact/foursquare', '/events');
-            locker.listen('contact/facebook', '/events');
-            locker.listen('contact/twitter', '/events');
-            locker.listen('contact/github', '/events');
-            locker.listen('contact/google', '/events');
             sync.eventEmitter.on('contact/full', function(eventObj) {
                 locker.event('contact/full', eventObj);
             });

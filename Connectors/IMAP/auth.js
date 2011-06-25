@@ -52,7 +52,8 @@ exports.isAuthed = function() {
             return true;
         }
     } catch (E) {
-        console.error(E);
+        if(E.code !== 'EBADF')
+            console.error(E);
     }
     return false;
 };

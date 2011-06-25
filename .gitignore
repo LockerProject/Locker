@@ -12,4 +12,4 @@ Me/*
 *.tmproj
 node_modules
 scheduler.json
-tests/Me/*
+tests/Data/*

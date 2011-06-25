@@ -1,7 +1,0 @@
-{
-    "title":"Event Collector",
-    "srcdir":"Tests/event-collector",
-    "is":"connector",
-    "id":"event-collector", 
-    "uri":"http://localhost:8043/Me/event-collector"
-}

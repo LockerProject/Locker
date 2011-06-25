@@ -1,9 +1,0 @@
-{
-    "uriLocal":"http://localhost:18049/",
-    "port":18049,
-    "run":"node client.js",
-    "is":"app",
-    "id":"slowStarter",
-    "srcdir":"Me/slowStarter",
-    "title":"Slow Starter Test"
-}

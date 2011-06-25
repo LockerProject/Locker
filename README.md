@@ -16,7 +16,12 @@ Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get
     chmod 0755 lockerbox.sh
     ./lockerbox.sh
 
-When that successfully completes, add lockerbox/local/bin to your path. Then:
+When that successfully completes, add lockerbox/local/bin to your path:
+
+    echo 'export PATH=$PATH:'`pwd`/lockerbox/local/bin >> ~/.profile
+    source ~/.profile
+
+Then:
     
     cd lockerbox/Locker
     #check to make sure everything worked
@@ -119,15 +124,14 @@ If (you think) you've got everything all set:
 
 you should see something like:
 
-    Python version 2.6.1 found.
+    Python version 2.7 found.
     Node.js version 0.4.8 found.
-    npm version 1.0.10 found.
-    mongoDB version 1.8.1 found.
-    Vows version 0.5.8 found.
+    npm version 1.0.14 found.
+    mongoDB version 1.8.2 found.
 
-Your version numbers may vary slightly, but so long as you don't see any red text, you are all set. If vows gives an error:
+Your version numbers may vary slightly, but so long as you don't see any red text, you are all set. (At this point, the vows check has been disabled.) If vows gives an error:
 
-    (sudo) npm install -g vows
+    sudo npm install -g vows
 
 Then you can install all of Locker's node dependencies:
 
@@ -137,7 +141,7 @@ Then you can install all of Locker's node dependencies:
 At this point you should be all set (famous last words). Next, run the tests:
 
     cd tests
-    node runTest.js
+    node runTests.js
 
 On a good day, all these tests will pass, resulting in something like:
 

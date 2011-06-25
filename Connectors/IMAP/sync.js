@@ -24,12 +24,12 @@ process.on('uncaughtException', function(err) {
 });
 
 var updateState, 
-    searchQuery,
+    query,
     auth, 
     allKnownIDs,
     totalMsgCount,
     imap,
-    debug = false;
+    debug = true;
     
 exports.eventEmitter = new EventEmitter();
 
@@ -37,7 +37,7 @@ exports.init = function(theAuth, mongo) {
     auth = theAuth;
     try {
         updateState = JSON.parse(fs.readFileSync('updateState.json'));
-    } catch (updateErr) { 
+    } catch (updateErr) {
         updateState = {messages: {}};
     }
     try {
@@ -56,10 +56,9 @@ exports.init = function(theAuth, mongo) {
 
 };
 
-exports.syncMessages = function (query, syncMessagesCallback) {
-    searchQuery = query;
+exports.syncMessages = function(syncMessagesCallback) {
     totalMsgCount = 0;
-    
+        
     async.series({
         connect: function(callback) {
             if (debug) console.log('connect');
@@ -71,12 +70,23 @@ exports.syncMessages = function (query, syncMessagesCallback) {
         getboxes: function(callback) {
             if (debug) console.log('getboxes');
             imap.getBoxes(function(err, mailboxes) {
-                mailboxArray = [];
-    
+                var mailboxArray = [];
+                var mailboxQuery = {};
+                
                 if (debug) console.log('getMailboxPaths');
                 exports.getMailboxPaths(mailboxArray, mailboxes);
 
-                async.forEachSeries(mailboxArray, fetchMessages, function(err) {
+                for (var i = 0; i < mailboxArray.length; i++) {
+                    if (!updateState.messages.hasOwnProperty(mailboxArray[i])) {
+                        updateState.messages[mailboxArray[i]] = {};
+                        updateState.messages[mailboxArray[i]].syncedThrough = 0;
+                    }
+                    mailboxQuery.mailbox = mailboxArray[i];
+                    mailboxQuery.query = (+updateState.messages[mailboxArray[i]].syncedThrough + 1) + ':*';
+                    mailboxArray[i] = lutil.extend({}, mailboxQuery);
+                }
+                
+                async.forEachSeries(mailboxArray, exports.fetchMessages, function(err) {
                     callback(err, 'getboxes');  
                 });
             });
@@ -84,7 +94,7 @@ exports.syncMessages = function (query, syncMessagesCallback) {
         logout: function(callback) {
             if (debug) console.log('logout');
             imap.logout(function(err) {
-                callback(err, 'logout');
+                return callback(err, 'logout');
             });
         }
     },
@@ -96,34 +106,40 @@ exports.syncMessages = function (query, syncMessagesCallback) {
     });
 };
 
-function fetchMessages(mailbox, fetchMessageCallback) {
+exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
     var results = null,
         fetchedCount = 0,
-        msgCount = 0;
+        msgCount = 0,
+        mailbox = mailboxQuery.mailbox,
+        query = mailboxQuery.query;
+        
     if (debug) console.log('fetchMessages');
-    
-    if (!updateState.messages.hasOwnProperty(mailbox)) {
-        updateState.messages[mailbox] = {};
-        updateState.messages[mailbox].syncedThrough = 0;
-    }
     
     if (!allKnownIDs.hasOwnProperty(mailbox)) {
         allKnownIDs[mailbox] = {};
     }
-    
+
     async.series({
-        openbox: function(callback) {
+        connect: function(callback) {
+            if (imap === undefined) {
+                if (debug) console.log('connect');
+                imap = new ImapConnection(auth);
+                imap.connect(function(err) {
+                    callback(err, 'connect');
+                });
+            } else {
+                callback(null, 'connect');
+            }
+        },
+        openbox: function(callback) {           
             if (debug) console.log('openbox: ' + mailbox);
             imap.openBox(mailbox, true, function(err, result) {
                 callback(err, 'openbox');
             });
         },
         search: function(callback) {
-            if (debug) console.log('search: ' + searchQuery);
-            if (searchQuery === null) {
-                searchQuery = (+updateState.messages[mailbox].syncedThrough + 1) + ':*';
-            }
-            imap.search([ ['UID', 'SEARCH', searchQuery] ], function(err, searchResults) {
+            if (debug) console.log('search: ' + query);
+            imap.search([ ['UID', 'SEARCH', query] ], function(err, searchResults) {
                 results = searchResults;
                 callback(err, 'search');
             });
@@ -133,7 +149,7 @@ function fetchMessages(mailbox, fetchMessageCallback) {
             fetchedCount = results.length;
             try {
                 var headerFetch = imap.fetch(results, { request: { headers: true } });
-        
+                
                 headerFetch.on('message', function(headerMsg) {
                     headerMsg.on('end', function() {
                         var message = headerMsg;
@@ -141,11 +157,12 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                         var partID = '1';
                         var structure = message.structure;
                 
+                        /* TODO: ETJ - COMMENTED OUT BODY HANDLING UNTIL MULTIBYTE CHAR BUG IS FIXED IN node-imap MODULE
                         if (message.structure.length > 1) {
                             structure.shift();
                             structure = structure[0];
                         }
-                
+  
                         for (var i=0; i<structure.length; i++) {
                             if (structure[i].hasOwnProperty('type') && 
                                 structure[i].type === 'text' &&
@@ -160,25 +177,41 @@ function fetchMessages(mailbox, fetchMessageCallback) {
                 
                         var bodyFetch = imap.fetch(headerMsg.id, { request: { headers: false, body: partID } });       
 
-                         bodyFetch.on('message', function(bodyMsg) {
-                             bodyMsg.on('data', function(chunk) {
-                                 body += chunk;
-                             });
-                             bodyMsg.on('end', function() {
-                                 if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
-                                     msgCount++;
-                                     totalMsgCount++;
-                                     message.body = body;                             
-                                     allKnownIDs[mailbox][message.id] = 1;
-                                     storeMessage(mailbox, message);
-                                     lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
-                                 }
-                                 if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
-                                 if (msgCount === 0 || msgCount === fetchedCount) {
-                                     callback(null, 'fetch');
-                                 }
+                        bodyFetch.on('message', function(bodyMsg) {
+                            bodyMsg.on('data', function(chunk) {
+                                body += chunk;
+                            });
+                            bodyMsg.on('error', function(err) {
+                                console.log('error: ' + err);
+                                callback(err, 'fetch');
+                            });
+                            bodyMsg.on('end', function() {
+                                msgCount++;
+                                if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
+                                    totalMsgCount++;
+                                    message.body = body;                             
+                                    allKnownIDs[mailbox][message.id] = 1;
+                                    storeMessage(mailbox, message);
+                                    lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
+                                }
+                                if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
+                                if (fetchedCount === 0 || msgCount === fetchedCount) {
+                                    callback(null, 'fetch');
+                                }
                             });
                         });
+                        */
+                        msgCount++;
+                        if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
+                            totalMsgCount++;                      
+                            allKnownIDs[mailbox][message.id] = 1;
+                            storeMessage(mailbox, message);
+                            lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
+                        }
+                        if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
+                        if (fetchedCount === 0 || msgCount === fetchedCount) {
+                            callback(null, 'fetch');
+                        }
                     });
                 });
             } catch(e) {
@@ -196,9 +229,9 @@ function fetchMessages(mailbox, fetchMessageCallback) {
         if (err) {
             console.error(err);
         }
-        fetchMessageCallback(null);
+        fetchMessageCallback(err);
     });
-}
+};
 
 function storeMessage(mailbox, msg) {
     if (debug) console.log('storeMessage from ' + mailbox + ' (message.id: ' + msg.id + ')');
@@ -225,7 +258,7 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
-            // hardwire skipping Trash, Spam/Junk, and Gmail's "All Mail" IMAP folders
+            // hardwired skipping Trash, Spam/Junk, and Gmail's "All Mail" IMAP folders
             if (results[i].attribs.indexOf('NOSELECT') === -1 && 
                 i !== 'Trash' && i !== 'Spam' && i !== 'Junk' && i !== 'All Mail') {
                 mailboxes.push(prefix + i);

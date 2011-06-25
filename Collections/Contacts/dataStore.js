@@ -8,6 +8,7 @@
 */
 
 var collection;
+var lconfig = require('../../Common/node/lconfig');
 
 exports.init = function(mongoCollection) {
     collection = mongoCollection;
@@ -288,7 +289,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
         addToSet['_matching.cleanedNames'] = cleanedName;
     //photos
     if(data.id && data.photo)
-        addToSet.photos = '/Me/gcontacts/photo/' + data.id;
+        addToSet.photos = '/' + lconfig.me + '/gcontacts/photo/' + data.id;
     //addresses
     if(data.address) {
         var addresses = [];

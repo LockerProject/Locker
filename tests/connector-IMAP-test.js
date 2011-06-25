@@ -27,13 +27,13 @@ process.on('uncaughtException',function(error){
 });
 
 var svcId = 'imap';
-var mePath = '/Me/' + svcId;
 
 var thecollections = ['messages'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load('config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
+var mePath = lconfig.me + "/" + svcId;
 
 var auth = {
     username: 'testmcchester@gmail.com',
@@ -51,7 +51,7 @@ sync.eventEmitter.on('message/imap', function() {
 suite.next().suite.addBatch({
     "Can setup the tests": { 
         topic: function() {
-            process.chdir('.' + mePath);
+            process.chdir(mePath);
             var self = this;
             lmongoclient.connect(function(mongo) {
                 sync.init(auth, mongo);
@@ -91,14 +91,14 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Can get messages" : {
         topic: function() {
-            sync.syncMessages(null, this.callback);
+            sync.syncMessages(this.callback);
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "sync'd 7 new messages"); },
         "again with no duplicates" : {
             topic: function() {
-                sync.syncMessages(null, this.callback);
+                sync.syncMessages(this.callback);
             },
             "successfully" : function(err, repeatAfter, diaryEntry) {
                 assert.equal(repeatAfter, 3600);
@@ -136,7 +136,7 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("IMAP connector")
         .discuss("all messages")
-            .path(mePath + "/getCurrent/messages")
+            .path("/Me/" + svcId + "/getCurrent/messages")
             .get()
                 .expect('returns all current messages', function(err, res, body) {
                     assert.isNull(err);

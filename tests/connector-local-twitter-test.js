@@ -16,7 +16,7 @@ process.on('uncaughtException',function(error){
 });
 
 var svcId = "twitter";
-var mePath = '/Me/' + svcId;
+var mePath = '/Data/' + svcId;
 
 var thecollections = ['friends', 'followers', 'home_timeline', 'user_timeline', 'mentions'];
 var lconfig = require('../Common/node/lconfig');
@@ -278,7 +278,7 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Twitter connector")
         .discuss("all current friends")
-            .path(mePath + "/getCurrent/friends")
+            .path("/Me/" + svcId + "/getCurrent/friends")
             .get()
                 .expect('returns nothing', function(err, res, body) {
                     assert.isNull(err);
@@ -289,7 +289,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all current followers")
-            .path(mePath + "/getCurrent/followers")
+            .path("/Me/" + svcId + "/getCurrent/followers")
             .get()
                 .expect('returns one follower', function(err, res, body) {
                     assert.isNull(err);
@@ -301,7 +301,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all home_timeline updates")
-            .path(mePath + "/getCurrent/home_timeline")
+            .path("/Me/" + svcId + "/getCurrent/home_timeline")
             .get()
                 .expect('returns status updates', function(err, res, body) {
                     assert.isNull(err);
@@ -313,7 +313,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all mentions updates")
-            .path(mePath + "/getCurrent/mentions")
+            .path("/Me/" + svcId + "/getCurrent/mentions")
             .get()
                 .expect('returns status updates', function(err, res, body) {
                     assert.isNull(err);
@@ -325,7 +325,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all user_timeline updates")
-            .path(mePath + "/getCurrent/user_timeline")
+            .path("/Me/" + svcId + "/getCurrent/user_timeline")
             .get()
                 .expect('returns status updates', function(err, res, body) {
                     assert.isNull(err);
@@ -337,7 +337,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("get photos")
-            .path(mePath + "/getPhoto/1054551")
+            .path("/Me/" + svcId + "/getPhoto/1054551")
             .get()
                 .expect('returns the photo fixture', function(err, res, body) {
                     assert.isNull(err);

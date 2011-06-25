@@ -22,14 +22,14 @@ console.error = writeLogLine;
 
 // Cleanup the old runs Me dir and then copy the stub in
 try {
-    wrench.rmdirSyncRecursive("Me");
+    wrench.rmdirSyncRecursive(lconfig.me);
 } catch (E) {
     if (E.code != "ENOENT") {
         process.stderr.write("Error: " + E + "\n");
         process.exit(1);
     }
 }
-wrench.copyDirSyncRecursive("Me.tests", "Me");
+wrench.copyDirSyncRecursive(lconfig.me + ".tests", lconfig.me);
 
 // Cleanup the old runs ijodtest dir
 try {

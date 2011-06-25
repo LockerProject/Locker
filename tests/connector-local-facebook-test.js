@@ -11,7 +11,7 @@
 var mongoCollections;
 var currentDir = process.cwd();
 var svcId = 'facebook';
-var mePath = '/Me/' + svcId;
+var mePath = '/Data/' + svcId;
 var thecollections = ['friends', 'newsfeed', 'wall'];
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
@@ -225,7 +225,7 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Facebook connector")
         .discuss("all contacts")
-            .path(mePath + "/getCurrent/friends")
+            .path("/Me/" + svcId + "/getCurrent/friends")
             .get()
                 .expect('returns contacts', function(err, res, body) {
                     assert.isNull(err);
@@ -236,7 +236,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all newsfeed posts")
-            .path(mePath + "/getCurrent/newsfeed")
+            .path("/Me/" + svcId + "/getCurrent/newsfeed")
             .get()
                 .expect('returns newsfeed', function(err, res, body) {
                     assert.isNull(err);
@@ -247,7 +247,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all wall posts")
-            .path(mePath + "/getCurrent/wall")
+            .path("/Me/" + svcId + "/getCurrent/wall")
             .get()
                 .expect('returns wall', function(err, res, body) {
                     assert.isNull(err);
@@ -258,7 +258,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("get profile")
-            .path(mePath + "/get_profile")
+            .path("/Me/" + svcId + "/get_profile")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);
@@ -268,7 +268,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .discuss("get photo")
-            .path(mePath + "/getPhoto/100002438955325")
+            .path("/Me/" + svcId + "/getPhoto/100002438955325")
             .get()
                 .expect("returns a photo", function(err, res, body) {
                     assert.isNull(err);

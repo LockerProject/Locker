@@ -128,7 +128,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 })
                 .expect("and has a created instance directory", function(err, res, body) {
                     var svcInfo = JSON.parse(body);
-                    fs.statSync("Me/" + svcInfo.id + "/me.json").isFile();
+                    fs.statSync(lconfig.me + "/" + svcInfo.id + "/me.json").isFile();
                 })
         .undiscuss()
     .undiscuss().unpath()
@@ -239,12 +239,12 @@ tests.next().suite.addBatch({
                 path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
             };
             try {
-                fs.unlinkSync("Me/testURLCallback/result.json");
+                fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
             } catch (E) {
             }
             http.get(options, function(res) {
                 setTimeout(function() {
-                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat(lconfig.me + "/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -281,13 +281,13 @@ tests.next().suite.addBatch({
                     }
                 };
                 try {
-                    fs.unlinkSync("Me/testURLCallback/event.json");
+                    fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
                 } catch (E) {
                 }
                 var req = http.request(options);
                 req.on("response", function(res) {
                     setTimeout(function() {
-                        fs.stat("Me/testURLCallback/event.json", function(err, stats) {
+                        fs.stat(lconfig.me + "/testURLCallback/event.json", function(err, stats) {
                             if (!err)
                                 promise.emit("success", true);
                             else
