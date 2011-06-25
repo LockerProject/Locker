@@ -21,7 +21,6 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
-var mePath = '/Me/' + svcId;
 
 var events = 0;
 var fs = require('fs');
@@ -40,7 +39,7 @@ suite.next().suite.addBatch({
                 uri: 'http://localhost:8043/Me/foursquare/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/foursquare_friends.json' });
             var self = this;
-            process.chdir('./Me/contacts');
+            process.chdir('./' + lconfig.me + '/contacts');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.contacts;

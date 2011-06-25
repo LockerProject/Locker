@@ -20,7 +20,7 @@ SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
 
 exports.Scheduler = function() {
     this.scheduledActions = [];
-    this.filename = "Me/scheduler.json";
+    this.filename = lconfig.me + "/scheduler.json";
 };
 
 exports.Scheduler.prototype.loadAndStart = function() {

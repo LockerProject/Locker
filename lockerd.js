@@ -35,6 +35,7 @@ var lconsole = require("lconsole");
 var lscheduler = require("lscheduler");
 var serviceManager = require("lservicemanager");
 var dashboard = require(__dirname + "/Ops/dashboard.js");
+var mongodb = require('mongodb');
 var webservice = require(__dirname + "/Ops/webservice.js");
 var lcrypto = require("lcrypto");
 
@@ -68,8 +69,17 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     var mongodExit = function(errorCode) {
         if(shuttingDown_) return;
         if(errorCode !== 0) {
-            console.error('mongod did not start successfully ('+errorCode+'), here was the stdout: '+mongoOutput);
-            shutdown(1);
+            var db = new mongodb.Db('locker', new mongodb.Server('127.0.0.1', lconfig.mongo.port, {}), {});
+            db.open(function(error, client) {
+                if(error) { 
+                    console.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
+                    shutdown(1);
+                } else {
+                    console.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
+                    db.close();
+                    checkKeys();
+                }
+            });
         }
     };
     mongoProcess.on('exit', mongodExit);

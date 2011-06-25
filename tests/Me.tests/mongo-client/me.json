@@ -1,7 +1,0 @@
-{
-    "title":"Test MongoDB",
-    "srcdir":"Tests/mongo-client",
-    "is":"connector",
-    "id":"mongo-client", 
-    "uri":"http://localhost:8043/Me/mongo-client"
-}

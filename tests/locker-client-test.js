@@ -14,6 +14,7 @@ var fs = require("fs");
 var path = require("path");
 var locker = require("../Common/node/locker.js");
 var lconfig = require("../Common/node/lconfig.js");
+var request = require('request');
 var testUtils = require('./test-utils');
 
 lconfig.load("config.json");
@@ -22,9 +23,9 @@ vows.describe("Locker Client API").addBatch({
     "Initialization" : {
         "sets the base service URL" : function() {
             var baseURL = lconfig.lockerBase;
-            locker.initClient({workingDirectory:"Me/testURLCallback", lockerUrl:"test"});
+            locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:"test"});
 //            assert.equal(lconfig.lockerBase, "test");
-            locker.initClient({workingDirectory:"Me/testURLCallback", lockerUrl:baseURL});
+            locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:baseURL});
         }
     }
 }).addBatch({
@@ -123,11 +124,10 @@ vows.describe("Locker Client API").addBatch({
             topic:function() {
                 var promise = new events.EventEmitter();
                 var fired = false;
-
                 try {
-                    path.exists("Me/testURLCallback/result.json", function (exists) {
+                    path.exists(lconfig.me + "/testURLCallback/result.json", function (exists) {
                         if (exists) {
-                            fs.unlinkSync("Me/testURLCallback/result.json");
+                            fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
                         }
                     }); 
                 } catch (E) {
@@ -135,7 +135,7 @@ vows.describe("Locker Client API").addBatch({
                 }
                 locker.at("/write", 1);
                 setTimeout(function() {
-                    fs.stat("Me/testURLCallback/result.json", function(err, stats) {
+                    fs.stat(lconfig.me + "/testURLCallback/result.json", function(err, stats) {
                         if (!err)
                             promise.emit("success", true);
                         else
@@ -155,9 +155,9 @@ vows.describe("Locker Client API").addBatch({
                 var fired = false;
                 
                 try {
-                    path.exists("Me/testURLCallback/event.json", function (exists) {
+                    path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
                         if (exists) {
-                            fs.unlinkSync("Me/testURLCallback/event.json");
+                            fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
                         }
                     });
                 } catch (E) {
@@ -166,7 +166,7 @@ vows.describe("Locker Client API").addBatch({
                 }
                 locker.listen("test/event", "/event", function(err, resp, body) {
                     locker.event("test/event", {"test":"value"});
-                    testUtils.waitForPathsToExist(["Me/testURLCallback/event.json"], 10, 1000, function(success) {
+                    testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
                         if(success)
                             promise.emit("success", true);
                         else
@@ -178,6 +178,31 @@ vows.describe("Locker Client API").addBatch({
             "fires an event callback": function(err, result) {
                 assert.isNull(err);
                 assert.isTrue(result);
+            },
+            "have listeners defined via config files" : {
+                topic: function() {
+                    request.post({uri : 'http://localhost:8043/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
+                    var promise = new events.EventEmitter();
+                    var fired = false;
+                    setTimeout(function() {
+                        request.get({uri : 'http://localhost:8043/Me/event-collector/getEvents/testing'}, function(err, resp, body) {
+                            if (err == null && body == 1) {
+                                promise.emit('success', true);
+                            } else {
+                                if (err != null) {
+                                    promise.emit('error', err);
+                                } else {
+                                    promise.emit('error', 'body was equal to ' + body + ' instead of 1');
+                                }
+                            }
+                        });
+                    }, 500);
+                    return promise;
+                },
+                "successfully": function(err, fired) {
+                    assert.isNull(err);
+                    assert.isTrue(fired);
+                }
             }
         }
     }

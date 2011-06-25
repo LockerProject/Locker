@@ -122,10 +122,10 @@ vows.describe("Service Manager").addBatch({
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync("Me/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
                 "and by creating a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
-                    statInfo = fs.readFileSync("Me/" + svcMetaInfo.id + "/auth.json",'ascii');
+                    statInfo = fs.readFileSync(lconfig.me + "/" + svcMetaInfo.id + "/auth.json",'ascii');
                     assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
                 }    
             }
@@ -150,7 +150,7 @@ vows.describe("Service Manager").addBatch({
             assert.equal(serviceManager.serviceMap().installed['migration-test'].version, 1308079085972);
         },
         "and running the migration successfully" : function(topic) {
-            var me = JSON.parse(fs.readFileSync(process.cwd() + "/Me/migration-test/me.json", 'ascii'));
+            var me = JSON.parse(fs.readFileSync(process.cwd() + "/" + lconfig.me + "/migration-test/me.json", 'ascii'));
             assert.notEqual(me.mongoCollections, undefined);
             assert.equal(me.mongoCollections[0], 'new_collection');
         }

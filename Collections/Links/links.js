@@ -84,9 +84,6 @@ process.stdin.on('data', function(data) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.links);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
-            // locker.listen('contact/foursquare', '/events');
-            locker.listen('link/facebook', '/events');
-            locker.listen('link/twitter', '/events');
             sync.eventEmitter.on('link/full', function(eventObj) {
                 locker.event('link/full', eventObj);
             });
