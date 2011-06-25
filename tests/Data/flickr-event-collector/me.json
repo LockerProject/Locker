@@ -1,9 +1,0 @@
-{
-    "run": "node client.js",
-    "is": "app",
-    "id": "flickr-event-collector",
-    "srcdir": "Data/flickr-event-collector",
-    "title": "Flickr Event Collector Test",
-    "externalUri": "http://localhost:8043/Me/flickr-event-collector/",
-    "version": 1
-}

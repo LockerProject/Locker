@@ -1,1 +1,0 @@
-{"title":"Links","desc":"A collection of links from many places.","run":"node links.js","status":"stable","handle":"links","provides":["link"],"mongoCollections":["links"],"srcdir":"Collections/Links","is":"collection","installable":false,"externalUri":"http://localhost:8043/Me/links/","id":"links","uri":"http://localhost:8043/Me/links/","version":"1308942327129"}
