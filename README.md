@@ -141,7 +141,7 @@ Then you can install all of Locker's node dependencies:
 At this point you should be all set (famous last words). Next, run the tests:
 
     cd tests
-    node runTest.js
+    node runTests.js
 
 On a good day, all these tests will pass, resulting in something like:
 
