@@ -12,6 +12,9 @@ var request = require('request'),
     lcrypto = require("lcrypto"),
     fs = require('fs');
 
+var lconfig = require('lconfig');
+//TODO: fix lconfig and remove this!
+lconfig.load('../../config.json');
 var completedCallback, uri;
 
 exports.auth = {};
