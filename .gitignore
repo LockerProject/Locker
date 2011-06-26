@@ -1,6 +1,4 @@
 .DS_Store
-*/my/*
-*/*/my/*
 Me/*
 \.*.swp
 *.pyc
@@ -11,4 +9,4 @@ Me/*
 *.tmproj
 node_modules
 scheduler.json
-tests/Data/*
+tests/Data/
