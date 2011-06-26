@@ -36,22 +36,25 @@ exports.generateSymKey = function(cb) {
 }
 
 // load up private key or create if none, just KISS for now
-exports.loadKeys = function() {
-    path.exists(__dirname + "/../../" + lconfig.me + "/symKey", function(exists) {
-        if (exists === true) {  
-            symKey = fs.readFileSync(__dirname + "/../../" + lconfig.me + "/symKey", "utf8");
-        }
-    });
-    path.exists(__dirname + "/../../" + lconfig.me + "/key", function(exists) {
-        if (exists === true) {  
-            idKey = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key','utf-8');
-        }
-    });
-    path.exists(__dirname + "/../../" + lconfig.me + "/key.pub", function(exists) {
-        if (exists === true) {  
-            idKeyPub = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key.pub','utf-8');
-        }
-    });
+exports.loadKeys = function(callback) {
+    if(!(symKey && idKey && idKeyPub)) {
+        path.exists(__dirname + "/../../" + lconfig.me + "/symKey", function(exists) {
+            if (exists === true)
+                symKey = fs.readFileSync(__dirname + "/../../" + lconfig.me + "/symKey", "utf8");
+            path.exists(__dirname + "/../../" + lconfig.me + "/key", function(exists) {
+                if (exists === true)
+                    idKey = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key','utf-8');
+                path.exists(__dirname + "/../../" + lconfig.me + "/key.pub", function(exists) {
+                    if (exists === true)
+                        idKeyPub = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key.pub','utf-8');
+                    if(typeof callback === 'function')
+                        callback();
+                });
+            });
+        });
+    } else if(typeof callback === 'function') {
+        process.nextTick(callback);
+    }
 }
 
 exports.generatePKKeys = function(cb) {
