@@ -21,6 +21,7 @@ exports.init = function(theLockerUrl, mongoCollection) {
 }
 
 exports.gatherLinks = function() {
+    lconfig.load('../../config.json');
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
         locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
