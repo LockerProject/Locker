@@ -21,6 +21,7 @@ exports.init = function(theLockerUrl, mongoCollection) {
 }
 
 exports.gatherContacts = function() {
+    lconfig.load('../../config.json');
     dataStore.clear(function(err) {
         // This should really be timered, triggered, something else
         locker.providers(['contact/facebook', 'contact/twitter', 
