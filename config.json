@@ -7,7 +7,6 @@
         "Collections", 
         "Connectors"
         ],
-    "displayUnstable" : false,
     "mongo" : {
         "dataDir": "mongodata",
         "host": "localhost",
