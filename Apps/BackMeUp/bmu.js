@@ -53,7 +53,7 @@ app.get('/backup',function(req, res) {
             return;
         }
         res.write("<p>tgz created, dropboxing now...\n");
-        var url = lockerBase+'/' + lconfig.me + '/'+dbox+'/save?file=/tmp/Me_bu.tgz';
+        var url = lockerBase+'/Me/'+dbox+'/save?file=/tmp/Me_bu.tgz';
         console.log("calling "+url);
         request.get({uri:url}, function(err, resp, body) {
             if(err)

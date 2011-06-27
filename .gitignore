@@ -13,3 +13,4 @@ Me/*
 node_modules
 scheduler.json
 tests/Data/*
+tests/Me/*
