@@ -78,32 +78,6 @@ vows.describe("Service Manager").addBatch({
             }
         }
     },
-    "Unstable services aren't listed if " : {
-        topic: function() {
-            serviceManager.serviceMap().available = [];
-            lconfig.displayUnstable = false;
-            lconfig.scannedDirs.forEach(function(dirToScan) {
-                var installable = true;
-                if (dirToScan === "Collections") installable = false;
-                serviceManager.scanDirectory(dirToScan, installable);
-            });
-            return "topic";
-        },
-        "not set to display them" : function(topic) {
-            for (var i = 0; i < serviceManager.serviceMap().available.length; i++) {
-                assert.equal(serviceManager.serviceMap().available[i].status, "stable");
-            }
-        },
-        "reset afterwards" : function(topic) {
-            serviceManager.serviceMap().available = [];
-            lconfig.displayUnstable = true;
-            lconfig.scannedDirs.forEach(function(dirToScan) {
-                var installable = true;
-                if (dirToScan === "Collections") installable = false;
-                serviceManager.scanDirectory(dirToScan, installable);
-            });
-        }
-    },
     "Available services" : {
         "gathered from the filesystem" : {
             topic:serviceManager.scanDirectory("Connectors"),

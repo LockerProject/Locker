@@ -7,6 +7,7 @@
 *
 */
 var serviceMap;
+var unstable = false;
 
 // Sections ------------------------------------------------------------------
 
@@ -73,6 +74,13 @@ function showServicesSection() {
   $("#appsList li, .tab").removeClass("current");
   $("#servicesTab").addClass("current");
 
+}
+
+function unstableServices()
+{
+    unstable = true;
+    $("#servicesSection header ul").hide();
+    updateServiceMap("",function(){ $("#servicesSection").show();});
 }
 
 function selectService(index) {
@@ -172,6 +180,7 @@ function updateServiceMap(previousLocation, callback) {
       // Populate Available Services List
       serviceMap.available.forEach(function(item) {
         if (!item.installable) return;
+        if (!unstable && item.status != "stable") return;
         switch (item.is) {
           case "app":
             $("#servicesList").append($("<li class='app' title='" + item.title + "'>" + item.title + "</li>").click(function(event) {

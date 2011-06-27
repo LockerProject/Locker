@@ -17,7 +17,6 @@ vows.describe("Locker Config").addBatch({
             assert.equal(lconfig.externalHost, "example.com");
             assert.equal(lconfig.externalSecure, false);
             assert.equal(lconfig.externalBase, "http://example.com");
-            assert.equal(lconfig.displayUnstable, true);
         },
     }
 }).addBatch({

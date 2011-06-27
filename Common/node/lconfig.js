@@ -21,7 +21,6 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     setBase();
     exports.scannedDirs = config.scannedDirs;
-    exports.displayUnstable = config.displayUnstable;
     exports.mongo = config.mongo;
     exports.me = config.me || "Me";
     exports.lockerDir = process.cwd();
