@@ -8,6 +8,8 @@ import lockerfs
 
 import client
 import util
+import xmlrpclib
+import os
 
 app = Flask(__name__)
 
@@ -101,6 +103,17 @@ def trackbacks():
     for key, value in request.args.items():
         trackbacks = [trackback for trackback in trackbacks if matches_arg(trackback[key], json.loads(value))]
     return json.dumps(trackbacks)
+
+@app.route("/uploadFile")
+def uploadFile():
+    f = request.args["file"]
+    data = {}
+    data["name"] = os.path.basename(f)
+    data["type"] = "image/jpeg"
+    data["bits"] = xmlrpclib.Binary(open(f).read())
+    data["overwrite"] = 1
+    app.client._server.wp.uploadFile('', app.client.user, app.client.password, data)
+    return "kthxbye"
 
 def runService(info):
     app.info = info
