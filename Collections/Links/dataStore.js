@@ -21,11 +21,11 @@ exports.getAll = function(callback) {
 }
 
 exports.addEvent = function(data, callback) {
-    var type = data.data._via[0];
+    var type = data._via[0];
     if (type.indexOf('facebook') !== -1) {
-        exports.addLink("facebook", data.data.obj.data, data.data.obj.data.url, callback);
+        exports.addLink("facebook", data.obj.data, data.obj.data.url, callback);
     } else if (type.indexOf('twitter') !== -1) {
-        exports.addLink("twitter", data.data.obj.status, data.data.obj.status.entities.urls[0].expanded_url || data.data.obj.status.entities.urls[0].url, callback);
+        exports.addLink("twitter", data.obj.status, data.obj.status.entities.urls[0].expanded_url || data.obj.status.entities.urls[0].url, callback);
     }
 }
 
