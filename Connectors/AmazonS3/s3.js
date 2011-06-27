@@ -65,7 +65,7 @@ app.get('/save', function(req, res) {
     res.end("ok, background uploading...");
     s3.putFile(req.param('file'), path.basename(req.param('file')), function (err, res) {
         if (err)
-            console.log("failed: "+err);
+            console.log("failed: "+err+" "+res.body);
         else
             console.log("result: "+res.statusCode);
     });
