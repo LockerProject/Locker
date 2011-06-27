@@ -13,6 +13,8 @@ var express = require('express'),connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 var locker = require('../../Common/node/locker.js');
 var lfs = require('../../Common/node/lfs.js');
+var lconfig = require('../../Common/node/lconfig.js');
+lconfig.load('../../config.json');
 var exec = require('child_process').exec;
 var util = require('util');
 var request = require('request');
@@ -46,7 +48,7 @@ app.get('/backup',function(req, res) {
         'Content-Type': 'text/html'
     });
     res.write("<p>hold on, backing up in progress...\n");
-    var child = exec('rm -f /tmp/Me_bu.tgz && tar -cvzf /tmp/Me_bu.tgz ./Me', {cwd: '../../'}, function (error, stdout, stderr) {
+    var child = exec('rm -f /tmp/Me_bu.tgz && tar -cvzf /tmp/Me_bu.tgz ./' + lconfig.me, {cwd: '../../'}, function (error, stdout, stderr) {
         if (error !== null) {
             res.end("failed: "+error+" stdout: "+stdout+" stderr: "+stderr);
             return;
