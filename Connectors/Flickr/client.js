@@ -131,8 +131,7 @@ function(req, res) {
     if(!auth.token)
         res.end("<html>you need to <a href='" + getAuthSignedURL('read') + "'>auth w/ flickr</a> yet</html>");
     else
-        res.end();
-        //res.end("<html>found a token, <a href='./friends'>load friends</a></html>");
+        res.end("<html>found a token, <a href='./friends'>load friends</a> and <a href='./photos'>photos</a></html>");
 });
 
 app.get('/save',
@@ -165,7 +164,7 @@ function(req, res) {
     });
     var frob = req.param('frob');
     getTokenFromFrob(frob);
-    res.end();
+    res.end("are you ready? yeah!");
 });
 
 //download social graph
@@ -265,7 +264,7 @@ function(req, res) {
     getPhotos(auth.token._content, userInfo.username, 'me', 1, state.newest, now);
     state.newest = now;
     lfs.writeObjectToFile('state.json', state);
-    res.write(JSON.stringify(state));
+    res.write("loading... "+JSON.stringify(state));
     res.end();
 });
 
