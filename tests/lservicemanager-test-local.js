@@ -22,6 +22,7 @@ require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
 lconfig.load("config.json");
+var path = require('path');
 
 var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
@@ -132,12 +133,80 @@ vows.describe("Service Manager").addBatch({
 }).addBatch({
     "Spawning a service": {
         topic : function() {
-            var that = this;
-            request({url:lconfig.lockerBase + '/Me/echo-config/'}, that.callback);
+            request({url:lconfig.lockerBase + '/Me/echo-config/'}, this.callback);
         },
         "passes the externalBase with the process info": function(err, resp, body) {
             var json = JSON.parse(body);
             assert.equal(json.externalBase, lconfig.externalBase + '/Me/echo-config/');
+        }
+    }
+}).addBatch({
+    "Disabling services " : {
+        "that " : {
+            topic: function() {
+                request({url:lconfig.lockerBase + '/Me/disabletest/'}, this.callback);
+            },
+            "are already running" : function(err, resp, body) {
+                assert.equal(resp.statusCode, 200);
+                assert.equal(body, "ACTIVE");
+            },
+            "are already running " : {
+                topic : function() {
+                    serviceManager.disable('disabletest');
+                    var that = this;
+                    request({uri:'http://localhost:8043/core/disabletest/disable', method: 'POST'}, function(err, resp, body) {
+                        request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
+                    })
+                },
+                "are stopped": function(err, resp, body) {
+                    assert.equal(serviceManager.isInstalled('disabletest'), false);
+                    assert.equal(resp.statusCode, 503);
+                    assert.equal(body, "This service has been disabled.");
+                },
+                "but can be reenabled": {
+                    topic: function() {
+                        serviceManager.enable('disabletest');
+                        var that = this;
+                        request({uri:'http://localhost:8043/core/disabletest/enable', method: 'POST'}, function(err, resp, body) {
+                            request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
+                        })
+                    },
+                    "successfully": function(err, resp, body) {
+                        assert.equal(serviceManager.isInstalled('disabletest'), true);
+                        assert.equal(resp.statusCode, 200);
+                        assert.equal(body, "ACTIVE");
+                    }
+                }
+            }
+        }
+    }
+}).addBatch({
+    "Uninstalling services " : {
+        topic: function() {
+            var that = this;
+            request({uri:'http://localhost:8043/core/disabletest/uninstall', method: 'POST'}, function() {
+                path.exists(lconfig.me + "/disabletest", function(exists) {
+                    if (exists) {
+                        that.callback("directory still exists");
+                    } else {
+                        that.callback(false, true);
+                    }
+                })
+            });
+        },
+        "deletes them FOREVER" : function(err, resp) {
+            assert.isNull(err);
+            assert.isTrue(resp);
+        }
+    }
+}).addBatch({
+    "Disabled services " : {
+        topic: function() {
+            request({url:lconfig.lockerBase + '/Me/disabledtest/'}, this.callback);
+        },
+        "are disabled": function(err, resp, body) {
+            assert.equal(resp.statusCode, 503);
+            assert.equal(body, "This service has been disabled.");
         }
     }
 }).export(module);
