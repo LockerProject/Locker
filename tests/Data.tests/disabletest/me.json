@@ -4,5 +4,6 @@
     "is":"connector",
     "id":"disabletest",
     "run":"node disabletest.js",
+    "mongoCollections" : ["thing1","thing2"],
     "uri":"http://localhost:8043/Me/disabletest"
 }
