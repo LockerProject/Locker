@@ -335,9 +335,10 @@ locker.post('/core/:svcId/uninstall', function(req, res) {
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    serviceManager.uninstall(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
+    serviceManager.uninstall(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
 })
 
 locker.post('/core/:svcId/disable', function(req, res) {

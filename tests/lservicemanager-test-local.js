@@ -24,6 +24,8 @@ var lconfig = require("lconfig");
 lconfig.load("config.json");
 var path = require('path');
 
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
+
 var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
     "has a map of the available services" : function() {
@@ -150,6 +152,21 @@ vows.describe("Service Manager").addBatch({
                 assert.equal(resp.statusCode, 200);
                 assert.equal(body, "ACTIVE");
             },
+            "have mongo " : {
+                topic : function() {
+                    var self = this;
+                    lmongoclient.connect(function(theMongo) {
+                        mongo = theMongo;
+                        mongo.collections.thing1.save({'one':1}, function(err, doc) {
+                            mongo.collections.thing1.count(self.callback);
+                        });
+                    });
+                },
+                "collections" : function(err, result) {
+                    assert.isNull(err);
+                    assert.equal(result, 1);
+                }
+            },
             "are already running " : {
                 topic : function() {
                     serviceManager.disable('disabletest');
@@ -197,6 +214,15 @@ vows.describe("Service Manager").addBatch({
         "deletes them FOREVER" : function(err, resp) {
             assert.isNull(err);
             assert.isTrue(resp);
+        },
+        "and deletes" : {
+            topic : function() {
+                mongo.collections.thing1.count(this.callback);
+            },
+            "mongo collections" : function(err, doc) {
+                assert.isNull(err);
+                assert.equal(doc, 0);
+            }
         }
     }
 }).addBatch({

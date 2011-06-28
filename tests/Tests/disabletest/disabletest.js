@@ -10,6 +10,7 @@
 
 var app = require('express').createServer();
 var locker = require(__dirname + '/../../../Common/node/locker.js');
+var collections;
 
 app.get('/', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -22,8 +23,11 @@ process.stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    app.listen(0, function() {
-        process.stdout.write(JSON.stringify({port: app.address().port}));
+    locker.connectToMongo(function(mongo) {
+        collections = mongo.collections;
+        app.listen(0, function() {
+            process.stdout.write(JSON.stringify({port: app.address().port}));
+        });
     });
 });
 process.stdin.resume();

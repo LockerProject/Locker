@@ -444,14 +444,21 @@ exports.disable = function(serviceId) {
     }
 }
 
-exports.uninstall = function(serviceId) {
+exports.uninstall = function(serviceId, callback) {
     var svc = serviceMap.installed[serviceId];
-    svc.uninstalled = true;
-    if (svc.pid) {
-        process.kill(svc.pid, "SIGINT");
-    }
-    wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
-    delete serviceMap.installed[serviceId];
+    var lmongoclient = require('lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, svc.id, svc.mongoCollections);
+    lmongoclient.connect(function(mongo) {
+        for (var i in mongo.collections) {
+            mongo.collections[i].drop();
+        }
+        svc.uninstalled = true;
+        if (svc.pid) {
+            process.kill(svc.pid, "SIGINT");
+        }
+        wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
+        delete serviceMap.installed[serviceId];
+        if (callback) { callback(); }
+    })
 };
 
 exports.enable = function(serviceId) {
