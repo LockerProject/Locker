@@ -306,6 +306,7 @@ ul#servicesList li.current.connector
   line-height: 36px;
   padding-left: 10px;
   margin-bottom: 8px;
+  margin-right: 100px;
 
   background-color: rgba(255, 255, 255, 0.25);
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.15)));
@@ -362,6 +363,18 @@ ul#servicesList li.current.connector
   line-height: 38px;
   color: rgba(0, 0, 0, 0.5);
 }
+
+#serviceInfo ul#connectorInstancesList #inst-cont {
+    position:relative;
+    float:right;
+}
+#serviceInfo ul#connectorInstancesList div .uninstall
+{
+  right:10px;
+  top:2px;
+}
+
+
 
 #serviceInfo ul#connectorInstancesList li .page
 {
