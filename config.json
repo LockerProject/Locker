@@ -8,10 +8,9 @@
         "Collections", 
         "Connectors"
         ],
-    "displayUnstable" : false,
     "mongo" : {
         "dataDir": "mongodata",
         "host": "localhost",
-        "port": 27017
+        "port": 27018
     }
 }

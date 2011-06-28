@@ -25,7 +25,7 @@ var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 
 lconfig.load('config.json');
 
-locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"Me/flickr-event-collector"});
+locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:lconfig.me + "/flickr-event-collector"});
 locker.listen('photo/flickr', 'event');
 
 suite.next().suite.addBatch({
@@ -37,7 +37,7 @@ suite.next().suite.addBatch({
                 port:lconfig.lockerPort,
                 path:'/Me/' + id + '/photos' 
             };
-            fs.statSync('Me/' + id);
+            fs.statSync(lconfig.me + '/' + id);
             http.get(options, function(res) {
                 function checkForPhotos(retries) {
                     if(retries < 0) {
@@ -45,22 +45,22 @@ suite.next().suite.addBatch({
                         return;
                     } 
                     setTimeout(function() {
-                        fs.readdir('Me/' + id + '/originals', function(err, files) {
+                        fs.readdir(lconfig.me + '/' + id + '/originals', function(err, files) {
                             if(err || !files || files.length != 2) {
                                 checkForPhotos(retries - 1);
                                 return;
                             }
-                            fs.readdir('Me/' + id + '/thumbs', function(err, files) {
+                            fs.readdir(lconfig.me + '/' + id + '/thumbs', function(err, files) {
                                 if(err || !files || files.length != 2) {
                                     checkForPhotos(retries - 1);
                                     return;
                                 }
-                                fs.stat('Me/' + id + '/state.json', function(err, stat) {
+                                fs.stat(lconfig.me + '/' + id + '/state.json', function(err, stat) {
                                     if(err || !stat) {
                                         checkForPhotos(retries - 1);
                                         return;
                                     }
-                                    fs.stat('Me/' + id + '/photos.json', function(err, stat) {
+                                    fs.stat(lconfig.me + '/' + id + '/photos.json', function(err, stat) {
                                         if(err || !stat) {
                                             checkForPhotos(retries - 1);
                                             return;
@@ -84,34 +84,36 @@ suite.next().suite.addBatch({
     }
 });
 
-var eventCollectorID = 'flickr-event-collector';
-suite.next().suite.addBatch({
-    "Flickr Connector emits events" : {
-        topic:function() {
-            var promise = new events.EventEmitter;
-            function checkForEvents(retries) {
-                if(retries < 0) {
-                    promise.emit("error", 'Events did not emit in time.');
-                    return;
-                } 
-                setTimeout(function() {
-                    fs.readFile('Me/' + eventCollectorID + '/events', function(err, data) {
-                        if(err || data != '2') {
-                            checkForEvents(retries - 1);
-                            return;
-                        }
-                        promise.emit("success", true);
-                    });
-                }, 100);
-            }
-            checkForEvents(30);
-            return promise;
-        },
-        "within 3 seconds":function(err, stat) {
-            assert.isNull(err);
-        }
-    }
-});
+// this test needs to be rewritten to use the regular event collector
+//
+// var eventCollectorID = 'flickr-event-collector';
+// suite.next().suite.addBatch({
+//     "Flickr Connector emits events" : {
+//         topic:function() {
+//             var promise = new events.EventEmitter;
+//             function checkForEvents(retries) {
+//                 if(retries < 0) {
+//                     promise.emit("error", 'Events did not emit in time.');
+//                     return;
+//                 }
+//                 setTimeout(function() {
+//                     fs.readFile(lconfig.me + '/' + eventCollectorID + '/events', function(err, data) {
+//                         if(err || data != '2') {
+//                             checkForEvents(retries - 1);
+//                             return;
+//                         }
+//                         promise.emit("success", true);
+//                     });
+//                 }, 100);
+//             }
+//             checkForEvents(30);
+//             return promise;
+//         },
+//         "within 3 seconds":function(err, stat) {
+//             assert.isNull(err);
+//         }
+//     }
+// });
 
 var photos = [];
 var photoID = '5577555595';

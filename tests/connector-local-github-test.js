@@ -16,7 +16,7 @@ process.on('uncaughtException',function(error){
 });
 
 var svcId = "github";
-var mePath = '/Me/' + svcId;
+var mePath = '/Data/' + svcId;
 
 var thecollections = ['repos', 'followers', 'following'];
 var lconfig = require('../Common/node/lconfig');
@@ -298,7 +298,7 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Github connector")
         .discuss("all followers")
-            .path(mePath + "/getCurrent/followers")
+            .path("/Me/" + svcId + "/getCurrent/followers")
             .get()
                 .expect('returns followers', function(err, res, body) {
                     assert.isNull(err);
@@ -309,7 +309,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all followed users")
-            .path(mePath + "/getCurrent/following")
+            .path("/Me/" + svcId + "/getCurrent/following")
             .get()
                 .expect('returns following', function(err, res, body) {
                     assert.isNull(err);
@@ -320,7 +320,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all repos")
-            .path(mePath + "/getCurrent/repos")
+            .path("/Me/" + svcId + "/getCurrent/repos")
             .get()
                 .expect('returns repos', function(err, res, body) {
                     assert.isNull(err);
@@ -331,7 +331,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("get profile")
-            .path(mePath + "/get_profile")
+            .path("/Me/" + svcId + "/get_profile")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);

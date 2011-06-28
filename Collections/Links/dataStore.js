@@ -20,11 +20,12 @@ exports.getAll = function(callback) {
     collection.find({}, callback);
 }
 
-exports.addEvent = function(type, data, callback) {
-    if (type === 'facebook') {
-        exports.addLink(type, data.data.obj.data, data.data.obj.data.url, callback);
-    } else if (type === 'twitter') {
-        exports.addLink(type, data.data.obj.status, data.data.obj.status.entities.urls[0].expanded_url || data.data.obj.status.entities.urls[0].url, callback);
+exports.addEvent = function(data, callback) {
+    var type = data._via[0];
+    if (type.indexOf('facebook') !== -1) {
+        exports.addLink("facebook", data.obj.data, data.obj.data.url, callback);
+    } else if (type.indexOf('twitter') !== -1) {
+        exports.addLink("twitter", data.obj.status, data.obj.status.entities.urls[0].expanded_url || data.obj.status.entities.urls[0].url, callback);
     }
 }
 

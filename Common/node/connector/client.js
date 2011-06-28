@@ -60,9 +60,9 @@ exports.init = function (processOptions, callback) {
                 started = true;
                 // Start the core web server
                 if(callback) callback(app);
-                app.listen(processInfo.port, function() {
+                app.listen(0, function() {
                     // Tell the locker core that we're done
-                    var returnedInfo = {port: processInfo.port};
+                    var returnedInfo = {port: app.address().port};
                     process.stdout.write(JSON.stringify(returnedInfo));
                 });
             }

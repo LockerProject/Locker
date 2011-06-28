@@ -8,18 +8,19 @@
 */
 
 var request = require('request'),
-    lfs = require('../../Common/node/lfs.js'),
-    lcrypto = require("../../Common/node/lcrypto"),
+    lfs = require('lfs'),
+    lcrypto = require("lcrypto"),
     fs = require('fs');
 
+var lconfig = require('lconfig');
+//TODO: fix lconfig and remove this!
+lconfig.load('../../config.json');
 var completedCallback, uri;
-
-lcrypto.loadKeys();
 
 exports.auth = {};
 
 exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
-    uri = externalUrl
+    uri = externalUrl;
     
     if(exports.isAuthed()) {
         onCompletedCallback();
@@ -52,7 +53,8 @@ exports.isAuthed = function() {
             return true;
         }
     } catch (E) {
-        console.error(E);
+        if(E.code !== 'EBADF')
+            console.error(E);
     }
     return false;
 };
@@ -81,16 +83,18 @@ function saveAuth(req, res) {
         res.end("missing field(s)?");
         return;
     }
-    // We put in the encrypted values for writing to the disk
-    exports.auth.username = lcrypto.encrypt(req.param('username'));
-    exports.auth.password = lcrypto.encrypt(req.param('password'));
-    exports.auth.host = req.param('host');
-    exports.auth.port = req.param('port');
-    exports.auth.secure = req.param('secure');
-    lfs.writeObjectToFile('auth.json', exports.auth);
-    // Put back the non encrypted values
-    exports.auth.username = req.param('username');
-    exports.auth.password = req.param('password');
-    completedCallback(exports.auth);
-    res.redirect(uri);
+    lcrypto.loadKeys(function() {
+        // We put in the encrypted values for writing to the disk
+        exports.auth.username = lcrypto.encrypt(req.body.username);
+        exports.auth.password = lcrypto.encrypt(req.body.password);
+        exports.auth.host = req.body.host;
+        exports.auth.port = req.body.port;
+        exports.auth.secure = req.body.secure;
+        lfs.writeObjectToFile('auth.json', exports.auth);
+        // Put back the non encrypted values
+        exports.auth.username = req.body.username;
+        exports.auth.password = req.body.password;
+        completedCallback(exports.auth);
+        res.redirect(uri);
+    });
 }

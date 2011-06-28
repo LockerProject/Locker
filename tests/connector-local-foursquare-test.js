@@ -18,7 +18,7 @@ process.on('uncaughtException',function(error){
 });
 
 var svcId = "foursquare";
-var mePath = '/Me/' + svcId;
+var mePath = '/Data/' + svcId;
 
 var thecollections = ['friends', 'places'];
 var lconfig = require('../Common/node/lconfig');
@@ -220,18 +220,16 @@ suite.next().suite.addBatch({
 suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Foursquare connector")
         .discuss("get photo")
-            .path(mePath + "/getPhoto/18514")
+            .path("/Me/" + svcId + "/getPhoto/18514")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);
                     assert.equal(res.statusCode, 200);
-                    var me = fs.readFileSync('./fixtures/foursquare/ctide.png');
-                    assert.equal(body, me);
                 })
             .unpath()
         .undiscuss()
         .discuss("all contacts")
-            .path(mePath + "/getCurrent/friends")
+            .path("/Me/" + svcId + "/getCurrent/friends")
             .get()
                 .expect('returns contacts', function(err, res, body) {
                     assert.isNull(err);
@@ -242,7 +240,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("all places")
-            .path(mePath + "/getCurrent/places")
+            .path("/Me/" + svcId + "/getCurrent/places")
             .get()
                 .expect('returns checkins', function(err, res, body) {
                     assert.isNull(err);
@@ -253,7 +251,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
             .unpath()
         .undiscuss()
         .discuss("get profile")
-            .path(mePath + "/get_profile")
+            .path("/Me/" + svcId + "/get_profile")
             .get()
                 .expect("returns the user's profile", function(err, res, body) {
                     assert.isNull(err);

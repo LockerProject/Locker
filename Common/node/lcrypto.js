@@ -10,23 +10,24 @@ var crypto = require("crypto");
 var path = require("path");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
+var lconfig = require('lconfig');
 
 var idKey,idKeyPub,symKey;
 
 exports.generateSymKey = function(cb) {
-    path.exists("Me/symKey", function(exists) {
+    path.exists(lconfig.me + "/symKey", function(exists) {
         if (exists) {
-            symKey = fs.readFileSync("Me/symKey", "utf8");
+            symKey = fs.readFileSync(lconfig.me + "/symKey", "utf8");
             cb(true);
         } else {
-            var openssl = spawn("openssl", ["rand", "-out", "Me/symKey", "24"]);
+            var openssl = spawn("openssl", ["rand", "-out", lconfig.me + "/symKey", "24"]);
             openssl.on("exit", function(code) {
                 var ret = true;
                 if (code !== 0) {
                     ret = false;
                     console.error("could not generate a symmetric key");
                 } else {
-                    symKey = fs.readFileSync("Me/symKey", "utf8");
+                    symKey = fs.readFileSync(lconfig.me + "/symKey", "utf8");
                 }
                 cb(ret);
             });
@@ -35,37 +36,40 @@ exports.generateSymKey = function(cb) {
 }
 
 // load up private key or create if none, just KISS for now
-exports.loadKeys = function() {
-    path.exists(__dirname + "/../../Me/symKey", function(exists) {
-        if (exists === true) {  
-            symKey = fs.readFileSync(__dirname + "/../../Me/symKey", "utf8");
-        }
-    });
-    path.exists(__dirname + "/../../Me/key", function(exists) {
-        if (exists === true) {  
-            idKey = fs.readFileSync(__dirname + '/../../Me/key','utf-8');
-        }
-    });
-    path.exists(__dirname + "/../../Me/key.pub", function(exists) {
-        if (exists === true) {  
-            idKeyPub = fs.readFileSync(__dirname + '/../../Me/key.pub','utf-8');
-        }
-    });
+exports.loadKeys = function(callback) {
+    if(!(symKey && idKey && idKeyPub)) {
+        path.exists(__dirname + "/../../" + lconfig.me + "/symKey", function(exists) {
+            if (exists === true)
+                symKey = fs.readFileSync(__dirname + "/../../" + lconfig.me + "/symKey", "utf8");
+            path.exists(__dirname + "/../../" + lconfig.me + "/key", function(exists) {
+                if (exists === true)
+                    idKey = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key','utf-8');
+                path.exists(__dirname + "/../../" + lconfig.me + "/key.pub", function(exists) {
+                    if (exists === true)
+                        idKeyPub = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key.pub','utf-8');
+                    if(typeof callback === 'function')
+                        callback();
+                });
+            });
+        });
+    } else if(typeof callback === 'function') {
+        process.nextTick(callback);
+    }
 }
 
 exports.generatePKKeys = function(cb) {
-    path.exists('Me/key',function(exists){
+    path.exists(lconfig.me + '/key',function(exists){
         if(exists) {
             exports.loadKeys();
             cb(true);
         } else {
-            openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: 'Me'});
+            openssl = spawn('openssl', ['genrsa', '-out', 'key', '1024'], {cwd: lconfig.me});
             console.log('generating id private key');
     //        openssl.stdout.on('data',function (data){console.log(data);});
     //        openssl.stderr.on('data',function (data){console.log('Error:'+data);});
             openssl.on('exit', function (code) {
                 console.log('generating id public key');
-                openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: 'Me'});
+                openssl = spawn('openssl', ['rsa', '-pubout', '-in', 'key', '-out', 'key.pub'], {cwd: lconfig.me});
                 openssl.on('exit', function (code) {
                     var ret = true;
                     if (code !== 0) {

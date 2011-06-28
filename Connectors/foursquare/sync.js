@@ -131,7 +131,7 @@ exports.syncRecent = function (callback) {
         var checkins = JSON.parse(data).response.recent;
         var checkinCount = checkins.length;
         addRecent(checkins, function() {
-            callback(err, 600, "sync'd " + checkinCount + " new friend's checkins");
+            callback(err, 300, "sync'd " + checkinCount + " new friend's checkins");
         });
     });
 }

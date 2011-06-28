@@ -1,0 +1,6 @@
+{
+    "lockerPort" : 8043,
+    "externalHost" : "example.com",
+    "externalPort" : 443,
+    "externalSecure" : false
+}

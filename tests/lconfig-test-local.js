@@ -5,10 +5,64 @@ var vows = require("vows");
 
 vows.describe("Locker Config").addBatch({
     "Can load config from a file" : {
-        topic: lconfig.load('config.json'),
-        "loads value for lockerPort as 8043" : function() {
-            assert.equal(lconfig.lockerPort, 8043);
-            assert.equal(lconfig.displayUnstable, true);
+        topic:  function() {
+            lconfig.load('fixtures/lconfig/config-1.json');
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.lockerPort, 4242);
+            assert.equal(lconfig.lockerHost, "localhost");
+            assert.equal(lconfig.lockerBase, "http://localhost:4242");
+            assert.equal(lconfig.externalPort, 80);
+            assert.equal(lconfig.externalHost, "example.com");
+            assert.equal(lconfig.externalSecure, false);
+            assert.equal(lconfig.externalBase, "http://example.com");
+        },
+    }
+}).addBatch({
+    "Can load config from a file with a 443 external port" : {
+        topic: function() {
+            lconfig.load('fixtures/lconfig/config-2.json');
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.externalPort, 443);
+            assert.equal(lconfig.externalHost, "example.com");
+            assert.equal(lconfig.externalBase, "https://example.com");
+        }
+    }
+}).addBatch({
+    "Can load config from a file with a 443 external port, but with externalSecure == false" : {
+        topic: function() {
+            lconfig.load('fixtures/lconfig/config-3.json');
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.externalPort, 443);
+            assert.equal(lconfig.externalHost, "example.com");
+            assert.equal(lconfig.externalBase, "http://example.com");
+        }
+    }
+}).addBatch({
+    "Can load config from a file with a different external port, but with externalSecure == true" : {
+        topic: function() {
+            lconfig.load('fixtures/lconfig/config-4.json');
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.externalPort, 8443);
+            assert.equal(lconfig.externalHost, "example.com");
+            assert.equal(lconfig.externalBase, "https://example.com:8443");
+        }
+    }
+}).addBatch({
+    "Can reload original config" : {
+        topic: function() {
+            lconfig.load("config.json");
+            this.callback();
+        },
+        "loads expected values" : function() {
+            assert.equal(lconfig.lockerBase, 'http://localhost:8043');
         }
     }
 }).export(module);

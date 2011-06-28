@@ -56,8 +56,8 @@ process.stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    app.listen(processInfo.port, function() {
-        process.stdout.write(JSON.stringify({port: processInfo.port}));
+    app.listen(0, function() {
+        process.stdout.write(JSON.stringify({port: app.address().port}));
     });
 });
 process.stdin.resume();

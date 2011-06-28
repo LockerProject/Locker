@@ -23,7 +23,8 @@ var url = require('url');
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
-var config = require("lconfig");
+var lconfig = require("lconfig");
+
 var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.HttpProxy();
@@ -100,7 +101,7 @@ locker.get("/query/:query", function(req, res) {
             return;
         }
 
-        var mongo = require("lmongoclient")(config.mongo.host, config.mongo.port, provider.id, provider.mongoCollections);
+        var mongo = require("lmongoclient")(lconfig.mongo.host, lconfig.mongo.port, provider.id, provider.mongoCollections);
         mongo.connect(function(mongo) {
             try {
                 var collection = mongo.collections[provider.mongoCollections[0]];
@@ -178,35 +179,24 @@ locker.post('/core/:svcId/install', function(req, res) {
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
-    var slashIndex = req.url.indexOf("/", 4);
-    if (slashIndex < 0) slashIndex = req.url.length;
-    var id = req.url.substring(4, slashIndex);
-    var ppath = req.url.substring(slashIndex);
-    if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
-        res.writeHead(404);
-        res.end("so sad, couldn't find "+id);
-        return;
-    }
-    if (!serviceManager.isRunning(id)) {
-        console.log("Having to spawn " + id);
-        var buffer = proxy.buffer(req);
-        serviceManager.spawn(id,function(){
-            proxied('GET', serviceManager.metaInfo(id),ppath,req,res,buffer);
-        });
-    } else {
-        proxied('GET', serviceManager.metaInfo(id),ppath,req,res);
-    }
-    console.log("Proxy complete");
+    proxyRequest('GET', req, res);
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.post('/Me/*', function(req,res){
+    proxyRequest('POST', req, res);
+});
+
+function proxyRequest(method, req, res) {
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
-    sys.debug("Proxying a post to " + ppath + " to service " + req.url);
-    console.log("Proxying a post to " + ppath + " to service " + req.url);
+    if(serviceManager.isDisabled(id)) {
+        res.writeHead(503);
+        res.end('This service has been disabled.');
+        return;
+    }
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
         res.writeHead(404);
         res.end("so sad, couldn't find "+id);
@@ -216,14 +206,13 @@ locker.post('/Me/*', function(req,res){
         console.log("Having to spawn " + id);
         var buffer = proxy.buffer(req);
         serviceManager.spawn(id,function(){
-            proxied('POST', serviceManager.metaInfo(id),ppath,req,res,buffer);
+            proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
         });
     } else {
-        proxied('POST', serviceManager.metaInfo(id),ppath,req,res);
+        proxied(method, serviceManager.metaInfo(id),ppath,req,res);
     }
     console.log("Proxy complete");
-});
-
+};
 
 // DIARY
 // Publish a user visible message
@@ -234,15 +223,15 @@ locker.get("/core/:svcId/diary", function(req, res) {
 
     var now = new Date;
     try {
-        fs.mkdirSync("Me/diary", 0700, function(err) {
+        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
             if (err && err.errno != process.EEXIST) console.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
-    fs.mkdir("Me/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir("Me/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
+        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+            var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
             res.end("{}");
@@ -253,7 +242,7 @@ locker.get("/core/:svcId/diary", function(req, res) {
 // Retrieve the current days diary or the given range
 locker.get("/diary", function(req, res) {
     var now = new Date;
-    var fullPath = "Me/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
+    var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
         "Access-Control-Allow-Origin" : "*" 
@@ -339,6 +328,41 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
+locker.post('/core/:svcId/uninstall', function(req, res) {
+    var svcId = req.params.svcId;
+    if(!serviceManager.isInstalled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" doesn't exist, but does anything really? ");
+        return;
+    }
+    serviceManager.uninstall(svcId);
+    res.writeHead(200);
+    res.end("OKTHXBI");
+})
+
+locker.post('/core/:svcId/disable', function(req, res) {
+    var svcId = req.params.svcId;
+    if(!serviceManager.isInstalled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" doesn't exist, but does anything really? ");
+        return;
+    }
+    serviceManager.disable(svcId);
+    res.writeHead(200);
+    res.end("OKTHXBI");
+})
+
+locker.post('/core/:svcId/enable', function(req, res) {
+    var svcId = req.params.svcId;
+    if(!serviceManager.isDisabled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" isn't disabled");
+        return;
+    }
+    serviceManager.enable(svcId);
+    res.writeHead(200);
+    res.end("OKTHXBI");
+})
 
 // fallback everything to the dashboard
 locker.get('/*', function(req, res) {

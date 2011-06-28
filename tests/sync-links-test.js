@@ -21,7 +21,6 @@ var lconfig = require('../Common/node/lconfig');
 lconfig.load("config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
-var mePath = '/Me/' + svcId;
 
 var events = 0;
 
@@ -40,7 +39,7 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/home_timeline',
                 file: __dirname + '/fixtures/links/twitter_home_timeline.json' });
             var self = this;
-            process.chdir('./Me/links');
+            process.chdir('./' + lconfig.me + '/links');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/link%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.links;
@@ -142,7 +141,7 @@ suite.next().suite.addBatch({
     "Facebook ADD event" : {
         topic: function() {
             dataStore.clear();
-            dataStore.addEvent("facebook", {data: JSON.parse(facebookEvent1)}, this.callback);},
+            dataStore.addEvent(JSON.parse(facebookEvent1), this.callback);},
         "is handled properly" : function(err, object) {
             assert.equal(object.sourceObjects[0].svcID, 'facebook');
             assert.equal(object.url, 'http://singly.com/');
@@ -151,7 +150,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Twitter ADD event" : {
         topic: function() {
-            dataStore.addEvent("twitter", {data: JSON.parse(twitterEvent1)}, this.callback);},
+            dataStore.addEvent(JSON.parse(twitterEvent1), this.callback);},
         "is handled properly" : function(err, object) {
             assert.equal(object.sourceObjects[0].svcID, 'twitter');
             assert.equal(object.url, 'http://bit.ly/jBrrAe');

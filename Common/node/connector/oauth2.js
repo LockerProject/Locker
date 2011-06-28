@@ -64,7 +64,7 @@ exports.isAuthed = function() {
     return false;
 };
 
-function go(req, res) {
+function go(req, res, error) {
     if(!(exports.auth.appKey && exports.auth.appSecret)) {
         if (options.promptForUsername) {
             var prompt = "Username: <input name='username'><br>";
@@ -72,7 +72,12 @@ function go(req, res) {
             var prompt = "";
         }
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end("<html>Enter your personal " + options.provider + " app info that will be used to sync your data" + 
+        if (error) {
+            error = '<h1>Got an error while attempting to authenticate : ' + error + "</h1><p>Please reenter your credentials below.</p>";
+        } else {
+            error = "";
+        }
+        res.end("<html>" + error + "Enter your personal " + options.provider + " app info that will be used to sync your data" + 
                 " (create a new one <a href='" + options.linkToCreate + "' target='_blank'>here</a>" +
                 " using a callback url of " + options.redirectURI + "auth/) " +
                 "<form method='post' action='saveAuth'>" + 
@@ -93,22 +98,27 @@ function go(req, res) {
 }
 
 function handleAuth(req, res) {
-    var newUrl = options.endPoint + '/access_token' +
-                    '?client_id=' + exports.auth.appKey +
-                    '&client_secret=' + exports.auth.appSecret +
-                    '&grant_type=' + options.grantType +
-                    '&redirect_uri=' + options.redirectURI + 'auth/' +
-                    '&code=' + req.param('code');
-    request.get({url:newUrl}, function(err, resp, body) {
-        if (options.accessTokenResponse == 'json') {
-            exports.auth.accessToken = JSON.parse(body).access_token;
-        } else {
-            exports.auth.accessToken = querystring.parse(body).access_token;
-        }
-        lfs.writeObjectToFile("auth.json", exports.auth);
-        completedCallback(exports.auth);
-        res.redirect(options.redirectURI);
-    });
+    if (req.param('code')) {
+        var newUrl = options.endPoint + '/access_token' +
+                        '?client_id=' + exports.auth.appKey +
+                        '&client_secret=' + exports.auth.appSecret +
+                        '&grant_type=' + options.grantType +
+                        '&redirect_uri=' + options.redirectURI + 'auth/' +
+                        '&code=' + req.param('code');
+        request.get({url:newUrl}, function(err, resp, body) {
+            if (options.accessTokenResponse == 'json') {
+                exports.auth.accessToken = JSON.parse(body).access_token;
+            } else {
+                exports.auth.accessToken = querystring.parse(body).access_token;
+            }
+            lfs.writeObjectToFile("auth.json", exports.auth);
+            completedCallback(exports.auth);
+            res.redirect(options.redirectURI);
+        });
+    } else {
+        exports.auth = {};
+        go(req, res, req.params('error'));
+    }
 }
 
 

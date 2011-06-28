@@ -17,6 +17,7 @@ var fs = require('fs'),
     express = require('express'),
     connect = require('connect'),
     lfs = require('../../Common/node/lfs.js'),
+    lconfig = require('../../Common/node/lconfig.js'),
     app = express.createServer(
         connect.bodyParser(),
         connect.cookieParser(),
@@ -147,7 +148,7 @@ var manifest = function(){ return '{\n' +
 '}\n'; };
 var background = function() {
     var cwd = process.cwd();
-    var lockerDir = cwd.substring(0, cwd.lastIndexOf('/Me/')) + '/';
+    var lockerDir = cwd.substring(0, cwd.lastIndexOf('/' + lconfig.me + '/')) + '/';
     var bg = fs.readFileSync(lockerDir + '/Connectors/ChromeHistory/extension/background.html');
     bg = bg.toString().replace('__INSERT_ME_DOT_URI_HERE__', externalBase);
     return bg;
@@ -191,7 +192,7 @@ function createCrx(callback) {
     fs.chmodSync('crxmake.sh', 0750);
 
     var cwd = process.cwd();
-    var lockerDir = cwd.substring(0, cwd.lastIndexOf('/Me/')) + '/';
+    var lockerDir = cwd.substring(0, cwd.lastIndexOf('/' + lconfig.me + '/')) + '/';
     sys.debug('./crxmake.sh ' + dirName + ' ' + lockerDir + 'Me/key');
     crxMake = spawn('./crxmake.sh', [dirName, lockerDir + 'Me/key']);
     crxMake.stdout.on('data',function (data){sys.debug(data);});
