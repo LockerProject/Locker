@@ -14,9 +14,11 @@ var crypto = require("crypto");
 var util = require("util");
 var spawn = require('child_process').spawn;
 var levents = require('levents');
+var wrench = require('wrench');
 
 var serviceMap = {
     available:[],
+    disabled:[],
     installed:{}
 };
 
@@ -136,6 +138,9 @@ exports.findInstalled = function () {
             addEvents(js);
             console.log("Loaded " + js.id);
             serviceMap.installed[js.id] = js;
+            if (js.disabled) {
+                serviceMap.disabled.push(js.id);
+            }
         } catch (E) {
 //            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
@@ -372,7 +377,9 @@ exports.spawn = function(serviceId, callback) {
         delete svc.port;
         delete svc.uriLocal;
         // save out all updated meta fields (pretty print!)
-        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
+        if (!svc.uninstalled) {
+            fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
+        }
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
@@ -389,7 +396,18 @@ exports.metaInfo = function(serviceId) {
 }
 
 exports.isInstalled = function(serviceId) {
+    if (serviceMap.disabled.indexOf(serviceId) > -1) {
+        return false;
+    }
     return serviceId in serviceMap.installed;
+}
+
+exports.isAvailable = function(serviceId) {
+    return serviceId in serviceMap.available;
+}
+
+exports.isDisabled = function(serviceId) {
+    return (serviceMap.disabled.indexOf(serviceId) > -1);
 }
 
 /**
@@ -411,6 +429,34 @@ exports.shutdown = function(cb) {
     }
     checkForShutdown();
 }
+
+exports.disable = function(serviceId) {
+    serviceMap.disabled.push(serviceId);
+    var svc = serviceMap.installed[serviceId];
+    svc.disabled = true;
+    if (svc) {
+        if (svc.pid) {
+            try {
+                console.log("Killing running service " + svc.id + " at pid " + svc.pid);
+                process.kill(svc.pid, "SIGINT");
+            } catch (e) {}
+        }
+    }
+}
+
+exports.uninstall = function(serviceId) {
+    var svc = serviceMap.installed[serviceId];
+    svc.uninstalled = true;
+    if (svc.pid) {
+        process.kill(svc.pid, "SIGINT");
+    }
+    wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
+    delete serviceMap.installed[serviceId];
+};
+
+exports.enable = function(serviceId) {
+    serviceMap.disabled.splice(serviceMap.disabled.indexOf(serviceId), 1);
+};
 
 /**
 * Return whether the service is running

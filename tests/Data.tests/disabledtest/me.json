@@ -1,0 +1,9 @@
+{
+    "title":"Disable Tester",
+    "srcdir":"Tests/disabletest",
+    "is":"connector",
+    "id":"disabledtest",
+    "run":"node disabletest.js",
+    "uri":"http://localhost:8043/Me/disabledtest",
+    "disabled":true
+}
