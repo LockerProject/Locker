@@ -9,6 +9,9 @@ var fakeweb = require(__dirname + '/fakeweb.js');
 var mongoCollections;
 var svcId = 'contacts';
 
+var lconfig = require('lconfig');
+lconfig.load('config.json');
+
 var request = require('request');
 
 var RESTeasy = require('api-easy');
@@ -34,9 +37,9 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.allowLocalConnect = false;
             fakeweb.ignoreUri({
-                uri: 'http://localhost:8043/Me/event-collector/listen/contact%2Ffull' });
+                uri: lconfig.lockerBase + '/Me/event-collector/listen/contact%2Ffull' });
             fakeweb.registerUri({
-                uri: 'http://localhost:8043/Me/foursquare/getCurrent/friends',
+                uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/foursquare_friends.json' });
             var self = this;
             process.chdir('./' + lconfig.me + '/contacts');
@@ -77,7 +80,7 @@ suite.next().suite.addBatch({
     "Can pull in the contacts from facebook" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: 'http://localhost:8043/Me/facebook/getCurrent/friends',
+                uri: lconfig.lockerBase + '/Me/facebook/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/facebook_friends.json' });
             var self = this;
             contacts.getContacts("facebook", "friends", "facebook", function() {
@@ -106,7 +109,7 @@ suite.next().suite.addBatch({
     "Can pull in the contacts from twitter" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: 'http://localhost:8043/Me/twitter/getCurrent/friends',
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/friends',
                 file: __dirname + '/fixtures/contacts/twitter_friends.json' });
             var self = this;
             contacts.getContacts("twitter", "friends", "twitter", function() {
@@ -135,7 +138,7 @@ suite.next().suite.addBatch({
     "Can successfully merge a contact from twitter + foursquare" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: 'http://localhost:8043/Me/twitter/getCurrent/followers',
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/followers',
                 file: __dirname + '/fixtures/contacts/twitter_followers.json' });
             var self = this;
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really

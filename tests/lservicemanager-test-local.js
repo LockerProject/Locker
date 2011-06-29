@@ -171,7 +171,7 @@ vows.describe("Service Manager").addBatch({
                 topic : function() {
                     serviceManager.disable('disabletest');
                     var that = this;
-                    request({uri:'http://localhost:8043/core/disabletest/disable', method: 'POST'}, function(err, resp, body) {
+                    request({uri:lconfig.lockerBase + '/core/tests/disable', json:{serviceId:'disabletest'}, method: 'POST'}, function(err, resp, body) {
                         request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
                     })
                 },
@@ -184,7 +184,7 @@ vows.describe("Service Manager").addBatch({
                     topic: function() {
                         serviceManager.enable('disabletest');
                         var that = this;
-                        request({uri:'http://localhost:8043/core/disabletest/enable', method: 'POST'}, function(err, resp, body) {
+                        request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
                             request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
                         })
                     },
@@ -201,7 +201,7 @@ vows.describe("Service Manager").addBatch({
     "Uninstalling services " : {
         topic: function() {
             var that = this;
-            request({uri:'http://localhost:8043/core/disabletest/uninstall', method: 'POST'}, function() {
+            request({uri:lconfig.lockerBase + '/core/tests/uninstall', json:{serviceId:'disabletest'}, method: 'POST'}, function() {
                 path.exists(lconfig.me + "/disabletest", function(exists) {
                     if (exists) {
                         that.callback("directory still exists");

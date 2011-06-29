@@ -16,6 +16,7 @@ var fs = require('fs');
 var locker = require('locker');
 var events = require('events');
 var lconfig = require('lconfig');
+lconfig.load('config.json');
 
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {
@@ -28,7 +29,7 @@ vows.describe("Locker Scheduling System").addBatch({
                 lscheduler.masterScheduler.at(1, 'scheduler-tester', 'scheduled');
                 var emitter = new events.EventEmitter();
                 setTimeout(function() {
-                    request.get({uri : 'http://localhost:8043/Me/scheduler-tester/getScheduledCount'}, function(err, resp, body) {
+                    request.get({uri : lconfig.lockerBase + '/Me/scheduler-tester/getScheduledCount'}, function(err, resp, body) {
                         if (err == null && body == 1) {
                             emitter.emit('success', true);
                         } else {
@@ -56,7 +57,7 @@ vows.describe("Locker Scheduling System").addBatch({
                 // i need to schedule a bogus event.  also a potential race condition
                 //
                 var emitter = new events.EventEmitter();
-                request.get({uri: 'http://localhost:8043/core/foursquare/at?at=2500&cb=whatever'}, function() {
+                request.get({uri: lconfig.lockerBase + '/core/foursquare/at?at=2500&cb=whatever'}, function() {
                     setTimeout(function() {
                         var scheduled = fs.readFileSync(lconfig.me + '/scheduler.json', 'ascii');
                         if (scheduled != '') {
