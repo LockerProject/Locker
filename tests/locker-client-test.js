@@ -181,11 +181,11 @@ vows.describe("Locker Client API").addBatch({
             },
             "have listeners defined via config files" : {
                 topic: function() {
-                    request.post({uri : 'http://localhost:8043/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
+                    request.post({uri : lconfig.lockerBase + '/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
                     var promise = new events.EventEmitter();
                     var fired = false;
                     setTimeout(function() {
-                        request.get({uri : 'http://localhost:8043/Me/event-collector/getEvents/testing'}, function(err, resp, body) {
+                        request.get({uri : lconfig.lockerBase + '/Me/event-collector/getEvents/testing'}, function(err, resp, body) {
                             if (err == null && body == 1) {
                                 promise.emit('success', true);
                             } else {
