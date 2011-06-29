@@ -113,10 +113,7 @@ app.get('/disable', function(req, res){
 
 function stopService(method, req, res) {
     var serviceId = req.query.serviceId;
-    console.error('doing ' + lockerBase + '/' + method + ' of ' + serviceId);
     request.post({uri:lockerBase + '/' + method, json:{serviceId:serviceId}}, function(err, resp, body) {
-        console.error('DEBUG: err', err);
-        console.error('DEBUG: body', body);
         if(err) {
             res.writeHead(500, {'Content-Type': 'application/json'});
             console.error(method + ' err', err);

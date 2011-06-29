@@ -1,13 +1,11 @@
 
 /* Services --------------------------------------------------------------- */
 
-section#servicesSection
-{
+section#servicesSection {
   display: none;
 }
 
-ul#servicesList
-{
+ul#servicesList {
   position: absolute;
   left: 0;
   top: 0;
@@ -33,8 +31,7 @@ ul#servicesList
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
 }
 
-ul#servicesList li
-{
+ul#servicesList li {
   line-height: 32px;
   height: 32px;
   padding-left: 36px;
@@ -52,33 +49,27 @@ ul#servicesList li
   background-repeat: no-repeat;
 }
 
-ul#servicesList li:nth-of-type(odd)
-{
+ul#servicesList li:nth-of-type(odd) {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-ul#servicesList li:hover
-{
+ul#servicesList li:hover {
   color: rgba(0, 0, 0, 1);
 }
 
-ul#servicesList li.app
-{
+ul#servicesList li.app {
   background-image: url("../img/App.png");
 }
 
-ul#servicesList li.collection
-{
+ul#servicesList li.collection {
   background-image: url("../img/Collection.png");
 }
 
-ul#servicesList li.connector
-{
+ul#servicesList li.connector {
   background-image: url("../img/Connector.png");
 }
 
-ul#servicesList .current
-{
+ul#servicesList .current {
   background-color: rgba(0, 0, 0, 0.6) !important;
   background-position: 0 -32px, 0 0;
 
@@ -90,8 +81,7 @@ ul#servicesList .current
   box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
 }
 
-ul#servicesList li.current.app
-{
+ul#servicesList li.current.app {
   background-image: url("../img/App.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
   background-image: url("../img/App.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
   background-image: url("../img/App.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
@@ -99,8 +89,7 @@ ul#servicesList li.current.app
   background-image: url("../img/App.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
-ul#servicesList li.current.collection
-{
+ul#servicesList li.current.collection {
   background-image: url("../img/Collection.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
   background-image: url("../img/Collection.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
   background-image: url("../img/Collection.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
@@ -108,8 +97,7 @@ ul#servicesList li.current.collection
   background-image: url("../img/Collection.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
-ul#servicesList li.current.connector
-{
+ul#servicesList li.current.connector {
   background-image: url("../img/Connector.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.015)), to(rgba(0, 0, 0, 0.35))) !important;
   background-image: url("../img/Connector.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
   background-image: url("../img/Connector.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
@@ -117,8 +105,7 @@ ul#servicesList li.current.connector
   background-image: url("../img/Connector.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
 }
 
-#serviceInfo
-{
+#serviceInfo {
   position: absolute;
   left: 0px;
   right: 1px;
@@ -132,8 +119,7 @@ ul#servicesList li.current.connector
   display: none;
 }
 
-#serviceInfo h1
-{
+#serviceInfo h1 {
   margin: 0;
   padding: 0;
   margin-bottom: 18px;
@@ -143,27 +129,23 @@ ul#servicesList li.current.connector
   font-size: 24px;
 }
 
-#serviceInfo .description
-{
+#serviceInfo .description {
   font-size: 14px;
   margin-bottom: 18px;
   line-height: 24px;
 }
 
-#serviceInfo .details
-{
+#serviceInfo .details {
   line-height: 24px;
   list-style: none;
   font-size: 12px;
 }
 
-#serviceInfo .value
-{
+#serviceInfo .value {
   font-family: Menlo, Courier, monospace;
 }
 
-#serviceInfo #installButton
-{
+#serviceInfo #installButton {
   position: absolute;
   top: 16px;
   right: 20px;
@@ -184,8 +166,7 @@ ul#servicesList li.current.connector
   box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
 }
 
-#serviceInfo #installButton a
-{
+#serviceInfo #installButton a {
   display: block;
 
   padding-left: 12px;
@@ -202,18 +183,15 @@ ul#servicesList li.current.connector
   cursor: default;
 }
 
-#serviceInfo #installButton:hover
-{
+#serviceInfo #installButton:hover {
   background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
-#serviceInfo #installButton:hover a
-{
+#serviceInfo #installButton:hover a {
   color: white;
 }
 
-#serviceInfo #installButton:active
-{
+#serviceInfo #installButton:active {
   background-color: rgba(0, 0, 0, 0.6) !important;
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.35)), to(rgba(0, 0, 0, 0.015)));
   background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.015));
@@ -222,13 +200,11 @@ ul#servicesList li.current.connector
   background-image: linear-gradient(top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.015));
 }
 
-#serviceInfo #installButton:active a
-{
+#serviceInfo #installButton:active a {
   color: white;
 }
 
-#serviceInfo section#connectorInstancesSection
-{
+#serviceInfo section#connectorInstancesSection {
   position: absolute;
   left: 21px;
   right: 20px;
@@ -236,8 +212,7 @@ ul#servicesList li.current.connector
   top: 224px;
 }
 
-#serviceInfo section#connectorInstancesSection footer
-{
+#serviceInfo section#connectorInstancesSection footer {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -246,8 +221,7 @@ ul#servicesList li.current.connector
   line-height: 32px;
 }
 
-#serviceInfo section#connectorInstancesSection footer:before
-{
+#serviceInfo section#connectorInstancesSection footer:before {
   content: "";
   display: block;
   height: 1px;
@@ -256,20 +230,17 @@ ul#servicesList li.current.connector
   margin-bottom: 10px;
 }
 
-#serviceInfo section#connectorInstancesSection footer ul
-{
+#serviceInfo section#connectorInstancesSection footer ul {
   list-style: none;
   line-height: inherit;
   height: inherit;
 }
 
-#serviceInfo section#connectorInstancesSection footer li
-{
+#serviceInfo section#connectorInstancesSection footer li {
   float: left;
 }
 
-#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton
-{
+#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton {
   opacity: 0.5;
   -webkit-transition-property: opacity;
   -moz-transition-property: opacity;
@@ -279,18 +250,15 @@ ul#servicesList li.current.connector
   -o-transition-property: 0.25s;
 }
 
-#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton:hover
-{
+#serviceInfo section#connectorInstancesSection footer li#addConnectorInstanceButton:hover {
   opacity: 1;
 }
 
-#serviceInfo ul#connectorInstancesList
-{
+#serviceInfo ul#connectorInstancesList {
   list-style: none;
 }
 
-#serviceInfo ul#connectorInstancesList:before
-{
+#serviceInfo ul#connectorInstancesList:before {
   content: "";
   display: block;
   height: 1px;
@@ -299,14 +267,13 @@ ul#servicesList li.current.connector
   margin-bottom: 10px;
 }
 
-#serviceInfo ul#connectorInstancesList li
-{
+#serviceInfo ul#connectorInstancesList li {
   position: relative;
   font-size: 14px;
   line-height: 36px;
   padding-left: 10px;
   margin-bottom: 8px;
-  margin-right: 100px;
+  margin-right: 180px;
 
   background-color: rgba(255, 255, 255, 0.25);
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.15)));
@@ -338,13 +305,11 @@ ul#servicesList li.current.connector
   cursor: default;
 }
 
-#serviceInfo ul#connectorInstancesList li:hover
-{
+#serviceInfo ul#connectorInstancesList li:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
-#serviceInfo ul#connectorInstancesList li:active
-{
+#serviceInfo ul#connectorInstancesList li:active {
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.15)), to(rgba(0, 0, 0, 0.05)));
   background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
   background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
@@ -352,8 +317,7 @@ ul#servicesList li.current.connector
   background-image: linear-gradient(top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.05));
 }
 
-#serviceInfo ul#connectorInstancesList li .identifier
-{
+#serviceInfo ul#connectorInstancesList li .identifier {
   position: absolute;
   top: 0;
   right: 10px;
@@ -365,19 +329,28 @@ ul#servicesList li.current.connector
 }
 
 #serviceInfo ul#connectorInstancesList #inst-cont {
-    position:relative;
-    float:right;
-}
-#serviceInfo ul#connectorInstancesList div .uninstall
-{
-  right:10px;
-  top:2px;
+    position: relative;
 }
 
+#serviceInfo ul#connectorInstancesList #inst-right {
+    float: right;
+}
+
+#serviceInfo ul#connectorInstancesList div .uninstall {
+  right: 10px;
+  top: 2px;
+}
+
+#serviceInfo ul#connectorInstancesList div .disable {
+    right: 100px;
+    top: 2px;
+    width: 74px;
+    text-align: center;
+}
 
 
-#serviceInfo ul#connectorInstancesList li .page
-{
+
+#serviceInfo ul#connectorInstancesList li .page {
   position: absolute;
   top: 0;
   right: 0;
@@ -385,8 +358,7 @@ ul#servicesList li.current.connector
   width: 28px;
 }
 
-#serviceInfo ul#connectorInstancesList li .page img
-{
+#serviceInfo ul#connectorInstancesList li .page img {
   margin-top: 10px;
   margin-right: 10px;
   opacity: 0.5;
@@ -398,14 +370,12 @@ ul#servicesList li.current.connector
   -o-transition-property: 0.25s;
 }
 
-#serviceInfo ul#connectorInstancesList li .page img:hover
-{
+#serviceInfo ul#connectorInstancesList li .page img:hover {
   opacity: 1.0;
 }
 
 /* Custom Scrollbars ------------------------------------------------------ */
 
-ul#servicesList::-webkit-scrollbar
-{
+ul#servicesList::-webkit-scrollbar {
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
