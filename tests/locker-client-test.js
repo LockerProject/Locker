@@ -196,7 +196,7 @@ vows.describe("Locker Client API").addBatch({
                                 }
                             }
                         });
-                    }, 500);
+                    }, 1500);
                     return promise;
                 },
                 "successfully": function(err, fired) {
