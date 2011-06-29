@@ -7,7 +7,7 @@
         "lib": "./Common/node"
     },
     "engines": {
-        "node": ">= 0.4.6  <=0.4.8"
+        "node": ">= 0.4.6  <=0.4.9"
     },
     "dependencies": {
         "connect": "=1.1.4",
