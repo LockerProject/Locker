@@ -454,16 +454,24 @@ exports.uninstall = function(serviceId, callback) {
     var svc = serviceMap.installed[serviceId];
     var lmongoclient = require('lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, svc.id, svc.mongoCollections);
     lmongoclient.connect(function(mongo) {
-        for (var i in mongo.collections) {
-            mongo.collections[i].drop();
-        }
-        svc.uninstalled = true;
-        if (svc.pid) {
-            process.kill(svc.pid, "SIGINT");
-        }
-        wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
-        delete serviceMap.installed[serviceId];
-        if (callback) { callback(); }
+        var keys = Object.getOwnPropertyNames(mongo.collections);
+        (function deleteCollection (keys, callback) {
+            if (keys.length > 0) {
+                key = keys.splice(0, 1);
+                coll = mongo.collections[key];
+                coll.drop(function() {deleteCollection(keys, callback);});
+            } else {
+                callback();
+            }
+        })(keys, function() {
+            svc.uninstalled = true;
+            if (svc.pid) {
+                process.kill(svc.pid, "SIGINT");
+            }
+            wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
+            delete serviceMap.installed[serviceId];
+            callback();
+        });
     })
 };
 
