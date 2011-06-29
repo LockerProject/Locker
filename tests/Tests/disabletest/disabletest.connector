@@ -1,0 +1,7 @@
+{
+    "title":"Test disabling valid service",
+    "desc":"Nothing",
+    "mongoCollections" : ["thing1","thing2"],
+    "run":"node disabletest.js",
+    "handle":"disabletest"
+}

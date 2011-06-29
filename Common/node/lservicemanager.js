@@ -430,9 +430,13 @@ exports.shutdown = function(cb) {
     checkForShutdown();
 }
 
-exports.disable = function(serviceId) {
-    serviceMap.disabled.push(serviceId);
-    var svc = serviceMap.installed[serviceId];
+exports.disable = function(id) {
+    if(!id)
+        return;
+    serviceMap.disabled.push(id);
+    var svc = serviceMap.installed[id];
+    if(!svc)
+        return;
     svc.disabled = true;
     if (svc) {
         if (svc.pid) {
@@ -442,20 +446,42 @@ exports.disable = function(serviceId) {
             } catch (e) {}
         }
     }
+    // save out all updated meta fields (pretty print!)
+    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
 }
 
-exports.uninstall = function(serviceId) {
+exports.uninstall = function(serviceId, callback) {
     var svc = serviceMap.installed[serviceId];
-    svc.uninstalled = true;
-    if (svc.pid) {
-        process.kill(svc.pid, "SIGINT");
-    }
-    wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
-    delete serviceMap.installed[serviceId];
+    var lmongoclient = require('lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, svc.id, svc.mongoCollections);
+    lmongoclient.connect(function(mongo) {
+        for (var i in mongo.collections) {
+            mongo.collections[i].drop();
+        }
+        svc.uninstalled = true;
+        if (svc.pid) {
+            process.kill(svc.pid, "SIGINT");
+        }
+        wrench.rmdirSyncRecursive(lconfig.me + "/" + serviceId);
+        delete serviceMap.installed[serviceId];
+        if (callback) { callback(); }
+    })
 };
 
-exports.enable = function(serviceId) {
-    serviceMap.disabled.splice(serviceMap.disabled.indexOf(serviceId), 1);
+exports.enable = function(id) {
+    if(!id)
+        return;
+    serviceMap.disabled.splice(serviceMap.disabled.indexOf(id), 1);
+    var svc;
+    for(var i in serviceMap.installed) {
+        if(serviceMap.installed[i].id === id) {
+            svc = serviceMap.installed[i];
+            delete svc.disabled;
+        }
+    }
+    if(!svc)
+        return;
+    // save out all updated meta fields (pretty print!)
+    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
 };
 
 /**

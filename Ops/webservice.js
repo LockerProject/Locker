@@ -175,6 +175,44 @@ locker.post('/core/:svcId/install', function(req, res) {
     res.end(JSON.stringify(metaData));
 });
 
+locker.post('/core/:svcId/uninstall', function(req, res) {
+    console.log('/core/:svcId/uninstal, :svcId == ' + req.params.svcId);
+    var svcId = req.body.serviceId;
+    if(!serviceManager.isInstalled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" doesn't exist, but does anything really? ");
+        return;
+    }
+    serviceManager.uninstall(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+})
+
+locker.post('/core/:svcId/disable', function(req, res) {
+    var svcId = req.body.serviceId;
+    if(!serviceManager.isInstalled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" doesn't exist, but does anything really? ");
+        return;
+    }
+    serviceManager.disable(svcId);
+    res.writeHead(200);
+    res.end("OKTHXBI");
+})
+
+locker.post('/core/:svcId/enable', function(req, res) {
+    var svcId = req.body.serviceId;
+    if(!serviceManager.isDisabled(svcId)) {
+        res.writeHead(404);
+        res.end(svcId+" isn't disabled");
+        return;
+    }
+    serviceManager.enable(svcId);
+    res.writeHead(200);
+    res.end("OKTHXBI");
+})
+
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
@@ -328,41 +366,6 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
-locker.post('/core/:svcId/uninstall', function(req, res) {
-    var svcId = req.params.svcId;
-    if(!serviceManager.isInstalled(svcId)) {
-        res.writeHead(404);
-        res.end(svcId+" doesn't exist, but does anything really? ");
-        return;
-    }
-    serviceManager.uninstall(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
-
-locker.post('/core/:svcId/disable', function(req, res) {
-    var svcId = req.params.svcId;
-    if(!serviceManager.isInstalled(svcId)) {
-        res.writeHead(404);
-        res.end(svcId+" doesn't exist, but does anything really? ");
-        return;
-    }
-    serviceManager.disable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
-
-locker.post('/core/:svcId/enable', function(req, res) {
-    var svcId = req.params.svcId;
-    if(!serviceManager.isDisabled(svcId)) {
-        res.writeHead(404);
-        res.end(svcId+" isn't disabled");
-        return;
-    }
-    serviceManager.enable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
 
 // fallback everything to the dashboard
 locker.get('/*', function(req, res) {

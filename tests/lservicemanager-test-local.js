@@ -24,6 +24,8 @@ var lconfig = require("lconfig");
 lconfig.load("config.json");
 var path = require('path');
 
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
+
 var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
     "has a map of the available services" : function() {
@@ -150,11 +152,26 @@ vows.describe("Service Manager").addBatch({
                 assert.equal(resp.statusCode, 200);
                 assert.equal(body, "ACTIVE");
             },
+            "have mongo " : {
+                topic : function() {
+                    var self = this;
+                    lmongoclient.connect(function(theMongo) {
+                        mongo = theMongo;
+                        mongo.collections.thing1.save({'one':1}, function(err, doc) {
+                            mongo.collections.thing1.count(self.callback);
+                        });
+                    });
+                },
+                "collections" : function(err, result) {
+                    assert.isNull(err);
+                    assert.equal(result, 1);
+                }
+            },
             "are already running " : {
                 topic : function() {
                     serviceManager.disable('disabletest');
                     var that = this;
-                    request({uri:'http://localhost:8043/core/disabletest/disable', method: 'POST'}, function(err, resp, body) {
+                    request({uri:lconfig.lockerBase + '/core/tests/disable', json:{serviceId:'disabletest'}, method: 'POST'}, function(err, resp, body) {
                         request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
                     })
                 },
@@ -167,7 +184,7 @@ vows.describe("Service Manager").addBatch({
                     topic: function() {
                         serviceManager.enable('disabletest');
                         var that = this;
-                        request({uri:'http://localhost:8043/core/disabletest/enable', method: 'POST'}, function(err, resp, body) {
+                        request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
                             request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
                         })
                     },
@@ -184,7 +201,7 @@ vows.describe("Service Manager").addBatch({
     "Uninstalling services " : {
         topic: function() {
             var that = this;
-            request({uri:'http://localhost:8043/core/disabletest/uninstall', method: 'POST'}, function() {
+            request({uri:lconfig.lockerBase + '/core/tests/uninstall', json:{serviceId:'disabletest'}, method: 'POST'}, function() {
                 path.exists(lconfig.me + "/disabletest", function(exists) {
                     if (exists) {
                         that.callback("directory still exists");
@@ -197,6 +214,15 @@ vows.describe("Service Manager").addBatch({
         "deletes them FOREVER" : function(err, resp) {
             assert.isNull(err);
             assert.isTrue(resp);
+        },
+        "and deletes" : {
+            topic : function() {
+                mongo.collections.thing1.count(this.callback);
+            },
+            "mongo collections" : function(err, doc) {
+                assert.isNull(err);
+                assert.equal(doc, 0);
+            }
         }
     }
 }).addBatch({
