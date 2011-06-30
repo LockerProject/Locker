@@ -65,11 +65,11 @@ vows.describe("Locker Scheduling System").addBatch({
                         } else {
                             emitter.emit('success', true);
                         }
-                    }, 500);
+                    }, 1500);
                 });
                 return emitter;
             },
-            "is resolved" : function(err, fired) {
+            "is resolved in a timely fashion" : function(err, fired) {
                 assert.isNull(err);
                 assert.isTrue(fired);
             }
