@@ -33,13 +33,13 @@ exports.Scheduler.prototype.loadAndStart = function() {
 }
 
 exports.Scheduler.prototype.savePending = function() {
-    var stream = fs.createWriteStream(this.filename, {'flags':'w', 'encoding': 'utf-8'});
+    var data = "";
     for(var i = 0; i < this.scheduledActions.length; ++i) {
         if (this.scheduledActions[i].type == SCHEDULE_ACTION_URI)  {
-            stream.write(JSON.stringify(this.scheduledActions[i]) + '\n');
+            data += JSON.stringify(this.scheduledActions[i]) + '\n';
         }
     }
-    stream.end();
+    fs.writeFileSync(this.filename, data);
 }
 
 exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackURL) {
