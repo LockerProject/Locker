@@ -189,6 +189,7 @@ padding-left:8px;
 #searchBox select {
     font-size: 30px;
        display: inline-block;
+       color: #999;
    font-size: 13px;
    font-family: 'MuliRegular';
    line-height: 1em;
@@ -335,7 +336,7 @@ a.github {
 
 .logo_text{
 
-font-family: 'MolotRegular';
+font-family: 'MolotRegular', Arial;
 font-size: 28px;
 
 letter-spacing: 1px;
