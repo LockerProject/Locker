@@ -23,12 +23,12 @@
 }
 
 @font-face {
-    font-family: 'MolotRegular';
-    src: url('Molot-webfont.eot');
-    src: url('Molot-webfont.eot?#iefix') format('embedded-opentype'),
-         url('Molot-webfont.woff') format('woff'),
-         url('Molot-webfont.ttf') format('truetype'),
-         url('Molot-webfont.svg#MolotRegular') format('svg');
+    font-family: 'nevisBold';
+    src: url('nevis-webfont.eot');
+    src: url('nevis-webfont.eot?#iefix') format('embedded-opentype'),
+         url('nevis-webfont.woff') format('woff'),
+         url('nevis-webfont.ttf') format('truetype'),
+         url('nevis-webfont.svg#nevisBold') format('svg');
     font-weight: normal;
     font-style: normal;
 
@@ -189,7 +189,6 @@ padding-left:8px;
 #searchBox select {
     font-size: 30px;
        display: inline-block;
-       color: #999;
    font-size: 13px;
    font-family: 'MuliRegular';
    line-height: 1em;
@@ -199,6 +198,7 @@ padding-left:8px;
    height: 25px;
    -webkit-border-radius: 0.25em;
    vertical-align: text-top;
+   color: #999;
 }
 
 #searchBox .clear {
@@ -209,10 +209,10 @@ padding-left:8px;
     color: #fff;
     width: 20px;
     height: 0;
-    font-size: 15px;
-    font-family:'MolotRegular';
-    padding: 11px 5px 0px 5px;
-    margin-top: 1px;
+    font-size: 14px;
+    font-family:'nevisBold';
+    padding: 0px 5px 0px 12px;
+    margin-top: 11px;
 }
 
 #searchBox label {
@@ -223,6 +223,7 @@ line-height: 23px;
 
 #searchBox input {
     padding: 0px;
+   
     
 }
 
@@ -336,12 +337,13 @@ a.github {
 
 .logo_text{
 
-font-family: 'MolotRegular', Arial;
-font-size: 28px;
+    font-family: 'nevisBold';
 
-letter-spacing: 1px;
-position:relative; top:-12px;
-text-shadow: 0px 1px 1px #000;
+    font-weight: bold;
+font-size: 29px;
+
+position:relative; top:-13px;
+/* text-shadow: 0px 1px 1px #000; */
 }
 
 .logo_text a {
