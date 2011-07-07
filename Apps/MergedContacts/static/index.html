@@ -22,17 +22,36 @@
 
 <body>
   <div id="container">
+
     <header>   
     </header>
     
     <section id="main" role="main">
+
+    
     <!-- Main content area -->
     <div id="searchBox">
-      <input type="text" id="search"/>
-      <div id="count">0</div>
-      <label for="showJSON">Debug:</label>
-      <input type="checkbox" id="showJSON"/>
-      <label for="sort">Sort by:</label>
+      <div class="logo_bg">
+      <div class="logo_text"><a href="#">Contact<span style="float: right; font-style: italic;; color: rgb(74,207,240);">Merge</span></a>
+      </div>
+      </div>
+      <div class="clear"></div>
+      <div class="clear"></div>
+    <br/>
+    <br/>
+
+      <form action="#" id="search_box"> 
+			<div class="wrapper"> 
+				<input type="text" id="search" name="search" placeholder="Search for Music" />
+				
+				 
+			</div> 
+			<div id="count">0</div>
+		</form> 
+      
+      <label for="showJSON">Debug:&nbsp;</label>
+      <input type="checkbox" id="showJSON"/><br/>
+      <label for="sort">Sort by:&nbsp;</label>
       <select id="sort">
 	<option value="firstname">First name</option>
 	<option value="lastname">Last name</option>
@@ -45,19 +64,37 @@
     </div>
     <ul id='contacts'>
     </ul>
-    </section>
     
-    <aside class="blueGreyGrad">  
+   
+	
+	</section>
+    
+    <aside>  
       <!-- Sidebar -->
-      <h1>Merged Contacts Viewer</h1>
+     
+      	
       
-      <div class="detail">This is an example app, and is in active
-	development. <br/><br/>
-	If you find an error, please email <a href="mailto:nym@singly.com">nym@singly.com</a>, or
-	come onto our IRC chat room on <a
-	href="http://webchat.freenode.net/" target="_blank">irc.freenode.net</a>, channel
-	#lockerproject. <br/><br/>Thanks!
-      </div>
+      <div class="detail">
+     
+     <h1>An Adorable Kitten</h1><br/>
+     <img src="http://placekitten.com/135/135"><br/><br/>
+     <a href="#">omgthatcatiscute@gmail.com</a>	<br/><br/>
+     <a href="#">@adorablekitten</a>&nbsp;<span class="small">Last Tweet:</span> 
+     <p>Can't seem to find my ball of yarn anywhere - beginning to suspect my human.</p>
+     <div id="iphone" class="gap"> 
+			<span class="earpiece"></span> 
+			<span class="screen"></span> 
+			<span class="home"></span> 
+		</div><!-- /iphone --><a href="#">415.298.7727</a>
+		<div class="clear"></div>	<br/>	
+		<a href="#">1456 Jones St. No. 23<br/>San Francisco, CA 94109</a>
+		<br/>
+     
+     <br/><span class="small">Info from: Facebook, Twitter and Gmail.</span>
+     </div>
+     
+  
+     
     </aside>
 
       <footer>
