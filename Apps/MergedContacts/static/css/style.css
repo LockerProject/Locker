@@ -115,7 +115,7 @@ aside .small {
 
 aside img {
 	
-    margin-top: 5px;
+    margin-top: 25px;
     height: 150px;
     width: 150px;
     border: solid 2px #999;
@@ -152,7 +152,7 @@ padding-left:8px;
 
 .contact div.contactSummary {
     display:inline-block;
-    width: 275px;
+    width: 240px;
     font-family: 'MuliRegular';
     color: rgb(67,67,67);
 }
@@ -356,6 +356,7 @@ background: url('../img/www.addictedtocoffee.de/facebook.png');
 }
 
 a.facebook:hover {
+
 
 }
 
