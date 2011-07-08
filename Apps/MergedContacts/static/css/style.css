@@ -368,6 +368,10 @@ a.github {
     background: url('../img/www.addictedtocoffee.de/github.png');
 }
 
+a.email {
+    background: url('../img/mail.png');
+}
+
 
 .blueGreyGrad {
     background: rgb(206,220,231); /* Old browsers */
