@@ -59,9 +59,9 @@ aside {
     margin-top: 155px;
     padding: 17px;
     padding-top:25px;
-      background-color: rgb(235,235,235);
-   box-shadow: rgba(0,0,0,0.4) -2px 2px 2px 0px inset;
-   font-family: 'MuliLight';
+    background-color: rgb(235,235,235);
+   	box-shadow: rgba(0,0,0,0.4) -2px 2px 2px 0px inset;
+   	font-family: 'MuliLight';
     
 /*     border-left: 5px solid #aaa; */
 }  
@@ -69,16 +69,9 @@ aside a {
     color: rgb(51,204,255);
     text-decoration: none;
     font-family: 'MuliRegular';
-text-shadow: 0px 1px 1.5px #999;
+	text-shadow: 0px 1px 1.5px #999;
 }
 
-aside p {
-	margin-top:2px;
-    color: rgb(51,51,51);
-    text-shadow: 0px 1px 1.5px #999;
-
-
-}
 
 aside a:hover {
     color: rgb(104,104,104);
@@ -86,9 +79,27 @@ aside a:hover {
     
     
 }
+
+aside a.address {
+    color: rgb(51,204,255);
+    text-decoration: none;
+    display: block;
+    
+    
+}
+
+aside p {
+	margin-top:2px;
+    color: rgb(51,51,51);
+    text-shadow: 0px 1px 1.5px #999;
+    text-align: left;
+
+
+}
+
+
     
 aside h1 {
-	color: red
     margin: 0px;
     font-size: 23px;
     text-shadow: 0px 1px 1.5px #999;
@@ -117,7 +128,8 @@ aside img.icon {
 	height:16px;
     float:left;
     border: none;
-    margin:2px;
+    margin-top: 2px;
+    margin-right: 10px;  
     
 }
 
@@ -140,8 +152,8 @@ padding-left:8px;
 
 .contact div.contactSummary {
     display:inline-block;
-    width: 200px;
-    font-family: 'MuliLight';
+    width: 275px;
+    font-family: 'MuliRegular';
     color: rgb(67,67,67);
 }
 
@@ -163,7 +175,7 @@ padding-left:8px;
 }
 
 .contact div.contactSummary strong {
-    font-size: 15px;
+    font-size: 16px;
     font-family: 'MuliLight';
     color: rgb(67,67,67);
 }
@@ -192,17 +204,17 @@ padding-left:8px;
     border-bottom: 1px solid #999;
     width: 100%;
     height:135px;
+
 /*     background: rgb(182,182,182); */
 
-
-background: rgb(202,202,202); /* Old browsers */
-background: -moz-linear-gradient(top, rgba(202,202,202,1) 0%, rgba(173,173,173,1) 100%); /* FF3.6+ */
-background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(202,202,202,1)), color-stop(100%,rgba(173,173,173,1))); /* Chrome,Safari4+ */
-background: -webkit-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* Chrome10+,Safari5.1+ */
-background: -o-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* Opera11.10+ */
-background: -ms-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* IE10+ */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cacaca', endColorstr='#adadad',GradientType=0 ); /* IE6-9 */
-background: linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* W3C */    
+	background: rgb(202,202,202); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(202,202,202,1) 0%, rgba(173,173,173,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(202,202,202,1)), color-stop(100%,rgba(173,173,173,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* Opera11.10+ */
+	background: -ms-linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* IE10+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cacaca', endColorstr='#adadad',GradientType=0 ); /* IE6-9 */
+	background: linear-gradient(top, rgba(202,202,202,1) 0%,rgba(173,173,173,1) 100%); /* W3C */    
 }
 
 #searchBox * {
@@ -290,8 +302,6 @@ header div {
 -webkit-box-shadow: 1px 1px #999;
 box-shadow: 1px 0px 1px #999;
 
-
-/*     border-right: 1px solid #bbb; */
     
 }
 
@@ -405,7 +415,7 @@ text-shadow: 0px 1px 1px #333;
 
 .returnbtn_text{
 
-    font-family: 'MuliLight';
+font-family: 'MuliLight';
 font-size: 200px;
 
 position:relative; top:-9px;
@@ -419,9 +429,6 @@ margin-left: 4px;
 font-size: 9px;
 }
 
-.returnbtn_text a:hover {
-
-}
 
 #returnbtn_bg {
   border-color: rgb(153,153,153);
@@ -441,7 +448,7 @@ font-size: 9px;
 }
 
 #returnbtn_bg:hover {
-   width:180px;
+   width:167px;
 
 }
 
