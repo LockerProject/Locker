@@ -111,6 +111,16 @@ aside img {
     
 }
 
+aside img.icon {
+	
+	width:16px;
+	height:16px;
+    float:left;
+    border: none;
+    margin:2px;
+    
+}
+
 aside div.detail {
 padding-left:8px;
 }
@@ -373,8 +383,8 @@ position:relative; top:-13px;
 .logo_text a {
 text-decoration: none;
 color: white;
-margin-left: 18px;
-text-shadow: 1px 1px 1px #999;
+margin-left: 15px;
+text-shadow: 0px 1px 1px #333;
 }
 
 .logo_text a:hover {
@@ -480,42 +490,4 @@ font-size: 9px;
 	width:45px;
 }
 
-#iphone {
-margin-right: 5px;
-		width: 0.95em;
-		height: 1.3em;
-		background-color: #000;
--webkit-border-radius: 0.22em;
- -khtml-border-radius: 0.22em;
-   -moz-border-radius: 0.22em;
-		border-radius: 0.22em;
-		display: block;
-		position: relative;
-		overflow: hidden;
-		float:left;
-}
-#iphone span {
-		display: block;
-		clear: both;
-		margin-right: auto;
-		margin-left: auto;
-		background-color: #f1f1f1;
-}
-#iphone .earpiece {
-		width: 16%;
-		height: 3%;
-		margin-top: 10%;
-}
-#iphone .screen {
-		width: 76%;
-		height: 65%;
-		margin-top: 10%;
-}
-#iphone .home {
-		width: 0.2em;
-		height: 0.2em;
-		margin-top: 8%;
--webkit-border-radius: 0.3em;
-   -moz-border-radius: 0.3em;
-		border-radius: 0.3em;
-}
+
