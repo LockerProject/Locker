@@ -325,7 +325,7 @@ $(function() {
 	    contactTemplate += '<% if (typeof(sex) != "undefined") { %><br/><%= sex %><% } %>';
 	    contactTemplate += '</div>';
 	    contactTemplate += '<div class="contactActions">';
-	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b">Email</a><% } %> ';
+	    contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b" class="social_link email">Email</a><% } %> ';
 	    contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
 	    contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
 	    contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_b">GitHub Profile</a><% } %>';
