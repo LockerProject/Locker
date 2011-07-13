@@ -46,13 +46,13 @@ exports.search = function(type, term, offset, limit, callback) {
     var data = '';
     var req = http.get(options, function(res) {
         res.setEncoding('utf8');
-
+        
         res.on('data', function(chunk) {
             data += chunk;
         });
 
         res.on('end', function() {
-            callback(null, data);
+            callback(null, JSON.parse(data));
         });
     });
     
