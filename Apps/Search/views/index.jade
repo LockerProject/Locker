@@ -1,0 +1,16 @@
+#block
+  .wrapper
+    h1 Search my Locker
+    #searchForm
+      form(action='/Me/search/search', method='post')
+        input.text(type='text', name='searchterm', size='48')
+        #searchButton
+          .button.clb
+            a#searchButton(href='#') Search
+    #indexLinks 
+      a(href='/Me/search/indexContacts') Start indexing my Contacts collection
+      br
+      a(href='/Me/search/indexLinks') Start indexing my Links collection
+      br
+      a(href='/Me/search/indexMessages') Start indexing my Messages collection
+      br  
