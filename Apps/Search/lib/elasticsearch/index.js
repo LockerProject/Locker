@@ -43,7 +43,7 @@ exports.search = function(type, term, offset, limit, callback) {
     
     console.log('Searching ' + options.path);
 
-    var data;
+    var data = '';
     var req = http.get(options, function(res) {
         res.setEncoding('utf8');
 

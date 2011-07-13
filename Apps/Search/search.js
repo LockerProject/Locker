@@ -46,12 +46,10 @@ function(req, res) {
     search.search('contacts', term, 0, 10, function(err, results) {
       if (err) {
         console.error(err);
-        return;
+        res.end(err);
       }
-      
-      res.write(results);
+      res.end(JSON.stringify(results));
     });
-    res.end();
 });
 
 app.get('/indexContacts',
