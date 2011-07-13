@@ -11,10 +11,11 @@ require.paths.push(__dirname + '/../../Common/node');
 
 var fs = require('fs'),
     http = require('http'),
+    url = require('url'),
     express = require('express'),
     connect = require('connect'),
     locker = require('locker'),
-    serviceManager = require('lservicemanager'),
+    lconfig = require('lconfig'),
     search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
     
@@ -27,11 +28,11 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    res.write("Start searching for goodies: <form action='/Me/Search/search' method='post'><input type='text' name='searchterm' /><input type='submit' name='Search' /></form>");
+    res.write("Start searching for goodies: <form action='/Me/search/search' method='post'><input type='text' name='searchterm' /><input type='submit' name='Search' /></form>");
     res.write("<br /><br />");
-    res.write("<a href='/Me/Search/indexContacts'>Start indexing my Contacts collection</a><br />");
-    res.write("<a href='/Me/Search/indexLinks'>Start indexing my Links collection</a><br />");
-    res.write("<a href='/Me/Search/indexMessages'>Start indexing my Messages collection</a><br />");
+    res.write("<a href='/Me/search/indexContacts'>Start indexing my Contacts collection</a><br />");
+    res.write("<a href='/Me/search/indexLinks'>Start indexing my Links collection</a><br />");
+    res.write("<a href='/Me/search/indexMessages'>Start indexing my Messages collection</a><br />");
     res.end();
 });
 
@@ -42,7 +43,14 @@ function(req, res) {
     });
     var term = sanitize(req.param('searchterm'));
     res.write("Search results for <i>&quot;" + term + "&quot;</i>: ");
-    var results = searcher.search(term, offset, limit);
+    search.search('contacts', term, 0, 10, function(err, results) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      
+      res.write(results);
+    });
     res.end();
 });
 
@@ -70,48 +78,55 @@ function sanitize(term){
         .replace(/"/g, '&quot;');
 }
 
-function indexCollectionRecordsOfType(id, urlPath) {
-    if (!serviceManager.isInstalled(id)) {
-        console.error('Cannot index ' + id + ' for Search app because collection not available.');
-        return false;
-    }
+function indexCollectionRecordsOfType(type, urlPath) {
 
-    var serviceInfo = serviceManager.metaInfo(id);
-    var url = url.parse(serviceInfo.uriLocal);
-    var options = {
-        host: url.hostname,
-        port: url.port,
-        path: urlPath,
-        method:'GET'
-    };
+  var lockerUrl = url.parse(processInfo.lockerUrl);
+  var options = {
+    host: lockerUrl.hostname,
+    port: lockerUrl.port,
+    path: urlPath,
+    method:'GET'
+  };
+
+  var data = '';
+  var jsonDelim = 0;
+
+  var req = http.get(options, function(res) {
+    res.setEncoding('utf8');
     
-    var results;
-    
-    var req = http.request(options, function(res) {
-      res.setEncoding('utf8');
-      res.on('data', function (chunk) {
-        results += chunk;
-      });
-      
-      res.on('end', function() {
-          for (var i in results) {
-              search.index(results[i]._id, id, results[i]);
+    res.on('data', function (chunk) {
+      data += chunk;    
+    });
+
+    res.on('end', function() {
+      search.map(type);
+      var results = JSON.parse(data);
+      for (var i in results) {
+        search.index(results[i]._id, type, results[i], function(err, result) {
+          if (err) {
+            console.log('error indexing ' + type + ' with ID of ' + results[i]._id);
           }
-      });
+        });
+      }
     });
+  });
 
-    req.on('error', function(e) {
-      console.log('problem with request: ' + e.message);
-    });
+  req.on('error', function(e) {
+    console.log('problem with request: ' + e.message);
+  });
 }
 
-
 var stdin = process.openStdin();
+var processInfo;
+
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
-    var processInfo = JSON.parse(chunk);
+    processInfo = JSON.parse(chunk);
+    locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
-    app.listen(processInfo.port);
-    var returnedInfo = {};
-    console.log(JSON.stringify(returnedInfo));
+    app.listen(processInfo.port, function() {
+        var returnedInfo = {port: processInfo.port};
+        process.stdout.write(JSON.stringify(returnedInfo));
+    });
 });
+stdin.resume();

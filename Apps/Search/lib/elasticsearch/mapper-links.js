@@ -1,11 +1,13 @@
-exports.map = function() {
-    options.path = '/links/_mapping';
+var http = require('http');
+
+exports.map = function(options) {
+    options.path = '/locker/link/_mapping';
     options.method = 'PUT';
     
     var req = http.request(options, function(res) {
       res.setEncoding('utf8');
       res.on('data', function (chunk) {
-        console.log('BODY: ' + chunk);
+        //console.log('BODY: ' + chunk);
       });
     });
 
