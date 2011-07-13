@@ -7,48 +7,71 @@
 *
 */
 
-require.paths.push(__dirname + '/../../Common/node');
+require.paths.push(__dirname + '/node_modules');
 
 var fs = require('fs'),
     http = require('http'),
-    url = require('url'),
-    express = require('express'),
-    connect = require('connect'),
-    locker = require('locker'),
+    url = require('url');
+    
+var express = require('./node_modules/express'),
+    app = express.createServer();
+    
+var locker = require('locker'),
     lconfig = require('lconfig'),
     search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
     
-var app = express.createServer(connect.bodyParser(), connect.cookieParser(), connect.session({secret : "locker"}));
 
-app.set('views', __dirname);
+// Config
+app.configure(function(){
+  app.set('views', __dirname + '/views');
+  app.set('view engine', 'jade');
+  app.set('view options', {layout: true});
+  app.use(express.bodyParser());
+  app.use(express.methodOverride());
+  app.use(express.static(__dirname + '/public'));
+  app.use(express.cookieParser());
+  app.use(express.session({ secret: 'locker'}));
+  app.use(app.router);
+});
 
+app.configure('development', function(){
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+});
+
+app.configure('production', function(){
+  app.use(express.errorHandler()); 
+});
+
+
+// Routes
 app.get('/',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
+  console.log(res);
+    res.render('index', {
+      error: null
     });
-    res.write("Start searching for goodies: <form action='/Me/search/search' method='post'><input type='text' name='searchterm' /><input type='submit' name='Search' /></form>");
-    res.write("<br /><br />");
-    res.write("<a href='/Me/search/indexContacts'>Start indexing my Contacts collection</a><br />");
-    res.write("<a href='/Me/search/indexLinks'>Start indexing my Links collection</a><br />");
-    res.write("<a href='/Me/search/indexMessages'>Start indexing my Messages collection</a><br />");
-    res.end();
 });
 
 app.post('/search',
 function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
     var term = sanitize(req.param('searchterm'));
-    res.write("Search results for <i>&quot;" + term + "&quot;</i>: ");
+    var results = [];
+    var error = null;
+    
     search.search('contacts', term, 0, 10, function(err, results) {
       if (err) {
         console.error(err);
-        res.end(err);
+        error = err;
       }
-      res.end(JSON.stringify(results));
+      res.render('search', {
+        term: term,
+        results: results.hits.hits,
+        took: results.took,
+        total: results.hits.total,
+        raw: JSON.stringify(results),
+        error: err
+      });
     });
 });
 
