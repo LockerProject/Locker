@@ -5,13 +5,15 @@ var options = {
     port: 9200
 };
 
-exports.index = function(id, type, body, callback) {
+exports.map = function(type) {
     // dynamic loading of mapper
     console.log('Loading Elasticsearch mapping for ' + type);
-    require('./mapper-' + type + '.js').map();
+    require('./mapper-' + type + '.js').map(options);
+};
 
+exports.index = function(id, type, body, callback) {
     console.log('Indexing ' + type + ' ID ' + id);
-    options.path = '/' + type + '/' + id;
+    options.path = '/locker/' + type + '/' + id;
     options.method = 'POST';
     
     var result;
@@ -32,23 +34,25 @@ exports.index = function(id, type, body, callback) {
         callback(err);
     });
 
-    req.end(body);
+    req.end(JSON.stringify(body));
 };
 
 exports.search = function(type, term, offset, limit, callback) {
-    options.path = '/' + type + '/_search?from:' + offset + '&size:' + limit + '&q:' + term;
+    options.path = '/locker/' + type + '/_search?q=' + term;
     options.method = 'GET';
+    
+    console.log('Searching ' + options.path);
 
-    var result;
-    var req = http.request(options, function(res) {
+    var data;
+    var req = http.get(options, function(res) {
         res.setEncoding('utf8');
 
         res.on('data', function(chunk) {
-            result += chunk;
+            data += chunk;
         });
 
         res.on('end', function() {
-            callback(null, result);
+            callback(null, data);
         });
     });
     
