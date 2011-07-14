@@ -14,9 +14,9 @@ var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
 var path = require("path");
-var querystring = require("querystring");
 
 var app = express.createServer(connect.bodyParser(), connect.cookieParser());
+app.use(express.static(__dirname + '/static'));
 
 var locker = require('../../Common/node/locker.js');
 var lfs = require('../../Common/node/lfs.js');
@@ -25,69 +25,104 @@ var me;
 
 var journal = undefined;
 function getJournal(callback) {
+    console.log("Journal:");
     if (journal) {
+        console.log(journal);
         callback(true);
         return;
     }
     var ret = false;
-    console.log(process.cwd());
-    if (path.existsSync(process.cwd() + "/journal.json")) {
-        console.log("We found the journal");
+    if (path.exists("journal.json")) {
         journal = JSON.parse(fs.readFileSync("journal.json")).journal;
+        console.log(journal);
         callback(true);
         return;
     } else {
-        console.log("path fails");
+        console.log("else");
         locker.providers("journal", function(err, providers) {
+                             console.log(err, providers);
+                             console.log("looking");
             if (!providers) {
+                console.log("!providers");
                 callback(false);
                 return;
             }
 
             if (providers.length == 1) {
+                // only one journal, use it
                 journal = providers[0].id;
                 fs.writeFileSync("journal.json", JSON.stringify({"journal":journal}));
                 callback(true);
                 return;
             }
+
+            if (providers.length > 1) {
+                // have the user pick a journal
+                console.log("multiple journals");
+                callback(false);
+                return;
+            }
+                             
+            console.log("giving up");
             callback(false);
         });
     }
 }
 
 app.get("/", function(req, res) {
+    console.log("woo");
     getJournal(function(hasJournal) {
-        console.log("Has a journal " + hasJournal);
         if (hasJournal) {
+            console.log("hasJournal");
             // show the current graph and add entry
-            res.sendfile(__dirname + "/html/index.html");
+            res.sendfile(__dirname + "/static/index.html");
         } else {
+            console.log("!hasJournal");
             // select a journal
-            console.log("Sending the journal picker");
-            res.sendfile(__dirname + "/html/pickJournal.html");
+            res.sendfile(__dirname + "/static/pickJournal.html");
         }
     });
 });
 
-app.get("/journals", function(req, res) {
-    locker.providers("journal", function(err, providers) {
-        res.writeHead(200, {"Content-Type":"application/json"});
-        if (!providers) {
-            res.end("[]");
-            return;
-        }
-
-        var journals = [];
-        for (var i = 0; i < providers.length; ++i) {
-            journals.push({id:providers[i].id});
-        }
-        res.end(JSON.stringify(journals));
-    });
-});
-
-app.post("/selectJournal", function(req, res) {
-    fs.writeFileSync("journal.json", JSON.stringify({journal:req.body["journalId"]}));
-    res.redirect("back");
+app.get("/getJournals", function(req, res) {
+            var callback = function(providers) {
+                res.writeHead(200, {
+                                  'Content-Type': 'text/html'
+                              });
+                res.end(JSON.stringify(providers));
+            };
+            
+            locker.providers("journal", 
+                             function(err, providers) {
+                                 console.log(err, providers);
+                                 console.log("looking");
+                                 if (!providers) {
+                                     console.log("!providers");
+                                     callback([]);
+                                     return;
+                                 }
+                                 
+                                 if (providers.length == 1) {
+                                     // only one journal, use it
+                                     journal = providers[0].id;
+                                     console.log("1 journal");
+                                     console.log(journal);
+                                     callback(providers);
+                                     return;
+                                 }
+                                 
+                                 if (providers.length > 1) {
+                                     // have the user pick a journal
+                                     console.log("multiple journals");
+                                     console.log(providers);
+                                     callback(providers);
+                                     return;
+                                 }
+                                 
+                                 console.log("giving up");
+                                 callback([]);
+                                 return;
+                             });
 });
 
 // Usually ajax call to retrieve rates
@@ -104,10 +139,6 @@ app.get("/rates", function(req, res) {
 
         var journalURL = (processInfo.lockerUrl + "/Me/" + journal + "/get?" + querystring.stringify({start:prevDate, end:now}));
         request.get({url:journalURL}, function(error, request, result) {
-            if (error) {
-                res.end(400);
-                return;
-            }
             entries = JSON.parse(result);
             // Filter to only bp entries
             entries = entries.filter(function(entry) {
@@ -142,12 +173,6 @@ app.post("/addRate", function(req, res) {
             res.end();
         });
     });
-});
-
-// Return static js files
-app.get("/js/:filename", function(req, res) {
-    console.log("Getting " + req.param("filename"));
-    res.sendfile(__dirname + "/js/" + req.param("filename"));
 });
 
 // Woo woo startup stuff!
