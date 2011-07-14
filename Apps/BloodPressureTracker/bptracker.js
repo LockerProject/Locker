@@ -14,6 +14,7 @@ var request = require('request');
 var sys = require('sys');
 var fs = require("fs");
 var path = require("path");
+var querystring = require("querystring");
 
 var app = express.createServer(connect.bodyParser(), connect.cookieParser())
 
@@ -29,11 +30,14 @@ function getJournal(callback) {
         return;
     }
     var ret = false;
-    if (path.exists("journal.json")) {
+    console.log(process.cwd());
+    if (path.existsSync(process.cwd() + "/journal.json")) {
+        console.log("We found the journal");
         journal = JSON.parse(fs.readFileSync("journal.json")).journal;
         callback(true);
         return;
     } else {
+        console.log("path fails");
         locker.providers("journal", function(err, providers) {
             if (!providers) {
                 callback(false);
@@ -53,14 +57,37 @@ function getJournal(callback) {
 
 app.get("/", function(req, res) {
     getJournal(function(hasJournal) {
+        console.log("Has a journal " + hasJournal);
         if (hasJournal) {
             // show the current graph and add entry
             res.sendfile(__dirname + "/html/index.html");
         } else {
             // select a journal
+            console.log("Sending the journal picker");
             res.sendfile(__dirname + "/html/pickJournal.html");
         }
     });
+});
+
+app.get("/journals", function(req, res) {
+    locker.providers("journal", function(err, providers) {
+        res.writeHead(200, {"Content-Type":"application/json"});
+        if (!providers) {
+            res.end("[]");
+            return;
+        }
+
+        var journals = [];
+        for (var i = 0; i < providers.length; ++i) {
+            journals.push({id:providers[i].id});
+        }
+        res.end(JSON.stringify(journals));
+    });
+});
+
+app.post("/selectJournal", function(req, res) {
+    fs.writeFileSync("journal.json", JSON.stringify({journal:req.body["journalId"]}));
+    res.redirect("back");
 });
 
 // Usually ajax call to retrieve rates
@@ -77,6 +104,10 @@ app.get("/rates", function(req, res) {
 
         var journalURL = (processInfo.lockerUrl + "/Me/" + journal + "/get?" + querystring.stringify({start:prevDate, end:now}));
         request.get({url:journalURL}, function(error, request, result) {
+            if (error) {
+                res.end(400);
+                return;
+            }
             entries = JSON.parse(result);
             // Filter to only bp entries
             entries = entries.filter(function(entry) {

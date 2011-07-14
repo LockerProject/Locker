@@ -98,6 +98,7 @@ app.get("/get", function(req, res) {
     query += " ORDER BY timestamp";
 
     var totalRows = 0;
+    console.log("Running " + query + " : "+ params);
     db.query(query, params, function(error, row) {
         if (error && totalRows == 0) {
             res.writeHead(400);
@@ -113,10 +114,8 @@ app.get("/get", function(req, res) {
             res.write((totalRows > 0 ? "," : "") + row.event);
             ++totalRows;
         } else {
-            if (totalRows >= 0) {
-                res.write("]");
-                res.end();
-            }
+            res.write("]");
+            res.end();
         }
     });
 
@@ -127,21 +126,27 @@ function prepareDb()
     db = new sqlite.Database();
     db.open("journal.sqlite", function(error) {
         if (error) {
-            process.stderr.write(error + "\n");
+            process.stderr.write("DB Startup error:" + error + "\n");
             process.exit(1);
         }
         db.execute("SELECT name FROM sqlite_master WHERE name='journal'", function(error, results) {
+            if (error)  {
+                process.stderr.write("Finding journal error: " + error + "\n");
+                db.close();
+                process.exit(1);
+            }
+
             if (results.length == 0) {
                 db.execute("CREATE TABLE journal(timestamp INT PRMIARY KEY, event TEXT)", function(error, results) {
                     if (error) {
-                        process.stderr.write(error + "\n");
+                        process.stderr.write("Journal create table error: " + error + "\n");
                         db.close();
                         process.exit(1);
                     }
                     sendStartup();
                 });
             } else {
-                sendStartup();
+                process.nextTick(sendStartup);
             }
         });
     });
@@ -151,17 +156,18 @@ function sendStartup() {
     app.listen(processInfo.port,function() {
         var returnedInfo = {port: processInfo.port};
         process.stdout.write(JSON.stringify(returnedInfo));
+        process.stdout.flush();
     });
 }
 // Woo woo startup stuff!
-var stdin = process.openStdin();
-stdin.setEncoding('utf8');
-stdin.on('data', function (chunk) {
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', function (chunk) {
     processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
+    process.stderr.write("Locker init done\n");
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
     prepareDb();
 });
-stdin.resume();
+process.stdin.resume();
 
