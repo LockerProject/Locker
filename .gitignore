@@ -10,3 +10,4 @@ Me/*
 node_modules
 scheduler.json
 tests/Data/
+lockerbox*
