@@ -1,0 +1,32 @@
+<html>
+<head>
+  <title>Hash Tag Counter</title>
+</head>
+
+<body>
+<h1>TAGS!</h1>
+<div id='loading'>Loading...</div>
+<div id='tags'>
+</div>
+<script src='js/prototype.js'></script>
+<script>
+var req = new Ajax.Request("tagCounts", {
+    method:"get",
+    onSuccess:function(response) {
+        var tags = [];
+        for (var key in response.responseJSON) {
+            tags.push({tag:key, count:response.responseJSON[key]});
+        }
+        tags.sort(function(lh, rh) {
+            return rh.count - lh.count;
+        });
+        for (var i = 0; i < tags.length; ++i) {
+            $("tags").insert(new Element("div").update(tags[i].tag + " : " + tags[i].count));
+        }
+        $("loading").hide();
+    }
+});
+</script>
+</body>
+
+</html>
