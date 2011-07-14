@@ -87,12 +87,13 @@ function getMongo(type, id, callback) {
         return m;
 }
 
-exports.getAllCurrent = function(type, callback) {
+exports.getAllCurrent = function(type, callback, options) {
+    options = options || {};
     var m = mongo.collections[type];
     if(!m) 
         callback(new Error('invalid type:' + type), null);
     else
-        m.find({}, {}).toArray(callback);
+        m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
