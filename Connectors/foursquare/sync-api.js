@@ -58,7 +58,7 @@ function friends(req, res) {
 function checkins(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     sync.syncCheckins(function(err, repeatAfter, diaryEntry) {
-        locker.diary(diaryEntry);
+        if(!error) locker.diary(diaryEntry);
         locker.at('/checkins', repeatAfter);
         res.end(JSON.stringify({success: "done fetching checkins"}));
     });
