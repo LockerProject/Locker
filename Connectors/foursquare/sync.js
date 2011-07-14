@@ -128,6 +128,11 @@ function getMe(token, callback) {
 
 exports.syncRecent = function (callback) {
     getRecent(auth.accessToken, function(err, resp, data) {
+        if(err || !data || !JSON.parse(data).response.recent)
+        {
+            callback(true,60);
+            return;
+        }
         var checkins = JSON.parse(data).response.recent;
         // load up known recents and cache so we only track new checkins
         fs.readFile('recents.json',function(err, data){
