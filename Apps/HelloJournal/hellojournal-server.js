@@ -16,6 +16,7 @@ var fs = require("fs");
 var path = require("path");
 
 var app = express.createServer(connect.bodyParser(), connect.cookieParser());
+app.use(express.static(__dirname + '/static'));
 
 var locker = require('../../Common/node/locker.js');
 var lfs = require('../../Common/node/lfs.js');
@@ -24,43 +25,104 @@ var me;
 
 var journal = undefined;
 function getJournal(callback) {
+    console.log("Journal:");
     if (journal) {
+        console.log(journal);
         callback(true);
         return;
     }
     var ret = false;
     if (path.exists("journal.json")) {
         journal = JSON.parse(fs.readFileSync("journal.json")).journal;
+        console.log(journal);
         callback(true);
         return;
     } else {
+        console.log("else");
         locker.providers("journal", function(err, providers) {
+                             console.log(err, providers);
+                             console.log("looking");
             if (!providers) {
+                console.log("!providers");
                 callback(false);
                 return;
             }
 
             if (providers.length == 1) {
+                // only one journal, use it
                 journal = providers[0].id;
                 fs.writeFileSync("journal.json", JSON.stringify({"journal":journal}));
                 callback(true);
                 return;
             }
+
+            if (providers.length > 1) {
+                // have the user pick a journal
+                console.log("multiple journals");
+                callback(false);
+                return;
+            }
+                             
+            console.log("giving up");
             callback(false);
         });
     }
 }
 
 app.get("/", function(req, res) {
+    console.log("woo");
     getJournal(function(hasJournal) {
         if (hasJournal) {
+            console.log("hasJournal");
             // show the current graph and add entry
-            res.sendfile(__dirname + "/html/index.html");
+            res.sendfile(__dirname + "/static/index.html");
         } else {
+            console.log("!hasJournal");
             // select a journal
-            res.sendfile(__dirname + "/html/pickJournal.html");
+            res.sendfile(__dirname + "/static/pickJournal.html");
         }
     });
+});
+
+app.get("/getJournals", function(req, res) {
+            var callback = function(providers) {
+                res.writeHead(200, {
+                                  'Content-Type': 'text/html'
+                              });
+                res.end(JSON.stringify(providers));
+            };
+            
+            locker.providers("journal", 
+                             function(err, providers) {
+                                 console.log(err, providers);
+                                 console.log("looking");
+                                 if (!providers) {
+                                     console.log("!providers");
+                                     callback([]);
+                                     return;
+                                 }
+                                 
+                                 if (providers.length == 1) {
+                                     // only one journal, use it
+                                     journal = providers[0].id;
+                                     console.log("1 journal");
+                                     console.log(journal);
+                                     callback(providers);
+                                     return;
+                                 }
+                                 
+                                 if (providers.length > 1) {
+                                     // have the user pick a journal
+                                     console.log("multiple journals");
+                                     console.log(providers);
+                                     callback(providers);
+                                     return;
+                                 }
+                                 
+                                 console.log("giving up");
+                                 callback([]);
+                                 return;
+                             });
 });
 
 // Usually ajax call to retrieve rates
@@ -111,12 +173,6 @@ app.post("/addRate", function(req, res) {
             res.end();
         });
     });
-});
-
-// Return static js files
-app.get("/js/:filename", function(req, res) {
-    console.log("Getting " + req.param("filename"));
-    res.sendfile(__dirname + "/js/" + req.param("filename"));
 });
 
 // Woo woo startup stuff!
