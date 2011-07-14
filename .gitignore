@@ -9,5 +9,5 @@ Me/*
 *.tmproj
 node_modules
 scheduler.json
-tests/Data/*
-tests/Me/*
+tests/Data/
+lockerbox*
