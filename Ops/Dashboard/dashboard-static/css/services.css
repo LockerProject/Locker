@@ -145,6 +145,7 @@ ul#servicesList li.current.connector {
   font-family: Menlo, Courier, monospace;
 }
 
+#serviceInfo #uninstallButton,
 #serviceInfo #installButton {
   position: absolute;
   top: 16px;
@@ -166,6 +167,7 @@ ul#servicesList li.current.connector {
   box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.15), inset -1px -1px 0px rgba(0, 0, 0, 0.25);
 }
 
+#serviceInfo #uninstallButton a,
 #serviceInfo #installButton a {
   display: block;
 
@@ -183,14 +185,17 @@ ul#servicesList li.current.connector {
   cursor: default;
 }
 
+#serviceInfo #uninstallButton:hover,
 #serviceInfo #installButton:hover {
   background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
+#serviceInfo #uninstallButton:hover a,
 #serviceInfo #installButton:hover a {
   color: white;
 }
 
+#serviceInfo #uninstallButton:active,
 #serviceInfo #installButton:active {
   background-color: rgba(0, 0, 0, 0.6) !important;
   background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.35)), to(rgba(0, 0, 0, 0.015)));
@@ -200,6 +205,7 @@ ul#servicesList li.current.connector {
   background-image: linear-gradient(top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.015));
 }
 
+#serviceInfo #uninstallButton:active a,
 #serviceInfo #installButton:active a {
   color: white;
 }
