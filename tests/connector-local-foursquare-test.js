@@ -40,11 +40,14 @@ sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
     levents.fireEvent('contact/foursquare', 'foursquare', eventObj);
 });
+sync.eventEmitter.on('photo/foursquare', function(eventObj) {
+    levents.fireEvent('photo/foursquare', 'foursquare', eventObj);
+})
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
-            utils.hijackEvents(['checkin/foursquare','contact/foursquare'], 'foursquare');
+            utils.hijackEvents(['checkin/foursquare','contact/foursquare','photo/foursquare'], 'foursquare');
             utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
             
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
@@ -66,14 +69,17 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({
                     uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
                     file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+                fakeweb.registerUri({
+                    uri : 'https://playfoursquare.s3.amazonaws.com/pix/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg',
+                    file : __dirname + '/fixtures/foursquare/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg' });
                 sync.syncCheckins(self.callback);
             });
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
-            assert.equal(diaryEntry, "sync'd 251 new my checkins"); },
-        "generates a ton of checkin events" : function(err) {
-            assert.equal(emittedEvents.length, 251);
+            assert.equal(diaryEntry, "sync'd 252 new my checkins"); },
+        "generates a ton of checkin events and some photo events" : function(err) {
+            assert.equal(emittedEvents.length, 253);
             assert.equal(emittedEvents[0], '{"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"_via":["foursquare"]}');
             emittedEvents = [];
         },
@@ -149,7 +155,7 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent("places", this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 251);
+                assert.equal(response.length, 252);
                 assert.equal(response[0].id, "4d1dcbf7d7b0b1f7f37bfd9e");
                 assert.equal(response[0].venue.name, "Boston Logan International Airport (BOS)");
                 assert.equal(response[0].type, 'checkin');
@@ -228,6 +234,15 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
+        .discuss("get checkin photo")
+            .path('/Me/' + svcId + '/getPhoto/4e208b75e4cdf685917bee22')
+            .get()
+                .expect("returns the first photo associated with the checkin", function(err, res, body) {
+                    assert.isNull(err);
+                    assert.equal(res.statusCode, 200);
+                })
+            .unpath()
+        .undiscuss()
         .discuss("all contacts")
             .path("/Me/" + svcId + "/getCurrent/friends")
             .get()
@@ -246,7 +261,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var checkins = JSON.parse(body);
                     assert.isNotNull(checkins);
-                    assert.equal(checkins.length, 251); 
+                    assert.equal(checkins.length, 252);
                 })
             .unpath()
         .undiscuss()
