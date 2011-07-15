@@ -51,7 +51,7 @@ exports.init = function(theAuth, mongo) {
     
     // Need IMAP raw debug output?  Uncomment this mofo
     // auth.debug = function(msg) {
-    //     console.log(msg);
+    //     console.error(msg);
     // };
 
 };
@@ -61,19 +61,19 @@ exports.syncMessages = function(syncMessagesCallback) {
         
     async.series({
         connect: function(callback) {
-            if (debug) console.log('connect');
+            if (debug) console.error('connect');
             imap = new ImapConnection(auth);
             imap.connect(function(err) {
                 callback(err, 'connect');
             });
         },
         getboxes: function(callback) {
-            if (debug) console.log('getboxes');
+            if (debug) console.error('getboxes');
             imap.getBoxes(function(err, mailboxes) {
                 var mailboxArray = [];
                 var mailboxQuery = {};
                 
-                if (debug) console.log('getMailboxPaths');
+                if (debug) console.error('getMailboxPaths');
                 exports.getMailboxPaths(mailboxArray, mailboxes);
 
                 for (var i = 0; i < mailboxArray.length; i++) {
@@ -92,7 +92,7 @@ exports.syncMessages = function(syncMessagesCallback) {
             });
         },
         logout: function(callback) {
-            if (debug) console.log('logout');
+            if (debug) console.error('logout');
             imap.logout(function(err) {
                 return callback(err, 'logout');
             });
@@ -113,106 +113,35 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
         mailbox = mailboxQuery.mailbox,
         query = mailboxQuery.query;
         
-    if (debug) console.log('fetchMessages');
+    if (debug) console.error('fetchMessages');
     
     if (!allKnownIDs.hasOwnProperty(mailbox)) {
         allKnownIDs[mailbox] = {};
     }
+    
+    var connect = function(callback) {
+        // console.error('connecting with, ', auth);
+        imap = new ImapConnection(auth);
+        imap.connect(function() {
+            imap.openBox(mailbox, false, callback);
+        });
+    }
 
     async.series({
-        connect: function(callback) {
-            if (imap === undefined) {
-                if (debug) console.log('connect');
-                imap = new ImapConnection(auth);
-                imap.connect(function(err) {
-                    callback(err, 'connect');
-                });
-            } else {
-                callback(null, 'connect');
-            }
-        },
-        openbox: function(callback) {           
-            if (debug) console.log('openbox: ' + mailbox);
-            imap.openBox(mailbox, true, function(err, result) {
-                callback(err, 'openbox');
-            });
-        },
+        connect: connect,
         search: function(callback) {
-            if (debug) console.log('search: ' + query);
+            if (debug) console.error('search: ' + query);
             imap.search([ ['UID', 'SEARCH', query] ], function(err, searchResults) {
                 results = searchResults;
                 callback(err, 'search');
             });
         },
         fetch: function(callback) {
-            if (debug) console.log('fetch');
+            if (debug) console.error('fetch');
             fetchedCount = results.length;
             try {
-                var headerFetch = imap.fetch(results, { request: { headers: true } });
-                
-                headerFetch.on('message', function(headerMsg) {
-                    headerMsg.on('end', function() {
-                        var message = headerMsg;
-                        var body = '';
-                        var partID = '1';
-                        var structure = message.structure;
-                
-                        /* TODO: ETJ - COMMENTED OUT BODY HANDLING UNTIL MULTIBYTE CHAR BUG IS FIXED IN node-imap MODULE
-                        if (message.structure.length > 1) {
-                            structure.shift();
-                            structure = structure[0];
-                        }
-  
-                        for (var i=0; i<structure.length; i++) {
-                            if (structure[i].hasOwnProperty('type') && 
-                                structure[i].type === 'text' &&
-                                structure[i].hasOwnProperty('subtype') && 
-                                structure[i].subtype === 'plain' &&
-                                structure[i].hasOwnProperty('params') &&
-                                structure[i].params !== null &&
-                                structure[i].params.hasOwnProperty('charset')) {
-                                    partID = structure[i].partID;
-                            }
-                        }
-                
-                        var bodyFetch = imap.fetch(headerMsg.id, { request: { headers: false, body: partID } });       
-
-                        bodyFetch.on('message', function(bodyMsg) {
-                            bodyMsg.on('data', function(chunk) {
-                                body += chunk;
-                            });
-                            bodyMsg.on('error', function(err) {
-                                console.log('error: ' + err);
-                                callback(err, 'fetch');
-                            });
-                            bodyMsg.on('end', function() {
-                                msgCount++;
-                                if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
-                                    totalMsgCount++;
-                                    message.body = body;                             
-                                    allKnownIDs[mailbox][message.id] = 1;
-                                    storeMessage(mailbox, message);
-                                    lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
-                                }
-                                if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
-                                if (fetchedCount === 0 || msgCount === fetchedCount) {
-                                    callback(null, 'fetch');
-                                }
-                            });
-                        });
-                        */
-                        msgCount++;
-                        if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
-                            totalMsgCount++;                      
-                            allKnownIDs[mailbox][message.id] = 1;
-                            storeMessage(mailbox, message);
-                            lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
-                        }
-                        if (debug) console.log('Fetched message ' + msgCount + ' of ' + fetchedCount + ' (message.id: ' + message.id + ')');
-                        if (fetchedCount === 0 || msgCount === fetchedCount) {
-                            callback(null, 'fetch');
-                        }
-                    });
+                getMessages(results, mailbox, connect, function() {
+                    callback(null, 'fetch');
                 });
             } catch(e) {
                 // catch IMAP module's lame exception handling here and parse to see if it's REALLY an exception or not. Bah!
@@ -234,13 +163,13 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
 };
 
 function storeMessage(mailbox, msg) {
-    if (debug) console.log('storeMessage from ' + mailbox + ' (message.id: ' + msg.id + ')');
+    if (debug) console.error('storeMessage from ' + mailbox + ' (message.id: ' + msg.id + ')');
     var message = lutil.extend({'messageId': msg.id}, msg);
     message.id = mailbox + '||' + msg.id;
     
     dataStore.addObject('messages', message, function(err) {
         if (err) {
-            console.log(err);
+            console.error(err);
         }   
         updateState.messages[mailbox].syncedThrough = message.messageId;
         lfs.writeObjectToFile('updateState.json', updateState);
@@ -269,3 +198,105 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
         }
     }
 };
+
+
+
+
+
+//-----------------
+
+
+
+var uidsPerCycle = 100;
+var timeout = 3000;
+
+function getMessages(uids, mailbox, connect, callback) {
+    if(!(uids && uids.length)) {
+        process.nextTick(callback);
+    } else {
+        var theseUIDs = uids.splice(0, uidsPerCycle);
+        
+        doFetch(theseUIDs, { headers: true }, connect, function(headers) {
+            doFetch(theseUIDs, { headers: false, body:true }, connect, function(bodies) {
+                var messages = headers;
+                for(var id in headers) {
+                    if(bodies[id])
+                        messages[id].body = bodies[id];
+                }
+                
+                for(var i in messages) {
+                    var message = messages[i];
+                    if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
+                        allKnownIDs[mailbox][message.id] = 1;
+                        storeMessage(mailbox, message);
+                        lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
+                    }
+                    if (debug) console.error('Fetched message (message.id: ' + message.id + ')');
+                }
+                //write to disk, etc
+                
+                process.nextTick(function() {
+                    getMessages(uids, mailbox, connect, callback);
+                });
+            });
+        });
+    }
+}
+
+function doFetch(uids, request, connect, callback, messages) {
+    if(!messages)
+        messages = {};
+    var fetch = imap.fetch(uids, { request: request });
+    var highestUID = 0;
+    
+    var reset = function() {
+        imap._state.conn._readWatcher.socket.destroy();
+        connect(function() { //reconnect
+            if (debug) console.error('reconnected');
+            var sliceAt = 0;
+            for(var i in uids) {
+                if(parseInt(uids[i]) > highestUID) {
+                    sliceAt = parseInt(i) + 1;
+                    break;
+                }
+            }
+            if(sliceAt < uids.length - 1)
+                doFetch(uids.slice(sliceAt, uids.length), request, connect, callback, messages); //start again from the next one
+            else
+                callback(messages);
+        })
+    };
+    
+    fetch.on('error', function(err) {
+        console.error('DEBUG: fetch err', err);
+        reset();
+    });
+    fetch.on('message', function(msg) {
+        var t = setTimeout(function() {
+            if (debug) console.error('stuck on message, closing connection an reconnecting!!!');
+            reset();
+        }, timeout);
+        msg.on('error', function(err) {
+            console.error('DEBUG: msg err', err);
+            reset();
+        });
+        msg.on('end', function() {
+            clearTimeout(t);
+            if (debug) console.error('Finished: ' + msg.id);
+            if(msg.id) {
+                if(msg.id > highestUID)
+                    highestUID = msg.id;
+                messages[msg.id] = msg;
+            }
+        });
+        msg.on('error', function(err) {
+            console.error('DEBUG: err', err);
+        })
+    });
+    fetch.on('end', function() {
+        if(highestUID < uids[uids.length - 1]) { //something went wrong
+            console.error('baaad!');
+        }
+        callback(messages);
+    });
+}
