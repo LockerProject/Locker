@@ -11,6 +11,7 @@ var locker = require('../../Common/node/locker.js'),
     sync = require('./sync');
 
 var validTypes = {profile:{update:true},
+                  devices:{update:true},
                   //'sleepMinutesAsleep': {updateCurrent: true, getNew:true}
                   };
 
