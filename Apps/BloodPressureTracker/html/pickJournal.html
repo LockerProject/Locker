@@ -1,7 +1,45 @@
 <html>
+
 <head>
+<title>Select Journal</title>
 </head>
+
 <body>
-Please install a Simple Journal Connector from your Dashboard.
+<div id='noJournalFound'>
+A Simple Journal installation could not be found, please install one of these connectors and try again.
+</div>
+<div id='selectJournal'>
+  Plese select the journal that you wish to store your data into.
+  <form id='journalSelection' action='selectJournal' method='post'>
+  <select name='journalId' id='journalSelector'>
+  </select>
+  <input type='submit' value='Use' />
+  </form>
+</div>
+<script src="js/prototype.js"></script>
+<script>
+function doIt() {
+    var req = new Ajax.Request("journals", {
+        method:"get",
+        onSuccess:function(response) {
+            if (response.responseJSON.length == 0) {
+                $("selectJournal").hide();
+                $("noJournalFound").show();
+                return;
+            }
+            response.responseJSON.forEach(function(providerId) {
+                $("journalSelector").insert(new Element("option", {value:providerId.id}).update(providerId.id));
+            });
+            $("selectJournal").show();
+            $("noJournalFound").hide();
+        },
+        onFailure:function(error) {
+            alert(error);
+        }
+    });
+}
+doIt();
+</script>
 </body>
+
 </html>

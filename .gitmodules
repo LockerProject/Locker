@@ -1,0 +1,3 @@
+[submodule "Common/php/httpserver"]
+	path = Common/php/httpserver
+	url = git://github.com/quartzjer/httpserver.git

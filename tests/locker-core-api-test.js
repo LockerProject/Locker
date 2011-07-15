@@ -250,7 +250,7 @@ tests.next().suite.addBatch({
                         else
                             promise.emit("error", err);
                     });
-                }, 500);
+                }, 1500);
             }).on('data', function(chunk) {
                 
             }).on("error", function(e) {

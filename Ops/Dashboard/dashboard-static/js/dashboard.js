@@ -89,7 +89,7 @@ function selectService(index) {
     $("#serviceInfo p").html(item["desc"]);
     $("#availType").html(item["is"]);
     $("#availSrcDir").html(item["srcdir"]);
-    if (item["provides"]) $("#availProvides").html(item["provides"].join(", "));
+    $("#availProvides").html(item["provides"] ? item["provides"].join(", ") : '');
     $("#connectorInstancesList").children().remove();
     $("#installButton a").attr("href", "javascript:installService(" + index + ");");
     $("#installButton").show();

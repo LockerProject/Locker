@@ -1,0 +1,14 @@
+#block
+  .wrapper
+    h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
+    
+    ul
+      - for (var r in results)
+        li
+          strong
+            #{results[r]._type}:
+          #{results[r]._source.name}
+
+    #raw
+      p Raw output: 
+      code #{raw}

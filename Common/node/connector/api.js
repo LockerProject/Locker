@@ -25,6 +25,10 @@ dataStore.init(id, mongo);
 // Returns a list of the current set of friends or followers
 app.get('/getCurrent/:type', function(req, res) {
     var type = req.params.type;
+    var options = {};
+    if(req.query['limit']) options.limit = req.query['limit'];
+    if(req.query['skip']) options.skip = req.query['skip'];
+
     if (validTypes.indexOf(type) === -1) {
         res.writeHead(404, {'content-type' : 'application/json'});
         res.end('{error: type not found}');
@@ -37,7 +41,7 @@ app.get('/getCurrent/:type', function(req, res) {
                 res.writeHead(200, {'content-type' : 'application/json'});
                 res.end(JSON.stringify(objects));
             }
-        })
+        }, options);
     }
 });
 

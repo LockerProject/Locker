@@ -128,25 +128,40 @@ function getMe(token, callback) {
 
 exports.syncRecent = function (callback) {
     getRecent(auth.accessToken, function(err, resp, data) {
+        if(err || !data || !JSON.parse(data).response.recent)
+        {
+            callback(true,60);
+            return;
+        }
         var checkins = JSON.parse(data).response.recent;
-        var checkinCount = checkins.length;
-        addRecent(checkins, function() {
-            callback(err, 300, "sync'd " + checkinCount + " new friend's checkins");
+        // load up known recents and cache so we only track new checkins
+        fs.readFile('recents.json',function(err, data){
+            var lastCheckins = (err || !data || data.length == 0)?[]:JSON.parse(data);
+            fs.writeFile('recents.json', JSON.stringify(checkins));
+            var seenIDs = {count:0};
+            for(var i = 0; i < lastCheckins.length; i++) seenIDs[lastCheckins[i].id]=true;
+            addRecent(checkins, seenIDs, function() {
+                callback(err, 300, "sync'd " + seenIDs["count"] + " new friend's checkins");
+            });
         });
+
     });
 }
 
-function addRecent(checkins, callback) {
-    if (!checkins || !checkins.length) {
-        callback();
+function addRecent(checkins, seenIDs, callback) {
+    if (!checkins || checkins.length == 0) {
+        return callback();
     }
     var checkin = checkins.shift();
-    if (checkin != undefined) {
+    if (checkin != undefined && !seenIDs[checkin.id]) {
+        seenIDs["count"]++;
         dataStore.addObject("recent", checkin, function(err) {
             var eventObj = {source:'recent', type:'new', status:checkin};
             exports.eventEmitter.emit('checkin/foursquare', eventObj);
-            addRecent(checkins, callback);
+            addRecent(checkins, seenIDs, callback);
         })
+    }else{
+        addRecent(checkins, seenIDs, callback);        
     }
 }
 
