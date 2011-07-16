@@ -10,6 +10,8 @@
 var fs = require('fs'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
+    async = require('async'),
+    sys = require('sys'),
     dataStore = require('../../Common/node/connector/dataStore'),
     app = require('../../Common/node/connector/api');
     EventEmitter = require('events').EventEmitter;
@@ -224,6 +226,64 @@ exports.syncProfile = function(callback) {
 
 function getMe(accessToken, callback) {
     request.get({uri:'https://graph.facebook.com/me?access_token=' + accessToken + '&date_format=U'}, callback);
+}
+
+// this function accidentially turned out to be really async dense, sorry, blame brendan and ryan
+var photocnt = 0;
+exports.syncPhotos = function(cb) 
+{
+    var albums = [];
+    photocnt = 0;
+    getAlbums('https://graph.facebook.com/me/albums?access_token=' + auth.accessToken + '&date_format=U', albums, function(albums){
+        cb(null, "got "+albums.length+" albums:"+JSON.stringify(albums));
+        async.forEach(albums,function(album, cb){
+            getAlbum('https://graph.facebook.com/'+album.id+'/photos?access_token=' + auth.accessToken + '&date_format=U',cb); // recurse till done
+        }, function(err){
+            console.log("finished processing all photos: "+photocnt);
+        })
+    })
+} 
+
+// recurse getting all the photos in an album
+function getAlbum(uri, callback) {
+    request.get({uri:uri}, function(err, resp, data){
+        js = JSON.parse(data);
+        if(!js || !js.data || js.data.length == 0)
+        { // end of the line folks, please exit to the up
+            return callback();
+        }
+        // omg4realz
+        async.forEach(js.data,function(photo,cb){
+            photocnt++;
+            // need to associate the album info?
+            dataStore.addObject('photos', photo, function(err) {
+                var eventObj = {source:'photo', type:'new', data:{id:photo.id, sourceObject:photo}};
+                exports.eventEmitter.emit('photo/facebook', eventObj);
+                cb();
+            });
+        },function(err){
+            if(js.paging && js.paging.next)
+            {
+                getAlbum(js.paging.next,callback);
+            }else{
+                callback();
+            }
+        });
+    });
+}
+
+// recurse getting all the albums
+function getAlbums(uri, albums, callback) {
+    request.get({uri:uri}, function(err, resp, data){
+        js = JSON.parse(data);
+        albums = albums.concat(js.data);
+        if(js.paging && js.paging.next)
+        {
+            getAlbums(js.paging.next,albums,callback);
+        }else{
+            callback(albums);
+        }
+    });
 }
 
 var postLimit = 250;

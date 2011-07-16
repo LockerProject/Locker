@@ -28,6 +28,7 @@ function authComplete(theauth, mongo) {
     app.get('/newsfeed', newsfeed);
     app.get('/wall', wall);
     app.get('/profile', profile);
+    app.get('/photos', photos);
 
     sync.eventEmitter.on('contact/facebook', function(eventObj) {
         locker.event('contact/facebook', eventObj);
@@ -50,6 +51,7 @@ function index(req, res) {
         h += "<li><a href='newsfeed'>newsfeed</a></li>";
         h += "<li><a href='wall'>wall</a></li>";
         h += "<li><a href='profile'>profile</a></li>";
+        h += "<li><a href='photos'>photos</a></li>";
 	h += "</body></html>"
 
         res.end(h);
@@ -89,5 +91,12 @@ function profile(req, res) {
         locker.diary(diaryEntry);
         locker.at('/profile', repeatAfter);
         res.end(JSON.stringify({success: "done fetching profile"}));
+    });
+}
+
+function photos(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncPhotos(function(err, msg) {
+        res.end(msg);
     });
 }
