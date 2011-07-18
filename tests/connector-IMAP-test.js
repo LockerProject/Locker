@@ -72,7 +72,7 @@ suite.next().suite.addBatch({
             return mailboxes;
         },
         "successfully": function(mailboxes) {
-            assert.length(mailboxes, 5);
+            assert.length(mailboxes, 6);
         },
         "and includes INBOX": function(mailboxes) {
             assert.include(mailboxes, 'INBOX');
@@ -95,7 +95,7 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 3600);
-            assert.equal(diaryEntry, "sync'd 7 new messages"); },
+            assert.equal(diaryEntry, "sync'd 14 new messages"); },
         "again with no duplicates" : {
             topic: function() {
                 sync.syncMessages(this.callback);
@@ -115,7 +115,7 @@ suite.next().suite.addBatch({
             'successfully': function(err, response) {
                 assert.isNull(err);
                 assert.isNotNull(response);
-                assert.equal(response.length, 7);
+                assert.equal(response.length, 14);
                 assert.equal(response[0].messageId, '4');
             }  
         }
@@ -124,7 +124,7 @@ suite.next().suite.addBatch({
     "Tears itself down" : {
         topic: [],
         'after checking for proper number of events': function(topic) {
-            assert.equal(events.message, 7);
+            assert.equal(events.message, 14);
         },
         'sucessfully': function(topic) {
             process.chdir('../..');
@@ -142,7 +142,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var messages = JSON.parse(body);
                     assert.isNotNull(messages);
-                    assert.equal(messages.length, 7); 
+                    assert.equal(messages.length, 14); 
                 })
             .unpath()
         .undiscuss();

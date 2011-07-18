@@ -29,7 +29,7 @@ var updateState,
     allKnownIDs,
     totalMsgCount,
     imap,
-    debug = true;
+    debug = false;
     
 exports.eventEmitter = new EventEmitter();
 
@@ -72,12 +72,12 @@ exports.syncMessages = function(syncMessagesCallback) {
             imap.getBoxes(function(err, mailboxes) {
                 var mailboxArray = [];
                 var mailboxQuery = {};
-                console.error('DEBUG: mailboxArray', mailboxArray);
-                console.error('DEBUG: mailboxes', mailboxes);
+                // console.error('DEBUG: mailboxArray', mailboxArray);
+                // console.error('DEBUG: mailboxes', mailboxes);
                 
                 if (debug) console.error('getMailboxPaths');
                 exports.getMailboxPaths(mailboxArray, mailboxes);
-                console.error('DEBUG: mailboxArray', mailboxArray);
+                // console.error('DEBUG: mailboxArray', mailboxArray);
 
                 for (var i = 0; i < mailboxArray.length; i++) {
                     if (!updateState.messages.hasOwnProperty(mailboxArray[i])) {
@@ -124,8 +124,14 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
     
     var connect = function(callback) {
         // console.error('connecting with, ', auth);
+        try {
+            imap._state.conn._readWatcher.socket.destroy();
+        } catch(exp) {
+            console.error('exception while destroying socket! ', exp);
+        }
         imap = new ImapConnection(auth);
-        imap.connect(function() {
+        imap.connect(function(err) {
+            if(err) console.error('DEBUG: err', err);
             imap.openBox(mailbox, false, callback);
         });
     }
@@ -219,7 +225,7 @@ function getMessages(uids, mailbox, connect, callback) {
                 for(var id in headers) {
                     if(bodies[id]) {
                         delete messages[id]._events;
-                        console.error('DEBUG: messages[id]', messages[id]);
+                        // console.error('DEBUG: messages[id]', messages[id]);
                         messages[id].body = [];
                         for(var i in bodies[id].structure) {
                             var part = bodies[id].structure[i];
@@ -229,7 +235,7 @@ function getMessages(uids, mailbox, connect, callback) {
                                 //do something else!
                             }
                         }
-                        console.error('DEBUG: bodies[' + id + ']', bodies[id]);
+                        // console.error('DEBUG: bodies[' + id + ']', bodies[id]);
                     }
                         
                 }
@@ -238,6 +244,7 @@ function getMessages(uids, mailbox, connect, callback) {
                     var message = messages[i];
                     if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
                         allKnownIDs[mailbox][message.id] = 1;
+                        totalMsgCount++;
                         storeMessage(mailbox, message);
                         lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
                     }
