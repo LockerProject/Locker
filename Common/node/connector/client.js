@@ -59,7 +59,7 @@ exports.init = function (processOptions, callback) {
             function startWebServer() {
                 started = true;
                 // Start the core web server
-                if(callback) callback(app);
+                if(callback) callback(app, mongo);
                 app.listen(0, function() {
                     // Tell the locker core that we're done
                     var returnedInfo = {port: app.address().port};
