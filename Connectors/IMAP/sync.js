@@ -105,7 +105,7 @@ exports.syncMessages = function(syncMessagesCallback) {
         if (err) {
             console.error(err);
         }
-        syncMessagesCallback(err, 3600, "sync'd " + totalMsgCount + " new messages");
+        syncMessagesCallback(err, 600, "sync'd " + totalMsgCount + " new messages");
     });
 };
 
