@@ -72,9 +72,12 @@ exports.syncMessages = function(syncMessagesCallback) {
             imap.getBoxes(function(err, mailboxes) {
                 var mailboxArray = [];
                 var mailboxQuery = {};
+                console.error('DEBUG: mailboxArray', mailboxArray);
+                console.error('DEBUG: mailboxes', mailboxes);
                 
                 if (debug) console.error('getMailboxPaths');
                 exports.getMailboxPaths(mailboxArray, mailboxes);
+                console.error('DEBUG: mailboxArray', mailboxArray);
 
                 for (var i = 0; i < mailboxArray.length; i++) {
                     if (!updateState.messages.hasOwnProperty(mailboxArray[i])) {
@@ -166,6 +169,7 @@ function storeMessage(mailbox, msg) {
     if (debug) console.error('storeMessage from ' + mailbox + ' (message.id: ' + msg.id + ')');
     var message = lutil.extend({'messageId': msg.id}, msg);
     message.id = mailbox + '||' + msg.id;
+    message.mailbox = mailbox;
     
     dataStore.addObject('messages', message, function(err) {
         if (err) {
@@ -187,9 +191,9 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
-            // hardwired skipping Trash, Spam/Junk, and Gmail's "All Mail" IMAP folders
+            // hardwired skipping Trash, Spam, Junk folders
             if (results[i].attribs.indexOf('NOSELECT') === -1 && 
-                i !== 'Trash' && i !== 'Spam' && i !== 'Junk' && i !== 'All Mail') {
+                i !== 'Trash' && i !== 'Spam' && i !== 'Junk') {
                 mailboxes.push(prefix + i);
             }
             if (results[i].children !== null) {
@@ -198,13 +202,6 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
         }
     }
 };
-
-
-
-
-
-//-----------------
-
 
 
 var uidsPerCycle = 100;
@@ -220,8 +217,21 @@ function getMessages(uids, mailbox, connect, callback) {
             doFetch(theseUIDs, { headers: false, body:true }, connect, function(bodies) {
                 var messages = headers;
                 for(var id in headers) {
-                    if(bodies[id])
-                        messages[id].body = bodies[id];
+                    if(bodies[id]) {
+                        delete messages[id]._events;
+                        console.error('DEBUG: messages[id]', messages[id]);
+                        messages[id].body = [];
+                        for(var i in bodies[id].structure) {
+                            var part = bodies[id].structure[i];
+                            if(part.type === 'text') {
+                                messages[id].body.push(part);
+                            } else {
+                                //do something else!
+                            }
+                        }
+                        console.error('DEBUG: bodies[' + id + ']', bodies[id]);
+                    }
+                        
                 }
                 
                 for(var i in messages) {
@@ -233,7 +243,6 @@ function getMessages(uids, mailbox, connect, callback) {
                     }
                     if (debug) console.error('Fetched message (message.id: ' + message.id + ')');
                 }
-                //write to disk, etc
                 
                 process.nextTick(function() {
                     getMessages(uids, mailbox, connect, callback);
