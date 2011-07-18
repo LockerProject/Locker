@@ -115,6 +115,9 @@ vows.describe("Service Manager").addBatch({
         topic:serviceManager.install({srcdir:"Collections/Contacts"}),
         "are not installable" : function(svcInfo) {
             assert.isUndefined(svcInfo);
+        },
+        "do not install stub collections" : function() {
+            assert.isFalse(serviceManager.isInstalled("videos"));
         }
     },
     "Migrates services that need it during the install" : {
