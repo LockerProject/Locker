@@ -15,6 +15,10 @@ var request = require('request'),
 var lconfig = require('lconfig');
 //TODO: fix lconfig and remove this!
 lconfig.load('../../config.json');
+
+//TODO: this is almost definitely a race condition!
+lcrypto.loadKeys(function(){});
+
 var completedCallback, uri;
 
 exports.auth = {};
@@ -42,7 +46,7 @@ exports.isAuthed = function() {
         }
     
         var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
-        
+        console.error('DEBUG: authData', authData);
         if(authData.hasOwnProperty('username') && 
            authData.hasOwnProperty('password') && 
            authData.hasOwnProperty('host') && 
