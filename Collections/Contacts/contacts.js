@@ -27,7 +27,7 @@ app.get('/', function(req, res) {
         'Content-Type': 'text/html'
     });
     dataStore.getTotalCount(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' contacts</p><p><a href="update">Update from Connectors</a></p></html>');
+        res.write('<html><p>Found '+ countInfo +' contacts</p></html>');
         res.end();
     });
 });
