@@ -64,7 +64,7 @@ exports.isAuthed = function() {
     return false;
 };
 
-function go(req, res, error) {
+function go(req, res) {
     if(!(exports.auth.appKey && exports.auth.appSecret)) {
         if (options.promptForUsername) {
             var prompt = "Username: <input name='username'><br>";
@@ -72,10 +72,9 @@ function go(req, res, error) {
             var prompt = "";
         }
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        if (error) {
+        var error = "";
+        if (req.param('error')) {
             error = '<h1>Got an error while attempting to authenticate : ' + error + "</h1><p>Please reenter your credentials below.</p>";
-        } else {
-            error = "";
         }
         res.end("<html>" + error + "Enter your personal " + options.provider + " app info that will be used to sync your data" + 
                 " (create a new one <a href='" + options.linkToCreate + "' target='_blank'>here</a>" +
@@ -117,7 +116,7 @@ function handleAuth(req, res) {
         });
     } else {
         exports.auth = {};
-        go(req, res, req.params('error'));
+        go(req, res);
     }
 }
 
