@@ -135,8 +135,10 @@ exports.hijackEvents = function (types, svcId) {
     lservicemanager.isRunning = function() { return true; };
     lservicemanager.isInstalled = function() { return true; };
     lservicemanager.metaInfo = function() { return { uriLocal: 'http://testing:80/' }; };
-    locker.makeRequest = function(httpOpts, body) {
-        exports.eventEmitter.emit('event', body);
+    levents.makeRequest = function(httpOpts, body, callback) {
+        //console.log("Emitting fake event for ");
+        //console.dir(httpOpts);
+        exports.eventEmitter.emit('event', body, callback);
     }
     
     for (var i = 0; i < types.length; i++) {

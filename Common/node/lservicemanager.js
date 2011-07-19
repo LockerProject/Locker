@@ -371,8 +371,8 @@ exports.spawn = function(serviceId, callback) {
         console.outputModule = mod;
         
     });
-    app.on('exit', function (code) {
-        console.log(svc.id + " process has ended.");
+    app.on('exit', function (code,signal) {
+        console.log(svc.id + " process has ended. (" + code + ":" + signal + ")");
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
