@@ -21,7 +21,9 @@ var request = require('request'),
                promptForUsername :   false,
                accessTokenResponse : 'text',
                grantType :           '',
-               extraParams :         ''};
+               extraParams :         '',
+               width :               980,
+               height :              750};
 
 var completedCallback, externalUrl;
 
@@ -85,6 +87,8 @@ function go(req, res) {
                     options.appSecretName + ": <input name='appSecret'><br>" +
                     "<input type='submit' value='Save'>" +
                 "</form></html>");
+    } else if (exports.isAuthed()) {
+        res.redirect(options.redirectURI);
     } else {
         var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey + 
                         '&response_type=code&redirect_uri=' + options.redirectURI + 'auth/';
@@ -92,7 +96,8 @@ function go(req, res) {
         if (options.extraParams) {
             newUrl += "&" + options.extraParams;
         }
-        res.redirect(newUrl);
+        var resp = "<script type='text/javascript'>var left= (screen.width / 2) - (" + options.width + " / 2); var top = (screen.height / 2) - (" + options.height + " / 2); window.open('" + newUrl + "', 'auth', 'menubar=no,toolbar=no,status=no,width=" + options.width + ",height=" + options.height + ",toolbar=no,left=' + left + 'top=' + top);</script>";
+        res.end(resp + '<a target=_new href=\'' + newUrl + '\'>Authenticate</a>');
     }
 }
 
@@ -110,9 +115,10 @@ function handleAuth(req, res) {
             } else {
                 exports.auth.accessToken = querystring.parse(body).access_token;
             }
-            lfs.writeObjectToFile("auth.json", exports.auth);
-            completedCallback(exports.auth);
-            res.redirect(options.redirectURI);
+            fs.writeFile('auth.json', JSON.stringify(exports.auth), 'utf8', function() {
+                completedCallback(exports.auth);
+                res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            });
         });
     } else {
         exports.auth = {};
