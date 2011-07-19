@@ -29,7 +29,7 @@ var path = require('path');
 var lconfig = require('lconfig');
 lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'config.json'));
 
-
+var logger = require("logger");
 //var crypto = require('crypto');
 var lconsole = require("lconsole");
 var lscheduler = require("lscheduler");

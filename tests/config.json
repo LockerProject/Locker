@@ -7,7 +7,6 @@
         "core" : ["locker-core-api-test.js"],
         "core-lib" : ["lservicemanager-test-local.js", 
                       "lconfig-test-local.js", 
-                      "lconsole-test-local.js", 
                       "ijod-test-local.js",
                       "lpquery-test-local.js",
                       "mongo-test.js",
