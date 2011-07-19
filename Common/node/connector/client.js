@@ -10,6 +10,7 @@
 var express = require('express'),
     connect = require('connect'),
     locker = require('locker'),
+    lstate = require('lstate'),
     lfs = require('lfs');
 
 // run callback to pass the express app object right before the listen() happens
@@ -42,6 +43,7 @@ exports.init = function (processOptions, callback) {
         var syncApi = require("sync-api.js")(app);
         locker.initClient(processInfo);
         process.chdir(processInfo.workingDirectory);
+        lstate.init();
 
         app.meData = lfs.loadMeData();
         locker.connectToMongo(function(mongo) {

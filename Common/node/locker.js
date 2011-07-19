@@ -12,6 +12,7 @@ var request = require('request'),
     sys = require('sys'),
     http = require("http"),
     url = require("url"),
+    lstate = require("lstate"),
     querystring = require("querystring");
     
 var lmongoclient;
@@ -33,7 +34,8 @@ exports.initClient = function(instanceInfo) {
     }
 };
 
-exports.at = function(uri, delayInSec) {
+exports.at = function(uri, delayInSec, stateField) {
+    if(stateField) lstate.next(stateField,(new Date().getTime() + (delayInSec * 1000)));
     request.get({
         url:baseServiceUrl + '/at?' + querystring.stringify({
             cb:uri,

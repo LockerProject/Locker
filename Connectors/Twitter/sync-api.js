@@ -9,6 +9,7 @@
 
 var fs = require('fs'),
     url = require('url'),
+    lstate = require('lstate'),
     querystring = require('querystring'),
     sys = require('sys'),
     request = require('request'),
@@ -21,6 +22,8 @@ var app, auth;
 // Add the basic / head ups (or forward to /auth if needed)
 module.exports = function(theApp) {
     app = theApp;
+    lstate.set("status","waiting for next sync");
+    lstate.set("syncing",0);
     
     app.get('/', function (req, res) {
         if(!(auth && auth.consumerKey && auth.consumerSecret && auth.token)) {
@@ -37,6 +40,17 @@ module.exports = function(theApp) {
                                                  "<li><a href='update/profile'>sync your profile</a></li>" +"</html>");
         }
     });
+    
+    app.get('/status', function(req, res) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        if(!(auth && auth.token))
+        {
+            lstate.set("ready",0);
+        }else{
+            lstate.set("ready",1)
+        }
+        res.end(JSON.stringify(lstate.state()));        
+    });
     this.authComplete = authComplete;
     return this;
 }
@@ -49,6 +63,9 @@ function authComplete(theAuth, mongo) {
     // Sync the person's friend data
     app.get('/getNew/:type', function(req, res) {
         var type = req.params.type.toLowerCase();
+        lstate.set("status","syncing "+type);
+        lstate.up("syncing");
+
         if(type === 'friends' || type === 'followers')
             people(type, res);
         else if(type === 'mentions' || type === 'home_timeline' || type === 'user_timeline') {
@@ -62,6 +79,8 @@ function authComplete(theAuth, mongo) {
             if(err) {
                 
             } else {
+                lstate.set("status","done syncing "+type);
+                lstate.down("syncing");
                 locker.diary(diaryEntry);
                 locker.at('/getNew/' + type, repeatAfter);
                 res.writeHead(200, {'content-type':'application/json'});
@@ -78,6 +97,8 @@ function authComplete(theAuth, mongo) {
                 res.end(JSON.stringify({error:err}));
                 return;
             } else {
+                lstate.set("status","done syncing "+endpoint);
+                lstate.down("syncing");
                 locker.at('/getNew/' + endpoint, repeatAfter);
                 locker.diary(diaryEntry);
                 res.writeHead(200, {'Content-Type': 'application/json'});
