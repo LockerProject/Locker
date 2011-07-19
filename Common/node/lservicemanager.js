@@ -378,6 +378,7 @@ exports.spawn = function(serviceId, callback) {
         delete svc.pid;
         delete svc.port;
         delete svc.uriLocal;
+        delete svc.starting;
         // save out all updated meta fields (pretty print!)
         if (!svc.uninstalled) {
             fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
