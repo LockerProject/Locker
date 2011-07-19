@@ -16,6 +16,7 @@ var fs = require('fs'),
     express = require('express'),
     connect = require('connect'),
     sys = require('sys'),
+    async = require('async'),
     app = express.createServer(
                     connect.bodyParser(),
                     connect.cookieParser()),
@@ -28,6 +29,24 @@ var me;
 
 app.set('views', __dirname);
 app.get('/', handleIndex);
+
+function searchScan(callback) {
+    var searches = {};
+    var files = fs.readdirSync(".");
+    async.forEach(files,function(file){
+        if(RegExp("\\.search$").test(file,cb))
+        {
+            lfs.readObjectFromFile(files[i],function(data){
+                if(data && data.id) searches[data.id] = data;
+                cb();
+            });
+        }else{
+            cb();
+        }
+    },function(err){
+        callback(searches);
+    });
+}
 
 function handleIndex(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
