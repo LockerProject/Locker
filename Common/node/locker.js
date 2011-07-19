@@ -77,11 +77,14 @@ exports.providers = function(types, callback) {
  * Post an event
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
  * obj - the object to make a JSON string of as the event body
+ * action - the action, defaults to new
  */
-exports.event = function(type, obj) {
+exports.event = function(type, obj, action) {
+    if (action === undefined) action = "new";
     request.post({
         url:baseServiceUrl + "/event",
-        json:{"type":type,"obj":obj}
+        json:{"type":type,"obj":obj},
+        action:action
     });
 };
 

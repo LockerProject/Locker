@@ -50,7 +50,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.obj.type || !req.body._via || !(req.body._via[0].indexOf('facebook') === 0 || req.body._via[0].indexOf('twitter') === 0)) {
+    if (!req.body.obj.type || !req.body.via || !(req.body.via.indexOf('facebook') === 0 || req.body.via.indexOf('twitter') === 0)) {
         console.log('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
@@ -61,7 +61,7 @@ app.post('/events', function(req, res) {
         // what event should this be?
         // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
         //
-        // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+        // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
         var eventObj = {source: "links", type:req.body.obj.type, data:doc};
         locker.event("link/full", eventObj);
         res.writeHead(200);
