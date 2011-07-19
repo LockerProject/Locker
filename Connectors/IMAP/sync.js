@@ -29,7 +29,7 @@ var updateState,
     allKnownIDs,
     totalMsgCount,
     imap,
-    debug = false;
+    debug = true;
     
 exports.eventEmitter = new EventEmitter();
 
@@ -125,7 +125,8 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
     var connect = function(callback) {
         // console.error('connecting with, ', auth);
         try {
-            imap._state.conn._readWatcher.socket.destroy();
+            if(imap._state.conn._readWatcher.hasOwnProperty('socket'))
+                imap._state.conn._readWatcher.socket.destroy();
         } catch(exp) {
             console.error('exception while destroying socket! ', exp);
         }
