@@ -30,22 +30,30 @@ var levents = require('../Common/node/levents');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 
-var contactEvent1 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_1.json');
-var contactEvent2 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_2.json');
-var contactEvent3 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_3.json');
+var contactEvent1 = JSON.parse(fs.readFileSync('fixtures/events/contacts/foursquare_contact_1.json'));
+var contactEvent2 = JSON.parse(fs.readFileSync('fixtures/events/contacts/foursquare_contact_2.json'));
+var contactEvent3 = JSON.parse(fs.readFileSync('fixtures/events/contacts/foursquare_contact_3.json'));
 
 sync.eventEmitter.on('checkin/foursquare', function(eventObj) {
-    levents.fireEvent('checkin/foursquare', 'foursquare', eventObj);
+    levents.fireEvent('checkin/foursquare', 'foursquare', "new", eventObj);
 });
 sync.eventEmitter.on('contact/foursquare', function(eventObj) {
-    levents.fireEvent('contact/foursquare', 'foursquare', eventObj);
+    levents.fireEvent('contact/foursquare', 'foursquare', "new", eventObj);
 });
+sync.eventEmitter.on('photo/foursquare', function(eventObj) {
+    levents.fireEvent('photo/foursquare', 'foursquare', "new", eventObj);
+})
 
 suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
-            utils.hijackEvents(['checkin/foursquare','contact/foursquare'], 'foursquare');
-            utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
+            utils.hijackEvents(['checkin/foursquare','contact/foursquare','photo/foursquare'], 'foursquare');
+            utils.eventEmitter.on('event', function(body) {
+                var obj = JSON.parse(body);
+                // We need to hide the timestamp, it's too hard to test
+                delete obj.timestamp;
+                emittedEvents.push(obj);
+            });
             
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
@@ -66,15 +74,18 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({
                     uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
                     file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+                fakeweb.registerUri({
+                    uri : 'https://playfoursquare.s3.amazonaws.com/pix/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg',
+                    file : __dirname + '/fixtures/foursquare/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg' });
                 sync.syncCheckins(self.callback);
             });
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
             assert.equal(repeatAfter, 600);
-            assert.equal(diaryEntry, "sync'd 251 new my checkins"); },
-        "generates a ton of checkin events" : function(err) {
-            assert.equal(emittedEvents.length, 251);
-            assert.equal(emittedEvents[0], '{"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"_via":["foursquare"]}');
+            assert.equal(diaryEntry, "sync'd 252 new my checkins"); },
+        "generates a ton of checkin events and some photo events" : function(err) {
+            assert.equal(emittedEvents.length, 253);
+            assert.deepEqual(emittedEvents[0], {"obj":{"source":"places","type":"new","status":{"id":"4d1dcbf7d7b0b1f7f37bfd9e","createdAt":1293798391,"type":"checkin","timeZone":"America/New_York","venue":{"id":"452113b6f964a520bc3a1fe3","name":"Boston Logan International Airport (BOS)","contact":{"phone":"8002356426","twitter":"BostonLogan"},"location":{"address":"1 Harborside Dr","city":"Boston","state":"MA","postalCode":"02128‎","country":"USA","lat":42.368310452775766,"lng":-71.02154731750488},"categories":[{"id":"4bf58dd8d48988d1ed931735","name":"Airport","pluralName":"Airports","icon":"https://foursquare.com/img/categories/travel/airport.png","parents":["Travel Spots"],"primary":true}],"verified":true,"stats":{"checkinsCount":102160,"usersCount":39715},"todos":{"count":0}},"photos":{"count":0,"items":[]},"comments":{"count":0,"items":[]}}},"via":"foursquare","type":"checkin/foursquare","action":"new"});
             emittedEvents = [];
         },
         "successfully " : {
@@ -103,8 +114,8 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/foursquare/ctide.png' });
             sync.syncFriends(this.callback) },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"friends","type":"new","data":{"id":"18387","firstName":"William","lastName":"Warnecke","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"San Francisco, CA","relationship":"friend","type":"user","pings":true,"contact":{"email":"lockerproject@sing.ly","twitter":"ww"},"badges":{"count":25},"mayorships":{"count":0,"items":[]},"checkins":{"count":0},"friends":{"count":88,"groups":[{"type":"friends","name":"mutual friends","count":0}]},"following":{"count":13},"tips":{"count":5},"todos":{"count":1},"scores":{"recent":14,"max":90,"checkinsCount":4},"name":"William Warnecke"}},"_via":["foursquare"]}');
-            assert.equal(emittedEvents[1], contactEvent1);
+            assert.deepEqual(emittedEvents[0], {"obj":{"source":"friends","type":"new","data":{"id":"18387","firstName":"William","lastName":"Warnecke","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"San Francisco, CA","relationship":"friend","type":"user","pings":true,"contact":{"email":"lockerproject@sing.ly","twitter":"ww"},"badges":{"count":25},"mayorships":{"count":0,"items":[]},"checkins":{"count":0},"friends":{"count":88,"groups":[{"type":"friends","name":"mutual friends","count":0}]},"following":{"count":13},"tips":{"count":5},"todos":{"count":1},"scores":{"recent":14,"max":90,"checkinsCount":4},"name":"William Warnecke"}},"via":"foursquare","action":"new","type":"contact/foursquare"});
+            assert.deepEqual(emittedEvents[1], contactEvent1);
             assert.equal(emittedEvents[2], undefined);
             emittedEvents = []; },
         "successfully" : function(err, repeatAfter, diaryEntry) {
@@ -123,7 +134,7 @@ suite.next().suite.addBatch({
             assert.equal(repeatAfter, 3600);
             assert.equal(diaryEntry, "Updated 2 friends"); },
         "and emit an update event" : function(err) {
-            assert.equal(emittedEvents[0], contactEvent2);
+            assert.deepEqual(emittedEvents[0], contactEvent2);
             assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; 
         }
@@ -149,7 +160,7 @@ suite.next().suite.addBatch({
                 dataStore.getAllCurrent("places", this.callback);
             },
             'successfully': function(err, response) {
-                assert.equal(response.length, 251);
+                assert.equal(response.length, 252);
                 assert.equal(response[0].id, "4d1dcbf7d7b0b1f7f37bfd9e");
                 assert.equal(response[0].venue.name, "Boston Logan International Airport (BOS)");
                 assert.equal(response[0].type, 'checkin');
@@ -181,7 +192,7 @@ suite.next().suite.addBatch({
         'successfully': function(err, repeatAfter, diaryEntry) {
             assert.equal(diaryEntry, 'Updated 1 existing friends, deleted 1 friends'); },
         "and emits delete events" : function(err) {
-            assert.equal(emittedEvents[0], contactEvent3);
+            assert.deepEqual(emittedEvents[0], contactEvent3);
             assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; },
         "in the datastore" : {
@@ -228,6 +239,15 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                 })
             .unpath()
         .undiscuss()
+        .discuss("get checkin photo")
+            .path('/Me/' + svcId + '/getPhoto/4e208b75e4cdf685917bee22')
+            .get()
+                .expect("returns the first photo associated with the checkin", function(err, res, body) {
+                    assert.isNull(err);
+                    assert.equal(res.statusCode, 200);
+                })
+            .unpath()
+        .undiscuss()
         .discuss("all contacts")
             .path("/Me/" + svcId + "/getCurrent/friends")
             .get()
@@ -246,7 +266,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNull(err);
                     var checkins = JSON.parse(body);
                     assert.isNotNull(checkins);
-                    assert.equal(checkins.length, 251); 
+                    assert.equal(checkins.length, 252);
                 })
             .unpath()
         .undiscuss()

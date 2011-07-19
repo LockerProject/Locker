@@ -30,14 +30,19 @@ var mongoCollections;
 var emittedEvents = [];
 
 sync.eventEmitter.on('contact/github', function(eventObj) {
-    levents.fireEvent('contact/github', 'github-test', eventObj);
+    levents.fireEvent('contact/github', 'github-test', "new", eventObj);
 });
 
 suite.next().suite.addBatch({
     "Can sync repos" : {
         topic: function() {
             utils.hijackEvents(['contact/github'], 'github-test');
-            utils.eventEmitter.on('event', function(body) { emittedEvents.push(body); });
+            utils.eventEmitter.on('event', function(body) { 
+                var obj = JSON.parse(body);
+                // We need to hide the timestamp, it's too hard to test
+                delete obj.timestamp;
+                emittedEvents.push(obj);
+            });
             
             locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:"." + mePath});
             process.chdir('.' + mePath);
@@ -59,9 +64,9 @@ suite.next().suite.addBatch({
             });
         },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"ctide"}},"_via":["github-test"]}');
-            assert.equal(emittedEvents[1], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"_via":["github-test"]}');
-            assert.equal(emittedEvents[2], '{"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/WoWCombatLogParser","login":"ctide"}},"_via":["github-test"]}');
+            assert.deepEqual(emittedEvents[0], {"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"ctide"}},"via":"github-test","action":"new","type":"contact/github"});
+            assert.deepEqual(emittedEvents[1], {"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"via":"github-test","action":"new","type":"contact/github"});
+            assert.deepEqual(emittedEvents[2], {"obj":{"type":"new","source":"watcher","data":{"repo":"ctide/WoWCombatLogParser","login":"ctide"}},"via":"github-test","action":"new","type":"contact/github"});
             emittedEvents = [];
         },
         "successfully" : function(err, repeatAfter, diaryEntry) {
@@ -84,7 +89,7 @@ suite.next().suite.addBatch({
             sync.syncRepos(this.callback);
         },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"type":"delete","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"_via":["github-test"]}');
+            assert.deepEqual(emittedEvents[0], {"obj":{"type":"delete","source":"watcher","data":{"repo":"ctide/arenarecapslibrary","login":"smurthas"}},"via":"github-test","action":"new","type":"contact/github"});
             emittedEvents = [];
         }
     }
@@ -108,8 +113,8 @@ suite.next().suite.addBatch({
             assert.equal(diaryEntry, "examined 2 users, added 2 new users, and modified 0 users.");
         },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"followers","type":"add","data":{"gravatar_id":"27e803a71a7774a00d14274def33f92c","company":"Focus.com","name":"James Burkhart","created_at":"2009/07/05 18:16:40 -0700","location":"San Francisco","public_repo_count":4,"public_gist_count":7,"blog":"www.jamesburkhart.com","following_count":8,"id":101964,"type":"User","permission":null,"followers_count":2,"login":"fourk","email":"j@hip.st"}},"_via":["github-test"]}');
-            assert.equal(emittedEvents[1], '{"obj":{"source":"followers","type":"add","data":{"gravatar_id":"c0ffbda2aaf58c66407e55f9091acde8","company":null,"name":"Simon Murtha-Smith","created_at":"2010/09/14 15:05:26 -0700","location":"Brooklyn, NY","public_repo_count":4,"public_gist_count":0,"blog":"twitter.com/smurthas","following_count":11,"id":399496,"type":"User","permission":null,"followers_count":8,"login":"smurthas","email":null}},"_via":["github-test"]}');
+            assert.deepEqual(emittedEvents[0], {"obj":{"source":"followers","type":"add","data":{"gravatar_id":"27e803a71a7774a00d14274def33f92c","company":"Focus.com","name":"James Burkhart","created_at":"2009/07/05 18:16:40 -0700","location":"San Francisco","public_repo_count":4,"public_gist_count":7,"blog":"www.jamesburkhart.com","following_count":8,"id":101964,"type":"User","permission":null,"followers_count":2,"login":"fourk","email":"j@hip.st"}},"via":"github-test","action":"new","type":"contact/github"});
+            assert.deepEqual(emittedEvents[1], {"obj":{"source":"followers","type":"add","data":{"gravatar_id":"c0ffbda2aaf58c66407e55f9091acde8","company":null,"name":"Simon Murtha-Smith","created_at":"2010/09/14 15:05:26 -0700","location":"Brooklyn, NY","public_repo_count":4,"public_gist_count":0,"blog":"twitter.com/smurthas","following_count":11,"id":399496,"type":"User","permission":null,"followers_count":8,"login":"smurthas","email":null}},"via":"github-test","action":"new","type":"contact/github"});
             assert.equal(emittedEvents[2], undefined);
             emittedEvents = [];
         }
@@ -138,7 +143,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/github/wmw.json' });
             sync.syncUsers("following", this.callback) },
         "and emit proper events" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"following","type":"add","data":{"gravatar_id":"d0dddbe40b4abde24cd534567bae1039","company":"FifteenB","name":"William M Warnecke","created_at":"2009/02/10 00:10:43 -0800","location":"San Francisco, CA","public_repo_count":8,"public_gist_count":12,"blog":"http://bill.fifteenb.com","following_count":23,"id":53258,"type":"User","permission":null,"followers_count":16,"login":"wmw","email":"bill@fifteenb.com"}},"_via":["github-test"]}');
+            assert.deepEqual(emittedEvents[0], {"obj":{"source":"following","type":"add","data":{"gravatar_id":"d0dddbe40b4abde24cd534567bae1039","company":"FifteenB","name":"William M Warnecke","created_at":"2009/02/10 00:10:43 -0800","location":"San Francisco, CA","public_repo_count":8,"public_gist_count":12,"blog":"http://bill.fifteenb.com","following_count":23,"id":53258,"type":"User","permission":null,"followers_count":16,"login":"wmw","email":"bill@fifteenb.com"}},"via":"github-test","action":"new","type":"contact/github"});
             assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; },
         "successfully" : function(err, repeatAfter, diaryEntry) {
@@ -229,7 +234,7 @@ suite.next().suite.addBatch({
         'successfully': function(err, repeatAfter, diaryEntry) {
             assert.equal(diaryEntry, 'examined 1 users, added 0 new users, modified 0 users, and removed 1 users.'); },
         "and emit a delete event" : function(err) {
-            assert.equal(emittedEvents[0], '{"obj":{"source":"followers","type":"delete","data":{"id":"smurthas","deleted":true}},"_via":["github-test"]}');
+            assert.deepEqual(emittedEvents[0], {"obj":{"source":"followers","type":"delete","data":{"id":"smurthas","deleted":true}},"via":"github-test","action":"new","type":"contact/github"});
             assert.equal(emittedEvents[1], undefined);
             emittedEvents = []; },
         "in the datastore" : {

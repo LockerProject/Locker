@@ -21,7 +21,7 @@ exports.getAll = function(callback) {
 }
 
 exports.addEvent = function(data, callback) {
-    var type = data._via[0];
+    var type = data.via;
     if (type.indexOf('facebook') !== -1) {
         exports.addLink("facebook", data.obj.data, data.obj.data.url, callback);
     } else if (type.indexOf('twitter') !== -1) {

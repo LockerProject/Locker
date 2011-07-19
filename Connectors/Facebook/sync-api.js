@@ -8,6 +8,7 @@
 */
 
 var fs = require('fs'),
+    lstate = require('lstate'),
     sync = require('./sync'),
     locker = require('../../Common/node/locker.js');
     
@@ -23,11 +24,15 @@ module.exports = function(theapp) {
 function authComplete(theauth, mongo) {
     auth = theauth;
     sync.init(auth, mongo);
+    lstate.set("status","waiting for next sync");
+    lstate.set("syncing",0);
 
     app.get('/friends', friends);
     app.get('/newsfeed', newsfeed);
     app.get('/wall', wall);
     app.get('/profile', profile);
+    app.get('/photos', photos);
+    app.get('/state', state);
 
     sync.eventEmitter.on('contact/facebook', function(eventObj) {
         locker.event('contact/facebook', eventObj);
@@ -50,15 +55,29 @@ function index(req, res) {
         h += "<li><a href='newsfeed'>newsfeed</a></li>";
         h += "<li><a href='wall'>wall</a></li>";
         h += "<li><a href='profile'>profile</a></li>";
+        h += "<li><a href='photos'>photos</a></li>";
 	h += "</body></html>"
 
         res.end(h);
     }
 }
 
+function state(req, res) {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    if(!(auth && auth.accessToken))
+    {
+        lstate.set("ready",0);
+    }
+    res.end(JSON.stringify(lstate.state()));
+}
+
 function friends(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
+    lstate.set("status","syncing friends");
+    lstate.up("syncing");
     sync.syncFriends(function(err, repeatAfter, diaryEntry) {
+        lstate.set("status","done syncing friends");
+        lstate.down("syncing");
         locker.diary(diaryEntry);
         locker.at('/friends', repeatAfter);
         res.end(JSON.stringify({success: "done fetching friends"}));
@@ -67,9 +86,13 @@ function friends(req, res) {
 
 function newsfeed(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
+    lstate.set("status","syncing newsfeed");
+    lstate.up("syncing");
     sync.syncNewsfeed(function(err, repeatAfter, diaryEntry) {
+        lstate.set("status","done syncing newsfeed");
+        lstate.down("syncing");
         locker.diary(diaryEntry);
-        locker.at('/newsfeed', repeatAfter);
+        locker.at('/newsfeed', repeatAfter, "newsfeed");
         res.end(JSON.stringify({success: "done fetching newsfeed"}));
     });
 }
@@ -89,5 +112,12 @@ function profile(req, res) {
         locker.diary(diaryEntry);
         locker.at('/profile', repeatAfter);
         res.end(JSON.stringify({success: "done fetching profile"}));
+    });
+}
+
+function photos(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    sync.syncPhotos(function(err, msg) {
+        res.end(msg);
     });
 }

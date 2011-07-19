@@ -81,7 +81,7 @@ function updateDevices(callback) {
     makeApiCall('/user/-/devices.json', {}, function(err, resp) {
         if(err) {
             console.error(err);
-            callback(err, resp);
+            callback(err, 3600, resp);
         } else {
             for(var i in resp) {
                 var device = resp[i];
@@ -95,7 +95,7 @@ function updateDevices(callback) {
                     }
                 });
             }
-            callback(null, resp);
+            callback(null, 3600, resp);
         }
     });
 }
