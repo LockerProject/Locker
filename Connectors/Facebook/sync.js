@@ -8,7 +8,7 @@
 */
 
 var fs = require('fs'),
-    lfs = require('../../Common/node/lfs.js'),
+    lfs = require('lfs'),
     request = require('request'),
     async = require('async'),
     sys = require('sys'),
@@ -89,6 +89,8 @@ exports.syncFriends = function(callback) {
                     logRemoved(removedIDs, function(err) {
                         callback(err, 3600, "no new friends, removed " + removedCount + " deleted friends");
                     });
+                }else{
+                    callback(null, 3600, "no friend changes");
                 }
             } else {
                 
