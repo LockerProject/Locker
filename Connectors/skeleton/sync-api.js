@@ -8,6 +8,7 @@
 */
 
 var locker = require('../../Common/node/locker.js');
+var sync = require('./sync');
     
 var app, auth;
 
@@ -34,10 +35,10 @@ function authComplete(theauth, mongo) {
 
 function index(req, res) {
     if(!(auth && auth.accessToken))
-        res.redirect(app.externalBase + 'go');
+        res.redirect(app.externalBase + 'auth');
     else {
         res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end("<html>found a token, load <a href='items'>items</a>, <a href='items'>my items</a>, and <a href='items'>my friend's recent items</a></html>");
+        res.end("<html>found a token, load <a href='items'>items</a></html>");
     }
 }
 
