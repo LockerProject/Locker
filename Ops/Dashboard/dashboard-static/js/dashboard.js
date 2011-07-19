@@ -211,6 +211,7 @@ function showApp(app, event) {
   $("#appSection").show();
   $("#appTitle").html(app.title);
   // $("#appFrame").attr("src", app.uri || "");
+  $('#appFrame').contents().find('html').html('');
   $("#appFrame")[0].contentWindow.location.replace(app.externalUri || "");
   $("#zoomAppButton").unbind("click").click(function() { window.open(app.externalUri) });
 
