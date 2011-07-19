@@ -24,6 +24,7 @@ exports.load = function(filepath) {
     exports.mongo = config.mongo;
     exports.me = config.me || "Me";
     exports.lockerDir = process.cwd();
+    exports.logFile = config.logFile || undefined;
 }
 
 function setBase() {
