@@ -78,8 +78,7 @@ function showServicesSection() {
 
 function unstableServices()
 {
-    unstable = true;
-    $("#servicesSection header ul").hide();
+    unstable = $('#showUnstable').is(':checked');
     updateServiceMap("",function(){ $("#servicesSection").show();});
 }
 
