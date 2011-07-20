@@ -1,3 +1,4 @@
+#!/bin/bash
 
 txtrst=$(tput sgr0) # Text reset
 txtred=$(tput setaf 1) # Red
