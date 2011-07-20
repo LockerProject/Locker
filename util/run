@@ -4,4 +4,12 @@ PATH=`pwd`/bin:$PATH
 export PATH
 
 cd code
-node lockerd.js
+
+if [ -f .1strun ];
+then
+        node lockerd.js
+else
+        python setupEnv.py > .1strun 2>&1
+        sh checkEnv.sh 2>> .1strun
+        node lockerd.js
+fi
