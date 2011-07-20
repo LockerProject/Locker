@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import urllib
+import glob
+import subprocess
+
+mongodb_urls = {'Linux': {'i686': 'http://fastdl.mongodb.org/linux/mongodb-linux-i686-static-1.8.2.tgz',
+                          'x86_64': 'http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-static-legacy-1.8.2.tgz'},
+                'Darwin': {'i386': 'http://fastdl.mongodb.org/osx/mongodb-osx-i386-1.8.2.tgz',
+                           'x86_64': 'http://fastdl.mongodb.org/osx/mongodb-osx-x86_64-1.8.2.tgz'}}
+
+node_url = 'http://nodejs.org/dist/node-v0.4.9.tar.gz'
+node_srcdir = 'node-v0.4.9'
+
+openssl_src_url = 'http://www.openssl.org/source/openssl-1.0.0d.tar.gz'
+openssl_srcdir = 'openssl-1.0.0d'
+
+lockerproject_git_url = 'git://github.com/LockerProject/Locker.git'
+
+# Helper functions
+def dlProgress(count, blockSize, totalSize):
+    percent = int(count*blockSize*100/totalSize)
+    sys.stdout.write("\rDownloaded %2d%%" % percent)
+    sys.stdout.flush()
+
+system      = os.uname()[0]
+arch        = os.uname()[-1]
+
+os.mkdir('lockerproject')
+os.mkdir('lockerproject/bin')
+
+# Step 1a: fetch mongodb
+mongodb_url = mongodb_urls[system][arch]
+
+print "Fetching mongodb for " + system + " " + arch + " from " + mongodb_url
+
+os.mkdir('mongodb')
+os.chdir('mongodb')
+
+urllib.urlretrieve(mongodb_url, 'mongodb.tgz', reporthook=dlProgress)
+print " ...done."
+
+# Step 1b: unpack mongodb
+os.system('tar xf mongodb.tgz')
+
+# Step 1c: hardlink binaries into tar staging bin directory
+[os.link(binary, '../lockerproject/bin/' + os.path.basename(binary)) for binary in glob.glob('*/bin/*')]
+
+# Step 1 donezo
+os.chdir('..')
+
+
+# Step 2a: fetch node.js source
+print "Fetching node.js source from " + node_url
+
+os.mkdir('nodejs')
+os.chdir('nodejs')
+
+urllib.urlretrieve(node_url, node_srcdir + '.tar.gz', reporthook=dlProgress)
+print " ...done."
+
+# Step 2b: unpack node.js
+os.system('tar xf ' + node_srcdir + '.tar.gz')
+
+# Step 2c: configure source for building
+os.chdir(node_srcdir)
+os.system('./configure')
+
+# Step 2d: build
+os.system('make')
+
+# Step 2e: hardlink node binary into tar staging directory
+os.link('build/default/node', '../../lockerproject/bin/node')
+
+# Step 2 fin
+os.chdir('../..')
+
+
+# Step 3a: fetch OpenSSL source
+print "Fetching OpenSSL from " + openssl_src_url
+
+os.mkdir('openssl')
+os.chdir('openssl')
+
+urllib.urlretrieve(openssl_src_url, openssl_srcdir + ".tar.gz", reporthook=dlProgress)
+print " ...done."
+
+# Step 3b: unpack OpenSSL
+os.system('tar xf ' + openssl_srcdir + '.tar.gz')
+
+# Step 3c: configure OpenSSL to be built statically
+os.chdir(openssl_srcdir)
+os.system('./config no-shared')
+
+# Step 3d: build
+os.system('make')
+
+# Step 3e: hardlink openssl binary into tar staging directory
+os.link('apps/openssl', '../../lockerproject/bin/openssl')
+
+# Step 3 complete!
+os.chdir('../..')
+
+
+# Step 4: check out locker project code
+print "Cloning locker source from Github."
+
+os.chdir('lockerproject')
+os.system('git clone ' + lockerproject_git_url + ' code')
+
+os.chdir('code')
+git = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE, shell=False)
+(locker_version, err) = git.communicate()
+
+# Step 5: run npm
+print "Running npm in code directory..."
+
+os.system('npm install')
+
+os.chdir('..')
+
+
+# Step 6: copy the runtime script into place
+print "Copying runtime script into place."
+
+os.link('../run', 'run')
+
+
+# Step 7: build the tarball
+print "Building the tarball..."
+
+os.chdir('..')
+os.system('tar cvfz lockerproject-' + locker_version.rstrip() + '-' + system + '-' + arch + '.tar.gz lockerproject')
+
+
+# That should be everything!
+print "Finished!"

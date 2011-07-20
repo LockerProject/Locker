@@ -1,0 +1,21 @@
+This is a very simple Python script that you can use to build a
+tarball that contains everything a locker needs to run, with the
+dependencies built with as few dynamically-loaded dependencies as
+possible.
+
+It presumes that you already have a complete build environment,
+including:
+
+ - Python 2.6+
+ - g++ (with libstdc++)
+ - libssl
+ - a recent version of npm.
+
+Basically, if you've built a full version of the project using
+lockerbox.sh or the like, your environment should be in good enough
+shape to build the tarball. It fetches its dependencies as necessary,
+and takes 10-15 minutes to build.
+
+NOTE: This script can be run from pretty much anywhere, but it needs
+the 'run' script to be in the same directory, as it copies it into the
+staged tarball directory as part of the build process.
