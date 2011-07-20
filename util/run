@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PATH=`pwd`/bin:$PATH
+export PATH
+
+cd code
+node lockerd.js
