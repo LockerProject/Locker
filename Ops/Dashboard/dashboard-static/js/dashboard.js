@@ -134,7 +134,7 @@ function selectService(index) {
                 $("#connectorInstancesList #id-" + id).click(function(event) {
                     window.location.replace("#!/app/" + id);
                 });
-                $("#connectorInstancesList div .uninst-" + id + ' a').attr("href", "javascript:uninstallService('" + id + "', '" + value.title + "', " + index + ");");
+                $("#connectorInstancesList div .uninst-" + id + ' a').attr("href", "javascript:uninstallService('" + id + "', '" + value.title + "', " + index + ", 'connector');");
                 $("#connectorInstancesList div .disable-" + id + ' a').attr("href", "javascript:ableService('" + abled + "', '" + id + "', '" + value.title + "', " + index + ");");
             }
         }
@@ -160,9 +160,14 @@ function installService(i) {
     });
 }
 
-function uninstallService(svcID, title, index) {
-    var resp = confirm('Are you sure you want to delete ' + svcID + '? ' + 
-                            'This is NOT REVERSIBLE and will DELETE all of the DATA in your locker associated with this connector!!');
+function uninstallService(svcID, title, index, type) {
+    var resp;
+    if (type == 'connector') {
+        resp = confirm('Are you sure you want to delete ' + svcID + '? ' + 
+                                'This is NOT REVERSIBLE and will DELETE all of the DATA in your locker associated with this connector!!');
+    } else {
+        resp = confirm('Are you sure you want to remove this app?');
+    }
     if(resp) {
         $.getJSON("uninstall", {serviceId:svcID}, function(data, err, resp) {
             if(data && data.success) {
