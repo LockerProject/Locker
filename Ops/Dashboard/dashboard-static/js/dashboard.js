@@ -82,6 +82,17 @@ function unstableServices()
     updateServiceMap("",function(){ $("#servicesSection").show();});
 }
 
+function availableIndexForService(service) {
+    var index = -1;
+    for(var i in serviceMap.available) {
+        if(service.handle && serviceMap.available[i].handle === service.handle) {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
 function selectService(index) {
     var item = serviceMap.available[index];
     $("#serviceInfo h1").html(item["title"]);
@@ -92,12 +103,17 @@ function selectService(index) {
     $("#connectorInstancesList").children().remove();
     $("#installButton a").attr("href", "javascript:installService(" + index + ");");
     $("#installButton").show();
+    $("#uninstallButton").hide();
     $("#connectorInstancesSection").hide();
 
-    if (item.is == "connector") {
-        // $("#addConnectorInstanceButton a").attr("href", "javascript:installService(" + index + ");");
-        $.each(serviceMap.installed, function(key, value) {
-            if (value["srcdir"] == item["srcdir"]) {
+    $.each(serviceMap.installed, function(key, value) {
+        if (value["srcdir"] == item["srcdir"]) {
+            var index = availableIndexForService(value);
+            if (item.is == "app") {
+                $("#installButton").hide();
+                $("#uninstallButton a").attr("href", "javascript:uninstallService('" + value.id + "', '" + value.title + "', " + index + ");").show();
+                $("#uninstallButton").show();
+            } else if (item.is == "connector") {
                 var id = value.id;
                 var abled = 'Dis';
                 if(value.disabled) {
@@ -118,19 +134,12 @@ function selectService(index) {
                 $("#connectorInstancesList #id-" + id).click(function(event) {
                     window.location.replace("#!/app/" + id);
                 });
-                var index = -1;
-                for(var i in serviceMap.available) {
-                    if(value.handle && serviceMap.available[i].handle === value.handle) {
-                        index = i;
-                        break;
-                    }
-                }
                 $("#connectorInstancesList div .uninst-" + id + ' a').attr("href", "javascript:uninstallService('" + id + "', '" + value.title + "', " + index + ");");
                 $("#connectorInstancesList div .disable-" + id + ' a').attr("href", "javascript:ableService('" + abled + "', '" + id + "', '" + value.title + "', " + index + ");");
             }
-        });
-        $("#connectorInstancesSection").show();
-    }
+        }
+    });
+    $("#connectorInstancesSection").toggle(item.is == "connector");
 
     $("#serviceInfo").show();
 }
@@ -143,6 +152,8 @@ function installService(i) {
             updateServiceMap(previousLocation, function() {
                 showApp(svc);
             });
+            $("#installButton").hide();
+            $("#uninstallButton").show();
         } else {
             alert('error:' + JSON.string(data));
         }
@@ -159,6 +170,8 @@ function uninstallService(svcID, title, index) {
                 updateServiceMap(previousLocation, function() {
                     setLocation("services");
                     selectService(index);
+                    $("#installButton").show();
+                    $("#uninstallButton").hide();
                     $("#servicesList li").each(function(index) {
                         if($(this).html() === title) {
                             $("#servicesList li").removeClass("current");
@@ -285,7 +298,6 @@ function updateServiceMap(previousLocation, callback) {
         }
       });
 
-      
       $("#appsList").html('');
       // Populate Installed Apps List
       $.each(serviceMap.installed, function(key, value) {
