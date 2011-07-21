@@ -59,7 +59,7 @@
         <header>
           <h1>Services</h1>
           <ul class="actions">
-            <li onclick="javascript:unstableServices()">[show unstable]</li>
+            <li onclick="javascript:unstableServices()">[<input type="checkbox" id="showUnstable"/><label for="showUnstable">show unstable</label> ]</li>
           </ul>
         </header>
         <section class="content">
@@ -83,6 +83,9 @@
             </ul>
             <div id="installButton">
               <a href="#">Install</a>
+            </div>
+            <div id="uninstallButton">
+              <a href="#">Uninstall</a>
             </div>
             <section id="connectorInstancesSection">
               <ul id="connectorInstancesList">

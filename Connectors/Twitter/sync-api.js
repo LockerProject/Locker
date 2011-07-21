@@ -12,6 +12,7 @@ var fs = require('fs'),
     lstate = require('lstate'),
     querystring = require('querystring'),
     sys = require('sys'),
+    async = require('async'),
     request = require('request'),
     lfs = require('../../Common/node/lfs.js'),
     locker = require('../../Common/node/locker.js'),
@@ -30,7 +31,8 @@ module.exports = function(theApp) {
             res.redirect(app.externalBase + 'auth');
         } else {
             res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end("<html>great! now you can:<br><li><a href='getNew/home_timeline'>sync new home_timeline entries</a></li>" + 
+            res.end("<html>great! now you can:<br><h3><a href='sync'>sync it all!</a></h3>or: " +
+                                                 "<li><a href='getNew/home_timeline'>sync new home_timeline entries</a></li>" + 
                                                  "<li><a href='getNew/user_timeline'>sync new user_timeline entries</a></li>" + 
                                                  "<li><a href='getNew/mentions'>sync new mentions</a></li>" + 
                                                  "<li><a href='getNew/friends'>sync new friends</a></li>" + 
@@ -59,6 +61,63 @@ module.exports = function(theApp) {
 function authComplete(theAuth, mongo) {
     auth = theAuth;
     sync.init(auth, mongo);
+
+    // manual sync of everything
+    app.get('/sync', function(req, res){
+        res.end(JSON.stringify({success:"background syncing"}));
+        lstate.up("syncing");
+        async.series([
+            function(cb){
+                lstate.set("status","syncing home_timeline");
+                sync.pullStatuses("home_timeline",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing home_timeline");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/home_timeline', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
+                lstate.set("status","syncing user_timeline");
+                sync.pullStatuses("user_timeline",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing user_timeline");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/user_timeline', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
+                lstate.set("status","syncing mentions");
+                sync.pullStatuses("mentions",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing mentions");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/mentions', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
+                lstate.set("status","syncing friends");
+                sync.syncUsersInfo("friends",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing friends");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/friends', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
+                lstate.set("status","syncing followers");
+                sync.syncUsersInfo("followers",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing followers");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/followers', repeatAfter);
+                    cb();
+                });
+            }
+            ],function(){
+                lstate.set("status","done syncing");
+                lstate.down("syncing");
+            });
+        
+    });
 
     // Sync the person's friend data
     app.get('/getNew/:type', function(req, res) {
