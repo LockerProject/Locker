@@ -26,6 +26,8 @@ exports.addEvent = function(data, callback) {
         exports.addLink("facebook", data.obj.data, data.obj.data.url, callback);
     } else if (type.indexOf('twitter') !== -1 && data.obj && data.obj.hasOwnProperty("status") && data.obj.status.hasOwnProperty("entities") && data.obj.status.entities.hasOwnProperty("urls")) {
         exports.addLink("twitter", data.obj.status, data.obj.status.entities.urls[0].expanded_url || data.obj.status.entities.urls[0].url, callback);
+    } else {
+        callback("Invalid data");
     }
 }
 
