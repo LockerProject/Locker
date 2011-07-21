@@ -38,6 +38,7 @@ var dashboard = require(__dirname + "/Ops/dashboard.js");
 var mongodb = require('mongodb');
 var webservice = require(__dirname + "/Ops/webservice.js");
 var lcrypto = require("lcrypto");
+var thservice = require(__dirname + "/Ops/thservice.js");
 
 
 if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
@@ -124,9 +125,11 @@ function finishStartup() {
     // look for existing things
     serviceManager.findInstalled();
 
-    lscheduler.masterScheduler.loadAndStart();
+    thservice.start();
 
     webservice.startService(lconfig.lockerPort);
+
+    lscheduler.masterScheduler.loadAndStart();
 
     var lockerPortNext = "1"+lconfig.lockerPort;
     dashboard.start(lockerPortNext);
