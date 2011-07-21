@@ -57,25 +57,35 @@ print "Fetching node.js source from " + node_url
 
 os.mkdir('nodejs')
 os.chdir('nodejs')
+os.mkdir('installroot')
 
 urllib.urlretrieve(node_url, node_srcdir + '.tar.gz', reporthook=dlProgress)
 print " ...done."
 
 # Step 2b: unpack node.js
-os.system('tar xf ' + node_srcdir + '.tar.gz')
-
-# Step 2c: configure source for building
+print "Unpacking node.js"
+os.system('tar xvf ' + node_srcdir + '.tar.gz > ../node-manifest.log 2>&1')
 os.chdir(node_srcdir)
-os.system('./configure')
 
-# Step 2d: build
-os.system('make')
+if system != 'Darwin':
+    # Step 2c: patch configured source
+    print "Patching node.js source to build statically."
+    os.system('patch -p2 < ../../patches/node-static-build.patch')
 
-# Step 2e: hardlink node binary into tar staging directory
-os.link('build/default/node', '../../lockerproject/bin/node')
+# Step 2d: configure source for building
+print "Configuring node.js"
+os.system('./configure --prefix=../installroot > ../../node-configure.log 2>&1')
+
+# Step 2e: build
+print "Building node.js"
+os.system('make install > ../../node-build.log 2>&1')
+
+# Step 2f: hardlink node binary into tar staging directory
+print "Linking node.js into lockerball root."
+os.chdir('../..')
+os.link('nodejs/installroot/bin/node', 'lockerproject/bin/node')
 
 # Step 2 fin
-os.chdir('../..')
 
 
 # Step 3a: fetch OpenSSL source
@@ -88,14 +98,22 @@ urllib.urlretrieve(openssl_src_url, openssl_srcdir + ".tar.gz", reporthook=dlPro
 print " ...done."
 
 # Step 3b: unpack OpenSSL
-os.system('tar xf ' + openssl_srcdir + '.tar.gz')
+print "Unpacking OpenSSL"
+os.system('tar xvf ' + openssl_srcdir + '.tar.gz > ../openssl-manifest.log 2>&1')
+os.chdir(openssl_srcdir)
+
+if system != 'Darwin':
+    # Step 3c: patch the source to build the OpenSSL app to actually be static
+    print "Patching OpenSSL source to build openssl binary statically."
+    os.system('patch -p2 < ../../patches/openssl-app-static-build.patch')
 
 # Step 3c: configure OpenSSL to be built statically
-os.chdir(openssl_srcdir)
-os.system('./config no-shared')
+print "Configuring OpenSSL"
+os.system('./config no-shared > ../../openssl-configure.log 2>&1')
 
 # Step 3d: build
-os.system('make')
+print "Building OpenSSL"
+os.system('make > ../../openssl-build.log 2>&1')
 
 # Step 3e: hardlink openssl binary into tar staging directory
 os.link('apps/openssl', '../../lockerproject/bin/openssl')
@@ -108,7 +126,7 @@ os.chdir('../..')
 print "Cloning locker source from Github."
 
 os.chdir('lockerproject')
-os.system('git clone ' + lockerproject_git_url + ' code')
+os.system('git clone --quiet ' + lockerproject_git_url + ' code')
 
 os.chdir('code')
 git = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE, shell=False)
@@ -117,7 +135,7 @@ git = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], stdout=subproces
 # Step 5: run npm
 print "Running npm in code directory..."
 
-os.system('npm install')
+os.system('npm install > ../../npm-install.log 2>&1')
 
 os.chdir('..')
 
@@ -132,7 +150,7 @@ os.link('../run', 'run')
 print "Building the tarball..."
 
 os.chdir('..')
-os.system('tar cvfz lockerproject-' + locker_version.rstrip() + '-' + system + '-' + arch + '.tar.gz lockerproject')
+os.system('tar cvfz lockerproject-' + locker_version.rstrip() + '-' + system + '-' + arch + '.tar.gz lockerproject > lockerball-assembly.log 2>&1')
 
 
 # That should be everything!
