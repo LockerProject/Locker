@@ -8,6 +8,7 @@
 */
 
 var IJOD = require('ijod').IJOD;
+var lstate = require('lstate');
 
 var ijodFiles = {};
 var mongo;
@@ -17,6 +18,7 @@ exports.init = function(mongoid, _mongo) {
     mongo = _mongo;
     mongoID = mongoid;
     for (var i in mongo.collections) {
+        // MAYBETODO: do .count() for each and reset lstate.set("field",val) here? 
         if (!ijodFiles[i]) {
             ijodFiles[i] = new IJOD(i);
         }
@@ -40,6 +42,7 @@ function now() {
 // timeStamp will be the timestamp stored w/ the record if it exists, otherwise, just use now.
 //
 exports.addObject = function(type, object, options, callback) {
+    lstate.up(type);
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
@@ -59,6 +62,7 @@ exports.addObject = function(type, object, options, callback) {
 
 // same deal, except no strip option, just timestamp is available currently
 exports.removeObject = function(type, id, options, callback) {
+    lstate.down(type);
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
@@ -87,12 +91,13 @@ function getMongo(type, id, callback) {
         return m;
 }
 
-exports.getAllCurrent = function(type, callback) {
+exports.getAllCurrent = function(type, callback, options) {
+    options = options || {};
     var m = mongo.collections[type];
     if(!m) 
         callback(new Error('invalid type:' + type), null);
     else
-        m.find({}, {}).toArray(callback);
+        m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {

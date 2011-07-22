@@ -93,7 +93,7 @@ vows.describe("Service Manager").addBatch({
                     assert.include(svcMetaInfo, "id");
                 },
                 "setting a version number" : function(svcMetaInfo) {
-                    assert.isNotNull(svcMetaInfo.version);
+                    assert.notEqual(svcMetaInfo.version, undefined);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
@@ -104,7 +104,10 @@ vows.describe("Service Manager").addBatch({
                 "and by creating a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
                     statInfo = fs.readFileSync(lconfig.me + "/" + svcMetaInfo.id + "/auth.json",'ascii');
                     assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
-                }    
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
             }
         }
     },
@@ -115,6 +118,9 @@ vows.describe("Service Manager").addBatch({
         topic:serviceManager.install({srcdir:"Collections/Contacts"}),
         "are not installable" : function(svcInfo) {
             assert.isUndefined(svcInfo);
+        },
+        "do not install stub collections" : function() {
+            assert.isFalse(serviceManager.isInstalled("videos"));
         }
     },
     "Migrates services that need it during the install" : {

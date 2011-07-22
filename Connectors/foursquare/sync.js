@@ -31,6 +31,7 @@ exports.init = function(theauth, mongo) {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = []; }
     dataStore.init("id", mongo);
+    fs.mkdir('photos', 0755);
 }
 
 
@@ -46,7 +47,6 @@ exports.syncFriends = function(callback) {
         var self = JSON.parse(data).response.user;
         fs.writeFile('profile.json', JSON.stringify(self));
         var userID = self.id;
-        fs.mkdir('photos', 0755);
         if (self.photo.indexOf("userpix") > 0) {
             // fetch photo
             request.get({uri:self.photo, encoding: 'binary'}, function(err, resp, body) {
@@ -114,6 +114,11 @@ function addCheckins(checkins, callback) {
     }
     var checkin = checkins.shift();
     if (checkin != undefined) {
+        if (checkin.photos.count > 0) {
+            for (var i = 0; i < checkin.photos.count; i++) {
+                downloadPhoto(checkin.photos.items[0].url, checkin.id + "_" + i);
+            }
+        }
         dataStore.addObject("places", checkin, function(err) {
             var eventObj = {source:'places', type:'new', status:checkin};
             exports.eventEmitter.emit('checkin/foursquare', eventObj);
@@ -122,12 +127,31 @@ function addCheckins(checkins, callback) {
     }
 }
 
+function downloadPhoto(url, id) {
+    request.get({uri:url, encoding: 'binary'}, function(err, resp, body) {
+        if (err)
+            console.error(err);
+        else {
+            console.dir('photos/' + id + '.jpg');
+            fs.writeFileSync('photos/' + id + '.jpg', body, 'binary');
+            // don't know what these events are supposed to look like yet
+            var eventObj = {source:'places', type:'new', photo: 'newPhoto'};
+            exports.eventEmitter.emit('photo/foursquare', eventObj);
+        }
+    });
+}
+
 function getMe(token, callback) {
     request.get({uri:'https://api.foursquare.com/v2/users/self.json?oauth_token=' + token}, callback);
 }
 
 exports.syncRecent = function (callback) {
     getRecent(auth.accessToken, function(err, resp, data) {
+        if(err || !data || !JSON.parse(data).response.recent)
+        {
+            callback(true,60);
+            return;
+        }
         var checkins = JSON.parse(data).response.recent;
         // load up known recents and cache so we only track new checkins
         fs.readFile('recents.json',function(err, data){

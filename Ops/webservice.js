@@ -350,6 +350,7 @@ locker.post('/core/:svcId/event', function(req, res) {
         return;
     }
     var type = req.body['type'], obj = req.body['obj'];
+    var action = req.body["action"] || "new";
     var svcId = req.params.svcId;
     if(!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
@@ -361,7 +362,7 @@ locker.post('/core/:svcId/event', function(req, res) {
         res.end("Invalid type or object");
         return;
     }
-    levents.fireEvent(type, svcId, obj);
+    levents.fireEvent(type, svcId, action, obj);
     res.writeHead(200);
     res.end("OKTHXBI");
 });

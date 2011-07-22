@@ -74,16 +74,18 @@ function mapMetaData(file, type, installable) {
             console.error("missing handle for "+file);
             return;
         }
-        fs.stat(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle,function(err,stat){
-            if(err || !stat) {
-                metaData.id=metaData.handle;
-                metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
-                metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
-                serviceMap.installed[metaData.id] = metaData;
-                fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id,0755);
-                fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
-            }
-        });
+        if (metaData.status != 'stub') {
+            fs.stat(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle,function(err,stat){
+                if(err || !stat) {
+                    metaData.id=metaData.handle;
+                    metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
+                    metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
+                    serviceMap.installed[metaData.id] = metaData;
+                    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id,0755);
+                    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
+                }
+            });
+        }
     }
 
     return metaData;
@@ -369,13 +371,14 @@ exports.spawn = function(serviceId, callback) {
         console.outputModule = mod;
         
     });
-    app.on('exit', function (code) {
-        console.log(svc.id + " process has ended.");
+    app.on('exit', function (code,signal) {
+        console.log(svc.id + " process has ended. (" + code + ":" + signal + ")");
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
         delete svc.port;
         delete svc.uriLocal;
+        delete svc.starting;
         // save out all updated meta fields (pretty print!)
         if (!svc.uninstalled) {
             fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));

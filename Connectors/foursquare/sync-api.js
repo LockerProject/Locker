@@ -34,6 +34,9 @@ function authComplete(theauth, mongo) {
     sync.eventEmitter.on('contact/foursquare', function(eventObj) {
         locker.event('contact/foursquare', eventObj);
     });
+    sync.eventEmitter.on('photo/foursquare', function(eventObj) {
+        locker.event('photo/foursquare', eventObj);
+    });
 }
 
 function index(req, res) {

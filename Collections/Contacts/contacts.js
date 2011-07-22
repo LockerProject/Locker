@@ -27,7 +27,7 @@ app.get('/', function(req, res) {
         'Content-Type': 'text/html'
     });
     dataStore.getTotalCount(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' contacts</p><p><a href="update">Update from Connectors</a></p></html>');
+        res.write('<html><p>Found '+ countInfo +' contacts</p></html>');
         res.end();
     });
 });
@@ -50,7 +50,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.obj.type || !req.body._via) {
+    if (!req.body.obj.type || !req.body.via) {
         console.log('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');

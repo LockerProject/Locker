@@ -4,6 +4,7 @@
     "desc":"Collect and sync my data from my FitBit account.",
     "run":"node init.js",
     "status":"unstable",
-    "mongoCollections": ["sleep"],
-    "handle":"fitbit"
+    "mongoCollections": ["sleep", "devices", "profile"],
+    "handle":"fitbit",
+    "provides":["device/fitbit"]
 }

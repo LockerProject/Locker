@@ -98,10 +98,11 @@ function handleAuth(req, res) {
                 exports.auth.token = newToken;
                 fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
                 completedCallback();
-                res.redirect(uri);
+                res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
             }
         });    
-    } else { 
+    } else {
+        res.redirect(uri);
         completedCallback();
     }
 }

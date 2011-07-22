@@ -7,5 +7,6 @@
     "handle":"twitter",
     "mongoCollections": ["friends", "followers", "home_timeline", "user_timeline", "mentions"],
     "processOptions" : {"enableCookies" : true, "id" : "id_str"},
+    "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",
     "provides":["contact/twitter","status/twitter","link/twitter"]
 }

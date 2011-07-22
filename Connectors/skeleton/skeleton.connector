@@ -1,0 +1,10 @@
+{
+    "title":"Example Provider",
+    "action":"Connect to a Example account",
+    "desc":"Collect and sync my data from my example account using the Example API and an Example 'app' that I create just for myself.  To enable this to show up in the available list of services, you'll need to set displayUnstable to true in your config.json",
+    "run":"node init.js",
+    "status":"unstable",
+    "handle":"skeleton",
+    "mongoCollections": ["put the names of the mongo collections you require here"],
+    "provides":["here you will list the service types exposed by the connector"]
+}

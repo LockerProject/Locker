@@ -32,7 +32,7 @@ exports.init = function(theAuth, mongo) {
     try {
         allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
     } catch (err) { allKnownIDs = {friends:{}, followers:{}}; }
-    dataStore.init('id_str', mongo);
+    dataStore.init('id', mongo);
 }
 // 
 // exports.updateCurrent = function(type, callback) {
@@ -56,6 +56,8 @@ exports.update = function(type, callback) {
     }
     if(type === 'profile') {
         updateProfile(callback);
+    } else if(type === 'devices') {
+        updateDevices(callback);
     } else if(type === 'sleepMinutesAsleep') {
         updateTimeSeries('sleep/minutesAsleep', callback);
     } else {
@@ -71,6 +73,29 @@ function updateProfile(callback) {
         } else {
             lfs.writeObjectToFile('profile.json',resp);
             callback(null, resp);
+        }
+    });
+}
+
+function updateDevices(callback) {
+    makeApiCall('/user/-/devices.json', {}, function(err, resp) {
+        if(err) {
+            console.error(err);
+            callback(err, 3600, resp);
+        } else {
+            for(var i in resp) {
+                var device = resp[i];
+                dataStore.getCurrent("devices", device.id, function(err, currentDevice) {
+                    if(err || !currentDevice || device.battery != currentDevice.battery) {
+                        dataStore.addObject("devices", device, function(err) {
+                            if(err) {
+                                console.error('DEBUG: updateDevices, err', err);
+                            }
+                        });
+                    }
+                });
+            }
+            callback(null, 3600, resp);
         }
     });
 }
