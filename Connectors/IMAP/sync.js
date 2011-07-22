@@ -19,11 +19,6 @@ var fs = require('fs'),
     EventEmitter = require('events').EventEmitter,
     ImapConnection = require('./imap').ImapConnection;
 
-process.on('uncaughtException', function(err) {
-  console.error(err);
-  console.error(err.stack);
-});
-
 var updateState, 
     query,
     auth, 
@@ -31,10 +26,9 @@ var updateState,
     totalMsgCount,
     imap,
     isSyncing = false,
-    debug = true;
+    debug = false;
     
 exports.eventEmitter = new EventEmitter();
-
 
 exports.init = function(theAuth, mongo) {
     auth = theAuth;
@@ -62,7 +56,7 @@ exports.init = function(theAuth, mongo) {
 exports.syncMessages = function(syncMessagesCallback) {
     if(isSyncing) {
         process.nextTick(function() {
-            syncMessagesCallback("already syncing", 600, "");
+            syncMessagesCallback("already syncing", 600);
         });
         return;
     } else {
@@ -72,31 +66,24 @@ exports.syncMessages = function(syncMessagesCallback) {
         
     async.series({
         connect: function(callback) {
-            if (debug) console.error('connect');
             imap = new ImapConnection(auth);
             imap.connect(function(err) {
                 callback(err, 'connect');
             });
         },
         getboxes: function(callback) {
-            if (debug) console.error('getboxes');
             try {
                 fs.mkdirSync('attachments', 0755);
             } catch(err) {
                 if(err.code !== 'EEXIST')
-                    console.error('DEBUG: err', err);
+                    console.error('err', err);
             }
             imap.getBoxes(function(err, mailboxes) {
-                // console.error('DEBUG: mailboxes', mailboxes);
                 var mailboxArray = [];
                 var mailboxQuery = {};
-                // console.error('DEBUG: mailboxArray', mailboxArray);
-                // console.error('DEBUG: mailboxes', mailboxes);
                 
-                if (debug) console.error('getMailboxPaths');
                 exports.getMailboxPaths(mailboxArray, mailboxes);
-                // console.error('DEBUG: mailboxArray', mailboxArray);
-
+                
                 for (var i = 0; i < mailboxArray.length; i++) {
                     if (!updateState.messages.hasOwnProperty(mailboxArray[i])) {
                         updateState.messages[mailboxArray[i]] = {};
@@ -107,18 +94,12 @@ exports.syncMessages = function(syncMessagesCallback) {
                     mailboxArray[i] = lutil.extend({}, mailboxQuery);
                 }
                 
-                // try {
-                //     fs.mkdir('attachments', 0755);
-                // } catch(err) {
-                //     console.error('DEBUG: err', err);
-                // }
                 async.forEachSeries(mailboxArray, exports.fetchMessages, function(err) {
                     callback(err, 'getboxes');  
                 });
             });
         },
         logout: function(callback) {
-            if (debug) console.error('logout');
             imap.logout(function(err) {
                 return callback(err, 'logout');
             });
@@ -147,7 +128,6 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
     }
     
     var connect = function(callback) {
-        // console.error('connecting with, ', auth);
         try {
             if(imap._state.conn._readWatcher.socket)
                 imap._state.conn._readWatcher.socket.destroy();
@@ -156,11 +136,11 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
         }
         imap = new ImapConnection(auth);
         imap.connect(function(err) {
-            if(err) console.error('DEBUG: err', err);
+            if(err) console.error('error connecting:', err);
             imap.openBox(mailbox, false, callback);
         });
     }
-
+    
     async.series({
         connect: connect,
         search: function(callback) {
@@ -248,12 +228,19 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
 };
 
 function cleanPrefix(prefix) {
-    return prefix.replace(/[^a-zA-Z0-9\/-]/g, '_');
+    if(typeof prefix === 'string')
+        return prefix.replace(/[^a-zA-Z0-9\/-_]/g, '_');
+    return prefix;
+}
+
+function getCleanFilename(msgID, partID, filename, mailbox) {
+    var fn = msgID + '_' + partID + '_' + filename;
+    fn = fn.replace(/[^a-zA-Z0-9-_.]/g, '_');
+    return 'attachments/' + cleanPrefix(mailbox) + '/' + fn;
 }
 
 var throughput = 125; // KB/s
 var uidsPerCycle = 100;
-// var timeout = ;
 
 function getMessages(uids, mailbox, connect, callback) {
     if(!(uids && uids.length)) {
@@ -266,7 +253,7 @@ function getMessages(uids, mailbox, connect, callback) {
             for(var i in headers)
                 msgHeadersArray.push(headers[i]);
             getBodies(msgHeadersArray, mailbox, connect, function(messages) {
-                console.error('DEBUG: messages.length', messages.length);
+                if(debug) console.error('DEBUG: messages.length', messages.length);
                 
                 for(var i in messages) {
                     var message = messages[i];
@@ -296,10 +283,7 @@ function getBodies(msgHeadersArray, mailbox, connect, callback, messages) {
     }
     var headers = msgHeadersArray.shift();
     
-    console.error('getting body parts for', headers.id);
     getBodyParts(headers, mailbox, connect, function(err, bodyParts) {
-        console.error('got body parts for', headers.id);
-        // console.error('DEBUG: bodyParts', bodyParts);
         headers.body = bodyParts;
         messages.push(headers);
         getBodies(msgHeadersArray, mailbox, connect, callback, messages);
@@ -319,16 +303,13 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
     var part = msgHeaders.structure.shift();
     if (part.length > 0)
        part = part[0];
-    // console.error('DEBUG: part', part);
     if(!part.partID) {
         process.nextTick(function() {
             getBodyParts(msgHeaders, mailbox, connect, callback, body)
         });
         return;
     }
-    console.error('DEBUG: part.partID', part.partID);
-    var partFetch = imap.fetch(msgHeaders.id, {request:{headers:false, body: '' + part.partID}});
-    var data = '';
+    
     
     var done = function() {
         body.push(part);
@@ -349,9 +330,13 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
             timeout = 3000;
     }
     if(timeout > 3000) {
-        console.error('DEBUG: part.size', part.size, ', timeout', timeout);
+        if(debug) console.error('DEBUG: part.size', part.size, ', timeout', timeout);
     }
     
+    // var start = Date.now();
+    if(debug) console.error('DEBUG: part.partID', part.partID);
+    var partFetch = imap.fetch(msgHeaders.id, {request:{headers:false, body: '' + part.partID}});
+    var data = '';
     partFetch.on('error', function(err) {
         console.error('part fetch err', err);
         reset();
@@ -371,15 +356,26 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
         });
         msg.on('end', function() {
             clearTimeout(t);
-            if(part.type == 'text') {
+            // var et = Date.now() - start;
+            // var stream = fs.createWriteStream('points.csv', {'flags':'a'});
+            // stream.write(part.size + ',' + et + '\n');
+            // stream.end();
+            // console.error('Point, ', part.size, ',', et);
+            if(part.type === 'text') {
                 part.body = data;
-            } else if(part && part.disposition && part.disposition.filename && part.disposition.filename.length > 0) {
-                var stream = fs.createWriteStream('attachments/' + cleanPrefix(mailbox) + '/' 
-                                + msgHeaders.id + '_' + part.partID + '_' + part.disposition.filename, 
-                                { flags: 'w', encoding: 'base64'});
+            } else if(part.type) {
+                var filename = '';
+                if(part.disposition && part.disposition.filename && part.disposition.filename.length > 0) {
+                    filename = part.disposition.filename
+                } else if(part.params && part.params.name && part.params.name.length > 0) {
+                    filename = part.params.name;
+                }
+                var stream = fs.createWriteStream(getCleanFilename(msgHeaders.id, part.partID, filename, mailbox), {flags:'w', encoding:'base64'});
                 stream.write(data, 'base64');
                 stream.end();
-                console.error('DEBUG: non-text part', part);
+                if(debug) console.error('DEBUG: non-text part', part);
+            } else {
+                console.error('DEBUG: nothing?? part', part);
             }
             done();
         });
@@ -393,7 +389,6 @@ function doFetch(uids, request, connect, callback, messages) {
     var highestUID = 0;
     
     var reset = function() {
-        imap._state.conn._readWatcher.socket.destroy();
         connect(function() { //reconnect
             if (debug) console.error('reconnected');
             var sliceAt = 0;
@@ -426,7 +421,7 @@ function doFetch(uids, request, connect, callback, messages) {
             reset();
         });
         msg.on('data', function(chunk) {
-            console.error('DEBUG: chunk', chunk);
+            if(debug) console.error('DEBUG: chunk', chunk);
         })
         msg.on('end', function() {
             clearTimeout(t);
@@ -438,7 +433,7 @@ function doFetch(uids, request, connect, callback, messages) {
             }
         });
         msg.on('error', function(err) {
-            console.error('DEBUG: err', err);
+            console.error('fetch msg err', err);
         })
     });
     fetch.on('end', function() {
@@ -447,4 +442,13 @@ function doFetch(uids, request, connect, callback, messages) {
         }
         callback(messages);
     });
+}
+
+// var b = 1000, // connect time
+//     m = 125;  // bandwidth, KB/s
+
+function calcLine(point1, point2) {
+    var m = (point2.dep - point1.dep) / (point2.indep - point1.indep);
+    var b = (point1.dep - (m * point1.indep) );
+    return {b:b, m:m, calc: function(indep) { return m * indep + b; }};
 }
