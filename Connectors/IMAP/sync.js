@@ -8,6 +8,7 @@
 */
 
 var fs = require('fs'),
+    path = require('path'),
     async = require('async'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
@@ -72,12 +73,6 @@ exports.syncMessages = function(syncMessagesCallback) {
             });
         },
         getboxes: function(callback) {
-            try {
-                fs.mkdirSync('attachments', 0755);
-            } catch(err) {
-                if(err.code !== 'EEXIST')
-                    console.error('err', err);
-            }
             imap.getBoxes(function(err, mailboxes) {
                 var mailboxArray = [];
                 var mailboxQuery = {};
@@ -197,6 +192,12 @@ function storeMessage(mailbox, msg) {
 }
 
 exports.getMailboxPaths = function(mailboxes, results, prefix) {
+    try {
+        fs.mkdirSync('attachments', 0755);
+    } catch(err) {
+        if(err.code !== 'EEXIST')
+            console.error('err', err);
+    }
     if (prefix === undefined) {
         prefix = '';
     } else {
@@ -213,7 +214,7 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
             if (results[i].attribs.indexOf('NOSELECT') === -1 && 
                 i !== 'Trash' && i !== 'Spam' && i !== 'Junk') {
                     try {
-                        fs.mkdirSync('attachments/' + cleanPrefix(prefix + '/' + i), 0755);
+                        fs.mkdirSync('attachments/' + cleanPrefix((prefix? (prefix +'/') : '') + i), 0755);
                     } catch(err) {
                         if(err.code !== 'EEXIST')
                             console.error('DEBUG: err for ', cleanPrefix(prefix), err);
