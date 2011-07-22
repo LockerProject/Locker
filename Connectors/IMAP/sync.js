@@ -30,9 +30,11 @@ var updateState,
     allKnownIDs,
     totalMsgCount,
     imap,
+    isSyncing = false,
     debug = true;
     
 exports.eventEmitter = new EventEmitter();
+
 
 exports.init = function(theAuth, mongo) {
     auth = theAuth;
@@ -58,6 +60,14 @@ exports.init = function(theAuth, mongo) {
 };
 
 exports.syncMessages = function(syncMessagesCallback) {
+    if(isSyncing) {
+        process.nextTick(function() {
+            syncMessagesCallback("already syncing", 600, "");
+        });
+        return;
+    } else {
+        isSyncing = true;
+    }
     totalMsgCount = 0;
         
     async.series({
@@ -118,6 +128,7 @@ exports.syncMessages = function(syncMessagesCallback) {
         if (err) {
             console.error(err);
         }
+        isSyncing = false;
         syncMessagesCallback(err, 600, "sync'd " + totalMsgCount + " new messages");
     });
 };
@@ -242,7 +253,7 @@ function cleanPrefix(prefix) {
 
 
 var uidsPerCycle = 100;
-var timeout = (debug? 2000 : 60000);
+var timeout = (debug? 10000 : 60000);
 
 function getMessages(uids, mailbox, connect, callback) {
     if(!(uids && uids.length)) {
@@ -271,45 +282,7 @@ function getMessages(uids, mailbox, connect, callback) {
                     getMessages(uids, mailbox, connect, callback);
                 });
             });
-/*            doFetch(theseUIDs, { headers: false, body:true }, connect, function(bodies) {
-                var messages = headers;
-                for(var id in headers) {
-                    if(bodies[id]) {
-                        delete messages[id]._events;
-                        delete bodies[id]._events;
-                        console.error('DEBUG: bodies[' + id + ']', JSON.stringify(bodies[id]));
-                        // console.error('DEBUG: messages[id]', messages[id]);
-                        messages[id].body = [];
-                        for(var i in bodies[id].structure) {
-                            var part = bodies[id].structure[i];
-                            console.error('DEBUG: part ' + i, part);
-                            if(part.type === 'text') {
-                                messages[id].body.push(part);
-                            } else {
-                                //do something else!
-                            }
-                        }
-                        // console.error('DEBUG: bodies[' + id + ']', bodies[id]);
-                    }
-                        
-                }
-                
-                for(var i in messages) {
-                    var message = messages[i];
-                    if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
-                        allKnownIDs[mailbox][message.id] = 1;
-                        totalMsgCount++;
-                        storeMessage(mailbox, message);
-                        lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
-                    }
-                    if (debug) console.error('Fetched message (message.id: ' + message.id + ')');
-                }
-                
-                process.nextTick(function() {
-                    getMessages(uids, mailbox, connect, callback);
-                });
-            });
-*/        });
+        });
     }
 }
 
@@ -357,12 +330,21 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
     var partFetch = imap.fetch(msgHeaders.id, {request:{headers:false, body: '' + part.partID}});
     var data = '';
     
+    var done = function() {
+        body.push(part);
+        getBodyParts(msgHeaders, mailbox, connect, callback, body);
+    };
+    
+    partFetch.on('error', function(err) {
+        console.error('part fetch err', err);
+        done();
+    });
     partFetch.on('message', function(msg) {
         var t = setTimeout(function() {
             if (debug) console.error('stuck on message ' + msgHeaders.id + ', part ' + part.partID
                     + ' of type ' + part.type + '/' + part.subtype + ', closing connection and reconnecting!!!');
             connect(function() {
-                getBodyParts(msgHeaders, mailbox, connect, callback, body);
+                done();
             });
         }, timeout);
         msg.on('data', function(chunk) {
@@ -370,13 +352,13 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
             data += chunk;
         })
         msg.on('error', function(error) {
-            console.error('error', error);
+            console.error('part fetch msg error', error);
+            done();
         });
         msg.on('end', function() {
             clearTimeout(t);
             if(part.type == 'text') {
                 part.body = data;
-                body.push(part);
             } else if(part && part.disposition && part.disposition.filename && part.disposition.filename.length > 0) {
                 var stream = fs.createWriteStream('attachments/' + cleanPrefix(mailbox) + '/' 
                                 + msgHeaders.id + '_' + part.partID + '_' + part.disposition.filename, 
@@ -385,7 +367,7 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
                 stream.end();
                 console.error('DEBUG: non-text part', part);
             }
-            getBodyParts(msgHeaders, mailbox, connect, callback, body);
+            done();
         });
     })
 }
