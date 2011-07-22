@@ -251,9 +251,9 @@ function cleanPrefix(prefix) {
     return prefix.replace(/[^a-zA-Z0-9\/-]/g, '_');
 }
 
-
+var throughput = 125; // KB/s
 var uidsPerCycle = 100;
-var timeout = (debug? 10000 : 60000);
+// var timeout = ;
 
 function getMessages(uids, mailbox, connect, callback) {
     if(!(uids && uids.length)) {
@@ -335,25 +335,39 @@ function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
         getBodyParts(msgHeaders, mailbox, connect, callback, body);
     };
     
+    var reset = function() {
+        connect(function() {
+            done();
+        });
+    };
+    
+    var timeout = 60000;
+    if(part.size) {
+        //     setup time    size in KB      /   (KB/s)   * (s/ms) * factor of safety
+        timeout = 1000 + (part.size / 1024.0 / throughput * 1000 * 2);
+        if(timeout < 3000) // some minimum
+            timeout = 3000;
+    }
+    if(timeout > 3000) {
+        console.error('DEBUG: part.size', part.size, ', timeout', timeout);
+    }
+    
     partFetch.on('error', function(err) {
         console.error('part fetch err', err);
-        done();
+        reset();
     });
     partFetch.on('message', function(msg) {
         var t = setTimeout(function() {
             if (debug) console.error('stuck on message ' + msgHeaders.id + ', part ' + part.partID
                     + ' of type ' + part.type + '/' + part.subtype + ', closing connection and reconnecting!!!');
-            connect(function() {
-                done();
-            });
+            reset();
         }, timeout);
         msg.on('data', function(chunk) {
-            // console.error('DEBUG: chunk', chunk);
             data += chunk;
-        })
+        });
         msg.on('error', function(error) {
             console.error('part fetch msg error', error);
-            done();
+            reset();
         });
         msg.on('end', function() {
             clearTimeout(t);
@@ -400,6 +414,8 @@ function doFetch(uids, request, connect, callback, messages) {
         console.error('DEBUG: fetch err', err);
         reset();
     });
+    
+    var timeout = 5000;
     fetch.on('message', function(msg) {
         var t = setTimeout(function() {
             if (debug) console.error('stuck on message, closing connection and reconnecting!!!');
