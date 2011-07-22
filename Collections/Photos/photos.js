@@ -20,6 +20,7 @@ var lockerInfo;
 var express = require('express'),
     connect = require('connect');
 var app = express.createServer(connect.bodyParser());
+var request = require('request');
 
 app.get('/', function(req, res) {
     res.writeHead(200, {
@@ -43,14 +44,43 @@ app.get('/allPhotos', function(req, res) {
 });
 
 app.get("/fullPhoto/:photoId", function(req, res) {
-    if (!req.param.photoId) {
+    if (!req.params.photoId) {
         res.writeHead(500);
         res.end("No photo id supplied");
         return;
     }
+    dataStore.getOne(req.params.photoId, function(error, data) {
+        if (error) {
+            res.writeHead(500);
+            res.end(error);
+        } else {
+            res.writeHead(302, {"location":data.url});
+            res.end("");
+            /*
+            request.get({url:data.url}, function(error, resp, body) {
+                if (error) {
+                    res.writeHead(500);
+                    res.end(error);
+                } else {
+                    res.writeHead(200, resp.headers);
+                    res.end(body);
+                }
+            });
+            */
+        }
+    })
 });
 
 app.get("/getPhoto/:photoId", function(req, res) {
+    dataStore.getOne(req.params.photoId, function(error, data) {
+        if (error) {
+            res.writeHead(500);
+            res.end(error);
+        } else {
+            res.writeHead(200, {"Content-Type":"application/json"});
+            res.end(JSON.stringify(data));
+        }
+    })
 });
 
 app.get('/update', function(req, res) {

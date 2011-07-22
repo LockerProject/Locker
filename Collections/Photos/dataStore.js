@@ -12,6 +12,7 @@ var lconfig = require('../../Common/node/lconfig');
 var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
+var crypto = require("crypto");
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -69,10 +70,12 @@ function processShared(svcId, data, cb) {
 }
 
 function saveCommonPhoto(photoInfo, cb) {
+    // This is the only area we do basic matching on right now.  We'll do more later
     var query = [{url:photoInfo.url}];
     if (photoInfo.name) {
         query.push({name:photoInfo.name});
     }
+    if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             locker.event("photo", doc, "new");
@@ -80,6 +83,19 @@ function saveCommonPhoto(photoInfo, cb) {
         cb(err, doc);
     });
 }
+
+/**
+* Common function to create an id attribute for a photo entry
+*
+* This currently uses the only matched attributes of the url and the name to generate a hash.
+*/
+function createId(url, name) {
+    var sha1 = crypto.createHash("sha1");
+    sha1.update(url);
+    if (name) sha1.update(name);
+    return sha1.digest("hex");
+}
+
 
 var dataHandlers = {};
 dataHandlers["photo/twitpic"] = processTwitPic;
@@ -95,6 +111,20 @@ exports.getTotalCount = function(callback) {
 }
 exports.getAll = function(callback) {
     collection.find({}, callback);
+}
+exports.getOne = function(id, callback) {
+    collection.find({"id":id}, function(error, cursor) {
+        if (error) {
+            callback(error, null);
+        } else {
+            cursor.nextObject(function(err, doc) {
+                if (err)
+                    callback(err);
+                else
+                    callback(err, doc);
+            });
+        }
+    });
 }
 
 exports.processEvent = function(eventBody, callback) {
