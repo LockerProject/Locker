@@ -24,21 +24,21 @@ exports.getAll = function(callback) {
 exports.addEvent = function(eventBody, callback) {
     var target;
         
-    switch (eventBody.via) {
-        case 'foursquare':
+    switch (eventBody.type) {
+        case 'contact/foursquare':
             target = exports.addFoursquareData;
             break;
-        case 'facebook':
+        case 'contact/facebook':
             target = exports.addFacebookData;
             break;
-        case 'twitter':
+        case 'contact/twitter':
             target = exports.addTwitterData;
             break;
-        case 'github':
+        case 'contact/github':
             if(eventBody.obj.source !== 'watcher')
                 target = exports.addGithubData;
             break;
-        case 'gcontacts':
+        case 'contact/google':
             target = exports.addGoogleContactsData;
             break;
     }

@@ -197,6 +197,17 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "Github ADD event with different via field" : {
+        topic: function() {
+            dataStore.addEvent({"obj":{"source":"followers","type":"add","data":{"gravatar_id":"27e803a71a7774a00d14274def33f92c","company":"Focus.com","name":"James Burkhart","created_at":"2009/07/05 18:16:40 -0700","location":"San Francisco","public_repo_count":4,"public_gist_count":7,"blog":"www.jamesburkhart.com","following_count":8,"id":101964,"type":"User","permission":null,"followers_count":2,"login":"fourk","email":"fake@testdata.com"}},"via":"github-1","action":"new","type":"contact/github"}, this.callback); },
+        "updates to the same account": function(err, object) {
+            assert.equal(object.data.accounts.foursquare[0].data.id, 2715557);
+            assert.equal(object.data.accounts.foursquare[0].data.name, 'Jake Mitchell');
+            assert.equal(object.data.name, 'James Burkhart');
+            assert.equal(object.data.accounts.github[0].data.name, 'James Burkhart');
+        }
+    }
+}).addBatch({
     "Github ADD event with matching email" : {
         topic: function() {
             dataStore.addEvent({"obj":{"source":"followers","type":"add","data":{"gravatar_id":"27e803a71a7774a00d14274def33f92c","company":"Focus.com","name":"James Burkhart","created_at":"2009/07/05 18:16:40 -0700","location":"San Francisco","public_repo_count":4,"public_gist_count":7,"blog":"www.jamesburkhart.com","following_count":8,"id":101964,"type":"User","permission":null,"followers_count":2,"login":"fourk","email":"fake@testdata.com"}},"via":"github","action":"new","type":"contact/github"}, this.callback); },
