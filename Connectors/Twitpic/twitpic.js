@@ -68,6 +68,25 @@ app.get('/sync', function(req, res) {
     res.end("kthxbye");
 });
 
+app.get("/allPhotos", function(req, res) {
+    if (!handle) {
+        try {
+            handle = JSON.parse(fs.readFileSync("auth.json"))["handle"];
+        } catch (E) {
+            // pass, we'll handle it down below
+        }
+    }
+    if (!handle) {
+        res.writeHead(500);
+        res.end("No handle has been set yet.");
+        return;
+    }
+    lfs.readObjectsFromFile("pics-" + handle + ".json", function(objects) {
+        res.writeHead(200, {"Content-Type":"application/json"});
+        res.end(JSON.stringify(objects));
+    });
+});
+
 app.get('/full/:pic', function(req, res) {
     if(!req.params.pic)
     {
@@ -162,6 +181,7 @@ function tpage(num)
             idCache[id]=pic;
             console.log(JSON.stringify(pic));
             lfs.appendObjectsToFile("pics-"+handle+".json",[pic]);
+            locker.event("photo/twitpic", pic, "new");
         }
         thumbQ(); // kick off in case not running
         num++;

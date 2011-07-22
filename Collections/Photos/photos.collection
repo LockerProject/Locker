@@ -4,5 +4,10 @@
     "run":"node photos.js",
 	"status":"stub",
 	"handle":"photos",
-    "provides":["photo"]
+    "provides":["photo"],
+    "mongoCollections":["photos"],
+    "events":[
+        ["photo/facebook", "/events"],
+        ["photo/twitpic", "/events"]
+    ]
 }
