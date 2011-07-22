@@ -113,10 +113,11 @@ function allsync(req, res) {
                 cb();
             });
         }
-        ],function(){
-            lstate.set("status","done syncing");
-            lstate.down("syncing");
-        });
+    ],
+    function(){
+        lstate.set("status","done syncing");
+        lstate.down("syncing");
+    });
 }
 
 function friends(req, res) {
