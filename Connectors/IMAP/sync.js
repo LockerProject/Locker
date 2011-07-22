@@ -11,6 +11,7 @@ var fs = require('fs'),
     async = require('async'),
     lfs = require('../../Common/node/lfs.js'),
     request = require('request'),
+    wrench = require('wrench'),
     dataStore = require('../../Common/node/connector/dataStore'),
     app = require('../../Common/node/connector/api'),
     util = require('util'),
@@ -69,7 +70,14 @@ exports.syncMessages = function(syncMessagesCallback) {
         },
         getboxes: function(callback) {
             if (debug) console.error('getboxes');
+            try {
+                fs.mkdirSync('attachments', 0755);
+            } catch(err) {
+                if(err.code !== 'EEXIST')
+                    console.error('DEBUG: err', err);
+            }
             imap.getBoxes(function(err, mailboxes) {
+                // console.error('DEBUG: mailboxes', mailboxes);
                 var mailboxArray = [];
                 var mailboxQuery = {};
                 // console.error('DEBUG: mailboxArray', mailboxArray);
@@ -89,6 +97,11 @@ exports.syncMessages = function(syncMessagesCallback) {
                     mailboxArray[i] = lutil.extend({}, mailboxQuery);
                 }
                 
+                // try {
+                //     fs.mkdir('attachments', 0755);
+                // } catch(err) {
+                //     console.error('DEBUG: err', err);
+                // }
                 async.forEachSeries(mailboxArray, exports.fetchMessages, function(err) {
                     callback(err, 'getboxes');  
                 });
@@ -125,7 +138,7 @@ exports.fetchMessages = function(mailboxQuery, fetchMessageCallback) {
     var connect = function(callback) {
         // console.error('connecting with, ', auth);
         try {
-            if(imap._state.conn._readWatcher.hasOwnProperty('socket'))
+            if(imap._state.conn._readWatcher.socket)
                 imap._state.conn._readWatcher.socket.destroy();
         } catch(exp) {
             console.error('exception while destroying socket! ', exp);
@@ -195,12 +208,25 @@ function storeMessage(mailbox, msg) {
 exports.getMailboxPaths = function(mailboxes, results, prefix) {
     if (prefix === undefined) {
         prefix = '';
+    } else {
+        try {
+            fs.mkdirSync('attachments/' + cleanPrefix(prefix), 0755);
+        } catch(err) {
+            if(err.code !== 'EEXIST')
+                console.error('DEBUG: err for ', cleanPrefix(prefix), err);
+        }
     }
     for (var i in results) {
         if (results.hasOwnProperty(i)) {
             // hardwired skipping Trash, Spam, Junk folders
             if (results[i].attribs.indexOf('NOSELECT') === -1 && 
                 i !== 'Trash' && i !== 'Spam' && i !== 'Junk') {
+                    try {
+                        fs.mkdirSync('attachments/' + cleanPrefix(prefix + '/' + i), 0755);
+                    } catch(err) {
+                        if(err.code !== 'EEXIST')
+                            console.error('DEBUG: err for ', cleanPrefix(prefix), err);
+                    }
                 mailboxes.push(prefix + i);
             }
             if (results[i].children !== null) {
@@ -210,9 +236,13 @@ exports.getMailboxPaths = function(mailboxes, results, prefix) {
     }
 };
 
+function cleanPrefix(prefix) {
+    return prefix.replace(/[^a-zA-Z0-9\/-]/g, '_');
+}
+
 
 var uidsPerCycle = 100;
-var timeout = 3000;
+var timeout = (debug? 2000 : 60000);
 
 function getMessages(uids, mailbox, connect, callback) {
     if(!(uids && uids.length)) {
@@ -221,15 +251,38 @@ function getMessages(uids, mailbox, connect, callback) {
         var theseUIDs = uids.splice(0, uidsPerCycle);
         
         doFetch(theseUIDs, { headers: true }, connect, function(headers) {
-            doFetch(theseUIDs, { headers: false, body:true }, connect, function(bodies) {
+            var msgHeadersArray = [];
+            for(var i in headers)
+                msgHeadersArray.push(headers[i]);
+            getBodies(msgHeadersArray, mailbox, connect, function(messages) {
+                console.error('DEBUG: messages.length', messages.length);
+                
+                for(var i in messages) {
+                    var message = messages[i];
+                    if (!allKnownIDs[mailbox].hasOwnProperty(message.id)) {
+                        allKnownIDs[mailbox][message.id] = 1;
+                        totalMsgCount++;
+                        storeMessage(mailbox, message);
+                        lfs.writeObjectToFile('allKnownIDs.json', allKnownIDs);
+                    }
+                    if (debug) console.error('Fetched message (message.id: ' + message.id + ')');
+                }
+                process.nextTick(function() {
+                    getMessages(uids, mailbox, connect, callback);
+                });
+            });
+/*            doFetch(theseUIDs, { headers: false, body:true }, connect, function(bodies) {
                 var messages = headers;
                 for(var id in headers) {
                     if(bodies[id]) {
                         delete messages[id]._events;
+                        delete bodies[id]._events;
+                        console.error('DEBUG: bodies[' + id + ']', JSON.stringify(bodies[id]));
                         // console.error('DEBUG: messages[id]', messages[id]);
                         messages[id].body = [];
                         for(var i in bodies[id].structure) {
                             var part = bodies[id].structure[i];
+                            console.error('DEBUG: part ' + i, part);
                             if(part.type === 'text') {
                                 messages[id].body.push(part);
                             } else {
@@ -256,8 +309,85 @@ function getMessages(uids, mailbox, connect, callback) {
                     getMessages(uids, mailbox, connect, callback);
                 });
             });
-        });
+*/        });
     }
+}
+
+function getBodies(msgHeadersArray, mailbox, connect, callback, messages) {
+    if(!messages) messages = [];
+    if(!msgHeadersArray || msgHeadersArray.length < 1) {
+        process.nextTick(function() {
+            callback(messages);
+        });
+        return;
+    }
+    var headers = msgHeadersArray.shift();
+    
+    console.error('getting body parts for', headers.id);
+    getBodyParts(headers, mailbox, connect, function(err, bodyParts) {
+        console.error('got body parts for', headers.id);
+        // console.error('DEBUG: bodyParts', bodyParts);
+        headers.body = bodyParts;
+        messages.push(headers);
+        getBodies(msgHeadersArray, mailbox, connect, callback, messages);
+    });
+}
+
+
+function getBodyParts(msgHeaders, mailbox, connect, callback, body) {
+    if(!body) body = [];
+    if(!msgHeaders || !msgHeaders.structure || msgHeaders.structure.length < 1) {
+        process.nextTick(function() {
+            callback(null, body);
+        });
+        return;
+    }
+    
+    var part = msgHeaders.structure.shift();
+    if (part.length > 0)
+       part = part[0];
+    // console.error('DEBUG: part', part);
+    if(!part.partID) {
+        process.nextTick(function() {
+            getBodyParts(msgHeaders, mailbox, connect, callback, body)
+        });
+        return;
+    }
+    console.error('DEBUG: part.partID', part.partID);
+    var partFetch = imap.fetch(msgHeaders.id, {request:{headers:false, body: '' + part.partID}});
+    var data = '';
+    
+    partFetch.on('message', function(msg) {
+        var t = setTimeout(function() {
+            if (debug) console.error('stuck on message ' + msgHeaders.id + ', part ' + part.partID
+                    + ' of type ' + part.type + '/' + part.subtype + ', closing connection and reconnecting!!!');
+            connect(function() {
+                getBodyParts(msgHeaders, mailbox, connect, callback, body);
+            });
+        }, timeout);
+        msg.on('data', function(chunk) {
+            // console.error('DEBUG: chunk', chunk);
+            data += chunk;
+        })
+        msg.on('error', function(error) {
+            console.error('error', error);
+        });
+        msg.on('end', function() {
+            clearTimeout(t);
+            if(part.type == 'text') {
+                part.body = data;
+                body.push(part);
+            } else if(part && part.disposition && part.disposition.filename && part.disposition.filename.length > 0) {
+                var stream = fs.createWriteStream('attachments/' + cleanPrefix(mailbox) + '/' 
+                                + msgHeaders.id + '_' + part.partID + '_' + part.disposition.filename, 
+                                { flags: 'w', encoding: 'base64'});
+                stream.write(data, 'base64');
+                stream.end();
+                console.error('DEBUG: non-text part', part);
+            }
+            getBodyParts(msgHeaders, mailbox, connect, callback, body);
+        });
+    })
 }
 
 function doFetch(uids, request, connect, callback, messages) {
@@ -290,13 +420,16 @@ function doFetch(uids, request, connect, callback, messages) {
     });
     fetch.on('message', function(msg) {
         var t = setTimeout(function() {
-            if (debug) console.error('stuck on message, closing connection an reconnecting!!!');
+            if (debug) console.error('stuck on message, closing connection and reconnecting!!!');
             reset();
         }, timeout);
         msg.on('error', function(err) {
             console.error('DEBUG: msg err', err);
             reset();
         });
+        msg.on('data', function(chunk) {
+            console.error('DEBUG: chunk', chunk);
+        })
         msg.on('end', function() {
             clearTimeout(t);
             if (debug) console.error('Finished: ' + msg.id);
