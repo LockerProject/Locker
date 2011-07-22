@@ -22,22 +22,43 @@
 
 <body>
   <div id="container">
+
     <header>   
     </header>
     
     <section id="main" role="main">
+
+    
     <!-- Main content area -->
     <div id="searchBox">
-      <input type="text" id="search"/>
-      <div id="count">0</div>
-      <label for="showJSON">Debug:</label>
-      <input type="checkbox" id="showJSON"/>
-      <label for="sort">Sort by:</label>
+      <div id="logo_bg">
+      	<div class="logo_text"><a href="#">CONTACT<span style="float: right; font-style: italic;; color: rgb(74,207,240);">MERGE</span></a>
+      	</div>
+      </div>
+      
+      <div id="returnbtn_bg">
+      	<div class="returnbtn_text"><a href="#"><span style="font-size: 13px;"> Return to My Locker &raquo;</span></a>
+      	</div>
+      </div>
+      <div class="clear"></div>
+      <div class="clear"></div>
+    <br/>
+    <br/>
+
+      <form action="#" id="search_box"> 
+			<div class="wrapper"> 
+				<input type="text" id="search" name="search" placeholder="Search..." /> 
+			</div> 
+			<div id="count">0</div>
+		</form> 
+      
+      <label for="showJSON">Debug:&nbsp;</label>
+      <input type="checkbox" id="showJSON"/><br/>
+      <label for="sort">Sort by:&nbsp;</label>
       <select id="sort">
 	<option value="firstname">First name</option>
 	<option value="lastname">Last name</option>
 	<option value="email">Email address</option>
-	<option value="sex">Gender</option>
       </select>
       
       <div class="clear"></div>
@@ -45,23 +66,41 @@
     </div>
     <ul id='contacts'>
     </ul>
-    </section>
     
-    <aside class="blueGreyGrad">  
+   
+	
+	</section>
+    
+    <aside>  
+     
+     
       <!-- Sidebar -->
-      <h1>Merged Contacts Viewer</h1>
+     
+      	
       
-      <div class="detail">This is an example app, and is in active
-	development. <br/><br/>
-	If you find an error, please email <a href="mailto:nym@singly.com">nym@singly.com</a>, or
-	come onto our IRC chat room on <a
-	href="http://webchat.freenode.net/" target="_blank">irc.freenode.net</a>, channel
-	#lockerproject. <br/><br/>Thanks!
-      </div>
+      <div class="detail">
+     
+     <h1>An Adorable Kitten</h1>
+     
+     <img src="http://placekitten.com/150/150"><br/><br/>
+     
+     <a href="#">omgthatcatiscute@gmail.com</a>	<br/><br/>
+     <a href="#">@adorablekitten</a>&nbsp;<span class="small">Last Tweet:</span> 
+     <p>Can't seem to find my ball of yarn anywhere - beginning to suspect my human.</p>
+     
+     <img class="icon" src="img/icon_phone.png"><a href="#">415.298.7727</a>
+		<div class="clear"></div>	<br/>	
+		<img class="icon" src="img/icon_mapmarker.png"><a class="address" href="#">1456 Jones St. No. 23<br/>San Francisco, CA 94109</a>
+		<br/>
+     	<br/>
+     	<span class="small">Info from: Facebook, Twitter and Gmail.</span>
+     
+     </div>
+          
     </aside>
 
-      <footer>
-    </footer>
+<!--       <footer></footer> -->
+  
   </div> <!-- eo #container -->
   
   <script src='/static/js/jquery-1.6.1.min.js' type='text/javascript'> </script>

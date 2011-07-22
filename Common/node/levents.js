@@ -10,11 +10,12 @@
 var http = require("http");
 var url = require("url");
 require.paths.push(__dirname);
-
-var locker = require("locker");
+var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
+var logger = require("./logger.js").logger;
 
 var eventListeners = {};
+var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
 
 exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
@@ -29,32 +30,34 @@ exports.removeListener = function(type, id, cb) {
     if (pos >= 0) eventListeners[type].splice(pos, 1);
 }
 
-exports.fireEvent = function(type, id, obj) {
-    if (!eventListeners.hasOwnProperty(type)) return;
-    // console.log("Firing " + eventListeners[type].length + " listeners for " + type + " from " + id);
-    eventListeners[type].forEach(function(listener) {
-        if (!serviceManager.isInstalled(listener.id)) return;
-        function sendEvent() {
-            var serviceInfo = serviceManager.metaInfo(listener.id);
-            var cbUrl = url.parse(serviceInfo.uriLocal);
-            var httpOpts = {
-                host: cbUrl.hostname,
-                port: cbUrl.port,
-                path: listener.cb,
-                method:"POST",
-                headers: {
-                    "Content-Type":"application/json"
-                }
-            };
-            // console.log("Firing event to " + listener.id + " to " + listener.cb);
-            locker.makeRequest(httpOpts, JSON.stringify({obj:obj, _via:[id]}));
-        }
-        if (!serviceManager.isRunning(listener.id)) {
-            serviceManager.spawn(listener.id, sendEvent);
-        } else {
-            sendEvent();
-        }
-    });
+exports.makeRequest = function(httpOpts, body, callback) {
+    //console.log("HTTP " + JSON.stringify(httpOpts));
+    var req = http.request(httpOpts, callback);
+    req.write(body);
+    req.end();
+}
+
+exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
+    logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+    // Short circuit when no one is listening
+    if (!eventListeners.hasOwnProperty(serviceType)) return;
+    var newEventInfo = {
+        type:serviceType,
+        action:action,
+        via:fromServiceId,
+        timestamp:Date.now(),
+        obj:obj,
+        listeners:eventListeners[serviceType].slice()
+    };
+    //console.log(require("sys").inspect(newEventInfo));
+    if (!processingEvents.hasOwnProperty(fromServiceId)) processingEvents[fromServiceId] = [];
+    var queue = processingEvents[fromServiceId];
+    queue.push(newEventInfo);
+    // We bail out unless this is the first time into the queue
+    if (queue.length == 1) 
+        processEvents(queue);
+    else
+        process.nextTick(function() { processEvents(queue); });
 }
 
 function findListenerPosition(type, id, cb) {
@@ -63,4 +66,53 @@ function findListenerPosition(type, id, cb) {
         if (listener.id == id && listener.cb == cb) return i;
     }
     return -1;
+}
+
+function processEvents(queue) {
+    // Only the first one is started and it will continue until empty
+    if (!queue || queue.length > 1) {
+        //console.log("Bailing on the queue");
+        console.dir(queue);
+        return;
+    }
+
+    //console.log("processing " + queue.length + " events for " + queue[0].via);
+    // We loop over all the pending events to fire from the service
+    do {
+        var curEvent = queue.pop();
+        //console.log("Current event from " + curEvent.via + " " + curEvent.listeners.length + " listeners");
+        curEvent.listeners.forEach(function(listener) {
+            if (!serviceManager.isInstalled(listener.id)) return;
+            function sendEvent() {
+                //console.log("Send to " + listener.id);
+                var serviceInfo = serviceManager.metaInfo(listener.id);
+                //console.log("Sevice info " + serviceInfo.url);
+                var cbUrl = url.parse(lconfig.lockerBase);
+                var httpOpts = {
+                    host: cbUrl.hostname,
+                    port: cbUrl.port,
+                    path: "/Me/" + listener.id + listener.cb,
+                    method:"POST",
+                    headers: {
+                        "Content-Type":"application/json"
+                    }
+                };
+                logger.debug("Firing event to " + listener.id + " to " + listener.cb);
+                // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
+                exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
+                    listener.response = response.statusCode;
+                    if (listener.response != 200) {
+                        console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
+                        // TODO: Need to evaluate the logic here, to see if we should retry or other options.
+                    }
+                });
+            }
+            if (!serviceManager.isRunning(listener.id)) {
+                serviceManager.spawn(listener.id, sendEvent);
+            } else {
+                sendEvent();
+            }
+        });
+    } while (queue.length > 0)
+
 }

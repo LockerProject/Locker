@@ -78,7 +78,7 @@ function addContacts(type, endpoint, contacts, callback) {
             // what event should this be?
             // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
             //
-            // var eventObj = {source: req.body.obj._via, type:req.body.obj.type, data:doc};
+            // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
             if (doc._id) {
                 var eventObj = {source: "contacts", type:endpoint, data:doc};
                 exports.eventEmitter.emit('contact/full', eventObj);
