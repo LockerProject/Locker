@@ -12,6 +12,7 @@ var url = require("url");
 require.paths.push(__dirname);
 var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
+var logger = require("./logger.js").logger;
 
 var eventListeners = {};
 var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
@@ -37,7 +38,7 @@ exports.makeRequest = function(httpOpts, body, callback) {
 }
 
 exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
-    //console.log("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+    logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
     // Short circuit when no one is listening
     if (!eventListeners.hasOwnProperty(serviceType)) return;
     var newEventInfo = {
@@ -96,7 +97,7 @@ function processEvents(queue) {
                         "Content-Type":"application/json"
                     }
                 };
-                //console.log("Firing event to " + listener.id + " to " + listener.cb);
+                logger.debug("Firing event to " + listener.id + " to " + listener.cb);
                 // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
                 exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
                     listener.response = response.statusCode;

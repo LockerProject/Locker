@@ -259,7 +259,7 @@ function getAlbum(uri, callback) {
             photocnt++;
             // need to associate the album info?
             dataStore.addObject('photos', photo, function(err) {
-                var eventObj = {source:'photo', type:'new', data:{id:photo.id, sourceObject:photo}};
+                var eventObj = {source:'photo', data:{id:photo.id, sourceObject:photo}};
                 exports.eventEmitter.emit('photo/facebook', eventObj);
                 cb();
             });
