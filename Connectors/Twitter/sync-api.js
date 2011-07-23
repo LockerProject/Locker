@@ -43,7 +43,7 @@ module.exports = function(theApp) {
         }
     });
     
-    app.get('/status', function(req, res) {
+    app.get('/state', function(req, res) {
         res.writeHead(200, {'Content-Type': 'application/json'});
         if(!(auth && auth.token))
         {
