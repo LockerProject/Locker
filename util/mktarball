@@ -146,6 +146,11 @@ print "Copying runtime script into place."
 os.link('../run', 'run')
 
 
+# Step 7: include a copy of lockerbox in the tarball
+print "Cloning lockerbox into lockerproject."
+
+os.system('git clone --quiet https://github.com/smurthas/lockerbox.git')
+
 # Step 7: build the tarball
 print "Building the tarball..."
 
