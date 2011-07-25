@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 txtrst=$(tput sgr0) # Text reset
 txtred=$(tput setaf 1) # Red
 txtgrn=$(tput setaf 2) # Green
 
-function check_for {
+check_for() {
     found=`which $2`
     version=`$3 2>&1 | grep -o -E [-0-9.]\{1,\} | head -n 1`
     if [ -z "$found" ]; then
@@ -34,6 +34,6 @@ check_for Python python 'python -V' 2.6
 check_for Node.js node 'node -v' 0.4.6 0.4.9
 check_for npm npm "npm -v" 1
 check_for mongoDB mongod "mongod --version" 1.4.0
-if [[ "$1" == "--vows" ]]; then
+if [ "$1" = "--vows" ] ; then
     check_for Vows vows "vows --version" 0.5.8
 fi
