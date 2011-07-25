@@ -31,6 +31,11 @@ arch        = os.uname()[-1]
 os.mkdir('lockerproject')
 os.mkdir('lockerproject/bin')
 
+# prepend the bin path to the OS path so we can make sure the local version
+# of each executable is preferred
+os.environ['PATH'] = ':'.join([os.getcwd() + '/lockerproject/bin', os.getenv('PATH')])
+
+
 # Step 1a: fetch mongodb
 mongodb_url = mongodb_urls[system][arch]
 
