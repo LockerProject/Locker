@@ -1,6 +1,9 @@
 #!/bin/sh
 
-PATH=`pwd`/bin:$PATH
+cd `dirname $0`
+scriptlocation=`pwd -P`
+
+PATH=$scriptlocation/bin:$PATH
 export PATH
 
 cd code
