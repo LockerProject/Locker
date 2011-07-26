@@ -167,6 +167,7 @@ function profile(req, res) {
 function photos(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     sync.syncPhotos(function(err, msg) {
+        locker.diary(msg);
         res.end(msg);
     });
 }

@@ -163,6 +163,7 @@ exports.syncUsers = function(friendsOrFollowers, callback) {
             if (data && data.length) {
                 js = data.splice(0, 1)[0];
                 github.getUserApi().show(js, function(err, user) {
+                    if(err) return processUser(data);
                     dataStore.getCurrent(friendsOrFollowers, user.id, function(err, resp) {
                         if (resp === undefined) {
                             dataStore.addObject(friendsOrFollowers, user, function(err) {
