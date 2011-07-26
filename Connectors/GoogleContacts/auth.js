@@ -102,11 +102,12 @@ function handleAuth(req, res) {
                     exports.auth.token = tkn;
                     fs.writeFileSync('auth.json', JSON.stringify(exports.auth));
                     completedCallback();
-                    res.redirect(uri);
+                    res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
                 }
             });    
     } else { 
         completedCallback();
+        res.end("<script type='text/javascript'>parent.location.reload();</script>");
     }
 }
 
