@@ -237,11 +237,11 @@ exports.syncPhotos = function(cb)
     var albums = [];
     photocnt = 0;
     getAlbums('https://graph.facebook.com/me/albums?access_token=' + auth.accessToken + '&date_format=U', albums, function(albums){
-        cb(null, "got "+albums.length+" albums:"+JSON.stringify(albums));
         async.forEach(albums,function(album, cb){
             getAlbum('https://graph.facebook.com/'+album.id+'/photos?access_token=' + auth.accessToken + '&date_format=U',cb); // recurse till done
         }, function(err){
             console.log("finished processing all photos: "+photocnt);
+            cb(null, "got "+albums.length+" albums and "+photocnt+" photos");
         })
     })
 } 
@@ -259,7 +259,7 @@ function getAlbum(uri, callback) {
             photocnt++;
             // need to associate the album info?
             dataStore.addObject('photos', photo, function(err) {
-                var eventObj = {source:'photo', type:'new', data:{id:photo.id, sourceObject:photo}};
+                var eventObj = {source:'photo', data:{id:photo.id, sourceObject:photo}};
                 exports.eventEmitter.emit('photo/facebook', eventObj);
                 cb();
             });

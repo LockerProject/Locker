@@ -10,6 +10,7 @@
 var fs = require('fs'),
     lstate = require('lstate'),
     sync = require('./sync'),
+    async = require('async'),
     locker = require('../../Common/node/locker.js');
     
 var app, auth;
@@ -33,6 +34,7 @@ function authComplete(theauth, mongo) {
     app.get('/profile', profile);
     app.get('/photos', photos);
     app.get('/state', state);
+    app.get('/sync', allsync);
 
     sync.eventEmitter.on('contact/facebook', function(eventObj) {
         locker.event('contact/facebook', eventObj);
@@ -50,7 +52,7 @@ function index(req, res) {
 	
 	// TODO: move to template
 	var h = "<html><head><title>Facebook Connector</title></head><body>";
-	h += "Your Facebook Connector is all set up! You can manually sync data here:<br/><br/>";
+	h += "Your Facebook Connector is all set up! You can manually sync data here:<br/><br/><h3><a href='sync'>sync it all!</a></h3>or:<br>";
 	h += "<li><a href='friends'>friends</a></li>";
         h += "<li><a href='newsfeed'>newsfeed</a></li>";
         h += "<li><a href='wall'>wall</a></li>";
@@ -69,6 +71,53 @@ function state(req, res) {
         lstate.set("ready",0);
     }
     res.end(JSON.stringify(lstate.state()));
+}
+
+// this is shattily duplicating a lot of code but I don't want to reflacktor it yet
+function allsync(req, res) {
+    res.end(JSON.stringify({success:"background syncing"}));
+    lstate.up("syncing");
+    async.series([
+        function(cb){
+            lstate.set("status","syncing friends");
+            sync.syncFriends(function(err, repeatAfter, diaryEntry) {
+                lstate.set("status","done syncing friends");
+                locker.diary(diaryEntry);
+                locker.at('/friends', repeatAfter);
+                cb();
+            });
+        },
+        function(cb){
+            lstate.set("status","syncing newsfeed");
+            sync.syncNewsfeed(function(err, repeatAfter, diaryEntry) {
+                lstate.set("status","done syncing newsfeed");
+                locker.diary(diaryEntry);
+                locker.at('/newsfeed', repeatAfter);
+                cb();
+            });
+        },
+        function(cb){
+            lstate.set("status","syncing wall");
+            sync.syncWall(function(err, repeatAfter, diaryEntry) {
+                lstate.set("status","done syncing wall");
+                locker.diary(diaryEntry);
+                locker.at('/wall', repeatAfter);
+                cb();
+            });
+        },
+        function(cb){
+            lstate.set("status","syncing photos");
+            sync.syncPhotos(function(err, msg) {
+                lstate.set("status","done syncing photos");
+                locker.diary(msg);
+                cb();
+            });
+        }
+    ],
+    function(){
+        lstate.set("status","done syncing");
+        lstate.down("syncing");
+    });
 }
 
 function friends(req, res) {
@@ -118,6 +167,7 @@ function profile(req, res) {
 function photos(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     sync.syncPhotos(function(err, msg) {
+        locker.diary(msg);
         res.end(msg);
     });
 }

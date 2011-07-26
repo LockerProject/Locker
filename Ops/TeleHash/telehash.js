@@ -75,6 +75,7 @@ function isFunction(o) {
  *  new Telex({_to: "somehost.com:41234", _ring: 8980})
  */
 function Telex(arg){
+    if(!arg) return;
     if (arg.constructor == String) {
         this._to = arg;
     }
@@ -160,16 +161,11 @@ function Switch(bindPort){
             var seedHost = seed.substring(0,seed.indexOf(":"));
             var seedPort = seed.substring(seed.indexOf(":")+1);
             dns.resolve4(seedHost, function(err, addresses) {
-                if (err) {
-                    throw err;
+                if (!err && addresses.length > 0) {
+                    var seedIP = addresses[0];
+                    // Start the bootstrap process
+                    self.startBootstrap(seedIP+":"+seedPort);
                 }
-                if (addresses.length == 0) {
-                    throw "Cannot resolve bootstrap host '" + seedHost;
-                }
-                var seedIP = addresses[0];
-
-                // Start the bootstrap process
-                self.startBootstrap(seedIP+":"+seedPort);
             });            
         }
         

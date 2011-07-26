@@ -20,7 +20,7 @@ util.inherits(ModuleConsoleLogger, winston.transports.Console);
 ModuleConsoleLogger.prototype.name = "moduleConsole";
 ModuleConsoleLogger.prototype.doLog = ModuleConsoleLogger.prototype.log;
 ModuleConsoleLogger.prototype.log = function(level, msg, meta, callback) {
-    if (meta.module) {
+    if (meta && meta.module) {
         msg = "[" + meta.module + "] " + msg;
         meta = undefined;
     }

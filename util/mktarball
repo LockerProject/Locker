@@ -31,6 +31,11 @@ arch        = os.uname()[-1]
 os.mkdir('lockerproject')
 os.mkdir('lockerproject/bin')
 
+# prepend the bin path to the OS path so we can make sure the local version
+# of each executable is preferred
+os.environ['PATH'] = ':'.join([os.getcwd() + '/lockerproject/bin', os.getenv('PATH')])
+
+
 # Step 1a: fetch mongodb
 mongodb_url = mongodb_urls[system][arch]
 
@@ -140,13 +145,25 @@ os.system('npm install > ../../npm-install.log 2>&1')
 os.chdir('..')
 
 
-# Step 6: copy the runtime script into place
+# Step 6: set up virtualenv and install python dependencies
+print "Setting up Python environment..."
+os.system('virtualenv --setuptools --no-site-packages . > ../virtualenv-setup.log')
+os.system('. bin/activate && python code/setupEnv.py > ../setupenv-install.log')
+os.system('virtualenv --relocatable . > ../virtualenv-relocatable-config.log')
+
+
+# Step 7: copy the runtime script into place
 print "Copying runtime script into place."
 
 os.link('../run', 'run')
 
 
-# Step 7: build the tarball
+# Step 8: include a copy of lockerbox in the tarball
+print "Cloning lockerbox into lockerproject."
+
+os.system('git clone --quiet https://github.com/smurthas/lockerbox.git')
+
+# Step 9: build the tarball
 print "Building the tarball..."
 
 os.chdir('..')

@@ -1,15 +1,20 @@
 #!/bin/sh
 
-PATH=`pwd`/bin:$PATH
+cd `dirname $0`
+scriptlocation=`pwd -P`
+
+PATH=$scriptlocation/bin:$PATH
 export PATH
+
+. bin/activate
 
 cd code
 
+echo "Starting up locker..."
 if [ -f .1strun ];
 then
         node lockerd.js
 else
-        python setupEnv.py > .1strun 2>&1
-        sh checkEnv.sh 2>> .1strun
+        sh checkEnv.sh 2> .1strun
         node lockerd.js
 fi
