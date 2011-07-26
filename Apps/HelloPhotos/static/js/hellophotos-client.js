@@ -33,7 +33,7 @@ function reload(offset, limit, useJSON) {
 		// get the photo name, but use the first email address if no name exists
 		photoHTML = photo.name || photo.emails[0].value;
 	    }
-	    liHTML = '<li id="' + photo._id + '" class="photo"><span class="basic-data">'+photoHTML+'</span></div>';
+	    liHTML = '<li id="' + photo._id + '" class="photo"><img src="/Me/photos/fullPhoto/' + photo.id+ '" style="max-width:300px" /><span class="basic-data">'+photoHTML+'</span></div>';
 	    photosList.append(liHTML);
 	}
     };
