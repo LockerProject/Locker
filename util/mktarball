@@ -147,8 +147,8 @@ os.chdir('..')
 
 # Step 6: set up virtualenv and install python dependencies
 print "Setting up Python environment..."
-os.system('virtualenv --no-site-packages . > ../virtualenv-setup.log')
-os.system('source bin/activate && python code/setupEnv.py > ../setupenv-install.log')
+os.system('virtualenv --setuptools --no-site-packages . > ../virtualenv-setup.log')
+os.system('. bin/activate && python code/setupEnv.py > ../setupenv-install.log')
 os.system('virtualenv --relocatable . > ../virtualenv-relocatable-config.log')
 
 

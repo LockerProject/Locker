@@ -6,7 +6,7 @@ scriptlocation=`pwd -P`
 PATH=$scriptlocation/bin:$PATH
 export PATH
 
-source bin/activate
+. bin/activate
 
 cd code
 
