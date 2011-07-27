@@ -1,0 +1,10 @@
+{
+	"title":"Wakemate Account",
+	"action":"Connect to a Wakemate account",
+	"desc":"Collect and sync my data from my Wakemate account using just a username and password.",
+	"run":"node init.js",
+	"status":"unstable",
+	"handle":"wakemate",
+	"mongoCollections": ["wakemate"],
+	"provides":["journal/wakemate"]
+}
