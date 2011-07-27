@@ -153,25 +153,15 @@ function Switch(bindPort){
     });
     
     self.server.on("listening", function(){
-        // Lookup the bootstrap and attempt to connect
-        // TODO: resolution fails when no dns server, raw IP addresses shouldn't
-        for(var i=0;i<self.seeds.length;i++)
-        {
-            var seed = self.seeds[i];
-            var seedHost = seed.substring(0,seed.indexOf(":"));
-            var seedPort = seed.substring(seed.indexOf(":")+1);
-            dns.resolve4(seedHost, function(err, addresses) {
-                if (!err && addresses.length > 0) {
-                    var seedIP = addresses[0];
-                    // Start the bootstrap process
-                    self.startBootstrap(seedIP+":"+seedPort);
-                }
-            });            
-        }
-        
         var address = self.server.address();
-        console.log([
-            "server listening ", address.address, ":", address.port].join(""));
+        console.log(["server listening ", address.address, ":", address.port].join(""));
+        // start the seed ping monitoring immediately and repeat it every 10s
+        self.pingSeeds();
+        self.pingSeedsInterval = setInterval(function(){self.pingSeeds()},10000);
+        // start scanlines maintenance
+        self.scanlinesInterval = setInterval(function(){self.scanlines()},10000);
+        // refresh our taps regularly (for now)
+        self.taptapInterval = setInterval(function(){self.taptap()},30000);
     });
     
     // Register built-in command handlers
@@ -220,6 +210,7 @@ Switch.prototype.addTap = function(tap) {
 
 Switch.prototype.taptap = function() {
     var self = this;
+    if(!self.connected) return;
     self.taps.forEach(function(tap){
         var tapEnd = tap.is["+end"];
         if (!tapEnd) {
@@ -249,37 +240,49 @@ Switch.prototype.taptap = function() {
 }
 
 /**
- * Start the bootstrap process by sending a telex to the 
+ * If we're not connected, start the bootstrap process by sending a telex to the 
  * bootstrap switch.
  */
-Switch.prototype.startBootstrap = function(seed){
+Switch.prototype.pingSeeds = function(){
     var self = this;
-    console.log(["SEEDING[", seed, "]"].join(""));
-    var line = self.getline(seed);
-    var bootTelex = new Telex(seed);
-    bootTelex["+end"] = line.end; // any end will do, might as well ask for their neighborhood
-    self.send(bootTelex);
-    
-    // Retry the bootstrap every 10s until it completes
-    var bootstrapRetryID = setInterval(function() {
-        if (self.connected) {
-            clearInterval(bootstrapRetryID);
+    if(self.connected || self.seeds.length == 0) return;
+
+    // rotate through seeds every time
+    if("seedID" in self)
+    {
+        self.seedID++;
+    }else{
+        self.seedID = 0;
+    }
+    if(self.seedID >= self.seeds.length) self.seedID=0;
+    var seed = self.seeds[self.seedID];
+    var seedHost = seed.substring(0,seed.indexOf(":"));
+    var seedPort = seed.substring(seed.indexOf(":")+1);
+    // TODO, skip dns if it's an IP already? there's probably a module for that
+    dns.resolve4(seedHost, function(err, addresses) {
+        if(err || addresses.length == 0)
+        {
+            console.log("failed to resolve "+seedHost+ " "+err);
+            return;
         }
-        else {
-            self.scanlines();
-            self.taptap();
-            self.startBootstrap(seed);
-        }
-    }, 10000);
-    
+        var seedIPP = addresses[0]+":"+seedPort;
+        self.seedsIndex[seedIPP] = true;
+        // Start the bootstrap process
+        console.log(["SEEDING[", seedIPP, "]"].join(""));
+        var line = self.getline(seedIPP);
+        var bootTelex = new Telex(seedIPP);
+        bootTelex["+end"] = line.end; // any end will do, might as well ask for their neighborhood
+        self.send(bootTelex);
+    });            
 }
 
 /**
- * Complete the bootstrap by processing the response from
- * the bootstrap switch.
+ * Complete the online bootstrapping by processing the response from
+ * any seed switch.
  */
-Switch.prototype.completeBootstrap = function(remoteipp, telex) {
+Switch.prototype.online = function(telex) {
     var self = this;
+    console.log("\tONLINE");
     self.connected = true;
     self.selfipp = telex._to;
     self.selfhash = new Hash(self.selfipp).toString();
@@ -290,22 +293,8 @@ Switch.prototype.completeBootstrap = function(remoteipp, telex) {
     line.visible = 1; // flag ourselves as default visible
     line.rules = self.taps; // if we're tap'ing anything
     
-    // WE are the seed, haha, remove our own line and skip
-    if (self.selfipp == remoteipp) {
-        console.log("\tWe're the seed!\n");
-    }
-    
-    // Start scan/taptap interval scanning until disconnected
-    var scanID = setInterval(function() {
-        if (!self.connected) {
-            clearInterval(scanID);
-        }
-        else {
-            self.scanlines();
-            self.taptap();
-        }
-    }, 10000);
-    
+    // trigger immediate tapping to move things along
+    self.taptap();
 }
 
 /**
@@ -319,8 +308,16 @@ Switch.prototype.recv = function(msgstr, rinfo) {
     console.log([
         "RECV from ", remoteipp, ": ", JSON.stringify(telex)].join(""));
     
-    if (self.selfipp == null && "_to" in telex) {
-        self.completeBootstrap(remoteipp, telex);
+    if (!self.connected)
+    {
+        // must have come from a trusted seed and have our to IPP info
+        if(self.seedsIndex[remoteipp] && "_to" in telex)
+        {
+            self.online(telex);
+        }else{
+            console.log("we're offline and don't like that");
+            return;
+        }
     }
     
     // if this is a switch we know, check a few things
@@ -674,6 +671,7 @@ Switch.prototype.checkline = function(line, t, br) {
  */
 Switch.prototype.scanlines = function() {
     var self = this;
+    if(!self.connected) return;
     var now = time();
     var switches = keys(self.master);
     var valid = 0;
@@ -722,7 +720,6 @@ Switch.prototype.scanlines = function() {
     
     if (!valid && !self.seedsIndex[self.selfipp]) {
         self.offline();
-        self.startBootstrap();
     }
 }
 
@@ -733,7 +730,6 @@ Switch.prototype.offline = function() {
     self.selfhash = null;
     self.connected = false;
     self.master = {};
-    self.startBootstrap();
 }
 
 /**
