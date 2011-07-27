@@ -338,16 +338,18 @@ function updateServiceMap(previousLocation, callback) {
 
             var populateAvailableApps = function(key, value) {
                 var item = value;
-                var li = $("<li class='app' style='color: #333;' title='" + item.title + "'>" + item.title + "</li>");
-                li.click(
-                    function(event) {
-                        $("#appsList li").removeClass("current");
-                        $(event.target).addClass("current");
-                        $("#installButton a").html("Install App");
-                        showDetails(window.serviceMap.available.indexOf(item), 'apps');
-                    }
-                );
-                $("#appsList").append(li);
+                if (item.is == "app") {
+                    var li = $("<li class='app' style='color: #333;' title='" + item.title + "'>" + item.title + "</li>");
+                    li.click(
+                        function(event) {
+                            $("#appsList li").removeClass("current");
+                            $(event.target).addClass("current");
+                            $("#installButton a").html("Install App");
+                            showDetails(window.serviceMap.available.indexOf(item), 'apps');
+                        }
+                    );
+                    $("#appsList").append(li);
+                }
             };
 
             $.each(window.serviceMap.installed, populateInstalledApps);
