@@ -8,6 +8,10 @@ STATUS: eager-developer-friendly only at this point, we're working hard to make 
 
 ## Getting Started
 
+### The Take-No-Prisoners Way
+
+If you just want to get a locker up and running, there are [semi-regularly refreshed standalone tarballs available](http://lockerproject.org/tarballs/) for OS X and Linux (in both 32-bit and 64-bit flavors). Unpack the tarball, cd into the lockerproject directory, and ./run!
+
 ### The Fast Way
 
 Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get all the high-level dependencies installed at once. It will make a single directory called lockerbox and get everything set up inside of there.
