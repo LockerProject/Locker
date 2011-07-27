@@ -23,7 +23,8 @@ exports.init = function(theLockerUrl, mongoCollection) {
 }
 
 var photoGatherers = {
-    "photo/twitpic":gatherTwitpic
+    "photo/twitpic":gatherTwitpic,
+    "photo/flickr":gatherFlickr
 };
 
 exports.gatherPhotos = function() {
@@ -55,6 +56,10 @@ exports.gatherPhotos = function() {
 
 function gatherTwitpic(svcId) {
     gatherFromUrl(svcId, "/allPhotos", "photo/twitpic");
+}
+
+function gatherFlickr(svcId) {
+    gatherFromUrl(svcId, "/allPhotos", "photo/flickr");
 }
 
 function basicPhotoGatherer(svcId, type, provides) {
