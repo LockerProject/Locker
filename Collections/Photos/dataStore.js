@@ -24,6 +24,7 @@ function processTwitPic(svcId, data, cb) {
     photoInfo.url = lconfig.lockerBase + "/Me/" + svcId + "/full/" + data.id;
     if (data.txt) photoInfo.title = data.txt;
     if (data.thumb) photoInfo.thumbnail = data.thumb;
+    photoInfo.timestamp = Date.now();
 
     photoInfo.sources = [{service:svcId, id:data.id}];
 
