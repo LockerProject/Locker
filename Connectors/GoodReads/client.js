@@ -22,10 +22,10 @@ var express = require('express'),
     oauthclient = require('oauth').OAuth,
     locker = require('locker'),
     lfs = require('lfs'),
+    sys = require('sys'),
     xml2js = require('xml2js'),
     eyes = require('eyes'),
     lconfig = require('lconfig');
- 
 
 var lockerInfo;
 var accessData;
@@ -182,7 +182,21 @@ function(req, res)
 				console.error(err);
 				return false;
 			}
-			lfs.writeObjectToFile('owned_books.json', data);
+			var parser = new xml2js.Parser();
+			parser.addListener('end', function(result) {
+				var allBooks = [];
+				var books = result.reviews.review;
+					for(var i = 0; i < books.length; i++) {
+                            		console.log(JSON.stringify(books[i]) + '\n');
+						allBooks.push(books[i]);
+					}
+					var stream = fs.createWriteStream('owned_books.json', {'flags': 'a'});
+					for(var i = allBooks.length - 1; i >=0 ; i--) {
+						stream.write(JSON.stringify(allBooks[i]) + "\n");
+					}
+				stream.end();
+			});
+			parser.parseString(data);
 			res.end('Books saved to owned_books.json');
 		}
 	);
