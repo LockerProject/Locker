@@ -10,28 +10,33 @@
     <link rel="stylesheet" href="dashboard-static/css/logs.css" />
     <link rel="stylesheet" href="dashboard-static/css/services.css" />
     <link rel="stylesheet" href="dashboard-static/css/apps.css" />
+    <link rel="stylesheet" href="dashboard-static/css/home.css" />
   </head>
   <body>
 
     <aside>
       <header>
-        <h1><img src="dashboard-static/img/Lock.png" width="200" height="200" alt="The Locker Project" /></h1>
+        <h1><img src="dashboard-static/img/Lock.png" width="100" height="100" alt="The Locker Project" id="logo"/></h1>
       </header>
 
       <!-- Primary Sections Listing -->
       <nav id="primary">
         <ul>
-          <li id="logsTab" data-section="logs" class="tab current">Logs</li>
-          <li id="servicesTab" data-section="services" class="tab">Services</li>
-        </ul>
+	  <!--<li id="servicesTab" data-section="services" class="tab">Services</li>-->
+         <li id="homeTab" data-section="home" class="tab">Home</li>
+          <li id="connectorsTab" data-section="connectors" class="tab">Connectors</li>
+          <li id="collectionsTab" data-section="collections" class="tab" style="display: none;">Collections</li> 
+          <li id="appsTab" data-section="apps" class="tab">Apps</li>
+          <!--<li id="logsTab" data-section="logs" class="tab current">Log</li>-->
+        </ul>                                                            
       </nav>
 
-      <!-- Applications Listing -->
-      <nav id="applications">
-        <ul id="appsList">
+      <nav id="secondary">
+        <ul>
+          <li id="logsTab" class="tab">Logs</li>
         </ul>
       </nav>
-    </aside>
+   </aside>
 
     <section id="mainSection">
 
@@ -40,7 +45,9 @@
         <header>
           <h1>Logs</h1>
           <ul class="actions">
-            <li onclick="javascript:refreshLog()"><img src="dashboard-static/img/Refresh.png" width="21" height="26" alt="Refresh" /></li>
+            <li onclick="javascript:refreshLog()">
+              <img src="dashboard-static/img/Refresh.png" width="21" height="26" alt="Refresh" />
+            </li>
           </ul>
         </header>
         <section class="content">
@@ -55,37 +62,35 @@
       </section>
 
       <!-- Services Section -->
+<!--
       <section id="servicesSection" class="tabPage">
         <header>
           <h1>Services</h1>
           <ul class="actions">
-            <li onclick="javascript:unstableServices()">[<input type="checkbox" id="showUnstable"/><label for="showUnstable">show unstable</label> ]</li>
+            <li onclick="javascript:unstableServices()">[show unstable]</li>
           </ul>
         </header>
         <section class="content">
-          <ul id="servicesList">
+          <ul id="servicesList" class="servicesList">
           </ul>
-          <div id="serviceInfo">
+          <div class="serviceInfo">
             <div>
               <h1>Name</h1>
             </div>
             <p class="description">Description</p>
             <ul class="details">
               <li>
-                <strong>Service Type:</strong> <span id="availType" class="value"></span>
+                <strong>Service Type:</strong> <span class="availType" class="value"></span>
               </li>
               <li>
-                <strong>Source Directory:</strong> <span id="availSrcDir" class="value"></span>
+                <strong>Source Directory:</strong> <span class="availSrcDir" class="value"></span>
               </li>
               <li>
                 <strong>Provides:</strong> <span id="availProvides" class="value"></span>
               </li>
             </ul>
-            <div id="installButton">
-              <a href="#">Install</a>
-            </div>
-            <div id="uninstallButton">
-              <a href="#">Uninstall</a>
+            <div class="installButton">
+              <a href="javascript:;">Install</a>
             </div>
             <section id="connectorInstancesSection">
               <ul id="connectorInstancesList">
@@ -94,13 +99,163 @@
           </div>
         </section>
       </section>
+-->
+
+      <!-- Home Section -->
+      <section id="homeSection" class="tabPage">
+        <header>
+          <h1>Home</h1>
+          <ul class="actions">
+         </ul>
+        </header>
+
+        <section class="content">
+         
+        Welcome to your personal locker. You can keep all sorts of
+        things here, including your addresses, photos, and links. In
+        the future, you will be able to get even more.
+
+
+	 <br/><br/><br/>
+	 
+	 <h2>Getting started:</h2>
+	 <br/>
+	 1. If you haven't already, <strong>Install a Connector</strong>
+	 (e.g. Facebook, Twitter, Flickr)
+	 <br/><br/>
+	 2. Once you install a connector, install an App.
+	 <!--
+       <div class="tbd">
+           <label>Connectors installed:</label> <div>TBD</div>
+         </div>
+
+         <div class="tbd">
+           <label>Apps installed</label> <div>TBD</div>
+         </div>
+        -->
+       </section>
+      </section>
+
+      <!-- Connectors Section -->
+      <section id="connectorsSection" class="tabPage">
+        <header>
+          <h1>Connectors</h1>
+          <ul class="actions">
+         </ul>
+        </header>
+        <section class="content">
+          <ul id="connectorsList" class="servicesList">
+          </ul>
+          <div class="serviceInfo">
+            <div>
+              <h1>Name</h1>
+            </div>
+            <p class="description">Description</p>
+            <ul class="details">
+              <li>
+                <strong>Service Type:</strong> <span class="availType value"></span>
+              </li>
+              <li>
+                <strong>Source Directory:</strong> <span class="availSrcDir value"></span>
+              </li>
+              <li>
+                <strong>Provides:</strong> <span class="availProvides value"></span>
+              </li>
+            </ul>
+            <div class="installButton">
+              <a href="javascript:;">Install</a>
+            </div>
+            <section class="connectorInstancesSection">
+	      <span class="status"></span><br/><br/>
+              <ul class="connectorInstancesList">
+              </ul>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <!-- Collections Section -->
+      <section id="collectionsSection" class="tabPage">
+        <header>
+          <h1>Collections</h1>
+          <ul class="actions">
+         </ul>
+        </header>
+        <section class="content">
+          <ul id="collectionsList" class="servicesList">
+         </ul>
+          <div class="serviceInfo">
+            <div>
+              <h1>Name</h1>
+            </div>
+            <p class="description">Description</p>
+            <ul class="details">
+              <li>
+                <strong>Service Type:</strong> <span class="availType" class="value"></span>
+              </li>
+              <li>
+                <strong>Source Directory:</strong> <span class="availSrcDir" class="value"></span>
+              </li>
+              <li>
+                <strong>Provides:</strong> <span class="availProvides" class="value"></span>
+              </li>
+            </ul>
+            <div class="installButton">
+              <a href="javascript:;">Install</a>
+            </div>
+            <section class="connectorInstancesSection">
+              <ul class="connectorInstancesList">
+              </ul>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <!-- Apps Section -->
+      <section id="appsSection" class="tabPage">
+        <header>
+          <h1>Apps</h1>
+          <ul class="actions">
+         </ul>
+        </header>
+        <section class="content">
+          <ul id="appsList" class="servicesList">
+          </ul>
+          <div class="serviceInfo">
+            <div>
+              <h1>Name</h1>
+            </div>
+            <p class="description">Description</p>
+            <ul class="details">
+              <li>
+                <strong>Service Type:</strong> <span class="availType" class="value"></span>
+              </li>
+              <li>
+                <strong>Source Directory:</strong> <span class="availSrcDir" class="value"></span>
+              </li>
+              <li>
+                <strong>Provides:</strong> <span class="availProvides" class="value"></span>
+              </li>
+            </ul>
+            <div class="installButton">
+              <a href="javascript:;">Install</a>
+            </div>
+            <section class="connectorInstancesSection">
+              <ul class="connectorInstancesList">
+              </ul>
+            </section>
+          </div>
+        </section>
+      </section>
+          
+          
 
       <!-- App Section -->
       <section id="appSection" class="tabPage">
         <header>
           <h1 id="appTitle">App Title</h1>
           <ul class="actions">
-            <li id="zoomAppButton" onclick="#"><img src="dashboard-static/img/Zoom.png" width="26" height="26" alt="Zoom" /></li>
+            <li id="zoomAppButton" onclick="javascript:;"><img src="dashboard-static/img/Zoom.png" width="26" height="26" alt="Zoom" /></li>
           </ul>
         </header>
         <section class="content">
@@ -119,6 +274,7 @@
     <script src="static/js/extensions/date.js"></script>
     <script src="static/js/extensions/string.js"></script>
     <script src="config.js"></script>
+    <script src="dashboard-static/js/jq.odoticker.min.js"></script>
     <script src="dashboard-static/js/dashboard.js"></script>
   </body>
 </html>

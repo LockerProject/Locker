@@ -12,14 +12,17 @@ body
   -moz-user-select: none;
 }
 
+#logo {
+}
+
 aside
 {
   position: absolute;
-  left: 20px;
-  top: 20px;
-  bottom: 20px;
+  left: 10px;
+  top: 10px;
+  bottom: 10px;
 
-  width: 220px;
+  width: 100px;
 
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -37,7 +40,7 @@ aside header
 aside nav
 {
   position: absolute;
-  top: 230px;
+  top: 120px;
   left: 0;
   right: 0;
 
@@ -56,27 +59,6 @@ aside nav
               inset 0px -1px 0px rgba(255, 255, 255, 0.15);
 }
 
-aside nav#applications
-{
-  top: 340px;
-  bottom: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-aside nav#applications .placeholder
-{
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  margin-top: -32px;
-  height: 64px;
-  line-height: 64px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.15);
-  text-shadow: none;
-}
 
 aside nav li
 {
@@ -86,9 +68,21 @@ aside nav li
   height: 42px;
   line-height: 42px;
 
+  font-size: 14px;
   margin: 1px;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+aside nav#secondary {
+    bottom: 10px;
+    left: 0px;
+    top: auto;
+}
+
+aside nav#secondary li {
+    font-size: 12px;
+    margin: 0px;
 }
 
 aside nav#applications li
@@ -96,6 +90,7 @@ aside nav#applications li
   height: 28px;
   line-height: 28px;
   font-size: 12px;
+  overflow: hidden;
 }
 
 aside nav li:first-of-type
@@ -136,7 +131,7 @@ aside nav li.current
     inset -1px -1px 0px rgba(0, 0, 0, 0.25);
 }
 
-aside nav li#logsTab
+aside nav li#logsTab.break
 {
   background-image: url("../img/Logs.png");
   background-repeat: no-repeat;
@@ -144,7 +139,7 @@ aside nav li#logsTab
   padding-left: 48px;
 }
 
-aside nav li#logsTab.current
+aside nav li#logsTab.current.break
 {
   background-position: 13px 50%, 0 0;
   background-image: url("../img/Logs.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
@@ -154,7 +149,7 @@ aside nav li#logsTab.current
   background-image: url("../img/Logs.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
 }
 
-aside nav li#servicesTab
+aside nav li#servicesTab.break
 {
   background-image: url("../img/Services.png");
   background-repeat: no-repeat;
@@ -162,7 +157,7 @@ aside nav li#servicesTab
   padding-left: 48px;
 }
 
-aside nav li#servicesTab.current
+aside nav li#servicesTab.current.break
 {
   background-position: 10px 50%, 0 0;
   background-image: url("../img/Services.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
@@ -175,10 +170,10 @@ aside nav li#servicesTab.current
 section#mainSection
 {
   position: absolute;
-  left: 260px;
-  top: 20px;
-  right: 20px;
-  bottom: 20px;
+  left: 125px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
 
   padding: 20px;
   padding-top: 68px;
@@ -190,9 +185,9 @@ section#mainSection
   -moz-border-radius: 3px;
   border-radius: 3px;
 
-  -webkit-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+/*  -webkit-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
   -moz-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8); */
 }
 
 section#mainSection header
@@ -296,7 +291,9 @@ section#mainSection section.content
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
 
-  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.2)), to(rgba(255, 255, 255, 0.05)));
+
+
+  overflow: auto;
 }
 
 body > footer

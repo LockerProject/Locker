@@ -7,7 +7,8 @@
 *
 */
 
-// present a single page listing all the services discovered in this locker, scanning the /Apps /Collections /Contexts and /SourceSinks dirs
+// Present a single page listing all the services discovered in this locker, scanning the
+// /Apps /Collections /Contexts and /SourceSinks dirs
 // enable start/stop on all (that you can)
 
 var rootHost = process.argv[2];
@@ -31,13 +32,13 @@ var fs = require('fs'),
     connect = require('connect'),
     http = require('http'),
     request = require('request');
-    
+
 
 var app = express.createServer();
 app.use(connect.bodyParser());
 
 var map;
-app.get('/', function (req, res) {    
+app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     request.get({uri:lockerRoot + '/map'}, function(err, resp, body) {
         map = JSON.parse(body);
@@ -48,7 +49,7 @@ app.get('/', function (req, res) {
     });
 });
 
-app.get('/config.js', function (req, res) {    
+app.get('/config.js', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/javascript','Access-Control-Allow-Origin' : '*' });
     //this might be a potential script injection attack, just sayin.
     var config = {lockerHost:rootHost,
