@@ -27,7 +27,7 @@ app.get('/', function(req, res) {
         'Content-Type': 'text/html'
     });
     dataStore.getTotalCount(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' photos</p></html>');
+        res.write('<html><p>Found '+ countInfo +' photos</p>(<a href="update">Update</a>)</html>');
         res.end();
     });
 });

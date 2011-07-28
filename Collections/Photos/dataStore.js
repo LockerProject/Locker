@@ -24,10 +24,10 @@ function processTwitPic(svcId, data, cb) {
     photoInfo.url = lconfig.lockerBase + "/Me/" + svcId + "/full/" + data.id;
     if (data.txt) photoInfo.title = data.txt;
     if (data.thumb) photoInfo.thumbnail = data.thumb;
+    photoInfo.timestamp = Date.now();
 
     photoInfo.sources = [{service:svcId, id:data.id}];
 
-    if (!cb) throw("CRAP");
     saveCommonPhoto(photoInfo, cb);
 }
 
@@ -69,11 +69,34 @@ function processShared(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+function processFlickr(svcId, data, cb) {
+    if (!data.id || !data.url_l) {
+        cb("The flickr data was invalid");
+        return;
+    }
+
+    var photoInfo = {};
+    photoInfo.url = data.url_l
+    if (data.height_l) photoInfo.height = data.height_l;
+    if (data.width_l) photoInfo.width = data.width_l;
+    if (data.title) photoInfo.title = data.title
+    if (data.url_t) photoInfo.thumbnail = data.url_t;
+    if (data.datetaken) {
+        var d = new Date(data.datetaken);
+        photoInfo.timestap = d.getTime();
+    }
+
+    photoInfo.sources = [{service:svcId, id:data.id}];
+
+    saveCommonPhoto(photoInfo, cb);
+
+}
+
 function saveCommonPhoto(photoInfo, cb) {
     // This is the only area we do basic matching on right now.  We'll do more later
     var query = [{url:photoInfo.url}];
-    if (photoInfo.name) {
-        query.push({name:photoInfo.name});
+    if (photoInfo.title) {
+        query.push({name:photoInfo.title});
     }
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
@@ -100,6 +123,7 @@ function createId(url, name) {
 var dataHandlers = {};
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
+dataHandlers["photo/flickr"] = processFlickr;
 
 exports.init = function(mongoCollection) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");

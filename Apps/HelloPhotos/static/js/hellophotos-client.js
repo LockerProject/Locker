@@ -14,6 +14,20 @@ function reload(offset, limit, useJSON) {
     var useJSON = useJSON || false;
 
     var getPhotosCB = function(photos) {
+    photos = photos.sort(function(lh, rh) {
+        var rhc = parseInt(rh.timestamp);
+        var lhc = parseInt(lh.timestamp);
+        console.log(rhc);
+        console.log(lhc);
+        if (isNaN(rhc) || isNaN(lhc)) {
+            console.dir(rh);
+            console.dir(lh);
+        }
+        if (rhc > (Date.now() / 1000)) rhc = rhc / 1000;
+        if (lhc > (Date.now() / 1000)) lhc = lhc / 1000;
+        return rhc - lhc;
+    });
+    console.log(photos);
 	// find the unordered list in our document to append to
         var photosList = $("#main ul");
 
