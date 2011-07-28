@@ -281,10 +281,26 @@ function updateServiceMap(previousLocation, callback) {
     // Update Interface from Service Map
     $.ajax({ url: "map", dataType: "json" }).success(
         function(data) {
+            var installedSrcDirs = [];
             window.serviceMap = data;
 
             $("#connectorsList").html('');
             $("#appsList").html('');
+
+            // Populate Apps Tab with installed apps first
+            var populateInstalledApps = function(key, value) {
+                var item = value;
+                if (item.is == "app") {
+                    $("#appsList").append($("<li title='" + item.title + "' data-app-id='" + item.id + "'>" + item.title + "</li>").click(
+                                              function(event) {
+                                                  log("Launching app..");
+                                                  showApp(item, event);
+                                              }));
+                    installedSrcDirs.push(item.srcdir);
+                }
+            };
+            $.each(window.serviceMap.installed, populateInstalledApps);
+
             // Populate Available Services List
             window.serviceMap.available.forEach(
                 function(item) {
@@ -293,12 +309,22 @@ function updateServiceMap(previousLocation, callback) {
 
                     switch (item.is) {
                     case "app":
-                        log("Application");                                              
-                        // gets populated below
+                        // prevent installed apps from showing up twice in view
+                        if (installedSrcDirs.indexOf(item.srcdir) != -1 ) return;
+
+                        var li = $("<li class='app' title='" + item.title + "'>" + item.title + "</li>");
+                        li.click(
+                            function(event) {
+                                $("#appsList li").removeClass("current");
+                                $(event.target).addClass("current");
+                                $("#installButton a").html("Install App");
+                                showDetails(window.serviceMap.available.indexOf(item), 'apps');
+                            }
+                        );
+                        $("#appsList").append(li);
                         break;
 
                     case "connector":
-                        log("Connector");
                         $("#connectorsList").append($("<li class='connector' title='" + item.title + "'>" + item.title + "</li>").click(
                                                         function(event) {
                                                             $("#connectorsList li").removeClass("current");
@@ -319,42 +345,11 @@ function updateServiceMap(previousLocation, callback) {
                         break;
 
                     default:
-                        console.log("Unknown service type \"" + item.is + "\"");
+                        log("Unknown service type \"" + item.is + "\"");
                         break;
                     }
                 });
-
-            // Populate Apps Tab
-            var populateInstalledApps = function(key, value) {
-                var item = value;
-                if (item.is == "app") {
-                    $("#appsList").append($("<li title='" + item.title + "' data-app-id='" + item.id + "'>" + item.title + "</li>").click(
-                                              function(event) {
-                                                  log("Launching app..");
-                                                  showApp(item, event);
-                                              }));
-                }
-            };
-
-            var populateAvailableApps = function(key, value) {
-                var item = value;
-                if (item.is == "app") {
-                    var li = $("<li class='app' style='color: #333;' title='" + item.title + "'>" + item.title + "</li>");
-                    li.click(
-                        function(event) {
-                            $("#appsList li").removeClass("current");
-                            $(event.target).addClass("current");
-                            $("#installButton a").html("Install App");
-                            showDetails(window.serviceMap.available.indexOf(item), 'apps');
-                        }
-                    );
-                    $("#appsList").append(li);
-                }
-            };
-
-            $.each(window.serviceMap.installed, populateInstalledApps);
-            $.each(window.serviceMap.available, populateAvailableApps);
-
+           
             // Restore Previously Selected App
             if (previousLocation.match(/^app/)) {
                 var appId = previousLocation.substr(4),
@@ -380,6 +375,11 @@ $(document).ready(
                              $("#connectorsTab").click(function() {showSection('connectors');});
                              $("#collectionsTab").click(function() {showSection('collections');});
                              $("#appsTab").click(function() {showSection('apps');});
+
+                             $("#showUnstableConnectorsCheckbox, #showUnstableAppsCheckbox").change(function(e) {
+                                                                                                        unstable = e.currentTarget.value=="on";
+                                                                                                        updateServiceMap("", function() {});
+                                                                                                    });
 
                              // Restore Previously Selected Section
                              if (!previousLocation.match(/^app/)) {
