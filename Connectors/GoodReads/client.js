@@ -33,6 +33,7 @@ var externalUrl;
 var oAuth;
 var state;
 var CALLBACK_URL = 'http://'+lconfig.lockerHost+':'+lconfig.lockerPort+'/Me/goodreads/callback';
+var allBooks = [];
 
 
 function setupOAuthClient(clientId, clientSecret) 
@@ -43,6 +44,38 @@ function setupOAuthClient(clientId, clientSecret)
                             '1.0',
                             CALLBACK_URL,
                             'HMAC-SHA1');
+}
+
+function GetBooks(page)
+{
+	oAuth.get('http://www.goodreads.com/review/list/'+accessData.userId+'?format=xml&page='+page+'&v=2&key='+accessData.clientId, accessData.accessToken, accessData.accessTokenSecret,
+		function(err, data) 
+		{
+			if (err) 
+			{
+				console.error(err);
+				return false;
+			}
+			var parser = new xml2js.Parser();
+			parser.addListener('end', function(result) {
+				var totalBooks = result.reviews["@"].total;
+				var books = result.reviews.review;
+					for(var i = 0; i < books.length; i++) {
+                            		//console.log(JSON.stringify(books[i]) + '\n');
+						allBooks.push(books[i]);
+					}
+					if(allBooks.length < totalBooks) { //there's more
+                            		GetBooks(page + 1);
+					}
+					var stream = fs.createWriteStream('owned_books.json', {'flags': 'w'});
+					for(var i = allBooks.length - 1; i >=0 ; i--) {
+						stream.write(JSON.stringify(allBooks[i]) + "\n");
+					}
+				stream.end();
+			});
+			parser.parseString(data);
+		}
+	);
 }
 
 app.get('/',
@@ -174,32 +207,8 @@ function(req, res, next)
 app.get('/books', 
 function(req, res) 
 {
-	oAuth.get('http://www.goodreads.com/review/list/'+accessData.userId+'?format=xml&v=2&key='+accessData.clientId, accessData.accessToken, accessData.accessTokenSecret,
-		function(err, data) 
-		{
-			if (err) 
-			{
-				console.error(err);
-				return false;
-			}
-			var parser = new xml2js.Parser();
-			parser.addListener('end', function(result) {
-				var allBooks = [];
-				var books = result.reviews.review;
-					for(var i = 0; i < books.length; i++) {
-                            		console.log(JSON.stringify(books[i]) + '\n');
-						allBooks.push(books[i]);
-					}
-					var stream = fs.createWriteStream('owned_books.json', {'flags': 'a'});
-					for(var i = allBooks.length - 1; i >=0 ; i--) {
-						stream.write(JSON.stringify(allBooks[i]) + "\n");
-					}
-				stream.end();
-			});
-			parser.parseString(data);
-			res.end('Books saved to owned_books.json');
-		}
-	);
+	GetBooks(1);
+	res.end('Books saved to owned_books.json');
 });
 
 // Process the startup JSON object
