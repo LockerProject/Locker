@@ -128,7 +128,7 @@ function stopService(method, req, res) {
 
 function ensureMap(callback) {
     if (!map || !map.available) {
-        request.get({uri:lockerBase + '/map'}, function(err, resp, body) {
+        request.get({uri:lockerRoot + '/map'}, function(err, resp, body) {
             map = JSON.parse(body);
             callback();
         });
