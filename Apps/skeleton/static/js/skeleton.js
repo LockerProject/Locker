@@ -9,7 +9,7 @@ function getContacts(offset, limit, callback) {
     var offset = offset || 0; 
     var limit = limit || 100;
 
-    $.getJSON('http://localhost:8042/query/getContact', {'offset':offset, 'limit':limit}, callback);
+    $.getJSON('/query/getContact', {'offset':offset, 'limit':limit}, callback);
 }
 
 /* jQuery syntactic sugar for onDomReady */
