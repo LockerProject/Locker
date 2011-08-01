@@ -39,7 +39,7 @@ function reload(offset, limit, useJSON) {
     };
 
     $.getJSON(
-	'http://localhost:8042/query/getLink', 
+	'/query/getLink',
 	{'offset':offset, 'limit':limit}, 
 	getLinksCB
     );

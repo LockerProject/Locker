@@ -38,7 +38,7 @@ function reload(offset, limit, useJSON) {
     };
 
     $.getJSON(
-	'http://localhost:8042/query/getContact', 
+	'/query/getContact',
 	{'offset':offset, 'limit':limit}, 
 	getContactsCB
     );
