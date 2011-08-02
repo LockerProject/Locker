@@ -132,7 +132,7 @@ setTimeout(function() {
         vowsArgument = '--xunit';
     }
 
-    var vowsProcess = require("child_process").spawn("vows", [vowsArgument].concat(runFiles));
+    var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", [vowsArgument].concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
         process.stdout.write(data);
     });
