@@ -214,7 +214,7 @@ suite.next().suite.addBatch({
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].id.toNumber(), 71348168469643260);
+                    assert.equal(response[0].id, '71348168469643260');
                 }
             },
             "user_timeline returns" : {
@@ -223,7 +223,7 @@ suite.next().suite.addBatch({
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].id.toNumber(), 73036575310757890);
+                    assert.equal(response[0].id, '73036575310757890');
                 }
             },
             "mentions returns" : {
@@ -232,7 +232,7 @@ suite.next().suite.addBatch({
                 "successfully": function(err, response) {
                     assert.isNull(err);
                     assert.equal(response.length, 1);
-                    assert.equal(response[0].id.toNumber(), 73034804081344510);
+                    assert.equal(response[0].id, '73034804081344510');
                 }
             }
         }
