@@ -188,7 +188,7 @@ function processData (info, key, data, callback) {
     datastore.addCollection(key, info.id, info.mongoId);
     async.forEach(data, function(object, cb) {
         if (object.type === 'delete') {
-            // datastore.removeObject(info.id + '_' + key, ) = function(type, id, options, callback) {
+            datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {
             // exports.addObject = function(type, object, options, callback) {            
             datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);

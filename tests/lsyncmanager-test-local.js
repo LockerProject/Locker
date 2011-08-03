@@ -84,7 +84,7 @@ vows.describe("Synclet Manager").addBatch({
                 fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
             },
             "successfully" : function(err, data) {
-                assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n');
+                assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n');
             }
         }
     },

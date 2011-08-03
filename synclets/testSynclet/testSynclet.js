@@ -28,6 +28,8 @@ function sync() {
     var response = {};
     response.config = { "knownIDs" : [1, 2, 4]};
     response.data = { "testSync" : [ { "obj" : {"notId" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 } ] };
+    response.data.testSync.push({"obj" : {"notId" : 1, "someData":"datas"}, "type" : "new", "timestamp" : 1312325283582 });
+    response.data.testSync.push({"obj" : {"notId" : 1}, "type" : "delete", "timestamp" : 1312325283583 });
     process.stdout.write(JSON.stringify(response));
     process.exit();
 };
