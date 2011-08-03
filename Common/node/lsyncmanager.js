@@ -2,6 +2,9 @@ var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
+  , datastore = require('./synclet/datastore')
+  , datastoreinit = false
+  , async = require('async')
   ;
 
 var synclets = {
@@ -112,7 +115,6 @@ exports.syncNow = function(serviceId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info) {
-    console.dir(new Date() + parseInt(info.frequency));
     info.nextRun = new Date() + parseInt(info.frequency);
     info.nextRunId = setTimeout(function() {
         executeSynclet(info);
@@ -131,8 +133,7 @@ function executeSynclet(info, callback) {
 
     run = info.run.split(" "); // node foo.js
 
-    var env = process.env;
-    env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
+    process.env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
     var dataResponse = '';
     app = spawn(run.shift(), run, {cwd: info.srcdir, env:process.env});
     
@@ -156,19 +157,44 @@ function executeSynclet(info, callback) {
 };
 
 function processResponse(info, data, callback) {
-    info.status = 'processing data';
-    var response;
-    try {
-        response = JSON.parse(data);
-    } catch (E) {
-        info.status = 'failed : ' + E;
-        return callback(E);
-    }
-    info.config = response.config;
-    info.status = 'waiting';
-    
-    if (callback) callback(undefined, 'finished');
+    datastore.init(function() {
+        info.status = 'processing data';
+        var response;
+        try {
+            response = JSON.parse(data);
+        } catch (E) {
+            info.status = 'failed : ' + E;
+            return callback(E);
+        }
+        info.config = response.config;
+        info.status = 'waiting';
+
+        if (callback) {
+            var dataKeys = [];
+            for (var i in response.data) {
+                dataKeys.push(i);
+            }
+            async.forEach(dataKeys, function(key, cb) { processData(info, key, response.data[key], cb); }, callback);
+        }
+        else {
+            for (var i in response.data) {
+                processData(info, i, response.data[i]);
+            }
+        }
+    });
 };
+
+function processData (info, key, data, callback) {
+    datastore.addCollection(key, info.id);
+    async.forEach(data, function(object, cb) {
+        if (object.type === 'delete') {
+            // datastore.removeObject(info.id + '_' + key, ) = function(type, id, options, callback) {
+        } else {
+            // exports.addObject = function(type, object, options, callback) {            
+            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
+        }
+    }, callback);
+}
 
 /**
 * Map a meta data file JSON with a few more fields and make it available

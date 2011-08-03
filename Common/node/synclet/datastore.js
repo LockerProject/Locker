@@ -6,28 +6,29 @@
 * Please see the LICENSE file for more information.
 *
 */
-
-var IJOD = require('ijod').IJOD;
-var lstate = require('lstate');
+var IJOD = require('../ijod').IJOD
+  , lconfig = require('../lconfig')
+  , lstate = require('../lstate')
+  , lmongoclient = require('../lmongoClient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
+  ;
 
 var ijodFiles = {};
 var mongo;
 var mongoID = 'id';
 
-exports.init = function(mongoid, _mongo) {
-    mongo = _mongo;
-    mongoID = mongoid;
-    for (var i in mongo.collections) {
-        // MAYBETODO: do .count() for each and reset lstate.set("field",val) here? 
-        if (!ijodFiles[i]) {
-            ijodFiles[i] = new IJOD(i);
-        }
-    }
+exports.init = function(callback) {
+    if (mongo) return callback();
+    lmongoclient.connect(function(_mongo) {
+        mongo = _mongo;
+        callback();
+    });
 }
 
-exports.addCollection = function(name) {
-    if(!mongo.collections[name])
-        mongo.addCollection(name);
+exports.addCollection = function(name, dir) {
+    if(!mongo.collections[dir + "_" + name])
+        mongo.addCollection(dir + "_" + name);
+    if(!ijodFiles[dir + "_" + name])
+        ijodFiles[dir + "_" + name] = new IJOD(name, dir);
 }
 
 function now() {
@@ -55,7 +56,7 @@ exports.addObject = function(type, object, options, callback) {
     }
     ijodFiles[type].addRecord(timeStamp, object, function(err) {
         if (err)
-            callback(err); 
+            callback(err);
         setCurrent(type, object, callback);
     })
 }

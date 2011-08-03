@@ -16,9 +16,11 @@ var vows = require("vows")
   , assert = require("assert")
   , lconfig = require("lconfig")
   , fs = require('fs')
+  , mongo
   ;
 lconfig.load("config.json");
 var syncManager = require("lsyncmanager.js");
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync']);
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
@@ -62,27 +64,28 @@ vows.describe("Synclet Manager").addBatch({
         topic:function() {
             syncManager.syncNow("testSynclet", this.callback);
         },
-        "successfully" : function(err, stat) {
+        "successfully" : function(err, status) {
             assert.isNull(err);
-            assert.equal(stat, 'finished');
-    //     },
-    //     "and can be shut down" : {
-    //         topic: function() {
-    //             var promise = new events.EventEmitter();
-    //             var shutdownComplete = false;
-    //             serviceManager.shutdown(function() {
-    //                 shutdownComplete = true;
-    //             });
-    //             setTimeout(function() {
-    //                 if (shutdownComplete) promise.emit("success", true);
-    //                 else promise.emit("error", false);
-    //             }, 1000);
-    //             return promise;
-    //         },
-    //         "successfully" : function (err, stat) {
-    //             assert.isNull(err);
-    //             assert.isTrue(stat);
-    //         }
+        },
+        "and after running generates data in mongo" : {
+            topic: function() {
+                var self = this;
+                lmongoclient.connect(function(theMongo) {
+                    mongo = theMongo;
+                    mongo.collections.testSynclet_testSync.count(self.callback);
+                });
+            },
+            "successfully" : function(err, count) {
+                assert.equal(count, 1);
+            }
+        },
+        "and after running writes out IJOD stuff" : {
+            topic: function() {
+                fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
+            },
+            "successfully" : function(err, data) {
+                assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"id":500,"someData":"BAM"}}\n');
+            }
         }
     },
     "Available services" : {
