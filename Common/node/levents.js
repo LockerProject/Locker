@@ -13,6 +13,7 @@ require.paths.push(__dirname);
 var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js").logger;
+var syncManager = require('lsyncmanager');
 
 var eventListeners = {};
 var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
@@ -21,6 +22,9 @@ exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     eventListeners[type].push({"id":id, "cb":cb});
+    syncManager.eventEmitter.on(type, function(event) {
+        exports.fireEvent(type, event.fromService, event.obj, event.type);
+    });
 }
 
 exports.removeListener = function(type, id, cb) {

@@ -5,12 +5,15 @@ var fs = require('fs')
   , datastore = require('./synclet/datastore')
   , datastoreinit = false
   , async = require('async')
+  , EventEmitter = require('events').EventEmitter
   ;
 
 var synclets = {
     available:[],
     installed:{}
 };
+
+exports.eventEmitter = new EventEmitter();
 
 exports.synclets = function() {
   return synclets;
@@ -188,10 +191,13 @@ function processResponse(info, response, callback) {
 function processData (info, key, data, callback) {
     datastore.addCollection(key, info.id, info.mongoId);
     async.forEach(data, function(object, cb) {
+        newEvent = object;
+        newEvent.fromService = info.provider + "/" + info.id;
+        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         if (object.type === 'delete') {
             datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {
-            // exports.addObject = function(type, object, options, callback) {            
+            // exports.addObject = function(type, object, options, callback) {
             datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
         }
     }, callback);

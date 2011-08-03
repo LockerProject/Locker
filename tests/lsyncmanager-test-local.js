@@ -17,10 +17,17 @@ var vows = require("vows")
   , lconfig = require("lconfig")
   , fs = require('fs')
   , mongo
+  , eventCount = 0
+  , events = []
   ;
 lconfig.load("config.json");
 var syncManager = require("lsyncmanager.js");
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync']);
+
+syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
+    events.push(event);
+    eventCount++;
+});
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
@@ -85,6 +92,21 @@ vows.describe("Synclet Manager").addBatch({
             },
             "successfully" : function(err, data) {
                 assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n');
+            }
+        },
+        "and after generating " : {
+            topic: eventCount,
+            "correct number of events" : function(topic) {
+                assert.equal(eventCount, 3);
+            },
+            "with correct data" : function(topic) {
+                assert.equal(events[0].fromService, 'testSynclet/testSynclet');
+                assert.equal(events[1].fromService, 'testSynclet/testSynclet');
+                assert.equal(events[2].fromService, 'testSynclet/testSynclet');
+                assert.equal(events[0].type, 'new');
+                assert.equal(events[2].type, 'delete');
+                assert.equal(events[0].obj.notId, 500);
+                assert.equal(events[2].obj.notId, 1);
             }
         }
     },
