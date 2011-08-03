@@ -127,11 +127,10 @@ function scheduleRun(info) {
 function executeSynclet(info, callback) {
     info.status = "running";
     if (!info.run) {
-        // this is how we'll handle the common client code version
-        return;
+        run = ["node ", lconfig.lockerDir + "/Common/node/synclet/client.js"];
+    } else {
+        run = info.run.split(" "); // node foo.js
     }
-
-    run = info.run.split(" "); // node foo.js
 
     process.env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
     var dataResponse = '';
@@ -149,24 +148,26 @@ function executeSynclet(info, callback) {
     });
     
     app.on('exit', function (code,signal) {
-        processResponse(info, dataResponse, callback);
+        var response;
+        try {
+            response = JSON.parse(dataResponse);
+        } catch (E) {
+            info.status = 'failed : ' + E;
+            return callback(E);
+        }
+        info.status = 'processing data';
+        info.config = response.config;
+        processResponse(info, response, callback);
+        delete info.nextRunId;
+        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
         scheduleRun(info);
     });
     if (!info.config) info.config = {};
     app.stdin.write(JSON.stringify(info.config)+"\n"); // Send them the process information
 };
 
-function processResponse(info, data, callback) {
+function processResponse(info, response, callback) {
     datastore.init(function() {
-        info.status = 'processing data';
-        var response;
-        try {
-            response = JSON.parse(data);
-        } catch (E) {
-            info.status = 'failed : ' + E;
-            return callback(E);
-        }
-        info.config = response.config;
         info.status = 'waiting';
 
         if (callback) {
