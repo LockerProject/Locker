@@ -1,7 +1,6 @@
 {
     "lockerHost" : "localhost",
     "lockerPort" : 8042,
-    "externalHost" : "localhost",
     "logFile": null,
     "me" : "Me",
     "scannedDirs" : [
