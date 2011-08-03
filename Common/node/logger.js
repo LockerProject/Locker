@@ -22,14 +22,15 @@ ModuleConsoleLogger.prototype.doLog = ModuleConsoleLogger.prototype.log;
 ModuleConsoleLogger.prototype.log = function(level, msg, meta, callback) {
     if (meta && meta.module) {
         msg = "[" + meta.module + "] " + msg;
-        meta = undefined;
+        delete meta.module;
+        if (meta == {}) meta = undefined;
     }
 
     this.doLog(level, msg, meta, callback);
 }
 
 
-var transports = [new ModuleConsoleLogger({colorize:true})];
+var transports = [new ModuleConsoleLogger({colorize:true,timestamp:true})];
 if (lconfig.logFile) {
     transports.push(new (winston.transports.File)({filename:lconfig.logFile}));
 }

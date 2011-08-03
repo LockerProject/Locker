@@ -10,6 +10,8 @@
 /**
  * web server/service to wrap interactions w/ GitHub API
  */
+ 
+// http://twitpic.com/show/full/:id
 
 var fs = require('fs'),
     url = require('url'),

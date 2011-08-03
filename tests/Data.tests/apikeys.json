@@ -2,5 +2,9 @@
     "twitter":{
         "consumerKey":"daKey",
         "consumerSecret":"daPassword"
+    },
+    "testSynclet":{
+        "consumerKey":"daKey",
+        "consumerSecret":"daPassword"
     }
 }
