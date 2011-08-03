@@ -32,7 +32,6 @@ var accessData;
 var externalUrl;
 var oAuth;
 var state;
-var CALLBACK_URL = 'http://'+lconfig.lockerHost+':'+lconfig.lockerPort+'/Me/goodreads/callback';
 var allBooks = [];
 
 
@@ -42,7 +41,7 @@ function setupOAuthClient(clientId, clientSecret)
                             'http://www.goodreads.com/oauth/access_token',
                             clientId, clientSecret, 
                             '1.0',
-                            CALLBACK_URL,
+                            externalUrl+'callback',
                             'HMAC-SHA1');
 }
 
@@ -101,7 +100,7 @@ function(req, res)
 		res.end('<html>Enter your personal GoodReads app info that will be used to sync your data' + 
 				' (create a new one <a href="http://www.goodreads.com/api/keys">' + 
 				'here</a> using the callback url of ' +
-				externalUrl+'auth) ' +
+				externalUrl+'callback) ' +
 				'<form method="get" action="save">' +
 					'Client ID: <input name="clientId"><br>' +
 					'Client Secret: <input name="clientSecret"><br>' +
@@ -124,7 +123,7 @@ function(req, res)
 				req.session.oauth = {};
 				req.session.oauth.token = oauth_token;
 				req.session.oauth.token_secret = oauth_token_secret;
-				res.redirect('http://www.goodreads.com/oauth/authorize?oauth_token='+oauth_token+'&oauth_callback='+CALLBACK_URL)
+				res.redirect('http://www.goodreads.com/oauth/authorize?oauth_token='+oauth_token+'&oauth_callback='+externalUrl+'callback')
 			}
 		});
 	}    
