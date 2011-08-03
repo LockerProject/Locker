@@ -9,7 +9,7 @@
 var IJOD = require('../ijod').IJOD
   , lconfig = require('../lconfig')
   , lstate = require('../lstate')
-  , lmongoclient = require('../lmongoClient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
+  , lmongoclient = require('../lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
   , ijodFiles = {}
   , mongo
   , mongoIDs = {}
