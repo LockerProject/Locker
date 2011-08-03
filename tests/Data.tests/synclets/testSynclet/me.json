@@ -10,7 +10,7 @@
     "mongoId":"notId",
     "mongoCollections": ["testSynclet"],
     "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",
-    "provides":["contact/testSynclet"],
+    "provides":["testSync/testSynclet"],
     "run":"node testSynclet.js",
     "provider":"testSynclet"
 }

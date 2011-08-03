@@ -41,6 +41,7 @@ var locker = express.createServer(
             }
             );
 
+var synclets = require('./webservice-synclets')(locker);
 
 var listeners = new Object(); // listeners for events
 

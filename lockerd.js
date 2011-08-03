@@ -37,6 +37,7 @@ npm.load(conf, function(er) {
     //var crypto = require('crypto');
     var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
+    var syncManager = require('lsyncmanager');
     var serviceManager = require("lservicemanager");
     var dashboard = require(__dirname + "/Ops/dashboard.js");
     var mongodb = require('mongodb');
@@ -125,9 +126,13 @@ npm.load(conf, function(er) {
             if (dirToScan === "Collections") installable = false;
             serviceManager.scanDirectory(dirToScan, installable);
         });
+        
+        syncManager.scanDirectory("synclets");
+        
 
         // look for existing things
         serviceManager.findInstalled();
+        syncManager.findInstalled();
 
         thservice.start();
 
