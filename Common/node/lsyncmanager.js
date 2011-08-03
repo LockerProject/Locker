@@ -185,7 +185,7 @@ function processResponse(info, data, callback) {
 };
 
 function processData (info, key, data, callback) {
-    datastore.addCollection(key, info.id);
+    datastore.addCollection(key, info.id, info.mongoId);
     async.forEach(data, function(object, cb) {
         if (object.type === 'delete') {
             // datastore.removeObject(info.id + '_' + key, ) = function(type, id, options, callback) {

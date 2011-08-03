@@ -27,7 +27,7 @@ function processConfig() {
 function sync() {
     var response = {};
     response.config = { "knownIDs" : [1, 2, 4]};
-    response.data = { "testSync" : [ { "obj" : {"id" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 } ] };
+    response.data = { "testSync" : [ { "obj" : {"notId" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 } ] };
     process.stdout.write(JSON.stringify(response));
     process.exit();
 };

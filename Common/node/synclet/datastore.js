@@ -10,11 +10,10 @@ var IJOD = require('../ijod').IJOD
   , lconfig = require('../lconfig')
   , lstate = require('../lstate')
   , lmongoclient = require('../lmongoClient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
+  , ijodFiles = {}
+  , mongo
+  , mongoIDs = {}
   ;
-
-var ijodFiles = {};
-var mongo;
-var mongoID = 'id';
 
 exports.init = function(callback) {
     if (mongo) return callback();
@@ -24,7 +23,8 @@ exports.init = function(callback) {
     });
 }
 
-exports.addCollection = function(name, dir) {
+exports.addCollection = function(name, dir, id) {
+    mongoIDs[dir + "_" + name] = id;
     if(!mongo.collections[dir + "_" + name])
         mongo.addCollection(dir + "_" + name);
     if(!ijodFiles[dir + "_" + name])
@@ -72,7 +72,7 @@ exports.removeObject = function(type, id, options, callback) {
         }
     }
     var record = {deleted: timeStamp};
-    record[mongoID] = id;
+    record[mongoIDs[type]] = id;
     ijodFiles[type].addRecord(timeStamp, record, function(err) {
         if (err)
             callback(err);
@@ -115,16 +115,16 @@ exports.getCurrent = function(type, id, callback) {
     var m = getMongo(type, id, callback);
     if(m) {
         var query = {};
-        query[mongoID] = id;
+        query[mongoIDs[type]] = id;
         m.findOne(query, callback);
     }
 }
 
 function setCurrent(type, object, callback) {
-    var m = getMongo(type, object[mongoID], callback);
+    var m = getMongo(type, object[mongoIDs[type]], callback);
     if(m) {
         var query = {};
-        query[mongoID] = object[mongoID];
+        query[mongoIDs[type]] = object[mongoIDs[type]];
         m.update(query, object, {upsert:true, safe:true}, callback);
     }
 }
@@ -133,7 +133,7 @@ function removeCurrent(type, id, callback) {
     var m = getMongo(type, id, callback);
     if(m) {
         var query = {};
-        query[mongoID] = id;
+        query[mongoIDs[type]] = id;
         m.remove(query, callback);
     }
 }
