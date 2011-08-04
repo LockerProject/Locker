@@ -28,4 +28,11 @@ module.exports = function(locker) {
         });
         res.end(JSON.stringify(metaData));
     });
+    
+    locker.get('/synclets/:id/run', function(req, res) {
+        syncManager.syncNow(req.params.id, function() {
+            res.writeHead(200);
+            res.end('DONE');
+        })
+    });
 };

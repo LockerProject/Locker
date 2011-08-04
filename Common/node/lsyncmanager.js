@@ -119,7 +119,7 @@ exports.syncNow = function(serviceId, callback) {
 */
 function scheduleRun(info) {
     info.nextRun = new Date() + parseInt(info.frequency);
-    info.nextRunId = setTimeout(function() {
+    setTimeout(function() {
         executeSynclet(info);
     }, parseInt(info.frequency) * 1000);
 };
@@ -128,16 +128,19 @@ function scheduleRun(info) {
 * Executes a synclet
 */
 function executeSynclet(info, callback) {
+    if (info.status === 'running') {
+        return callback('already running');
+    }
     info.status = "running";
     if (!info.run) {
-        run = ["node ", lconfig.lockerDir + "/Common/node/synclet/client.js"];
+        run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else {
         run = info.run.split(" "); // node foo.js
     }
 
-    process.env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
+    process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets';
     var dataResponse = '';
-    app = spawn(run.shift(), run, {cwd: info.srcdir, env:process.env});
+    app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
@@ -155,18 +158,21 @@ function executeSynclet(info, callback) {
         try {
             response = JSON.parse(dataResponse);
         } catch (E) {
+            console.error(E);
+            console.error(dataResponse);
             info.status = 'failed : ' + E;
-            return callback(E);
+            if (callback) callback(E);
+            return;
         }
         info.status = 'processing data';
         info.config = response.config;
         processResponse(info, response, callback);
-        delete info.nextRunId;
         fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
         scheduleRun(info);
     });
     if (!info.config) info.config = {};
-    app.stdin.write(JSON.stringify(info.config)+"\n"); // Send them the process information
+
+    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
 };
 
 function processResponse(info, response, callback) {
@@ -189,7 +195,11 @@ function processResponse(info, response, callback) {
 };
 
 function processData (info, key, data, callback) {
-    datastore.addCollection(key, info.id, info.mongoId);
+    if (info.mongoId) { 
+        datastore.addCollection(key, info.id, info.mongoId);
+    } else {
+        datastore.addCollection(key, info.id, "id");
+    }
     async.forEach(data, function(object, cb) {
         newEvent = object;
         newEvent.fromService = info.provider + "/" + info.id;
