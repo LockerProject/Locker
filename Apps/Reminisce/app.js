@@ -73,21 +73,21 @@ function send()
         var photos = JSON.parse(body);
         // ideally this is a lot smarter, about weighting history, tracking to not do dups, etc
         var rand = Math.floor(Math.random() * photos.length);
-        console.log("picked random photo: "+JSON.stringify(photos[rand]));
+        console.log("for "+auth.username+" we picked random photo: "+JSON.stringify(photos[rand]));
         // hard coded to gmail for testing (ver -0.1)
         nodemailer.SMTP = {
             host: 'smtp.gmail.com',
             port: 587,
             ssl: false,
             use_authentication: true,
-            user: auth.username+'@gmail.com',
+            user: auth.username,
             pass: auth.password
         };
         // Message object
         var cid = Date.now() + '.image.png';
         var message = {
             sender: 'Reminisce <42@awesome.com>',
-            to: '"'+auth.username+'" <'+auth.username+'@gmail.com>',
+            to: auth.username,
             subject: 'something fun and random  ✔',
             body: 'Hello to myself!',
             html:'<p><b>reminiscing...</b> <img src="cid:"' + cid + '"/></p>',
@@ -108,6 +108,7 @@ function send()
                     console.error("failed to get photo "+imgurl);
                     return;
                 }
+                // this doesn't work, garbles the image somehow, dunno what buffer magic is needed :(
                 message.attachments[0].contents = body;
                 mail = nodemailer.send_mail(message, function(err, ok){
                     if(err){
@@ -138,6 +139,7 @@ stdin.on('data', function (chunk) {
             if(authData && authData.hasOwnProperty('username') && authData.hasOwnProperty('password') && authData.hasOwnProperty('host') && authData.hasOwnProperty('port'))
             {
                     authData.username = lcrypto.decrypt(authData.username);
+                    if(authData.username.indexOf("@") == -1) authData.username += "@gmail.com"; // meh! HACK!
                     authData.password = lcrypto.decrypt(authData.password);
                     auth = authData;
             }
