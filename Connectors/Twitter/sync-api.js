@@ -68,6 +68,24 @@ function authComplete(theAuth, mongo) {
         lstate.up("syncing");
         async.series([
             function(cb){
+                lstate.set("status","syncing friends");
+                sync.syncUsersInfo("friends",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing friends");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/friends', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
+                lstate.set("status","syncing followers");
+                sync.syncUsersInfo("followers",function(err,repeatAfter,diaryEntry){
+                    lstate.set("status","done syncing followers");
+                    locker.diary(diaryEntry);
+                    locker.at('/getNew/followers', repeatAfter);
+                    cb();
+                });
+            },
+            function(cb){
                 lstate.set("status","syncing home_timeline");
                 sync.pullStatuses("home_timeline",function(err,repeatAfter,diaryEntry){
                     lstate.set("status","done syncing home_timeline");
@@ -91,24 +109,6 @@ function authComplete(theAuth, mongo) {
                     lstate.set("status","done syncing mentions");
                     locker.diary(diaryEntry);
                     locker.at('/getNew/mentions', repeatAfter);
-                    cb();
-                });
-            },
-            function(cb){
-                lstate.set("status","syncing friends");
-                sync.syncUsersInfo("friends",function(err,repeatAfter,diaryEntry){
-                    lstate.set("status","done syncing friends");
-                    locker.diary(diaryEntry);
-                    locker.at('/getNew/friends', repeatAfter);
-                    cb();
-                });
-            },
-            function(cb){
-                lstate.set("status","syncing followers");
-                sync.syncUsersInfo("followers",function(err,repeatAfter,diaryEntry){
-                    lstate.set("status","done syncing followers");
-                    locker.diary(diaryEntry);
-                    locker.at('/getNew/followers', repeatAfter);
                     cb();
                 });
             }
