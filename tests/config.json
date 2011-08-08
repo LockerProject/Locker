@@ -20,6 +20,7 @@
                               "connector-local-foursquare-test.js",
                               "connector-local-facebook-test.js",
                               "connector-local-twitter-test.js"],
+        "synclets" : ["synclet-local-foursquare.js"],
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
                         "connector-flickr-test.js"],

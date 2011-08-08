@@ -181,18 +181,14 @@ function processResponse(info, response, callback) {
     datastore.init(function() {
         info.status = 'waiting';
 
-        if (callback) {
-            var dataKeys = [];
-            for (var i in response.data) {
-                dataKeys.push(i);
-            }
-            async.forEach(dataKeys, function(key, cb) { processData(info, key, response.data[key], cb); }, callback);
+        if (!callback) {
+            callback = function() {};
         }
-        else {
-            for (var i in response.data) {
-                processData(info, i, response.data[i]);
-            }
+        var dataKeys = [];
+        for (var i in response.data) {
+            dataKeys.push(i);
         }
+        async.forEach(dataKeys, function(key, cb) { processData(info, key, response.data[key], cb); }, callback);
     });
 };
 
@@ -209,7 +205,6 @@ function processData (info, key, data, callback) {
         if (object.type === 'delete') {
             datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {
-            // exports.addObject = function(type, object, options, callback) {
             datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
         }
     }, callback);
