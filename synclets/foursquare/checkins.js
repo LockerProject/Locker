@@ -13,20 +13,21 @@ var fs = require('fs')
   , updateState, auth, recents
   , places = []
   , photos = []
+  , profile = []
   , checkins_limit = 250
   ;
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
-    try {
+    if (processInfo.config && processInfo.config.updateState) {
         updateState = processInfo.config.updateState;
-    } catch (err) {
+    } else {
         updateState = {checkins:{syncedThrough:0}}; }
-    fs.mkdir('photos', 0755);
     syncCheckins(function(err) {
         var responseObj = {data : {}, config : {}};
         responseObj.data.place = places;
         responseObj.data.photo = photos;
+        responseObj.data.profile = [{ obj: profile }];
         responseObj.config.updateState = updateState;
         cb(err, responseObj);
     });
@@ -34,8 +35,8 @@ exports.sync = function(processInfo, cb) {
 
 var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
-        var self = JSON.parse(data).response.user;
-        getCheckins(self.id, auth.accessToken, 0, function(err, checkins) {
+        profile = JSON.parse(data).response.user;
+        getCheckins(profile.id, auth.accessToken, 0, function(err, checkins) {
             if (!checkins || !checkins.length) {
                 return callback();
             }
@@ -86,6 +87,7 @@ function downloadPhoto(url, id) {
         if (err)
             console.error(err);
         else {
+            console.error(process.cwd());
             fs.writeFileSync('photos/' + id + '.jpg', body, 'binary');
             photos.push({'obj' : {'photoID' : id}});
         }

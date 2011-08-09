@@ -1,5 +1,5 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var sync = require('../synclets/foursquare/foursquare');
+var checkins = require('../synclets/foursquare/checkins');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -17,6 +17,7 @@ suite.next().suite.addBatch({
     "Can get checkins" : {
         topic: function() {
             process.chdir('.' + mePath);
+            fs.mkdirSync('./photos', 0755);
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252459',
@@ -33,7 +34,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://playfoursquare.s3.amazonaws.com/pix/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg',
                 file : __dirname + '/fixtures/foursquare/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg' });
-            sync.sync(pinfo, this.callback);
+            checkins.sync(pinfo, this.callback);
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
@@ -47,7 +48,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Successfully updates state going forward" : {
         topic: function() {
-            sync.sync(pinfo, this.callback);
+            checkins.sync(pinfo, this.callback);
         },
         "and doesn't try to pull down the same checkins again" : function(err, response) {
             assert.equal(response.config.updateState.checkins.syncedThrough, '1305252459');

@@ -2,13 +2,11 @@
     "title":"testSynclet",
     "action":"testSynclet",
     "desc":"testSynclet",
-    "frequency":120,
     "status":"stable",
-    "handle":"testSynclet",
     "mongoId" : "notId",
     "mongoCollections": ["testSynclet"],
     "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",
     "provides":["contact/testSynclet"],
-    "run":"node testSynclet.js",
+    "synclets":[{"name": "testSynclet", "frequency": 120, "run" : "node testSynclet.js"}],
     "provider":"testSynclet"
 }

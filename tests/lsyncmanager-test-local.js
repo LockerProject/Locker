@@ -100,9 +100,9 @@ vows.describe("Synclet Manager").addBatch({
                 assert.equal(eventCount, 3);
             },
             "with correct data" : function(topic) {
-                assert.equal(events[0].fromService, 'testSynclet/testSynclet');
-                assert.equal(events[1].fromService, 'testSynclet/testSynclet');
-                assert.equal(events[2].fromService, 'testSynclet/testSynclet');
+                assert.equal(events[0].fromService, 'synclet/testSynclet');
+                assert.equal(events[1].fromService, 'synclet/testSynclet');
+                assert.equal(events[2].fromService, 'synclet/testSynclet');
                 assert.equal(events[0].type, 'new');
                 assert.equal(events[2].type, 'delete');
                 assert.equal(events[0].obj.notId, 500);
@@ -119,13 +119,13 @@ vows.describe("Synclet Manager").addBatch({
             "and can be installed" : {
                 topic:syncManager.install({srcdir:"synclets/testSynclet"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
-                    assert.include(svcMetaInfo, "id");
+                    assert.include(svcMetaInfo, "synclets");
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
-                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
+                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.provider));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.provider);
                 },
                 "and by adding valid auth info" : function(svcMetaInfo) {
                     assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});

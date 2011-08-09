@@ -32,8 +32,8 @@ exports.findInstalled = function () {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-            synclets.installed[js.id] = js;
-            synclets.installed[js.id].status = "waiting";
+            synclets.installed[js.provider] = js;
+            synclets.installed[js.provider].status = "waiting";
             if (js.frequency) scheduleRun(js);
         } catch (E) {
             console.log("Me/synclets/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
@@ -72,31 +72,20 @@ exports.install = function(metaData) {
     if (!serviceInfo) return serviceInfo;
     var authInfo;
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
-    if(serviceInfo.handle) {
+    if(serviceInfo.provider) {
         try {
             var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
             authInfo = apiKeys[serviceInfo.provider];
         } catch (E) { console.dir(E); }
-        // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
-        var inc = 0;
-        try {
-            if(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/synclets/"+serviceInfo.handle).isDirectory()) {
-                inc++;
-                while(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/synclets/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
-            }
-        } catch (E) {
-            var suffix = (inc > 0)?"-"+inc:"";
-            serviceInfo.id = serviceInfo.handle+suffix;
-        }
     } else {
-        var hash = crypto.createHash('md5');
-        hash.update(Math.random()+'');
-        serviceInfo.id = hash.digest('hex');
+        throw "invalid synclet, has no provider";
     }
-    synclets.installed[serviceInfo.id] = serviceInfo;
-    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.id,0755);
+    synclets.installed[serviceInfo.provider] = serviceInfo;
+    if (!(path.existsSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider))) {
+        fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider,0755);
+    }
     if (authInfo) serviceInfo.auth = authInfo;
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo, null, 4));
+    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider+'/me.json',JSON.stringify(serviceInfo, null, 4));
     if (serviceInfo.frequency) scheduleRun(serviceInfo);
     return serviceInfo;
 }
@@ -111,7 +100,7 @@ exports.status = function(serviceId) {
 
 exports.syncNow = function(serviceId, callback) {
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
-    executeSynclet(synclets.installed[serviceId], callback);
+    async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) { executeSynclet(synclets.installed[serviceId], synclet, cb); }, callback);
 };
 
 /**
@@ -127,15 +116,15 @@ function scheduleRun(info) {
 /**
 * Executes a synclet
 */
-function executeSynclet(info, callback) {
-    if (info.status === 'running') {
+function executeSynclet(info, synclet, callback) {
+    if (synclet.status === 'running') {
         return callback('already running');
     }
-    info.status = "running";
-    if (!info.run) {
+    info.status = synclet.status = "running";
+    if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else {
-        run = info.run.split(" "); // node foo.js
+        run = synclet.run.split(" "); // node foo.js
     }
 
     process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets';
@@ -162,24 +151,26 @@ function executeSynclet(info, callback) {
         } catch (E) {
             console.error(E);
             console.error(dataResponse);
-            info.status = 'failed : ' + E;
+            info.status = synclet.status = 'failed : ' + E;
             if (callback) callback(E);
             return;
         }
-        info.status = 'processing data';
+        info.status = synclet.status = 'processing data';
         info.config = response.config;
-        processResponse(info, response, callback);
-        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
+        processResponse(info, synclet, response, callback);
+        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.provider + '/me.json', JSON.stringify(info, null, 4));
         scheduleRun(info);
     });
     if (!info.config) info.config = {};
-
+    
+    info.syncletToRun = synclet;
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
+    delete info.syncletToRun;
 };
 
-function processResponse(info, response, callback) {
+function processResponse(info, synclet, response, callback) {
     datastore.init(function() {
-        info.status = 'waiting';
+        info.status = synclet.status = 'waiting';
 
         if (!callback) {
             callback = function() {};
@@ -194,18 +185,18 @@ function processResponse(info, response, callback) {
 
 function processData (info, key, data, callback) {
     if (info.mongoId) { 
-        datastore.addCollection(key, info.id, info.mongoId);
+        datastore.addCollection(key, info.provider, info.mongoId);
     } else {
-        datastore.addCollection(key, info.id, "id");
+        datastore.addCollection(key, info.provider, "id");
     }
     async.forEach(data, function(object, cb) {
         newEvent = object;
-        newEvent.fromService = info.provider + "/" + info.id;
+        newEvent.fromService = "synclet/" + info.provider;
         exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         if (object.type === 'delete') {
-            datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
+            datastore.removeObject(info.provider + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {
-            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
+            datastore.addObject(info.provider + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
         }
     }, callback);
 }
