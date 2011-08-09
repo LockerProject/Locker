@@ -45,7 +45,7 @@ vows.describe("Synclet Manager").addBatch({
             "and has status" : {
                 topic: syncManager.status('testSynclet'),
                 "frequency is 120s" : function(topic) {
-                    assert.equal(topic.frequency, 120);
+                    assert.equal(topic.synclets[0].frequency, 120);
                 },
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');
@@ -122,10 +122,28 @@ vows.describe("Synclet Manager").addBatch({
                     assert.include(svcMetaInfo, "synclets");
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
-                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.provider));
+                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.provider);
+                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                },
+                "and by adding valid auth info" : function(svcMetaInfo) {
+                    assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
+            },
+            "and can be installed a second time" : {
+                topic:syncManager.install({srcdir:"synclets/testSynclet"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
+                    assert.include(svcMetaInfo, "id");
+                },
+                "and by service map says it is installed" : function(svcMetaInfo) {
+                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
+                },
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
+                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
                 },
                 "and by adding valid auth info" : function(svcMetaInfo) {
                     assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});

@@ -34,7 +34,7 @@ exports.findInstalled = function () {
             synclets.installed[js.id] = js;
             synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
-                for (var i = 0; i < js.synclets; i++) {
+                for (var i = 0; i < js.synclets.length; i++) {
                     scheduleRun(js, js.synclets[i]);
                 }
             }
@@ -83,7 +83,7 @@ exports.install = function(metaData) {
         var inc = 0;
         if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider))) {
             inc++;
-            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider, '-' + inc))) inc++;
+            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider + '-' + inc))) inc++;
             serviceInfo.id = serviceInfo.provider + "-" + inc;
         } else {
             serviceInfo.id = serviceInfo.provider;
@@ -91,7 +91,7 @@ exports.install = function(metaData) {
     } else {
         throw "invalid synclet, has no provider";
     }
-    synclets.installed[serviceInfo.provider] = serviceInfo;
+    synclets.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
     if (authInfo) serviceInfo.auth = authInfo;
     fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
@@ -172,7 +172,7 @@ function executeSynclet(info, synclet, callback) {
         info.status = synclet.status = 'processing data';
         info.config = response.config;
         processResponse(info, synclet, response, callback);
-        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.provider + '/me.json', JSON.stringify(info, null, 4));
+        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
@@ -199,18 +199,18 @@ function processResponse(info, synclet, response, callback) {
 
 function processData (info, key, data, callback) {
     if (info.mongoId) { 
-        datastore.addCollection(key, info.provider, info.mongoId);
+        datastore.addCollection(key, info.id, info.mongoId);
     } else {
-        datastore.addCollection(key, info.provider, "id");
+        datastore.addCollection(key, info.id, "id");
     }
     async.forEach(data, function(object, cb) {
         newEvent = object;
-        newEvent.fromService = "synclet/" + info.provider;
+        newEvent.fromService = "synclet/" + info.id;
         exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         if (object.type === 'delete') {
-            datastore.removeObject(info.provider + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
+            datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {
-            datastore.addObject(info.provider + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
+            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
         }
     }, callback);
 }
