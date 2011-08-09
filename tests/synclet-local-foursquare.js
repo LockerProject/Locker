@@ -1,5 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var checkins = require('../synclets/foursquare/checkins');
+var friends = require('../synclets/foursquare/friends');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -43,6 +44,31 @@ suite.next().suite.addBatch({
             assert.equal(response.data.place[0].type, 'new');
             assert.equal(response.data.place[0].obj.id, '4d1dcbf7d7b0b1f7f37bfd9e');
             assert.equal(response.data.place[1].obj.photoID, undefined);
+            pinfo.config = response.config;
+        }
+    }
+}).addBatch({
+    "Can get friends" : {
+        topic: function() {
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/me.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/friends.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/multi?requests=/users/2715557,/users/18387,&oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/users.json' });
+            fakeweb.registerUri({
+                uri : 'https://playfoursquare.s3.amazonaws.com/userpix_thumbs/UFTTLGSOZMNGZZ3T.png',
+                file : __dirname + '/fixtures/foursquare/ctide.png' });
+            friends.sync(pinfo, this.callback) },
+        "successfully" : function(err, response) {
+            assert.isNull(err);
+            assert.equal(response.data.contact[0].type, 'new');
+            assert.equal(response.data.contact[0].obj.id, '18387');
+            assert.equal(response.data.contact[1].obj.photoID, undefined);
+            assert.equal(response.data.photo[0].obj.photoID, '18514');
             pinfo.config = response.config;
         }
     }

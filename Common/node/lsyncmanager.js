@@ -132,7 +132,10 @@ function scheduleRun(info, synclet) {
 */
 function executeSynclet(info, synclet, callback) {
     if (synclet.status === 'running') {
-        return callback('already running');
+        if (callback) {
+            callback('already running');
+        }
+        return;
     }
     info.status = synclet.status = "running";
     if (!synclet.run) {
@@ -206,7 +209,8 @@ function processData (info, key, data, callback) {
     async.forEach(data, function(object, cb) {
         newEvent = object;
         newEvent.fromService = "synclet/" + info.id;
-        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
+        // double wrapping it, just in case.
+        exports.eventEmitter.emit(key + "/" + info.provider, {data: newEvent});
         if (object.type === 'delete') {
             datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {

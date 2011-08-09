@@ -6,5 +6,5 @@
     "mongoCollections": ["friends", "places", "recent"],
     "provides":["contact/foursquare", "checkin/foursquare"],
     "provider":"foursquare",
-    "synclets":[{"name": "checkins", "frequency": 120}]
+    "synclets":[{"name": "checkins", "frequency": 120},{"name": "friends", "frequency": 3600}]
 }

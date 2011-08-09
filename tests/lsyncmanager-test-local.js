@@ -100,13 +100,13 @@ vows.describe("Synclet Manager").addBatch({
                 assert.equal(eventCount, 3);
             },
             "with correct data" : function(topic) {
-                assert.equal(events[0].fromService, 'synclet/testSynclet');
-                assert.equal(events[1].fromService, 'synclet/testSynclet');
-                assert.equal(events[2].fromService, 'synclet/testSynclet');
-                assert.equal(events[0].type, 'new');
-                assert.equal(events[2].type, 'delete');
-                assert.equal(events[0].obj.notId, 500);
-                assert.equal(events[2].obj.notId, 1);
+                assert.equal(events[0].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[1].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[2].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[0].data.type, 'new');
+                assert.equal(events[2].data.type, 'delete');
+                assert.equal(events[0].data.obj.notId, 500);
+                assert.equal(events[2].data.obj.notId, 1);
             }
         }
     },
