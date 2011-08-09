@@ -5,6 +5,7 @@ var RESTeasy = require('api-easy');
 var vows = require("vows");
 var suite = RESTeasy.describe("Foursquare Synclet");
 var fs = require('fs');
+var curDir = process.cwd();
 
 process.on('uncaughtException',function(error){
     console.dir(error.stack);
@@ -54,6 +55,14 @@ suite.next().suite.addBatch({
             assert.equal(response.config.updateState.checkins.syncedThrough, '1305252459');
         }
     }
-});
+}).addBatch({
+    "cleanup" : {
+        topic: [],
+        "after itself": function(topic) {
+            process.chdir(curDir);
+            assert.equal(process.cwd(), curDir);
+        }
+    }
+})
 
 suite.export(module);
