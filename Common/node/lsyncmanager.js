@@ -31,8 +31,8 @@ exports.findInstalled = function () {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-            synclets.installed[js.provider] = js;
-            synclets.installed[js.provider].status = "waiting";
+            synclets.installed[js.id] = js;
+            synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
                 for (var i = 0; i < js.synclets; i++) {
                     scheduleRun(js, js.synclets[i]);
@@ -80,15 +80,21 @@ exports.install = function(metaData) {
             var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
             authInfo = apiKeys[serviceInfo.provider];
         } catch (E) { console.dir(E); }
+        var inc = 0;
+        if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider))) {
+            inc++;
+            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider, '-' + inc))) inc++;
+            serviceInfo.id = serviceInfo.provider + "-" + inc;
+        } else {
+            serviceInfo.id = serviceInfo.provider;
+        }
     } else {
         throw "invalid synclet, has no provider";
     }
     synclets.installed[serviceInfo.provider] = serviceInfo;
-    if (!(path.existsSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider))) {
-        fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider,0755);
-    }
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
     if (authInfo) serviceInfo.auth = authInfo;
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider+'/me.json',JSON.stringify(serviceInfo, null, 4));
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
     if (serviceInfo.synclets) {
         for (var i = 0; i < serviceInfo.synclets; i++) {
             scheduleRun(serviceInfo, serviceInfo.synclets[i]);
