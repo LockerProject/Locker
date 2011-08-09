@@ -3,7 +3,6 @@ var fs = require('fs')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
   , datastore = require('./synclet/datastore')
-  , datastoreinit = false
   , async = require('async')
   , EventEmitter = require('events').EventEmitter
   ;
@@ -34,7 +33,11 @@ exports.findInstalled = function () {
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             synclets.installed[js.provider] = js;
             synclets.installed[js.provider].status = "waiting";
-            if (js.frequency) scheduleRun(js);
+            if (js.synclets) {
+                for (var i = 0; i < js.synclets; i++) {
+                    scheduleRun(js, js.synclets[i]);
+                }
+            }
         } catch (E) {
             console.log("Me/synclets/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
@@ -86,7 +89,11 @@ exports.install = function(metaData) {
     }
     if (authInfo) serviceInfo.auth = authInfo;
     fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/"+serviceInfo.provider+'/me.json',JSON.stringify(serviceInfo, null, 4));
-    if (serviceInfo.frequency) scheduleRun(serviceInfo);
+    if (serviceInfo.synclets) {
+        for (var i = 0; i < serviceInfo.synclets; i++) {
+            scheduleRun(serviceInfo, serviceInfo.synclets[i]);
+        }
+    }
     return serviceInfo;
 }
 
@@ -106,11 +113,12 @@ exports.syncNow = function(serviceId, callback) {
 /**
 * Add a timeout to run a synclet
 */
-function scheduleRun(info) {
+function scheduleRun(info, synclet) {
     info.nextRun = new Date() + parseInt(info.frequency);
+    synclet.nextRun = new Date() + parseInt(synclet.frequency);
     setTimeout(function() {
-        executeSynclet(info);
-    }, parseInt(info.frequency) * 1000);
+        executeSynclet(info, synclet);
+    }, parseInt(synclet.frequency) * 1000);
 };
 
 /**
@@ -159,7 +167,7 @@ function executeSynclet(info, synclet, callback) {
         info.config = response.config;
         processResponse(info, synclet, response, callback);
         fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.provider + '/me.json', JSON.stringify(info, null, 4));
-        scheduleRun(info);
+        scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
     

@@ -87,7 +87,6 @@ function downloadPhoto(url, id) {
         if (err)
             console.error(err);
         else {
-            console.error(process.cwd());
             fs.writeFileSync('photos/' + id + '.jpg', body, 'binary');
             photos.push({'obj' : {'photoID' : id}});
         }
