@@ -1,7 +1,6 @@
 {
     "title":"Facebook Account",
     "status":"stable",
-    "mongoCollections": ["friends", "home", "photos"],
     "provides":["contact/facebook", "photo/facebook"],
     "provider":"facebook",
     "synclets":[{"name": "home", "frequency": 120},{"name": "friends", "frequency": 3600},{"name": "photos", "frequency": 86400}]
