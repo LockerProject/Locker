@@ -19,14 +19,21 @@ var vows = require("vows")
   , mongo
   , eventCount = 0
   , events = []
+  , nsEventCount = 0
+  , nsEvents = []
   ;
 lconfig.load("config.json");
 var syncManager = require("lsyncmanager.js");
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync']);
+var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync', 'testSynclet_dataStore']);
 
 syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
     events.push(event);
     eventCount++;
+});
+
+syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
+    nsEvents.push(event);
+    nsEventCount++;
 });
 
 vows.describe("Synclet Manager").addBatch({
@@ -85,31 +92,53 @@ vows.describe("Synclet Manager").addBatch({
             "successfully" : function(err, count) {
                 assert.equal(count, 1);
             }
+        }
+    }
+}).addBatch({
+    "and also generates " : {
+        topic: function() {
+            mongo.collections.testSynclet_dataStore.count(this.callback);
         },
-        "and after running writes out IJOD stuff" : {
-            topic: function() {
-                fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
-            },
-            "successfully" : function(err, data) {
-                assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
-            }
+        "data in the namespaced collection" : function(err, count) {
+            assert.equal(count, 1);
+        }
+    },
+    "and after running writes out IJOD stuff" : {
+        topic: function() {
+            fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
         },
-        "and after generating " : {
-            topic: eventCount,
-            "correct number of events" : function(topic) {
-                assert.equal(eventCount, 3);
-            },
-            "with correct data" : function(topic) {
-                assert.equal(events[0].fromService, 'synclet/testSynclet');
-                assert.equal(events[1].fromService, 'synclet/testSynclet');
-                assert.equal(events[2].fromService, 'synclet/testSynclet');
-                assert.equal(events[0].obj.type, 'delete');
-                assert.equal(events[2].obj.type, 'new');
-                assert.equal(events[0].obj.data.notId, 1);
-                assert.equal(events[1].obj.data.notId, 500);
-                events = [];
-                eventCount = 0;
-            }
+        "successfully" : function(err, data) {
+            assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
+        }
+    },
+    "into both" : {
+        topic: function() {
+            fs.readFile(lconfig.me + "/synclets/testSynclet/dataStore.json", this.callback);
+        },
+        "files": function(err, data) {
+            assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"id":5,"notId":5,"random":"data"}}\n');
+        }
+    },
+    "and after generating " : {
+        topic: eventCount,
+        "correct number of events" : function(topic) {
+            assert.equal(eventCount, 3);
+        },
+        "with correct data" : function(topic) {
+            assert.equal(events[0].fromService, 'synclet/testSynclet');
+            assert.equal(events[1].fromService, 'synclet/testSynclet');
+            assert.equal(events[2].fromService, 'synclet/testSynclet');
+            assert.equal(events[0].obj.type, 'delete');
+            assert.equal(events[2].obj.type, 'new');
+            assert.equal(events[0].obj.data.notId, 1);
+            assert.equal(events[1].obj.data.notId, 500);
+            events = [];
+            eventCount = 0;
+        },
+        "correct types of events": function(topic) {
+            assert.equal(nsEventCount, 1);
+            assert.equal(nsEvents[0].obj.type, 'new');
+            assert.equal(nsEvents[0].obj.data.random, 'data');
         }
     }
 }).addBatch({

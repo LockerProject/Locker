@@ -224,49 +224,57 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 };
 
 function processData (deleteIDs, info, key, data, callback) {
-    // console.error(key);
     // console.error(deleteIDs);
+    var collection = info.id + "_" + key;
+    var eventType = key + "/" + info.provider;
     
+    if (key.indexOf('/') !== -1) {
+        collection = info.id + "_" + key.substring(key.indexOf('/') + 1);
+        eventType = key.substring(0, key.indexOf('/')) + "/" + info.provider;
+        key = key.substring(key.indexOf('/') + 1);
+    }
+
     if (info.mongoId) { 
         datastore.addCollection(key, info.id, info.mongoId);
     } else {
         datastore.addCollection(key, info.id, "id");
     }
+    
     if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(data, info, key, function() {
-            deleteData(deleteIDs, info, key, callback);
+        addData(collection, data, info, eventType, function() {
+            deleteData(collection, deleteIDs, info, eventType, callback);
         });
     } else if (data) {
-        addData(data, info, key, callback);
+        addData(collection, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(deleteIDs, info, key, callback);
+        deleteData(collection, deleteIDs, info, eventType, callback);
     } else {
         callback();
     }
 }
 
-function deleteData (deleteIds, info, key, callback) {
+function deleteData (collection, deleteIds, info, eventType, callback) {
     async.forEach(deleteIds, function(id, cb) {
-        var newEvent = {obj : {source : key, type: 'delete', data : {}}};
+        var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
         newEvent.obj.data[info.mongoId] = id;
         newEvent.fromService = "synclet/" + info.id;
-        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
-        datastore.removeObject(info.id + "_" + key, id, {timeStampe: Date.now()}, cb);
+        exports.eventEmitter.emit(eventType, newEvent);
+        datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
     }, callback);
 }
 
-function addData (data, info, key, callback) {
+function addData (collection, data, info, eventType, callback) {
     async.forEach(data, function(object, cb) {
-        var newEvent = {obj : {source : key, type: object.type, data: object.obj}};
+        var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
         newEvent.fromService = "synclet/" + info.id;
         if (object.type === 'delete') {
-            datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
-            exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
+            datastore.removeObject(collection, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
+            exports.eventEmitter.emit(eventType, newEvent);
         } else {
-            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, function(err, type) {
+            datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type) {
                 if (type === 'same') return cb();
                 newEvent.obj.type = type;
-                exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
+                exports.eventEmitter.emit(eventType, newEvent);
                 cb();
             });
         }

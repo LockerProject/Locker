@@ -142,6 +142,7 @@ function setCurrent(type, object, callback) {
             });
         }
     } else {
+        console.error('failed to set current, l145 of common/node/synclet/datastore');
         console.error(type)
         console.error(object)
         console.error(callback);
