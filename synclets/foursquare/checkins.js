@@ -9,7 +9,6 @@
 
 var fs = require('fs')
   , request = require('request')
-  , utils = require('../../Common/node/connector/utils')
   , updateState, auth
   , places = []
   , photos = []

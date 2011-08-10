@@ -4,6 +4,7 @@ var fs = require('fs')
   , spawn = require('child_process').spawn
   , datastore = require('./synclet/datastore')
   , async = require('async')
+  , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   ;
 
@@ -173,9 +174,10 @@ function executeSynclet(info, synclet, callback) {
             return;
         }
         info.status = synclet.status = 'processing data';
-        info.config = response.config;
-        processResponse(info, synclet, response, callback);
+        tempInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json'));
+        info.config = lutil.extend(tempInfo.config, response.config);
         fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
+        processResponse(info, synclet, response, callback);
         scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
@@ -207,10 +209,9 @@ function processData (info, key, data, callback) {
         datastore.addCollection(key, info.id, "id");
     }
     async.forEach(data, function(object, cb) {
-        newEvent = object;
+        var newEvent = {obj : {source : key, type: object.type, data: object.obj}};
         newEvent.fromService = "synclet/" + info.id;
-        // double wrapping it, just in case.
-        exports.eventEmitter.emit(key + "/" + info.provider, {data: newEvent});
+        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         if (object.type === 'delete') {
             datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
         } else {

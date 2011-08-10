@@ -23,7 +23,7 @@ exports.addListener = function(type, id, cb) {
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     eventListeners[type].push({"id":id, "cb":cb});
     syncManager.eventEmitter.on(type, function(event) {
-        exports.fireEvent(type, event.fromService, event.type, event.obj);
+        exports.fireEvent(type, event.fromService, event.obj.type, event.obj);
     });
 }
 

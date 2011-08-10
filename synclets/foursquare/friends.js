@@ -18,7 +18,7 @@ exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     exports.syncFriends(function(err) {
         if (err) console.error(err);
-        var responseObj = {data : {}, config : {}};
+        var responseObj = {data : {}};
         responseObj.data.contact = contacts;
         responseObj.data.photo = photos;
         cb(err, responseObj);
