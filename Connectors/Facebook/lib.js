@@ -32,8 +32,8 @@ exports.getFriends = function(arg, cbEach, cbDone) {
     var fb = this;
     var uri = 'https://graph.facebook.com/'+arg.id+'/friends?access_token=' + auth.accessToken + '&date_format=U';
     getOne(uri,function(err,friends){
-        if(err) return cbDone(err);
-        async.forEach(friends,function(friend,cb){
+        if(err || !friends.data) return cbDone(err);
+        async.forEach(friends.data,function(friend,cb){
             fb.getPerson({id:friend.id},cbEach,cb);
         },cbDone);
     });
