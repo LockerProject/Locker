@@ -8,21 +8,28 @@
 */
 
 var fb = require('../../Connectors/Facebook/lib.js')
-  , contacts = []
+  , async = require('async')
+  , photos = []
   ;
 
 exports.sync = function(processInfo, cb) {
     fb.init(processInfo.auth);
-    exports.syncFriends(function(err) {
+    exports.syncPhotos(function(err) {
         if (err) console.error(err);
         var responseObj = {data : {}};
-        responseObj.data.contact = contacts;
+        responseObj.data.photo = photos;
         cb(err, responseObj);
     });
 };
 
-exports.syncFriends = function(callback) {
-    fb.getFriends({id:"me"},function(friend){
-        contacts.push({'obj' : friend, timestamp: new Date(), type : 'new'});
-    },callback);
+exports.syncPhotos = function(callback) {
+    // use a queue so we know when all the albums are done individually async'ly processing
+    var albums = [];
+    fb.getAlbums({id:"me"},function(album){albums.push(album);},function(){
+        async.forEach(albums,function(album,cbDone){
+            fb.getAlbum({id:album.id},function(photo){
+                photos.push({'obj' : photo, timestamp: new Date(), type : 'new'});            
+            },cbDone);
+        },callback);
+    });
 }
