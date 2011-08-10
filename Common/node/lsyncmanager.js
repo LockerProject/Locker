@@ -211,11 +211,16 @@ function processData (info, key, data, callback) {
     async.forEach(data, function(object, cb) {
         var newEvent = {obj : {source : key, type: object.type, data: object.obj}};
         newEvent.fromService = "synclet/" + info.id;
-        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         if (object.type === 'delete') {
             datastore.removeObject(info.id + '_' + key, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
+            exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
         } else {
-            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, cb);
+            datastore.addObject(info.id + "_" + key, object.obj, {timeStamp: object.timestamp}, function(err, type) {
+                if (type === 'same') return cb();
+                newEvent.obj.type = type;
+                exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
+                cb();
+            });
         }
     }, callback);
 }

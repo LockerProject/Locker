@@ -11,6 +11,7 @@ var IJOD = require('../ijod').IJOD
   , lstate = require('../lstate')
   , lmongoclient = require('../lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
   , ijodFiles = {}
+  , deepCompare = require('../deepCompare')
   , mongo
   , mongoIDs = {}
   ;
@@ -54,11 +55,12 @@ exports.addObject = function(type, object, options, callback) {
             timeStamp = options['timeStamp'];
         }
     }
-    ijodFiles[type].addRecord(timeStamp, object, function(err) {
-        if (err)
-            callback(err);
-        setCurrent(type, object, callback);
-    })
+    setCurrent(type, object, function(err, newType) {
+        if (type === 'same') return callback(err, newType);
+        ijodFiles[type].addRecord(timeStamp, object, function(err) {
+            callback(err, newType);
+        });
+    });
 }
 
 // same deal, except no strip option, just timestamp is available currently
@@ -126,7 +128,18 @@ function setCurrent(type, object, callback) {
         if(m) {
             var query = {};
             query[mongoIDs[type]] = object[mongoIDs[type]];
-            m.update(query, object, {upsert:true, safe:true}, callback);
+            m.findAndModify(query, [['_id','asc']], object, {upsert:true, safe:true}, function(err, doc) {
+                if (deepCompare(doc, {})) {
+                    callback(err, 'new');
+                } else {
+                    delete doc._id;
+                    if (deepCompare(doc, object)) {
+                        callback(err, 'same');
+                    } else {
+                        callback(err, 'update');
+                    }
+                }
+            });
         }
     } else {
         console.error(type)

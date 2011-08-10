@@ -91,7 +91,7 @@ vows.describe("Synclet Manager").addBatch({
                 fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
             },
             "successfully" : function(err, data) {
-                assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n');
+                assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
             }
         },
         "and after generating " : {
@@ -100,15 +100,31 @@ vows.describe("Synclet Manager").addBatch({
                 assert.equal(eventCount, 3);
             },
             "with correct data" : function(topic) {
-                console.dir(events[0]);
                 assert.equal(events[0].fromService, 'synclet/testSynclet');
                 assert.equal(events[1].fromService, 'synclet/testSynclet');
                 assert.equal(events[2].fromService, 'synclet/testSynclet');
-                assert.equal(events[0].obj.type, 'new');
-                assert.equal(events[2].obj.type, 'delete');
-                assert.equal(events[0].obj.data.notId, 500);
-                assert.equal(events[2].obj.data.notId, 1);
+                assert.equal(events[0].obj.type, 'delete');
+                assert.equal(events[2].obj.type, 'new');
+                assert.equal(events[0].obj.data.notId, 1);
+                assert.equal(events[1].obj.data.notId, 500);
+                events = [];
+                eventCount = 0;
             }
+        }
+    }
+}).addBatch({
+    "Running testSynclet again" : {
+        topic: function() {
+            syncManager.syncNow("testSynclet", this.callback);
+        },
+        "will only generate a delete and a new event" : function(topic) {
+            assert.equal(eventCount, 2);
+            assert.equal(events[0].obj.type, 'delete');
+            assert.equal(events[1].obj.type, 'new');
+            assert.equal(events[0].obj.data.notId, 1);
+            assert.equal(events[1].obj.data.notId, 1);
+            events = [];
+            eventCount = 0;
         }
     },
     "Available services" : {
