@@ -17,7 +17,8 @@ var request = require('request');
 
 app.set('views', __dirname);
 
-var places = [];
+var places = {};
+var pcnt = {};
 var processInfo;
 
 app.get('/', function(req, res) {
@@ -25,24 +26,37 @@ app.get('/', function(req, res) {
     res.end(fs.readFileSync(__dirname + '/ui/index.html'));
 });
 
+var latlng = "function ll(){}";
 app.get('/search', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     var q = req.param("q").toLowerCase();
-    res.write("<h2>results for "+q+" on "+places.length+" places</h2>");
-    for(var i = 0; i < places.length; i++)
+    res.write("<h2>results for "+q+" on "+Object.keys(places).length+" places</h2>");
+    var ids = Object.keys(places).sort(function(a,b){return pcnt[b] - pcnt[a]});
+    latlng = "function ll(){";
+    var firstp = false;
+    for(var i=0; i < ids.length; i++)
     {
-        var p = places[i];
-        var txt = p.venue.name + " " + p.venue.location.city + " " + p.venue.location.state;
+        var p = places[ids[i]];
+        var txt = p.name + " " + p.location.city + " " + p.location.state;
         if(txt.toLowerCase().indexOf(q) >= 0)
         {
-            res.write("<li>"+txt);
+            res.write("<li>("+pcnt[p.id]+") "+txt);
+            latlng += 'var marker = new google.maps.Marker({position: new google.maps.LatLng('+p.location.lat+','+p.location.lng+'),map:map,title:"'+txt+'"});'
+            firstp = p;
         }
     }
+    latlng += 'map.panTo(new google.maps.LatLng('+firstp.location.lat+','+firstp.location.lng+'));}';
     res.end();
+});
+
+app.get('/latlng', function(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/javascript'});
+    res.end(latlng);
 });
 
 
 app.get('/load', function(req, res) {
+    var type = (req.param('type'))?req.param('type'):"places";
     locker.providers("checkin/foursquare",function(err, arr){
         res.writeHead(200, {'Content-Type': 'text/html'});
         if(err || arr.length == 0)
@@ -53,7 +67,7 @@ app.get('/load', function(req, res) {
         // lazy load these, could use async if we want to know they were loaded before responding
         for(var i=0; i<arr.length; i++)
         {
-            var url = processInfo.lockerUrl+"/Me/"+arr[i].id+"/getCurrent/places";
+            var url = processInfo.lockerUrl+"/Me/"+arr[i].id+"/getCurrent/"+type;
             request.get({uri:url},function(err,res,body){
                 if(!err)
                 {
@@ -62,11 +76,34 @@ app.get('/load', function(req, res) {
                     // need to switch places to {} by id to be unique yet
                     for(var i=0; i < p.length; i++)
                     {
-                        places.push(p[i]);
+                        var v = (p[i].venue)?p[i].venue:p[i].data.venue;
+                        places[v.id] = v;
                     }
                 }
             });
         }
+        res.end("loaded foursquare places, <a href='./'>back</a>");
+    });
+});
+
+app.get('/loadEE', function(req, res) {
+    locker.providers("checkin/foursquare",function(err, arr){
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        if(err || arr.length == 0)
+        {
+            res.end("couldn't find foursquare, go install/connect it? <a href='./'>back</a>");
+            return;
+        }
+        // hack to manually load just for ME!
+        lfs.readObjectsFromFile("../"+arr[0].id+"/recent.json",function(p){
+            for(var i=0; i < p.length; i++)
+            {
+                var v = (p[i].venue)?p[i].venue:p[i].data.venue;
+                if(!v) continue;
+                places[v.id] = v;
+                pcnt[v.id] = (!pcnt[v.id])?1:pcnt[v.id]+1;
+            }            
+        });
         res.end("loaded foursquare places, <a href='./'>back</a>");
     });
 });

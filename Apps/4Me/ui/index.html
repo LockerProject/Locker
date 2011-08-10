@@ -8,14 +8,15 @@
 <link href="http://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" /> 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script> 
 <script type="text/javascript"> 
+var map;
   function initialize() {
-    var myLatlng = new google.maps.LatLng(-25.363882,131.044922);
+    var myLatlng = new google.maps.LatLng(42.299722,-91.014776);
     var myOptions = {
-      zoom: 4,
+      zoom: 9,
       center: myLatlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     }
-    var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+    map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
     
     var marker = new google.maps.Marker({
         position: myLatlng, 
@@ -24,8 +25,9 @@
     });   
   }
 </script> 
+<script src="latlng"></script>
 </head> 
-<body onload="initialize()"> 
+<body onload="initialize();ll();"> 
   <div id="map_canvas"></div> 
 U R MY LAB MONKEY!  This is intended to be a simple foursquare browsing or search of your history (by city name for example) and map the results so you can see everywhere you've ever checked in on a map in a specific area.
 <a href="load">load first</a> then search: <form method="get" action="search"><input name="q"></form>
