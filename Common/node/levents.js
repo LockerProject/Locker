@@ -23,7 +23,7 @@ exports.addListener = function(type, id, cb) {
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     eventListeners[type].push({"id":id, "cb":cb});
     syncManager.eventEmitter.on(type, function(event) {
-        exports.fireEvent(type, event.fromService, event.obj, event.type);
+        exports.fireEvent(type, event.fromService, event.type, event.obj);
     });
 }
 
@@ -53,7 +53,7 @@ exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
         obj:obj,
         listeners:eventListeners[serviceType].slice()
     };
-    //console.log(require("sys").inspect(newEventInfo));
+    // console.log(require("sys").inspect(newEventInfo));
     if (!processingEvents.hasOwnProperty(fromServiceId)) processingEvents[fromServiceId] = [];
     var queue = processingEvents[fromServiceId];
     queue.push(newEventInfo);

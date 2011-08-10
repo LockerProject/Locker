@@ -14,9 +14,8 @@ process.stdin.setEncoding('utf8');
 process.stdin.on("data", function(data) {
     // Do the initialization bits
     var processInfo = JSON.parse(data);
-    console.error(process.cwd());
-    console.error(processInfo);
-    var sync = require(processInfo.handle + "/" + processInfo.handle + ".js");
+    var run = processInfo.syncletToRun;
+    var sync = require(processInfo.provider + "/" + run.name + ".js");
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
             var error = JSON.stringify(err);

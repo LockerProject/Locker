@@ -45,7 +45,7 @@ vows.describe("Synclet Manager").addBatch({
             "and has status" : {
                 topic: syncManager.status('testSynclet'),
                 "frequency is 120s" : function(topic) {
-                    assert.equal(topic.frequency, 120);
+                    assert.equal(topic.synclets[0].frequency, 120);
                 },
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');
@@ -100,13 +100,13 @@ vows.describe("Synclet Manager").addBatch({
                 assert.equal(eventCount, 3);
             },
             "with correct data" : function(topic) {
-                assert.equal(events[0].fromService, 'testSynclet/testSynclet');
-                assert.equal(events[1].fromService, 'testSynclet/testSynclet');
-                assert.equal(events[2].fromService, 'testSynclet/testSynclet');
-                assert.equal(events[0].type, 'new');
-                assert.equal(events[2].type, 'delete');
-                assert.equal(events[0].obj.notId, 500);
-                assert.equal(events[2].obj.notId, 1);
+                assert.equal(events[0].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[1].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[2].data.fromService, 'synclet/testSynclet');
+                assert.equal(events[0].data.type, 'new');
+                assert.equal(events[2].data.type, 'delete');
+                assert.equal(events[0].data.obj.notId, 500);
+                assert.equal(events[2].data.obj.notId, 1);
             }
         }
     },
@@ -117,6 +117,24 @@ vows.describe("Synclet Manager").addBatch({
                 assert.ok(syncManager.synclets().available.length > 0);
             },
             "and can be installed" : {
+                topic:syncManager.install({srcdir:"synclets/testSynclet"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
+                    assert.include(svcMetaInfo, "synclets");
+                },
+                "and by service map says it is installed" : function(svcMetaInfo) {
+                    assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
+                },
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
+                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                },
+                "and by adding valid auth info" : function(svcMetaInfo) {
+                    assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
+            },
+            "and can be installed a second time" : {
                 topic:syncManager.install({srcdir:"synclets/testSynclet"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
@@ -135,59 +153,6 @@ vows.describe("Synclet Manager").addBatch({
                 }
             }
         }
-    // },
-    // "Migrates services that need it during the install" : {
-    //     topic: [],
-    //     "changing their version" : function(topic) {
-    //         assert.include(serviceManager.serviceMap().installed, "migration-test");
-    //         assert.isTrue(serviceManager.isInstalled("migration-test"));
-    //         assert.notEqual(serviceManager.serviceMap().installed['migration-test'], undefined);
-    //         assert.notEqual(serviceManager.serviceMap().installed['migration-test'].version, undefined);
-    //         assert.equal(serviceManager.serviceMap().installed['migration-test'].version, 1308079085972);
-    //     },
-    //     "and running the migration successfully" : function(topic) {
-    //         var me = JSON.parse(fs.readFileSync(process.cwd() + "/" + lconfig.me + "/migration-test/me.json", 'ascii'));
-    //         assert.notEqual(me.mongoCollections, undefined);
-    //         assert.equal(me.mongoCollections[0], 'new_collection');
-    //     }
     }
-// }).addBatch({
-//     "Spawning a service": {
-//         topic : function() {
-//             request({url:lconfig.lockerBase + '/Me/echo-config/'}, this.callback);
-//         },
-//         "passes the externalBase with the process info": function(err, resp, body) {
-//             var json = JSON.parse(body);
-//             assert.equal(json.externalBase, lconfig.externalBase + '/Me/echo-config/');
-//         }
-//     }
-// }).addBatch({
-//     "Uninstalling services " : {
-//         topic: function() {
-//             var that = this;
-//             request({uri:lconfig.lockerBase + '/core/tests/uninstall', json:{serviceId:'disabletest'}, method: 'POST'}, function() {
-//                 path.exists(lconfig.me + "/disabletest", function(exists) {
-//                     if (exists) {
-//                         that.callback("directory still exists");
-//                     } else {
-//                         that.callback(false, true);
-//                     }
-//                 })
-//             });
-//         },
-//         "deletes them FOREVER" : function(err, resp) {
-//             assert.isNull(err);
-//             assert.isTrue(resp);
-//         },
-//         "and deletes" : {
-//             topic : function() {
-//                 mongo.collections.thing1.count(this.callback);
-//             },
-//             "mongo collections" : function(err, doc) {
-//                 assert.isNull(err);
-//                 assert.equal(doc, 0);
-//             }
-//         }
-//     }
 }).export(module);
 

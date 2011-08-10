@@ -31,7 +31,7 @@ check_for() {
 
 
 check_for Python python 'python -V' 2.6
-check_for Node.js node 'node -v' 0.4.6 0.4.9
+check_for Node.js node 'node -v' 0.4.6 0.4.999999
 check_for npm npm "npm -v" 1
 check_for mongoDB mongod "mongod --version" 1.4.0
 if [ "$1" = "--vows" ] ; then

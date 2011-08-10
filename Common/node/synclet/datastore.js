@@ -121,11 +121,17 @@ exports.getCurrent = function(type, id, callback) {
 }
 
 function setCurrent(type, object, callback) {
-    var m = getMongo(type, object[mongoIDs[type]], callback);
-    if(m) {
-        var query = {};
-        query[mongoIDs[type]] = object[mongoIDs[type]];
-        m.update(query, object, {upsert:true, safe:true}, callback);
+    if (type && object && callback) {
+        var m = getMongo(type, object[mongoIDs[type]], callback);
+        if(m) {
+            var query = {};
+            query[mongoIDs[type]] = object[mongoIDs[type]];
+            m.update(query, object, {upsert:true, safe:true}, callback);
+        }
+    } else {
+        console.error(type)
+        console.error(object)
+        console.error(callback);
     }
 }
 
