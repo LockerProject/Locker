@@ -1,6 +1,7 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var checkins = require('../synclets/foursquare/checkins');
 var friends = require('../synclets/foursquare/friends');
+var recents = require('../synclets/foursquare/recent');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -48,6 +49,15 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "Successfully updates state going forward" : {
+        topic: function() {
+            checkins.sync(pinfo, this.callback);
+        },
+        "and doesn't try to pull down the same checkins again" : function(err, response) {
+            assert.equal(response.config.updateState.checkins.syncedThrough, '1305252459');
+        }
+    }
+}).addBatch({
     "Can get friends" : {
         topic: function() {
             fakeweb.registerUri({
@@ -73,12 +83,18 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
-    "Successfully updates state going forward" : {
+    "Can get recents" : {
         topic: function() {
-            checkins.sync(pinfo, this.callback);
-        },
-        "and doesn't try to pull down the same checkins again" : function(err, response) {
-            assert.equal(response.config.updateState.checkins.syncedThrough, '1305252459');
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com/v2/checkins/recent.json?limit=100&oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/recents.json' });
+            recents.sync(pinfo, this.callback) },
+        "successfully" : function(err, response) {
+            assert.isNull(err);
+            assert.equal(response.data.recents[0].id, '4e41ca3a62e13c6ce802fea8');
+            assert.equal(response.data.recents[1].venue.id, '44741dadf964a520ab331fe3');
+            var fixture = JSON.parse(fs.readFileSync(__dirname + '/fixtures/foursquare/recents.json', 'ascii'));
+            assert.equal(response.config.recents, JSON.stringify(fixture.response.recent));
         }
     }
 }).addBatch({
