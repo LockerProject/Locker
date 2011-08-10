@@ -175,9 +175,10 @@ function executeSynclet(info, synclet, callback) {
         }
         info.status = synclet.status = 'processing data';
         tempInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json'));
+        var deleteIDs = compareIDs(info.config, response.config);
+        processResponse(deleteIDs, info, synclet, response, callback);
         info.config = lutil.extend(tempInfo.config, response.config);
         fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
-        processResponse(info, synclet, response, callback);
         scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
@@ -187,7 +188,24 @@ function executeSynclet(info, synclet, callback) {
     delete info.syncletToRun;
 };
 
-function processResponse(info, synclet, response, callback) {
+function compareIDs (originalConfig, newConfig) {
+    var resp = {};
+    if (originalConfig.ids && newConfig.ids) {
+        for (var i in newConfig.ids) {
+            if (!originalConfig.ids[i]) break;
+            var newSet = newConfig.ids[i];
+            var oldSet = originalConfig.ids[i];
+            seenIDs = {};
+            resp[i] = [];
+            for (var j = 0; j < newSet.length; j++) seenIDs[newSet[j]] = true;
+            for (var j = 0; j < oldSet.length; j++) {
+                if (!seenIDs[oldSet[j]]) resp[i].push(oldSet[j]);
+            }
+        }
+    }
+    return resp;
+}
+function processResponse(deleteIDs, info, synclet, response, callback) {
     datastore.init(function() {
         info.status = synclet.status = 'waiting';
 
@@ -198,16 +216,46 @@ function processResponse(info, synclet, response, callback) {
         for (var i in response.data) {
             dataKeys.push(i);
         }
-        async.forEach(dataKeys, function(key, cb) { processData(info, key, response.data[key], cb); }, callback);
+        for (var i in deleteIDs) {
+            if (!dataKeys[i]) dataKeys.push(i);
+        }
+        async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
     });
 };
 
-function processData (info, key, data, callback) {
+function processData (deleteIDs, info, key, data, callback) {
+    // console.error(key);
+    // console.error(deleteIDs);
+    
     if (info.mongoId) { 
         datastore.addCollection(key, info.id, info.mongoId);
     } else {
         datastore.addCollection(key, info.id, "id");
     }
+    if (deleteIDs && deleteIDs.length > 0 && data) {
+        addData(data, info, key, function() {
+            deleteData(deleteIDs, info, key, callback);
+        });
+    } else if (data) {
+        addData(data, info, key, callback);
+    } else if (deleteIDs && deleteIDs.length > 0) {
+        deleteData(deleteIDs, info, key, callback);
+    } else {
+        callback();
+    }
+}
+
+function deleteData (deleteIds, info, key, callback) {
+    async.forEach(deleteIds, function(id, cb) {
+        var newEvent = {obj : {source : key, type: 'delete', data : {}}};
+        newEvent.obj.data[info.mongoId] = id;
+        newEvent.fromService = "synclet/" + info.id;
+        exports.eventEmitter.emit(key + "/" + info.provider, newEvent);
+        datastore.removeObject(info.id + "_" + key, id, {timeStampe: Date.now()}, cb);
+    }, callback);
+}
+
+function addData (data, info, key, callback) {
     async.forEach(data, function(object, cb) {
         var newEvent = {obj : {source : key, type: object.type, data: object.obj}};
         newEvent.fromService = "synclet/" + info.id;
@@ -224,7 +272,6 @@ function processData (info, key, data, callback) {
         }
     }, callback);
 }
-
 /**
 * Map a meta data file JSON with a few more fields and make it available
 */

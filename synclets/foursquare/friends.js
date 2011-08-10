@@ -11,6 +11,7 @@ var fs = require('fs')
   , request = require('request')
   , auth
   , contacts = []
+  , friendIDs = []
   , photos = []
   ;
 
@@ -18,7 +19,8 @@ exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     exports.syncFriends(function(err) {
         if (err) console.error(err);
-        var responseObj = {data : {}};
+        var responseObj = {data : {}, config: {}};
+        responseObj.config.ids = {contact: friendIDs};
         responseObj.data.contact = contacts;
         responseObj.data.photo = photos;
         cb(err, responseObj);
@@ -47,6 +49,7 @@ exports.syncFriends = function(callback) {
         }
         request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, function(err, resp, body) {
             var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
+            friendIDs = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
             downloadUsers(friends, function(err) {
                 callback(err);
             });

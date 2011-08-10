@@ -117,16 +117,29 @@ vows.describe("Synclet Manager").addBatch({
         topic: function() {
             syncManager.syncNow("testSynclet", this.callback);
         },
-        "will only generate a delete and a new event" : function(topic) {
-            assert.equal(eventCount, 2);
-            assert.equal(events[0].obj.type, 'delete');
-            assert.equal(events[1].obj.type, 'new');
-            assert.equal(events[0].obj.data.notId, 1);
-            assert.equal(events[1].obj.data.notId, 1);
+        "with no data will leave everything intact" : function(topic) {
+            assert.equal(eventCount, 0);
+            assert.equal(events[0], undefined);
             events = [];
             eventCount = 0;
         }
-    },
+    }
+}).addBatch({
+    "Removing IDs from the config will" : {
+        topic: function() {
+            var self = this;
+            syncManager.syncNow("testSynclet", function() {
+                mongo.collections.testSynclet_testSync.count(self.callback);
+            });
+        },
+        "will generate a delete event and remove the row from mongo" : function(err, count) {
+            assert.equal(count, 0);
+            assert.equal(eventCount, 1);
+            assert.equal(events[0].obj.type, 'delete');
+            assert.equal(events[0].obj.data.notId, 500);
+        }
+    }
+}).addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
             topic:syncManager.scanDirectory("synclets"),
