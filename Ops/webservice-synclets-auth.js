@@ -74,8 +74,7 @@ function handleTwitter (req, res) {
             auth.token = newToken;
             installSynclet("twitter", auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
-        }
-    });
+        });
 }
 
 function installSynclet (provider, auth) {
