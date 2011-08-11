@@ -35,7 +35,7 @@ exports.findInstalled = function (callback) {
             synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
                 for (var j = 0; j < js.synclets.length; j++) {
-                    scheduleRun(js, js.synclets[i]);
+                    scheduleRun(js, js.synclets[j]);
                 }
             }
         } catch (E) {
