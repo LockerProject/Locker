@@ -145,11 +145,10 @@ function executeSynclet(info, synclet, callback) {
         run = synclet.run.split(" "); // node foo.js
     }
 
-    process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets';
+    process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets/'+info.provider+'/';
     var dataResponse = '';
 
-    // app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
-    app = spawn(run.shift(), run, {cwd: info.srcdir, env:process.env});
+    app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;

@@ -15,7 +15,7 @@ process.stdin.on("data", function(data) {
     // Do the initialization bits
     var processInfo = JSON.parse(data);
     var run = processInfo.syncletToRun;
-    var sync = require(processInfo.provider + "/" + run.name + ".js");
+    var sync = require(run.name + ".js");
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
             var error = JSON.stringify(err);
