@@ -84,5 +84,6 @@ function installSynclet (provider, auth) {
         if (avail[i].provider == options.provider) newSynclet = avail[i];
     }
     newSynclet.auth = auth;
-    syncManager.install(newSynclet);
+    var svcInfo = syncManager.install(newSynclet);
+    syncManager.syncNow(svcInfo.id, function() {});
 }

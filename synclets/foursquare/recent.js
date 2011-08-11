@@ -23,7 +23,7 @@ exports.sync = function(processInfo, cb) {
     exports.syncRecent(function(err) {
         var responseObj = {data : {}, config : {}};
         responseObj.data.recents = newRecents;
-        responseObj.config.recents = recents;
+        responseObj.config.recents = JSON.parse(recents);
         cb(err, responseObj);
     });
 };

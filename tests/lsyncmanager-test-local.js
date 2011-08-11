@@ -176,7 +176,7 @@ vows.describe("Synclet Manager").addBatch({
                 assert.ok(syncManager.synclets().available.length > 0);
             },
             "and can be installed" : {
-                topic:syncManager.install({srcdir:"synclets/testSynclet"}),
+                topic:syncManager.install({srcdir:"synclets/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "synclets");
                 },
@@ -203,9 +203,6 @@ vows.describe("Synclet Manager").addBatch({
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
-                },
-                "and by adding valid auth info" : function(svcMetaInfo) {
-                    assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});
                 },
                 "and passes along the icon": function(svcMetaInfo) {
                     assert.notEqual(svcMetaInfo.icon, undefined);

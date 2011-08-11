@@ -94,7 +94,7 @@ suite.next().suite.addBatch({
             assert.equal(response.data.recents[0].id, '4e41ca3a62e13c6ce802fea8');
             assert.equal(response.data.recents[1].venue.id, '44741dadf964a520ab331fe3');
             var fixture = JSON.parse(fs.readFileSync(__dirname + '/fixtures/foursquare/recents.json', 'ascii'));
-            assert.equal(response.config.recents, JSON.stringify(fixture.response.recent));
+            assert.deepEqual(response.config.recents, fixture.response.recent);
         }
     }
 }).addBatch({

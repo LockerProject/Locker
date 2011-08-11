@@ -91,7 +91,9 @@ exports.install = function(metaData) {
     synclets.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
     fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
-    exports.syncNow(serviceInfo.id);
+    for (var i = 0; i < serviceInfo.synclets.length; i++) {
+        scheduleRun(serviceInfo, serviceInfo.synclets[i]);
+    }
     return serviceInfo;
 }
 
@@ -138,7 +140,8 @@ function executeSynclet(info, synclet, callback) {
     process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets/'+info.provider+'/';
     var dataResponse = '';
 
-    app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
+    // app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
+    app = spawn(run.shift(), run, {cwd: info.srcdir, env: process.env});
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
