@@ -8,18 +8,15 @@
 */
 var assert = require("assert");
 var lconfig = require('lconfig');
+var is = require("lutil").is;
 
 var currentEngine = undefined;
 
-exports.engines = {
-    "CLucene" : CLEngine,
-    "ElasticSearch" : ESEngine
-};
-
 CLEngine = function()
 {
-    this.cl = require('clucene').CLucene;
-    this.lucene = new cl.Lucene();
+    this.engine = require('clucene');
+    this.cl = this.engine.CLucene;
+    this.lucene = new this.cl.Lucene();
     this.mappings = {
         "contact" : [
             "name", "nickname", "email", "im", "address"
@@ -29,7 +26,7 @@ CLEngine = function()
     return this;
 }
 CLEngine.prototype.indexType = function(type, value, callback) {
-    var doc = new cl.Document();
+    var doc = new this.cl.Document();
     
     // Use the mapping to generate the content field
     //
@@ -39,75 +36,89 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     var contentTokens = [];
     for (k in value) {
         if (!value.hasOwnProperty(k)) continue;
-        if (mappings.indexOf(k) < 0) continue;
-        if (is("Array", value[k])) {
-            for(var i = 0, l = value[k].length; i < l; i++) {
-                contentTokens.push(value[k][i].toString());
+        if (this.mappings[type].indexOf(k) < 0) continue;
+        function processValue(v) {
+            if (is("Array", v)) {
+                for(var i = 0, l = v.length; i < l; i++) {
+                    processValue(v[i]);
+                    //contentTokens.push(value[k][i].toString());
+                }
+            } else if (is("Object", v)) {
+                for(i in value[k]) {
+                    processValue(v[i]);
+                    //contentTokens.push(value[k][i].toString());
+                }
+            } else {
+                if (v) contentTokens.push(v.toString());
             }
-        } else if (is("Object", value[k])) {
-            for(i in value[k]) {
-                contentTokens.push(value[k][i].toString());
-            }
-        } else {
-            contentTokens.push(value[k].toString());
+
         }
+        processValue(value[k]);
     }
+    var contentString = contentTokens.join(" <> ");
+    console.log("Going to store " + contentString);
     
-    doc.addField('_id', value.id, this.cl.Store.STORE_YES|this.cl.Index.INDEX_UNTOKENIZED);
-    doc.addField("_type", type, this.cl.Store.STORE_YES|this.cl.Index.INDEX_UNTOKENIZED);
-    doc.addField('content', value, this.cl.Store.STORE_NO|this.cl.Index.INDEX_TOKENIZED);
-    lucene.addDocument(doc, process.cwd() + '/' + lconfig.me + '/search.index', function(err, indexTime) {
+    doc.addField('_id', value._id.toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
+    this.lucene.addDocument(doc, process.cwd() + '/' + lconfig.me + '/search.index', function(err, indexTime) {
         callback(err, indexTime);
     });
 }
 CLEngine.prototype.queryType = function(type, query, params, callback) {
-    
-    lucene.search("tweets.lucene", "content:(" + process.argv[2] + ")", function(err, results) {
-        if (err) {
-            console.log("Search error: " + err);
-            return;
-        }
-        var objects = fs.readFileSync("user_timeline.json", "utf8").split("\n");
-        objects = objects.map(function(objText) { 
-            try {
-                var json = JSON.parse(objText);
-                return json;
-            } catch(E) {
-                return undefined;
-            }
-        }).filter(function(obj) { return obj !== undefined; });
-        results.forEach(function(result) {
-            var id = parseInt(result.id);
-            objects.some(function(obj) {
-                if (obj.data.id == id) {
-                    console.log("score(" + result.score + ") " + obj.data.created_at + " - " + obj.data.text);
-                    return true;
-                } else {
-                    return false;
-                }
-
-            });
-        });
-    });
-
+    var indexLocation = process.cwd() + '/' + lconfig.me + '/search.index';
+    lucene.search(indexLocation, "content:(" + query + ") AND +type:" + type, callback);
 }
 CLEngine.prototype.queryAll = function(type, query, params, callback) {
+    var indexLocation = process.cwd() + '/' + lconfig.me + '/search.index';
+    lucene.search(indexLocation, "content:(" + query + ")", callback);
 }
 
 
 exports.setEngine = function(engine) {
     if (currentEngine) delete currentEngine;
-    assert(exports.engines.hasOwnProperty(engine));
-    currentEngine = new exports.engines[engine]();
+    currentEngine = new engine();
 };
 
 function exportEngineFunction(funcName) {
-    var funcToRun = function() {}
+    var funcToRun = function() {
         assert.ok(currentEngine);
         currentEngine[func].apply(currentEngine, arguments);
     }
     exports[funcName] = funcToRun;
 }
-exportEngineFunction("indexType");
 exportEngineFunction("queryType");
 exportEngineFunction("queryAll");
+
+// Indexing Parts Be Here
+var indexQueue = [];
+var indexing = false;
+
+exports.indexType = function(type, value, cb) {
+    indexQueue.push({"type":type, "value":value, "cb":cb});
+    process.nextTick(indexMore);
+}
+
+function indexMore() {
+    // I still feel like async can break this unless there's some sort of atomic guarantee
+    if (indexing) return;
+    indexing = true;
+    
+    if (indexQueue.length == 0) {
+        indexing = false;
+        return;
+    }
+    
+    var cur = indexQueue.shift();
+    assert.ok(currentEngine);
+    currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
+        cur.cb(err, indexTime);
+        process.nextTick(indexMore);
+    });
+}
+
+exports.engines = {
+    "CLucene" : CLEngine,
+    "ElasticSearch" : undefined // ESEngine
+};
+

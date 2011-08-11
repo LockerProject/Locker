@@ -76,7 +76,7 @@ exports.extend = function() {
 };
 
 // Found on http://bonsaiden.github.com/JavaScript-Garden/#types.typeof
-function is(type, obj) {
+exports.is = function(type, obj) {
     var clas = Object.prototype.toString.call(obj).slice(8, -1);
     return obj !== undefined && obj !== null && clas === type;
 }
