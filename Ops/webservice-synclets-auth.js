@@ -4,7 +4,6 @@ var syncManager = require('lsyncmanager')
   , locker = require('../Common/node/locker')
   , request = require('request')
   , lconfig = require('../Common/node/lconfig')
-  , apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'))
   , foursquare = {"provider" : "foursquare",
       "accessTokenResponse" : "json",
       "endPoint" : "https://foursquare.com/oauth2/",
@@ -16,8 +15,12 @@ var syncManager = require('lsyncmanager')
   , github = {"provider" : "github",
       "endPoint" : "https://github.com/login/oauth",
       "redirectURI" : "auth/github/auth"}
+  , apiKeys = {}
   ;
 
+try{
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'))    
+}catch(e){}
 
 module.exports = function(locker) {
     locker.get('/auth/foursquare/auth', function(req, res) {
