@@ -6,33 +6,61 @@
 * Please see the LICENSE file for more information.
 *
 */
+var assert = require("assert");
 var lconfig = require('lconfig');
-var cl = require('clucene').CLucene;
 
-var lucene = new cl.Lucene();
+var currentEngine = undefined;
 
-exports.setEngine = function(engine) {
-    
+exports.engines = {
+    "CLucene" : CLEngine,
+    "ElasticSearch" : ESEngine
 };
 
-exports.addMapping = function(type, mapping) {
+CLEngine = function()
+{
+    this.cl = require('clucene').CLucene;
+    this.lucene = new cl.Lucene();
+    this.mappings = {
+        "contact" : [
+            "name", "nickname", "email", "im", "address"
+        ]
+    };
     
-};
-
-exports.indexType = function(type, value, callback) {
+    return this;
+}
+CLEngine.prototype.indexType = function(type, value, callback) {
     var doc = new cl.Document();
     
-    doc.addField('_id', value.id, 65); // TODO: replace these with the actual bitwise ops for readability
-    doc.addField('content', value, 33);
-    lucene.addDocument(doc, process.cwd() + '/' + lconfig.me + '/search.index', function(err, indexTime) {
-        if (err) {
-            console.log('Error adding: ' + err);
+    // Use the mapping to generate the content field
+    //
+    if (!this.mappings.hasOwnProperty(type)) {
+        callback("No valid mapping for the type: " + type);
+    }
+    var contentTokens = [];
+    for (k in value) {
+        if (!value.hasOwnProperty(k)) continue;
+        if (mappings.indexOf(k) < 0) continue;
+        if (is("Array", value[k])) {
+            for(var i = 0, l = value[k].length; i < l; i++) {
+                contentTokens.push(value[k][i].toString());
+            }
+        } else if (is("Object", value[k])) {
+            for(i in value[k]) {
+                contentTokens.push(value[k][i].toString());
+            }
+        } else {
+            contentTokens.push(value[k].toString());
         }
-        process.nextTick(processNext);
+    }
+    
+    doc.addField('_id', value.id, this.cl.Store.STORE_YES|this.cl.Index.INDEX_UNTOKENIZED);
+    doc.addField("_type", type, this.cl.Store.STORE_YES|this.cl.Index.INDEX_UNTOKENIZED);
+    doc.addField('content', value, this.cl.Store.STORE_NO|this.cl.Index.INDEX_TOKENIZED);
+    lucene.addDocument(doc, process.cwd() + '/' + lconfig.me + '/search.index', function(err, indexTime) {
+        callback(err, indexTime);
     });
-};
-
-exports.queryType = function(type, query, params, callback) {
+}
+CLEngine.prototype.queryType = function(type, query, params, callback) {
     
     lucene.search("tweets.lucene", "content:(" + process.argv[2] + ")", function(err, results) {
         if (err) {
@@ -61,8 +89,25 @@ exports.queryType = function(type, query, params, callback) {
             });
         });
     });
+
+}
+CLEngine.prototype.queryAll = function(type, query, params, callback) {
+}
+
+
+exports.setEngine = function(engine) {
+    if (currentEngine) delete currentEngine;
+    assert(exports.engines.hasOwnProperty(engine));
+    currentEngine = new exports.engines[engine]();
 };
 
-exports.queryAll = function(query, params, callback) {
-    
-};
+function exportEngineFunction(funcName) {
+    var funcToRun = function() {}
+        assert.ok(currentEngine);
+        currentEngine[func].apply(currentEngine, arguments);
+    }
+    exports[funcName] = funcToRun;
+}
+exportEngineFunction("indexType");
+exportEngineFunction("queryType");
+exportEngineFunction("queryAll");
