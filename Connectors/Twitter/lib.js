@@ -85,6 +85,27 @@ exports.getFollowers = function(arg, cbEach, cbDone) {
     });
 }
 
+// get your home timeline, screen_name has to be me
+exports.getTimeline = function(arg, cbEach, cbDone) {
+    if(!arg.screen_name) return cbDone("missing screen_name");
+    arg.path = '/statuses/home_timeline.json';
+    getPages(arg,cbEach,cbDone);
+}
+
+// should work for anyone, get their tweets
+exports.getTweets = function(arg, cbEach, cbDone) {
+    if(!arg.screen_name) return cbDone("missing screen_name");
+    arg.path = '/statuses/user_timeline.json';
+    getPages(arg,cbEach,cbDone);
+}
+
+// duh
+exports.getMentions = function(arg, cbEach, cbDone) {
+    if(!arg.screen_name) return cbDone("missing screen_name");
+    arg.path = '/statuses/mentions.json';
+    getPages(arg,cbEach,cbDone);
+}
+
 // step through any sized list of ids using cursors
 function getIdList(arg, cbEach, cbDone) {
     if(!arg.screen_name) return cbDone("missing screen_name");
@@ -136,7 +157,7 @@ function getOne(arg, cb)
     });
 }
 
-function getDatas(arg, cbEach, cbDone)
+function getPages(arg, cbEach, cbDone)
 {
     if(!arg.path) return cb("no path");
     arg.token = auth.token;
@@ -147,7 +168,7 @@ function getDatas(arg, cbEach, cbDone)
         if(err || js.length == 0) return cbDone(err);
         for(var i = 0; i < js.length; i++) cbEach(js[i]);
         arg.page++;
-        return getDatas(arg,cbEach,cbDone);
+        return getPages(arg,cbEach,cbDone);
     });
 }
 
