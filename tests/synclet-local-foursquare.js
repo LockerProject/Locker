@@ -78,7 +78,7 @@ suite.next().suite.addBatch({
             assert.equal(response.data.contact[0].type, 'new');
             assert.equal(response.data.contact[0].obj.id, '18387');
             assert.equal(response.data.contact[1].obj.photoID, undefined);
-            assert.deepEqual(response.config.ids.friends, ['2715557','18387']);
+            assert.deepEqual(response.config.ids.contact, ['2715557','18387']);
             assert.equal(response.data.photo[0].obj.photoID, '18514');
         }
     }
