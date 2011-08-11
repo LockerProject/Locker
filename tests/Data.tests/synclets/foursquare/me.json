@@ -1,24 +1,37 @@
 {
-	"title":"Foursquare Account",
-	"action":"Connect to a Foursquare account",
-	"desc":"Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
-	"run":"node client.js",
-	"status":"stable",
-	"handle": "foursquare",
-    "provides":["contact/foursquare", "checkin/foursquare"],
+    "status": "stable",
+    "title": "Foursquare Account",
+    "synclets": [
+        {
+            "frequency": 120,
+            "name": "checkins"
+        },
+        {
+            "frequency": 3600,
+            "name": "friends"
+        },
+        {
+            "frequency": 60,
+            "name": "recent"
+        }
+    ],
     "mongoCollections": [
         "friends",
         "places",
         "recent"
     ],
-    "srcdir":"synclets/foursquare",
-    "id":"foursquare",
-    "provider": "foursquare",
-    "frequency": 120,
+    "provides": [
+        "contact/foursquare",
+        "checkin/foursquare"
+    ],
     "auth": {
         "username": "",
         "appKey": "sdf",
         "appSecret": "asf",
         "accessToken": "abc"
-    }
+    },
+    "id": "foursquare",
+    "provider": "foursquare",
+    "action": "Connect to a Foursquare account",
+    "desc": "Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself."
 }

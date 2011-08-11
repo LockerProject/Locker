@@ -1,0 +1,18 @@
+{
+    "status": "stable",
+    "title": "Github Account",
+    "synclets": [
+        {
+            "frequency": 120,
+            "name": "users"
+        }
+    ],
+    "provides": [
+        "contact/github"
+    ],
+    "auth": {"username" : "ctide", "accessToken" : "abc"},
+    "id": "github",
+    "provider": "github",
+    "action": "Connect to a github account",
+    "desc": "Collect and sync my data from my github account using the github API and a github 'app' that I create just for myself."
+}

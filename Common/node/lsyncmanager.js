@@ -22,8 +22,7 @@ exports.synclets = function() {
 /**
 * Scans the Me directory for instaled synclets
 */
-exports.findInstalled = function () {
-    synclets.installed = {};
+exports.findInstalled = function (callback) {
     if (!path.existsSync(lconfig.me + "/synclets/")) fs.mkdirSync(lconfig.me + "/synclets/", 0755);
     var dirs = fs.readdirSync(lconfig.me + "/synclets/" );
     for (var i = 0; i < dirs.length; i++) {
@@ -35,7 +34,7 @@ exports.findInstalled = function () {
             synclets.installed[js.id] = js;
             synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
-                for (var i = 0; i < js.synclets.length; i++) {
+                for (var j = 0; j < js.synclets.length; j++) {
                     scheduleRun(js, js.synclets[i]);
                 }
             }
