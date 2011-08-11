@@ -1,5 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
 var users = require('../synclets/github/users');
+var repos = require('../synclets/github/repos');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -40,6 +41,30 @@ suite.next().suite.addBatch({
             assert.equal(response.data['contact/followers'][1].obj.id, 399496);
             assert.equal(response.data['contact/following'][0].obj.login, 'wmw');
             assert.equal(response.config.id.followers[0], 'fourk');
+        }
+    }
+}).addBatch({
+    "Can get profile" : {
+        topic: function() {
+            fakeweb.allowNetConnect = false;
+            fakeweb.registerUri({
+                uri : 'https://github.com/api/v2/json/repos/show/ctide',
+                file : __dirname + '/fixtures/github/repos.json' });
+            fakeweb.registerUri({
+                uri :'https://github.com/api/v2/json/repos/show/ctide/arenarecapslibrary/watchers',
+                file : __dirname + '/fixtures/github/arenarecapslibrary_watchers.json'});
+            fakeweb.registerUri({
+                uri :'https://github.com/api/v2/json/repos/show/ctide/WoWCombatLogParser/watchers',
+                file : __dirname + '/fixtures/github/WoWCombatLogParser_watchers.json'});
+            fakeweb.registerUri({
+                uri : 'https://github.com/api/v2/json/user/show/ctide',
+                file : __dirname + '/fixtures/github/ctide.json' });
+            repos.sync(pinfo, this.callback) },
+        "successfully" : function(err, response) {
+            assert.equal(response.data.profile[0].obj.login, 'ctide');
+            assert.equal(response.data.repos[0].obj.name, 'arenarecapslibrary');
+            assert.equal(response.data['contact/watchers'][0].obj.login, 'ctide');
+            assert.equal(response.config.ids['ctide/arenarecapslibrary'][0], 'ctide');
         }
     }
 })
