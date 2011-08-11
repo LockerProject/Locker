@@ -3,6 +3,7 @@ var syncManager = require('lsyncmanager')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')
+  , querystring = require('querystring')
   , lconfig = require('../Common/node/lconfig')
   , foursquare = {"provider" : "foursquare",
       "accessTokenResponse" : "json",
@@ -41,20 +42,32 @@ module.exports = function(locker) {
 };
 
 function handleOAuth2 (code, options, res) {
+    console.dir(options.redirectURI);
     var newUrl = options.endPoint + '/access_token' +
                     '?client_id=' + apiKeys[options.provider].appKey +
                     '&client_secret=' + apiKeys[options.provider].appSecret +
                     '&grant_type=' + options.grantType +
-                    '&redirect_uri=' + host + options.redirectURI + 'auth' +
+                    '&redirect_uri=' + host + options.redirectURI +
                     '&code=' + code;
     request.get({url:newUrl}, function(err, resp, body) {
         auth = {};
+        console.dir(body);
         if (options.accessTokenResponse == 'json') {
             auth.accessToken = JSON.parse(body).access_token;
         } else {
             auth.accessToken = querystring.parse(body).access_token;
         }
-        installSynclet(options.provider, auth);
+        console.dir(auth);
+        if (options.provider === 'github') {
+            request.get({url:"https://github.com/api/v2/json/user/show?access_token=" + auth.accessToken}, function(err, resp, body) {
+                var resp = JSON.parse(body);
+                console.dir(resp);
+                auth.username = resp.user.login;
+                installSynclet(options.provider, auth);
+            });
+        } else {
+            installSynclet(options.provider, auth);
+        }
         res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
     });
 }
@@ -84,7 +97,7 @@ function installSynclet (provider, auth) {
     var avail = syncManager.synclets().available;
     var newSynclet;
     for (var i = 0; i < avail.length; i++) {
-        if (avail[i].provider == options.provider) newSynclet = avail[i];
+        if (avail[i].provider == provider) newSynclet = avail[i];
     }
     newSynclet.auth = auth;
     var svcInfo = syncManager.install(newSynclet);
