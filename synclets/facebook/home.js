@@ -14,6 +14,7 @@ var fb = require('../../Connectors/Facebook/lib.js')
 
 
 exports.sync = function(processInfo, cb) {
+console.error("RUNNING "+JSON.stringify(processInfo));
     fb.init(processInfo.auth);
     var arg = {id:"me",type:"home"};
     if (processInfo.config && processInfo.config.updateState && processInfo.config.updateState.home) {
@@ -21,7 +22,7 @@ exports.sync = function(processInfo, cb) {
     }
     var since=0;
     fb.getPosts(arg,function(post){
-        posts.push(post);
+        posts.push({'obj' : post, timestamp: new Date(), type : 'new'});
         if(post.updated_time > since) since = post.updated_time;
     },function(err) {
         var responseObj = {data : {}, config : {}};
