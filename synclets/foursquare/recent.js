@@ -41,7 +41,7 @@ exports.syncRecent = function (callback) {
         recents = JSON.stringify(checkins);
         for(var i = 0; i < checkins.length; i++) {
             if (seenIDs[checkins[i].id]) break;
-            newRecents.push(checkins[i]);
+            newRecents.push({obj: checkins[i], timestamp: Date.now()});
         }
         callback();
     });
