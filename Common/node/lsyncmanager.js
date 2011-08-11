@@ -68,18 +68,15 @@ exports.install = function(metaData) {
         if (svcInfo.srcdir == metaData.srcdir) {
             serviceInfo = {};
             for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
+            serviceInfo.auth = metaData.auth;
             return true;
         }
         return false;
     });
     if (!serviceInfo) return serviceInfo;
-    var authInfo;
+
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.provider) {
-        try {
-            var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
-            authInfo = apiKeys[serviceInfo.provider];
-        } catch (E) { console.dir(E); }
         var inc = 0;
         if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider))) {
             inc++;
@@ -93,13 +90,8 @@ exports.install = function(metaData) {
     }
     synclets.installed[serviceInfo.id] = serviceInfo;
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
-    if (authInfo) serviceInfo.auth = authInfo;
     fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
-    if (serviceInfo.synclets) {
-        for (var i = 0; i < serviceInfo.synclets; i++) {
-            scheduleRun(serviceInfo, serviceInfo.synclets[i]);
-        }
-    }
+    exports.syncNow(serviceInfo.id);
     return serviceInfo;
 }
 
@@ -120,8 +112,7 @@ exports.syncNow = function(serviceId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
-    info.nextRun = new Date() + parseInt(info.frequency);
-    synclet.nextRun = new Date() + parseInt(synclet.frequency);
+    synclet.nextRun = new Date(Date.now() + (parseInt(synclet.frequency) * 1000));
     setTimeout(function() {
         executeSynclet(info, synclet);
     }, parseInt(synclet.frequency) * 1000);
