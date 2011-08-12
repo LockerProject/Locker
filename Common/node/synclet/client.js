@@ -17,21 +17,23 @@ process.stdin.on("data", function(newData) {
     // Do the initialization bits
     data += newData;
     try {
-        JSON.parse(data);
-        run(data);
-    } catch (E) {}
+        run(JSON.parse(data));
+    } catch (E) {
+        console.error("failed to run: "+E);
+    }
 });
 
+var path = require('path');
 function run (processInfo) {
-    var run = processInfo.syncletToRun;
-    var sync = require(run.name + ".js");
+    require.paths.unshift(".");
+    var sync = require(processInfo.name);
+    process.chdir(processInfo.workingDirectory);
+console.error("running "+processInfo.name);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
-            var error = JSON.stringify(err);
-            fs.writeSync(1, error);
+            fs.writeSync(1,JSON.stringify(err));
         } else {
-            var output = JSON.stringify(returnedInfo);
-            fs.writeSync(1, output);
+            fs.writeSync(1,JSON.stringify(returnedInfo));
         }
         process.exit();
     });
