@@ -12,7 +12,8 @@ var syncManager = require('lsyncmanager')
       "grantType" : "authorization_code"}
   , facebook = {"provider" : "facebook",
       "endPoint" : "https://graph.facebook.com/oauth",
-      "redirectURI" : "auth/facebook/auth"}
+      "redirectURI" : "auth/facebook/auth",
+      "grantType" : ''}
   , github = {"provider" : "github",
       "endPoint" : "https://github.com/login/oauth",
       "redirectURI" : "auth/github/auth"}
