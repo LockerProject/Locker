@@ -39,8 +39,17 @@ var locker = express.createServer(
                 } else {
                     next();
                 }
-            }
-            );
+            },
+            function(req, res, next) {
+                if (req.url.substring(0, 13) == '/auth/twitter') {
+                    connect.bodyParser()(req, res, next);
+                } else {
+                    next();
+                }
+            },
+            connect.cookieParser(),
+            connect.session({key:'locker.project.id', secret : "locker"})
+        );
 
 var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);

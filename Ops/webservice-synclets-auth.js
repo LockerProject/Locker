@@ -84,10 +84,21 @@ function handleGoogleContacts (req, res) {
 }
 
 function handleTwitter (req, res) {
-    // eek @ this require
-    require('../Connectors/twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "/auth/twitter/auth")
+    // twitter's annoying.
+    // for the current ghetto flow, we're only allowing 1 twitter synclet to be installed
+    // unless i come up with a better solution
+    //
+    var installed = syncManager.synclets().installed;
+    for (var i in installed) {
+        if (i == 'twitter') {
+            return res.end('twitter already installed!!!');
+        }
+    }
+    require('../Connectors/twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
         .getAccessToken(req, res, function(err, newToken) {
             var auth = {};
+            auth.consumerKey = apiKeys.twitter.appKey;
+            auth.consumerSecret = apiKeys.twitter.appSecret;
             auth.token = newToken;
             installSynclet("twitter", auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
