@@ -111,7 +111,7 @@ def matches_arg(value, arg):
 def locations():
     locations = app.client.locations
     for key, value in request.args.items():
-        locations = [location for location in locations if matches_arg(location[key], json.loads(value))]
+        locations = [location for location in locations.values() if matches_arg(location[key], json.loads(value))]
     return json.dumps(locations)
 
 def runService(info):
