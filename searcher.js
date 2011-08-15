@@ -4,7 +4,7 @@ var lconfig = require('lconfig');
 lconfig.load('config.json');
 
 var lsearch = require('lsearch');
-lsearch.setIndexPath('./Me/search.indices');
+lsearch.setIndexPath('./Me/search/search.index');
 lsearch.setEngine(lsearch.engines.CLucene);
 
 var myrepl = repl.start('lockersearch> ');

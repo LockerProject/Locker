@@ -3,14 +3,12 @@
     h1 Search my Locker
     #searchForm
       form(action='#{searchPath}', method='post')
+        select(name='type')
+            option(value='') Search all types
+            option(value='contact') Search only contacts
+            option(value='message') Search only messages
+            option(value='link') Search only links
         input.text(type='text', name='searchterm', size='48')
         #searchButton
           .button.clb
             a#searchButton(href='#') Search
-    #indexLinks 
-      a(href='/Me/search/indexContacts') Start indexing my Contacts collection
-      br
-      a(href='/Me/search/indexLinks') Start indexing my Links collection
-      br
-      a(href='/Me/search/indexMessages') Start indexing my Messages collection
-      br  

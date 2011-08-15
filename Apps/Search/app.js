@@ -62,13 +62,18 @@ function(req, res) {
     var results = [];
     var error = null;
     
-    if (!type) {
-      type = null;
-    }
     search.search(type, term, 0, 10, function(err, results) {
       if (err) {
         console.error(err);
         error = err;
+      }
+      var hits = results.hits.hits;
+      
+      console.error(hits);
+      for (r=0; r<hits.length; r++) {
+          console.error(hits[0]);
+          console.error(hits[r].type);
+          console.error(hits[r].content);
       }
       res.render('search', {
         term: term,
