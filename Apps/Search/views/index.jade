@@ -3,7 +3,7 @@
     h1 Search my Locker
     #searchForm
       form(action='#{searchPath}', method='post')
-        select(name='type')
+        select.typeSelector(name='type')
             option(value='') Search all types
             option(value='contact') Search only contacts
             option(value='message') Search only messages

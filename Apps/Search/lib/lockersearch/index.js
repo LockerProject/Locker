@@ -10,9 +10,6 @@ exports.index = function(id, type, body, callback) {
 
 exports.search = function(type, term, offset, limit, callback) {
     
-    console.error('type: ' + type);
-    console.error('term: ' + term);
-    
     locker.providers('search', function(error, providers) {
         if (!providers || providers.length === 0) {
             callback('No Locker search providers found', null);
@@ -22,12 +19,12 @@ exports.search = function(type, term, offset, limit, callback) {
         if (type !== '') {
           fetchURL += '&type=' + type;
         }
-        console.error(fetchURL);
+
         request.get({url:fetchURL}, function(error, request, result) {
             if (error || !result) {
                 callback('Failed calling provider GET at ' + fetchURL, null);
             }
-            console.error(require('util').inspect(result, true, 5));
+
             var results = {};
             results.took = '10';
             results.hits = {};

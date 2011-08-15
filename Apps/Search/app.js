@@ -42,15 +42,17 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
+var me;
 
 // Routes
 app.get('/',
 function(req, res) {
-    var me = fs.readFileSync('me.json');
+    me = fs.readFileSync('me.json');
     me = JSON.parse(me);
-  
+    
     res.render('index', {
       error: null,
+      homePath: '/Me/' + me.id,
       searchPath: '/Me/' + me.id + '/search'
     });
 });
@@ -67,16 +69,10 @@ function(req, res) {
         console.error(err);
         error = err;
       }
-      var hits = results.hits.hits;
       
-      console.error(hits);
-      for (r=0; r<hits.length; r++) {
-          console.error(hits[0]);
-          console.error(hits[r].type);
-          console.error(hits[r].content);
-      }
       res.render('search', {
         term: term,
+        homePath: '/Me' + me.id,
         results: results.hits.hits,
         took: results.took,
         total: results.hits.total,
