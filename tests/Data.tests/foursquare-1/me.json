@@ -25,6 +25,7 @@
         "appSecret": "asf",
         "accessToken": "abc"
     },
+    "srcdir" : "Connectors/foursquare",
     "id": "foursquare-1",
     "provider": "foursquare",
     "action": "Connect to a Foursquare account",

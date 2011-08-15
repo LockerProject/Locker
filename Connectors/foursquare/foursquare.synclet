@@ -15,11 +15,6 @@
             "name": "recent"
         }
     ],
-    "mongoCollections": [
-        "friends",
-        "places",
-        "recent"
-    ],
     "provides": [
         "contact/foursquare",
         "checkin/foursquare"
