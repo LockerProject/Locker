@@ -15,6 +15,16 @@ var util = require('util');
 var currentEngine;
 var indexPath = '../../Me/search.indices';
 
+function noop() {
+}
+
+NullEngine = function()
+{
+}
+NullEngine.prototype.indexType = noop;
+NullEngine.prototype.queryAll = noop;
+NullEngine.prototype.queryType = noop;
+
 CLEngine = function()
 {
     this.engine = require('clucene');
@@ -162,7 +172,11 @@ CLEngine.prototype.queryAll = function(query, params, callback) {
 
 exports.setEngine = function(engine) {
     if (currentEngine) currentEngine = undefined;
-    currentEngine = new engine();
+    try {
+        currentEngine = new engine();
+    } catch (E) {
+        currentEngine = new NullEngine();
+    }
 };
 exports.setIndexPath = function(path) {
     indexPath = path;
