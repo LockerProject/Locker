@@ -18,8 +18,9 @@ var express = require('./node_modules/express'),
     
 var locker = require('locker'),
     lconfig = require('lconfig'),
-    search = require('./lib/elasticsearch/index.js');
+//  search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
+    search = require('./lib/lockersearch/index.js');
     
 
 // Config
