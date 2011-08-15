@@ -127,6 +127,9 @@ npm.load(conf, function(er) {
             serviceManager.scanDirectory(dirToScan, installable);
         });
         
+        syncManager.scanDirectory("synclets");
+        
+
         // look for existing things
         serviceManager.findInstalled();
         syncManager.findInstalled();
