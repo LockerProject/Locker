@@ -5,6 +5,7 @@ var fs = require('fs')
   , datastore = require('./synclet/datastore')
   , async = require('async')
   , lutil = require('lutil')
+  , crypto = require("crypto")
   , EventEmitter = require('events').EventEmitter
   ;
 
@@ -42,6 +43,33 @@ exports.findInstalled = function () {
     }
 }
 
+
+/**
+* Install one or more synclets as their own service {handle="foo",srcdir="Connector/bar",sync:{auth={},synclets=[]}}
+*/
+exports.installService = function(serviceInfo) {
+    if(!serviceInfo.handle){
+        var hash = crypto.createHash('md5');
+        hash.update(Math.random()+'');
+        serviceInfo.handle = hash.digest('hex');
+    }
+    var inc = 0;
+    if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle))) {
+        inc++;
+        while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle + '-' + inc))) inc++;
+        serviceInfo.id = serviceInfo.handle + "-" + inc;
+    } else {
+        serviceInfo.id = serviceInfo.handle;
+    }
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id),0755);
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
+    if(!serviceInfo.config) serviceInfo.config = {};
+    synclets[serviceInfo.id] = serviceInfo;
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'synclets.json'),JSON.stringify(synclets[serviceInfo.id].sync, null, 4));
+    for (var i = 0; i < serviceInfo.sync.synclets.length; i++) {
+        scheduleRun(synclets[serviceInfo.id], serviceInfo.sync.synclets[i]);
+    }
+}
 
 /**
 * Install a synclet, serviceId="connector",auth={},synclets=[]

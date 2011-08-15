@@ -11,8 +11,27 @@ module.exports = function(locker) {
         res.end(JSON.stringify(syncManager.synclets()));
     });    
 
-    // given a bunch of json describing a synclet, make a home for it on disk and add it to our map
-    locker.post('/synclets/:id/install', function(req, res) {
+    // given a bunch of json describing a synclet, make a service home for it and add it to our map
+    locker.post('/synclets/install', function(req, res) {
+        if (!req.body.hasOwnProperty("srcdir")) {
+            res.writeHead(400);
+            res.end("{}")
+            return;
+        }
+        var metaData = syncManager.install(req.body);
+        if (!metaData) {
+            res.writeHead(404);
+            res.end("{}");
+            return;
+        }
+        res.writeHead(200, {
+            'Content-Type': 'application/json'
+        });
+        res.end(JSON.stringify(metaData));
+    });
+
+    // add a synclet to an existing service, ?id=service POST={sync:[],auth:{}}
+    locker.post('/synclets/:id/add', function(req, res) {
         var id = req.params.id;
         var js;
         try{
