@@ -7,13 +7,11 @@
 *
 */
 
-require.paths.push(__dirname + '/node_modules');
-
 var fs = require('fs'),
     http = require('http'),
     url = require('url');
     
-var express = require('./node_modules/express'),
+var express = require('express'),
     app = express.createServer();
     
 var locker = require('locker'),
