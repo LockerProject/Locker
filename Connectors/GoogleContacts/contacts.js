@@ -1,4 +1,4 @@
-var config, auth;
+var config, auth, gdataClient;
 
 exports.sync = function(processInfo, callback) {
     config = processInfo.config;
@@ -7,22 +7,19 @@ exports.sync = function(processInfo, callback) {
 }
 
 function syncContacts(callback) {
-    // try {
-    //         fs.mkdirSync('photos', 0755);
-    //     } catch(err) {
-    //         if(err.code !== 'EEXIST')
-    //             console.error('err', err);
-    //     }
     //console.error('"Checking for updates since', new Date(config.lastUpdate).toString());
-    var params = {'updated-min':getISODateString(new Date(config.lastUpdate)),
-                  'showdeleted':'true',
+    var params = {'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
                   'max-results':3000
                  };
+    if(config.lastUpdate)
+        params['updated-min'] = getISODateString(new Date(config.lastUpdate));
     var now = new Date().getTime();
     getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
         function(err, result) {
+            // console.error('DEBUG: err', err);
+            // console.error('DEBUG: result', result);
             if(result && !(err && result.error)) {
                 var count = 0;
                 if(result.feed && result.feed.entry) {
@@ -50,21 +47,11 @@ function syncContacts(callback) {
 
 function processFeed(entries, callback) {
     var result = [];
-    for(var i in entries)
-        result.push(convertEntry(entries[i]));
+    for(var i in entries) {
+        var obj = convertEntry(entries[i]);
+        result.push({obj:obj, timestamp:obj.updated, type:'new'});
+    }
     callback(result);
-        // 
-        // if(!(entries && entries.length)) {
-        //     process.nextTick(callback);
-        //     return;
-        // }
-        // var entry = entries.shift();
-        // var obj = convertEntry(entry);
-        // dataStore.addObject('contacts', obj, {timeStamp:obj.updated}, function() {
-        //     var eventObj = {type:'update', data:obj};
-        //     exports.eventEmitter.emit('contact/google', eventObj);
-        //     processFeed(entries, callback);
-        // });
 }
 
 function convertEntry(entry) {

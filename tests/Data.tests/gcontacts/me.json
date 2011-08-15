@@ -1,0 +1,23 @@
+{
+    "status": "stable",
+    "title": "Google Contacts Account",
+    "synclets": [
+        {
+            "frequency": 120,
+            "name": "users"
+        }
+    ],
+    "provides": [
+        "contact/google"
+    ],
+    "auth": {
+        "clientID":"qwe",
+        "clientSecret":"wer",
+        "redirectURI":"http://localhost:8043/Me/gcontacts/auth",
+        "token":{"access_token":"ert","token_type":"Bearer","expires_in":3600,"refresh_token":"rty"}},
+    "id": "gcontacts",
+    "provider": "github",
+    "action": "Connect to a Google Contacts account",
+    "config":{},
+    "desc": "Collect and sync my data from my Google Contacts account using the Google Contacts API and a Google Contacts 'app' that I create just for myself."
+}

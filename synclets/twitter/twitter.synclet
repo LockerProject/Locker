@@ -1,6 +1,0 @@
-{
-    "title":"Twitter Account",
-    "status":"stable",
-    "provider":"twitter",
-    "synclets":[{"name": "friends", "frequency": 3600},{"name": "timeline", "frequency": 120},{"name": "tweets", "frequency": 600},{"name": "mentions", "frequency": 600}]
-}
