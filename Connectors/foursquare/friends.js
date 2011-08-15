@@ -44,7 +44,7 @@ exports.syncFriends = function(callback) {
                     fs.writeFile('photos/' + self.id + '.jpg', body, 'binary');
                     photos.push({'obj' : {'photoID' : self.id}});
                 }
-                    
+
             });
         }
         request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, function(err, resp, body) {

@@ -1,7 +1,7 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var checkins = require('../synclets/foursquare/checkins');
-var friends = require('../synclets/foursquare/friends');
-var recents = require('../synclets/foursquare/recent');
+var checkins = require('../Connectors/foursquare/checkins');
+var friends = require('../Connectors/foursquare/friends');
+var recents = require('../Connectors/foursquare/recent');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -13,7 +13,7 @@ process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
 
-var mePath = '/Data/synclets/foursquare';
+var mePath = '/Data/foursquare-1';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({

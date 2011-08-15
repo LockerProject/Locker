@@ -105,7 +105,7 @@ vows.describe("Synclet Manager").addBatch({
     },
     "and after running writes out IJOD stuff" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/testSync.json", this.callback);
         },
         "successfully" : function(err, data) {
             assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
@@ -113,7 +113,7 @@ vows.describe("Synclet Manager").addBatch({
     },
     "into both" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/synclets/testSynclet/dataStore.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/dataStore.json", this.callback);
         },
         "files": function(err, data) {
             assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"id":5,"notId":5,"random":"data"}}\n');
@@ -171,12 +171,12 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
-            topic:syncManager.scanDirectory("synclets"),
+            topic:syncManager.scanDirectory("Connectors"),
             "found a service": function() {
                 assert.ok(syncManager.synclets().available.length > 0);
             },
             "and can be installed" : {
-                topic:syncManager.install({srcdir:"synclets/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
+                topic:syncManager.install({srcdir:"Connectors/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "synclets");
                 },
@@ -184,7 +184,7 @@ vows.describe("Synclet Manager").addBatch({
                     assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
                 "and by adding valid auth info" : function(svcMetaInfo) {
                     assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});
@@ -194,7 +194,7 @@ vows.describe("Synclet Manager").addBatch({
                 }
             },
             "and can be installed a second time" : {
-                topic:syncManager.install({srcdir:"synclets/testSynclet"}),
+                topic:syncManager.install({srcdir:"Connectors/testSynclet"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
@@ -202,7 +202,7 @@ vows.describe("Synclet Manager").addBatch({
                     assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
                 "and passes along the icon": function(svcMetaInfo) {
                     assert.notEqual(svcMetaInfo.icon, undefined);

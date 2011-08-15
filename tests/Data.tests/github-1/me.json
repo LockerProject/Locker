@@ -7,9 +7,6 @@
             "name": "users"
         }
     ],
-    "provides": [
-        "contact/github"
-    ],
     "auth": {"username" : "ctide", "accessToken" : "abc"},
     "id": "github",
     "provider": "github",

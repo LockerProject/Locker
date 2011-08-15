@@ -7,12 +7,12 @@
 *
 */
 
-var fb = require('../../Connectors/Facebook/lib.js')
+var tw = require('../../Connectors/Twitter/lib.js')
   , contacts = []
   ;
 
 exports.sync = function(processInfo, cb) {
-    fb.init(processInfo.auth);
+    tw.init(processInfo.auth);
     exports.syncFriends(function(err) {
         if (err) console.error(err);
         var responseObj = {data : {}};
@@ -22,7 +22,7 @@ exports.sync = function(processInfo, cb) {
 };
 
 exports.syncFriends = function(callback) {
-    fb.getFriends({id:"me"},function(friend){
+    tw.getMyFriends({},function(friend){
         contacts.push({'obj' : friend, timestamp: new Date(), type : 'new'});
     },callback);
 }

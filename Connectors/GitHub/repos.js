@@ -52,7 +52,7 @@ exports.syncRepos = function(callback) {
             return callback();
         }
     };
-    
+
     function syncWatchers(repoName, callback) {
         github.getRepoApi().getRepoWatchers(auth.username, repoName.substring(repoName.indexOf('/') + 1), callback);
     }

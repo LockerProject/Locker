@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var users = require('../synclets/github/users');
-var repos = require('../synclets/github/repos');
+var users = require('../Connectors/github/users');
+var repos = require('../Connectors/github/repos');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -12,7 +12,7 @@ process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
 
-var mePath = '/Data/synclets/github';
+var mePath = '/Data/github-1';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({

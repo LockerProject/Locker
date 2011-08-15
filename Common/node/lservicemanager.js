@@ -137,15 +137,17 @@ exports.findInstalled = function () {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-            delete js.pid;
-            delete js.starting;
-            js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
-            exports.migrate(dir, js);
-            addEvents(js);
-            console.log("Loaded " + js.id);
-            serviceMap.installed[js.id] = js;
-            if (js.disabled) {
-                serviceMap.disabled.push(js.id);
+            if (!js.synclets) {
+                delete js.pid;
+                delete js.starting;
+                js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
+                exports.migrate(dir, js);
+                addEvents(js);
+                console.log("Loaded " + js.id);
+                serviceMap.installed[js.id] = js;
+                if (js.disabled) {
+                    serviceMap.disabled.push(js.id);
+                }
             }
         } catch (E) {
 //            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");

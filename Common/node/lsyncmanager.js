@@ -2,7 +2,7 @@ var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
-  , datastore = require('./synclet/datastore')
+  , datastore
   , async = require('async')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
@@ -23,28 +23,29 @@ exports.synclets = function() {
 * Scans the Me directory for instaled synclets
 */
 exports.findInstalled = function (callback) {
-    if (!path.existsSync(lconfig.me + "/synclets/")) fs.mkdirSync(lconfig.me + "/synclets/", 0755);
-    var dirs = fs.readdirSync(lconfig.me + "/synclets/" );
+    if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
+    var dirs = fs.readdirSync(lconfig.me);
     for (var i = 0; i < dirs.length; i++) {
-        var dir =  lconfig.me + '/synclets/' + dirs[i];
+        var dir =  lconfig.me + "/" + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-            synclets.installed[js.id] = js;
-            synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
+                synclets.installed[js.id] = js;
+                synclets.installed[js.id].status = "waiting";
                 for (var j = 0; j < js.synclets.length; j++) {
                     scheduleRun(js, js.synclets[j]);
                 }
             }
         } catch (E) {
-            console.log("Me/synclets/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
+            console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
 }
 
 exports.scanDirectory = function(dir) {
+    datastore = require('./synclet/datastore');
     var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
@@ -78,9 +79,9 @@ exports.install = function(metaData) {
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.provider) {
         var inc = 0;
-        if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider))) {
+        if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.provider))) {
             inc++;
-            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider + '-' + inc))) inc++;
+            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.provider + '-' + inc))) inc++;
             serviceInfo.id = serviceInfo.provider + "-" + inc;
         } else {
             serviceInfo.id = serviceInfo.provider;
@@ -89,8 +90,8 @@ exports.install = function(metaData) {
         throw "invalid synclet, has no provider";
     }
     synclets.installed[serviceInfo.id] = serviceInfo;
-    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
-    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id),0755);
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
@@ -137,7 +138,7 @@ function executeSynclet(info, synclet, callback) {
         run = synclet.run.split(" "); // node foo.js
     }
 
-    process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets/'+info.provider+'/';
+    process.env["NODE_PATH"] = path.join(lconfig.lockerDir, info.provider);
     var dataResponse = '';
 
     // app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
@@ -166,11 +167,11 @@ function executeSynclet(info, synclet, callback) {
             return;
         }
         info.status = synclet.status = 'processing data';
-        tempInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json'));
+        tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
         processResponse(deleteIDs, info, synclet, response, callback);
         info.config = lutil.extend(tempInfo.config, response.config);
-        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
+        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
