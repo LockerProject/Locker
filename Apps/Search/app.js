@@ -59,6 +59,9 @@ function(req, res) {
 
 app.post('/search',
 function(req, res) {
+    me = fs.readFileSync('me.json');
+    me = JSON.parse(me);
+    
     var term = sanitize(req.param('searchterm'));
     var type = sanitize(req.param('type'));
     var results = [];
@@ -72,7 +75,7 @@ function(req, res) {
       
       res.render('search', {
         term: term,
-        homePath: '/Me' + me.id,
+        homePath: '/Me/' + me.id,
         results: results.hits.hits,
         took: results.took,
         total: results.hits.total,
