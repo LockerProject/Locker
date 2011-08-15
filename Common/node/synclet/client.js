@@ -25,7 +25,7 @@ process.stdin.on("data", function(newData) {
 
 function run (processInfo) {
     var run = processInfo.syncletToRun;
-    var sync = require(run.name + ".js");
+    var sync = require(run.file);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
             var error = JSON.stringify(err);

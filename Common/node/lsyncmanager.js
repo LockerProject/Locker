@@ -142,11 +142,9 @@ function executeSynclet(info, synclet, callback) {
         run = synclet.run.split(" "); // node foo.js
     }
 
-    process.env["NODE_PATH"] = path.join(lconfig.lockerDir, info.provider);
     var dataResponse = '';
 
-    // app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
-    app = spawn(run.shift(), run, {cwd: info.srcdir, env: process.env});
+    app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, lconfig.me, info.id)});
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
@@ -181,6 +179,7 @@ function executeSynclet(info, synclet, callback) {
     if (!info.config) info.config = {};
     
     info.syncletToRun = synclet;
+    info.syncletToRun.file = path.join(lconfig.lockerDir, info.srcdir, synclet.name + ".js");
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     delete info.syncletToRun;
 };
