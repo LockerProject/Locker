@@ -8,8 +8,8 @@
 */
 
 var locker = require('../../Common/node/locker.js');
-var sync = require('./sync');
-    
+var sync = require('./sync.js');
+
 var app, auth;
 
 module.exports = function(theapp) {

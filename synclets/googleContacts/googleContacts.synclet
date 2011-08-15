@@ -1,0 +1,7 @@
+{
+    "title":"Google Contacts Account",
+    "status":"unstable",
+    "provides":["contact/google"],
+    "provider":"gcontacts",
+    "synclets":[{"name": "contacts", "frequency": 120}]
+}

@@ -77,17 +77,35 @@ function(req, res) {
 
 app.get('/indexContacts',
 function(req, res) {
-    indexCollectionRecordsOfType('contacts', '/Me/contacts/allContacts');
+    indexCollectionRecordsOfType('contacts', '/Me/contacts/allContacts', function(err, results) {
+      if (err) {
+        res.end('Error when attempting to index');
+      } else {
+        res.end('Indexed ' + results.count + ' contacts');
+      }
+    });
 });
 
 app.get('/indexLinks',
 function(req, res) {
-    indexCollectionRecordsOfType('links', '/Me/links/allLinks');
+    indexCollectionRecordsOfType('links', '/Me/links/allLinks', function(err, results) {
+      if (err) {
+        res.end('Error when attempting to index');
+      } else {
+        res.end('Indexed ' + results.count + ' links');
+      }
+    });
 });
 
 app.get('/indexMessages',
 function(req, res) {
-    indexCollectionRecordsOfType('messages', '/Me/messages/allMessages');
+    indexCollectionRecordsOfType('messages', '/Me/messages/allMessages', function(err, results) {
+      if (err) {
+        res.end('Error when attempting to index');
+      } else {
+        res.end('Indexed ' + results.count + ' messages');
+      }
+    });
 });
 
 // quick/dirty sanitization ripped from the Jade template engine
@@ -99,7 +117,7 @@ function sanitize(term){
         .replace(/"/g, '&quot;');
 }
 
-function indexCollectionRecordsOfType(type, urlPath) {
+function indexCollectionRecordsOfType(type, urlPath, callback) {
 
   var lockerUrl = url.parse(processInfo.lockerUrl);
   var options = {
@@ -126,6 +144,7 @@ function indexCollectionRecordsOfType(type, urlPath) {
         search.index(results[i]._id, type, results[i], function(err, result) {
           if (err) {
             console.log('error indexing ' + type + ' with ID of ' + results[i]._id);
+            callback(err);
           }
         });
       }

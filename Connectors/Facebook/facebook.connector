@@ -6,5 +6,5 @@
 	"status":"stable",
 	"handle":"facebook",
 	"mongoCollections": ["friends", "newsfeed", "wall", "photos"],
-	"provides":["contact/facebook", "link/facebook"]
+	"provides":["contact/facebook", "link/facebook", "photo/facebook"]
 }

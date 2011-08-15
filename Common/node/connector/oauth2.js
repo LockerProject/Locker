@@ -122,8 +122,7 @@ function handleAuth(req, res) {
         });
     } else {
         exports.auth = {};
-        console.error('DEBUG: req.param(error)', req.param('error'));
-        go(req, res, req.param('error'));
+        go(req, res);
     }
 }
 

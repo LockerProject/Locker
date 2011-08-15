@@ -53,7 +53,7 @@ function reload(offset, limit, useJSON) {
     };
 
     $.getJSON(
-	'http://localhost:8042/query/getPhoto', 
+	'/query/getPhoto',
 	{'offset':offset, 'limit':limit}, 
 	getPhotosCB
     );

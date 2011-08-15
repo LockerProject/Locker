@@ -119,7 +119,7 @@ exports.getCurrent = function(type, id, callback) {
     }
 }
 
-setCurrent = function(type, object, callback) {
+function setCurrent(type, object, callback) {
     var m = getMongo(type, object[mongoID], callback);
     if(m) {
         var query = {};
@@ -128,7 +128,7 @@ setCurrent = function(type, object, callback) {
     }
 }
 
-removeCurrent = function(type, id, callback) {
+function removeCurrent(type, id, callback) {
     var m = getMongo(type, id, callback);
     if(m) {
         var query = {};

@@ -32,6 +32,16 @@ app.get('/', function(req, res) {
     });
 });
 
+app.get('/state', function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'application/json'
+    });
+    dataStore.getTotalCount(function(err, countInfo) {
+        res.write('{"updated":'+new Date().getTime()+',"ready":1,"count":'+ countInfo +'}');
+        res.end();
+    });
+});
+
 app.get('/allPhotos', function(req, res) {
     res.writeHead(200, {
         'Content-Type':'application/json'

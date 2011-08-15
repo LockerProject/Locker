@@ -176,7 +176,7 @@ $(function() {
 	 */
 	load: function load(callback) {
 	    var that = this;
-	    var baseURL = 'http://localhost:8042/query';
+	    var baseURL = '/query';
 
 	    var getContactsCB = function(contacts) {
 		if (contacts.length > 3000) {
