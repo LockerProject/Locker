@@ -139,7 +139,7 @@ function executeSynclet(info, synclet, callback) {
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else {
-        run = synclet.run.split(" "); // node foo.js
+        run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
 
     var dataResponse = '';
@@ -290,24 +290,20 @@ function addUrls() {
     var apiKeys;
     var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
     try {
-        apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
+        apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
     } catch(e) { return; }
     for (var i = 0; i < synclets.available.length; i++) {
         synclet = synclets.available[i];
         if (synclet.provider === 'facebook') {
-            if (apiKeys.facebook) {
-                synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
-            }
+            if (apiKeys.facebook) synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
         } else if (synclet.provider === 'twitter') {
-            synclet.authurl = host + "auth/twitter/auth";
+            if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
         } else if (synclet.provider === 'foursquare') {
-            synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
+            if (apiKeys.foursquare) synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
         } else if (synclet.provider === 'gcontacts') {
-            synclet.authurl = "";
+            if (apiKeys.gcontacts) synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey + "&redirect_uri=" + host + "auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code";
         } else if (synclet.provider === 'github') {
-            if (apiKeys.github) {
-                synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
-            }
+            if (apiKeys.github) synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
         }
     }
 }

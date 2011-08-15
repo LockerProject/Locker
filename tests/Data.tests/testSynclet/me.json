@@ -11,6 +11,6 @@
     "mongoCollections": ["testSynclet"],
     "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",
     "provides":["testSync/testSynclet"],
-    "synclets":[{"name": "testSynclet", "frequency": 120, "run" : "node testSynclet.js"}],
+    "synclets":[{"name": "testSynclet", "frequency": 120, "run" : "testSynclet.js"}],
     "provider":"testSynclet"
 }
