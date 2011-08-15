@@ -17,8 +17,10 @@ process.stdin.on("data", function(newData) {
     // Do the initialization bits
     data += newData;
     try {
-        run(JSON.parse(data););
-    } catch (E) {}
+        run(JSON.parse(data));
+    } catch (E) {
+        console.error("synclet run failed: "+E);
+    }
 });
 
 function run (processInfo) {

@@ -29,9 +29,10 @@ exports.findInstalled = function (callback) {
         var dir =  lconfig.me + "/" + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
-            if(!fs.statSync(dir+'/me.json').isFile()) continue;
+            if(!path.existsSync(dir+'/me.json')) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
             if (js.synclets) {
+                console.log("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
                 synclets.installed[js.id].status = "waiting";
                 for (var j = 0; j < js.synclets.length; j++) {
@@ -116,6 +117,7 @@ exports.syncNow = function(serviceId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
+    // TODO if there is a .nextRun and it's past-due, run it now!
     synclet.nextRun = new Date(Date.now() + (parseInt(synclet.frequency) * 1000));
     setTimeout(function() {
         executeSynclet(info, synclet);
@@ -132,6 +134,7 @@ function executeSynclet(info, synclet, callback) {
         }
         return;
     }
+    console.log("Running synclet "+synclet.name+" for "+info.id);
     info.status = synclet.status = "running";
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
@@ -147,7 +150,7 @@ function executeSynclet(info, synclet, callback) {
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
-        console.outputModule = info.title;
+        console.outputModule = info.title+" "+synclet.name;
         console.error(data.toString());
         console.outputModule = mod;
     });
