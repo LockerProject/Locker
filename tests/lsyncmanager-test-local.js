@@ -99,13 +99,13 @@ vows.describe("Synclet Manager").addBatch({
                 }
             }
         },
-        // "gcontacts worked" : function(topic) {
-        //     for (var i = 0; i < topic.length; i++) {
-        //         if (topic[i].provider === 'gcontacts') {
-        //             assert.equal(topic[i].authurl, "https://graph.facebook.com/oauth/authorize?client_id=fb-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags");
-        //         }
-        //     }
-        // },
+        "gcontacts worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'gcontacts') {
+                    assert.equal(topic[i].authurl, "https://accounts.google.com/o/oauth2/auth?client_id=gc-appkey&redirect_uri=http://localhost:8043/auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code");
+                }
+            }
+        },
         "foursquare worked" : function(topic) {
             for (var i = 0; i < topic.length; i++) {
                 if (topic[i].provider === 'foursquare') {

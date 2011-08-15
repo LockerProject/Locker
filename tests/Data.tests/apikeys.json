@@ -18,5 +18,9 @@
     "facebook" : {
         "appKey" : "fb-appkey",
         "appSecret" : "fb-appsecret"
+    },
+    "gcontacts" : {
+        "appKey" : "gc-appkey",
+        "appSecret" : "gc-appsecret"
     }
 }

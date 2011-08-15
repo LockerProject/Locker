@@ -3,6 +3,7 @@ var syncManager = require('lsyncmanager')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')
+  , https = require('https')
   , querystring = require('querystring')
   , lconfig = require('../Common/node/lconfig')
   , foursquare = {"provider" : "foursquare",
@@ -17,6 +18,10 @@ var syncManager = require('lsyncmanager')
   , github = {"provider" : "github",
       "endPoint" : "https://github.com/login/oauth",
       "redirectURI" : "auth/github/auth"}
+  , gcontacts = {"provider" : "gcontacts",
+      "endPoint" : "https://accounts.google.com/o/oauth2/token",
+      "redirectURI" : "auth/gcontacts/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
@@ -35,7 +40,7 @@ module.exports = function(locker) {
         handleOAuth2(req.param('code'), github, res);
     });
     locker.get('/auth/gcontacts/auth', function(req, res) {
-        handleGoogleContacts(req, res);
+        handleOAuth2Post(req.param('code'), gcontacts, res);
     });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
@@ -43,7 +48,6 @@ module.exports = function(locker) {
 };
 
 function handleOAuth2 (code, options, res) {
-    console.dir(options.redirectURI);
     var newUrl = options.endPoint + '/access_token' +
                     '?client_id=' + apiKeys[options.provider].appKey +
                     '&client_secret=' + apiKeys[options.provider].appSecret +
@@ -52,17 +56,14 @@ function handleOAuth2 (code, options, res) {
                     '&code=' + code;
     request.get({url:newUrl}, function(err, resp, body) {
         auth = {};
-        console.dir(body);
         if (options.accessTokenResponse == 'json') {
             auth.accessToken = JSON.parse(body).access_token;
         } else {
             auth.accessToken = querystring.parse(body).access_token;
         }
-        console.dir(auth);
         if (options.provider === 'github') {
             request.get({url:"https://github.com/api/v2/json/user/show?access_token=" + auth.accessToken}, function(err, resp, body) {
                 var resp = JSON.parse(body);
-                console.dir(resp);
                 auth.username = resp.user.login;
                 installSynclet(options.provider, auth);
             });
@@ -73,14 +74,46 @@ function handleOAuth2 (code, options, res) {
     });
 }
 
-function handleGoogleContacts (req, res) {
-    require('gdata-js')(apiKeys["gcontacts"].appKey, apiKeys["gcontacts"].appSecret, host + "/auth/gcontacts/auth")
-        .getAccessToken(scope, req, res, function(err, tkn) {
-            var auth = {};
-            auth.token = tkn;
-            installSynclet("gcontacts", auth);
+function handleOAuth2Post (code, options, res) {
+    var postData = {grant_type:options.grantType,
+              code:code,
+              client_id:apiKeys[options.provider].appKey,
+              client_secret:apiKeys[options.provider].appSecret,
+              redirect_uri:host + options.redirectURI};
+    // request won't ever return here.  no idea why.
+    //
+    // request({method: 'post', uri :options.endPoint, body: querystring.stringify(postData)}, function(err, resp, body) {
+    //     console.error(err);
+    //     console.error(resp);
+    //     console.error(body);
+    //     auth = {};
+    //     auth.token = JSON.parse(data);
+    //     installSynclet(options.provider, auth);
+    //     res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+    // });
+
+    var httpOptions = {
+        host: 'accounts.google.com',
+        port: 443,
+        path: '/o/oauth2/token',
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'}
+    };
+    var httpsReq = https.request(httpOptions, function(httpsRes) {
+        httpsRes.on('data', function(data) {
+            auth = {};
+            auth.clientID = apiKeys[options.provider].appKey;
+            auth.clientSecret = apiKeys[options.provider].appSecret;
+            auth.token = JSON.parse(data);
+            installSynclet(options.provider, auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
         });
+    });
+    httpsReq.write(querystring.stringify(postData));
+    httpsReq.on('error', function(e) {
+        callback(e, null);
+    });
+    httpsReq.end();
 }
 
 function handleTwitter (req, res) {
