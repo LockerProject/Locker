@@ -17,7 +17,7 @@ process.stdin.on("data", function(newData) {
     // Do the initialization bits
     data += newData;
     try {
-        run(JSON.parse(data););
+        run(JSON.parse(data));
     } catch (E) {}
 });
 
