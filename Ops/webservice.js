@@ -24,7 +24,6 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
 var lconfig = require("lconfig");
-var lsearch = require("lsearch");
 
 var lcrypto = require("lcrypto");
 
@@ -140,53 +139,6 @@ locker.get("/query/:query", function(req, res) {
     } catch (E) {
         res.writeHead(400);
         res.end("Invalid query " + req.originalUrl.substr(6) + "<br />" + E);
-    }
-});
-
-locker.post("/search/index", function(req, res) {
-    if (!req.body.type || !req.body.value) {
-        res.writeHead(400);
-        res.end("Invalid arguments");
-        return;
-    }
-    
-    try {
-        var value = JSON.parse(req.body.value);
-    } catch(E) {
-        res.writeHead(500);
-        res.end("invalid json in value");
-        return;
-    }
-    lsearch.indexType(req.body.type, value, function(error, time) {
-        if (error) {
-            res.writeHead(500);
-            res.end("Could not index: " + error);
-            return;
-        }
-        res.send({indexTime:time});
-    });
-});
-
-locker.get("/search/query", function(req, res) {
-    var q = req.param("q");
-    var type = req.param("type");
-    if (!q) {
-        res.writeHead(400);
-        res.end("Must supply at least a query");
-        return;
-    }
-    function sendResults(err, results) {
-        if (err) {
-            res.writeHead(400);
-            res.end("Error querying: " + err);
-            return;
-        }
-        res.send(results);
-    }
-    if (type) {
-        lsearch.queryType(type, q, {}, sendResults);
-    } else {
-        lsearch.queryAll(q, {}, sendResults);
     }
 });
 

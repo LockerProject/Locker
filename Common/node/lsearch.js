@@ -24,7 +24,7 @@ CLEngine = function()
         "contact" : {
             "_id":"_id",
             "name":"name",
-            "nickname":"nickname",
+            "nicknames":[],
             "email":[
                 {
                     "value":"value"
@@ -104,7 +104,7 @@ CLEngine.prototype.map = function(type, value) {
 */
 CLEngine.prototype.indexType = function(type, value, callback) {
     var doc = new this.cl.Document();
-    console.error(util.inspect(value, true, 10));
+    //console.error(util.inspect(value, true, 10));
     // Use the mapping to generate the content field
     //
     //var contentTokens = CLEngine.prototype.map(type, value);
@@ -147,18 +147,16 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     doc.addField('_id', value[this.mappings[type]["_id"]].toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
-    console.log('about to index at ' + indexPath + '/' + type);
-    this.lucene.addDocument(doc, indexPath + '/' + type, function(err, indexTime) {
+    console.log('about to index at ' + indexPath);
+    this.lucene.addDocument(doc, indexPath, function(err, indexTime) {
         callback(err, indexTime);
     });
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
-    this.lucene.search(indexPath + '/' + type, "content:(" + query + ") AND +_type:" + type, callback);
+    this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
-    //TODO need to search across indices 
-    //this.lucene.search(indexLocation, "content:(" + query + ")", callback);
-    callback(null, []);
+    this.lucene.search(indexPath, "content:(" + query + ")", callback);
 };
 
 
@@ -189,9 +187,9 @@ exports.indexType = function(type, value, cb) {
     process.nextTick(indexMore);
 };
 
-function indexMore() {
+function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee
-    if (indexing) return;
+    if (indexing && !keepGoing) return;
     indexing = true;
     console.log('IndexQueue length: ' + indexQueue.length);
     if (indexQueue.length === 0) {
@@ -204,7 +202,8 @@ function indexMore() {
     currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
         console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
-        process.nextTick(indexMore);
+        console.log("Setting up for next tick");
+        process.nextTick(function() { indexMore(true); });
     });
 }
 

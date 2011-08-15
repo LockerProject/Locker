@@ -33,6 +33,10 @@ ctx.queryType = function(type, query) {
        }
     });
 };
+ctx.setIndexPath = function(path) {
+    lsearch.setIndexPath(path);
+    console.log("OK");
+};
 ctx.queryAll = function(query) {
     lsearch.queryAll(query, {}, function(err, results) {
        if (err) {
