@@ -74,6 +74,46 @@ vows.describe("Synclet Manager").addBatch({
         }
     }
 }).addBatch({
+    // this will all be handled by the auth manager later, but this will have to do for now
+    //
+    "Installed services have hacky auth pieces added to them" : {
+        topic: syncManager.synclets().available,
+        "facebook worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'facebook') {
+                    assert.equal(topic[i].authurl, "https://graph.facebook.com/oauth/authorize?client_id=fb-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags");
+                }
+            }
+        },
+        "twitter worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'twitter') {
+                    assert.equal(topic[i].authurl, "http://localhost:8043/auth/twitter/auth");
+                }
+            }
+        },
+        "github worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'github') {
+                    assert.equal(topic[i].authurl, "https://github.com/login/oauth/authorize?client_id=gh-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/github/auth");
+                }
+            }
+        },
+        // "gcontacts worked" : function(topic) {
+        //     for (var i = 0; i < topic.length; i++) {
+        //         if (topic[i].provider === 'gcontacts') {
+        //             assert.equal(topic[i].authurl, "https://graph.facebook.com/oauth/authorize?client_id=fb-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags");
+        //         }
+        //     }
+        // },
+        "foursquare worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'foursquare') {
+                    assert.equal(topic[i].authurl, "https://foursquare.com/oauth2/authenticate?client_id=4sq-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/foursquare/auth");
+                }
+            }
+        }
+    },
     "Installed services can be executed immediately rather than waiting for next run" : {
         topic:function() {
             syncManager.syncNow("testSynclet", this.callback);

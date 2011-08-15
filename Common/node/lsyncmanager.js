@@ -58,6 +58,7 @@ exports.scanDirectory = function(dir) {
             mapMetaData(fullPath);
         }
     }
+    addUrls();
 }
 
 /**
@@ -281,4 +282,30 @@ function mapMetaData(file) {
     metaData.srcdir = path.dirname(file);
     synclets.available.push(metaData);
     return metaData;
+}
+
+function addUrls() {
+    var apiKeys;
+    var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    try {
+        apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
+    } catch(e) { return; }
+    for (var i = 0; i < synclets.available.length; i++) {
+        synclet = synclets.available[i];
+        if (synclet.provider === 'facebook') {
+            if (apiKeys.facebook) {
+                synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
+            }
+        } else if (synclet.provider === 'twitter') {
+            synclet.authurl = host + "auth/twitter/auth";
+        } else if (synclet.provider === 'foursquare') {
+            synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
+        } else if (synclet.provider === 'gcontacts') {
+            synclet.authurl = "";
+        } else if (synclet.provider === 'github') {
+            if (apiKeys.github) {
+                synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            }
+        }
+    }
 }
