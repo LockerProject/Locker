@@ -21,9 +21,26 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact" : [
-            "name", "nickname", "email", "im", "address"
-        ]
+        "contact" : {
+            "_id":"_id",
+            "name":"name",
+            "nickname":"nickname",
+            "email":[
+                {
+                    "value":"value"
+                }
+            ],
+            "im":[
+                {
+                    "value":"value"
+                }
+            ],
+            "address":[
+                {
+                    "value":"value"
+                }
+            ]
+        }
     };
 
     path.exists(indexPath, function(exists) {
@@ -56,6 +73,7 @@ CLEngine = function()
     return this;
 };
 
+/*
 CLEngine.prototype.map = function(type, value) {
     contentTokens = [];
 
@@ -83,47 +101,50 @@ CLEngine.prototype.map = function(type, value) {
     
     return contentTokens;
 };
-
+*/
 CLEngine.prototype.indexType = function(type, value, callback) {
     var doc = new this.cl.Document();
     console.error(util.inspect(value, true, 10));
     // Use the mapping to generate the content field
     //
-    var contentTokens = CLEngine.prototype.map(type, value);
-    console.log('Tokens: ' + contentTokens);
+    //var contentTokens = CLEngine.prototype.map(type, value);
+    //console.log('Tokens: ' + contentTokens);
     
-    /*
     if (!this.mappings.hasOwnProperty(type)) {
         callback("No valid mapping for the type: " + type);
     }
     
     var contentTokens = [];
-        for (var k in value) {
-            if (!value.hasOwnProperty(k)) continue;
-            if (this.mappings[type].indexOf(k) < 0) continue;
-            processValue = function(v) {
-                if (is("Array", v)) {
-                    for(var i = 0, l = v.length; i < l; i++) {
-                        processValue(v[i]);
-                        //contentTokens.push(value[k][i].toString());
-                    }
-                } else if (is("Object", v)) {
-                    console.log(v);
-                    for(var j in v) {
-                        processValue(v[j]);
-                        //contentTokens.push(value[k][i].toString());
-                    }
+    processValue = function(v, parentMapping) {
+        if (is("Array", v)) {
+            for(var i = 0, l = v.length; i < l; i++) {
+                var nextValue = v[i];
+                if (is("Object", nextValue) || is("Array", nextValue)) {
+                    // XXX:  This only supports a single type in the array right now
+                    processValue(v[i], parentMapping[0]);
                 } else {
-                    if (v) contentTokens.push(v.toString());
+                    processValue(v[i], undefined);
                 }
+            }
+        } else if (is("Object", v)) {
+            for (var k in parentMapping) {
+                if (k === "_id") continue;
+                subMapping = parentMapping[k];
+                valueKey = subMapping;
+                if (is("Array", subMapping) || is("Object", subMapping)) valueKey = k;
+                if (!v.hasOwnProperty(valueKey)) continue;
+                processValue(v[valueKey], subMapping);
+            }
+        } else {
+            if (v) contentTokens.push(v.toString());
+        }
 
-            };
-            processValue(value[k]);
-        }*/
+    };
+    processValue(value, this.mappings[type]);
     
     var contentString = contentTokens.join(" <> ");
     console.log("Going to store " + contentString);
-    doc.addField('_id', value._id.toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    doc.addField('_id', value[this.mappings[type]["_id"]].toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     console.log('about to index at ' + indexPath + '/' + type);
