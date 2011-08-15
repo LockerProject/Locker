@@ -46,19 +46,26 @@ app.configure('production', function(){
 // Routes
 app.get('/',
 function(req, res) {
-  console.log(res);
+    var me = fs.readFileSync('me.json');
+    me = JSON.parse(me);
+  
     res.render('index', {
-      error: null
+      error: null,
+      searchPath: '/Me/' + me.id + '/search'
     });
 });
 
 app.post('/search',
 function(req, res) {
     var term = sanitize(req.param('searchterm'));
+    var type = sanitize(req.param('type'));
     var results = [];
     var error = null;
     
-    search.search('contacts', term, 0, 10, function(err, results) {
+    if (!type) {
+      type = null;
+    }
+    search.search(type, term, 0, 10, function(err, results) {
       if (err) {
         console.error(err);
         error = err;

@@ -1,3 +1,5 @@
+var request = require('request');
+var locker = require('../../../../Common/node/locker.js');
 
 exports.map = function(type) { };
 
@@ -22,7 +24,13 @@ exports.search = function(type, term, offset, limit, callback) {
             if (error || !result) {
                 callback('Failed calling provider GET at ' + fetchURL, null);
             }
-            callback(null, result);
+            console.error(require('util').inspect(result, true, 5));
+            var results = {};
+            results.took = null;
+            results.hits = {};
+            results.hits.hits = result;
+            results.hits.total = null;
+            callback(null, results);
         });
     });
 };

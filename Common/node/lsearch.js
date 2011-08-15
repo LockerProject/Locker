@@ -53,11 +53,9 @@ CLEngine = function()
         }
     };
 
-    path.exists(indexPath, function(exists) {
-        if (!exists) {
-            fs.mkdirSync(indexPath, 0755);
-        }
-    });
+    if (!path.existsSync(indexPath)) {
+      fs.mkdirSync(indexPath, 0755);
+    };
     
     this.engine.Store = {
       STORE_YES: 1,

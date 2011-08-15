@@ -2,7 +2,7 @@
   .wrapper
     h1 Search my Locker
     #searchForm
-      form(action='/Me/search/search', method='post')
+      form(action='#{searchPath}', method='post')
         input.text(type='text', name='searchterm', size='48')
         #searchButton
           .button.clb
