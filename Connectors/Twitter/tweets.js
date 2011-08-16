@@ -16,9 +16,9 @@ exports.sync = function(processInfo, cb) {
     tw.getMe({},function(js){me=js}, function(err){
         if(err) return cb(err, responseObj);
         var statuses = [];
-        tw.getTweets({screen_name:me.screen_name},function(js){ statuses.push(js) },function(err){
+        tw.getTweets({screen_name:me.screen_name},function(js){ statuses.push({'obj' : js, timestamp: new Date(), type : 'new'}) },function(err){
             responseObj.data.tweets = statuses;
             cb(err, responseObj);
-        }
+        });
     });
 };
