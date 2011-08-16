@@ -22,8 +22,8 @@ if first time
 var conf = {};
 conf._exit = false;
 var npm = require('npm');
-npm.load(conf, function(er) {
-  npm.commands.install([], function(err, data) {
+//npm.load(conf, function(er) {
+  //npm.commands.install([], function(err, data) {
     require.paths.push(__dirname + "/Common/node");
     var spawn = require('child_process').spawn;
     var fs = require('fs');
@@ -164,5 +164,5 @@ npm.load(conf, function(er) {
 
     // Export some things so this can be used by other processes, mainly for the test runner
     exports.shutdown = shutdown;
-  });
-});
+//  });
+//});

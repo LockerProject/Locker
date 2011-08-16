@@ -11,8 +11,10 @@ var assert = require("assert");
 var vows = require("vows");
 var events = require("events");
 var lsearch = require("lsearch");
+var lconfig = require('lconfig');
+lconfig.load('./config.json');
 
-lsearch.setIndexPath(__dirname + "/Me/search.index");
+lsearch.setIndexPath(__dirname + "/" + lconfig.me + "/search.index");
 
 vows.describe("Locker Search").addBatch({
     "Setting an invalid engine":{
