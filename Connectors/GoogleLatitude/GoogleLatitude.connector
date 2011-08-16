@@ -1,0 +1,9 @@
+{
+	"title":"Google Latitude Connector",
+	"action":"Connect to Google Latitude account",
+        "desc":"Collect location history from my Google Latitude account using the Latitude API and a Google 'app' that I create just for myself.",
+	"run":"python service.py",
+	"status":"unstable",
+	"handle":"latitude",
+	"provides":["location/latitude"]
+}
