@@ -22,9 +22,15 @@ function noop() {
 NullEngine = function()
 {
 }
-NullEngine.prototype.indexType = noop;
-NullEngine.prototype.queryAll = noop;
-NullEngine.prototype.queryType = noop;
+NullEngine.prototype.indexType = function(type, obj, cb) {
+    cb("Null engine");
+};
+NullEngine.prototype.queryAll = function(q, params, cb) {
+    cb("Null engine");
+};
+NullEngine.prototype.queryType = function(type, q, params, cb) {
+    cb("Null engine");
+};
 
 CLEngine = function()
 {

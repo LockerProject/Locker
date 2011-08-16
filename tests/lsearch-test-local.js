@@ -15,6 +15,13 @@ var lsearch = require("lsearch");
 lsearch.setIndexPath(__dirname + "/Me/search.index");
 
 vows.describe("Locker Search").addBatch({
+    "Setting an invalid engine":{
+        topic:lsearch.setEngine(undefined),
+        "does not fail":function(topic) {
+            assert.ok(lsearch.currentEngine);
+        }
+    }
+}).addBatch({
     "Can pick the CLucene engine":{
         topic:function() {
             try {
