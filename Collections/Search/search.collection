@@ -5,5 +5,5 @@
     "status":"unstable",
     "handle":"search",
     "provides":["search"],
-    "events":[["contact/full","/events"]]
+    "events":[["contact/full","/events"],["photo","/events"],["status/twitter","/events"],["status/facebook","/events"]]
 }
