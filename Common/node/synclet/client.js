@@ -8,7 +8,7 @@
 */
 
 var fs = require('fs')
-  , data = '';
+  , data = ''
   ;
 
 // Process the startup JSON object
@@ -25,8 +25,7 @@ process.stdin.on("data", function(newData) {
 
 function run (processInfo) {
     var run = processInfo.syncletToRun;
-    require.paths.unshift("."); // not sure why?
-    var sync = require(run.name);
+    var sync = require(process.cwd()+"/"+run.name+".js");
     process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
