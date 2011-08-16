@@ -25,7 +25,9 @@ process.stdin.on("data", function(newData) {
 
 function run (processInfo) {
     var run = processInfo.syncletToRun;
-    var sync = require(run.file);
+    require.paths.unshift("."); // not sure why?
+    var sync = require(run.name);
+    process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
             var error = JSON.stringify(err);
