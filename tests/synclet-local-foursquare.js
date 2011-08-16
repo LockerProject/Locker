@@ -9,6 +9,7 @@ var suite = RESTeasy.describe("Foursquare Synclet");
 var fs = require('fs');
 var curDir = process.cwd();
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
