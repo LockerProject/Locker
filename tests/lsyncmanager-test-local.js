@@ -52,7 +52,7 @@ vows.describe("Synclet Manager").addBatch({
             "and has status" : {
                 topic: syncManager.status('testSynclet'),
                 "frequency is 120s" : function(topic) {
-                    assert.equal(topic.synclets[0].frequency, 120);
+                    assert.equal(topic.synclets[0].frequency, 360000);
                 },
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');

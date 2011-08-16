@@ -25,7 +25,6 @@
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
                       "synclet-local-googleContacts.js"],
-        "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
                         "connector-flickr-test.js"],
         "collections" : ["sync-contacts-test.js",

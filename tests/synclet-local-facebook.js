@@ -12,7 +12,7 @@ process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
 
-var mePath = '/Data/facebook';
+var mePath = '/Data/facebook-1';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({
@@ -26,13 +26,14 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({uri : 'https://graph.facebook.com/1234/picture?access_token=foo',
                     file : __dirname + '/fixtures/facebook/1234.jpg',
                     contentType : 'image/jpeg' });
-            process.chdir("/tmp");
+            process.chdir("." + mePath);
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1234');
+            process.chdir(curDir);
         }
     }
 })

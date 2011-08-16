@@ -12,14 +12,13 @@ process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
 
-var mePath = '/Data/twitter';
+var mePath = '/Data/twitter-1';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({
     "Can get users" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
                 file : __dirname + '/fixtures/twitter/verify_credentials.js' });
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/friends/ids.json?screen_name=ctide&cursor=-1&path=%2Ffriends%2Fids.json&include_entities=true',
@@ -29,13 +28,14 @@ https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2F
             fakeweb.registerUri({uri : 'http://a0.twimg.com/profile_images/299352843/Picture_82_normal.png',
                 file : __dirname + '/fixtures/twitter/1054551.png',
                 contentType : 'image/png' });
-             process.chdir("/tmp");
+            process.chdir('.' + mePath);
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1054551');
+            process.chdir(curDir);
         }
     }
 })

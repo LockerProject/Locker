@@ -1,0 +1,33 @@
+{
+    "title": "Facebook Account",
+    "action": "Connect to a Facebook account",
+    "desc": "Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
+    "run": "node init.js",
+    "status": "unstable",
+    "provides": [
+        "contact/facebook",
+        "status/facebook"
+    ],
+    "srcdir": "Connectors/Facebook",
+    "id": "facebook-1",
+    "provider": "facebook",
+    "auth": {
+        "appKey": "67",
+        "appSecret": "42",
+        "accessToken": "foo"
+    },
+    "synclets": [
+        {
+            "name": "photos",
+            "frequency": 360000
+        },
+        {
+            "name": "home",
+            "frequency": 360000
+        },
+        {
+            "name": "friends",
+            "frequency": 360000
+        }
+    ]
+}
