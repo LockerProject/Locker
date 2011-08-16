@@ -23,7 +23,7 @@ var suite = RESTeasy.describe("Flickr Connector");
 
 var id = '9fdfb7e5c6551dc45300aeb0d21fdff4';
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 locker.initClient({lockerUrl:lconfig.lockerBase, workingDirectory:lconfig.me + "/flickr-event-collector"});
 locker.listen('photo/flickr', 'event');

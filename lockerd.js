@@ -31,7 +31,7 @@ npm.load(conf, function(er) {
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
-    lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'config.json'));
+    lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
 
     var logger = require("logger");
     //var crypto = require('crypto');

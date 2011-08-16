@@ -16,7 +16,7 @@ var fs = require('fs');
 var locker = require('locker');
 var events = require('events');
 var lconfig = require('lconfig');
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {

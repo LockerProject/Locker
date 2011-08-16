@@ -10,7 +10,7 @@
 // merge contacts from connectors
 require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
-lconfig.load('../../config.json');
+lconfig.load('../../Config/config.json');
 
 var fs = require('fs'),
     locker = require('locker.js');

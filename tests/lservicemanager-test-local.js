@@ -21,7 +21,7 @@ var testUtils = require(__dirname + "/test-utils.js");
 require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 var path = require('path');
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);

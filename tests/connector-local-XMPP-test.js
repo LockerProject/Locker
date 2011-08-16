@@ -34,7 +34,7 @@ var suite = RESTeasy.describe("XMPP Connector")
 
 var svcId = "xmpp-test";
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var mePath = '/Me/' + svcId;
 

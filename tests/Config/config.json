@@ -12,7 +12,6 @@
                       "lpquery-test-local.js",
                       "mongo-test.js",
                       "lscheduler-test-local.js",
-                      "lsearch-test-local.js",
                       "deepCompare-test.js"],
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js",
@@ -26,8 +25,7 @@
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
                       "synclet-local-googleContacts.js"],
-        "connectors" : ["connector-IMAP-test.js",
-                        "connector-flickr-test.js"],
+        "connectors" : ["connector-flickr-test.js"],
         "collections" : ["sync-contacts-test.js",
                          "sync-links-test.js"],
         "issues" : ["locker-issues-test.js"]

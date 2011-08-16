@@ -12,7 +12,7 @@ var vows = require("vows");
 var RESTeasy = require("api-easy");
 var lconfig = require('../Common/node/lconfig.js');
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'lmongoclient-test', ['one']);
 var mongo;

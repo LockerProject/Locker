@@ -17,7 +17,7 @@ var lconfig = require("../Common/node/lconfig.js");
 var request = require('request');
 var testUtils = require('./test-utils');
 
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 
 vows.describe("Locker Client API").addBatch({
     "Initialization" : {

@@ -3,7 +3,7 @@ var net = require("net");
 require.paths.push(__dirname + "/../Common/node");
 process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
 var lconfig = require("lconfig");
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 var lconsole = require("lconsole");
 var wrench = require("wrench");
 
@@ -55,7 +55,7 @@ if (process.argv.length > 2) {
         process.stdout.write("  -f  The remaining arguments are treated as files to run\n");
         process.stdout.write("  -x  Output tests in xUnit format for CI reporting\n");
         process.stdout.write("\n");
-        process.stdout.write("The list of groups are loaded from the config.json and by default all\n");
+        process.stdout.write("The list of groups are loaded from the Config/config.json and by default all\n");
         process.stdout.write("of them are ran.  A list of the groups to run can be specified as an\n");
         process.stdout.write("argument to the script.  If -f is used the list of arguments are\n");
         process.stdout.write("treated as individual files, not groups.\n");
@@ -63,7 +63,7 @@ if (process.argv.length > 2) {
     } 
 
     if (process.argv[2] == "-l") {
-        var testGroups = JSON.parse(fs.readFileSync("config.json")).testGroups;
+        var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
         if (process.argv.length > 3) {
             if (testGroups.hasOwnProperty(process.argv[3])) {
                 process.stdout.write("Files in group " + process.argv[3] + ":\n");
@@ -97,7 +97,7 @@ if (process.argv.length > 2) {
 
 // If they have specified any groups or defaulting to all we need to process this
 if (runGroups.length > 0 || (runFiles.length === 0 && runGroups.length === 0)) {
-    var testGroups = JSON.parse(fs.readFileSync("config.json")).testGroups;
+    var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
     if (runGroups.length === 0) {
         for (var key in testGroups) {
             if (testGroups.hasOwnProperty(key)) {

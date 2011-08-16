@@ -11,3 +11,4 @@ node_modules
 scheduler.json
 tests/Data/
 lockerbox*
+Config/apikeys.json

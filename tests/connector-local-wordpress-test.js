@@ -15,7 +15,7 @@ var suite = RESTeasy.describe("Wordpress Connector");
 
 var svcId = "wordpress-test";
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var mePath = '/Me/' + svcId;
 

@@ -30,7 +30,7 @@ var svcId = 'imap';
 
 var thecollections = ['messages'];
 var lconfig = require('../Common/node/lconfig');
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;
 var mePath = lconfig.me + "/" + svcId;

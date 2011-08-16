@@ -22,7 +22,7 @@ var vows = require("vows")
   , nsEventCount = 0
   , nsEvents = []
   ;
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 var syncManager = require("lsyncmanager.js");
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync', 'testSynclet_dataStore']);
 

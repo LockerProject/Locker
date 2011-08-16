@@ -14,7 +14,7 @@ var request = require('request'),
 
 var lconfig = require('lconfig');
 //TODO: fix lconfig and remove this!
-lconfig.load('../../config.json');
+lconfig.load('../../Config/config.json');
 
 //TODO: this is almost definitely a race condition!
 lcrypto.loadKeys(function(){});
