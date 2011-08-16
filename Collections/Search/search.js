@@ -89,19 +89,24 @@ app.get("/query", function(req, res) {
 
 // Process the startup JSON object
 process.stdin.resume();
+var allData = "";
 process.stdin.on('data', function(data) {
-    lockerInfo = JSON.parse(data);
-    locker.initClient(lockerInfo);
-    if (!lockerInfo || !lockerInfo['workingDirectory']) {
-        process.stderr.write('Was not passed valid startup information.'+data+'\n');
-        process.exit(1);
-    }
-    process.chdir(lockerInfo.workingDirectory);
+    allData += data;
+    if (allData.indexOf("\n") > 0) {
+        data = allData.substr(0, allData.indexOf("\n"));
+        lockerInfo = JSON.parse(data);
+        locker.initClient(lockerInfo);
+        if (!lockerInfo || !lockerInfo['workingDirectory']) {
+            process.stderr.write('Was not passed valid startup information.'+data+'\n');
+            process.exit(1);
+        }
+        process.chdir(lockerInfo.workingDirectory);
 
-    lsearch.setEngine(lsearch.engines.CLucene);
-    lsearch.setIndexPath(process.cwd() + "/search.index");
-    
-    app.listen(lockerInfo.port, 'localhost', function() {
-        process.stdout.write(data);
-    });
+        lsearch.setEngine(lsearch.engines.CLucene);
+        lsearch.setIndexPath(process.cwd() + "/search.index");
+        
+        app.listen(lockerInfo.port, 'localhost', function() {
+            process.stdout.write(data);
+        });
+    }
 });
