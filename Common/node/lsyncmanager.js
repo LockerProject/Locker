@@ -291,7 +291,7 @@ function addUrls() {
     var apiKeys;
     var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
     try {
-        apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
+        apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'ascii'));
     } catch(e) { return; }
     for (var i = 0; i < synclets.available.length; i++) {
         synclet = synclets.available[i];

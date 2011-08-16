@@ -214,7 +214,7 @@ exports.install = function(metaData) {
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.handle) {
         try {
-            var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'));
+            var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'ascii'));
             authInfo = apiKeys[serviceInfo.handle];
         } catch (E) {}
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
