@@ -170,13 +170,18 @@ var stdin = process.openStdin();
 var processInfo;
 
 stdin.setEncoding('utf8');
-stdin.on('data', function (chunk) {
-    processInfo = JSON.parse(chunk);
-    locker.initClient(processInfo);
-    process.chdir(processInfo.workingDirectory);
-    app.listen(processInfo.port, function() {
-        var returnedInfo = {port: processInfo.port};
-        process.stdout.write(JSON.stringify(returnedInfo));
-    });
+var allData = "";
+process.stdin.on('data', function(data) {
+    allData += data;
+    if (allData.indexOf("\n") > 0) {
+        data = allData.substr(0, allData.indexOf("\n"));
+        processInfo = JSON.parse(data);
+        locker.initClient(processInfo);
+        process.chdir(processInfo.workingDirectory);
+        app.listen(processInfo.port, function() {
+            var returnedInfo = {port: processInfo.port};
+            process.stdout.write(JSON.stringify(returnedInfo));
+        });
+    }
 });
 stdin.resume();
