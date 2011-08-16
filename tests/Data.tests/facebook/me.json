@@ -1,12 +1,35 @@
 {
-	"title":"Facebook Account",
-	"action":"Connect to a Facebook account",
-	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
-	"run":"node facebook.js",
-	"status":"unstable",
-	"provides":["contact/facebook", "status/facebook"],
-    "is":"connector",
-    "srcdir":"Connectors/Facebook",
-    "id":"facebook",
-    "uri":"http://localhost:8043/Me/facebook"
+    "title": "Facebook Account",
+    "action": "Connect to a Facebook account",
+    "desc": "Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
+    "run": "node init.js",
+    "status": "unstable",
+    "provides": [
+        "contact/facebook",
+        "status/facebook"
+    ],
+    "is": "connector",
+    "srcdir": "Connectors/Facebook",
+    "id": "facebook",
+    "provider": "facebook",
+    "auth": {
+        "appKey": "67",
+        "appSecret": "42",
+        "accessToken": "foo"
+    },
+    "synclets": [
+        {
+            "name": "photos",
+            "frequency": 86400
+        },
+        {
+            "name": "home",
+            "frequency": 120
+        },
+        {
+            "name": "friends",
+            "frequency": 3600
+        }
+    ],
+    "uri": "http://localhost:8043/Me/facebook"
 }

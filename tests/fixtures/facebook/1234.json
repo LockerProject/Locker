@@ -1,0 +1,11 @@
+{
+   "id": "1234",
+   "name": "Foo You",
+   "first_name": "Foo",
+   "last_name": "You",
+   "link": "http://www.facebook.com/foo.you",
+   "username": "foo.you",
+   "gender": "male",
+   "locale": "en_US",
+   "updated_time": "2011-04-19T20:16:20+0000"
+}

@@ -22,6 +22,8 @@
                               "connector-local-twitter-test.js"],
         "synclets" : ["synclet-local-foursquare.js",
                       "synclet-local-github.js",
+                      "synclet-local-twitter.js",
+                      "synclet-local-facebook.js",
                       "synclet-local-googleContacts.js"],
         "connectors-remote" : [],
         "connectors" : ["connector-IMAP-test.js",
