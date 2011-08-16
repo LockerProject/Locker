@@ -1,9 +1,8 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-require.paths.unshift('../Connectors/Twitter/');
-var friends = require('friends');
-var timeline = require('timeline');
-var tweets = require('tweets');
-var mentions = require('mentions');
+var friends = require('../Connectors/Twitter/friends');
+var timeline = require('../Connectors/Twitter/timeline');
+var tweets = require('../Connectors/Twitter/tweets');
+var mentions = require('../Connectors/Twitter/mentions');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
