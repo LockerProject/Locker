@@ -151,13 +151,14 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     processValue(value, this.mappings[type]);
     
     var contentString = contentTokens.join(" <> ");
+    var docID = value[this.mappings[type]["_id"]].toString();
+    
     console.log("Going to store " + contentString);
-    doc.addField('_id', value[this.mappings[type]["_id"]].toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     console.log('about to index at ' + indexPath);
-    this.lucene.addDocument(doc, indexPath, function(err, indexTime) {
-        callback(err, indexTime);
+    this.lucene.addDocument(docID, doc, indexPath, function(err, indexTime, docsReplaced) {
+        callback(err, indexTime, docsReplaced);
     });
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
