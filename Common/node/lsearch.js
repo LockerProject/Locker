@@ -12,7 +12,7 @@ var path = require('path');
 var lconfig = require('lconfig');
 var is = require("lutil").is;
 var util = require('util');
-var indexPath = '../../Me/search.indices';
+var indexPath;
 
 exports.currentEngine;
 
@@ -81,10 +81,6 @@ CLEngine = function()
         }
     };
 
-    if (!path.existsSync(indexPath)) {
-      fs.mkdirSync(indexPath, 0755);
-    };
-    
     this.engine.Store = {
       STORE_YES: 1,
       STORE_NO: 2,
@@ -163,14 +159,17 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
+    assert.ok(indexPath);
     this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime, docsReplaced) {
     callback(err, indexTime, docsReplaced);
     });
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
+    assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
+    assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ")", callback);
 };
 
@@ -180,11 +179,16 @@ exports.setEngine = function(engine) {
     try {
         exports.currentEngine = new engine();
     } catch (E) {
+        console.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
         exports.currentEngine = new NullEngine();
     }
 };
-exports.setIndexPath = function(path) {
-    indexPath = path;
+exports.setIndexPath = function(newPath) {
+    indexPath = newPath;
+    if (!path.existsSync(indexPath)) {
+      fs.mkdirSync(indexPath, 0755);
+    };
+    
 };
 
 function exportEngineFunction(funcName) {
