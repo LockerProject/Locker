@@ -123,11 +123,7 @@ $(document).ready(
                     t.query = function() {
                         $.ajax({
                                    url: t.uri,
-                                   dataType: 'json',
-                                   success: t.handleResponse,
-                                   error: function(e) {}
-                               });
-                    };
+=======
 
                     t.handleResponse = function(data, err, resp) {
                         t.ready = data.ready;
@@ -144,7 +140,7 @@ $(document).ready(
                     };
 
                     t.query = function() {
-                        var url = t.uri + "state";
+                        url = t.uri + "state";
                         $.ajax({
                                    url: url,
 >>>>>>> dfa8992011ca75e005a4d129d7501111f644afdd
@@ -238,4 +234,4 @@ function accountPopup (url) {
     var popup = window.open(url, "account",
                             "width=620,height=400,status=no,scrollbars=no,resizable=no");
     popup.focus();
-}
+};
