@@ -121,16 +121,6 @@ function handleOAuth2Post (code, options, res) {
 }
 
 function handleTwitter (req, res) {
-    // twitter's annoying.
-    // for the current ghetto flow, we're only allowing 1 twitter synclet to be installed
-    // unless i come up with a better solution
-    //
-    var installed = syncManager.synclets().installed;
-    for (var i in installed) {
-        if (i == 'twitter') {
-            return res.end('twitter already installed!!!');
-        }
-    }
     require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
         .getAccessToken(req, res, function(err, newToken) {
             var auth = {};
