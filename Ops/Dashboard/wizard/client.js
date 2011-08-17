@@ -121,6 +121,29 @@ $(document).ready(
                     };
 
                     t.query = function() {
+                        $.ajax({
+                                   url: t.uri,
+                                   dataType: 'json',
+                                   success: t.handleResponse,
+                                   error: function(e) {}
+                               });
+                    };
+
+                    t.handleResponse = function(data, err, resp) {
+                        t.ready = data.ready;
+                        
+                        if (data.ready > 0 && data.syncing > 0) {
+                            t.pending();
+                            // show counters
+                            $("#wizard-collections").slideDown();
+                            $("#wizard-actions").fadeIn();
+                            $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
+                        }
+
+                        t.timeout = setTimeout(t.query, 1000);
+                    };
+
+                    t.query = function() {
                         var url = t.uri;
                         $.ajax({
                                    url: url,
