@@ -1,0 +1,25 @@
+{
+    "title": "Search",
+    "desc": "Provides an interface to searching your lockers data",
+    "run": "node search.js",
+    "status": "unstable",
+    "handle": "search",
+    "provides": [
+        "search"
+    ],
+    "events": [
+    ],
+    "srcdir": "Collections/Search",
+    "is": "collection",
+    "installable": false,
+    "externalUri": "http://localhost:8043/Me/search/",
+    "id": "search",
+    "uri": "http://localhost:8043/Me/search/",
+    "version": 1,
+    "starting": [
+        null
+    ],
+    "port": 18045,
+    "startingPid": 25427,
+    "uriLocal": "http://localhost:18045/"
+}

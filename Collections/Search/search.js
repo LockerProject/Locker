@@ -29,6 +29,14 @@ app.post("/events", function(req, res) {
             lsearch.indexType("contact", req.body.obj.data, function(error, time) {
             });
             res.end();
+        } else if (req.body.type === "status/twitter" && req.body.action === "new") {
+            lsearch.indexType(req.body.type, req.body.obj.status, function(error, time) {
+            });
+            res.end();
+        } else if (req.body.type) {
+            lsearch.indexType(req.body.type, req.body.obj, function(error, time) {
+            });
+            res.end();
         } else {
             console.log("Unexpected event: " + req.body.type + " and " + req.body.action);
             res.end();
@@ -78,7 +86,6 @@ app.get("/query", function(req, res) {
             return;
         }
         res.send(results);
-        console.dir(results);
     }
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);

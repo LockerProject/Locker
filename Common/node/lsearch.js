@@ -12,8 +12,9 @@ var path = require('path');
 var lconfig = require('lconfig');
 var is = require("lutil").is;
 var util = require('util');
-var currentEngine;
-var indexPath = '../../Me/search.indices';
+var indexPath;
+
+exports.currentEngine;
 
 function noop() {
 }
@@ -21,9 +22,15 @@ function noop() {
 NullEngine = function()
 {
 }
-NullEngine.prototype.indexType = noop;
-NullEngine.prototype.queryAll = noop;
-NullEngine.prototype.queryType = noop;
+NullEngine.prototype.indexType = function(type, obj, cb) {
+    cb("Null engine");
+};
+NullEngine.prototype.queryAll = function(q, params, cb) {
+    cb("Null engine");
+};
+NullEngine.prototype.queryType = function(type, q, params, cb) {
+    cb("Null engine");
+};
 
 CLEngine = function()
 {
@@ -50,13 +57,30 @@ CLEngine = function()
                     "value":"value"
                 }
             ]
+        },
+        "photo" : {
+            "_id":"id",
+            "caption":"caption",
+            "title":"title"
+        },
+        "status/twitter" : {
+            "_id":"id",
+            "text":"text",
+            "user":{
+                "name":"name",
+                "screen_name":"screen_name"
+            }
+        },
+        "status/facebook" : {
+            "_id":"id",
+            "description":"description",
+            "message":"message",
+            "from":{
+                "name":"name"
+            }
         }
     };
 
-    if (!path.existsSync(indexPath)) {
-      fs.mkdirSync(indexPath, 0755);
-    };
-    
     this.engine.Store = {
       STORE_YES: 1,
       STORE_NO: 2,
@@ -81,47 +105,21 @@ CLEngine = function()
     return this;
 };
 
-/*
-CLEngine.prototype.map = function(type, value) {
-    contentTokens = [];
-
-    if (type === 'contact') {
-        var i=0;
-        var l=0;
-        contentTokens.push(value.name);
-
-        if (value.hasOwnProperty('nicknames')) {
-            for (i=0, l=value.nicknames.length; i<l; i++) {
-                if (is("String", value.nicknames[i])) {
-                    contentTokens.push(value.nicknames[i]);
-                }
-            }
-        }
-
-        if (value.hasOwnProperty('addresses')) {
-            for (i=0, l=value.addresses.length; i<l; i++) {
-                if (is("String", value.addresses[i].value)) {
-                    contentTokens.push(value.addresses[i].value);
-                }
-            }
-        }
-    }
-    
-    return contentTokens;
-};
-*/
 CLEngine.prototype.indexType = function(type, value, callback) {
     var doc = new this.cl.Document();
-    //console.error(util.inspect(value, true, 10));
-    // Use the mapping to generate the content field
-    //
-    //var contentTokens = CLEngine.prototype.map(type, value);
-    //console.log('Tokens: ' + contentTokens);
     
     if (!this.mappings.hasOwnProperty(type)) {
         callback("No valid mapping for the type: " + type);
+        return;
     }
     
+    idToStore = value[this.mappings[type]["_id"]];
+    if (!idToStore) {
+        callback("No valid id property was found");
+        return;
+    }
+    idToStore = idToStore.toString();
+
     var contentTokens = [];
     processValue = function(v, parentMapping) {
         if (is("Array", v)) {
@@ -150,40 +148,53 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     };
     processValue(value, this.mappings[type]);
     
+    if (contentTokens.length == 0) {
+        callback("No valid tokens were found to index.");
+        return;
+    }
+
     var contentString = contentTokens.join(" <> ");
-    console.log("Going to store " + contentString);
-    doc.addField('_id', value[this.mappings[type]["_id"]].toString(), this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    
+    //console.log("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
-    console.log('about to index at ' + indexPath);
-    this.lucene.addDocument(doc, indexPath, function(err, indexTime) {
-        callback(err, indexTime);
+    //console.log('about to index at ' + indexPath);
+    assert.ok(indexPath);
+    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime, docsReplaced) {
+    callback(err, indexTime, docsReplaced);
     });
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
+    assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
+    assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ")", callback);
 };
 
 
 exports.setEngine = function(engine) {
-    if (currentEngine) currentEngine = undefined;
+    if (exports.currentEngine) exports.currentEngine = undefined;
     try {
-        currentEngine = new engine();
+        exports.currentEngine = new engine();
     } catch (E) {
-        currentEngine = new NullEngine();
+        console.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
+        exports.currentEngine = new NullEngine();
     }
 };
-exports.setIndexPath = function(path) {
-    indexPath = path;
+exports.setIndexPath = function(newPath) {
+    indexPath = newPath;
+    if (!path.existsSync(indexPath)) {
+      fs.mkdirSync(indexPath, 0755);
+    };
+    
 };
 
 function exportEngineFunction(funcName) {
     var funcToRun = function() {
-        assert.ok(currentEngine);
-        currentEngine[funcName].apply(currentEngine, arguments);
+        assert.ok(exports.currentEngine);
+        exports.currentEngine[funcName].apply(exports.currentEngine, arguments);
     };
     exports[funcName] = funcToRun;
 }
@@ -203,18 +214,18 @@ function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee
     if (indexing && !keepGoing) return;
     indexing = true;
-    console.log('IndexQueue length: ' + indexQueue.length);
+    //console.log('IndexQueue length: ' + indexQueue.length);
     if (indexQueue.length === 0) {
         indexing = false;
         return;
     }
     
     var cur = indexQueue.shift();
-    assert.ok(currentEngine);
-    currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
-        console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
+    assert.ok(exports.currentEngine);
+    exports.currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
+        //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
-        console.log("Setting up for next tick");
+        //console.log("Setting up for next tick");
         process.nextTick(function() { indexMore(true); });
     });
 }

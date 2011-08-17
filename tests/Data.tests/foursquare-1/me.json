@@ -3,15 +3,15 @@
     "title": "Foursquare Account",
     "synclets": [
         {
-            "frequency": 120,
+            "frequency": 360000,
             "name": "checkins"
         },
         {
-            "frequency": 3600,
+            "frequency": 360000,
             "name": "friends"
         },
         {
-            "frequency": 60,
+            "frequency": 360000,
             "name": "recent"
         }
     ],

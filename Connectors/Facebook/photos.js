@@ -17,7 +17,7 @@ exports.sync = function(processInfo, cb) {
     exports.syncPhotos(function(err) {
         if (err) console.error(err);
         var responseObj = {data : {}};
-        responseObj.data.photo = photos;
+        responseObj.data.photos = photos;
         cb(err, responseObj);
     });
 };

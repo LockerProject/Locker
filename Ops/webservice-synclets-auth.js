@@ -63,9 +63,13 @@ function handleOAuth2 (code, options, res) {
         }
         if (options.provider === 'github') {
             request.get({url:"https://github.com/api/v2/json/user/show?access_token=" + auth.accessToken}, function(err, resp, body) {
-                var resp = JSON.parse(body);
-                auth.username = resp.user.login;
-                installSynclet(options.provider, auth);
+                try {
+                    var resp = JSON.parse(body);
+                    auth.username = resp.user.login;
+                    installSynclet(options.provider, auth);
+                } catch (e) {
+                    console.error('Failed to auth github - ' + body);
+                }
             });
         } else {
             installSynclet(options.provider, auth);
