@@ -292,7 +292,9 @@ function addUrls() {
     var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
     try {
         apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
-    } catch(e) { return; }
+    } catch(e) { 
+        return console.log('Error reading apikeys.json file - ' + e); 
+    }
     for (var i = 0; i < synclets.available.length; i++) {
         synclet = synclets.available[i];
         if (synclet.provider === 'facebook') {
