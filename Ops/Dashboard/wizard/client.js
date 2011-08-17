@@ -44,7 +44,7 @@ $(document).ready(
                             $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
                         }
 
-                        t.timeout = setTimeout(t.query, 10000);
+                        t.timeout = setTimeout(t.query, 1000);
                     };
 
                     t.query = function() {
@@ -80,31 +80,6 @@ $(document).ready(
                 var SyncletPoll = function (handle) {
                     var t = this;
                     t.uri = "/synclets";
-
-                    /*
-                    t.el.find("a").click( 
-                        function (e) {
-                            e.stopImmediatePropagation();
-                            e.preventDefault();
-                            console.log("clicked");
-                            if (!t.installed) {
-                                t.pending();
-                                $.getJSON("install", {handle:handle},
-                                          function(data, err, resp) {
-                                              if(data && data.success) {
-                                                  var svc = data.success;
-                                                  t.installed = true;
-                                                  window.open(t.uri);
-                                              } else {
-                                                  alert('error:' + JSON.string(data));
-                                              }
-                                          });
-                            } else {
-                                window.open(t.uri);
-                            }
-
-                        });
-                     */
 
                     t.handleResponse = function(data, err, resp) {
                         console.log(data);
@@ -148,6 +123,27 @@ $(document).ready(
                     t.query = function() {
                         $.ajax({
                                    url: t.uri,
+=======
+
+                    t.handleResponse = function(data, err, resp) {
+                        t.ready = data.ready;
+                        
+                        if (data.ready > 0 && data.syncing > 0) {
+                            t.pending();
+                            // show counters
+                            $("#wizard-collections").slideDown();
+                            $("#wizard-actions").fadeIn();
+                            $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
+                        }
+
+                        t.timeout = setTimeout(t.query, 1000);
+                    };
+
+                    t.query = function() {
+                        url = t.uri + "state";
+                        $.ajax({
+                                   url: url,
+>>>>>>> dfa8992011ca75e005a4d129d7501111f644afdd
                                    dataType: 'json',
                                    success: t.handleResponse,
                                    error: function(e) {
@@ -238,4 +234,4 @@ function accountPopup (url) {
     var popup = window.open(url, "account",
                             "width=620,height=400,status=no,scrollbars=no,resizable=no");
     popup.focus();
-}
+};
