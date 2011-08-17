@@ -6,7 +6,6 @@
 	<meta charset="utf-8"> 
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 	<title>the locker project</title>
-	<link href='http://fonts.googleapis.com/css?family=Istok+Web:400,700' rel='stylesheet' type='text/css' />
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0b2/jquery.mobile-1.0b2.min.css" />
 	<link rel="stylesheet" href="/wizard/style.css" /> 
 	<script src="http://code.jquery.com/jquery-1.6.2.min.js"></script> 
@@ -103,9 +102,10 @@
 	  <p>Before you can use your Locker, you need to add at least one service.</p>		
 	  
 	  <div class="ui-grid-c connector-panel">
-	    <div class="ui-block-a" id="facebookConnect" >
+	    <div class="ui-block-a" id="accountConnect" >
 	      <div class="ui-bar connector-button">
-		<a href="javascript:;">
+		<a href="javascript:;" target="_blank" rel="external"
+		onclick="accountPopup(this.href); return false;">
 		<img src="/wizard/img/icons/facebook/facebook_72.png" /><br/>
 		Facebook
 		</a>
@@ -113,21 +113,25 @@
 	      <div class="spinner"></div>
 	    </div>
 	    <div class="ui-block-b" id="twitterConnect">
-	      <div class="ui-bar connector-button">	      
-		<a href="javascript:;"><img src="/wizard/img/icons/twitter/twitter_72.png" /><br/>Twitter<br/></a>
+	      <div class="ui-bar connector-button">
+		<a href="javascript:;" target="_blank" rel="external"
+		onclick="accountPopup(this.href); return false;">
+		<img src="/wizard/img/icons/twitter/twitter_72.png" /><br/>Twitter<br/></a>
 	      </div>
 	      <div class="spinner"></div>
 	    </div>
 	    <div class="ui-block-c" id="gcontactsConnect">
 	      <div class="ui-bar connector-button">
-		<a href="javascript:;">
+		<a href="javascript:;" target="_blank" rel="external"
+		onclick="accountPopup(this.href); return false;">
 		<img src="/wizard/img/icons/google/google_72.png" /><br/>Google<br/>Contacts</a>
 	      </div>
 	      <div class="spinner"></div>
 	    </div>
 	    <div class="ui-block-d" id="githubConnect">
 	      <div class="ui-bar connector-button">
-		<a href="javascript:;">
+		<a href="javascript:;" target="_blank" rel="external"
+		onclick="accountPopup(this.href); return false;">
 		<img src="/wizard/img/icons/github/github_72.png" /><br/>GitHub
 		</a>
 	      </div>

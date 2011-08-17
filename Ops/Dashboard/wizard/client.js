@@ -44,7 +44,7 @@ $(document).ready(
                             $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
                         }
 
-                        t.timeout = setTimeout(t.query, 1000);
+                        t.timeout = setTimeout(t.query, 10000);
                     };
 
                     t.query = function() {
@@ -73,19 +73,15 @@ $(document).ready(
             })();
        
         /* 
-         * StatePoll
+         * SyncletPoll
          */
-        var StatePoll = (
+        var SyncletPoll = (
             function () {
-                var StatePoll = function (handle) {
+                var SyncletPoll = function (handle) {
                     var t = this;
+                    t.uri = "/synclets";
 
-                    t.handle = handle;
-                    t.state = "";
-                    t.installed = false;
-                    t.uri = "/Me/"+t.handle+"/";
-                    t.el = $("#"+t.handle+"Connect");
-
+                    /*
                     t.el.find("a").click( 
                         function (e) {
                             e.stopImmediatePropagation();
@@ -108,25 +104,50 @@ $(document).ready(
                             }
 
                         });
+                     */
 
                     t.handleResponse = function(data, err, resp) {
-                        t.ready = data.ready;
+                        console.log(data);
+                        // if first time:
+                        //   need to pull authurls from feed
+                        //   assign authurls to buttons with popups 
+                        // for app in instaled:
+                        //   update state of app if 
                         
-                        if (data.ready > 0 && data.syncing > 0) {
-                            t.pending();
-                            // show counters
-                            $("#wizard-collections").slideDown();
-                            $("#wizard-actions").fadeIn();
-                            $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
-                        }
+                        var wizardApps = ["facebook", "twitter", "gcontacts", "github"];
+                        for (var app in data.available) {
+                            app = data.available[app];
 
-                        t.timeout = setTimeout(t.query, 1000);
+                            if (wizardApps.indexOf(app.provider) != -1 && typeof(app.authurl) != "undefined") {
+                                console.log(app.provider);
+                                // update app button with the correct link
+                                
+                                // get el
+                                var $el = $("#"+ app.provider + "Connect a:first");
+                                
+                                // change link
+                                console.log("Change link for " + app.provider + " to " + app.authurl);
+                                $el.attr("href", app.authurl);
+                                $el.attr("target", "_blank");
+                                console.log(app.authurl);
+                            }
+                        }
+                        
+                        for (app in data.installed) {
+                            app = data.installed[app];
+
+                            if (wizardApps.indexOf(app.name) != -1) {
+                                console.log(app.provider);                                
+                                // update app button with "pending" gfx
+                            }
+                        }
+                        
+                        //t.timeout = setTimeout(t.query, 1000);
                     };
 
                     t.query = function() {
-                        url = t.uri + "state";
                         $.ajax({
-                                   url: url,
+                                   url: t.uri,
                                    dataType: 'json',
                                    success: t.handleResponse,
                                    error: function(e) {
@@ -154,7 +175,7 @@ $(document).ready(
                 };
                 
                 return function (name) {
-                    return new StatePoll(name);
+                    return new SyncletPoll(name);
                 };
 
             })();
@@ -206,11 +227,15 @@ $(document).ready(
                              var linkCountPoll = new CountPoll("links");
                              var contactCountPoll = new CountPoll("contacts");
                              
-                             // connectors
-                             window.facebookStatePoll = new StatePoll("facebook");
-                             window.twitterStatePoll = new StatePoll("twitter");
-                             window.googleContactsStatePoll = new StatePoll("gcontacts");
-                             window.githubStatePoll = new StatePoll("github");
+                             // synclets
+                             window.syncletPoll = new SyncletPoll();
                          });
     }
 );				
+
+function accountPopup (url) {
+    console.log("URL " + url);
+    var popup = window.open(url, "account",
+                            "width=620,height=400,status=no,scrollbars=no,resizable=no");
+    popup.focus();
+}
