@@ -144,9 +144,10 @@ $(document).ready(
                     };
 
                     t.query = function() {
-                        var url = t.uri;
+                        var url = t.uri + "state";
                         $.ajax({
                                    url: url,
+>>>>>>> dfa8992011ca75e005a4d129d7501111f644afdd
                                    dataType: 'json',
                                    success: t.handleResponse,
                                    error: function(e) {
