@@ -140,7 +140,7 @@ setTimeout(function() {
         process.stderr.write(data);
     });
     vowsProcess.on("exit", function(code, signal) {
-        if (code == 0) {
+        if (code != null) {
             console.log("All tests done");
             lockerd.shutdown(code);
         } else {
