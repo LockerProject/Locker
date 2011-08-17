@@ -98,19 +98,22 @@ exports.queryCurrent = function(type, query, options) {
     query = query || {};
     options = options || {};
     var m = mongo.collections[type];
-    if(!m) 
-        callback(new Error('invalid type:' + type), null);
-    else
-        return m.find(query, options);
+    if(!m) {
+        mongo.addCollection(type);
+        m = mongo.collections[type];
+    }
+    return m.find(query, options);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
     options = options || {};
     var m = mongo.collections[type];
-    if(!m) 
-        callback(new Error('invalid type:' + type), null);
-    else
-        m.find({}, options).toArray(callback);
+    if(!m) {
+        mongo.addCollection(type);
+        m = mongo.collections[type];
+    }
+    console.dir(m);
+    m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
