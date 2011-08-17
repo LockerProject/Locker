@@ -289,7 +289,13 @@ function mapMetaData(file) {
 
 function addUrls() {
     var apiKeys;
-    var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    var host;
+    if (lconfig.externalSecure) {
+        host = "https://";
+    } else {
+        host = "http://";
+    }
+    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
     try {
         apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
     } catch(e) { 
