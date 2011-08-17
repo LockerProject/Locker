@@ -131,7 +131,7 @@ function handleTwitter (req, res) {
             return res.end('twitter already installed!!!');
         }
     }
-    require('../Connectors/twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
+    require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
         .getAccessToken(req, res, function(err, newToken) {
             var auth = {};
             auth.consumerKey = apiKeys.twitter.appKey;
