@@ -139,8 +139,13 @@ setTimeout(function() {
     vowsProcess.stderr.on("data", function(data) {
         process.stderr.write(data);
     });
-    vowsProcess.on("exit", function(code) {
-        console.log("All tests done");
-        lockerd.shutdown(code);
+    vowsProcess.on("exit", function(code, signal) {
+        if (code == 0) {
+            console.log("All tests done");
+            lockerd.shutdown(code);
+        } else {
+            console.dir("vows process exited abnormally (code="+code+", signal="+signal+")");
+            lockerd.shutdown(1);
+        }
     });
 }, 1000);
