@@ -79,13 +79,16 @@ app.get("/query", function(req, res) {
         res.end("Must supply at least a query");
         return;
     }
-    function sendResults(err, results) {
+    function sendResults(err, results, queryTime) {
         if (err) {
             res.writeHead(400);
             res.end("Error querying: " + err);
             return;
         }
-        res.send(results);
+        var data = {};
+        data.hits = results;
+        data.took = queryTime;
+        res.send(data);
     }
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);
