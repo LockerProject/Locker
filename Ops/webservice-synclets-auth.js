@@ -1,9 +1,10 @@
 var syncManager = require('lsyncmanager')
-  , host = "http://localhost:8042/"
+  , lconfig = require('lconfig')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')
   , https = require('https')
+  , host = ''
   , querystring = require('querystring')
   , lconfig = require('../Common/node/lconfig')
   , foursquare = {"provider" : "foursquare",
@@ -28,6 +29,13 @@ var syncManager = require('lsyncmanager')
 try{
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/apikeys.json", 'ascii'))    
 }catch(e){}
+
+if (lconfig.externalSecure) {
+    host = "https://";
+} else {
+    host = "http://";
+}
+host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
 
 module.exports = function(locker) {
     locker.get('/auth/foursquare/auth', function(req, res) {
