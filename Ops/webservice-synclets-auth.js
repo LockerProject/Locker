@@ -74,7 +74,7 @@ function handleOAuth2 (code, options, res) {
         } else {
             installSynclet(options.provider, auth);
         }
-        res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+        res.end("<script type='text/javascript'> window.close(); </script>");
     });
 }
 
@@ -110,7 +110,7 @@ function handleOAuth2Post (code, options, res) {
             auth.clientSecret = apiKeys[options.provider].appSecret;
             auth.token = JSON.parse(data);
             installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            res.end("<script type='text/javascript'> window.close(); </script>");
         });
     });
     httpsReq.write(querystring.stringify(postData));
@@ -138,7 +138,7 @@ function handleTwitter (req, res) {
             auth.consumerSecret = apiKeys.twitter.appSecret;
             auth.token = newToken;
             installSynclet("twitter", auth);
-            res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            res.end("<script type='text/javascript'> window.close(); </script>");
         });
 }
 
