@@ -11,6 +11,7 @@ var serviceManager = require("lservicemanager.js");
 var suite = RESTeasy.describe("Github Connector");
 var utils = require('./test-utils');
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });

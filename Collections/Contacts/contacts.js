@@ -12,10 +12,6 @@ require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
 lconfig.load('../../config.json');
 
-var lsearch = require('lsearch');
-lsearch.setIndexPath('../../Me/search.indices');
-lsearch.setEngine(lsearch.engines.CLucene);
-
 var fs = require('fs'),
     locker = require('locker.js');
     
@@ -80,14 +76,6 @@ app.post('/events', function(req, res) {
             res.end(err);
         } else {
             if (eventObj) {
-                
-                lsearch.indexType('contact', eventObj.data, function(err, indexTime) {
-                    if (err) {
-                        console.error('Error attempting to index doc of type contact, _id of ' + eventObj.data._id + ': ' + err);
-                    } else {
-                        console.log('Indexed contact id ' + eventObj.data._id + ' in ' + indexTime + ' ms');
-                    }
-                });
                 
                 locker.event("contact/full", eventObj);
             }

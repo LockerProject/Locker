@@ -4,7 +4,7 @@ var lconfig = require('lconfig');
 lconfig.load('config.json');
 
 var lsearch = require('lsearch');
-lsearch.setIndexPath('./Me/search.indices');
+lsearch.setIndexPath('./Me/search/search.index');
 lsearch.setEngine(lsearch.engines.CLucene);
 
 var myrepl = repl.start('lockersearch> ');
@@ -32,6 +32,10 @@ ctx.queryType = function(type, query) {
            console.log(results[i]);
        }
     });
+};
+ctx.setIndexPath = function(path) {
+    lsearch.setIndexPath(path);
+    console.log("OK");
 };
 ctx.queryAll = function(query) {
     lsearch.queryAll(query, {}, function(err, results) {

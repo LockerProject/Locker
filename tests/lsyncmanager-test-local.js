@@ -21,6 +21,7 @@ var vows = require("vows")
   , events = []
   , nsEventCount = 0
   , nsEvents = []
+  , request = require('request')
   ;
 lconfig.load("config.json");
 var syncManager = require("lsyncmanager.js");
@@ -52,7 +53,7 @@ vows.describe("Synclet Manager").addBatch({
             "and has status" : {
                 topic: syncManager.status('testSynclet'),
                 "frequency is 120s" : function(topic) {
-                    assert.equal(topic.synclets[0].frequency, 120);
+                    assert.equal(topic.synclets[0].frequency, 360000);
                 },
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');
@@ -74,6 +75,46 @@ vows.describe("Synclet Manager").addBatch({
         }
     }
 }).addBatch({
+    // this will all be handled by the auth manager later, but this will have to do for now
+    //
+    "Installed services have hacky auth pieces added to them" : {
+        topic: syncManager.synclets().available,
+        "facebook worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'facebook') {
+                    assert.equal(topic[i].authurl, "https://graph.facebook.com/oauth/authorize?client_id=fb-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags");
+                }
+            }
+        },
+        "twitter worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'twitter') {
+                    assert.equal(topic[i].authurl, "http://localhost:8043/auth/twitter/auth");
+                }
+            }
+        },
+        "github worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'github') {
+                    assert.equal(topic[i].authurl, "https://github.com/login/oauth/authorize?client_id=gh-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/github/auth");
+                }
+            }
+        },
+        "gcontacts worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'gcontacts') {
+                    assert.equal(topic[i].authurl, "https://accounts.google.com/o/oauth2/auth?client_id=gc-appkey&redirect_uri=http://localhost:8043/auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code");
+                }
+            }
+        },
+        "foursquare worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'foursquare') {
+                    assert.equal(topic[i].authurl, "https://foursquare.com/oauth2/authenticate?client_id=4sq-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/foursquare/auth");
+                }
+            }
+        }
+    },
     "Installed services can be executed immediately rather than waiting for next run" : {
         topic:function() {
             syncManager.syncNow("testSynclet", this.callback);
@@ -105,7 +146,7 @@ vows.describe("Synclet Manager").addBatch({
     },
     "and after running writes out IJOD stuff" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/synclets/testSynclet/testSync.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/testSync.json", this.callback);
         },
         "successfully" : function(err, data) {
             assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"deleted":1312325283583,"notId":1}}\n{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
@@ -113,7 +154,7 @@ vows.describe("Synclet Manager").addBatch({
     },
     "into both" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/synclets/testSynclet/dataStore.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/dataStore.json", this.callback);
         },
         "files": function(err, data) {
             assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"id":5,"notId":5,"random":"data"}}\n');
@@ -139,6 +180,17 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(nsEventCount, 1);
             assert.equal(nsEvents[0].obj.type, 'new');
             assert.equal(nsEvents[0].obj.data.random, 'data');
+        }
+    }
+}).addBatch({
+    "Querying the data API returns the data" : {
+        topic: function() {
+            request.get({uri : "http://localhost:8043/synclets/testSynclet/getCurrent/testSync"}, this.callback)
+        },
+        "from testSync" : function(err, resp, body) {
+            var data = JSON.parse(body);
+            assert.equal(data[0].notId, 500);
+            assert.equal(data[0].someData, 'BAM');
         }
     }
 }).addBatch({
@@ -171,12 +223,12 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
-            topic:syncManager.scanDirectory("synclets"),
+            topic:syncManager.scanDirectory("Connectors"),
             "found a service": function() {
                 assert.ok(syncManager.synclets().available.length > 0);
             },
             "and can be installed" : {
-                topic:syncManager.install({srcdir:"synclets/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
+                topic:syncManager.install({srcdir:"Connectors/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "synclets");
                 },
@@ -184,7 +236,7 @@ vows.describe("Synclet Manager").addBatch({
                     assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
                 "and by adding valid auth info" : function(svcMetaInfo) {
                     assert.deepEqual(svcMetaInfo.auth, {"consumerKey":"daKey","consumerSecret":"daPassword"});
@@ -194,7 +246,7 @@ vows.describe("Synclet Manager").addBatch({
                 }
             },
             "and can be installed a second time" : {
-                topic:syncManager.install({srcdir:"synclets/testSynclet"}),
+                topic:syncManager.install({srcdir:"Connectors/testSynclet"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
@@ -202,7 +254,7 @@ vows.describe("Synclet Manager").addBatch({
                     assert.isTrue(syncManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/synclets/" + svcMetaInfo.id);
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
                 "and passes along the icon": function(svcMetaInfo) {
                     assert.notEqual(svcMetaInfo.icon, undefined);

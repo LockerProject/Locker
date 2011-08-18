@@ -8,7 +8,7 @@
 */
 
 var fs = require('fs')
-  , data = '';
+  , data = ''
   ;
 
 // Process the startup JSON object
@@ -17,14 +17,16 @@ process.stdin.on("data", function(newData) {
     // Do the initialization bits
     data += newData;
     try {
-        JSON.parse(data);
-        run(data);
-    } catch (E) {}
+        run(JSON.parse(data));
+    } catch (E) {
+        console.error("synclet run failed: "+E);
+    }
 });
 
 function run (processInfo) {
     var run = processInfo.syncletToRun;
-    var sync = require(run.name + ".js");
+    var sync = require(process.cwd()+"/"+run.name+".js");
+    process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
             var error = JSON.stringify(err);

@@ -35,4 +35,6 @@ module.exports = function(locker) {
             res.end('DONE');
         })
     });
+    
+    require('synclet/dataaccess')(locker);
 };

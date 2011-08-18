@@ -126,3 +126,7 @@ h1 {
 .button:active a {
   color: white;
 }
+
+.typeSelector {
+    font-size: 2.0em;
+}

@@ -2,7 +2,7 @@ var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
-  , datastore = require('./synclet/datastore')
+  , datastore
   , async = require('async')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
@@ -23,28 +23,30 @@ exports.synclets = function() {
 * Scans the Me directory for instaled synclets
 */
 exports.findInstalled = function (callback) {
-    if (!path.existsSync(lconfig.me + "/synclets/")) fs.mkdirSync(lconfig.me + "/synclets/", 0755);
-    var dirs = fs.readdirSync(lconfig.me + "/synclets/" );
+    if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
+    var dirs = fs.readdirSync(lconfig.me);
     for (var i = 0; i < dirs.length; i++) {
-        var dir =  lconfig.me + '/synclets/' + dirs[i];
+        var dir =  lconfig.me + "/" + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
-            if(!fs.statSync(dir+'/me.json').isFile()) continue;
+            if(!path.existsSync(dir+'/me.json')) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
-            synclets.installed[js.id] = js;
-            synclets.installed[js.id].status = "waiting";
             if (js.synclets) {
+                console.log("Loaded synclets for "+js.id);
+                synclets.installed[js.id] = js;
+                synclets.installed[js.id].status = "waiting";
                 for (var j = 0; j < js.synclets.length; j++) {
                     scheduleRun(js, js.synclets[j]);
                 }
             }
         } catch (E) {
-            console.log("Me/synclets/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
+            console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
 }
 
 exports.scanDirectory = function(dir) {
+    datastore = require('./synclet/datastore');
     var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
@@ -57,6 +59,7 @@ exports.scanDirectory = function(dir) {
             mapMetaData(fullPath);
         }
     }
+    addUrls();
 }
 
 /**
@@ -78,9 +81,9 @@ exports.install = function(metaData) {
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.provider) {
         var inc = 0;
-        if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider))) {
+        if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.provider))) {
             inc++;
-            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'synclets', serviceInfo.provider + '-' + inc))) inc++;
+            while (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.provider + '-' + inc))) inc++;
             serviceInfo.id = serviceInfo.provider + "-" + inc;
         } else {
             serviceInfo.id = serviceInfo.provider;
@@ -89,8 +92,8 @@ exports.install = function(metaData) {
         throw "invalid synclet, has no provider";
     }
     synclets.installed[serviceInfo.id] = serviceInfo;
-    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id),0755);
-    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "synclets", serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id),0755);
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
@@ -114,6 +117,7 @@ exports.syncNow = function(serviceId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
+    // TODO if there is a .nextRun and it's past-due, run it now!
     synclet.nextRun = new Date(Date.now() + (parseInt(synclet.frequency) * 1000));
     setTimeout(function() {
         executeSynclet(info, synclet);
@@ -130,22 +134,21 @@ function executeSynclet(info, synclet, callback) {
         }
         return;
     }
+    console.log("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else {
-        run = synclet.run.split(" "); // node foo.js
+        run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
 
-    process.env["NODE_PATH"] = lconfig.lockerDir+'/synclets/'+info.provider+'/';
     var dataResponse = '';
 
-    // app = spawn(run.shift(), run, {cwd: lconfig.lockerDir + '/' + lconfig.me + '/synclets/' + info.id, env:process.env});
-    app = spawn(run.shift(), run, {cwd: info.srcdir, env: process.env});
+    app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
     
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
-        console.outputModule = info.title;
+        console.outputModule = info.title+" "+synclet.name;
         console.error(data.toString());
         console.outputModule = mod;
     });
@@ -165,17 +168,19 @@ function executeSynclet(info, synclet, callback) {
             if (callback) callback(E);
             return;
         }
+        console.log("Synclet "+synclet.name+" finished for "+info.id);
         info.status = synclet.status = 'processing data';
-        tempInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json'));
+        tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
         processResponse(deleteIDs, info, synclet, response, callback);
-        info.config = lutil.extend(tempInfo.config, response.config);
-        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/synclets/" + info.id + '/me.json', JSON.stringify(info, null, 4));
+        info.config = lutil.extend(true, tempInfo.config, response.config);
+        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });
     if (!info.config) info.config = {};
     
     info.syncletToRun = synclet;
+    info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     delete info.syncletToRun;
 };
@@ -217,6 +222,8 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
+    // this extra (handy) log breaks the synclet tests somehow??
+//    console.log("processing synclet data from "+key+" of length "+data.length);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
     
@@ -280,4 +287,36 @@ function mapMetaData(file) {
     metaData.srcdir = path.dirname(file);
     synclets.available.push(metaData);
     return metaData;
+}
+
+function addUrls() {
+    var apiKeys;
+    var host;
+    if (lconfig.externalSecure) {
+        host = "https://";
+    } else {
+        host = "http://";
+    }
+    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"))) {
+        try {
+            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
+        } catch(e) {
+            return console.log('Error reading apikeys.json file - ' + e);
+        }
+        for (var i = 0; i < synclets.available.length; i++) {
+            synclet = synclets.available[i];
+            if (synclet.provider === 'facebook') {
+                if (apiKeys.facebook) synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
+            } else if (synclet.provider === 'twitter') {
+                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
+            } else if (synclet.provider === 'foursquare') {
+                if (apiKeys.foursquare) synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
+            } else if (synclet.provider === 'gcontacts') {
+                if (apiKeys.gcontacts) synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey + "&redirect_uri=" + host + "auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code";
+            } else if (synclet.provider === 'github') {
+                if (apiKeys.github) synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            }
+        }
+    }
 }
