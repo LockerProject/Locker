@@ -173,7 +173,7 @@ function executeSynclet(info, synclet, callback) {
         tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
         processResponse(deleteIDs, info, synclet, response, callback);
-        info.config = lutil.extend(tempInfo.config, response.config);
+        info.config = lutil.extend(true, tempInfo.config, response.config);
         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });
@@ -222,6 +222,8 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
+    // this extra (handy) log breaks the synclet tests somehow??
+//    console.log("processing synclet data from "+key+" of length "+data.length);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
     
