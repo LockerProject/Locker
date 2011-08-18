@@ -127,7 +127,7 @@ try {
 }
 
 setTimeout(function() {
-    var vowsArgument = '--spec';
+    var vowsArgument = '--dot-matrix';
     if (process.argv[2] == "-x") {
         vowsArgument = '--xunit';
     }

@@ -8,7 +8,6 @@
 */
 var IJOD = require('../ijod').IJOD
   , lconfig = require('../lconfig')
-  , lstate = require('../lstate')
   , lmongoclient = require('../lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
   , ijodFiles = {}
   , deepCompare = require('../deepCompare')
@@ -44,7 +43,6 @@ function now() {
 // timeStamp will be the timestamp stored w/ the record if it exists, otherwise, just use now.
 //
 exports.addObject = function(type, object, options, callback) {
-    lstate.up(type);
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
@@ -65,7 +63,6 @@ exports.addObject = function(type, object, options, callback) {
 
 // same deal, except no strip option, just timestamp is available currently
 exports.removeObject = function(type, id, options, callback) {
-    lstate.down(type);
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
@@ -112,7 +109,6 @@ exports.getAllCurrent = function(type, callback, options) {
         mongo.addCollection(type);
         m = mongo.collections[type];
     }
-    console.dir(m);
     m.find({}, options).toArray(callback);
 }
 

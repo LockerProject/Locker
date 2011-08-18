@@ -10,13 +10,15 @@
 var assert = require("assert");
 var vows = require("vows");
 var events = require("events");
+var RESTeasy = require('api-easy');
+var suite = RESTeasy.describe('Locker Search');
 var lsearch = require("lsearch");
 var lconfig = require('lconfig');
 lconfig.load('./config.json');
 
 lsearch.setIndexPath(__dirname + "/" + lconfig.me + "/search.index");
 
-vows.describe("Locker Search").addBatch({
+suite.next().suite.addBatch({
     "Setting an invalid engine":{
         topic:lsearch.setEngine(undefined),
         "does not fail":function(topic) {
@@ -67,5 +69,10 @@ vows.describe("Locker Search").addBatch({
             assert.greater(results, 0, "No results were foind");
         }
     }
-}).export(module);
+});
+
+if (lsearch.currentEngine.name() !== 'Null engine') {
+    suite.export(module);
+}
+
 
