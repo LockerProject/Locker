@@ -109,7 +109,6 @@ exports.getAllCurrent = function(type, callback, options) {
         mongo.addCollection(type);
         m = mongo.collections[type];
     }
-    console.dir(m);
     m.find({}, options).toArray(callback);
 }
 
