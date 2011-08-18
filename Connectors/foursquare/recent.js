@@ -10,8 +10,9 @@
 var fs = require('fs')
   , request = require('request')
   , auth
+  , seenIDs = {}
   , recents = []
-  , lastCheckins = []
+  , lastCheckins = {}
   , newRecents = []
   ;
 
@@ -23,15 +24,13 @@ exports.sync = function(processInfo, cb) {
     exports.syncRecent(function(err) {
         var responseObj = {data : {}, config : {}};
         responseObj.data.recents = newRecents;
-        responseObj.config.recents = JSON.parse(recents);
+        responseObj.config.recents = seenIDs;
         cb(err, responseObj);
     });
 };
 
 
 exports.syncRecent = function (callback) {
-    seenIDs = {};
-    for(var i = 0; i < lastCheckins.length; i++) seenIDs[lastCheckins[i].id]=true;
     getRecent(auth.accessToken, function(err, resp, data) {
         if(err || !data || !JSON.parse(data).response.recent) return callback("broke" + err);
         var checkins = JSON.parse(data).response.recent;
@@ -40,8 +39,9 @@ exports.syncRecent = function (callback) {
         }
         recents = JSON.stringify(checkins);
         for(var i = 0; i < checkins.length; i++) {
-            if (seenIDs[checkins[i].id]) break;
+            if (lastCheckins[checkins[i].id]) break;
             newRecents.push({obj: checkins[i], timestamp: Date.now()});
+            seenIDs[checkins[i].id] = true;
         }
         callback();
     });
