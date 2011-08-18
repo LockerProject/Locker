@@ -10,14 +10,13 @@ var log = function(msg) { if (console && console.log) console.debug(msg); }
 
 var map;
 
-function add_marker(map, lat, loong, html, open, icon) {
+function add_marker(lat, loong, html, open, icon) {
       var myLatlng = new google.maps.LatLng(lat,loong);
       var marker = new google.maps.Marker({
         position: myLatlng, 
         map: map,
 		icon: icon
       });
-      
       var infowindow = new google.maps.InfoWindow({
             content: html
       });
@@ -31,7 +30,7 @@ function add_marker(map, lat, loong, html, open, icon) {
 }
 
 function initialize() {
-    var latlng = new google.maps.LatLng(-34.397, 150.644);
+    var latlng = new google.maps.LatLng(37.062530517578, 15.296230316162);
     var myOptions = {
       zoom: 8,
       center: latlng,
@@ -59,17 +58,29 @@ function reload(offset, limit, useJSON) {
         for (var i in contacts) {
 
 	    contact = contacts[i];
-	    
-	    log(contact);
-	    if (useJSON) {
-		contactHTML = "<pre>"+ JSON.stringify(contact['accounts']['foursquare'][0]['data']['mayorships'], null, 2) +"</pre>";
-	    } else {
-		// get the contact name, but use the first email address if no name exists
-		contactHTML = contact.name || contact.emails[0].value;
+
+        if (contact['accounts']['foursquare'][0]['data']['mayorships']['count'] != 0) {
+
+	        log(contact);
+            for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
+                    mayorship = contact['accounts']['foursquare'][0]['data']['mayorships']['items'][i];
+            add_marker(mayorship['location']['lat'],
+                mayorship['location']['lng'],
+                "<h1>" + mayorship['name'] +  "</h1>",
+                false,
+                contact['accounts']['foursquare'][0]['data']['photo']
+            );
+            }
+    	    if (useJSON) {
+        		contactHTML = "<pre>"+ JSON.stringify(contact['accounts']['foursquare'][0], null, 2) +"</pre>";
+    	    } else {
+    		// get the contact name, but use the first email address if no name exists
+        		contactHTML = contact.name || contact.emails[0].value;
+    	    }
+    	    liHTML = '<li id="' + contact._id + '" class="contact"><span class="basic-data">'+contactHTML+'</span></div>';
+    	    contactsList.append(liHTML);
+        }
 	    }
-	    liHTML = '<li id="' + contact._id + '" class="contact"><span class="basic-data">'+contactHTML+'</span></div>';
-	    contactsList.append(liHTML);
-	}
     };
 
     $.getJSON(
