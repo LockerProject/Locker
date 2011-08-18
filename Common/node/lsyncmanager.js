@@ -6,14 +6,13 @@ var fs = require('fs')
   , async = require('async')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
+  , levents = require(__dirname + '/levents')
   ;
 
 var synclets = {
     available:[],
     installed:{}
 };
-
-exports.eventEmitter = new EventEmitter();
 
 exports.synclets = function() {
   return synclets;
@@ -257,7 +256,7 @@ function deleteData (collection, deleteIds, info, eventType, callback) {
         var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
         newEvent.obj.data[info.mongoId] = id;
         newEvent.fromService = "synclet/" + info.id;
-        exports.eventEmitter.emit(eventType, newEvent);
+        levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
     }, callback);
 }
@@ -268,12 +267,12 @@ function addData (collection, data, info, eventType, callback) {
         newEvent.fromService = "synclet/" + info.id;
         if (object.type === 'delete') {
             datastore.removeObject(collection, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
-            exports.eventEmitter.emit(eventType, newEvent);
+            levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         } else {
             datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type) {
                 if (type === 'same') return cb();
                 newEvent.obj.type = type;
-                exports.eventEmitter.emit(eventType, newEvent);
+                levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
                 cb();
             });
         }
