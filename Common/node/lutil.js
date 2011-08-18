@@ -81,3 +81,9 @@ exports.is = function(type, obj) {
     return obj !== undefined && obj !== null && clas === type;
 }
 
+exports.addAll = function(thisArray, anotherArray) {
+    if(!(thisArray && anotherArray && anotherArray.length))
+        return;
+    for(var i = 0; i < anotherArray.length; i++)
+        thisArray.push(anotherArray[i]);
+}

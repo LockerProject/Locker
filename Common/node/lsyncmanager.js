@@ -18,8 +18,36 @@ exports.synclets = function() {
   return synclets;
 };
 
+exports.providers = function(types) {
+    var services = [];
+    for(var svcId in synclets.installed) {
+        if (!synclets.installed.hasOwnProperty(svcId))  continue;
+        var service = synclets.installed[svcId];
+        if (!service.hasOwnProperty("provides")) continue;
+        if (service.provides.some(function(svcType, index, actualArray) {
+            for (var i = 0; i < types.length; i++) {
+                var currentType = types[i];
+                var currentTypeSlashIndex = currentType.indexOf("/");
+                if (currentTypeSlashIndex < 0) {
+                    // This is a primary only comparison
+                    var svcTypeSlashIndex = svcType.indexOf("/");
+                    if (svcTypeSlashIndex < 0 && currentType == svcType) return true;
+                    if (currentType == svcType.substring(0, svcTypeSlashIndex)) return true;
+                    continue;
+                }
+                // Full comparison
+                if (currentType == svcType) return true;
+            }
+            return false;
+        })) {
+            services.push(service);
+        }
+    }
+    return services;
+}
+
 /**
-* Scans the Me directory for instaled synclets
+* Scans the Me directory for installed synclets
 */
 exports.findInstalled = function (callback) {
     if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
@@ -201,6 +229,7 @@ function compareIDs (originalConfig, newConfig) {
     }
     return resp;
 }
+
 function processResponse(deleteIDs, info, synclet, response, callback) {
     datastore.init(function() {
         info.status = synclet.status = 'waiting';
