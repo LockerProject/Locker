@@ -69,7 +69,7 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
-            assert.equal(response.data.photos[0].obj.id, '214713967594');
+            assert.equal(response.data.photo[0].obj.id, '214713967594');
             process.chdir(curDir);
         }
     }    
