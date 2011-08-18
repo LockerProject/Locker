@@ -24,13 +24,22 @@ var map;
         title:"Hello World!"
     });   
   }
+function go(f)
+{
+	var s=document.createElement('script')
+	s.setAttribute("type","text/javascript")
+	s.setAttribute("src", "search?friends="+f.friends.value+"&q="+f.q.value);
+	document.getElementsByTagName("head")[0].appendChild(s)
+	
+}
 </script> 
-<script src="latlng"></script>
 </head> 
-<body onload="initialize();ll();"> 
+<body onload="initialize();"> 
+<form method="get" action="search" onsubmit="go(this); return false">
+Foursquare history search:  <input name="q" value="san francisco"> (<input type="checkbox" name="friends"> include friend checkins)
+<input type="submit" value="map"></form>
+
   <div id="map_canvas"></div> 
-U R MY LAB MONKEY!  This is intended to be a simple foursquare browsing or search of your history (by city name for example) and map the results so you can see everywhere you've ever checked in on a map in a specific area.
-<a href="load">load first</a> then search: <form method="get" action="search"><input name="q"></form>
 
 </body> 
 </html> 
