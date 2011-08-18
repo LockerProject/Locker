@@ -31,6 +31,9 @@ NullEngine.prototype.queryAll = function(q, params, cb) {
 NullEngine.prototype.queryType = function(type, q, params, cb) {
     cb("Null engine");
 };
+NullEngine.prototype.name = function() {
+    return "Null engine";
+};
 
 CLEngine = function()
 {
@@ -172,6 +175,9 @@ CLEngine.prototype.queryAll = function(query, params, callback) {
     assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ")", callback);
 };
+CLEngine.prototype.name = function() {
+    return "CLEngine";
+};
 
 
 exports.setEngine = function(engine) {
@@ -226,6 +232,7 @@ function indexMore(keepGoing) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         //console.log("Setting up for next tick");
+        // TODO: review for optimization per ctide comment (per 100 instead of per 1?)
         process.nextTick(function() { indexMore(true); });
     });
 }
