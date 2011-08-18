@@ -21,7 +21,7 @@ module.exports = function(host, port, localServiceId, theCollectionNames) {
             // in case the mongod process was a bit slow to start up
             if(error && !isRetry) { 
                 setTimeout(function() {
-                    _connectToDB(callback, true);
+                    connectToDB(callback, true);
                 }, 2000);
             } else if (error) 
                 throw error;

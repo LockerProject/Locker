@@ -21,6 +21,7 @@ var vows = require("vows")
   , events = []
   , nsEventCount = 0
   , nsEvents = []
+  , request = require('request')
   ;
 lconfig.load("config.json");
 var syncManager = require("lsyncmanager.js");
@@ -179,6 +180,17 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(nsEventCount, 1);
             assert.equal(nsEvents[0].obj.type, 'new');
             assert.equal(nsEvents[0].obj.data.random, 'data');
+        }
+    }
+}).addBatch({
+    "Querying the data API returns the data" : {
+        topic: function() {
+            request.get({uri : "http://localhost:8043/synclets/testSynclet/getCurrent/testSync"}, this.callback)
+        },
+        "from testSync" : function(err, resp, body) {
+            var data = JSON.parse(body);
+            assert.equal(data[0].notId, 500);
+            assert.equal(data[0].someData, 'BAM');
         }
     }
 }).addBatch({
