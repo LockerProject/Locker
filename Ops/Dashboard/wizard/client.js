@@ -18,18 +18,17 @@ $(document).ready(
         var CountPoll = (
             function () {
                 var CountPoll = function (name) {
-                    console.log("Count poll made ("+name+")");
+//                    console.log("Count poll made ("+name+")");
                     var t = this;
                     t.name = name;
                     t.lastCount = 0;
                     t.count = 0;
                     
                     t.handleResponse = function(data, err, resp) {
-                        console.log("got response");
                         t.lastCount = t.count;
                         t.count = data.count;
                         if (t.count != t.lastCount) {
-                            console.log("Updated count of "+t.name+": " + data.count);
+//                            console.log("Updated count of "+t.name+": " + data.count);
 
                             $("#"+t.name+"Count").odoTicker(
                                 {
@@ -40,7 +39,7 @@ $(document).ready(
                             );
                         }
                         if (t.lastCount == 0 && t.count != 0) {
-                            console.log("Not 0 anymore");
+//                            console.log("Not 0 anymore");
                             $("#wizard-collections").slideDown();
                             $("#wizard-actions").fadeIn();
                             $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
@@ -50,7 +49,6 @@ $(document).ready(
                     };
 
                     t.query = function() {
-                        console.log("Query");
                         var url = "/Me/"+t.name+"/state";
                         $.ajax({
                                    url: url,
@@ -68,7 +66,7 @@ $(document).ready(
                     };
                     
                     // init
-                    console.log("init");
+//                    console.log("init");
                     t.query();
                     $("#"+t.name+"Count").odoTicker(
                         {
@@ -91,7 +89,7 @@ $(document).ready(
         var SyncletPoll = (
             function () {
                 var SyncletPoll = function () {
-                    console.log("Synclet poll made");
+//                    console.log("Synclet poll made");
                     var t = this;
                     t.uri = "/synclets";
                     t.buttonsConnected = false;
@@ -99,39 +97,51 @@ $(document).ready(
 
                     var app = {};
 
+                    t.pending = function(provider) {
+                        console.log(provider + " pending");
+                        if (typeof(t.installed[provider]) == "undefined") {
+                            var b =  {
+                                "state": "pending",
+                                "$el": $("#"+provider+"Connect a:first")
+                            };
+                            
+                            b.$el.addClass("pending disabled");
+                            
+                            b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
+                            
+                            t.installed[provider] = b;
+                        }
+                    };
+
                     t.handleResponse = function(data, err, resp) {
                         console.log(data);
-                        // if first time:
-                        //   need to pull authurls from feed
-                        //   assign authurls to buttons with popups 
-                        // for app in instaled:
-                        //   update state of app if 
-                        
                         var wizardApps = ["facebook", "twitter", "gcontacts", "github", "foursquare"];
                         if (!t.buttonsConnected) {
                             for (app in data.available) {
                                 app = data.available[app];
                                 
                                 if (wizardApps.indexOf(app.provider) != -1 && typeof(app.authurl) != "undefined") {
-                                    console.log(app.provider);
                                     // update app button with the correct link
                                     var $el = $("#"+ app.provider + "Connect a:first");
                                     // change link
-                                    console.log("Change link for " + app.provider + " to " + app.authurl);
+                                    //console.log("Change link for " + app.provider + " to " + app.authurl);
                                     $el.attr("href", app.authurl);
                                     $el.attr("target", "_blank");
                                     console.log(app.authurl);
                                 }
                             }
+                            t.buttonsConnected = true;
                         }
                             
                         for (app in data.installed) {
                             app = data.installed[app];
+                            console.log(app);
 
-                            if (wizardApps.indexOf(app.name) != -1) {
-                                console.log(app.provider);                        
+                            if (wizardApps.indexOf(app.provider) != -1) {
                                 // update app button with "pending" gfx
+                                console.log(app.provider);
                                 t.pending(app.provider);
+                                console.log(app.provider);
                             }
                         }
                         
@@ -154,22 +164,7 @@ $(document).ready(
                     t.halt = function() {
                         clearTimeout(t.timeout);
                     };
-                    
-                    t.pending = function(provider) {
-                        console.log(provider + " pending");
-                        if (typeof(t.installed[handle]) == "undefined") {
-                            var b =  {
-                                "state": "pending",
-                                "$el": $("#"+provider+"Connect a:first")
-                            };
-                            
-                            b.$el.addClass("pending disabled");
-                            b.spinner = spinner(b.$el.children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
-                            
-                            t.installed[provider] = providerState;
-                        }
-                    };
-                    
+                                        
                     // init
                     t.query();
                 };
@@ -234,7 +229,7 @@ $(document).ready(
 );				
 
 function accountPopup (url) {
-    console.log("URL " + url);
+    //    console.log("URL " + url);
     var popup = window.open(url, "account",
                             "width=620,height=400,status=no,scrollbars=no,resizable=no");
     popup.focus();
