@@ -36,57 +36,54 @@ body {
 
 }
 
-.ui-grid-c.connector-panel {
-/*    border: 1px solid #ddd;
-    box-shadow:inset 0 0 10px rgba(100,100,100, 0.1);
-  */  
+.ui-grid-d.connector-panel {
     padding: 10px;
     padding-top: 30px;
     border-radius: 10px;
     margin-bottom: 20px;
-    
+    min-width: 545px;
 }
 
-.ui-grid-c.connector-panel ui-bar,.ui-grid-c.connector-panel ui-body, {
+.ui-grid-d.connector-panel ui-bar,.ui-grid-d.connector-panel ui-body, {
     padding: 0px;
 }
 
-.ui-grid-c div div.connector-button {
+.ui-grid-d div div.connector-button {
     height: 150px;
     text-align: center;
     min-width: 100px;
     padding: 0px;
 }
 
-.ui-grid-c div div.connector-button {
+.ui-grid-d div div.connector-button {
     height; 120px;
 }
 
-.ui-grid-c.connector-panel .ui-btn-hover-d.disabled {
+.ui-grid-d.connector-panel .ui-btn-hover-d.disabled {
     background: white !important;
     border: 1px solid #CCC;
     cursor: default;
 }
 
-.ui-grid-c.connector-panel .disabled img  {
+.ui-grid-d.connector-panel .disabled img  {
     opacity: 0.5
 }
 
-.ui-grid-c.connector-panel .disabled  {
+.ui-grid-d.connector-panel .disabled  {
     color: #ccc;
 }
 
-.ui-grid-c.connector-panel .pending {
+.ui-grid-d.connector-panel .pending {
     border: 1px solid #ccc;
 }
 
-.ui-grid-c div div.connector-button img {
+.ui-grid-d div div.connector-button img {
     border-radius: 10px;
     box-shadow: 1px 0px 5px rgba(0,0,0,0.7);    
     margin-bottom: 5px;
 }
 
-.ui-grid-c div div.connector-button a {
+.ui-grid-d div div.connector-button a {
     font-size: 12px;
     padding: 10px;
     height: 120px;

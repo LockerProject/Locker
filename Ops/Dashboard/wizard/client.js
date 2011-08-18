@@ -94,6 +94,10 @@ $(document).ready(
                     console.log("Synclet poll made");
                     var t = this;
                     t.uri = "/synclets";
+                    t.buttonsConnected = false;
+                    t.installed = {};
+
+                    var app = {};
 
                     t.handleResponse = function(data, err, resp) {
                         console.log(data);
@@ -103,35 +107,35 @@ $(document).ready(
                         // for app in instaled:
                         //   update state of app if 
                         
-                        var wizardApps = ["facebook", "twitter", "gcontacts", "github"];
-                        for (var app in data.available) {
-                            app = data.available[app];
-
-                            if (wizardApps.indexOf(app.provider) != -1 && typeof(app.authurl) != "undefined") {
-                                console.log(app.provider);
-                                // update app button with the correct link
+                        var wizardApps = ["facebook", "twitter", "gcontacts", "github", "foursquare"];
+                        if (!t.buttonsConnected) {
+                            for (app in data.available) {
+                                app = data.available[app];
                                 
-                                // get el
-                                var $el = $("#"+ app.provider + "Connect a:first");
-                                
-                                // change link
-                                console.log("Change link for " + app.provider + " to " + app.authurl);
-                                $el.attr("href", app.authurl);
-                                $el.attr("target", "_blank");
-                                console.log(app.authurl);
+                                if (wizardApps.indexOf(app.provider) != -1 && typeof(app.authurl) != "undefined") {
+                                    console.log(app.provider);
+                                    // update app button with the correct link
+                                    var $el = $("#"+ app.provider + "Connect a:first");
+                                    // change link
+                                    console.log("Change link for " + app.provider + " to " + app.authurl);
+                                    $el.attr("href", app.authurl);
+                                    $el.attr("target", "_blank");
+                                    console.log(app.authurl);
+                                }
                             }
                         }
-                        
+                            
                         for (app in data.installed) {
                             app = data.installed[app];
 
                             if (wizardApps.indexOf(app.name) != -1) {
-                                console.log(app.provider);                                
+                                console.log(app.provider);                        
                                 // update app button with "pending" gfx
+                                t.pending(app.provider);
                             }
                         }
                         
-                        //t.timeout = setTimeout(t.query, 1000);
+                        t.timeout = setTimeout(t.query, 1000);
                     };
 
                     t.query = function() {
@@ -151,12 +155,18 @@ $(document).ready(
                         clearTimeout(t.timeout);
                     };
                     
-                    t.pending = function() {
-                        console.log(t.handle + " pending");
-                        if (t.state != "pending") {
-                            t.state = "pending";
-                            t.el.find('a').addClass("pending disabled");
-                            t.stateSpinner = spinner(t.el.children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
+                    t.pending = function(provider) {
+                        console.log(provider + " pending");
+                        if (typeof(t.installed[handle]) == "undefined") {
+                            var b =  {
+                                "state": "pending",
+                                "$el": $("#"+provider+"Connect a:first")
+                            };
+                            
+                            b.$el.addClass("pending disabled");
+                            b.spinner = spinner(b.$el.children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
+                            
+                            t.installed[provider] = providerState;
                         }
                     };
                     
