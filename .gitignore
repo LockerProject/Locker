@@ -12,3 +12,4 @@ scheduler.json
 tests/Data/
 lockerbox*
 Config/apikeys.json
+Config/config.json
