@@ -37,17 +37,18 @@ var fs = require('fs'),
 var app = express.createServer();
 app.use(connect.bodyParser());
 
-var map;
+var synclets;
 app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
-    request.get({uri:lockerRoot + '/map'}, function(err, resp, body) {
-        map = JSON.parse(body);
+    request.get({uri:lockerRoot + '/synclets'}, function(err, resp, body) {
+        synclets = JSON.parse(body);
         var connectorCount = 0; // should replace with collection count
         var path = "wizard/index.html";
-        for (foo in map.installed) {
-          if (map.installed[foo] && map.installed[foo].is == "connector") connectorCount++;
+                   
+        for (app in synclets.installed) {
+            path = "dashboard.html";
         }
-        if (false) path = "dashboard.html";
+
         fs.readFile(path, function(err, data) {
             res.write(data, "binary");
             res.end();
