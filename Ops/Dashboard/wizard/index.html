@@ -46,28 +46,28 @@
 		<h4></h4> 
 	</div><!-- /footer --> 
 </div><!-- /page one --> 
- 
- 
-<!-- Start of second page: #two --> 
-<div data-role="page" id="two" data-theme="b"> 
- 
-	<div data-role="header"> 
-		<h1>Two</h1> 
-	</div><!-- /header --> 
- 
-	<div data-role="content" data-theme="d">	
-		<h2>Two</h2> 
-		<p>I have an id of "two" on my page container. I'm the second page container in this multi-page template.</p>	
-		<p>Notice that the theme is different for this page because we've added a few <code>data-theme</code> swatch assigments here to show off how flexible it is. You can add any content or widget to these pages, but we're keeping these simple.</p>	
-		<p><a href="#one" data-direction="reverse" data-role="button" data-theme="b">Back to page "one"</a></p>	
-		
-	</div><!-- /content --> 
 	
-	<div data-role="footer"> 
-		<h4>Page Footer</h4> 
-	</div><!-- /footer --> 
-</div><!-- /page two --> 
+
+<!-- Start of third page: #popup --> 
+<div data-role="page" id="noApiKeys"> 
  
+	<div data-role="header" data-theme="b"> 
+		<h1>Oh, snap</h1> 
+	</div><!-- /header --> 
+
+	<div data-role="content">
+	  <h3>No apikeys.json</h3>
+	  <p>In order to run a locker yourself, you need to add in a file
+	  called apikeys.json that has the appKey and appSecret for at
+	  least one service. For example:</p>
+<pre>
+{"facebook": {"appKey": "YOUR-APP-KEY", "appSecret": "YOUR-APP-SECRET"}}
+</pre>
+
+	  <p>Please add apikeys.json, and restart lockerd.js.</p>
+	</div>
+
+</div>
  
 <!-- Start of third page: #popup --> 
 <div data-role="page" id="popup" data-theme="b"> 

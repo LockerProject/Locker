@@ -116,6 +116,7 @@ $(document).ready(
                     t.handleResponse = function(data, err, resp) {
                         var wizardApps = ["facebook", "twitter", "gcontacts", "github", "foursquare"];
                         if (!t.buttonsConnected) {
+                            var authTokensExist = false;
                             for (app in data.available) {
                                 app = data.available[app];
                                 
@@ -125,9 +126,14 @@ $(document).ready(
                                     // change link
                                     $el.attr("href", app.authurl);
                                     $el.attr("target", "_blank");
-                                }
+                                    authTokensExist = true;
+                                }                                
                             }
                             t.buttonsConnected = true;
+                            if (!authTokensExist) {
+                                // bail out if synclets have no authtokens
+                                $.mobile.changePage("#noApiKeys");
+                            }
                         }
                             
                         for (app in data.installed) {
