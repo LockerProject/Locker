@@ -100,6 +100,12 @@ $(document).ready(
                             };
                             
                             b.$el.addClass("pending disabled");
+                                                        
+                            if ($("#wizard-collections:visible").length == 0) {
+                                $("#wizard-collections").slideDown();
+                                $("#wizard-actions").fadeIn();
+                                $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
+                            }
                             
                             b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
                             
@@ -220,6 +226,10 @@ $(document).ready(
  * Account Popup
  */
 function accountPopup (url) {
+    var oauthPopupSizes = {foursquare: {height: 540,  width: 960},
+                 github: {height: 1000, width: 1000},
+                 twitter: {width: 980, height: 750}
+                };
     var popup = window.open(url, "account", "width=620,height=400,status=no,scrollbars=no,resizable=no");
     popup.focus();
 }
