@@ -52,8 +52,6 @@
 body
 {
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
-  -webkit-user-select: none;
-  -moz-user-select: none;
 }
 h1 {
   margin: 0;
