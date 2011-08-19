@@ -13,6 +13,7 @@ var currentDir = process.cwd();
 var svcId = 'facebook';
 var mePath = '/Data/' + svcId;
 var thecollections = ['friends', 'newsfeed', 'wall'];
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });

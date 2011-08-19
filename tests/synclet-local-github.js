@@ -1,6 +1,6 @@
 var fakeweb = require(__dirname + '/fakeweb.js');
-var users = require('../Connectors/github/users');
-var repos = require('../Connectors/github/repos');
+var users = require('../Connectors/GitHub/users');
+var repos = require('../Connectors/GitHub/repos');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -8,6 +8,7 @@ var suite = RESTeasy.describe("Github Synclet");
 var fs = require('fs');
 var curDir = process.cwd();
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });

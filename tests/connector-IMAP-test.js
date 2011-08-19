@@ -22,6 +22,7 @@ var mockMailboxResults = fs.readFileSync('fixtures/imap/mailboxes.json');
 
 var suite = RESTeasy.describe('IMAP Connector');
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });

@@ -14,12 +14,13 @@ var app = express.createServer(connect.bodyParser(), connect.cookieParser());
 var locker = require('locker');
 var lfs = require('lfs');
 var request = require('request');
+var async = require('async');
 
 app.set('views', __dirname);
 
-var places = {};
-var pcnt = {};
 var processInfo;
+var myCheckins = [];
+var myFriends = [];
 
 app.get('/', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
@@ -30,22 +31,33 @@ var latlng = "function ll(){}";
 app.get('/search', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     var q = req.param("q").toLowerCase();
-    res.write("<h2>results for "+q+" on "+Object.keys(places).length+" places</h2>");
-    var ids = Object.keys(places).sort(function(a,b){return pcnt[b] - pcnt[a]});
-    latlng = "function ll(){";
-    var firstp = false;
-    for(var i=0; i < ids.length; i++)
+    var friends = req.param("friends");
+    var places = myCheckins;
+    if(friends)
     {
-        var p = places[ids[i]];
-        var txt = p.name + " " + p.location.city + " " + p.location.state;
-        if(txt.toLowerCase().indexOf(q) >= 0)
+        for(var i=0;i<myFriends.length;i++) places.push(myFriends[i]);
+    }
+    var firstp = false;
+    var ids = {};
+    for(var i=0; i < places.length; i++)
+    {
+        p = places[i];
+        if(ids[p.venue.id]) continue;
+        if(p.search.toLowerCase().indexOf(q) >= 0)
         {
-            res.write("<li>("+pcnt[p.id]+") "+txt);
-            latlng += 'var marker = new google.maps.Marker({position: new google.maps.LatLng('+p.location.lat+','+p.location.lng+'),map:map,title:"'+txt+'"});'
-            firstp = p;
+            ids[p.venue.id]=true;
+            if(!firstp)
+            {
+                firstp = p;
+                res.write('var bounds = new google.maps.LatLngBounds();');
+                res.write('map = new google.maps.Map(document.getElementById("map_canvas"), {center:new google.maps.LatLng('+firstp.venue.location.lat+','+firstp.venue.location.lng+'),zoom:9,mapTypeId: google.maps.MapTypeId.ROADMAP});')
+            }else{
+                res.write('var marker = new google.maps.Marker({position: new google.maps.LatLng('+p.venue.location.lat+','+p.venue.location.lng+'),map:map,title:"'+p.search+'"});');
+                res.write('bounds.extend(new google.maps.LatLng('+p.venue.location.lat+','+p.venue.location.lng+'));');
+            }
         }
     }
-    latlng += 'map.panTo(new google.maps.LatLng('+firstp.location.lat+','+firstp.location.lng+'));}';
+    if(firstp) res.write('map.fitBounds(bounds);');
     res.end();
 });
 
@@ -55,19 +67,12 @@ app.get('/latlng', function(req, res) {
 });
 
 
-app.get('/load', function(req, res) {
-    var type = (req.param('type'))?req.param('type'):"places";
+function load4(type,cb){
     locker.providers("checkin/foursquare",function(err, arr){
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        if(err || arr.length == 0)
-        {
-            res.end("couldn't find foursquare, go install/connect it? <a href='./'>back</a>");
-            return;
-        }
-        // lazy load these, could use async if we want to know they were loaded before responding
-        for(var i=0; i<arr.length; i++)
-        {
-            var url = processInfo.lockerUrl+"/Me/"+arr[i].id+"/getCurrent/"+type;
+        var places = [];
+        if(err || arr.length == 0) return cb(places);
+        async.forEach(arr,function(svc,cb){
+            var url = processInfo.lockerUrl+"/Me/"+svc.id+"/getCurrent/"+type;
             request.get({uri:url},function(err,res,body){
                 if(!err)
                 {
@@ -76,37 +81,39 @@ app.get('/load', function(req, res) {
                     // need to switch places to {} by id to be unique yet
                     for(var i=0; i < p.length; i++)
                     {
-                        var v = (p[i].venue)?p[i].venue:p[i].data.venue;
-                        places[v.id] = v;
+                        // normalize it a bit and make a search string
+                        if(p[i].data && p[i].data.venue) p[i].venue = p[i].data.venue;
+                        p[i].search =  p[i].venue.name + " " + p[i].venue.location.city + " " + p[i].venue.location.state;
+                        places.push(p[i]);
                     }
                 }
+                cb();
             });
-        }
-        res.end("loaded foursquare places, <a href='./'>back</a>");
+        },function(){cb(places)});
     });
-});
+};
 
-app.get('/loadEE', function(req, res) {
+function disk4_tmp()
+{
     locker.providers("checkin/foursquare",function(err, arr){
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        if(err || arr.length == 0)
-        {
-            res.end("couldn't find foursquare, go install/connect it? <a href='./'>back</a>");
-            return;
-        }
+        if(err || arr.length == 0) return;
         // hack to manually load just for ME!
         lfs.readObjectsFromFile("../"+arr[0].id+"/recent.json",function(p){
+            console.error("got "+p.length+" friend places");
             for(var i=0; i < p.length; i++)
             {
-                var v = (p[i].venue)?p[i].venue:p[i].data.venue;
-                if(!v) continue;
-                places[v.id] = v;
-                pcnt[v.id] = (!pcnt[v.id])?1:pcnt[v.id]+1;
+                // normalize it a bit and make a search string
+                if(p[i].data && p[i].data.venue){
+                    p[i].venue = p[i].data.venue;
+                    p[i].user = p[i].data.user;
+                }
+                if(!p[i].venue) continue;
+                p[i].search =  p[i].user.firstName + " " + p[i].user.lastName + " - " + p[i].venue.name + " " + p[i].venue.location.city + " " + p[i].venue.location.state;
+                myFriends.push(p[i]);
             }            
         });
-        res.end("loaded foursquare places, <a href='./'>back</a>");
     });
-});
+}
 
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
@@ -114,6 +121,8 @@ stdin.on('data', function (chunk) {
     processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
+    load4("places",function(p){myCheckins = p});
+    disk4_tmp(); // temp hack to get manually from disk
     app.listen(processInfo.port,function() {
         var returnedInfo = {};
         console.log(JSON.stringify(returnedInfo));

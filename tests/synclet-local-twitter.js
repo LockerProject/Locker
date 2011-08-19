@@ -10,6 +10,7 @@ var suite = RESTeasy.describe("Twitter Synclets");
 var fs = require('fs');
 var curDir = process.cwd();
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
@@ -46,9 +47,9 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
                 file : __dirname + '/fixtures/twitter/verify_credentials.js' });
-            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=1',
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=1',
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
-                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=2',
+                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=2',
                     body :'[]' });
             process.chdir('.' + mePath);
             timeline.sync(pinfo, this.callback)
@@ -67,9 +68,9 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
                 file : __dirname + '/fixtures/twitter/verify_credentials.js' });
-            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/mentions.json?screen_name=ctide&path=%2Fstatuses%2Fmentions.json&include_entities=true&page=1',
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/mentions.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fmentions.json&include_entities=true&page=1',
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
-                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/mentions.json?screen_name=ctide&path=%2Fstatuses%2Fmentions.json&include_entities=true&page=2',
+                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/mentions.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fmentions.json&include_entities=true&page=2',
                     body :'[]' });
             process.chdir('.' + mePath);
             mentions.sync(pinfo, this.callback)
@@ -88,9 +89,9 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
                 file : __dirname + '/fixtures/twitter/verify_credentials.js' });
-            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&path=%2Fstatuses%2Fuser_timeline.json&include_entities=true&page=1',
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&include_entities=true&page=1',
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
-                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&path=%2Fstatuses%2Fuser_timeline.json&include_entities=true&page=2',
+                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&include_entities=true&page=2',
                     body :'[]' });
             process.chdir('.' + mePath);
             tweets.sync(pinfo, this.callback)

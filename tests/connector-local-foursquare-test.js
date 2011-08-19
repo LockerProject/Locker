@@ -13,6 +13,7 @@ var suite = RESTeasy.describe("Foursquare Connector");
 var utils = require('./test-utils');
 var fs = require('fs');
 
+process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
     sys.puts(error.stack);
 });

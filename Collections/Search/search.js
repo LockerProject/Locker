@@ -25,11 +25,11 @@ app.get('/', function(req, res) {
 
 app.post("/events", function(req, res) {
     if (req.headers["content-type"] === "application/json" && req.body) {
-        if (req.body.type === "contact/full" && req.body.action === "new") {
+        if (req.body.type === "contact/full" && (req.body.action === "new" || req.body.action === "update")) {
             lsearch.indexType("contact", req.body.obj.data, function(error, time) {
             });
             res.end();
-        } else if (req.body.type === "status/twitter" && req.body.action === "new") {
+        } else if (req.body.type === "status/twitter" && (req.body.action === "new" || req.body.action === "update")) {
             lsearch.indexType(req.body.type, req.body.obj.status, function(error, time) {
             });
             res.end();
@@ -79,13 +79,16 @@ app.get("/query", function(req, res) {
         res.end("Must supply at least a query");
         return;
     }
-    function sendResults(err, results) {
+    function sendResults(err, results, queryTime) {
         if (err) {
-            res.writeHead(400);
+            res.writeHead(500);
             res.end("Error querying: " + err);
             return;
         }
-        res.send(results);
+        var data = {};
+        data.hits = results;
+        data.took = queryTime;
+        res.send(data);
     }
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);

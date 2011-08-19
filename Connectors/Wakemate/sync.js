@@ -54,7 +54,29 @@ dataStore.getAllCurrent = function(type, callback) {
     // else
     //     m.find({}, {}).toArray(callback);
 
-		callback(null, [{ date  : "2011-07-12T03:55:18Z", sleep_score : 50},{ date : "2011-07-13T03:55:18Z", sleep_score :80}])
+
+		var util   = require('util'),
+		    spawn = require('child_process').spawn,
+		    ruby  = spawn('ruby', [__dirname + '/fetch_all.rb']);
+
+	  console.log('Spawned child pid: ' + ruby.pid);
+
+		ruby.stdout.on('data', function (data) {
+		  console.log('stdout: ' + data);
+			callback(null, JSON.parse(data))
+		});
+
+		ruby.stderr.on('data', function (data) {
+		  console.log('stderr: ' + data);
+			callback(null, null)		
+		});
+
+		ruby.on('exit', function (code) {
+		  console.log('child process exited with code ' + code);
+
+		});
+
+		// ruby.stdin.write("ping\n");
   
 }
 

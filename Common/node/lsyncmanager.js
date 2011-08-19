@@ -6,6 +6,7 @@ var fs = require('fs')
   , async = require('async')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
+  , levents = require(__dirname + '/levents')
   ;
 
 var synclets = {
@@ -13,14 +14,40 @@ var synclets = {
     installed:{}
 };
 
-exports.eventEmitter = new EventEmitter();
-
 exports.synclets = function() {
   return synclets;
 };
 
+exports.providers = function(types) {
+    var services = [];
+    for(var svcId in synclets.installed) {
+        if (!synclets.installed.hasOwnProperty(svcId))  continue;
+        var service = synclets.installed[svcId];
+        if (!service.hasOwnProperty("provides")) continue;
+        if (service.provides.some(function(svcType, index, actualArray) {
+            for (var i = 0; i < types.length; i++) {
+                var currentType = types[i];
+                var currentTypeSlashIndex = currentType.indexOf("/");
+                if (currentTypeSlashIndex < 0) {
+                    // This is a primary only comparison
+                    var svcTypeSlashIndex = svcType.indexOf("/");
+                    if (svcTypeSlashIndex < 0 && currentType == svcType) return true;
+                    if (currentType == svcType.substring(0, svcTypeSlashIndex)) return true;
+                    continue;
+                }
+                // Full comparison
+                if (currentType == svcType) return true;
+            }
+            return false;
+        })) {
+            services.push(service);
+        }
+    }
+    return services;
+}
+
 /**
-* Scans the Me directory for instaled synclets
+* Scans the Me directory for installed synclets
 */
 exports.findInstalled = function (callback) {
     if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
@@ -173,7 +200,7 @@ function executeSynclet(info, synclet, callback) {
         tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
         processResponse(deleteIDs, info, synclet, response, callback);
-        info.config = lutil.extend(tempInfo.config, response.config);
+        info.config = lutil.extend(true, tempInfo.config, response.config);
         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });
@@ -202,6 +229,7 @@ function compareIDs (originalConfig, newConfig) {
     }
     return resp;
 }
+
 function processResponse(deleteIDs, info, synclet, response, callback) {
     datastore.init(function() {
         info.status = synclet.status = 'waiting';
@@ -222,6 +250,8 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
+    // this extra (handy) log breaks the synclet tests somehow??
+//    console.log("processing synclet data from "+key+" of length "+data.length);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
     
@@ -255,7 +285,7 @@ function deleteData (collection, deleteIds, info, eventType, callback) {
         var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
         newEvent.obj.data[info.mongoId] = id;
         newEvent.fromService = "synclet/" + info.id;
-        exports.eventEmitter.emit(eventType, newEvent);
+        levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
     }, callback);
 }
@@ -266,12 +296,12 @@ function addData (collection, data, info, eventType, callback) {
         newEvent.fromService = "synclet/" + info.id;
         if (object.type === 'delete') {
             datastore.removeObject(collection, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
-            exports.eventEmitter.emit(eventType, newEvent);
+            levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         } else {
             datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type) {
                 if (type === 'same') return cb();
                 newEvent.obj.type = type;
-                exports.eventEmitter.emit(eventType, newEvent);
+                levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
                 cb();
             });
         }
@@ -289,22 +319,32 @@ function mapMetaData(file) {
 
 function addUrls() {
     var apiKeys;
-    var host = "http://" + lconfig.externalHost + ":" + lconfig.externalPort + "/";
-    try {
-        apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'ascii'));
-    } catch(e) { return; }
-    for (var i = 0; i < synclets.available.length; i++) {
-        synclet = synclets.available[i];
-        if (synclet.provider === 'facebook') {
-            if (apiKeys.facebook) synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
-        } else if (synclet.provider === 'twitter') {
-            if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
-        } else if (synclet.provider === 'foursquare') {
-            if (apiKeys.foursquare) synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
-        } else if (synclet.provider === 'gcontacts') {
-            if (apiKeys.gcontacts) synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey + "&redirect_uri=" + host + "auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code";
-        } else if (synclet.provider === 'github') {
-            if (apiKeys.github) synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+    var host;
+    if (lconfig.externalSecure) {
+        host = "https://";
+    } else {
+        host = "http://";
+    }
+    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
+        try {
+            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'ascii'));
+        } catch(e) {
+            return console.log('Error reading apikeys.json file - ' + e);
+        }
+        for (var i = 0; i < synclets.available.length; i++) {
+            synclet = synclets.available[i];
+            if (synclet.provider === 'facebook') {
+                if (apiKeys.facebook) synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + '&response_type=code&redirect_uri=' + host + "auth/facebook/auth&scope=email,offline_access,read_stream,user_photos,friends_photos,publish_stream,user_photo_video_tags";
+            } else if (synclet.provider === 'twitter') {
+                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
+            } else if (synclet.provider === 'foursquare') {
+                if (apiKeys.foursquare) synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
+            } else if (synclet.provider === 'gcontacts') {
+                if (apiKeys.gcontacts) synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey + "&redirect_uri=" + host + "auth/gcontacts/auth&scope=https://www.google.com/m8/feeds/&response_type=code";
+            } else if (synclet.provider === 'github') {
+                if (apiKeys.github) synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            }
         }
     }
 }

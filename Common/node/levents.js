@@ -22,9 +22,6 @@ exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     eventListeners[type].push({"id":id, "cb":cb});
-    syncManager.eventEmitter.on(type, function(event) {
-        exports.fireEvent(type, event.fromService, event.obj.type, event.obj);
-    });
 }
 
 exports.removeListener = function(type, id, cb) {
@@ -87,35 +84,28 @@ function processEvents(queue) {
         //console.log("Current event from " + curEvent.via + " " + curEvent.listeners.length + " listeners");
         curEvent.listeners.forEach(function(listener) {
             if (!serviceManager.isInstalled(listener.id)) return;
-            function sendEvent() {
-                //console.log("Send to " + listener.id);
-                var serviceInfo = serviceManager.metaInfo(listener.id);
-                //console.log("Sevice info " + serviceInfo.url);
-                var cbUrl = url.parse(lconfig.lockerBase);
-                var httpOpts = {
-                    host: cbUrl.hostname,
-                    port: cbUrl.port,
-                    path: "/Me/" + listener.id + listener.cb,
-                    method:"POST",
-                    headers: {
-                        "Content-Type":"application/json"
-                    }
-                };
-                logger.debug("Firing event to " + listener.id + " to " + listener.cb);
-                // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-                exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
-                    listener.response = response.statusCode;
-                    if (listener.response != 200) {
-                        console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
-                        // TODO: Need to evaluate the logic here, to see if we should retry or other options.
-                    }
-                });
-            }
-            if (!serviceManager.isRunning(listener.id)) {
-                serviceManager.spawn(listener.id, sendEvent);
-            } else {
-                sendEvent();
-            }
+            //console.log("Send to " + listener.id);
+            var serviceInfo = serviceManager.metaInfo(listener.id);
+            //console.log("Sevice info " + serviceInfo.url);
+            var cbUrl = url.parse(lconfig.lockerBase);
+            var httpOpts = {
+                host: cbUrl.hostname,
+                port: cbUrl.port,
+                path: "/Me/" + listener.id + listener.cb,
+                method:"POST",
+                headers: {
+                    "Content-Type":"application/json"
+                }
+            };
+            logger.debug("Firing event to " + listener.id + " to " + listener.cb);
+            // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
+            exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
+                listener.response = response.statusCode;
+                if (listener.response != 200) {
+                    console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
+                    // TODO: Need to evaluate the logic here, to see if we should retry or other options.
+                }
+            });
         });
     } while (queue.length > 0)
 

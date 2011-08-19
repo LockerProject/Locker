@@ -25,10 +25,11 @@ exports.search = function(type, term, offset, limit, callback) {
                 callback('Failed calling provider GET at ' + fetchURL, null);
             }
 
+            var result = JSON.parse(result);
             var results = {};
-            results.took = '10';
+            results.took = result.took;
             results.hits = {};
-            results.hits.hits = JSON.parse(result);
+            results.hits.hits = result.hits;
             results.hits.total = null;
             callback(null, results);
         });
