@@ -167,6 +167,10 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     callback(err, indexTime, docsReplaced);
     });
 };
+CLEngine.prototype.deleteDocument = function(id, callback) {
+    assert.ok(indexPath);
+    this.lucene.deleteDocument(id, indexPath, callback);
+};
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
@@ -214,6 +218,10 @@ var indexing = false;
 exports.indexType = function(type, value, cb) {
     indexQueue.push({"type":type, "value":value, "cb":cb});
     process.nextTick(indexMore);
+};
+
+exports.deleteDocument = function(id, cb) {
+  exports.currentEngine.deleteDocument(id, cb);  
 };
 
 function indexMore(keepGoing) {
