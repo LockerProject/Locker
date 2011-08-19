@@ -95,7 +95,7 @@ suite.next().suite.addBatch({
             assert.equal(response.data.recents[0].obj.id, '4e41ca3a62e13c6ce802fea8');
             assert.equal(response.data.recents[1].obj.venue.id, '44741dadf964a520ab331fe3');
             var fixture = JSON.parse(fs.readFileSync(__dirname + '/fixtures/foursquare/recents.json', 'ascii'));
-            assert.deepEqual(response.config.recents, fixture.response.recent);
+            assert.deepEqual(response.config.recents, {"4e41ca3a62e13c6ce802fea8" : true, "4e41c4f5b0fb09b6086758c1" : true});
         }
     }
 }).addBatch({
