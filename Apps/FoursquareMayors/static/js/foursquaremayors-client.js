@@ -10,23 +10,27 @@ var log = function(msg) { if (console && console.log) console.debug(msg); }
 
 var map;
 
-function add_marker(lat, loong, html, open, icon) {
-      var myLatlng = new google.maps.LatLng(lat,loong);
-      var marker = new google.maps.Marker({
+function add_marker(checkin, icon, html, open) {
+
+    var myLatlng = new google.maps.LatLng(checkin['location']['lat'], checkin['location']['lng']);
+
+    var marker = new google.maps.Marker({
         position: myLatlng, 
         map: map,
 		icon: icon
-      });
-      var infowindow = new google.maps.InfoWindow({
-            content: html
-      });
+    });
+
+    var infowindow = new google.maps.InfoWindow({
+          content: html
+    });
       
-      google.maps.event.addListener(marker, 'click', function() {
-            infowindow.open(map,marker);
-      });
-      if (open == true){
-	infowindow.open(map,marker);
-      }
+    google.maps.event.addListener(marker, 'click', function() {
+          infowindow.open(map,marker);
+    });
+
+    if (open == true){
+	    infowindow.open(map,marker);
+    }
 }
 
 function initialize() {
@@ -57,29 +61,39 @@ function reload(offset, limit, useJSON) {
 	if (contacts.length == 0) contactsList.append("<li>Sorry, no contacts found!</li>");
         for (var i in contacts) {
 
-	    contact = contacts[i];
-
-        if (contact['accounts']['foursquare'][0]['data']['mayorships']['count'] != 0) {
-
-	        log(contact);
-            for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
+    	    var contact = contacts[i];
+            var friend = contact['accounts']['foursquare'][0]['data'];
+            if (contact['accounts']['foursquare'][0]['data']['mayorships']['count'] != 0) {
+    
+	            log(contact);
+                for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
                     mayorship = contact['accounts']['foursquare'][0]['data']['mayorships']['items'][i];
-            add_marker(mayorship['location']['lat'],
-                mayorship['location']['lng'],
-                "<h1>" + mayorship['name'] +  "</h1>",
-                false,
-                contact['accounts']['foursquare'][0]['data']['photo']
-            );
+                    var html = ""
+                    if (mayorship['categories'].length > 0) {
+                        html = "<h1><img src='" + mayorship['categories'][0]['icon'] + "'/> " + mayorship['name'] + "</h1>";
+                    } else {
+                        html = "<h1>" + mayorship['name'] + "</h1>";
+                    }
+                    add_marker(mayorship, contact['accounts']['foursquare'][0]['data']['photo'], html, false);
+                }
+
+        	    if (useJSON) {
+            		contactHTML = "<pre>"+ JSON.stringify(contact['accounts']['foursquare'][0]['data']['mayorships']['items'][0], null, 2) +"</pre>";
+        	    } else {
+    	    	// get the contact name, but use the first email address if no name exists
+            		contactHTML = contact.name || contact.emails[0].value;
+        	    }
+                
+                var lastname = friend['lastName'] ? friend['lastName'] : '';
+        	    liHTML = '<li id="' + contact._id + '" class="contact"><h1>' + friend['firstName'] + ' ' + lastname + '</h1><span class="basic-data">'
+                for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
+                    mayorship = contact['accounts']['foursquare'][0]['data']['mayorships']['items'][i];
+                    liHTML += '<h2><a href="https://foursquare.com/venue/' + mayorship['id'] + '">' + mayorship['name'] + '</a></h2>';
+                }
+                liHTML += '</span></div>';
+
+        	    contactsList.append(liHTML);
             }
-    	    if (useJSON) {
-        		contactHTML = "<pre>"+ JSON.stringify(contact['accounts']['foursquare'][0], null, 2) +"</pre>";
-    	    } else {
-    		// get the contact name, but use the first email address if no name exists
-        		contactHTML = contact.name || contact.emails[0].value;
-    	    }
-    	    liHTML = '<li id="' + contact._id + '" class="contact"><span class="basic-data">'+contactHTML+'</span></div>';
-    	    contactsList.append(liHTML);
-        }
 	    }
     };
 
