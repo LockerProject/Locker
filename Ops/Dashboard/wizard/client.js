@@ -1,3 +1,5 @@
+function log(m) { if (console && console.log) console.log(m); }
+
 $(document).ready(
     function() {
         var _s = [{
@@ -18,7 +20,6 @@ $(document).ready(
         var CountPoll = (
             function () {
                 var CountPoll = function (name) {
-//                    console.log("Count poll made ("+name+")");
                     var t = this;
                     t.name = name;
                     t.lastCount = 0;
@@ -28,8 +29,6 @@ $(document).ready(
                         t.lastCount = t.count;
                         t.count = data.count;
                         if (t.count != t.lastCount) {
-//                            console.log("Updated count of "+t.name+": " + data.count);
-
                             $("#"+t.name+"Count").odoTicker(
                                 {
 	                            number: data.count ? data.count : 0, //Number to load
@@ -39,7 +38,6 @@ $(document).ready(
                             );
                         }
                         if (t.lastCount == 0 && t.count != 0) {
-//                            console.log("Not 0 anymore");
                             $("#wizard-collections").slideDown();
                             $("#wizard-actions").fadeIn();
                             $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
@@ -66,7 +64,6 @@ $(document).ready(
                     };
                     
                     // init
-//                    console.log("init");
                     t.query();
                     $("#"+t.name+"Count").odoTicker(
                         {
@@ -74,7 +71,6 @@ $(document).ready(
 	                    speed: 1500, //speed in ms
 	                    height: 28   //height of a single number in the CSS sprite
                         });
-                    
                 };
                 
                 return function (name) {
@@ -89,7 +85,6 @@ $(document).ready(
         var SyncletPoll = (
             function () {
                 var SyncletPoll = function () {
-//                    console.log("Synclet poll made");
                     var t = this;
                     t.uri = "/synclets";
                     t.buttonsConnected = false;
@@ -98,7 +93,6 @@ $(document).ready(
                     var app = {};
 
                     t.pending = function(provider) {
-                        console.log(provider + " pending");
                         if (typeof(t.installed[provider]) == "undefined") {
                             var b =  {
                                 "state": "pending",
@@ -114,7 +108,6 @@ $(document).ready(
                     };
 
                     t.handleResponse = function(data, err, resp) {
-                        console.log(data);
                         var wizardApps = ["facebook", "twitter", "gcontacts", "github", "foursquare"];
                         if (!t.buttonsConnected) {
                             for (app in data.available) {
@@ -124,10 +117,8 @@ $(document).ready(
                                     // update app button with the correct link
                                     var $el = $("#"+ app.provider + "Connect a:first");
                                     // change link
-                                    //console.log("Change link for " + app.provider + " to " + app.authurl);
                                     $el.attr("href", app.authurl);
                                     $el.attr("target", "_blank");
-                                    console.log(app.authurl);
                                 }
                             }
                             t.buttonsConnected = true;
@@ -135,13 +126,10 @@ $(document).ready(
                             
                         for (app in data.installed) {
                             app = data.installed[app];
-                            console.log(app);
 
                             if (wizardApps.indexOf(app.provider) != -1) {
                                 // update app button with "pending" gfx
-                                console.log(app.provider);
                                 t.pending(app.provider);
-                                console.log(app.provider);
                             }
                         }
                         
@@ -228,9 +216,10 @@ $(document).ready(
     }
 );				
 
+/*
+ * Account Popup
+ */
 function accountPopup (url) {
-    //    console.log("URL " + url);
-    var popup = window.open(url, "account",
-                            "width=620,height=400,status=no,scrollbars=no,resizable=no");
+    var popup = window.open(url, "account", "width=620,height=400,status=no,scrollbars=no,resizable=no");
     popup.focus();
 }
