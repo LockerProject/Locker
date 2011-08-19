@@ -13,3 +13,5 @@ tests/Data/
 lockerbox*
 Config/apikeys.json
 Config/config.json
+Logs/*
+!.gitignore
