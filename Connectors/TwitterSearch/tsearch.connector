@@ -5,5 +5,5 @@
     "run":"node tsearch.js",
     "status":"unstable",
 	"handle":"twitter-search",
-    "provides":["status/twitter"]
+    "provides":["status/twittersearch"]
 }

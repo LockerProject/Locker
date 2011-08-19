@@ -110,6 +110,7 @@ exports.getPhoto = function(arg, cbEach, cbDone) {
 exports.getPosts = function (arg, cbEach, cbDone) {
     var since = (arg.since)?"&since="+arg.since:"";
     var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since;
+    // possible facebook bug here when using since, sometimes the paging.next doesn't contain the since and it'll end up re-walking the whole list
     getDatas(uri, cbEach, cbDone);
 }
 
