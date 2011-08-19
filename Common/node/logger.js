@@ -10,6 +10,7 @@ var lconfig = require("lconfig");
 var winston = require("winston");
 var events = require("events");
 var util = require("util");
+var path = require("path");
 
 // Allow us to see the module for now
 function ModuleConsoleLogger(args) {
@@ -32,6 +33,6 @@ ModuleConsoleLogger.prototype.log = function(level, msg, meta, callback) {
 
 var transports = [new ModuleConsoleLogger({colorize:true,timestamp:true})];
 if (lconfig.logFile) {
-    transports.push(new (winston.transports.File)({filename:lconfig.logFile}));
+    transports.push(new (winston.transports.File)({filename:path.join("Logs", lconfig.logFile)}));
 }
 exports["logger"] = new (winston.Logger)({"transports":transports});
