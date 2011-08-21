@@ -8,7 +8,7 @@
         }
     ],
     "auth": {"username" : "ctide", "accessToken" : "abc"},
-    "id": "github",
+    "id": "github-1",
     "provider": "github",
     "action": "Connect to a github account",
     "desc": "Collect and sync my data from my github account using the github API and a github 'app' that I create just for myself."

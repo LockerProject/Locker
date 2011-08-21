@@ -31,6 +31,9 @@ NullEngine.prototype.queryAll = function(q, params, cb) {
 NullEngine.prototype.queryType = function(type, q, params, cb) {
     cb("Null engine");
 };
+NullEngine.prototype.name = function() {
+    return "Null engine";
+};
 
 CLEngine = function()
 {
@@ -164,6 +167,10 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     callback(err, indexTime, docsReplaced);
     });
 };
+CLEngine.prototype.deleteDocument = function(id, callback) {
+    assert.ok(indexPath);
+    this.lucene.deleteDocument(id, indexPath, callback);
+};
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
@@ -171,6 +178,9 @@ CLEngine.prototype.queryType = function(type, query, params, callback) {
 CLEngine.prototype.queryAll = function(query, params, callback) {
     assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ")", callback);
+};
+CLEngine.prototype.name = function() {
+    return "CLEngine";
 };
 
 
@@ -210,6 +220,10 @@ exports.indexType = function(type, value, cb) {
     process.nextTick(indexMore);
 };
 
+exports.deleteDocument = function(id, cb) {
+  exports.currentEngine.deleteDocument(id, cb);  
+};
+
 function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee
     if (indexing && !keepGoing) return;
@@ -226,6 +240,7 @@ function indexMore(keepGoing) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         //console.log("Setting up for next tick");
+        // TODO: review for optimization per ctide comment (per 100 instead of per 1?)
         process.nextTick(function() { indexMore(true); });
     });
 }

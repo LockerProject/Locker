@@ -17,16 +17,25 @@ var vows = require("vows")
   , lconfig = require("lconfig")
   , fs = require('fs')
   , mongo
-  , eventCount = 0
-  , events = []
-  , nsEventCount = 0
-  , nsEvents = []
+  , allEvents = {}
   , request = require('request')
+  , primaryType = "testSync/testSynclet"
+  , otherType = "eventType/testSynclet"
   ;
 lconfig.load("config.json");
+var levents = require("levents");
+var realFireEvent = levents.fireEvent;
+levents.fireEvent = function(type, id, action, obj) {
+    if (type == primaryType || type == otherType) {
+        if (!allEvents.hasOwnProperty(type)) allEvents[type] = [];
+        allEvents[type].push(obj);
+    }
+}
+
 var syncManager = require("lsyncmanager.js");
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', ['testSynclet_testSync', 'testSynclet_dataStore']);
 
+/*
 syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
     events.push(event);
     eventCount++;
@@ -36,6 +45,7 @@ syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
     nsEvents.push(event);
     nsEventCount++;
 });
+*/
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
@@ -117,6 +127,7 @@ vows.describe("Synclet Manager").addBatch({
     },
     "Installed services can be executed immediately rather than waiting for next run" : {
         topic:function() {
+            allEvents = {};
             syncManager.syncNow("testSynclet", this.callback);
         },
         "successfully" : function(err, status) {
@@ -131,7 +142,7 @@ vows.describe("Synclet Manager").addBatch({
                 });
             },
             "successfully" : function(err, count) {
-                assert.equal(count, 1);
+                assert.equal(allEvents[primaryType].length, 3);
             }
         }
     }
@@ -161,25 +172,29 @@ vows.describe("Synclet Manager").addBatch({
         }
     },
     "and after generating " : {
-        topic: eventCount,
+        topic: allEvents,
         "correct number of events" : function(topic) {
-            assert.equal(eventCount, 3);
+            assert.equal(allEvents[primaryType].length, 3);
         },
         "with correct data" : function(topic) {
+            /*
             assert.equal(events[0].fromService, 'synclet/testSynclet');
             assert.equal(events[1].fromService, 'synclet/testSynclet');
             assert.equal(events[2].fromService, 'synclet/testSynclet');
-            assert.equal(events[0].obj.type, 'delete');
-            assert.equal(events[2].obj.type, 'new');
-            assert.equal(events[0].obj.data.notId, 1);
-            assert.equal(events[1].obj.data.notId, 500);
+            */
+            var events = allEvents[primaryType];
+            assert.equal(events[0].type, 'delete');
+            assert.equal(events[2].type, 'new');
+            assert.equal(events[0].data.notId, 1);
+            assert.equal(events[1].data.notId, 500);
             events = [];
-            eventCount = 0;
         },
         "correct types of events": function(topic) {
-            assert.equal(nsEventCount, 1);
-            assert.equal(nsEvents[0].obj.type, 'new');
-            assert.equal(nsEvents[0].obj.data.random, 'data');
+            var nsEvents = allEvents[otherType];
+            assert.equal(nsEvents.length, 1);
+            assert.equal(nsEvents[0].type, 'new');
+            assert.equal(nsEvents[0].data.random, 'data');
+            nsEvents = [];
         }
     }
 }).addBatch({
@@ -196,39 +211,43 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Running testSynclet again" : {
         topic: function() {
+            allEvents[primaryType] = [];
             syncManager.syncNow("testSynclet", this.callback);
         },
         "with no data will leave everything intact" : function(topic) {
-            assert.equal(eventCount, 0);
+            var events = allEvents[primaryType];
+            assert.equal(events.length, 0);
             assert.equal(events[0], undefined);
-            events = [];
-            eventCount = 0;
         }
     }
 }).addBatch({
     "Removing IDs from the config will" : {
         topic: function() {
+            allEvents[primaryType] = [];
             var self = this;
-            syncManager.syncNow("testSynclet", function() {
-                mongo.collections.testSynclet_testSync.count(self.callback);
+            mongo.collections.testSynclet_testSync.drop(function() {
+                syncManager.syncNow("testSynclet", function() {
+                    mongo.collections.testSynclet_testSync.count(self.callback);
+                });
             });
         },
         "will generate a delete event and remove the row from mongo" : function(err, count) {
+            var events = allEvents[primaryType];
             assert.equal(count, 0);
-            assert.equal(eventCount, 1);
-            assert.equal(events[0].obj.type, 'delete');
-            assert.equal(events[0].obj.data.notId, 500);
+            assert.equal(events.length, 1);
+            assert.equal(events[0].type, 'delete');
+            assert.equal(events[0].data.notId, 500);
         }
     }
 }).addBatch({
     "Available services" : {
         "gathered from the filesystem" : {
-            topic:syncManager.scanDirectory("Connectors"),
+            topic:syncManager.scanDirectory("Tests"),
             "found a service": function() {
                 assert.ok(syncManager.synclets().available.length > 0);
             },
             "and can be installed" : {
-                topic:syncManager.install({srcdir:"Connectors/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
+                topic:syncManager.install({srcdir:"Tests/testSynclet","auth" : {"consumerKey":"daKey","consumerSecret":"daPassword"}}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "synclets");
                 },
@@ -246,7 +265,7 @@ vows.describe("Synclet Manager").addBatch({
                 }
             },
             "and can be installed a second time" : {
-                topic:syncManager.install({srcdir:"Connectors/testSynclet"}),
+                topic:syncManager.install({srcdir:"Tests/testSynclet"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
@@ -261,6 +280,9 @@ vows.describe("Synclet Manager").addBatch({
                 }
             }
         }
+    },
+    teardown : function() {
+        levents.fireEvent = realFireEvent;
     }
 }).export(module);
 

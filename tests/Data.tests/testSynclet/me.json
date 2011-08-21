@@ -4,7 +4,7 @@
     "desc":"testSynclet",
     "frequency":120,
     "status":"stable",
-    "srcdir":"Connectors/testSynclet",
+    "srcdir":"Tests/testSynclet",
     "id":"testSynclet",
     "handle":"testSynclet",
     "mongoId":"notId",
