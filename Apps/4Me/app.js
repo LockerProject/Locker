@@ -52,7 +52,12 @@ app.get('/search', function(req, res) {
                 res.write('var bounds = new google.maps.LatLngBounds();');
                 res.write('map = new google.maps.Map(document.getElementById("map_canvas"), {center:new google.maps.LatLng('+firstp.venue.location.lat+','+firstp.venue.location.lng+'),zoom:9,mapTypeId: google.maps.MapTypeId.ROADMAP});')
             }else{
-                res.write('var marker = new google.maps.Marker({position: new google.maps.LatLng('+p.venue.location.lat+','+p.venue.location.lng+'),map:map,title:"'+p.search+'"});');
+                if (p.venue.hasOwnProperty('categories') && p.venue.categories.length > 0 && p.venue.categories[0].hasOwnProperty('icon'))
+                {
+                res.write('add_marker(' + p.venue.location.lat + ',' + p.venue.location.lng + ',"' + p.venue.categories[0].icon + '",' + '"<h1>' + p.venue.name + '</h1>"' + ', false);')
+                }else{
+                res.write('add_marker(' + p.venue.location.lat + ',' + p.venue.location.lng + ', false,' + '"' + p.venue.name + '"' + ', false);')
+                }
                 res.write('bounds.extend(new google.maps.LatLng('+p.venue.location.lat+','+p.venue.location.lng+'));');
             }
         }
@@ -82,9 +87,13 @@ function load4(type,cb){
                     for(var i=0; i < p.length; i++)
                     {
                         // normalize it a bit and make a search string
-                        if(p[i].data && p[i].data.venue) p[i].venue = p[i].data.venue;
-                        p[i].search =  p[i].venue.name + " " + p[i].venue.location.city + " " + p[i].venue.location.state;
-                        places.push(p[i]);
+                        
+                        if (p[i].type != "venueless")
+                        {
+                            if(p[i].data && p[i].data.venue) p[i].venue = p[i].data.venue;
+                            p[i].search =  p[i].venue.name + " " + p[i].venue.location.city + " " + p[i].venue.location.state;
+                            places.push(p[i]);
+                        }
                     }
                 }
                 cb();
