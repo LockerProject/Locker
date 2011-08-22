@@ -290,10 +290,7 @@ section#mainSection section.content
   -moz-border-radius-bottomright: 2px;
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
-
-
-
-  overflow: auto;
+/*  overflow-y: scroll;*/
 }
 
 body > footer
@@ -303,55 +300,55 @@ body > footer
 
 /* Custom Scrollbars ------------------------------------------------------ */
 
-::-webkit-scrollbar
+ul::-webkit-scrollbar
 {
   width: 20px;
 }
 
-::-webkit-scrollbar:horizontal
+ul::-webkit-scrollbar:horizontal
 {
   height: 20px;
 }
 
-::-webkit-scrollbar-corner  
+ul::-webkit-scrollbar-corner
 {
   display: none;
 }
 
-::-webkit-scrollbar-track
+ul::-webkit-scrollbar-track
 {
   margin-top: 6px;
   margin-bottom: 6px;
   border-width: 20px 0;
 }
 
-::-webkit-scrollbar-track:horizontal
+ul::-webkit-scrollbar-track:horizontal
 {
   margin-left: 6px;
   margin-right: 6px;
   border-height: 20px 0;
 }
 
-::-webkit-scrollbar-thumb
+ul::-webkit-scrollbar-thumb
 {
   -webkit-border-image: url("../img/VerticalScrollbar.Thumb.png") 20 20 20 0;
   border-width: 20px 0;
   min-height: 40px;
 }
 
-::-webkit-scrollbar-thumb:hover
+ul::-webkit-scrollbar-thumb:hover
 {
   -webkit-border-image: url("../img/VerticalScrollbar.Thumb.png") 20 0 20 20;
 }
 
-::-webkit-scrollbar-thumb:horizontal
+ul::-webkit-scrollbar-thumb:horizontal
 {
   -webkit-border-image: url("../img/HorizontalScrollbar.Thumb.png") 0 20 20 20;
   border-width: 0 20px;
   min-width: 40px;
 }
 
-::-webkit-scrollbar-thumb:horizontal:hover
+ul::-webkit-scrollbar-thumb:horizontal:hover
 {
   -webkit-border-image: url("../img/HorizontalScrollbar.Thumb.png") 20 20 0 20;
 }

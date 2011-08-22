@@ -53,7 +53,7 @@ aside {
     position: fixed;
     top: 0; right: 0;
     float: left;
-    margin-top: 155px;
+    margin-top: 73px;
     padding: 17px;
     padding-top:25px;
     background-color: rgb(235,235,235);
@@ -122,7 +122,7 @@ aside div.detail {
 #contacts {
     margin: 0px;
     margin-left: 0px;
-    margin-top: 155px;
+    margin-top: 74px;
     padding: 0px;
     list-style:none;
     display: none;
