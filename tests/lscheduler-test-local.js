@@ -11,12 +11,13 @@ var request = require("request");
 var vows = require("vows");
 var testUtils = require(__dirname + "/test-utils.js");
 require.paths.push(__dirname + "/../Common/node");
-var lscheduler = require("lscheduler.js");
 var fs = require('fs');
-var locker = require('locker');
-var events = require('events');
 var lconfig = require('lconfig');
 lconfig.load('Config/config.json');
+var locker = require('locker');
+var events = require('events');
+var serviceManager = require('lservicemanager');
+var lscheduler = require("lscheduler.js");
 
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {
@@ -73,6 +74,15 @@ vows.describe("Locker Scheduling System").addBatch({
                 assert.isNull(err);
                 assert.isTrue(fired);
             }
+        }
+    }
+}).addBatch({
+    "Cleanup" : {
+        topic: function() {
+            this.callback(process.kill(serviceManager.serviceMap().installed['scheduler-tester'].pid));
+        },
+        "successful" : function(err, resp) {
+            assert.isNull(err);
         }
     }
 }).export(module);
