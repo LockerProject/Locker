@@ -319,9 +319,8 @@ $(function() {
             // I could put this in a script tag on the page,
             // but i kind of like being able to comment lines
             contactTemplate =  '<li class="contact" data-cid="<%= id %>">';
-            contactTemplate += '<div class="contactSummary"><img src="<% if (typeof(smPhoto) != "undefined" ) { %><%= smPhoto %><% } else { %>/static/img/lock.png<% } %>" style=""/>';
+            contactTemplate += '<div class="contactSummary"><img src="<% if (typeof(smPhoto) != "undefined" ) { %><%= smPhoto %><% } else { %>/static/img/lock.png<% } %>"/>';
             contactTemplate += '<strong><% if (typeof(name) != "undefined") { %><%= name %><% } %></strong>';
-            contactTemplate += '<% if (typeof(sex) != "undefined") { %><br/><%= sex %><% } %>';
             contactTemplate += '</div>';
             contactTemplate += '<div class="contactActions">';
             contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b" class="social_link email">Email</a><% } %> ';
