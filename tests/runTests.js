@@ -50,6 +50,8 @@ if (process.argv.length > 2) {
     if (process.argv[2] == "-h" || process.argv[2] == "-?") {
         process.stdout.write("Usage: runTests [-l <group name>][-f] [files or groups to run]\n");
         process.stdout.write("  -h  You found me!\n");
+        process.stdout.write("  -s  Suppress the output from test running\n");
+        process.stdout.write("  -d  Use the dot matrix style reporter\n");
         process.stdout.write("  -l  List all of the available groups when no group is given or\n");
         process.stdout.write("      all of the files ran in a group.\n");
         process.stdout.write("  -f  The remaining arguments are treated as files to run\n");
@@ -90,7 +92,7 @@ if (process.argv.length > 2) {
     } else {
         // We'll process the groups later into indivdual files
         for (var x = 2; x < process.argv.length; ++x) {
-            runGroups.push(process.argv[x]);
+            if (process.argv[x][0] != "-") runGroups.push(process.argv[x]);
         }
     }
 }
@@ -127,12 +129,19 @@ try {
 }
 
 setTimeout(function() {
-    var vowsArgument = '--dot-matrix';
-    if (process.argv[2] == "-x") {
-        vowsArgument = '--xunit';
+    var vowsArgument = [];//["--supress-stdout"];
+    if (process.argv.indexOf("-x") > 0) {
+        vowsArgument.push('--xunit');
+    } else if (process.argv.indexOf("-d") > 0) {
+        vowsArgument.push("--dot-matrix");
+    } else {
+        vowsArgument.push("--spec");
+    }
+    if (process.argv.indexOf("-s") > 0) {
+        vowsArgument.push("--supress-stdout");
     }
 
-    var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", [vowsArgument].concat(runFiles));
+    var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
         process.stdout.write(data);
     });
