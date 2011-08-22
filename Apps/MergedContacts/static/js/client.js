@@ -5,7 +5,7 @@ $(function() {
     // Contact Model
     var Contact = Backbone.Model.extend({
         defaults: {}
-    });      
+    });
 
     // Contact Collection
     var AddressBook = Backbone.Collection.extend({
@@ -107,8 +107,8 @@ $(function() {
 
             // copy email
             if (contact.emails) {
-            var email = contact.emails[0].value;
-            if (email) newContact.set({email: email});
+                var email = contact.emails[0].value;
+                if (email) newContact.set({email: email});
             }
 
             // copy photos
@@ -116,28 +116,28 @@ $(function() {
 
             // copy accounts (twitter, github, facebook, foursquare)
             if(contact.accounts) {
-            if(contact.accounts.twitter)
-                newContact.set({twitterHandle: contact.accounts.twitter[0]});
-            if(contact.accounts.github)
-                newContact.set({github: contact.accounts.github[0]});
-            if(contact.accounts.facebook) {
-                newContact.set({
-                firstname: contact.accounts.facebook[0].data.first_name,
-                lastname: contact.accounts.facebook[0].data.last_name,
-                facebookName: contact.accounts.facebook[0].data.name,
-                facebookName: contact.accounts.facebook[0].data.name,
-                facebookLink: contact.accounts.facebook[0].data.link,
-                sex: contact.accounts.facebook[0].data.gender
-                });
-            }
-            if(contact.accounts.googleContacts) {
-                // nothing for now, no unique data
-            }
-            if(contact.accounts.foursquare) {
-                newContact.set({
-                foursquare: contact.accounts.foursquare[0]
-                });
-            }
+                if(contact.accounts.twitter)
+                    newContact.set({twitterHandle: contact.accounts.twitter[0]});
+                if(contact.accounts.github)
+                    newContact.set({github: contact.accounts.github[0]});
+                if(contact.accounts.facebook) {
+                    newContact.set({
+                        firstname: contact.accounts.facebook[0].data.first_name,
+                        lastname: contact.accounts.facebook[0].data.last_name,
+                        facebookName: contact.accounts.facebook[0].data.name,
+                        facebookName: contact.accounts.facebook[0].data.name,
+                        facebookLink: contact.accounts.facebook[0].data.link,
+                        sex: contact.accounts.facebook[0].data.gender
+                    });
+                }
+                if(contact.accounts.googleContacts) {
+                    // nothing for now, no unique data
+                }
+                if(contact.accounts.foursquare) {
+                    newContact.set({
+                        foursquare: contact.accounts.foursquare[0]
+                    });
+                }
             }
 
             this.collection.add(newContact); // add item to collection; view is updated via event 'add'
@@ -146,10 +146,10 @@ $(function() {
         appendContact: function(contact) {
             var contactHTML = '<div class="contact">';
             if (contact.get('name')) {
-            contactHTML += contact.get('name') + "<br/>";
+                contactHTML += contact.get('name') + "<br/>";
             }
             if (contact.get('email')) {
-            contactHTML += contact.get('email') + "<br/>";
+                contactHTML += contact.get('email') + "<br/>";
             }
 
             //$("#contacts").append(contactHTML);
@@ -165,8 +165,8 @@ $(function() {
             // TODO: clean up so the search is a proper view.
             that.blurSearchHandler();
             this.load(function() {
-            $("#searchBox").slideDown();
-            $("#contacts").show();
+                $("#searchBox").slideDown();
+                $("#contacts").show();
             });
         },
 
@@ -179,17 +179,17 @@ $(function() {
             var baseURL = '/query';
 
             var getContactsCB = function(contacts) {
-            if (contacts.length > 3000) {
-                alert("Whoha... that's a lot of contacts! Please be patient.");
-            }
-            for(var i in contacts) {
-                // only add contacts if they have a name or email. might change this.
-                if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
-                if (contacts[i].emails || contacts[i].name) {
-                that.addContact(contacts[i]);
+                if (contacts.length > 3000) {
+                    alert("Whoha... that's a lot of contacts! Please be patient.");
                 }
-            }
-            that.render();
+                for(var i in contacts) {
+                    // only add contacts if they have a name or email. might change this.
+                    if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
+                    if (contacts[i].emails || contacts[i].name) {
+                        that.addContact(contacts[i]);
+                    }
+                }
+                that.render();
             };
 
             // chunk it for the very start, want instant results
@@ -206,11 +206,12 @@ $(function() {
         getTwitter: function(contact) {
             var twitterUsername;
             if(contact.accounts.twitter && contact.accounts.twitter[0].data
-                   && contact.accounts.twitter[0].data.screen_name)
-            twitterUsername = contact.accounts.twitter[0].data.screen_name;
+                   && contact.accounts.twitter[0].data.screen_name) {
+                twitterUsername = contact.accounts.twitter[0].data.screen_name;
+            }
 
             if(twitterUsername) {
-            return twitterUsername
+                return twitterUsername;
             }
             return false;
         },
@@ -230,10 +231,11 @@ $(function() {
          */
         getLocation: function(contact) {
             if(contact.addresses && contact.addresses) {
-            for(var i in contact.addresses) {
-                if(contact.addresses[i].type === 'location')
-                return contact.addresses[i].value;
-            }
+                for(var i in contact.addresses) {
+                    if(contact.addresses[i].type === 'location') {
+                        return contact.addresses[i].value;
+                    }
+                }
             }
             return '';
         },
@@ -253,16 +255,17 @@ $(function() {
         getPhoto: function(contact, fullsize) {
             var url = 'img/silhouette.png';
             if(contact.photos && contact.photos.length) {
-            url = contact.photos[0];
-            //twitter
-            if(fullsize && url.match(/_normal\.(jpg||png)/) && !url.match(/.*default_profile_([0-9])_normal\.png/))
-                url = url.replace(/_normal\.(jpg||png)/, '.$1');
-            else if(url.indexOf('https://graph.facebook.com/') === 0) {
-                if(fullsize)
-                url = url += "?return_ssl_resources=1&type=large";
-                else
-                url = url += "?return_ssl_resources=1&type=square";
-            }
+                url = contact.photos[0];
+                //twitter
+                if(fullsize && url.match(/_normal\.(jpg||png)/) && !url.match(/.*default_profile_([0-9])_normal\.png/)) {
+                    url = url.replace(/_normal\.(jpg||png)/, '.$1');
+                }
+                else if(url.indexOf('https://graph.facebook.com/') === 0) {
+                    if(fullsize)
+                        url = url += "?return_ssl_resources=1&type=large";
+                    else
+                        url = url += "?return_ssl_resources=1&type=square";
+                }
             }
             return url;
         },
@@ -288,33 +291,29 @@ $(function() {
              * @returns {Boolean} Pass or fail
              */
             searchFilter = function(c) {
-            // test to see if we have a query, otherwise everything passes
-            if (typeof(config.q) == "undefined") return true;
-            else config.q = (config.q+'').toLowerCase();
+                // test to see if we have a query, otherwise everything passes
+                if (typeof(config.q) == "undefined") return true;
+                else config.q = (config.q+'').toLowerCase();
 
-            // make everything lowercase so search isn't case sensititive
-            var name = c.get('name');
-            if (name) name = name.toLowerCase();
-            var email = c.get('email');
-            if (email) email = email.toLowerCase();
+                // make everything lowercase so search isn't case sensititive
+                var name = c.get('name');
+                if (name) name = name.toLowerCase();
+                var email = c.get('email');
+                if (email) email = email.toLowerCase();
 
-            //search by name
-            if (typeof(name) != "undefined" &&
-                name.indexOf(config.q) != -1) return true;
+                //search by name
+                if (typeof(name) != "undefined" && name.indexOf(config.q) != -1) return true;
 
-            // search by email
-            if(typeof(email) != "undefined" &&
-               email.indexOf(config.q) != -1) return true;
+                // search by email
+                if(typeof(email) != "undefined" && email.indexOf(config.q) != -1) return true;
 
-            // search by twitter handle
-            if(typeof(twitterHandle) != "undefined" &&
-               twitterHandle.indexOf(config.q) != -1) return true;
+                // search by twitter handle
+                if(typeof(twitterHandle) != "undefined" && twitterHandle.indexOf(config.q) != -1) return true;
 
-            // search by facebook handle
-            if(typeof(facebookHandle) != "undefined" &&
-               facebookHandle.indexOf(config.q) != -1) return true;
+                // search by facebook handle
+                if(typeof(facebookHandle) != "undefined" && facebookHandle.indexOf(config.q) != -1) return true;
 
-            return false;
+                return false;
             };
 
             // I could put this in a script tag on the page,
@@ -334,34 +333,34 @@ $(function() {
             contactTemplate += '<div class="clear"></div></li>';
 
             addContactToHTML = function(c) {
-            // create a simple json obj to use for creating the template (if necessary)
-            if (typeof(c.get('html')) == "undefined") {
-                var tmpJSON = c.toJSON();
+                // create a simple json obj to use for creating the template (if necessary)
+                if (typeof(c.get('html')) == "undefined") {
+                    var tmpJSON = c.toJSON();
 
-                if (typeof(tmpJSON.name) == "undefined") {
-                tmpJSON.name = tmpJSON.email;
+                    if (typeof(tmpJSON.name) == "undefined") {
+                        tmpJSON.name = tmpJSON.email;
+                    }
+                    tmpJSON.smPhoto = that.getPhoto(tmpJSON, false);
+                    tmpJSON.photo = that.getPhoto(tmpJSON, true);
+                    tmpJSON.json = JSON.stringify(tmpJSON, null, 2);
+
+                    // cache compiled template to the model
+                    var compiledTemplate = _.template(contactTemplate, tmpJSON);
+                    c.set({'html': compiledTemplate});
+                    contactsHTML += compiledTemplate;
+                } else {
+                    // just get the rendered html from our model
+                    contactsHTML += c.get('html');
                 }
-                tmpJSON.smPhoto = that.getPhoto(tmpJSON, false);
-                tmpJSON.photo = that.getPhoto(tmpJSON, true);
-                tmpJSON.json = JSON.stringify(tmpJSON, null, 2);
-
-                // cache compiled template to the model
-                var compiledTemplate = _.template(contactTemplate, tmpJSON);
-                c.set({'html': compiledTemplate});
-                contactsHTML += compiledTemplate;
-            } else {
-                // just get the rendered html from our model
-                contactsHTML += c.get('html');
-            }
             };
 
             var tmp = filteredCollection.filter(searchFilter);
 
             var sortFn = function(c) {
-            if (c.get(that.sortType)) {
-                return c.get(that.sortType);
-            }
-            return "zzz"; // force to the end of the sort
+                if (c.get(that.sortType)) {
+                    return c.get(that.sortType);
+                }
+                return "zzz"; // force to the end of the sort
             };
 
             tmp = _.sortBy(tmp, sortFn);
