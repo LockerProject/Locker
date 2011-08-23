@@ -107,9 +107,8 @@ body {
 }
 
 .collection-count-panel .collection-status {
-    font-size: 26px;
+    font-size: 22px;
     margin-top: 10px;
-
 }
 
 .collection-count-panel .collection-status .count {
@@ -119,9 +118,10 @@ body {
     margin-right: 10px;
 }
 .collection-count-panel .collection-status label {
-    width: 100px;
+    width: 90px;
     text-align: right;
     float: right;
+    margin-right: 10px;
 }
 
 .spinner {

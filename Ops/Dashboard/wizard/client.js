@@ -92,51 +92,45 @@ $(document).ready(
 
                     var app = {};
 
-                    t.pending = function(provider) {
-                        if (typeof(t.installed[provider]) == "undefined") {
-                            var b =  {
-                                "state": "pending",
-                                "$el": $("#"+provider+"Connect a:first")
-                            };
+                    t.updateState = function(provider, state) {
+                        var b =  {
+                            "lastState": "",
+                            "state": state,
+                            "$el": $("#"+provider+"Connect a:first")
+                        };
+
+                        // use the existing object if it exists
+                        if (typeof(t.installed[provider]) != "undefined") {
+                            b = t.installed[provider];
+                            b.state = state;
+                        }
+
+                        if (b.lastState == b.state) {
+                            return;
+                        }
+                        
+                        console.log("["+provider+"] " + state);
+
+                        if (b.state == "running" || b.state == "processing data") {
                             
                             b.$el.addClass("pending disabled");
-                                                        
+                        
                             if ($("#wizard-collections:visible").length == 0) {
                                 $("#wizard-collections").slideDown();
                                 $("#wizard-actions").fadeIn();
                                 $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
                             }
-                            
-                            b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
-                            
-                            t.installed[provider] = b;
-                        }
-                    };
-
-                    t.waiting = function(provider) {
-                        var b =  {
-                            "state": "waiting",
-                            "$el": $("#"+provider+"Connect a:first")
-                        };
-                        if (typeof(t.installed[provider]) != "undefined") {
-                            b = t.installed[provider];
+                            if (typeof(b.spinner) == "undefined") {
+                                b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
+                            }
+                        } else if (b.state == "waiting") {
+                            b.$el.removeClass("pending");                            
                         }
                         
-                        b.$el.removeClass("pending");
-                        b.$el.addClass("waiting disabled");
-                        
-                        if ($("#wizard-collections:visible").length == 0) {
-                            $("#wizard-collections").slideDown();
-                            $("#wizard-actions").fadeIn();
-                            $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
-                        }
-                        
-                        b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
-                        
+                        b.lastState = b.state;
                         t.installed[provider] = b;
-
+                        
                     };
-
 
                     t.handleResponse = function(data, err, resp) {
                         var wizardApps = ["facebook", "twitter", "gcontacts", "github", "foursquare"];
@@ -166,11 +160,7 @@ $(document).ready(
 
                             if (wizardApps.indexOf(app.provider) != -1) {
                                 // update app button with "pending" gfx
-                                if (app.status == "pending") {
-                                    t.pending(app.provider);
-                                } else if (app.status == "waiting") {
-                                    t.waiting(app.provider);
-                                }
+                                t.updateState(app.provider, app.status);
                             }
                         }
                         
