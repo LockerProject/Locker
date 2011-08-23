@@ -21,7 +21,7 @@ var mePath = '/Data/' + svcId;
 
 var thecollections = ['repos', 'followers', 'following'];
 var lconfig = require('../Common/node/lconfig');
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 var locker = require('../Common/node/locker');
 var levents = require('../Common/node/levents');
 var request = require('request');

@@ -11,7 +11,7 @@ var spawn = require('child_process').spawn;
 var lconfig = require('../Common/node/lconfig.js');
 var dashboard;
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 exports.instance = dashboard;
 
 exports.start = function(port) {

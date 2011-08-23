@@ -1,0 +1,10 @@
+{
+    "title":"GoodReads Account",
+    "action":"Connect to a GoodReads account",
+    "desc":"Collect and sync my data from my GoodReads account.",
+    "run":"node client.js",
+    "status":"unstable",
+    "mongoCollections": ["books"],
+    "provides":["books/book"],
+    "handle":"goodreads"
+}

@@ -17,7 +17,7 @@ var events = require("events");
 var fs = require("fs");
 var lconfig = require('../Common/node/lconfig.js');
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var tests = RESTeasy.describe("Locker core API");
 

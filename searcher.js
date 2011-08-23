@@ -1,7 +1,7 @@
 var repl = require('repl');
 require.paths.push('./Common/node');
 var lconfig = require('lconfig');
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var lsearch = require('lsearch');
 lsearch.setIndexPath('./Me/search/search.index');

@@ -16,7 +16,7 @@ var lcrypto = require("lcrypto");
 var request = require("request");
 var lconfig = require("lconfig");
 var querystring = require("querystring");
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 
 vows.describe("Crypto Wrapper").addBatch({
     "lcrypto" : {

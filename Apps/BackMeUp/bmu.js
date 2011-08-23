@@ -14,7 +14,7 @@ var app = express.createServer(connect.bodyParser());
 var locker = require('../../Common/node/locker.js');
 var lfs = require('../../Common/node/lfs.js');
 var lconfig = require('../../Common/node/lconfig.js');
-lconfig.load('../../config.json');
+lconfig.load('../../Config/config.json');
 var exec = require('child_process').exec;
 var util = require('util');
 var request = require('request');

@@ -12,7 +12,6 @@
                       "lpquery-test-local.js",
                       "mongo-test.js",
                       "lscheduler-test-local.js",
-                      "lsearch-test-local.js",
                       "deepCompare-test.js"],
         "client-api" : ["locker-client-test.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js",

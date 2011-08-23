@@ -11,3 +11,7 @@ node_modules
 scheduler.json
 tests/Data/
 lockerbox*
+Config/*
+!Config/*.example
+Logs/*
+!.gitignore

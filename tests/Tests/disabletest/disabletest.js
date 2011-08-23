@@ -18,16 +18,20 @@ app.get('/', function(req, res) {
     res.end();
 });
 
+var fullData = "";
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
-    var processInfo = JSON.parse(chunk);
-    locker.initClient(processInfo);
-    process.chdir(processInfo.workingDirectory);
-    locker.connectToMongo(function(mongo) {
-        collections = mongo.collections;
-        app.listen(0, function() {
-            process.stdout.write(JSON.stringify({port: app.address().port}));
+    fullData += chunk;
+    if (fullData.indexOf("\n") > 0) {
+        var processInfo = JSON.parse(chunk);
+        locker.initClient(processInfo);
+        process.chdir(processInfo.workingDirectory);
+        locker.connectToMongo(function(mongo) {
+            collections = mongo.collections;
+            app.listen(0, function() {
+                process.stdout.write(JSON.stringify({port: app.address().port}));
+            });
         });
-    });
+    }
 });
 process.stdin.resume();

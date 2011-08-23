@@ -12,7 +12,13 @@ var fs = require('fs');
 
 
 exports.load = function(filepath) {
-    var config = JSON.parse(fs.readFileSync(filepath));
+    var config = {};
+    try {
+        config = JSON.parse(fs.readFileSync(filepath));
+    } catch(err) {
+        if(err.code !== 'EBADF')
+            throw err;
+    }
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerPort = config.lockerPort || 8042;
@@ -20,8 +26,16 @@ exports.load = function(filepath) {
     exports.externalSecure = config.externalSecure;
     exports.externalPath = config.externalPath || '';
     setBase();
-    exports.scannedDirs = config.scannedDirs;
-    exports.mongo = config.mongo;
+    exports.scannedDirs = config.scannedDirs || [
+        "Apps", 
+        "Collections", 
+        "Connectors"
+        ];
+    exports.mongo = config.mongo || {
+        "dataDir": "mongodata",
+        "host": "localhost",
+        "port": 27018
+    };
     exports.me = config.me || "Me";
     exports.lockerDir = process.cwd();
     exports.logFile = config.logFile || undefined;

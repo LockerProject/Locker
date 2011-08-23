@@ -58,7 +58,7 @@ vows.describe("Locker Config").addBatch({
 }).addBatch({
     "Can reload original config" : {
         topic: function() {
-            lconfig.load("config.json");
+            lconfig.load("Config/config.json");
             this.callback();
         },
         "loads expected values" : function() {

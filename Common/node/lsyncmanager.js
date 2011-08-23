@@ -326,9 +326,9 @@ function addUrls() {
         host = "http://";
     }
     host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
-    if (path.existsSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"))) {
+    if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
         try {
-            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "apikeys.json"), 'ascii'));
+            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'ascii'));
         } catch(e) {
             return console.log('Error reading apikeys.json file - ' + e);
         }

@@ -27,7 +27,7 @@ var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Facebook Connector');
 var vows = require('vows');
 var lconfig = require('../Common/node/lconfig');
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 var utils = require('./test-utils');
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var locker = require('../Common/node/locker');

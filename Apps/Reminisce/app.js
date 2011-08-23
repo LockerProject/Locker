@@ -18,7 +18,7 @@ var nodemailer = require('nodemailer');
 var lcrypto = require('lcrypto');
 var lconfig = require('lconfig');
 //TODO: fix lconfig and remove this! I need it for lcrypto?! 
-lconfig.load('../../config.json');
+lconfig.load('../../Config/config.json');
 
 var me;
 var auth=false;

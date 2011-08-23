@@ -1,4 +1,5 @@
 var request = require('request');
+var url = require('url');
 var locker = require('../../../../Common/node/locker.js');
 
 exports.map = function(type) { };
@@ -15,7 +16,12 @@ exports.search = function(type, term, offset, limit, callback) {
             callback('No Locker search providers found', null);
         }
         
-        var fetchURL = providers[0].uri + 'query?q='+term;
+        // lame regex replacement of the incoming bad encoding from the form handling.  Ugly but effective
+        term = term.replace(/&lt;/g, '<');
+        term = term.replace(/&gt;/g, '>');
+        term = term.replace(/&quot;/g, '"');
+
+        var fetchURL = providers[0].uri + 'query?q='+encodeURIComponent(term);
         if (type !== '') {
           fetchURL += '&type=' + type;
         }
@@ -25,12 +31,14 @@ exports.search = function(type, term, offset, limit, callback) {
                 callback('Failed calling provider GET at ' + fetchURL, null);
             }
 
-            var result = JSON.parse(result);
             var results = {};
-            results.took = result.took;
+            var result = JSON.parse(result);
+             
             results.hits = {};
+            results.hits.total = null;   
+            results.took = result.took;
             results.hits.hits = result.hits;
-            results.hits.total = null;
+        
             callback(null, results);
         });
     });
