@@ -226,6 +226,7 @@ $(function() {
                 var fsq = contact.accounts.foursquare[0].data;
                 $('.4sqlastseen').attr('href', 'http://www.foursquare.com/venue/' + fsq.checkins.items[0].venue.id);
                 $('.4sqlastseen').text(fsq.checkins.items[0].venue.name);
+                $('.foursquarehandle').attr('href', 'http://www.foursquare.com/user/' + fsq.id);
                 $('.foursquareSection').show();
             } else {
                 $('.foursquareSection').hide();
@@ -238,6 +239,15 @@ $(function() {
                 $('.githubSection').show();
             } else {
                 $('.githubSection').hide();
+            }
+            // fb
+            if (contact.accounts.facebook && contact.accounts.facebook[0].data) {
+                var fb = contact.accounts.facebook[0].data;
+                $('.facebookHandle').attr('href', fb.link);
+                $('.facebookHandle').text(fb.name);
+                $('.facebookSection').show();
+            } else {
+                $('.facebookSection').hide();
             }
             // location
             var loc = this.getLocation(contact);
