@@ -73,7 +73,7 @@ $(function() {
             var cid = $(ev.currentTarget).data('cid');
             if ($(ev.currentTarget).hasClass('clicked')) {
                 $('aside').css('z-index', -1);
-                $('#main').animate({
+                $('#main').stop().animate({
                     marginRight: '0px'}, 750, function() {
                         $('.detail').hide();
                     })
@@ -261,7 +261,7 @@ $(function() {
             // animation
             if (!$('.detail').is(':visible')) {
                 $('.detail').show();
-                $('#main').animate({
+                $('#main').stop().animate({
                     marginRight: '374px'}, 750, function() {
                         $('aside').css('z-index', 1);
                     });
