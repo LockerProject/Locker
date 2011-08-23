@@ -42,7 +42,6 @@ $(function() {
         events: {
             'keyup input#search': 'searchChangeHandler',
             'change #sort': 'sortChangeHandler',
-            'click input#showJSON': 'showJSONHandler',
 
             'hover #contacts li': 'hoverContactHandler',
             'click #contacts li': 'clickContactHandler',
@@ -64,13 +63,6 @@ $(function() {
             log("change sort to " + sortVal);
             this.sortType = sortVal;
             this.searchChangeHandler();
-        },
-
-        showJSONHandler: function() {
-            var showJSONEl = $("#showJSON:checked");
-            var contactsEl = $("ul#contacts");
-            if (showJSONEl.length) contactsEl.addClass("showJSON");
-            else contactsEl.removeClass("showJSON");
         },
 
         hoverContactHandler: function() {
@@ -99,17 +91,22 @@ $(function() {
 
         addContact: function(contact) {
             var newContact = new Contact();
+            if (contact.name) {
+                var names = contact.name.split(' ');
+                newContact.set({
+                    firstname: names[0],
+                    lastname: names[names.length - 1],
+                    name: contact.name
+                })
+            }
 
             newContact.set({
-            name: contact.name,
-            id: contact._id
+                name: contact.name,
+                id: contact._id,
             });
 
             // copy email
-            if (contact.emails) {
-                var email = contact.emails[0].value;
-                if (email) newContact.set({email: email});
-            }
+            if (contact.emails) newContact.set({email: contact.emails[0].value});
 
             // copy photos
             if (contact.photos) newContact.set({photos: contact.photos});
@@ -122,12 +119,8 @@ $(function() {
                     newContact.set({github: contact.accounts.github[0]});
                 if(contact.accounts.facebook) {
                     newContact.set({
-                        firstname: contact.accounts.facebook[0].data.first_name,
-                        lastname: contact.accounts.facebook[0].data.last_name,
                         facebookName: contact.accounts.facebook[0].data.name,
-                        facebookName: contact.accounts.facebook[0].data.name,
-                        facebookLink: contact.accounts.facebook[0].data.link,
-                        sex: contact.accounts.facebook[0].data.gender
+                        facebookLink: contact.accounts.facebook[0].data.link
                     });
                 }
                 if(contact.accounts.googleContacts) {
