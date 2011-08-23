@@ -25,12 +25,10 @@ exports.getAll = function(callback) {
 
 // this needs to move into the query interface i think
 //
-exports.getMinimal = function(callback) {
-    collection.find({}, {_id : 1, addresses: 1, emails: 1, name: 1, phoneNumbers: 1, photos: 1,
-                         'data.accounts.facebook.data.link': 1, 'data.accounts.foursquare.data.checkins.items': 1,
-                         'data.accounts.foursquare.data.id': 1,
-                         'data.accounts.github.data.public_repo_count': 1, 'data.accounts.github.data.login': 1,
-                         'data.accounts.twitter.data.screen_name': 1, 'data.accounts.twitter.data.status.text': 1},
+exports.getMinimal = function(offset, limit, callback) {
+    collection.find({}, {skip: offset, limit: limit, _id : 1, addresses: 1, emails: 1, name: 1, phoneNumbers: 1, photos: 1,
+                         'accounts.facebook.data.link': 1, 'accounts.foursquare.data.id': 1,
+                         'accounts.github.data.login': 1, 'accounts.twitter.data.screen_name': 1},
                     callback);
 }
 

@@ -36,7 +36,9 @@ app.get('/', function(req, res) {
 });
 
 app.get('/allMinimal', function(req, res) {
-    dataStore.getMinimal(function(err, cursor) {
+    var offset = req.param('offset') ? req.param('offset') : 0;
+    var limit = req.param('limit') ? req.param('limit') : 250;
+    dataStore.getMinimal(offset, limit, function(err, cursor) {
         cursor.toArray(function(err, items) {
             res.end(JSON.stringify(items));
         });
