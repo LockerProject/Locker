@@ -52,9 +52,9 @@ $(function() {
         searchChangeHandler: function() {
             var q = $("input#search").val();
             if (q.length > 0 && q != this._s.searchIndicator) {
-            this.render({q: q})
+                this.render({q: q})
             } else {
-            this.render();
+                this.render();
             }
         },
 
@@ -136,30 +136,16 @@ $(function() {
             this.collection.add(newContact); // add item to collection; view is updated via event 'add'
         },
 
-        appendContact: function(contact) {
-            var contactHTML = '<div class="contact">';
-            if (contact.get('name')) {
-                contactHTML += contact.get('name') + "<br/>";
-            }
-            if (contact.get('email')) {
-                contactHTML += contact.get('email') + "<br/>";
-            }
-
-            //$("#contacts").append(contactHTML);
-        },
-
         initialize: function(){
             _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'searchChangeHandler', 'load', 'render', 'addContact'); // fixes loss of context for 'this' within methods
             that = this;
 
             this.collection = new AddressBook();
-            //this.collection.bind('add', this.appendContact); // collection event binder
 
             // TODO: clean up so the search is a proper view.
             that.blurSearchHandler();
             this.load(function() {
                 $("#searchBox").slideDown();
-                $("#contacts").show();
             });
         },
 
@@ -170,25 +156,28 @@ $(function() {
         load: function load(callback) {
             var that = this;
             var baseURL = '/query';
+            var offset = 0;
 
-            var getContactsCB = function(contacts) {
-                if (contacts.length > 3000) {
-                    alert("Whoha... that's a lot of contacts! Please be patient.");
-                }
-                for(var i in contacts) {
-                    // only add contacts if they have a name or email. might change this.
-                    if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
-                    if (contacts[i].emails || contacts[i].name) {
-                        that.addContact(contacts[i]);
+            (function getContactsCB() {
+                $.getJSON(baseURL + '/getContact', {offset:offset, limit: 250}, function(contacts) {
+                    if (contacts.length === 0) return callback();
+                    for(var i in contacts) {
+                        // only add contacts if they have a name or email. might change this.
+                        if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
+                        if (contacts[i].emails || contacts[i].name) {
+                            that.addContact(contacts[i]);
+                        }
                     }
-                }
-                that.render();
-            };
+                    that.render();
+                    offset += 250;
+                    getContactsCB();
+                });
+            })();
 
-            // chunk it for the very start, want instant results
-            // TODO: paginate loading (probably 500 per set)
-            $.getJSON(baseURL + '/getContact', {offset:0, limit:100}, getContactsCB);
-            $.getJSON(baseURL + '/getContact', {offset:100, limit:10000}, function(c) { getContactsCB(c); callback(); });
+            //
+            // // chunk it for the very start, want instant results
+            // // TODO: paginate loading (probably 500 per set)
+            // $.getJSON(baseURL + '/getContact', {offset:offset, limit:10000}, function(c) { getContactsCB(c); callback(); });
         },
 
         /**
@@ -339,10 +328,12 @@ $(function() {
                     // cache compiled template to the model
                     var compiledTemplate = _.template(contactTemplate, tmpJSON);
                     c.set({'html': compiledTemplate});
-                    contactsHTML += compiledTemplate;
+                    contactsEl.append(compiledTemplate);
+                    // contactsHTML += compiledTemplate;
                 } else {
                     // just get the rendered html from our model
-                    contactsHTML += c.get('html');
+                    contactsEl.append(c.get('html'));
+                    // contactsHTML += c.get('html');
                 }
             };
 
@@ -358,7 +349,7 @@ $(function() {
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
 
-            contactsEl.html(contactsHTML);
+            // contactsEl.html(contactsHTML);
             countEl.html(tmp.length);
         }
     });
