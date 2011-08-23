@@ -40,13 +40,13 @@ $(function() {
         sortType: "firstname",
 
         events: {
-            'keyup input#search': 'searchChangeHandler',
-            'change #sort': 'sortChangeHandler',
+            'keyup input#search' : 'searchChangeHandler',
+            'change #sort'       : 'sortChangeHandler',
 
-            'hover #contacts li': 'hoverContactHandler',
-            'click #contacts li': 'clickContactHandler',
-            'focus #search': 'focusSearchHandler',
-            'blur #search': 'blurSearchHandler'
+            'hover #contacts li' : 'hoverContactHandler',
+            'click #contacts li' : 'clickContactHandler',
+            'focus #search'      : 'focusSearchHandler',
+            'blur #search'       : 'blurSearchHandler'
         },
 
         searchChangeHandler: function() {
@@ -69,8 +69,26 @@ $(function() {
             log("c hover");
         },
 
-        clickContactHandler: function() {
+        clickContactHandler: function(ev) {
             log("c click");
+            var model = this.collection.get($(ev.currentTarget).data('cid'));
+            console.log(model.attributes);
+            $('.name').text(model.get('name'));
+            var photo = model.get('photos')[0];
+            console.dir(photo);
+            if (photo.indexOf('facebook') !== -1) {
+                $('.photo').attr('src', photo + "?type=large");
+            } else {
+                $('.photo').attr('src', photo);
+            }
+            if (model.get('twitterHandle')) {
+                $('.twitter .twitterhandle').attr('href', 'http://www.twitter.com/' + model.get('twitterHandle').data.screen_name);
+                $('.twitter .twitterhandle').text('@' + model.get('twitterHandle').data.screen_name);
+                $('.twitter .lasttweet').text(model.get('twitterHandle').data.status.text);
+                $('.detail .twitter').show();
+            } else {
+                $('.detail .twitter').hide();
+            }
         },
 
         focusSearchHandler: function() {
