@@ -120,13 +120,14 @@ $(document).ready(
                                 $("#wizard-actions").fadeIn();
                                 $("#popup h2").html(_s[1].action).next().html(_s[1].desc);
                             }
+                            b.$el.parent().parent().children(".spinner").html("").fadeIn();
                             if (typeof(b.spinner) == "undefined") {
                                 b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
                             }
-                            b.$el.parent().children(".spinner").show();
                         } else if (b.state == "waiting") {
                             b.$el.removeClass("pending");                   
-                            b.$el.parent().parent().children(".spinner").hide(); 
+                            b.$el.parent().parent().children(".spinner").html("&#x2713;").fadeIn();
+                            delete b.spinner;
                         }
                         
                         b.lastState = b.state;
