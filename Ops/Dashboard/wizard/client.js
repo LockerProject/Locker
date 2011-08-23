@@ -126,7 +126,7 @@ $(document).ready(
                             b.$el.parent().children(".spinner").show();
                         } else if (b.state == "waiting") {
                             b.$el.removeClass("pending");                   
-                            b.$el.parent().children(".spinner").hide();         
+                            b.$el.parent().parent().children(".spinner").hide(); 
                         }
                         
                         b.lastState = b.state;
