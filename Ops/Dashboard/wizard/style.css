@@ -128,7 +128,9 @@ body {
     position: relative;
     top: -168px;
     left: 81px;
-    font-size: 30px;
+    font-size: 50px;
+    color: rgba(0, 0, 0, 0.6);
+    padding-left: 7px;
 }
 
 .odoTicker {
