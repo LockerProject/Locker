@@ -1,4 +1,5 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
+var displayedContact = '';
 
 $(function() {
     
@@ -66,16 +67,22 @@ $(function() {
         },
 
         hoverContactHandler: function() {
-            log("c hover");
         },
 
         clickContactHandler: function(ev) {
-            log("c click");
-            var model = this.collection.get($(ev.currentTarget).data('cid'));
-            console.log(model.attributes);
+            var cid = $(ev.currentTarget).data('cid');
+            if (cid === displayedContact) {
+                $('aside').css('z-index', -1);
+                $('#main').animate({
+                    marginRight: '0px'}, 750, function() {
+                        $('.detail').hide();
+                    })
+                return displayedContact = '';
+            }
+            displayedContact = cid;
+            var model = this.collection.get(cid);
             $('.name').text(model.get('name'));
             var photo = model.get('photos')[0];
-            console.dir(photo);
             if (photo.indexOf('facebook') !== -1) {
                 $('.photo').attr('src', photo + "?type=large");
             } else {
@@ -88,6 +95,13 @@ $(function() {
                 $('.detail .twitter').show();
             } else {
                 $('.detail .twitter').hide();
+            }
+            if (!$('.detail').is(':visible')) {
+                $('.detail').show();
+                $('#main').animate({
+                    marginRight: '374px'}, 750, function() {
+                        $('aside').css('z-index', 1);
+                    });
             }
         },
 
@@ -135,19 +149,13 @@ $(function() {
                     newContact.set({twitterHandle: contact.accounts.twitter[0]});
                 if(contact.accounts.github)
                     newContact.set({github: contact.accounts.github[0]});
-                if(contact.accounts.facebook) {
-                    newContact.set({
-                        facebookName: contact.accounts.facebook[0].data.name,
-                        facebookLink: contact.accounts.facebook[0].data.link
-                    });
-                }
+                if(contact.accounts.facebook)
+                    newContact.set({facebook: contact.accounts.facebook[0].data.link});
                 if(contact.accounts.googleContacts) {
                     // nothing for now, no unique data
                 }
                 if(contact.accounts.foursquare) {
-                    newContact.set({
-                        foursquare: contact.accounts.foursquare[0]
-                    });
+                    newContact.set({foursquare: contact.accounts.foursquare[0]});
                 }
             }
 
@@ -174,11 +182,11 @@ $(function() {
         load: function load(callback) {
             $('#loader').show();
             var that = this;
-            var baseURL = '/query';
+            var baseURL = '/Me/contacts';
             var offset = 0;
 
             (function getContactsCB() {
-                $.getJSON(baseURL + '/getContact', {offset:offset, limit: 250}, function(contacts) {
+                $.getJSON(baseURL + '/allMinimal', {offset:offset, limit: 250}, function(contacts) {
                     if (contacts.length === 0) {
                         $('#loader').hide();
                         return callback();
@@ -266,9 +274,9 @@ $(function() {
                 }
                 else if(url.indexOf('https://graph.facebook.com/') === 0) {
                     if(fullsize)
-                        url = url += "?return_ssl_resources=1&type=large";
+                        url = url += "?return_ssl_resources=true&type=large";
                     else
-                        url = url += "?return_ssl_resources=1&type=square";
+                        url = url += "?return_ssl_resources=true&type=square";
                 }
             }
             return url;
@@ -328,11 +336,10 @@ $(function() {
             contactTemplate += '</div>';
             contactTemplate += '<div class="contactActions">';
             contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b" class="social_link email">Email</a><% } %> ';
-            contactTemplate += '<% if (typeof(facebookLink) != "undefined") { %><a href="<%= facebookLink %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(facebook) != "undefined") { %><a href="<%= facebook %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
             contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
             contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_b">GitHub Profile</a><% } %>';
             contactTemplate += '</div>';
-            contactTemplate += '<br/><pre><%= json %></pre>';
             contactTemplate += '<div class="clear"></div></li>';
 
             addContactToHTML = function(c) {

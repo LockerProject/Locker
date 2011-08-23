@@ -66,16 +66,16 @@ body {
     display: table;  
 }  
   
-#main {  
-    margin-right: 375px;
+#main {
+    margin-right: 0px;
 }  
 
-aside {  
+aside {
+    z-index: -1;
     width: 340px;
     height: 100%;
     position: fixed;
     top: 0; right: 0;
-    float: left;
     margin-top: 73px;
     padding: 17px;
     padding-top:25px;
@@ -138,13 +138,14 @@ aside img.icon {
 }
 
 aside div.detail {
+    display: none;
     padding-left:8px;
 }
 
 #contacts {
     margin: 0px;
     margin-left: 0px;
-    margin-top: 74px;
+    margin-top: 73px;
     padding: 0px;
     list-style:none;
     text-shadow: 0px 1px 1px #999;
@@ -161,15 +162,6 @@ aside div.detail {
     float: left;
     height: 50px;
     width: 50px;
-}
-
-#contacts .contact pre {
-    display: none;
-    font-size: 10px;
-}
-
-#contacts.showJSON .contact pre {
-    display: block;
 }
 
 .contact div.contactSummary strong {
@@ -273,6 +265,7 @@ header div {
 }
 
 #contacts {
+    overflow: hidden;
     background: rgb(255,255,255);
 }
 
@@ -282,7 +275,7 @@ header div {
 
 #contacts li {
     margin: 0px;
-    margin-right: 0px;
+    margin-right: 1px;
     padding-left: 30px;
     padding-bottom: 10px;
     padding-top: 10px;
