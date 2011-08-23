@@ -154,13 +154,17 @@ $(function() {
          * @param callback
          */
         load: function load(callback) {
+            $('#loader').show();
             var that = this;
             var baseURL = '/query';
             var offset = 0;
 
             (function getContactsCB() {
                 $.getJSON(baseURL + '/getContact', {offset:offset, limit: 250}, function(contacts) {
-                    if (contacts.length === 0) return callback();
+                    if (contacts.length === 0) {
+                        $('#loader').hide();
+                        return callback();
+                    }
                     for(var i in contacts) {
                         // only add contacts if they have a name or email. might change this.
                         if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
