@@ -109,7 +109,7 @@ $(document).ready(
                             return;
                         }
                         
-                        console.log("["+provider+"] " + state);
+                        log("["+provider+"] " + state);
 
                         if (b.state == "running" || b.state == "processing data") {
                             
@@ -123,8 +123,10 @@ $(document).ready(
                             if (typeof(b.spinner) == "undefined") {
                                 b.spinner = spinner(b.$el.parent().parent().children(".spinner").get(0), 15, 20, 20, 4, "#aaa");
                             }
+                            b.$el.parent().children(".spinner").show();
                         } else if (b.state == "waiting") {
-                            b.$el.removeClass("pending");                            
+                            b.$el.removeClass("pending");                   
+                            b.$el.parent().children(".spinner").hide();         
                         }
                         
                         b.lastState = b.state;
