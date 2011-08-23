@@ -1,0 +1,22 @@
+{
+    "twitter":{
+        "appKey":"PASTE_HERE",
+        "appSecret":"PASTE_HERE"
+    },
+    "foursquare" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
+    },
+    "github" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
+    },
+    "facebook" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
+    },
+    "gcontacts" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
+    }
+}
