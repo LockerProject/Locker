@@ -1,5 +1,4 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
-var displayedContact = '';
 
 $(function() {
     
@@ -72,15 +71,16 @@ $(function() {
         clickContactHandler: function(ev) {
             var self = this;
             var cid = $(ev.currentTarget).data('cid');
-            if (cid === displayedContact) {
+            if ($(ev.currentTarget).hasClass('clicked')) {
                 $('aside').css('z-index', -1);
                 $('#main').animate({
                     marginRight: '0px'}, 750, function() {
                         $('.detail').hide();
                     })
-                return displayedContact = '';
+                return $('.clicked').removeClass('clicked');
             }
-            displayedContact = cid;
+            $('.clicked').removeClass('clicked');
+            $(ev.currentTarget).addClass('clicked');
             var model = this.collection.get(cid);
             if(!(model.get('detailedData'))) {
                 $.getJSON('/Me/contacts/' + cid, function(contact) {

@@ -298,6 +298,17 @@ header div {
     box-shadow: rgba(0,0,0,0.4) 0px 2px 2px 0px inset;
 }
 
+#contacts li.clicked {
+    margin: 0px;
+    padding-left: 30px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    margin-right: -3px;
+    border-bottom: 1px solid #bbb;
+    background-color: rgb(235,235,235);
+    box-shadow: rgba(0,0,0,0.4) 0px 2px 2px 0px inset;
+}
+
 #contacts li:hover a {
     color: white;
 }
