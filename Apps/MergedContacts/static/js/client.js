@@ -70,6 +70,7 @@ $(function() {
         },
 
         clickContactHandler: function(ev) {
+            var self = this;
             var cid = $(ev.currentTarget).data('cid');
             if (cid === displayedContact) {
                 $('aside').css('z-index', -1);
@@ -81,27 +82,14 @@ $(function() {
             }
             displayedContact = cid;
             var model = this.collection.get(cid);
-            $('.name').text(model.get('name'));
-            var photo = model.get('photos')[0];
-            if (photo.indexOf('facebook') !== -1) {
-                $('.photo').attr('src', photo + "?type=large");
+            if(!(model.get('detailedData'))) {
+                $.getJSON('/Me/contacts/' + cid, function(contact) {
+                    console.log(contact);
+                    model.set({detailedData : contact});
+                    self.updateDetails(contact);
+                });
             } else {
-                $('.photo').attr('src', photo);
-            }
-            if (model.get('twitterHandle')) {
-                $('.twitter .twitterhandle').attr('href', 'http://www.twitter.com/' + model.get('twitterHandle').data.screen_name);
-                $('.twitter .twitterhandle').text('@' + model.get('twitterHandle').data.screen_name);
-                $('.twitter .lasttweet').text(model.get('twitterHandle').data.status.text);
-                $('.detail .twitter').show();
-            } else {
-                $('.detail .twitter').hide();
-            }
-            if (!$('.detail').is(':visible')) {
-                $('.detail').show();
-                $('#main').animate({
-                    marginRight: '374px'}, 750, function() {
-                        $('aside').css('z-index', 1);
-                    });
+                self.updateDetails(model.get('detailedData'));
             }
         },
 
@@ -203,11 +191,71 @@ $(function() {
                     getContactsCB();
                 });
             })();
+        },
 
-            //
-            // // chunk it for the very start, want instant results
-            // // TODO: paginate loading (probably 500 per set)
-            // $.getJSON(baseURL + '/getContact', {offset:offset, limit:10000}, function(c) { getContactsCB(c); callback(); });
+        /**
+         * Update the details panel with a given contact
+         * @param the object containing all of the information about the contact
+         */
+        updateDetails: function(contact) {
+            $('.name').text(contact.name);
+            $('.photo').attr('src', this.getPhoto(contact, true));
+            // twitter
+            if (contact.accounts.twitter && contact.accounts.twitter[0].data) {
+                var twitter = contact.accounts.twitter[0].data;
+                $('.twitterhandle').attr('href', 'http://www.twitter.com/' + twitter.screen_name);
+                $('.twitterhandle').text('@' + twitter.screen_name);
+                $('.lasttweet').text(twitter.status.text);
+                $('.twitterSection').show();
+            } else {
+                $('.twitterSection').hide();
+            }
+            // email
+            $('.emailaddress').text(this.getEmail(contact));
+            $('.emailaddress').attr('href', 'mailto:' + this.getEmail(contact));
+            // phone
+            var phone = this.getPhone(contact);
+            $('.phonenumber').text(phone);
+            if (phone) {
+                $('.phoneSection').show();
+            } else {
+                $('.phoneSection').hide();
+            }
+            // 4sq
+            if (contact.accounts.foursquare && contact.accounts.foursquare[0].data) {
+                var fsq = contact.accounts.foursquare[0].data;
+                $('.4sqlastseen').attr('href', 'http://www.foursquare.com/venue/' + fsq.checkins.items[0].venue.id);
+                $('.4sqlastseen').text(fsq.checkins.items[0].venue.name);
+                $('.foursquareSection').show();
+            } else {
+                $('.foursquareSection').hide();
+            }
+            // gh
+            if (contact.accounts.github && contact.accounts.github[0].data) {
+                var gh = contact.accounts.github[0].data;
+                $('.githubHandle').text(gh.login);
+                $('.githubHandle').attr('href', 'http://www.github.com/' + gh.login);
+                $('.githubSection').show();
+            } else {
+                $('.githubSection').hide();
+            }
+            // location
+            var loc = this.getLocation(contact);
+            $('.address').text(loc);
+            if (loc) {
+                $('.addressSection').show();
+                $('.address').attr('href', 'http://maps.google.com/maps?q=' + encodeURI(loc));
+            } else {
+                $('.addressSection').hide();
+            }
+            // animation
+            if (!$('.detail').is(':visible')) {
+                $('.detail').show();
+                $('#main').animate({
+                    marginRight: '374px'}, 750, function() {
+                        $('aside').css('z-index', 1);
+                    });
+            }
         },
 
         /**
@@ -242,12 +290,34 @@ $(function() {
          * @param contact - contact obj
          */
         getLocation: function(contact) {
-            if(contact.addresses && contact.addresses) {
+            if(contact.addresses && contact.addresses.length) {
                 for(var i in contact.addresses) {
                     if(contact.addresses[i].type === 'location') {
                         return contact.addresses[i].value;
                     }
                 }
+            }
+            return '';
+        },
+
+        /**
+         * get the phone number of a contact
+         * @param contact - contact obj
+         */
+        getPhone: function(contact) {
+            if (contact.phoneNumbers && contact.phoneNumbers.length) {
+                return contact.phoneNumbers[0].value;
+            }
+            return '';
+        },
+
+        /**
+         * Get the person's email address
+         * @param contact - contact obj
+         */
+        getEmail: function(contact) {
+            if (contact.emails && contact.emails.length) {
+                return contact.emails[0].value;
             }
             return '';
         },
@@ -274,9 +344,9 @@ $(function() {
                 }
                 else if(url.indexOf('https://graph.facebook.com/') === 0) {
                     if(fullsize)
-                        url = url += "?return_ssl_resources=true&type=large";
+                        url += "?return_ssl_resources=true&type=large";
                     else
-                        url = url += "?return_ssl_resources=true&type=square";
+                        url += "?return_ssl_resources=true&type=square";
                 }
             }
             return url;
