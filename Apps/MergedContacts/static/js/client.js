@@ -2,6 +2,10 @@ var log = function(msg) { if (console && console.log) console.debug(msg); };
 
 $(function() {
     
+    $(document).keydown(function(e) {
+        return e.keyCode != 13;
+    });
+
     // Contact Model
     var Contact = Backbone.Model.extend({
         defaults: {}

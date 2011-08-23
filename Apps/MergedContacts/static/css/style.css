@@ -31,11 +31,16 @@
     font-style: normal;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     font-family: 13.34px 'MuliLight',sans-serif;
     background-color: rgb(235,235,235);
     padding:0px;
     margin: 0px;
+    height: 100%;
     color: rgb(104,104,104);
 }
 
@@ -67,6 +72,7 @@ body {
 }  
   
 #main {
+    height: 100%;
     margin-right: 0px;
 }  
 
@@ -145,6 +151,7 @@ aside div.detail div {
 }
 
 #contacts {
+    min-height: 100%;
     margin: 0px;
     margin-left: 0px;
     margin-top: 73px;
@@ -310,6 +317,10 @@ header div {
 
 #contacts li:hover a {
     color: white;
+}
+
+#container {
+    height: 100%;
 }
 
 a {
