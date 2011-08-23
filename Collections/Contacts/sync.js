@@ -14,9 +14,9 @@ var dataStore = require('./dataStore');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 
-exports.init = function(theLockerUrl, mongoCollection) {
+exports.init = function(theLockerUrl, mongoCollection, mongo) {
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection);
+    dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
 

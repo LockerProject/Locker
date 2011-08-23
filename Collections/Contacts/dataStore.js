@@ -8,10 +8,12 @@
 */
 
 var collection;
+var db;
 var lconfig = require('../../Common/node/lconfig');
 
-exports.init = function(mongoCollection) {
+exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
+    db = mongo.dbClient;
 }
 
 exports.getTotalCount = function(callback) {
@@ -19,6 +21,21 @@ exports.getTotalCount = function(callback) {
 }
 exports.getAll = function(callback) {
     collection.find({}, callback);
+}
+
+// this needs to move into the query interface i think
+//
+exports.getMinimal = function(callback) {
+    collection.find({}, {_id : 1, addresses: 1, emails: 1, name: 1, phoneNumbers: 1, photos: 1,
+                         'data.accounts.facebook.data.link': 1, 'data.accounts.foursquare.data.checkins.items': 1,
+                         'data.accounts.foursquare.data.id': 1,
+                         'data.accounts.github.data.public_repo_count': 1, 'data.accounts.github.data.login': 1,
+                         'data.accounts.twitter.data.screen_name': 1, 'data.accounts.twitter.data.status.text': 1},
+                    callback);
+}
+
+exports.get = function(id, callback) {
+    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
 }
 
 exports.addEvent = function(eventBody, callback) {
