@@ -76,16 +76,16 @@ $(function() {
         focusSearchHandler: function() {
             var searchEl = $("#search");
             if (searchEl.val() == this._s.searchIndicator) {
-            searchEl.val("");
-            searchEl.removeClass("inactive");
+                searchEl.val("");
+                searchEl.removeClass("inactive");
             }
         },
 
         blurSearchHandler: function() {
             var searchEl = $("#search");
             if (searchEl.val() == "") {
-            searchEl.val(this._s.searchIndicator);
-            searchEl.addClass("inactive");
+                searchEl.val(this._s.searchIndicator);
+                searchEl.addClass("inactive");
             }
         },
 
