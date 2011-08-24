@@ -1,5 +1,3 @@
-
-
 var contacts = require('../Collections/Contacts/sync.js');
 var dataStore = require('../Collections/Contacts/dataStore.js');
 var assert = require("assert");
@@ -46,8 +44,8 @@ suite.next().suite.addBatch({
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.contacts;
-                    contacts.init("", mongoCollections);
-                    dataStore.init(mongoCollections);
+                    contacts.init("", mongoCollections, mongo);
+                    dataStore.init(mongoCollections, mongo);
                     dataStore.clear();
                     contacts.eventEmitter.on('contact/full', function(obj) {
                         events++;
