@@ -21,6 +21,8 @@ var vows = require("vows")
   , request = require('request')
   , primaryType = "testSync/testSynclet"
   , otherType = "eventType/testSynclet"
+  , _id
+  , obj
   ;
 lconfig.load("Config/config.json");
 var levents = require("levents");
@@ -204,8 +206,21 @@ vows.describe("Synclet Manager").addBatch({
         },
         "from testSync" : function(err, resp, body) {
             var data = JSON.parse(body);
+            _id = data[0]._id;
+            obj = data[0];
             assert.equal(data[0].notId, 500);
             assert.equal(data[0].someData, 'BAM');
+        }
+    }
+}).addBatch({
+    "Querying for an ID returns the object": {
+        topic: function() {
+            request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/" + _id}, this.callback);
+        },
+        "successfully" : function(err, resp, body) {
+            console.dir(body);
+            var data = JSON.parse(body);
+            assert.deepEqual(obj, data);
         }
     }
 }).addBatch({

@@ -62,4 +62,19 @@ module.exports = function(app) {
             }
         });
     });
+    
+    app.get('/synclets/:syncletId/:type/:id', function(req, res) {
+        dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
+            if (err) {
+                res.writeHead(500, {'content-type' : 'application/json'});
+                res.end('{error : ' + err + '}')
+            } else if (doc) {
+                res.writeHead(200, {'content-type' : 'application/json'});
+                res.end(JSON.stringify(doc));
+            } else {
+                res.writeHead(404);
+                res.end();
+            }
+        });
+    });
 }

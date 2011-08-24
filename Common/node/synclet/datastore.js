@@ -91,7 +91,7 @@ function getMongo(type, id, callback) {
         return m;
 }
 
-exports.queryCurrent = function(type, query, options) {
+exports.queryCurrent = function(type, query, options, callback) {
     query = query || {};
     options = options || {};
     var m = mongo.collections[type];
@@ -99,7 +99,7 @@ exports.queryCurrent = function(type, query, options) {
         mongo.addCollection(type);
         m = mongo.collections[type];
     }
-    return m.find(query, options);
+    m.find(query, options).toArray(callback);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
@@ -120,8 +120,7 @@ exports.getAllCurrent = function(type, callback, options) {
 exports.getCurrent = function(type, id, callback) {
     var m = getMongo(type, id, callback);
     if(m) {
-        var query = {};
-        query[mongoIDs[type]] = id;
+        var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
         m.findOne(query, callback);
     }
 }
