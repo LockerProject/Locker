@@ -223,13 +223,11 @@ aside div.detail div {
 }
 
 #searchBox select {
-    font-size: 30px;
     display: inline-block;
     font-size: 13px;
     font-family: 'MuliRegular';
-    line-height: 1em;
+    padding: 3px;
     margin: 0 0.25em 0 0;
-    padding: 0;
     width: 200px;
     height: 25px;
     -webkit-border-radius: 0.25em;
