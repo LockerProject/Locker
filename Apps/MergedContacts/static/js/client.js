@@ -5,6 +5,11 @@ $(function() {
     $(document).keydown(function(e) {
         // disable enter
         if (e.keyCode === 13) return false;
+        // esc key
+        if (e.keyCode === 27) {
+            $("input#search").val('');
+            return true;
+        }
         if ($('.clicked').length != 0) {
             // down arrow
             if (e.keyCode === 40) {
@@ -94,12 +99,7 @@ $(function() {
             var self = this;
             var cid = $(ev.currentTarget).data('cid');
             if ($(ev.currentTarget).hasClass('clicked')) {
-                $('aside').css('z-index', -1);
-                $('#main').stop().animate({
-                    marginRight: '0px'}, 750, function() {
-                        $('.detail').hide();
-                    })
-                return $('.clicked').removeClass('clicked');
+                return this.hideDetailsPane();
             }
             $('.clicked').removeClass('clicked');
             $(ev.currentTarget).addClass('clicked');
@@ -112,6 +112,15 @@ $(function() {
             } else {
                 self.updateDetails(model.get('detailedData'));
             }
+        },
+        
+        hideDetailsPane: function() {
+            $('aside').css('z-index', -1);
+            $('#main').stop().animate({
+                marginRight: '0px'}, 750, function() {
+                    $('.detail').hide();
+                })
+            return $('.clicked').removeClass('clicked');
         },
 
         focusSearchHandler: function() {
@@ -478,7 +487,13 @@ $(function() {
 
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
-
+            
+            if ($('.contact').length === 1 && $('.contact clicked').length === 0) {
+                $('.contact').click();
+            }
+            if ($('.contact clicked').length === 0 && $('.detail').is(':visible')) {
+                this.hideDetailsPane();
+            }
             // contactsEl.html(contactsHTML);
             countEl.html(tmp.length);
         }
