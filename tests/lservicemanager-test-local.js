@@ -101,10 +101,6 @@ vows.describe("Service Manager").addBatch({
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
-                "and by creating a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
-                    statInfo = fs.readFileSync(lconfig.me + "/" + svcMetaInfo.id + "/auth.json",'ascii');
-                    assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
-                },
                 "and passes along the icon": function(svcMetaInfo) {
                     assert.notEqual(svcMetaInfo.icon, undefined);
                 }
