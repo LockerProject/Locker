@@ -1,9 +1,27 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
 
 $(function() {
-    
+
     $(document).keydown(function(e) {
-        return e.keyCode != 13;
+        // disable enter
+        if (e.keyCode === 13) return false;
+        if ($('.clicked').length != 0) {
+            // down arrow
+            if (e.keyCode === 40) {
+                if ($('.clicked').next().length != 0) {
+                    $('.clicked').next().click();
+                    window.scrollBy(0, 71);
+                    return false;
+                }
+            // up arrow
+            } else if (e.keyCode === 38) {
+                if ($('.clicked').prev().length != 0) {
+                    $('.clicked').prev().click();
+                    window.scrollBy(0, -71);
+                    return false;
+                }
+            }
+        }
     });
 
     // Contact Model
@@ -88,7 +106,6 @@ $(function() {
             var model = this.collection.get(cid);
             if(!(model.get('detailedData'))) {
                 $.getJSON('/Me/contacts/' + cid, function(contact) {
-                    console.log(contact);
                     model.set({detailedData : contact});
                     self.updateDetails(contact);
                 });
