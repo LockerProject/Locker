@@ -104,6 +104,8 @@ body {
 
 .collection-count-panel div.info {
     margin-bottom: 45px;
+    font-size: 15px;
+    text-align: center;
 }
 
 .collection-count-panel .collection-status {
