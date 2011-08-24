@@ -1,4 +1,5 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
+var displayedContact = '';
 
 $(function() {
 
@@ -96,13 +97,18 @@ $(function() {
         },
 
         clickContactHandler: function(ev) {
-            var self = this;
             var cid = $(ev.currentTarget).data('cid');
-            if ($(ev.currentTarget).hasClass('clicked')) {
+            if (cid === displayedContact) {
                 return this.hideDetailsPane();
             }
             $('.clicked').removeClass('clicked');
             $(ev.currentTarget).addClass('clicked');
+            this.drawDetailsPane(cid);
+        },
+        
+        drawDetailsPane: function(cid) {
+            displayedContact = cid;
+            var self = this;
             var model = this.collection.get(cid);
             if(!(model.get('detailedData'))) {
                 $.getJSON('/Me/contacts/' + cid, function(contact) {
@@ -115,6 +121,7 @@ $(function() {
         },
         
         hideDetailsPane: function() {
+            displayedContact = '';
             $('aside').css('z-index', -1);
             $('#main').stop().animate({
                 marginRight: '0px'}, 750, function() {
@@ -472,7 +479,6 @@ $(function() {
                 } else {
                     // just get the rendered html from our model
                     contactsEl.append(c.get('html'));
-                    // contactsHTML += c.get('html');
                 }
             };
 
@@ -488,14 +494,19 @@ $(function() {
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
             
-            if ($('.contact').length === 1 && $('.contact clicked').length === 0) {
-                $('.contact').click();
-            }
-            if ($('.contact clicked').length === 0 && $('.detail').is(':visible')) {
-                this.hideDetailsPane();
-            }
-            // contactsEl.html(contactsHTML);
             countEl.html(tmp.length);
+            
+            if ($('.contact').length === 1) {
+                this.drawDetailsPane($('.contact').data('cid'));
+                $('.contact').addClass('clicked');
+            } else if ($('.detail').is(':visible')) {
+                var selectedContact = $(".contact[data-cid='" + displayedContact + "']");
+                if (selectedContact.length > 0) {
+                    selectedContact.addClass('clicked');
+                } else {
+                    this.hideDetailsPane();
+                }
+            }
         }
     });
     var listView = new ListView();
