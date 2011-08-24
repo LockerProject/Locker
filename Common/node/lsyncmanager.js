@@ -214,7 +214,7 @@ function executeSynclet(info, synclet, callback) {
 
 function compareIDs (originalConfig, newConfig) {
     var resp = {};
-    if (originalConfig.ids && newConfig.ids) {
+    if (originalConfig && originalConfig.ids && newConfig && newConfig.ids) {
         for (var i in newConfig.ids) {
             if (!originalConfig.ids[i]) break;
             var newSet = newConfig.ids[i];
