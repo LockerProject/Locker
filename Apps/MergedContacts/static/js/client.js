@@ -228,7 +228,7 @@ $(function() {
             // 4sq
             if (contact.accounts.foursquare && contact.accounts.foursquare[0].data) {
                 var fsq = contact.accounts.foursquare[0].data;
-                $('.4sqlastseen').attr('href', 'http://www.foursquare.com/venue/' + fsq.checkins.items[0].venue.id);
+                $('.4sqlastseen').attr('href', 'http://www.foursquare.com/user/' + fsq.id + '/checkin/' + fsq.checkins.items[0].id);
                 $('.4sqlastseen').text(fsq.checkins.items[0].venue.name);
                 $('.foursquarehandle').attr('href', 'http://www.foursquare.com/user/' + fsq.id);
                 $('.foursquareSection').show();
