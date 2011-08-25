@@ -109,18 +109,18 @@ body {
 }
 
 .collection-count-panel .collection-status {
-    font-size: 22px;
+    font-size: 20px;
     margin-top: 10px;
 }
 
 .collection-count-panel .collection-status .count {
-    width: 90px;
+    width: 100px;
     text-align: right;
     float: right;
     margin-right: 10px;
 }
 .collection-count-panel .collection-status label {
-    width: 90px;
+    width: 80px;
     text-align: right;
     float: right;
     margin-right: 10px;
@@ -138,6 +138,8 @@ body {
 .odoTicker {
 	height:28px; /* change this to the height of a single number in the CSS sprite, will be the same as the height attr of the call above */
 	overflow:hidden;	
+	background: #fff !important;
+	border-radius: 
 }
 .odoTicker .odoNumber {
 	height:305px; /* height of your sprite */
@@ -145,5 +147,5 @@ body {
 	position:relative;
 	background-image:url(/static/img/numbers.gif);	/* change to path to numbers.gif */
 	float:left;
-	margin:0 1px;
+	margin:0;
 }
