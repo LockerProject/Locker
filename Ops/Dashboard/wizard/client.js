@@ -31,7 +31,7 @@ $(document).ready(
                         if (t.count != t.lastCount) {
                             $("#"+t.name+"Count").odoTicker(
                                 {
-                                    number: data.count ? data.count +1000 : 0, //Number to load
+                                    number: data.count ? data.count : 0, //Number to load
                                     speed: 1500, //speed in ms
                                     height: 28   //height of a single number in the CSS sprite
                                 }

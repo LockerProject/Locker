@@ -99,7 +99,7 @@ body {
     float: left;
     margin-right: 20px;
     margin-top: 20px;
-    height: 210px;
+    height: 195px;
 }
 
 .collection-count-panel div.info {
@@ -114,12 +114,14 @@ body {
 }
 
 .collection-count-panel .collection-status .count {
-    width: 100px;
+    width: 99px;
     text-align: right;
     float: right;
     margin-right: 10px;
+    border: 1px solid #ccc;
 }
 .collection-count-panel .collection-status label {
+    padding-top: 5px;
     width: 80px;
     text-align: right;
     float: right;
