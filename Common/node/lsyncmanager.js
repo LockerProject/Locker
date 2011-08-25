@@ -292,18 +292,20 @@ function deleteData (collection, deleteIds, info, eventType, callback) {
 
 function addData (collection, data, info, eventType, callback) {
     async.forEach(data, function(object, cb) {
-        var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
-        newEvent.fromService = "synclet/" + info.id;
-        if (object.type === 'delete') {
-            datastore.removeObject(collection, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
-            levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-        } else {
-            datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type) {
-                if (type === 'same') return cb();
-                newEvent.obj.type = type;
+        if (object.obj) {
+            var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
+            newEvent.fromService = "synclet/" + info.id;
+            if (object.type === 'delete') {
+                datastore.removeObject(collection, object.obj[info.mongoId], {timeStamp: object.timestamp}, cb);
                 levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-                cb();
-            });
+            } else {
+                datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type) {
+                    if (type === 'same') return cb();
+                    newEvent.obj.type = type;
+                    levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                    cb();
+                });
+            }
         }
     }, callback);
 }
