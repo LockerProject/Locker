@@ -1,14 +1,42 @@
 #block
   .wrapper
+    != partial('partials/searchform', {locals: {searchPath: searchPath}})
+  
     h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
     
-    ul
+    ul.searchresults
+      - var lastType
       - for (var r in results)
-        li
-          strong
-            #{results[r]._type}:
-          #{results[r].content}
+        - if (results[r]._type !== lastType)
+          .result-type
+            #{results[r]._type}
+          - lastType = results[r]._type
+        - if (results[r]._type === 'contacts')
+            li
+              - if (results[r].fullobject.photos.length > 0)
+                .fll
+                  <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
+                .clb
+              .fll
+              .upperresult
+                #{results[r].fullobject._matching.cleanedNames}
+              .lowerresult
+                - if (results[r].fullobject.accounts.hasOwnProperty('twitter'))
+                  \@#{results[r].fullobject.accounts.twitter[0].data.screen_name}
+        - else if (results[r]._type === 'photos')
+            li
+              - if (results[r].fullobject.photos.length > 0)
+                <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
+                .clb
+              #{results[r].content}
+        - else if (results[r]._type === 'status/twitter')
+            li
+              - if (results[r].fullobject.photos.length > 0)
+                <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
+                .clb
+              #{results[r].content}
 
-    #raw
-      p Raw output: 
-      code #{raw}
+    - if (raw)
+      #raw
+        p Raw output: 
+        code #{raw}
