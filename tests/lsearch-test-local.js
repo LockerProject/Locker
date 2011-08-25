@@ -7,25 +7,19 @@
 *
 */
 
-var assert = require("assert");
-var vows = require("vows");
-var events = require("events");
+require.paths.push(__dirname + "/../Common/node");
+var assert = require('assert');
+var vows = require('vows');
+var events = require('events');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Locker Search');
-var lsearch = require("lsearch");
 var lconfig = require('lconfig');
+var lsearch = require('lsearch');
 lconfig.load('./config.json');
 
-lsearch.setIndexPath(__dirname + "/" + lconfig.me + "/search.index");
+lsearch.setIndexPath(__dirname + "/testsearch.index");
 
 suite.next().suite.addBatch({
-    "Setting an invalid engine":{
-        topic:lsearch.setEngine(undefined),
-        "does not fail":function(topic) {
-            assert.ok(lsearch.currentEngine);
-        }
-    }
-}).addBatch({
     "Can pick the CLucene engine":{
         topic:function() {
             try {

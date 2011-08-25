@@ -41,7 +41,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact" : {
+        "contacts" : {
             "_id":"_id",
             "name":"name",
             "nicknames":[],
@@ -61,7 +61,7 @@ CLEngine = function()
                 }
             ]
         },
-        "photo" : {
+        "photos" : {
             "_id":"id",
             "caption":"caption",
             "title":"title"
@@ -185,6 +185,11 @@ CLEngine.prototype.name = function() {
 
 
 exports.setEngine = function(engine) {
+    if (engine === undefined) {
+        console.error("Falling back to search Null Engine, your indexing and queries will not work.");
+        exports.currentEngine = new NullEngine();
+        return;
+    }
     if (exports.currentEngine) exports.currentEngine = undefined;
     try {
         exports.currentEngine = new engine();
