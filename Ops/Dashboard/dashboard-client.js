@@ -38,6 +38,8 @@ var app = express.createServer();
 app.use(connect.bodyParser());
 
 var synclets;
+var map;
+
 app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     request.get({uri:lockerRoot + '/synclets'}, function(err, resp, body) {
