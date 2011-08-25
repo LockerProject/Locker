@@ -35,7 +35,7 @@ exports.search = function(type, term, offset, limit, callback) {
             var result = JSON.parse(result);
              
             results.hits = {};
-            results.hits.total = null;   
+            results.hits.total = result.hits.length;   
             results.took = result.took;
             results.hits.hits = result.hits;
         

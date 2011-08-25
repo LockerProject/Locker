@@ -62,6 +62,8 @@ function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
     
+    var DEBUG_SEARCH_OUTPUT = true;
+    
     var term = sanitize(req.param('searchterm'));
     var type = sanitize(req.param('type'));
     var results = [];
@@ -72,14 +74,19 @@ function(req, res) {
         console.error(err);
         error = err;
       }
-      
+      if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
+          console.error('No results object returned for search');
+          error = err;
+      }
+
       res.render('search', {
         term: term,
         homePath: '/Me/' + me.id,
+        searchPath: '/Me/' + me.id + '/search',
         results: results.hits.hits,
         took: results.took,
         total: results.hits.total,
-        raw: JSON.stringify(results),
+        raw: DEBUG_SEARCH_OUTPUT?JSON.stringify(results):false,
         error: err
       });
     });
