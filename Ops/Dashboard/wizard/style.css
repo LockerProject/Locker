@@ -1,0 +1,149 @@
+body {
+    font-family: 'Istok Web', sans-serif;
+}
+
+.clear {
+    clear: both;
+}
+.right {
+    text-align: right;
+}
+
+#one {
+    height: 1000px;
+} 
+    
+.login-badge {
+    width: 400px; 
+    border: 2px solid #ccc; 
+    margin: auto; 
+    padding: 20px;
+    border-radius: 5px; 
+    background: rgba(100,100,100,.1);
+    box-shadow: 1px 0px 5px #ccc;
+    margin-top: 50px;
+}
+
+.login-badge h3 {
+    text-align: center;
+    margin-top: 0px;
+}
+
+.login-badge-actions {
+    width: 200px;
+    margin: auto;
+    margin-top: 50px;
+
+}
+
+.ui-grid-d.connector-panel {
+    padding: 10px;
+    padding-top: 30px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    min-width: 545px;
+}
+
+.ui-grid-d.connector-panel ui-bar,.ui-grid-d.connector-panel ui-body, {
+    padding: 0px;
+}
+
+.ui-grid-d div div.connector-button {
+    height: 150px;
+    text-align: center;
+    min-width: 100px;
+    padding: 0px;
+}
+
+.ui-grid-d div div.connector-button {
+    height; 120px;
+}
+
+.ui-grid-d.connector-panel .ui-btn-hover-d.disabled {
+    background: white !important;
+    border: 1px solid #CCC;
+    cursor: default;
+}
+
+.ui-grid-d.connector-panel .disabled img  {
+    opacity: 0.5
+}
+
+.ui-grid-d.connector-panel .disabled  {
+    color: #ccc;
+}
+
+.ui-grid-d.connector-panel .pending {
+    border: 1px solid #ccc;
+}
+
+.ui-grid-d div div.connector-button img {
+    border-radius: 10px;
+    box-shadow: 1px 0px 5px rgba(0,0,0,0.7);    
+    margin-bottom: 5px;
+}
+
+.ui-grid-d div div.connector-button a {
+    font-size: 12px;
+    padding: 10px;
+    height: 120px;
+    position: absolute;
+}
+
+.collection-count-panel {
+    border: 1px solid #ccc;
+    background: rgba(0,0,0,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    width: 200px;
+    float: left;
+    margin-right: 20px;
+    margin-top: 20px;
+    height: 210px;
+}
+
+.collection-count-panel div.info {
+    margin-bottom: 45px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.collection-count-panel .collection-status {
+    font-size: 22px;
+    margin-top: 10px;
+}
+
+.collection-count-panel .collection-status .count {
+    width: 90px;
+    text-align: right;
+    float: right;
+    margin-right: 10px;
+}
+.collection-count-panel .collection-status label {
+    width: 90px;
+    text-align: right;
+    float: right;
+    margin-right: 10px;
+}
+
+.spinner {
+    position: relative;
+    top: -168px;
+    left: 81px;
+    font-size: 50px;
+    color: rgba(0, 0, 0, 0.6);
+    padding-left: 7px;
+}
+
+.odoTicker {
+	height:28px; /* change this to the height of a single number in the CSS sprite, will be the same as the height attr of the call above */
+	overflow:hidden;	
+}
+.odoTicker .odoNumber {
+	height:305px; /* height of your sprite */
+	width:19px; /* width of numbers.gif */
+	position:relative;
+	background-image:url(/static/img/numbers.gif);	/* change to path to numbers.gif */
+	float:left;
+	margin:0 1px;
+}

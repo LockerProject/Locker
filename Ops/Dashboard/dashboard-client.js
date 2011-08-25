@@ -37,12 +37,31 @@ var fs = require('fs'),
 var app = express.createServer();
 app.use(connect.bodyParser());
 
-var map;
+var synclets;
 app.get('/', function (req, res) {
+    res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
+    request.get({uri:lockerRoot + '/synclets'}, function(err, resp, body) {
+        synclets = JSON.parse(body);
+        var connectorCount = 0; // should replace with collection count
+        var path = "wizard/index.html";
+                   
+        for (app in synclets.installed) {
+            path = "dashboard.html";
+        }
+
+        fs.readFile(path, function(err, data) {
+            res.write(data, "binary");
+            res.end();
+        });
+    });
+});
+
+app.get('/dashboard', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     request.get({uri:lockerRoot + '/map'}, function(err, resp, body) {
         map = JSON.parse(body);
-        fs.readFile("dashboard.html", function(err, data) {
+        var path = "dashboard.html";
+        fs.readFile(path, function(err, data) {
             res.write(data, "binary");
             res.end();
         });
@@ -75,10 +94,21 @@ app.get('/install', function(req, res){
 });
 
 function install(req, res) {
+    var id = req.param('id');
+    var handle = req.param('handle');
+    console.log(id);
+    console.log(handle);
     var httpClient = http.createClient(lockerPort);
     var request = httpClient.request('POST', '/core/Dashboard/install', {'Content-Type':'application/json'});
-    var item = JSON.stringify(map.available[req.param('id')]);
-    request.write(JSON.stringify(map.available[req.param('id')]));
+    console.log("hi");
+    if (id) var item = JSON.stringify(map.available[req.param('id')]);
+    for (i in map.available) {
+        if (map.available[i].handle == handle) {
+            if (handle) var item = JSON.stringify(map.available[i]);
+        }
+    }
+    console.log(item);
+    request.write(item);
     request.end();
     request.on('response',
     function(response) {
