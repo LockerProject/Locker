@@ -83,8 +83,15 @@ exports.removeObject = function(type, id, options, callback) {
 // mongos
 function getMongo(type, id, callback) {
     var m = mongo.collections[type];
-    if(!m) 
+    if(!m) {
         callback(new Error('invalid type:' + type), null);
+        try {
+            mongo.addCollection(type);
+        } catch (E) {
+            return callback(E, []);
+        }
+        m = mongo.collections[type];
+    }
     else if(!(id && (typeof id === 'string' || typeof id === 'number')))
         callback(new Error('bad id:' + id), null);
     else
@@ -112,7 +119,7 @@ exports.getAllCurrent = function(type, callback, options) {
             callback(E, []);
             return;
         }
-            m = mongo.collections[type];
+        m = mongo.collections[type];
     }
     m.find({}, options).toArray(callback);
 }

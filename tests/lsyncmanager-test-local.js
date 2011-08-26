@@ -218,7 +218,6 @@ vows.describe("Synclet Manager").addBatch({
             request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/" + _id}, this.callback);
         },
         "successfully" : function(err, resp, body) {
-            console.dir(body);
             var data = JSON.parse(body);
             assert.deepEqual(obj, data);
         }
