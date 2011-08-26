@@ -84,7 +84,6 @@ exports.removeObject = function(type, id, options, callback) {
 function getMongo(type, id, callback) {
     var m = mongo.collections[type];
     if(!m) {
-        callback(new Error('invalid type:' + type), null);
         try {
             mongo.addCollection(type);
         } catch (E) {
@@ -93,9 +92,8 @@ function getMongo(type, id, callback) {
         m = mongo.collections[type];
     }
     else if(!(id && (typeof id === 'string' || typeof id === 'number')))
-        callback(new Error('bad id:' + id), null);
-    else
-        return m;
+        return callback(new Error('bad id:' + id), null);
+    return m;
 }
 
 exports.queryCurrent = function(type, query, options, callback) {
@@ -129,6 +127,10 @@ exports.getCurrent = function(type, id, callback) {
     if(m) {
         var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
         m.findOne(query, callback);
+    } else {
+        console.dir(m);
+        console.dir(mongo);
+        callback('broke!', []);
     }
 }
 
