@@ -136,13 +136,13 @@ exports.hijackEvents = function (types, svcId) {
     lservicemanager.isInstalled = function() { return true; };
     lservicemanager.metaInfo = function() { return { uriLocal: 'http://testing:80/' }; };
     levents.makeRequest = function(httpOpts, body, callback) {
-        //console.log("Emitting fake event for ");
-        //console.dir(httpOpts);
-        exports.eventEmitter.emit('event', body, callback);
+        if (httpOpts.path.toString() === ("/Me/" + svcId + "/faked")) {
+            exports.eventEmitter.emit('event', body, callback);
+        }
     }
     
     for (var i = 0; i < types.length; i++) {
-        levents.addListener(types[i], svcId, 'https://testing:80/');
+        levents.addListener(types[i], svcId, '/faked');
     }
 }
 
