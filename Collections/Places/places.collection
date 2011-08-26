@@ -1,0 +1,13 @@
+{
+    "title":"Places",
+    "desc":"A collection of geographic locations.",
+    "run":"node places.js",
+    "status":"stable",
+    "handle":"places",
+    "provides":["place"],
+    "mongoCollections": ["place"],
+    "events":[["checkin/foursquare","/events"]
+		,["status/twitter","/events"]
+		,["timeline/twitter","/events"]
+		]
+}
