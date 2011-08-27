@@ -53,10 +53,10 @@ exports.addObject = function(type, object, options, callback) {
             timeStamp = options['timeStamp'];
         }
     }
-    setCurrent(type, object, function(err, newType) {
-        if (type === 'same') return callback(err, newType);
+    setCurrent(type, object, function(err, newType, doc) {
+        if (type === 'same') return callback(err, newType, doc);
         ijodFiles[type].addRecord(timeStamp, object, function(err) {
-            callback(err, newType);
+            callback(err, newType, doc);
         });
     });
 }
@@ -142,13 +142,17 @@ function setCurrent(type, object, callback) {
             query[mongoIDs[type]] = object[mongoIDs[type]];
             m.findAndModify(query, [['_id','asc']], object, {upsert:true, safe:true}, function(err, doc) {
                 if (deepCompare(doc, {})) {
-                    callback(err, 'new');
+                    m.findOne(query, function(err, newDoc) {
+                        callback(err, 'new', newDoc);
+                    });
                 } else {
+                    var id = doc._id;
                     delete doc._id;
                     if (deepCompare(doc, object)) {
-                        callback(err, 'same');
+                        callback(err, 'same', doc);
                     } else {
-                        callback(err, 'update');
+                        doc._id = id;
+                        callback(err, 'update', doc);
                     }
                 }
             });
