@@ -12,12 +12,12 @@ var map;
 
 function add_marker(checkin, icon, html, open) {
 
-    var myLatlng = new google.maps.LatLng(checkin['location']['lat'], checkin['location']['lng']);
+    var myLatlng = new google.maps.LatLng(checkin.location.lat, checkin.location.lng);
 
     var marker = new google.maps.Marker({
         position: myLatlng, 
         map: map,
-		icon: icon
+        icon: icon
     });
 
     var infowindow = new google.maps.InfoWindow({
@@ -40,8 +40,7 @@ function initialize() {
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
-    map = new google.maps.Map(document.getElementById("map_canvas"),
-        myOptions);
+    map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 }
 
 function reload(offset, limit, useJSON) {
@@ -52,50 +51,59 @@ function reload(offset, limit, useJSON) {
 
     var getContactsCB = function(contacts) {
 	// find the unordered list in our document to append to
-        var contactsList = $("#main ul");
+    var contactsList = $("#main ul");
 
 	// clear the list
 	contactsList.html('');
-	
+
+    //console.error(contacts.accounts);
 	// populate the list with our contacts
-	if (contacts.length == 0) contactsList.append("<li>Sorry, no contacts found!</li>");
+	if (contacts.length == 0) { 
+        contactsList.append("<li>Sorry, no contacts found!</li>");
+    } else {
         for (var i in contacts) {
-
-    	    var contact = contacts[i];
-            var friend = contact['accounts']['foursquare'][0]['data'];
-            if (contact['accounts']['foursquare'][0]['data']['mayorships']['count'] != 0) {
-    
-	            log(contact);
-                for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
-                    mayorship = contact['accounts']['foursquare'][0]['data']['mayorships']['items'][i];
-                    var html = ""
-                    if (mayorship['categories'].length > 0) {
-                        html = "<h1><img src='" + mayorship['categories'][0]['icon'] + "'/> " + mayorship['name'] + "</h1>";
-                    } else {
-                        html = "<h1>" + mayorship['name'] + "</h1>";
-                    }
-                    add_marker(mayorship, contact['accounts']['foursquare'][0]['data']['photo'], html, false);
-                }
-
-        	    if (useJSON) {
-            		contactHTML = "<pre>"+ JSON.stringify(contact['accounts']['foursquare'][0]['data']['mayorships']['items'][0], null, 2) +"</pre>";
-        	    } else {
-    	    	// get the contact name, but use the first email address if no name exists
-            		contactHTML = contact.name || contact.emails[0].value;
-        	    }
+            var contact = contacts[i];
+            var lastlat = 37.062530517578;
+            var lastlng = 15.296230316162;
+            if (contact.accounts.foursquare != undefined){
+                var friend = contact.accounts.foursquare[0].data;
                 
-                var lastname = friend['lastName'] ? friend['lastName'] : '';
-        	    liHTML = '<li id="' + contact._id + '" class="contact"><h1>' + friend['firstName'] + ' ' + lastname + '</h1><span class="basic-data">'
-                for (var i in contact['accounts']['foursquare'][0]['data']['mayorships']['items']){
-                    mayorship = contact['accounts']['foursquare'][0]['data']['mayorships']['items'][i];
-                    liHTML += '<h2><a href="https://foursquare.com/venue/' + mayorship['id'] + '">' + mayorship['name'] + '</a></h2>';
+                if (friend.mayorships.count != 0) {
+                    for (var i in friend.mayorships.items){
+                        mayorship = friend.mayorships.items[i];
+                        var html = ""
+                        if (mayorship.categories.length > 0) {
+                            html = "<h1><img src='" + mayorship.categories[0].icon + "'/> " + mayorship.name + "</h1>";
+                        } else {
+                            html = "<h1>" + mayorship.name + "</h1>";
+                        }
+                        
+                        add_marker(mayorship, contact.accounts.foursquare[0].data.photo, html, false);
+                        lastlat = mayorship.location.lat;
+                        lastlng = mayorship.location.lng;
+                    }
+                    if (useJSON) {
+                        contactHTML = "<pre>"+ JSON.stringify(contact.accounts.foursquare[0].data.mayorships.items[0], null, 2) +"</pre>";
+                    } else {
+                        // get the contact name, but use the first email address if no name exists
+                        contactHTML = contact.name || contact.emails[0].value;
+                    }
+                    
+                    var lastname = friend.lastName ? friend.lastName : '';
+                    liHTML = '<li id="' + contact._id + '" class="contact"><h1>' + friend.firstName + ' ' + lastname + '</h1><span class="basic-data">'
+                    for (var i in friend.mayorships.items){
+                        mayorship = friend.mayorships.items[i];
+                        liHTML += '<h2><a href="https://foursquare.com/venue/' + mayorship.id + '">' + mayorship.name + '</a></h2>';
+                    }
+                    liHTML += '</span></div>';
+                    contactsList.append(liHTML);
                 }
-                liHTML += '</span></div>';
-
-        	    contactsList.append(liHTML);
             }
-	    }
-    };
+        }
+        var latlng = new google.maps.LatLng(lastlat, lastlng);
+        map.setCenter(latlng)
+    }
+};
 
     $.getJSON(
 	'/query/getContact',
