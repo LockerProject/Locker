@@ -30,14 +30,16 @@
 
   <div id="container">
     <header>
-      <h1>Hello Mayors!</h1>
-      The map shows were your friends are currently mayor.
     </header>
-    <div id="mapContainer">
-	    <div id="map_canvas" style="width:868px;height:800px"/>
-	</div>
+  <div id="mapContainer">
+  <div id="map_canvas"></div>
+  </div>
     <div id="main" role="main">
-      <div id="count"></div>
+      <div id="search">
+	<label>Search:</label> <input type="text" id="address"></input> <input type="submit" value="go"/>
+      </div>
+      <br/>
+      Your mayor friends:
       <ul>
 	<li>Loading....</li>
       </ul>
