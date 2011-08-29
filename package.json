@@ -33,11 +33,7 @@
         "wrench": "=1.1.0",
         "eyes": "=0.1.6",
         "knox": "=0.0.8",
-        "unshortener": ">=0.0.8",
-        "sax": ">=0.2.3",
-        "readabilitySAX": "=0.1.1",
         "mongodb": ">=0.9.6",
-        "winston": ">0.3.0",
-        "clucene": ">=0.1.1"
+        "winston": ">0.3.0"
     }
 }

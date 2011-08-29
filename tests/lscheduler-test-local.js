@@ -19,9 +19,6 @@ var events = require('events');
 var serviceManager = require('lservicemanager');
 var lscheduler = require("lscheduler.js");
 
-serviceManager.scanDirectory("Tests");
-serviceManager.findInstalled();
-
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {
         topic:lscheduler.masterScheduler,
@@ -61,7 +58,7 @@ vows.describe("Locker Scheduling System").addBatch({
                 // i need to schedule a bogus event.  also a potential race condition
                 //
                 var emitter = new events.EventEmitter();
-                request.get({uri: lconfig.lockerBase + '/core/temaseatscookies/at?at=2500&cb=whatever'}, function() {
+                request.get({uri: lconfig.lockerBase + '/core/foursquare/at?at=2500&cb=whatever'}, function() {
                     setTimeout(function() {
                         var scheduled = fs.readFileSync(lconfig.me + '/scheduler.json', 'ascii');
                         if (scheduled != '') {

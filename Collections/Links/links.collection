@@ -5,10 +5,6 @@
     "status":"stable",
     "handle":"links",
     "provides":["link"],
-    "mongoCollections": ["link","encounter"],
-    "events":[["link/facebook","/events"]
-		,["link/twitter","/events"]
-		,["timeline/twitter","/events"]
-		,["home/facebook","/events"]
-		]
+    "mongoCollections": ["links"],
+    "events":[["link/facebook","/events"],["link/twitter","/events"]]
 }

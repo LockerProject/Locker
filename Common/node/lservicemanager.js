@@ -355,15 +355,12 @@ exports.spawn = function(serviceId, callback) {
     var env = process.env;
     env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
     app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
-    app.stdout.setEncoding("utf8");
-    app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
         console.outputModule = svc.title;
         console.error(data);
         console.outputModule = mod;
     });
-    var dbuff = "";
     app.stdout.on('data',function (data) {
         var mod = console.outputModule;
         console.outputModule = svc.title;
@@ -372,21 +369,8 @@ exports.spawn = function(serviceId, callback) {
             console.log(data);
         } else {
             // Process the startup json info
-            dbuff += data;
             try {
-                var nl = dbuff.indexOf("\n");
-                if(nl > 0) dbuff = dbuff.substr(0,nl); // cut off any extra stuff, if any... TODO: we should have better newline parsing
-                var returnedProcessInformation = JSON.parse(dbuff);
-            }catch(error){
-                if(dbuff.substr(0,1) == '{')
-                { // json hasn't all been written yet, come back, should use newline terminated!
-                    console.outputModule = mod;
-                    return;
-                }
-                console.error("The process did not return valid startup information. "+error+" on "+dbuff);
-                app.kill();
-            }
-            try {
+                var returnedProcessInformation = JSON.parse(data);
                 // if they tell us a port, use that
                 if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
