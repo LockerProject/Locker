@@ -28,6 +28,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({uri : 'https://graph.facebook.com/1234/picture?access_token=foo',
                 file : __dirname + '/fixtures/facebook/1234.jpg',
                 contentType : 'image/jpeg' });
+            process.chdir("." + mePath);
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
