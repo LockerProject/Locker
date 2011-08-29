@@ -165,7 +165,7 @@ function getPages(arg, cbEach, cbDone)
     if(!arg.page) arg.page = 1;
     tw.apiCall('GET', arg.path, arg, function(err, js){
         // if error.statusCode == 500, retry?
-        if(err || js.length == 0) return cbDone(err);
+        if(err || !Array.isArray(js) || js.length == 0) return cbDone(err);
         for(var i = 0; i < js.length; i++) cbEach(js[i]);
         arg.page++;
         return getPages(arg,cbEach,cbDone);

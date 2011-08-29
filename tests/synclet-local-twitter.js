@@ -63,6 +63,25 @@ suite.next().suite.addBatch({
     }
     
 }).addBatch({
+    "Can handle failwhale" : {
+        topic: function() {
+            fakeweb.allowNetConnect = false;
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
+                file : __dirname + '/fixtures/twitter/verify_credentials.js' });
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=1',
+                body : '<html>jer cant find a real example</html>'});
+            process.chdir('.' + mePath);
+            timeline.sync(pinfo, this.callback)
+        },
+        "successfully" : function(err, response) {
+            //console.error('DEBUG: err', err);
+            //console.error('DEBUG: response', response.data);
+            assert.equal(response.data.timeline.length, 0);
+            process.chdir(curDir);
+        }
+    }
+    
+}).addBatch({
     "Can get mentions" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
