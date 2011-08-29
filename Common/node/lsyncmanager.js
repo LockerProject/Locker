@@ -238,6 +238,9 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
             callback = function() {};
         }
         var dataKeys = [];
+        if (typeof(response.data) === 'string') {
+            return callback('bad data from synclet');
+        }
         for (var i in response.data) {
             dataKeys.push(i);
         }
