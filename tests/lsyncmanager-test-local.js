@@ -296,8 +296,22 @@ vows.describe("Synclet Manager").addBatch({
             }
         }
     },
+    "Migrates services that need it during the install" : {
+        topic: [],
+        "changing their version" : function(topic) {
+            assert.include(syncManager.synclets().installed, "migration-test2");
+            assert.isTrue(syncManager.isInstalled("migration-test2"));
+            assert.notEqual(syncManager.synclets().installed['migration-test2'], undefined);
+            assert.notEqual(syncManager.synclets().installed['migration-test2'].version, undefined);
+            assert.equal(syncManager.synclets().installed['migration-test2'].version, 1308079085972);
+        },
+        "and running the migration successfully" : function(topic) {
+            var me = JSON.parse(fs.readFileSync(process.cwd() + "/" + lconfig.me + "/migration-test/me.json", 'ascii'));
+            assert.notEqual(me.mongoCollections, undefined);
+            assert.equal(me.mongoCollections[0], 'new_collection');
+        }
+    },
     teardown : function() {
         levents.fireEvent = realFireEvent;
     }
 }).export(module);
-

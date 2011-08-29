@@ -1,0 +1,8 @@
+{
+    "title":"Test migrating services from one version to the next",
+    "srcdir":"Tests/migration-test",
+    "id":"migration-test2",
+    "synclets":{},
+    "uri":"http://localhost:8043/Me/migration-test2",
+    "version":"1308078974481"
+}

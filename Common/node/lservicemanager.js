@@ -15,6 +15,7 @@ var util = require("util");
 var spawn = require('child_process').spawn;
 var levents = require('levents');
 var wrench = require('wrench');
+var lutil = require(__dirname + "/lutil");
 
 var serviceMap = {
     available:[],
@@ -64,12 +65,14 @@ exports.providers = function(types) {
 */
 function mapMetaData(file, type, installable) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
     metaData.installable = installable;
     metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
     serviceMap.available.push(metaData);
     if (type === "collection") {
+        console.log("***** Should install collection " + metaData.handle);
         if(!metaData.handle) {
             console.error("missing handle for "+file);
             return;
@@ -82,12 +85,15 @@ function mapMetaData(file, type, installable) {
                 err = true
             }
             if(err || !stat) {
+                exports.install(metaData, true);
+                /*
                 metaData.id=metaData.handle;
                 metaData.uri = lconfig.lockerBase+"/Me/"+metaData.id+"/";
                 metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
                 serviceMap.installed[metaData.id] = metaData;
                 fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id,0755);
                 fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+metaData.id+'/me.json',JSON.stringify(metaData, null, 4));
+                */
             }
         }
     }
@@ -124,6 +130,26 @@ exports.scanDirectory = function(dir, installable) {
     }
 }
 
+function mergedManifest(dir) 
+{
+    // Don't use metainfo here because we aren't fully setup
+    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+    var serviceInfo = {};
+    serviceMap.available.some(function(svcInfo) {
+        if (svcInfo.srcdir == js.srcdir) {
+            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
+            return true;
+        }
+        return false;
+    });
+    if (serviceInfo && serviceInfo.manifest) {
+        var fullInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + serviceInfo.manifest));
+        return lutil.extend(js, fullInfo);
+    } else {
+        return js;
+    }
+}
+
 /**
 * Scans the Me directory for instaled services
 */
@@ -136,17 +162,19 @@ exports.findInstalled = function () {
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!fs.statSync(dir+'/me.json').isFile()) continue;
-            var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+            var js = mergedManifest(dir);
             if (!js.synclets) {
                 delete js.pid;
                 delete js.starting;
                 js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
-                exports.migrate(dir, js);
-                addEvents(js);
-                console.log("Loaded " + js.id);
                 serviceMap.installed[js.id] = js;
                 if (js.disabled) {
+                    console.log("Disabled " + js.id);
                     serviceMap.disabled.push(js.id);
+                } else {
+                    exports.migrate(dir, js);
+                    addEvents(js);
+                    console.log("Loaded " + js.id);
                 }
             }
         } catch (E) {
@@ -197,7 +225,7 @@ exports.migrate = function(installedDir, metaData) {
 /**
 * Install a service
 */
-exports.install = function(metaData) {
+exports.install = function(metaData, installOverride) {
     var serviceInfo;
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == metaData.srcdir) {
@@ -207,9 +235,10 @@ exports.install = function(metaData) {
         }
         return false;
     });
-    if (!serviceInfo || !serviceInfo.installable) {
+    if (!serviceInfo || !(serviceInfo.installable || installOverride)) {
         return serviceInfo;
     }
+    var meInfo = {}; // The info to save to me.json
     // local/internal name for the service on disk and whatnot, try to make it more friendly to devs/debugging
     if(serviceInfo.handle) {
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
@@ -221,21 +250,25 @@ exports.install = function(metaData) {
             }
         } catch (E) {
             var suffix = (inc > 0)?"-"+inc:"";
-            serviceInfo.id = serviceInfo.handle+suffix;
+            meInfo.id = serviceInfo.handle+suffix;
         }
     } else {
         var hash = crypto.createHash('md5');
         hash.update(Math.random()+'');
-        serviceInfo.id = hash.digest('hex');        
+        meInfo.id = hash.digest('hex');        
     }
-    serviceInfo.uri = lconfig.lockerBase+"/Me/"+serviceInfo.id+"/";
-    serviceInfo.version = Date.now();
-    serviceMap.installed[serviceInfo.id] = serviceInfo;
-    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+serviceInfo.id,0755);
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+serviceInfo.id+'/me.json',JSON.stringify(serviceInfo, null, 4));
-    addEvents(serviceInfo);
-    serviceInfo.externalUri = lconfig.externalBase+"/Me/"+serviceInfo.id+"/";
-    return serviceInfo;
+    meInfo.srcdir = serviceInfo.srcdir;
+    meInfo.is = serviceInfo.is;
+    meInfo.uri = lconfig.lockerBase+"/Me/"+meInfo.id+"/";
+    meInfo.version = Date.now();
+    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id,0755);
+    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id+'/me.json',JSON.stringify(meInfo));
+    serviceMap.installed[meInfo.id] = mergedManifest(path.join(lconfig.me, meInfo.id));
+    
+    var fullInfo = exports.metaInfo(meInfo.id);
+    addEvents(fullInfo);
+    fullInfo.externalUri = lconfig.externalBase+"/Me/"+meInfo.id+"/";
+    return fullInfo;
 }
 
 //! Spawn a service instance
@@ -339,11 +372,11 @@ exports.spawn = function(serviceId, callback) {
             try {
                 var returnedProcessInformation = JSON.parse(data);
                 // if they tell us a port, use that
-                if(returnedProcessInformation.port)
-                    svc.port = returnedProcessInformation.port;
+                if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
+                console.log("Set local uri to " + svc.uriLocal + " for " + svc.id);
                 // save out all updated meta fields
-                fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + svc.id + '/me.json',JSON.stringify(svc, null, 4));
+                //fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + svc.id + '/me.json',JSON.stringify(svc, null, 4));
                 // Set the pid after the write because it's transient to this locker instance only
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
@@ -378,9 +411,11 @@ exports.spawn = function(serviceId, callback) {
         delete svc.uriLocal;
         delete svc.starting;
         // save out all updated meta fields (pretty print!)
+        /*
         if (!svc.uninstalled) {
             fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
         }
+        */
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
@@ -393,6 +428,25 @@ exports.spawn = function(serviceId, callback) {
 * Retrieve the meta information for a service
 */
 exports.metaInfo = function(serviceId) {
+    /*
+    var installedInfo = serviceMap.installed[serviceId] || {};
+    console.log("metaInfo")
+    console.dir(installedInfo);
+    var serviceInfo;
+    serviceMap.available.some(function(svcInfo) {
+        if (svcInfo.srcdir == installedInfo.srcdir) {
+            serviceInfo = {};
+            lutil.extend(serviceInfo, svcInfo);
+            return true;
+        }
+        return false;
+    });
+    if (!serviceInfo) {
+        console.log("Unknown");
+        throw "Unknown service " + serviceId;
+    }
+    serviceMap.installed[serviceId] = lutil.extend(serviceInfo, installedInfo);
+    */
     return serviceMap.installed[serviceId];
 }
 

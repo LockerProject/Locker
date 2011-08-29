@@ -33,12 +33,47 @@ vows.describe("Service Manager").addBatch({
         assert.include(serviceManager.serviceMap(), "available");
         assert.include(serviceManager.serviceMap(), "installed");
     },
+    "Available services" : {
+        "gathered from the filesystem" : {
+            topic:serviceManager.scanDirectory("Connectors"),
+            "found at least 10 services": function() {
+                assert.ok(serviceManager.serviceMap().available.length > 10);
+            },
+            "and can be installed" : {
+                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
+                    assert.include(svcMetaInfo, "id");
+                },
+                "setting a version number" : function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.version, undefined);
+                },
+                "and by service map says it is installed" : function(svcMetaInfo) {
+                    assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
+                },
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
+            }
+        }
+    },
+}).addBatch({
     "Installed services" : {
         "are found" : {
-            topic:serviceManager.findInstalled(),
+            topic:function() {
+                serviceManager.scanDirectory("Tests");
+                serviceManager.findInstalled();
+                return "";
+            },
             "and testURLCallback exists": function() {
                 assert.include(serviceManager.serviceMap().installed, "testURLCallback");
                 assert.isTrue(serviceManager.isInstalled("testURLCallback"));
+            },
+            "manifest data is taken over me.json data" : function() {
+                console.dir(serviceManager.serviceMap().installed["event-collector"]);
+                assert.equal(serviceManager.serviceMap().installed["event-collector"].events[0][0], "configuration/listener");
             },
             "and can be spawned" : {
                 topic:function() {
@@ -77,32 +112,6 @@ vows.describe("Service Manager").addBatch({
                         assert.isNull(err);
                         assert.isTrue(stat);
                     }
-                }
-            }
-        }
-    },
-    "Available services" : {
-        "gathered from the filesystem" : {
-            topic:serviceManager.scanDirectory("Connectors"),
-            "found at least 10 services": function() {
-                assert.ok(serviceManager.serviceMap().available.length > 10);
-            },
-            "and can be installed" : {
-                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
-                "by giving a valid install instance" : function(svcMetaInfo) {
-                    assert.include(svcMetaInfo, "id");
-                },
-                "setting a version number" : function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.version, undefined);
-                },
-                "and by service map says it is installed" : function(svcMetaInfo) {
-                    assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
-                },
-                "and by creating a valid service instance directory" : function(svcMetaInfo) {
-                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
-                },
-                "and passes along the icon": function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
         }

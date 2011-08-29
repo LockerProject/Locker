@@ -1,0 +1,5 @@
+{
+	"title":"Test migrating services from one version to the next",
+	"run":"node migration-test.js",
+	"synclets":{"name": "notreal", "frequency": 500000}
+}

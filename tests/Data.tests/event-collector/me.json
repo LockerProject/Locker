@@ -3,6 +3,5 @@
     "srcdir":"Tests/event-collector",
     "is":"connector",
     "id":"event-collector",
-    "uri":"http://localhost:8043/Me/event-collector",
-    "events":[["configuration/listener","/event"]]
+    "uri":"http://localhost:8043/Me/event-collector"
 }
