@@ -1,0 +1,29 @@
+/* Get stylin here */
+
+#main ul li {
+    margin-bottom: 10px;
+}
+
+#map_canvas {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 300px;
+    bottom: 0px;
+}
+
+#main {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    width: 280px;
+    overflow: auto;
+    padding: 10px;
+}
+
+#main ul {
+    font-size: 14px;
+    list-style: none;
+    padding: 0px;
+}
