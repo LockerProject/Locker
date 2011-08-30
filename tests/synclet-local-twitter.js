@@ -55,7 +55,7 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
-            assert.equal(response.data.timeline[0].obj.id_str, '71348168469643264');
+            assert.equal(response.data['status/timeline'][0].obj.id_str, '71348168469643264');
         }
     }
     
@@ -73,7 +73,7 @@ suite.next().suite.addBatch({
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             // assert.equal(response, undefined);
-            assert.equal(response.data.timeline.length, 0);
+            assert.equal(response.data['status/timeline'].length, 0);
         }
     }
     
@@ -92,7 +92,7 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
-            assert.equal(response.data.mentions[0].obj.id_str, '71348168469643264');
+            assert.equal(response.data['status/mentions'][0].obj.id_str, '71348168469643264');
         }
     }
     
@@ -111,7 +111,7 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
-            assert.equal(response.data.tweets[0].obj.id_str, '71348168469643264');
+            assert.equal(response.data['status/tweets'][0].obj.id_str, '71348168469643264');
         }
     }
 }).addBatch({
