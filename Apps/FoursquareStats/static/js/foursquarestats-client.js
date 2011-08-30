@@ -38,26 +38,22 @@ function add_marker(checkin, html, open) {
 
 function initialize() {
 
-    var latlng = new google.maps.LatLng(53.95113592173898, -1.0752010345458984);
-    //var latlng;
-    //var getcheckinsCB = function(checkins) {
-     //   latlng = new google.maps.LatLng(checkins[0].venue.location.lat, checkins[0].venue.location.lng);
-    //}
+    var latlng = new google.maps.LatLng(0, 0);
     var myOptions = {
-      zoom: 7,
+      zoom: 2,
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     map = new google.maps.Map(document.getElementById("map_canvas"),
         myOptions);
 }
+
 function sortObj(arr){
     // Setup Arrays
     var sortedKeys = new Array();
     var sortedObj = {};
  
     // Separate keys and sort them
-
     for (var i in arr){
         sortedKeys.push(i);
     }
@@ -70,7 +66,6 @@ function sortObj(arr){
     }
 
     return sortedObj;
-
 }
 
 function reload(useJSON) {

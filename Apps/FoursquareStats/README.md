@@ -1,6 +1,4 @@
-# This is a "static" example of a contacts locker app. #
+# This is an example locker app for displaying Foursquare check-ins. #
 
-It uses Boilerplate and jQuery for best practices, and is documented with YUI Doc comments.
+It uses your Foursquare history to map everywhere you have ever checked in.
 
-Let us know if you do something cool based on this!
--> #lockerproject on irc.freenode.net
