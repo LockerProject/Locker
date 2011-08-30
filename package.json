@@ -37,6 +37,7 @@
         "sax": ">=0.2.3",
         "readabilitySAX": ">=0.1.1",
         "mongodb": ">=0.9.6",
-        "winston": ">0.3.0"
+        "winston": ">0.3.0",
+        "clucene": ">=0.1.1"
     }
 }
