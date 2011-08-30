@@ -35,6 +35,9 @@ exports.sync = function(processInfo, cb) {
 var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         profile = JSON.parse(data).response.user;
+        if (profile === undefined) {
+            return callback('error attempting to get profile data - ' + data);
+        }
         getCheckins(profile.id, auth.accessToken, 0, function(err, checkins) {
             if (!checkins || !checkins.length) {
                 return callback();
