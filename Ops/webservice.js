@@ -408,9 +408,7 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
-console.error(__dirname + '/static');
 locker.use(express.static(__dirname + '/static'));
-
 
 
 // fallback everything to the dashboard
@@ -428,7 +426,7 @@ locker.get('/dashboard/', function(req, res) {
 });
 
 locker.get('/', function(req, res) {
-    res.redirect('/dashboard/');
+    res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
@@ -444,7 +442,6 @@ function proxied(method, svc, ppath, req, res, buffer) {
 
 
 exports.startService = function(port) {
-    // console.error('avail:' + JSON.stringify(serviceManager.serviceMap().available));
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
     serviceManager.spawn(lconfig.ui, function() {

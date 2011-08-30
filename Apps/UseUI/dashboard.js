@@ -10,21 +10,12 @@
 var lconfig = require('../../Common/node/lconfig.js');
 lconfig.load('Config/config.json');
 
-
-var express = require('express');
-var connect = require('connect');
-
-var app = express.createServer(connect.bodyParser(), connect.cookieParser());
-
-// Woo woo startup stuff!
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
-    console.error('DEBUG: processInfo', processInfo);
     process.chdir(processInfo.workingDirectory);
-    require('./dashboard-client')(lconfig.lockerHost, lconfig.lockerPort, processInfo.port, lconfig.externalBase);
+    require('./dashboard-client')(lconfig.externalBase, processInfo.port);
     process.stdout.write(JSON.stringify({port: processInfo.port}));
 });
 stdin.resume();
-
