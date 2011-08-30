@@ -9,27 +9,38 @@
       - for (var r in results)
         - if (results[r]._type !== lastType)
           .result-type
-            #{results[r]._type}
+            - if (results[r]._type == 'status/twitter')
+              Tweets
+            - else
+              #{results[r]._type}
           - lastType = results[r]._type
         - if (results[r]._type === 'contacts')
             li
               - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)
                 .fll
                   <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
-                .clb
               .fll
-              .upperresult
-                #{results[r].fullobject._matching.cleanedNames}
-              .lowerresult
-                - if (results[r].fullobject.accounts.hasOwnProperty('twitter'))
-                  \@#{results[r].fullobject.accounts.twitter[0].data.screen_name}
+                .upperresult(style="text-transform: capitalize;")
+                  #{results[r].fullobject._matching.cleanedNames}
+                .lowerresult
+                  - if (results[r].fullobject.accounts.hasOwnProperty('twitter'))
+                    \@#{results[r].fullobject.accounts.twitter[0].data.screen_name}
+              .clb
         - else if (results[r]._type === 'photos')
             li
               - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)
                 <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
-                .clb
               #{results[r].content}
-      
+        - else if (results[r]._type === 'status/twitter')
+            li
+              .fll
+                <img class="avatar" src="#{results[r].fullobject.user.profile_image_url_https}" />
+              .fll
+                .upperresult
+                  #{results[r].fullobject.text}
+                .lowerresult
+                  \@#{results[r].fullobject.user.screen_name}
+              .clb
     - if (raw)
       #raw
         p Raw output: 

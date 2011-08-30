@@ -157,15 +157,11 @@ h1 {
 	border: 1px #bbb solid;
 }
 .searchresults .upperresult { 
-	 width: auto;
-	 height: 48px;
-	 margin: -50px 0 0 65px;
-	 text-transform: capitalize;
+	 width: 600px;
+	 margin: 5px 0 0 15px;
 }
 .searchresults .lowerresult { 
-	 width: auto;
-	 height: 23px;
-	 margin: -24px 0 0 65px;
+	 margin: 3px 0 3px 15px;
 	 color: #888;
 	 font-size: 0.8em;
 }
