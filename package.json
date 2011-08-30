@@ -38,6 +38,7 @@
         "readabilitySAX": ">=0.1.1",
         "mongodb": ">=0.9.6",
         "winston": ">0.3.0",
-        "clucene": ">=0.1.1"
+        "clucene": ">=0.1.1",
+        "jade": ">= 0.0.1"
     }
 }
