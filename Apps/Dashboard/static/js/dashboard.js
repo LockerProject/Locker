@@ -174,7 +174,7 @@ function uninstallService(svcID, title, index) {
     var resp = confirm('Are you sure you want to delete ' + svcID + '? ' +
                        'This is NOT REVERSIBLE and will DELETE all of the DATA in your locker associated with this connector!!');
     if(resp) {
-        $.getJSON("uninstall", {serviceId:svcID},
+        $.getJSON("/uninstall", {serviceId:svcID},
                   function(data, err, resp) {
                       if(data && data.success) {
                           var previousLocation = getLocation();
@@ -200,7 +200,7 @@ function ableService(abled, svcID, title, index) {
     var resp = confirm(abled + 'able service ' + title + '?');
     if(resp) {
         var endpoint = abled.toLowerCase() + 'able';
-        $.getJSON(endpoint, {serviceId:svcID},
+        $.getJSON('/' + endpoint, {serviceId:svcID},
                   function(data, err, resp) {
                       if(data && data.success) {
                           var previousLocation = getLocation();
@@ -279,7 +279,7 @@ window.onpopstate = function(event) {
 
 function updateServiceMap(previousLocation, callback) {
     // Update Interface from Service Map
-    $.ajax({ url: "map", dataType: "json" }).success(
+    $.ajax({ url: "/map", dataType: "json" }).success(
         function(data) {
             var installedSrcDirs = [];
             window.serviceMap = data;

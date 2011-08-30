@@ -39,6 +39,7 @@ exports.load = function(filepath) {
     exports.me = config.me || "Me";
     exports.lockerDir = process.cwd();
     exports.logFile = config.logFile || undefined;
+    exports.ui = config.ui || 'devdashboard';
 }
 
 function setBase() {

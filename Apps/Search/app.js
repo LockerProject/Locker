@@ -118,6 +118,11 @@ function(req, res) {
     });
 });
 
+app.get('/ready', function(req, res) {
+    res.writeHead(200);
+    res.end('true');
+});
+
 // quick/dirty sanitization ripped from the Jade template engine
 function sanitize(term){
     return String(term)

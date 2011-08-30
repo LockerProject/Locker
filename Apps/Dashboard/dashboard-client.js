@@ -11,19 +11,6 @@
 // /Apps /Collections /Contexts and /SourceSinks dirs
 // enable start/stop on all (that you can)
 
-var rootHost = process.argv[2];
-var lockerPort = process.argv[3];
-var rootPort = process.argv[4];
-var externalBase = process.argv[5];
-var lockerBase = 'http://' + rootHost + ':' + lockerPort + '/core/dashboard';
-
-if (!rootHost || !rootPort) {
-    process.stderr.write("missing host and port arguments\n");
-    process.exit(1);
-}
-//var lockerPort = rootPort.substring(1);
-var lockerRoot = 'http://'+rootHost+':'+lockerPort;
-
 var fs = require('fs'),
     path = require('path'),
     url = require('url'),
@@ -32,25 +19,47 @@ var fs = require('fs'),
     connect = require('connect'),
     http = require('http'),
     request = require('request');
+    
+
+var map;
+
+var rootHost;
+var lockerPort;
+var rootPort;
+var externalBase;
+var lockerBase;
+var lockerRoot;
+
+module.exports = function(passedLockerHost, passedLockerPort, passedPort, passedExternalBase) {
+    rootHost = passedLockerHost;
+    lockerPort = passedLockerPort;
+    rootPort = passedPort;
+    externalBase = passedExternalBase;
+    lockerBase = 'http://' + rootHost + ':' + lockerPort + '/core/dashboard';
+    lockerRoot = 'http://'+rootHost+':'+lockerPort;
+    
+    app.use(express.static(__dirname + '/static'));
+
+    app.listen(rootPort);
+}
 
 
 var app = express.createServer();
 app.use(connect.bodyParser());
 
 var synclets;
-var map;
-
 app.get('/', function (req, res) {
     res.writeHead(200, { 'Content-Type': 'text/html','Access-Control-Allow-Origin' : '*' });
     request.get({uri:lockerRoot + '/synclets'}, function(err, resp, body) {
         synclets = JSON.parse(body);
         var connectorCount = 0; // should replace with collection count
-        var path = "wizard/index.html";
+        var path = __dirname + "/static/wizard/index.html";
                    
         for (app in synclets.installed) {
-            path = "dashboard.html";
+            path = __dirname + "/dashboard.html";
         }
-
+        
+        console.error('DEBUG: path', path);
         fs.readFile(path, function(err, data) {
             res.write(data, "binary");
             res.end();
@@ -170,6 +179,3 @@ function ensureMap(callback) {
 }
 
 
-app.use(express.static(__dirname));
-
-app.listen(rootPort);

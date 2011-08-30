@@ -97,7 +97,17 @@ function mapMetaData(file, type, installable) {
             }
         }
     }
-
+    if(metaData.autoInstall) {
+        var err = false;
+        try {
+            var stat = fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle);
+        } catch (E) {
+            err = true
+        }    
+        if(err || !stat) {
+            exports.install(metaData);
+        }
+    }
     return metaData;
 }
     
@@ -448,6 +458,14 @@ exports.metaInfo = function(serviceId) {
     serviceMap.installed[serviceId] = lutil.extend(serviceInfo, installedInfo);
     */
     return serviceMap.installed[serviceId];
+}
+
+exports.getFromAvailable = function(handle) {
+    for(var i in serviceMap.available) {
+        if(serviceMap.available[i].handle === handle)
+            return serviceMap.available[i];
+    }
+    return null;
 }
 
 exports.isInstalled = function(serviceId) {

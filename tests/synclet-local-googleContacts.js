@@ -25,9 +25,7 @@ suite.next().suite.addBatch({
             contacts.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data.contacts);
-            assert.equal(response.data.contacts[0].obj.id, '29a2af0a88d07f');
+            assert.equal(response.data.contact[0].obj.id, '29a2af0a88d07f');
         }
     }
 })

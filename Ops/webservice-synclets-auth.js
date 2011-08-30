@@ -128,7 +128,7 @@ function handleOAuth2Post (code, options, res) {
         });
         httpsReq.write(querystring.stringify(postData));
         httpsReq.on('error', function(e) {
-            callback(e, null);
+            console.error('DEBUG: e', e);
         });
         httpsReq.end();
     } catch (E) {

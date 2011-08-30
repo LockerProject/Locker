@@ -219,7 +219,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Google Contacts ADD event with matching email" : {
         topic: function() {
-            dataStore.addEvent({"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"fake@testdata.com"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"via":"gcontacts","type":"contact/google","action":"new"}, this.callback); },
+            dataStore.addEvent({"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"fake@testdata.com"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"via":"gcontacts","type":"contact/gcontacts","action":"new"}, this.callback); },
         "updates to the same account": function(err, object) {
             assert.equal(object.data.accounts.foursquare[0].data.id, 2715557);
             assert.equal(object.data.accounts.foursquare[0].data.name, 'Jake Mitchell');

@@ -15,7 +15,7 @@ var levents = require("levents");
 var lutil = require('lutil');
 var serviceManager = require("lservicemanager");
 var syncManager = require('lsyncmanager');
-var dashboard = require(__dirname + "/dashboard.js");
+// var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
@@ -32,6 +32,8 @@ var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
+
+var dashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -80,6 +82,25 @@ locker.get("/providers", function(req, res) {
     lutil.addAll(services, synclets);
     res.end(JSON.stringify(services));
 });
+
+locker.get("/available", function(req, res) {
+    var handle = req.param('handle');
+    if(!handle) {
+        res.writeHead(400);
+        res.end(JSON.stringify({error:'requires handle param'}));
+        return;
+    } else {
+        var service = serviceManager.getFromAvailable(handle);
+        if(!service) {
+            res.writeHead(400);
+            res.end(JSON.stringify({error:'handle ' + handle + ' not found'}));
+            return;
+        } else {
+            res.writeHead(200, {"Content-Type":"application/json"});
+            res.end(JSON.stringify(service));
+        }
+    }
+})
 
 locker.get("/encrypt", function(req, res) {
     if (!req.param("s")) {
@@ -387,19 +408,27 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
+console.error(__dirname + '/static');
+locker.use(express.static(__dirname + '/static'));
+
+
 
 // fallback everything to the dashboard
-locker.get('/*', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(1),req,res);
+locker.get('/dashboard/*', function(req, res) {
+    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
 });
 
 // fallback everything to the dashboard
-locker.post('/*', function(req, res) {
-    proxied('POST', dashboard.instance,req.url.substring(1),req,res);
+locker.post('/dashboard/*', function(req, res) {
+    proxied('POST', dashboard.instance,req.url.substring(11),req,res);
+});
+
+locker.get('/dashboard/', function(req, res) {
+    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
 });
 
 locker.get('/', function(req, res) {
-    proxied('GET', dashboard.instance,"",req,res);
+    res.redirect('/dashboard/');
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
@@ -413,6 +442,14 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
+
 exports.startService = function(port) {
+    // console.error('avail:' + JSON.stringify(serviceManager.serviceMap().available));
+    if(!serviceManager.isInstalled(lconfig.ui))
+        serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
+    serviceManager.spawn(lconfig.ui, function() {
+        dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+        console.log('ui spawned');
+    });
     locker.listen(port);
 }

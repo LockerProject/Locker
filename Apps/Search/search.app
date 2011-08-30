@@ -4,5 +4,7 @@
 	"desc":"Search your locker!",
 	"status":"unstable",
 	"run":"node app.js",
-	"handle":"search"
+	"uses":["facebook", "twitter", "foursquare", "gcontacts", "github"],
+	"autoInstall":true,
+    "handle":"searchapp"
 }
