@@ -174,10 +174,12 @@ function uninstallService(svcID, title, index) {
     var resp = confirm('Are you sure you want to delete ' + svcID + '? ' +
                        'This is NOT REVERSIBLE and will DELETE all of the DATA in your locker associated with this connector!!');
     if(resp) {
-        $.getJSON("/uninstall", {serviceId:svcID},
+        $.getJSON("uninstall", {serviceId:svcID},
                   function(data, err, resp) {
                       if(data && data.success) {
                           var previousLocation = getLocation();
+                          $('#id-' + svcID).parent().prev().remove();
+                          $('#id-' + svcID).parent().remove();
                           updateServiceMap(previousLocation, function() {
                                                setLocation("services");
                                                showDetails(index, "service");
