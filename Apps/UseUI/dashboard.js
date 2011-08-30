@@ -12,7 +12,7 @@ stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
-    require('./dashboard-client')(externalBase.externalBase, processInfo.port);
+    require('./dashboard-client')(processInfo.externalBase, processInfo.port);
     process.stdout.write(JSON.stringify({port: processInfo.port}));
 });
 stdin.resume();
