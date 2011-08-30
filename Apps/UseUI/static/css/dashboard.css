@@ -1,0 +1,354 @@
+body
+{
+  margin: 0;
+  padding: 0;
+
+  font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+
+  background-color: rgb(30, 35, 40);
+  background-image: url("../img/Background.png");
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+#logo {
+}
+
+aside
+{
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  bottom: 10px;
+
+  width: 100px;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
+  color: white;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.8);
+}
+
+aside header
+{
+  text-align: center;
+}
+
+aside nav
+{
+  position: absolute;
+  top: 120px;
+  left: 0;
+  right: 0;
+
+  padding-bottom: 1px;
+  background-color: rgba(0, 0, 0, 0.25);
+
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+  -webkit-box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.5),
+                      inset 0px -1px 0px rgba(255, 255, 255, 0.15);
+  -moz-box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.5),
+                   inset 0px -1px 0px rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0px 0px 1px rgba(0, 0, 0, 0.5),
+              inset 0px -1px 0px rgba(255, 255, 255, 0.15);
+}
+
+
+aside nav li
+{
+  display: block;
+  cursor: pointer;
+
+  height: 42px;
+  line-height: 42px;
+
+  font-size: 14px;
+  margin: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+aside nav#secondary {
+    bottom: 10px;
+    left: 0px;
+    top: auto;
+}
+
+aside nav#secondary li {
+    font-size: 12px;
+    margin: 0px;
+}
+
+aside nav#applications li
+{
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+aside nav li:first-of-type
+{
+  -webkit-border-top-left-radius: 2px;
+  -webkit-border-top-right-radius: 2px;
+  -moz-border-radius-topleft: 2px;
+  -moz-border-radius-topright: 2px;
+  border-radius-top-left: 2px;
+  border-radius-top-right: 2px;
+}
+
+aside nav li:last-of-type
+{
+  -webkit-border-bottom-left-radius: 2px;
+  -webkit-border-bottom-right-radius: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  -moz-border-radius-bottomright: 2px;
+  border-radius-bottom-left: 2px;
+  border-radius-bottom-right: 2px;
+}
+
+aside nav li.current
+{
+  background-color: rgba(0, 0, 0, 0.25);
+
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+
+  -webkit-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05),
+    inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05),
+    inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05),
+    inset -1px -1px 0px rgba(0, 0, 0, 0.25);
+}
+
+aside nav li#logsTab.break
+{
+  background-image: url("../img/Logs.png");
+  background-repeat: no-repeat;
+  background-position: 13px 50%;
+  padding-left: 48px;
+}
+
+aside nav li#logsTab.current.break
+{
+  background-position: 13px 50%, 0 0;
+  background-image: url("../img/Logs.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: url("../img/Logs.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Logs.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Logs.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Logs.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+}
+
+aside nav li#servicesTab.break
+{
+  background-image: url("../img/Services.png");
+  background-repeat: no-repeat;
+  background-position: 10px 50%;
+  padding-left: 48px;
+}
+
+aside nav li#servicesTab.current.break
+{
+  background-position: 10px 50%, 0 0;
+  background-image: url("../img/Services.png"), -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.5)));
+  background-image: url("../img/Services.png"), -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Services.png"), -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Services.png"), -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+  background-image: url("../img/Services.png"), linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.5));
+}
+
+section#mainSection
+{
+  position: absolute;
+  left: 125px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+
+  padding: 20px;
+  padding-top: 68px;
+
+  border: 1px solid black;
+  background-image: url("../img/MainBackground.png");
+
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+/*  -webkit-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+  -moz-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8); */
+}
+
+section#mainSection header
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 48px;
+  line-height: 48px;
+
+  background-color: rgba(0, 0, 0, 0.75);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.15)), to(rgba(0, 0, 0, 0.65)));
+  background-image: -moz-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: -ms-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: -o-linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+  background-image: linear-gradient(top, rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.35));
+
+  -webkit-border-top-left-radius: 2px;
+  -webkit-border-top-right-radius: 2px;
+  -moz-border-radius-topleft: 2px;
+  -moz-border-radius-topright: 2px;
+  border-radius-top-left: 2px;
+  border-radius-top-right: 2px;
+
+  -webkit-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.15),
+    inset 1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset -1px 0px 0px rgba(255, 255, 255, 0.1),
+    inset 0px -1px 0px rgba(0, 0, 0, 0.75);
+}
+
+section#mainSection header h1
+{
+  margin-left: 20px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0px -1px 1px rgba(0, 0, 0, 1);
+}
+
+section#mainSection header ul.actions
+{
+  position: absolute;
+  right: 20px;
+  top: 0;
+  bottom: 0;
+
+  margin: 0;
+  margin-top: 7px;
+  padding: 0;
+
+  list-style: none;
+
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0px -1px 1px rgba(0, 0, 0, 1);
+  
+  cursor: pointer;
+}
+
+section#mainSection header ul.actions li
+{
+  opacity: 0.7;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 0.25s;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 0.25s;
+  -o-transition-property: opacity;
+  -o-transition-duration: 0.25s;
+}
+
+section#mainSection header ul.actions li:hover
+{
+  opacity: 1.0;
+}
+
+section#mainSection section.content
+{
+  position: absolute;
+  top: 48px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-shadow: inset 0px -1px 1px rgba(0, 0, 0, 0.5),
+              inset 0px 1px 0px rgba(255, 255, 255, 0.35),
+              inset 1px 0px 0px rgba(255, 255, 255, 0.25),
+              inset -1px 0px 0px rgba(255, 255, 255, 0.25);
+
+  -webkit-border-bottom-left-radius: 2px;
+  -webkit-border-bottom-right-radius: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  -moz-border-radius-bottomright: 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+/*  overflow-y: scroll;*/
+}
+
+body > footer
+{
+  display: none;
+}
+
+/* Custom Scrollbars ------------------------------------------------------ */
+
+ul::-webkit-scrollbar
+{
+  width: 20px;
+}
+
+ul::-webkit-scrollbar:horizontal
+{
+  height: 20px;
+}
+
+ul::-webkit-scrollbar-corner
+{
+  display: none;
+}
+
+ul::-webkit-scrollbar-track
+{
+  margin-top: 6px;
+  margin-bottom: 6px;
+  border-width: 20px 0;
+}
+
+ul::-webkit-scrollbar-track:horizontal
+{
+  margin-left: 6px;
+  margin-right: 6px;
+  border-height: 20px 0;
+}
+
+ul::-webkit-scrollbar-thumb
+{
+  -webkit-border-image: url("../img/VerticalScrollbar.Thumb.png") 20 20 20 0;
+  border-width: 20px 0;
+  min-height: 40px;
+}
+
+ul::-webkit-scrollbar-thumb:hover
+{
+  -webkit-border-image: url("../img/VerticalScrollbar.Thumb.png") 20 0 20 20;
+}
+
+ul::-webkit-scrollbar-thumb:horizontal
+{
+  -webkit-border-image: url("../img/HorizontalScrollbar.Thumb.png") 0 20 20 20;
+  border-width: 0 20px;
+  min-width: 40px;
+}
+
+ul::-webkit-scrollbar-thumb:horizontal:hover
+{
+  -webkit-border-image: url("../img/HorizontalScrollbar.Thumb.png") 20 20 0 20;
+}

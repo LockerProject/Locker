@@ -53,7 +53,7 @@ exports.addEvent = function(eventBody, callback) {
             if(eventBody.obj.source !== 'watcher')
                 target = exports.addGithubData;
             break;
-        case 'contact/google':
+        case 'contact/gcontacts':
             target = exports.addGoogleContactsData;
             break;
     }
@@ -87,7 +87,7 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addTwitterData(endpoint, data, callback);
     } else if (type == 'foursquare') {
         exports.addFoursquareData(data, callback);
-    } else if (type == 'google') {
+    } else if (type == 'gcontacts') {
         exports.addGoogleContactsData(data, callback);
     } else if (type == 'github') {
         exports.addGithubData(endpoint, data, callback);
@@ -303,8 +303,8 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     if(cleanedName)
         addToSet['_matching.cleanedNames'] = cleanedName;
     //photos
-    if(data.id && data.photo)
-        addToSet.photos = '/' + lconfig.me + '/gcontacts/photo/' + data.id;
+    // if(data.id && data.photo)
+    //     addToSet.photos = '/' + lconfig.me + '/gcontacts/photo/' + data.id;
     //addresses
     if(data.address) {
         var addresses = [];

@@ -7,7 +7,6 @@ exports.sync = function(processInfo, callback) {
 }
 
 function syncContacts(callback) {
-    //console.error('"Checking for updates since', new Date(config.lastUpdate).toString());
     var params = {'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
@@ -18,28 +17,28 @@ function syncContacts(callback) {
     var now = new Date().getTime();
     getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
         function(err, result) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: result', result);
             if(result && !(err && result.error)) {
                 var count = 0;
-                if(result.feed && result.feed.entry) {
+                if(result.feed) {
                     config.lastUpdate = now;
-                    // fs.writeFileSync('status.json', JSON.stringify(status));
-                    count = result.feed.entry.length;
-                    processFeed(result.feed.entry, function(processedContacts) {
-                        var responseObj = {data : {}, config : {}};
-                        responseObj.data.contacts = processedContacts;
+                    var responseObj = {data : {}, config : {}};
+                    if(result.feed.entry) {
+                        count = result.feed.entry.length;
+                        processFeed(result.feed.entry, function(processedContacts) {
+                            responseObj.data.contact = processedContacts;
+                            responseObj.config.lastUpdate = now;
+                            callback(null, responseObj);
+                        });
+                    } else {
                         responseObj.config.lastUpdate = now;
                         callback(null, responseObj);
-                        // callback(null, 600, 'updated ' + count + ' contacts');
-                    });
+                    }
                 } else {
-                    console.error('DEBUG: BARF!');
-                    // callback(null, 600);
-                };
-            } else {        
-                console.error('DEBUG: BARF2!');
-                callback(null, 600, 'error updating contacts');
+                    console.error('DEBUG: BARF! result=', result);
+                }
+            } else {
+                console.error('DEBUG: BARF2! err=', err, ', result=', result);
+                callback();
             }
         });
 }

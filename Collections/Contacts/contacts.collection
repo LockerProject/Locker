@@ -10,5 +10,5 @@
         ["contact/facebook", "/events"],
         ["contact/twitter", "/events"],
         ["contact/github", "/events"],
-        ["contact/google", "/events"]]
+        ["contact/gcontacts", "/events"]]
 }

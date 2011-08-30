@@ -29,4 +29,9 @@ stdin.on('data', function (chunk) {
         var returnedInfo = {};
         console.log(JSON.stringify(returnedInfo));
     });
+    app.get('/ready', function(req, res) {
+        res.writeHead(200);
+        res.end('true');
+    });
 });
+

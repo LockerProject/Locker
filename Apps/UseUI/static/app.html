@@ -1,0 +1,49 @@
+<!DOCTYPE html> 
+<head> 
+  <meta charset="utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <title>the locker project</title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="app-page">
+
+  <div class="header">
+    <a class="back-button" href="index.html"><img src="img/home.png"></a>
+    <div class="links">
+      <a class="app-link" id="photos" href="#photos">PHOTOS</a>
+      <a class="app-link" id="contacts" href="#contacts">CONTACTS</a>
+      <a class="app-link" id="links" href="#links">LINKS</a>
+      <a class="app-link" id="search" href="#search">SEARCH</a>
+    </div>
+    <div class="services-box-container">
+      <div class="services-box">SERVICES
+        <span class="gray">\/</span></div>
+      </div>
+    </div>
+  </div>
+  <div id="services">
+    <div id="choose-services">
+      Choose services to connect
+    </div>
+    <div id="service-selector">
+      <div class="service template">
+        <a href="#" class="provider-link"><img class="provider-icon" src=""/></a>
+        <a href="#" class="provider-link"><p class="provider-name">facebook</p></a>
+        <div class="spinner"></div>
+        <img class="checkmark" src="img/checkmark.png">
+      </div>
+    </div>
+    <div id="service-closer"></div>
+  </div>
+
+  <div id="iframeWrapper">
+    <iframe id="appFrame"></iframe>
+  </div>
+
+<script src="/static/js/jquery-1.6.1.min.js"></script>
+<script type="text/javascript" src="js/app.js"></script>
+<script src="js/spin.min.js"></script>
+</body>
+</html>

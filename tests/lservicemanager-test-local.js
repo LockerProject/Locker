@@ -116,6 +116,40 @@ vows.describe("Service Manager").addBatch({
             }
         }
     },
+    "Available services" : {
+        "gathered from the filesystem" : {
+            topic:serviceManager.scanDirectory("Connectors"),
+            "found at least 10 services": function() {
+                assert.ok(serviceManager.serviceMap().available.length > 10);
+            },
+            "can be looked up by handle from the available sections of the service map": function() {
+                assert.equal(serviceManager.getFromAvailable("facebook").handle, "facebook");
+            },
+            "and can be installed" : {
+                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
+                    assert.include(svcMetaInfo, "id");
+                },
+                "setting a version number" : function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.version, undefined);
+                },
+                "and by service map says it is installed" : function(svcMetaInfo) {
+                    assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
+                },
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
+            }
+        }
+    },
+    "Services marked as \"autoInstall\"": {
+        "are installed automatically": function() {
+            assert.includes(serviceManager.serviceMap().installed, "contactsviewer");
+        }
+    },
     "Collections" : {
         "are preinstalled" : function() {
             assert.includes(serviceManager.serviceMap().installed, "contacts");

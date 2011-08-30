@@ -35,7 +35,6 @@ suite.next().suite.addBatch({
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1234');
-            process.chdir(curDir);
         }
     }
 }).addBatch({
@@ -47,14 +46,12 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
                 body :'{"data":[]}' });
             
-            process.chdir("." + mePath);
             home.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.home[0].obj.id, '100002438955325_224550747571079');
-            process.chdir(curDir);
         }
     }    
 }).addBatch({
@@ -63,16 +60,22 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/albums?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/albums.js' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/427822997594/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
-            process.chdir("." + mePath);
             photos.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.photo[0].obj.id, '214713967594');
-            process.chdir(curDir);
         }
     }    
+}).addBatch({
+    "cleanup" : {
+        topic: [],
+        "after itself": function(topic) {
+            process.chdir(curDir);
+            assert.equal(process.cwd(), curDir);
+        }
+    }
 })
 
 suite.export(module);

@@ -34,12 +34,10 @@ var npm = require('npm');
     lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
 
     var logger = require("logger");
-    //var crypto = require('crypto');
     var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
     var syncManager = require('lsyncmanager');
     var serviceManager = require("lservicemanager");
-    var dashboard = require(__dirname + "/Ops/dashboard.js");
     var mongodb = require('mongodb');
     var webservice = require(__dirname + "/Ops/webservice.js");
     var lcrypto = require("lcrypto");
@@ -141,7 +139,6 @@ var npm = require('npm');
         lscheduler.masterScheduler.loadAndStart();
 
         var lockerPortNext = "1"+lconfig.lockerPort;
-        dashboard.start(lockerPortNext);
         lockerPortNext++;
 
         console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
@@ -150,7 +147,6 @@ var npm = require('npm');
     function shutdown(returnCode) {
         process.stdout.write("\n");
         shuttingDown_ = true;
-        dashboard.instance.kill(dashboard.pid, "SIGINT");
         serviceManager.shutdown(function() {
             mongoProcess.kill();
             console.log("Shutdown complete.");
