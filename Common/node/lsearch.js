@@ -62,20 +62,12 @@ CLEngine = function()
             ]
         },
         "photos" : {
-            "_id":"id",
+            "_id":"_id",
             "caption":"caption",
             "title":"title"
         },
-        "status/tweets" : {
-            "_id":"id",
-            "text":"text",
-            "user":{
-                "name":"name",
-                "screen_name":"screen_name"
-            }
-        },
-        "status/timeline" : {
-            "_id":"id",
+        "status/twitter" : {
+            "_id":"_id",
             "text":"text",
             "user":{
                 "name":"name",
@@ -83,7 +75,7 @@ CLEngine = function()
             }
         },
         "status/facebook" : {
-            "_id":"id",
+            "_id":"_id",
             "description":"description",
             "message":"message",
             "from":{
