@@ -108,7 +108,7 @@ CLEngine = function()
     return this;
 };
 
-CLEngine.prototype.indexType = function(type, value, callback) {
+CLEngine.prototype.indexType = function(type, source, value, callback) {
     var doc = new this.cl.Document();
     
     if (!this.mappings.hasOwnProperty(type)) {
@@ -160,6 +160,9 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     
     //console.log("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    if (source !== null) {
+        doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    }
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
     assert.ok(indexPath);
@@ -221,7 +224,12 @@ var indexQueue = [];
 var indexing = false;
 
 exports.indexType = function(type, value, cb) {
-    indexQueue.push({"type":type, "value":value, "cb":cb});
+    indexQueue.push({"type":type, "source":null, "value":value, "cb":cb});
+    process.nextTick(indexMore);
+};
+
+exports.indexTypeAndSource = function(type, source, value, cb) {
+    indexQueue.push({"type":type, "source":source, "value":value, "cb":cb});
     process.nextTick(indexMore);
 };
 
@@ -241,7 +249,7 @@ function indexMore(keepGoing) {
     
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
-    exports.currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
+    exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         //console.log("Setting up for next tick");

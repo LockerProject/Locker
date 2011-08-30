@@ -32,23 +32,31 @@ function handleError(type, action, id, error) {
 
 app.post("/events", function(req, res) {
     if (req.headers["content-type"] === "application/json" && req.body) {
-        console.error('About to index the following:');
-        console.error(req.body);   
+        // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
+        var splitVia = req.body.via.split('/');
+        var splitSource = req.body.obj.source.split('_');
+        var source = splitVia[1] + '/' + splitSource[1];
+        if (splitVia == 'contacts') {
+            source = 'contacts';
+        }
+        // END FIXME
+        
+        console.log('About to index document from source: "'+source+'"');
+        
         if (req.body.type === "contact/full") {
             if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType("contacts", req.body.obj.data, function(err, time) {
+                lsearch.indexTypeAndSource("contacts", source, req.body.obj.data, function(err, time) {
                     if (err) { handleError(req.body.type, req.body.action, req.body.obj.data._id, err); }
                 });
             } else if (req.body.action === "delete") {
                 lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
                     if (err) { handleError(req.body.type, req.body.action, req.body.obj.data._id, err); }
-                    console.log('Received delete event for contact/full id: ' + req.body.obj.data._id);
                 });
             }
             res.end();
         } else if (req.body.type === "status/timeline" || req.body.type === "status/tweets") {
             if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType(req.body.type, req.body.obj.status, function(err, time) {
+                lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
                     if (err) { handleError(req.body.type, req.body.action, req.body.obj.data._id, err); }
                 });
             } else if (req.body.action === "delete") {
@@ -59,7 +67,7 @@ app.post("/events", function(req, res) {
             res.end();
         } else if (req.body.type) {
             if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType(req.body.type, req.body.obj, function(err, time) {
+                lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
                     if (err) { handleError(req.body.type, req.body.action, req.body.obj.data._id, err); }
                 });
             } else if (req.body.action === "delete") {
@@ -183,24 +191,8 @@ function enrichResultsWithFullObjects(results, callback) {
         function(results, waterfallCb) {
             async.forEach(results, 
                 function(item, forEachCb) {
-                    var splitType = item._type.split('/');
-                    if (splitType.length === 1) {
-                        var url = lockerInfo.lockerUrl + '/Me/' + splitType[0] + '/' + item._id;
-                        makeEnrichedRequest(url, item, forEachCb);
-                    } else {
-                        locker.providers(item._type, function(err, providers) {
-                            async.forEach(providers,
-                                function(provider, providersForEachCb) {
-                                    // query /Me/:syncletId/:type/:id
-                                    var url = lockerInfo.lockerUrl + '/Me/' + provider.id + '/' + splitType[0] + '/' + item._id;
-                                    makeEnrichedRequest(url, item, providersForEachCb);
-                                },
-                                function(err) {
-                                    forEachCb(null);
-                                }
-                            );
-                        });
-                    }
+                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/' + item._id;
+                    makeEnrichedRequest(url, item, forEachCb);
                 }, 
                 function(err) {
                     waterfallCb(err, results);

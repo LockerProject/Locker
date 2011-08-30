@@ -13,7 +13,7 @@
           - lastType = results[r]._type
         - if (results[r]._type === 'contacts')
             li
-              - if (results[r].fullobject.photos.length > 0)
+              - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)
                 .fll
                   <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
                 .clb
@@ -25,17 +25,11 @@
                   \@#{results[r].fullobject.accounts.twitter[0].data.screen_name}
         - else if (results[r]._type === 'photos')
             li
-              - if (results[r].fullobject.photos.length > 0)
+              - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)
                 <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
                 .clb
               #{results[r].content}
-        - else if (results[r]._type === 'status/twitter')
-            li
-              - if (results[r].fullobject.photos.length > 0)
-                <img class="avatar" src="#{results[r].fullobject.photos[0]}" />
-                .clb
-              #{results[r].content}
-
+      
     - if (raw)
       #raw
         p Raw output: 
