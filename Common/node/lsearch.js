@@ -66,7 +66,15 @@ CLEngine = function()
             "caption":"caption",
             "title":"title"
         },
-        "status/twitter" : {
+        "status/tweets" : {
+            "_id":"id",
+            "text":"text",
+            "user":{
+                "name":"name",
+                "screen_name":"screen_name"
+            }
+        },
+        "status/timeline" : {
             "_id":"id",
             "text":"text",
             "user":{
