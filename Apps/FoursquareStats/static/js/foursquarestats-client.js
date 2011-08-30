@@ -3,8 +3,6 @@ var log = function(msg) { if (console && console.log) console.debug(msg); }
 
 /**
  * Reload the display (get checkins, render them)
- * @property offset {Integer} Optional Where in the checkins collection you want to start.
- * @property limit {Integer} Optional The number of checkins you want returned.
  * @property useJSON {Boolean} Optional Display raw JSON instead of the checkin's name.
  */
 
@@ -13,11 +11,16 @@ var map;
 function add_marker(checkin, html, open) {
    
     var myLatlng = new google.maps.LatLng(checkin.venue.location.lat, checkin.venue.location.lng);
+    
+    var icon = "https://foursquare.com/img/categories/building/home.png";
+    if (checkin.hasOwnProperty('venue') && checkin.venue.hasOwnProperty('categories') && checkin.venue.categories.length >0 && checkin.venue.categories[0].hasOwnProperty('icon')){
+        icon =  checkin.venue.categories[0].icon;
+    }
 
     var marker = new google.maps.Marker({
         position: myLatlng, 
         map: map,
-        icon: checkin.venue.hasOwnProperty('categories') && checkin.venue.categories.hasOwnProperty('icon') ? checkin.venue.categories[0].icon : "https://foursquare.com/img/categories/building/home.png"
+        icon: icon
     });
 
     var infowindow = new google.maps.InfoWindow({
@@ -70,10 +73,8 @@ function sortObj(arr){
 
 }
 
-function reload(offset, limit, useJSON) {
+function reload(useJSON) {
     // set the params if not specified
-    var offset = offset || 0; 
-    var limit = limit || 100;
     var useJSON = useJSON || false;
 
     var getcheckinsCB = function(checkins) {
@@ -93,7 +94,9 @@ function reload(offset, limit, useJSON) {
                 checkins_visited[checkin.venue.name] = checkin;
             }
 	    }
+
         checkins_visited = sortObj(checkins_visited);
+
         $.each(checkins_visited, function(name, checkin) {
             var icon = "";
 
@@ -105,38 +108,43 @@ function reload(offset, limit, useJSON) {
             var city = checkin.venue.location.city ? ' - ' + checkin.venue.location.city : '';
 
             if (icon != undefined) {
-                liHTML = '<li id="' + checkin._id + '" class="checkin"><span class="basic-data">' + icon + '<h2><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + city +'</h2>';
+                liHTML = '<li id="' + checkin._id + '" class="checkin"><span class="basic-data">' + '<h2><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + city +'</h2>';
             } else {
                 liHTML = '<li id="' + checkin._id + '" class="checkin"><span class="basic-data"><h2><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + city +'</h2>';
             }
-                liHTML +='<p>You checked in at ' + new Date(checkin.createdAt * 1000);
-                if (checkin.isMayor == true){
-                   liHTML += ' and you are mayor!';
-                }
-                liHTML +='</p></span></div>';
-                var html = "";
-                if (icon != undefined) {
-                    html += icon;
-                }
-                html += "<h1>" + checkin.venue.name + "</h1>";
-                console.error(html);
-                if (checkin.venue.categories.length > 0) {
-                    html += "<p>" + checkin.venue.categories[0].name + '.</p>';
-                }
-                html += '<ul><li>Last Visited: '  + new Date(checkin.createdAt * 1000) +'</li>';
-                //if (checkin.venue.location.hasOwnProperty('city')){
-                //    html += '<li>' +  checkin.venue.location.city + '</li>'
-                //}
-                html += '</ul>';
-                add_marker(checkin, html, false);
-                checkinsList.append(liHTML);
+
+            liHTML +='<p>You checked in at ' + new Date(checkin.createdAt * 1000);
+
+            if (checkin.isMayor == true){
+                liHTML += ' and you are mayor!';
+            }
+
+            liHTML +='</p></span></div>';
+
+            var html = "";
+            if (icon != undefined) {
+                html += icon;
+            }
+
+            html += '<h1><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + "</h1>";
+
+            if (checkin.venue.categories.length > 0) {
+                html += "<p>" + checkin.venue.categories[0].name + '.</p>';
+            }
+
+            html += '<ul><li>Last Visited: '  + new Date(checkin.createdAt * 1000) +'</li>';
+            html += '<li>Total Check-Ins: ' + checkin.venue.stats.checkinsCount + '</li>';
+            html += '<li>Total People: ' + checkin.venue.stats.usersCount + '</li>';
+            html += '</ul>';
+            add_marker(checkin, html, false);
+            checkinsList.append(liHTML);
         });
 
     };
 
     $.getJSON(
 	'/Me/foursquare/getCurrent/place',
-	{'offset':offset, 'limit':limit}, 
+	{}, 
 	getcheckinsCB
     );
 }
