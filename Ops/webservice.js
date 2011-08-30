@@ -442,6 +442,10 @@ function proxied(method, svc, ppath, req, res, buffer) {
 
 
 exports.startService = function(port) {
+    if(!serviceManager.isAvailable(lconfig.ui)) {
+        console.error('you have specified an invalid UI in your config file.  please fix it!');
+        process.exit();
+    }
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
     serviceManager.spawn(lconfig.ui, function() {
