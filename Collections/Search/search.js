@@ -46,7 +46,7 @@ app.post("/events", function(req, res) {
                 });
             }
             res.end();
-        } else if (req.body.type === "status/twitter") {
+        } else if (req.body.type === "status/timeline" || req.body.type === "status/tweets") {
             if (req.body.action === "new" || req.body.action === "update") {
                 lsearch.indexType(req.body.type, req.body.obj.status, function(err, time) {
                     if (err) { handleError(req.body.type, req.body.action, req.body.obj.data._id, err); }
@@ -191,10 +191,8 @@ function enrichResultsWithFullObjects(results, callback) {
                         locker.providers(item._type, function(err, providers) {
                             async.forEach(providers,
                                 function(provider, providersForEachCb) {
-                                    console.error('GOOOT HEEERRE');
                                     // query /Me/:syncletId/:type/:id
                                     var url = lockerInfo.lockerUrl + '/Me/' + provider.id + '/' + splitType[0] + '/' + item._id;
-                                    console.log(url);
                                     makeEnrichedRequest(url, item, providersForEachCb);
                                 },
                                 function(err) {
