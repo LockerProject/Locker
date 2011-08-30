@@ -76,14 +76,17 @@ function handleOAuth2 (code, options, res) {
                         var resp = JSON.parse(body);
                         auth.username = resp.user.login;
                         installSynclet(options.provider, auth);
+                        res.end("<script type='text/javascript'> window.close(); </script>");
                     } catch (e) {
                         console.error('Failed to auth github - ' + body);
                     }
                 });
-            } else {
+            } else if (auth.accessToken) {
                 installSynclet(options.provider, auth);
+                res.end("<script type='text/javascript'> window.close(); </script>");
+            } else {
+                res.end(body);
             }
-            res.end("<script type='text/javascript'> window.close(); </script>");
         });
     } catch (E) {
         res.end('failed to authenticate against service - ' + E);
