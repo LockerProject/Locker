@@ -128,9 +128,6 @@ exports.getCurrent = function(type, id, callback) {
         var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
         m.findOne(query, callback);
     } else {
-        console.dir(m);
-        console.dir(mongo);
-        console.dir(id);
         callback('broke!', []);
     }
 }

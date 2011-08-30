@@ -165,7 +165,7 @@ function indexCollectionRecordsOfType(type, urlPath, callback) {
       for (var i in results) {
         search.index(results[i]._id, type, results[i], function(err, result) {
           if (err) {
-            console.log('error indexing ' + type + ' with ID of ' + results[i]._id);
+            console.error('error indexing ' + type + ' with ID of ' + results[i]._id);
             callback(err);
           }
         });
@@ -174,7 +174,7 @@ function indexCollectionRecordsOfType(type, urlPath, callback) {
   });
 
   req.on('error', function(e) {
-    console.log('problem with request: ' + e.message);
+    console.error('problem with request: ' + e.message);
   });
 }
 

@@ -41,8 +41,6 @@ app.post("/events", function(req, res) {
         }
         // END FIXME
         
-        console.log('About to index document from source: "'+source+'"');
-        
         if (req.body.type === "contact/full") {
             if (req.body.action === "new" || req.body.action === "update") {
                 lsearch.indexTypeAndSource("contacts", source, req.body.obj.data, function(err, time) {
