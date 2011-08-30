@@ -24,7 +24,7 @@ exports.sync = function(processInfo, cb) {
             statuses.push({'obj' : js, timestamp: new Date(), type : 'new'});
             if(js.id > since) since = js.id;
         },function(err){
-            responseObj.data.tweets = statuses;
+            responseObj.data['status/tweets'] = statuses;
             responseObj.config.updateState = {tweets:{since:since}};
             cb(err, responseObj);
         });
