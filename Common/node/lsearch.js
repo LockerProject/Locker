@@ -61,7 +61,7 @@ CLEngine = function()
                 }
             ]
         },
-        "photos" : {
+        "photo" : {
             "_id":"_id",
             "caption":"caption",
             "title":"title"

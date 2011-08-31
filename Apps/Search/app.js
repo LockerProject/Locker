@@ -19,7 +19,8 @@ var locker = require('locker'),
 //  search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
     search = require('./lib/lockersearch/index.js');
-    
+   
+var DEBUG_SEARCH_OUTPUT = false; 
 
 // Config
 app.configure(function(){
@@ -62,8 +63,6 @@ function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
     
-    var DEBUG_SEARCH_OUTPUT = true;
-    
     var term = sanitize(req.param('searchterm'));
     var type = sanitize(req.param('type'));
     var results = [];
@@ -72,11 +71,14 @@ function(req, res) {
     search.search(type, term, 0, 10, function(err, results) {
       if (err) {
         console.error(err);
-        error = err;
       }
       if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
           console.error('No results object returned for search');
-          error = err;
+          results = {};
+          results.hits = {};
+          results.hits.hits = [];
+          results.took = 1;
+          results.hits.total = 0;
       }
 
       res.render('search', {

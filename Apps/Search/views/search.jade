@@ -2,18 +2,21 @@
   .wrapper
     != partial('partials/searchform', {locals: {searchPath: searchPath}})
   
-    h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
+    - if (error !== null)
+      h1 #{error}
+    - else
+      h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
     
     ul.searchresults
       - var lastType
       - for (var r in results)
-        - if (results[r]._type !== lastType)
+        - if (results[r]._type != lastType)
           .result-type
             - if (results[r]._type == 'status/twitter')
-              Tweets
+              div Tweets
             - else
               #{results[r]._type}
-          - lastType = results[r]._type
+        - lastType = results[r]._type
         - if (results[r]._type === 'contacts')
             li
               - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)

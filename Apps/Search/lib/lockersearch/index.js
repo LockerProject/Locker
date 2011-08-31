@@ -26,20 +26,26 @@ exports.search = function(type, term, offset, limit, callback) {
           fetchURL += '&type=' + type;
         }
 
-        request.get({url:fetchURL}, function(error, request, result) {
-            if (error || !result) {
+        request.get({url:fetchURL}, function(error, res, body) {
+            
+            if (error || !res) {
                 callback('Failed calling provider GET at ' + fetchURL, null);
             }
-
-            var results = {};
-            var result = JSON.parse(result);
+            
+            else if (res.statusCode == 400) {
+                callback('That\'s an valid query term, try again!', null);
+            }
+            else {
+                var results = {};
+                var result = JSON.parse(body);
              
-            results.hits = {};
-            results.hits.total = result.hits.length;   
-            results.took = result.took;
-            results.hits.hits = result.hits;
+                results.hits = {};
+                results.hits.total = result.hits.length;   
+                results.took = result.took;
+                results.hits.hits = result.hits;
         
-            callback(null, results);
+                callback(null, results);
+            }
         });
     });
 };
