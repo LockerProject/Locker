@@ -38,12 +38,10 @@ exports.search = function(type, term, offset, limit, callback) {
             else {
                 var results = {};
                 var result = JSON.parse(body);
-             
                 results.hits = {};
                 results.hits.total = result.hits.length;   
                 results.took = result.took;
                 results.hits.hits = result.hits;
-        
                 callback(null, results);
             }
         });
