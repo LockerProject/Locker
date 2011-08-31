@@ -27,7 +27,7 @@ vows.describe("Locker Scheduling System").addBatch({
         topic:lscheduler.masterScheduler,
         "schedules a callback": testUtils.timeoutAsyncCallback(250, function(topic, timeout, cb) {
             topic.at(timeout, cb);
-        }
+        })
     }
 }).addBatch({
     "Cleanup" : {
