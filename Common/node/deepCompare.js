@@ -1,4 +1,8 @@
 module.exports = function Equals(obj1, obj2) {
+    if (typeof(obj2) === 'undefined') {
+        return false;
+    }
+
     for (var p in obj1) {
         if (typeof(obj2[p]) == 'undefined') {
             return false;
