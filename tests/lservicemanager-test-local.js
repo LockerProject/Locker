@@ -241,6 +241,11 @@ vows.describe("Service Manager").addBatch({
                     },
                     "successfully": function(err, resp, body) {
                         assert.equal(serviceManager.isInstalled('disabletest'), true);
+                        if (resp.statusCode === 500) {
+                            console.dir(body);
+                            console.dir(resp);
+                            console.dir(err);
+                        }
                         assert.equal(resp.statusCode, 200);
                         assert.equal(body, "ACTIVE");
                     }
