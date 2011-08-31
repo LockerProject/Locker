@@ -27,30 +27,6 @@ vows.describe("Locker Scheduling System").addBatch({
         topic:lscheduler.masterScheduler,
         "schedules a callback": testUtils.timeoutAsyncCallback(250, function(topic, timeout, cb) {
             topic.at(timeout, cb);
-        }),
-        "schedules a callback to a service": {
-            topic: function() {
-                lscheduler.masterScheduler.at(1, 'scheduler-tester', 'scheduled');
-                var emitter = new events.EventEmitter();
-                setTimeout(function() {
-                    request.get({uri : lconfig.lockerBase + '/Me/scheduler-tester/getScheduledCount'}, function(err, resp, body) {
-                        if (err == null && body == 1) {
-                            emitter.emit('success', true);
-                        } else {
-                            if (err != null) {
-                                emitter.emit('error', err);
-                            } else {
-                                emitter.emit('error', 'body was equal to ' + body + ' instead of 1');
-                            }
-                        }
-                    });
-                }, 1500);
-                return emitter;
-            },
-            "successfully" : function(err, fired) {
-                assert.isNull(err);
-                assert.isTrue(fired);
-            }
         }
     }
 }).addBatch({
