@@ -29,13 +29,37 @@ function reload(offset, limit, useJSON) {
     });
     console.log(photos);
 	// find the unordered list in our document to append to
-        var photosList = $("#main");
+    var photosList = $("#main");
 
 	// clear the list
 	photosList.html('');
+
+    // fetch facebook photos from facebook
+    var getFacebookPhotosCB = function(photos) {
+        var photosList = $("#main");
+
+        if (photos != undefined) {
+            for (var i in photos) {
+                photo = photos[i];
+ 
+                var title = photo.name ? photo.name : "Untitled";
+        
+                photoHTML = '<div id="' + photo._id + '" class="photo"><img src="' + photo.images[1].source + '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div>';
+                photosList.append(photoHTML);
+
+              }
+            }
+        }
+
+    // include facebook photos
+    $.getJSON(
+	'/Me/facebook/getCurrent/photo',
+	{'offset':offset, 'limit':limit}, 
+	getFacebookPhotosCB
+    );
 	
 	// populate the list with our photos
-	if (photos.length == 0) photosList.append("<div>Sorry, no photos found!</div>");
+    if (photos.length == 0) photosList.append("<h1>Local Photos</h1><div>Sorry, no local photos found!</div>");
         for (var i in photos) {
 	    photo = photos[i];
 	    
@@ -60,6 +84,8 @@ function reload(offset, limit, useJSON) {
 	{'offset':offset, 'limit':limit}, 
 	getPhotosCB
     );
+
+
 }
 
 /* jQuery syntactic sugar for onDomReady */
