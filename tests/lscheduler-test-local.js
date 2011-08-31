@@ -29,13 +29,4 @@ vows.describe("Locker Scheduling System").addBatch({
             topic.at(timeout, cb);
         })
     }
-}).addBatch({
-    "Cleanup" : {
-        topic: function() {
-            this.callback(process.kill(serviceManager.serviceMap().installed['scheduler-tester'].pid));
-        },
-        "successful" : function(err, resp) {
-            assert.isNull(err);
-        }
-    }
 }).export(module);
