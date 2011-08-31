@@ -61,6 +61,10 @@ exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
         process.nextTick(function() { processEvents(queue); });
 }
 
+exports.displayListeners = function(type) {
+    return eventListeners[type];
+}
+
 function findListenerPosition(type, id, cb) {
     for (var i = 0; i < eventListeners[type].length; ++i) {
         var listener = eventListeners[type][i];
