@@ -52,6 +52,7 @@ if (process.argv.length > 2) {
         process.stdout.write("  -h  You found me!\n");
         process.stdout.write("  -s  Suppress the output from test running\n");
         process.stdout.write("  -d  Use the dot matrix style reporter\n");
+        process.stdout.write("  -nc Disable colors\n");
         process.stdout.write("  -l  List all of the available groups when no group is given or\n");
         process.stdout.write("      all of the files ran in a group.\n");
         process.stdout.write("  -f  The remaining arguments are treated as files to run\n");
@@ -139,6 +140,9 @@ setTimeout(function() {
     }
     if (process.argv.indexOf("-s") > 0) {
         vowsArgument.push("--supress-stdout");
+    }
+    if (process.argv.indexOf("-nc") > 0) {
+        vowsArgument.push("--nocolor");
     }
 
     var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
