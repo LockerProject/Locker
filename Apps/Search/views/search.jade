@@ -42,7 +42,7 @@
                 .upperresult
                   #{results[r].fullobject.text}
                 .lowerresult
-                  \@#{results[r].fullobject.user.screen_name}
+                  #{results[r].fullobject.created_at} \@#{results[r].fullobject.user.screen_name}
               .clb
     - if (raw)
       #raw
