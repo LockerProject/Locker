@@ -10,6 +10,13 @@ var querystring = require("querystring");
                     connect.cookieParser(),
                     connect.session({secret : "locker"}));
 
+app.get('/test', function(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+
+    res.end('{"data":"♈♉♌♟♖Дворцовλευταῖόपशुपतिरपि तान्यहा學而時اибашен"}');
+});
 
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
@@ -20,16 +27,6 @@ stdin.on('data', function (chunk) {
         var returnedInfo = {port: processInfo.port};
         console.log(JSON.stringify(returnedInfo));
     });
-});
-
-
-app.get('/test',
-function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-
-    res.end('{"data":"♈♉♌♟♖Дворцовλευταῖόपशुपतिरपि तान्यहा學而時اибашен"}');
 });
 
 process.on("SIGINT", function() {
