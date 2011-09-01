@@ -24,7 +24,7 @@ exports.sync = function(processInfo, cb) {
         updateState = {checkins:{syncedThrough:0}}; }
     syncCheckins(function(err) {
         var responseObj = {data : {}, config : {}};
-        responseObj.data.place = places;
+        responseObj.data.checkin = places;
         responseObj.data.photo = photos;
         responseObj.data.profile = [{ obj: profile }];
         responseObj.config.updateState = updateState;
