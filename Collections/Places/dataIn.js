@@ -66,7 +66,8 @@ exports.processEvent = function(event, callback)
     var item = (data.sourceObject)?data.sourceObject:data;
     if(event.type.indexOf("foursquare") > 0)
     {
-        processPlace(do4sq(item.status),callback);
+        var status = (item.status)?item.status:item;
+        processPlace(do4sq(status),callback);
     }
     if(event.type.indexOf("twitter") > 0)
     {
@@ -97,16 +98,20 @@ function firstLL(o)
 
 function do4sq(checkin)
 {
-    if(!checkin.user || !checkin.venue || !checkin.venue.location || !checkin.venue.location.lat || !checkin.venue.location.lng) return null;
+    if(!checkin.venue || !checkin.venue.location || !checkin.venue.location.lat || !checkin.venue.location.lng) return null;
     var e = {id:checkin.id
         , network:"foursquare"
         , lat: checkin.venue.location.lat
         , lng: checkin.venue.location.lng
         , at: checkin.createdAt * 1000
-        , from: checkin.user.firstName + " " + checkin.user.lastName
-        , fromID: checkin.user.id
         , via: checkin
         };
+    // "checkins" are from yourself, kinda problematic to deal with here?
+    if(checkin.user)
+    {
+        e.fromID = checkin.user.id;
+        e.from = checkin.user.firstName + " " + checkin.user.lastName;
+    }
     return e;
 }
 

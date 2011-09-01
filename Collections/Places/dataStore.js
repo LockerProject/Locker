@@ -58,7 +58,7 @@ exports.getPlaces = function(arg, cbEach, cbDone) {
 
 // insert new place, replace any existing based on hash
 exports.addPlace = function(place, callback) {
-    logger.debug("addPlace: "+JSON.stringify(place));
+//    logger.debug("addPlace: "+JSON.stringify(place));
     var _hash = hashPlace(place);
     place["_hash"] = _hash;
     var options = {safe:true, upsert:true, new: true};
