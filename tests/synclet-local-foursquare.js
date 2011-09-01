@@ -43,9 +43,9 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             assert.isNull(err);
             assert.equal(response.config.updateState.checkins.syncedThrough, '1305252459');
-            assert.equal(response.data.place[0].type, 'new');
-            assert.equal(response.data.place[0].obj.id, '4d1dcbf7d7b0b1f7f37bfd9e');
-            assert.equal(response.data.place[1].obj.photoID, undefined);
+            assert.equal(response.data.checkin[0].type, 'new');
+            assert.equal(response.data.checkin[0].obj.id, '4d1dcbf7d7b0b1f7f37bfd9e');
+            assert.equal(response.data.checkin[1].obj.photoID, undefined);
             pinfo.config = response.config;
         }
     }
