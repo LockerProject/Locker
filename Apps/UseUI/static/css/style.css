@@ -46,7 +46,7 @@ body {
     border-radius: 3px;
 }
 
-.links {
+.app-links {
     float: left;
     margin-left: 50px;
 }
@@ -123,19 +123,52 @@ body {
     box-shadow: inset 0px 3px 1px rgba(0, 0, 0, .31);
 }
 
+.imageBox.contacts {
+    background-image: url('../img/contacts.png');
+}
+
+.imageBox.contacts:hover {
+    background-image: url('../img/contacts_over.png');
+}
+
+.imageBox.search {
+    background-image: url('../img/search.png');
+}
+
+.imageBox.search:hover {
+    background-image: url('../img/search_over.png');
+}
+
+.imageBox.links {
+    background-image: url('../img/links.png');
+}
+
+.imageBox.links:hover {
+    background-image: url('../img/links_over.png');
+}
+
+.imageBox.photos {
+    background-image: url('../img/photos.png');
+}
+
+.imageBox.photos:hover {
+    background-image: url('../img/photo_over.png');
+}
+
 #main .imageBox {
-    padding: 0px 25px;
+    height: 90px;
+    background-position: 25px 0px;
+    background-repeat: no-repeat;
 }
 
 #main .box.clicked .imageBox {
-    margin-left: 2px;
     margin-top: 2px;
-    height: 85px;
+    height: 88px;
 }
 
 #main .box.clicked p {
     margin-top: 7px;
-    margin-left: 4px;
+    margin-bottom: 3px;
 }
 
 #main p {
