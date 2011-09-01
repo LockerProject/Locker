@@ -66,7 +66,7 @@ body {
 }
 
 .block {
-    width: 33.333%;
+    width: 25%;
     margin: 0;
     padding: 0;
     border: 0;
@@ -74,12 +74,13 @@ body {
 }
 
 #main {
-    width: 505px;
+    width: 655px;
     margin: 50px auto 0px auto;
 }
 
 #main .title {
-    margin-left: 5px;
+    width: 505px;
+    margin-left: 80px;
     font-size: 34px;
     font-weight: bold;
     color: #6e6e6e;
@@ -95,10 +96,11 @@ body {
 }
 
 #main .body-header {
+    width: 505px;
     margin-top: 10px;
     letter-spacing: 1px;
     font-size: 20.25px;
-    margin-left: 15px;
+    margin-left: 90px;
     font-weight: bold;
     margin-bottom: 15px;
 }
@@ -107,12 +109,33 @@ body {
     cursor: pointer;
     background-color: white;
     color: #989898;
-    padding: 10px 25px 5px 25px;
+    padding: 10px 0px 5px 0px;
     margin: 0px 11px;
     border-radius: 12px;
     -moz-box-shadow: 0px 3px 1px rgba(0, 0, 0, .31);
     -webkit-box-shadow: 0px 3px 1px rgba(0, 0, 0, .31);
     box-shadow: 0px 3px 1px rgba(0, 0, 0, .31);
+}
+
+#main .box.clicked {
+    -moz-box-shadow: inset 0px 3px 1px rgba(0, 0, 0, .31);
+    -webkit-box-shadow: inset 0px 3px 1px rgba(0, 0, 0, .31);
+    box-shadow: inset 0px 3px 1px rgba(0, 0, 0, .31);
+}
+
+#main .imageBox {
+    padding: 0px 25px;
+}
+
+#main .box.clicked .imageBox {
+    margin-left: 2px;
+    margin-top: 2px;
+    height: 85px;
+}
+
+#main .box.clicked p {
+    margin-top: 7px;
+    margin-left: 4px;
 }
 
 #main p {
