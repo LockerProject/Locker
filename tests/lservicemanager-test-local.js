@@ -22,6 +22,7 @@ require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
+var levents = require('levents');
 var path = require('path');
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
@@ -160,6 +161,11 @@ vows.describe("Service Manager").addBatch({
         },
         "do not install stub collections" : function() {
             assert.isFalse(serviceManager.isInstalled("videos"));
+        },
+        "have event listeners defined via config files" : function() {
+            var listeners = levents.displayListeners('configuration/listener');
+            assert.equal(listeners[0].id, 'event-collector');
+            assert.equal(listeners[0].cb, '/event');
         }
     },
     "Migrates services that need it during the install" : {
@@ -235,6 +241,11 @@ vows.describe("Service Manager").addBatch({
                     },
                     "successfully": function(err, resp, body) {
                         assert.equal(serviceManager.isInstalled('disabletest'), true);
+                        if (resp.statusCode === 500) {
+                            console.dir(body);
+                            console.dir(resp);
+                            console.dir(err);
+                        }
                         assert.equal(resp.statusCode, 200);
                         assert.equal(body, "ACTIVE");
                     }

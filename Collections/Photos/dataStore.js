@@ -101,6 +101,7 @@ function saveCommonPhoto(photoInfo, cb) {
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
+//            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
             locker.event("photo", doc, "new");
         }
         cb(err, doc);
@@ -157,10 +158,11 @@ exports.processEvent = function(eventBody, callback) {
         callback();
         return;
     }
-
     // Run the data processing
+    var data = eventBody.obj;
+    if(eventBody.via && eventBody.via.indexOf("synclet") == 0) data = eventBody.obj.data;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, eventBody.obj, callback);
+    handler(eventBody.via, data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {

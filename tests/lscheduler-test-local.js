@@ -27,65 +27,6 @@ vows.describe("Locker Scheduling System").addBatch({
         topic:lscheduler.masterScheduler,
         "schedules a callback": testUtils.timeoutAsyncCallback(250, function(topic, timeout, cb) {
             topic.at(timeout, cb);
-        }),
-        "schedules a callback to a service": {
-            topic: function() {
-                lscheduler.masterScheduler.at(1, 'scheduler-tester', 'scheduled');
-                var emitter = new events.EventEmitter();
-                setTimeout(function() {
-                    request.get({uri : lconfig.lockerBase + '/Me/scheduler-tester/getScheduledCount'}, function(err, resp, body) {
-                        if (err == null && body == 1) {
-                            emitter.emit('success', true);
-                        } else {
-                            if (err != null) {
-                                emitter.emit('error', err);
-                            } else {
-                                emitter.emit('error', 'body was equal to ' + body + ' instead of 1');
-                            }
-                        }
-                    });
-                }, 1500);
-                return emitter;
-            },
-            "successfully" : function(err, fired) {
-                assert.isNull(err);
-                assert.isTrue(fired);
-            }
-        }
-    }
-}).addBatch({
-    "Scheduler" : {
-        "Issue #77 - Scheduler errors on invalid service IDs" : {
-            topic: function() {
-                // this is really ghetto, but to force the scheduler in the running locker to save (it has already read + truncated the scheduler.json file)
-                // i need to schedule a bogus event.  also a potential race condition
-                //
-                var emitter = new events.EventEmitter();
-                request.get({uri: lconfig.lockerBase + '/core/temaseatscookies/at?at=2500&cb=whatever'}, function() {
-                    setTimeout(function() {
-                        var scheduled = fs.readFileSync(lconfig.me + '/scheduler.json', 'ascii');
-                        if (scheduled != '') {
-                            emitter.emit('error', scheduled);
-                        } else {
-                            emitter.emit('success', true);
-                        }
-                    }, 1500);
-                });
-                return emitter;
-            },
-            "is resolved in a timely fashion" : function(err, fired) {
-                assert.isNull(err);
-                assert.isTrue(fired);
-            }
-        }
-    }
-}).addBatch({
-    "Cleanup" : {
-        topic: function() {
-            this.callback(process.kill(serviceManager.serviceMap().installed['scheduler-tester'].pid));
-        },
-        "successful" : function(err, resp) {
-            assert.isNull(err);
-        }
+        })
     }
 }).export(module);

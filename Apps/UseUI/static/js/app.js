@@ -29,7 +29,7 @@ $(document).ready(
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
             $('#services').animate({height: "0px"}, {duration: 200, queue: false});
         });
-        
+
         $('#service-selector').delegate('.provider-link', 'click', function() {
             if ($(this).hasClass('disabled')) return false;
             accountPopup($(this));
@@ -37,7 +37,7 @@ $(document).ready(
         });
 
         renderApp();
-        
+
         $(window).resize(resizeFrame);
         resizeFrame();
     }
@@ -57,7 +57,7 @@ var SyncletPoll = (
             speed: 1.0,
             shadow: false
         };
-        
+
         var SyncletPoll = function () {
             var t = this;
             t.uri = "/synclets";
@@ -212,6 +212,7 @@ function renderApp() {
                         // log('loading page');
                         $("#appFrame")[0].contentWindow.location.replace(data[app].url + "notready.html");
                     }
+                    clearTimeout(timeout);
                     timeout = setTimeout(function() {poll(data)}, 1000);
                     // log(timeout);
                 }
