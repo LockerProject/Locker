@@ -79,7 +79,14 @@ function reload(useJSON, day) {
 
     if (date) {
         alert(date);
-    }
+        checkinsList.html('');
+        if (checkins.length == 0) checkinsList.append("<li>Sorry, no checkins found!</li>");
+        for (var i in checkins) {
+            checkin = checkins[i];
+            console.log(checkin.createdAt);
+	   }   
+
+    } else {
 
 	// clear the list
 	checkinsList.html('');
@@ -89,7 +96,6 @@ function reload(useJSON, day) {
 	if (checkins.length == 0) checkinsList.append("<li>Sorry, no checkins found!</li>");
         for (var i in checkins) {
 	        checkin = checkins[i];
-	        var html = "";
             if (checkin.hasOwnProperty('venue')){
                 checkins_visited[checkin.venue.name] = checkin;
             }
@@ -139,7 +145,7 @@ day
             add_marker(checkin, html, false);
             checkinsList.append(liHTML);
         });
-
+    }//else
     };
 
     $.getJSON(
