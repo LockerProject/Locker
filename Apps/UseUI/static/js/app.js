@@ -155,7 +155,9 @@ function drawServices() {
                     }
                 }
             }
-            window.syncletPoll = new SyncletPoll(providers);
+            if (!window.syncletPoll) {
+                window.syncletPoll = new SyncletPoll(providers);
+            }
         });
     });
 }
