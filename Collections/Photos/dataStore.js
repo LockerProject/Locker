@@ -13,6 +13,7 @@ var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
+var async = require("async");
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -92,6 +93,26 @@ function processFlickr(svcId, data, cb) {
 
 }
 
+// look at all checkins, see if any contain attached photos
+function processFoursquare(svcId, data, cb)
+{
+    if(!data || !data.photos || !Array.isArray(data.photos.items)) return cb();
+
+    async.forEach(data.photos.items,function(photo,callback){
+        if(!photo || !photo.sizes || !Array.isArray(photo.sizes.items) || photo.sizes.items.length == 0) return callback();
+        var photoInfo = {};
+        photoInfo.url = photo.sizes.items[0].url;
+        if (photo.sizes.items[0].height) photoInfo.height = photo.sizes.items[0].height;
+        if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
+        if (data.venue.name) photoInfo.title = data.venue.name;
+        photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-1].url;
+        if (photo.createdAt) photoInfo.timestamp = photo.createdAt;
+
+        photoInfo.sources = [{service:svcId, id:photo.id}];
+        saveCommonPhoto(photoInfo, callback);
+    },cb);
+}
+
 function saveCommonPhoto(photoInfo, cb) {
     // This is the only area we do basic matching on right now.  We'll do more later
     var query = [{url:photoInfo.url}];
@@ -101,7 +122,7 @@ function saveCommonPhoto(photoInfo, cb) {
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
-//            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
+            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
             locker.event("photo", doc, "new");
         }
         cb(err, doc);
@@ -122,6 +143,7 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
+dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;

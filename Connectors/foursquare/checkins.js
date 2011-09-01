@@ -78,7 +78,7 @@ function getCheckins(userID, token, offset, callback, checkins) {
             getCheckins(userID, token, offset + checkins_limit, callback, checkins);
         else {
             if (checkins[0])
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
+                updateState.checkins = {syncedThrough:checkins[0].createdAt};
             callback(err, checkins.reverse());
         }
     });
