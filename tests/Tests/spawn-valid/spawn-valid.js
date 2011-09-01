@@ -16,8 +16,6 @@ app.get('/', function(req, res) {
 
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', function (chunk) {
-    var processInfo = JSON.parse(chunk);
-    process.chdir(processInfo.workingDirectory);
     app.listen(0, function() {
         process.stdout.write(JSON.stringify({port: app.address().port}));
     });
