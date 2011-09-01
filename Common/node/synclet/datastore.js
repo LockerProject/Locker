@@ -54,7 +54,7 @@ exports.addObject = function(type, object, options, callback) {
         }
     }
     setCurrent(type, object, function(err, newType, doc) {
-        if (type === 'same') return callback(err, newType, doc);
+        if (newType === 'same') return callback(err, newType, doc);
         ijodFiles[type].addRecord(timeStamp, object, function(err) {
             callback(err, newType, doc);
         });
