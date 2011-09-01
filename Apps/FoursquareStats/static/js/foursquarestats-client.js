@@ -68,13 +68,18 @@ function sortObj(arr){
     return sortedObj;
 }
 
-function reload(useJSON) {
+function reload(useJSON, day) {
     // set the params if not specified
     var useJSON = useJSON || false;
-
+    console.log(day);
+    var date = day || false;
     var getcheckinsCB = function(checkins) {
 	// find the unordered list in our document to append to
     var checkinsList = $("#main ul");
+
+    if (date) {
+        alert(date);
+    }
 
 	// clear the list
 	checkinsList.html('');
@@ -107,7 +112,7 @@ function reload(useJSON) {
             } else {
                 liHTML = '<li id="' + checkin._id + '" class="checkin"><span class="basic-data"><h2><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + city +'</h2>';
             }
-
+day
             liHTML +='<p>You checked in at ' + new Date(checkin.createdAt * 1000);
 
             if (checkin.isMayor == true){
@@ -146,5 +151,10 @@ function reload(useJSON) {
 
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 9000, true);
+    reload(true);
+    $('#datepicker').datepicker({
+        onSelect: function(dateText, inst) { 
+        	reload(true, dateText);
+        }
+    });
 });
