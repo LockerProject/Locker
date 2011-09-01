@@ -155,6 +155,10 @@ body {
     background-image: url('../img/photo_over.png');
 }
 
+#preload {
+    display: none;
+}
+
 #main .imageBox {
     height: 90px;
     background-position: 25px 0px;
