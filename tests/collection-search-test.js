@@ -12,7 +12,7 @@ search.lockerInfo.lockerUrl = 'http://localhost:8043';
 
 var contactAddEvent = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_1.json','ascii'));
 var contactUpdateEvent = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_1_updated.json','ascii'));
-var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/status_twitter/twitter_tweet_1.json','ascii'));
+var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/timeline_twitter/twitter_tweet_1.json','ascii'));
 
 fakeweb.allowNetConnect = false;
 fakeweb.registerUri({uri : 'http://localhost:8043/Me/twitter/timeline/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
@@ -111,7 +111,7 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet body' : {  
         topic: function() {
             req.params.q = 'forkly';
-            req.params.type = 'status/twitter*';
+            req.params.type = 'timeline/twitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
@@ -119,7 +119,7 @@ suite.next().suite.addBatch({
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);          
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'status/twitter');
+            assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
             assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
@@ -128,7 +128,7 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet author' : {  
         topic: function() {
             req.params.q = 'David';
-            req.params.type = 'status/twitter*';
+            req.params.type = 'timeline/twitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
@@ -136,7 +136,7 @@ suite.next().suite.addBatch({
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);          
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'status/twitter');
+            assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
             assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
@@ -145,7 +145,7 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet handle' : {  
         topic: function() {
             req.params.q = 'davidcohen';
-            req.params.type = 'status/twitter*';
+            req.params.type = 'timeline/twitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
@@ -153,7 +153,7 @@ suite.next().suite.addBatch({
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);          
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'status/twitter');
+            assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
             assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }

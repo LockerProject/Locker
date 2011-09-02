@@ -57,8 +57,6 @@ app.get('/query', function(req, res) {
 
 exports.handlePostEvents = function(req, callback) {
     var error;
-    console.log('handlePostEvents: ');
-    console.log(require('util').inspect(req, false, null));
     
     if (req.headers['content-type'] !== 'application/json') {
         error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];

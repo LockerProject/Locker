@@ -66,7 +66,7 @@ CLEngine = function()
             "caption":"caption",
             "title":"title"
         },
-        "status/twitter" : {
+        "timeline/twitter" : {
             "_id":"_id",
             "text":"text",
             "user":{
