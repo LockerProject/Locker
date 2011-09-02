@@ -16,6 +16,7 @@ var express = require('express'),
     
 var locker = require('locker'),
     lconfig = require('lconfig'),
+    lutil = require('lutil'),
 //  search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
     search = require('./lib/lockersearch/index.js');
@@ -63,8 +64,8 @@ function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
     
-    var term = sanitize(req.param('searchterm'));
-    var type = sanitize(req.param('type'));
+    var term = lutil.sanitize(req.param('searchterm'));
+    var type = lutil.sanitize(req.param('type'));
     var results = [];
     var error = null;
     
@@ -131,15 +132,6 @@ app.get('/ready', function(req, res) {
     res.writeHead(200);
     res.end('true');
 });
-
-// quick/dirty sanitization ripped from the Jade template engine
-function sanitize(term){
-    return String(term)
-        .replace(/&(?!\w+;)/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
 
 function indexCollectionRecordsOfType(type, urlPath, callback) {
 

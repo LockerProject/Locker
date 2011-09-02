@@ -43,6 +43,7 @@ exports.reIndex = function(locker) {
 exports.processEvent = function(event, callback)
 {
     if(!callback) callback = function(){};
+    // TODO: should we be only tracking event.action = new?
     // what a mess
     var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
     if(event.type.indexOf("facebook") > 0)

@@ -115,6 +115,15 @@ exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
     callback(foundValues);
 };
 
+// quick/dirty sanitization ripped from the Jade template engine
+exports.sanitize = function(term){
+    return String(term)
+        .replace(/&(?!\w+;)/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+} 
+
 exports.trim = function(stringToTrim) {
 	return stringToTrim.replace(/^\s+|\s+$/g,"");
 }
