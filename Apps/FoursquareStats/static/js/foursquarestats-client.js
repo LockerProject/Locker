@@ -68,13 +68,25 @@ function sortObj(arr){
     return sortedObj;
 }
 
-function reload(useJSON) {
+function reload(useJSON, day) {
     // set the params if not specified
     var useJSON = useJSON || false;
-
+    console.log(day);
     var getcheckinsCB = function(checkins) {
 	// find the unordered list in our document to append to
     var checkinsList = $("#main ul");
+
+    if (day != undefined) {
+        alert(date);
+        checkinsList.html('');
+        if (checkins.length == 0) checkinsList.append("<li>Sorry, no checkins found!</li>");
+        for (var i in checkins) {
+            checkin = checkins[i];
+            console.log(checkin.createdAt);
+	   }   
+
+    } else {
+    console.log(checkins);
 
 	// clear the list
 	checkinsList.html('');
@@ -84,7 +96,6 @@ function reload(useJSON) {
 	if (checkins.length == 0) checkinsList.append("<li>Sorry, no checkins found!</li>");
         for (var i in checkins) {
 	        checkin = checkins[i];
-	        var html = "";
             if (checkin.hasOwnProperty('venue')){
                 checkins_visited[checkin.venue.name] = checkin;
             }
@@ -134,11 +145,11 @@ function reload(useJSON) {
             add_marker(checkin, html, false);
             checkinsList.append(liHTML);
         });
-
+    }//else
     };
 
     $.getJSON(
-	'/Me/foursquare/getCurrent/place',
+	'/Me/foursquare/getCurrent/checkin',
 	{}, 
 	getcheckinsCB
     );
@@ -146,5 +157,10 @@ function reload(useJSON) {
 
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 9000, true);
+    reload(true);
+    $('#datepicker').datepicker({
+        onSelect: function(dateText, inst) { 
+        	reload(true, dateText);
+        }
+    });
 });
