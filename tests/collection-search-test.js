@@ -1,4 +1,3 @@
-require.paths.push(__dirname + '/../Common/node');
 var lconfig = require('lconfig');
 lconfig.load('Config/config.json');
 var assert = require('assert');

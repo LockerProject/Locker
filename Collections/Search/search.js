@@ -57,6 +57,8 @@ app.get('/query', function(req, res) {
 
 exports.handlePostEvents = function(req, callback) {
     var error;
+    console.log('handlePostEvents: ');
+    console.log(require('util').inspect(req, false, null));
     
     if (req.headers['content-type'] !== 'application/json') {
         error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
@@ -265,7 +267,7 @@ function getSourceForEvent(body) {
 }
 
 function handleError(type, action, id, error) {
-    console.error('Error attempting to ' + action + ' index of type "' + type + '" and id: ' + id + ' - ' + error);
+    console.error('Error attempting to index type "' + type + '" with action of "' + action + '" and id: ' + id + ' - ' + error);
 }
 
 function handleLog(type, action, id, time) {
