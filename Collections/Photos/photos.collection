@@ -7,7 +7,7 @@
     "provides":["photo"],
     "mongoCollections":["photos"],
     "events":[
-    	["tweets/twitter", "/events"],
+    	["status/twitter", "/events"],
     	["checkin/foursquare", "/events"],
         ["photo/facebook", "/events"],
         ["photo/twitpic", "/events"],

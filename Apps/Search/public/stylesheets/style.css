@@ -165,10 +165,13 @@ h1 {
 	 margin: 5px 0 0 15px;
 }
 .searchresults .lowerresult { 
-	 margin: 3px 0 3px 15px;
+	 margin: 5px 0 3px 15px;
 	 color: #888;
 	 font-size: 0.8em;
 }
 .searchresults .avatar { 
 	 border: 1px #bbb solid;
+}
+.via { 
+	margin: 0 10px 0 0; 
 }

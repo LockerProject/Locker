@@ -69,14 +69,22 @@ exports.handlePostEvents = function(req, callback) {
         console.error(error);
         return callback(error, {});
     }
-        
-    var source = getSourceForEvent(req.body);
     
-    if (req.body.type) {
+    if (req.body.hasOwnProperty('type')) {
+        // FIXME Hack to handle inconsistencies between photo and contacts collection
+        if (req.body.type === 'photo') {
+            req.body.type = 'photo/full';
+            req.body.obj.data = req.body.obj;
+        }
+        // END FIXME
+        
+        var source = getSourceForEvent(req.body);
+        
         if (req.body.action === 'new' || req.body.action === 'update') {
             lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
                 if (err) { 
                     handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+                    return callback(err, {});
                 }
                 handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
                 return callback(err, {timeToIndex: time, docsDeleted: 0});
@@ -85,6 +93,7 @@ exports.handlePostEvents = function(req, callback) {
             lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
                 if (err) { 
                     handleError(req.body.type, req.body.action, req.body.obj.data._id, err); 
+                    return callback(err, {});
                 }
                 handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
                 return callback(err, {timeToIndex: time, docsDeleted: docsDeleted});
@@ -193,7 +202,7 @@ function enrichResultsWithFullObjects(results, callback) {
             });
         },
         function(results, waterfallCb) {
-            async.forEach(results, 
+            async.forEachSeries(results, 
                 function(item, forEachCb) {
                     var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/' + item._id;
                     makeEnrichedRequest(url, item, forEachCb);
@@ -206,9 +215,9 @@ function enrichResultsWithFullObjects(results, callback) {
     ],
     function(err, results) {        
         if (err) {  
-            callback('Error when attempting to sort and enrich search results: ' + err, []);
+            return callback('Error when attempting to sort and enrich search results: ' + err, []);
         }
-        callback(null, results);
+        return callback(null, results);
     });
 }
 
@@ -226,29 +235,30 @@ function makeEnrichedRequest(url, item, callback) {
     request.get({uri:url}, function(err, res, body) {
         if (err) {
             console.error('Error when attempting to enrich search results: ' + err);
-            callback(err);
-            return;
+            return callback(err);
         } 
         if (res.statusCode >= 400) {
             var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results';
             console.error(error);
-            callback(error);
-            return;
+            return callback(error);
         }
-        
-        item.fullobject = body;
-        callback(null);
+
+        item.fullobject = JSON.parse(body);
+        return callback(null);
     });
 }
 
 function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
-    var splitVia = body.via.split('/');
-    var splitSource = body.obj.source.split('_');
-    var source = splitVia[1] + '/' + splitSource[1];
+    var source;
+    
     if (body.type == 'contact/full' || body.type == 'photo/full') {
-        var splitType = body.type.split('/');
-        source = splitType[0] + 's';
+       var splitType = body.type.split('/');
+       source = splitType[0] + 's';
+    } else {
+        var splitVia = body.via.split('/');
+        var splitSource = body.obj.source.split('_');
+        source = splitVia[1] + '/' + splitSource[1];
     }
     return source;
     // END FIXME

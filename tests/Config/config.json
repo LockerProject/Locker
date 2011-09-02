@@ -26,8 +26,7 @@
                       "synclet-local-facebook.js",
                       "synclet-local-googleContacts.js"],
         "collections" : ["sync-contacts-test.js",
-                         "collection-links-test.js",
-                         "collection-search-test.js"],
+                         "collection-links-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
     "displayUnstable" : true,

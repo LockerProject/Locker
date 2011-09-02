@@ -8,6 +8,7 @@
 */
 
 var collection;
+var db;
 var lconfig = require('../../Common/node/lconfig');
 var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
@@ -172,15 +173,16 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
-dataHandlers["tweets/twitter"] = processTwitter;
+dataHandlers["status/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 
-exports.init = function(mongoCollection) {
+exports.init = function(mongoCollection, mongo) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
+    db = mongo.dbClient;
     lconfig.load('../../Config/config.json'); // ugh
 }
 
@@ -190,6 +192,11 @@ exports.getTotalCount = function(callback) {
 exports.getAll = function(callback) {
     collection.find({}, callback);
 }
+
+exports.get = function(id, callback) {
+    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
 exports.getOne = function(id, callback) {
     collection.find({"id":id}, function(error, cursor) {
         if (error) {
