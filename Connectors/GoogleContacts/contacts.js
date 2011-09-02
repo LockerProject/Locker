@@ -15,8 +15,10 @@ function syncContacts(callback) {
     if(config.lastUpdate)
         params['updated-min'] = getISODateString(new Date(config.lastUpdate));
     var now = new Date().getTime();
+    console.error('getting feed and making request');
     getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
         function(err, result) {
+            console.error('got response!', result);
             if(result && !(err && result.error)) {
                 var count = 0;
                 if(result.feed) {
@@ -151,14 +153,18 @@ function getID(entry) {
 // }
 
 function getClient() {
+    console.error('called getClient!');
     if(auth && !gdataClient) {
+        console.error('getting new client!');
         // gdataClient = require('gdata-js')(auth.clientID, auth.clientSecret, auth.redirectURI);
         gdataClient = require('gdata-js')(auth.appKey, auth.appSecret, auth.redirectURI);
         gdataClient.setToken(auth.token);
         gdataClient.on('tokenRefresh', function() {
+            console.error('*************** tokenRefresh!!! ***************');
             fs.writeFile('auth.json', JSON.stringify(auth));
         });
     }
+    console.error('returning client');
     return gdataClient;
 }
 
