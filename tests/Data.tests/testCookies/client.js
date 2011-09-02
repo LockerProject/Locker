@@ -14,14 +14,14 @@ stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
     app.listen(processInfo.port, function() {
-        var returnedInfo = {port: processInfo.port};
-        console.log(JSON.stringify(returnedInfo));
+        console.log(JSON.stringify({port: app.address().port}));
     });
 });
 
 
 app.get('/test',
 function(req, res) {
+    console.log("Cookie test");
     res.cookie('rememberme', 'yes', { maxAge: 900000 });
     res.writeHead(200, {
         'Content-Type': 'text/html'

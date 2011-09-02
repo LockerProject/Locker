@@ -22,7 +22,7 @@ exports.sync = function(processInfo, cb) {
         var statuses = [];
         tw.getTweets({screen_name:me.screen_name,since_id:since},function(js){ 
             statuses.push({'obj' : js, timestamp: new Date(), type : 'new'});
-            if(js.id > since) since = js.id;
+            if(js.id > since) since = js.id+10;// their api sometimes returns the last one repeatedly, L4M30
         },function(err){
             responseObj.data['status/tweets'] = statuses;
             responseObj.config.updateState = {tweets:{since:since}};

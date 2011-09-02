@@ -27,7 +27,7 @@ $(document).ready(
             userClosed = true;
             $('.services-box').show();
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-            $('#services').animate({height: "0px"}, {duration: 200, queue: false});
+            $('#services').animate({height: "0px"}, {duration: 200, queue: false}, function() { resizeFrame(); });
         });
 
         $('#service-selector').delegate('.provider-link', 'click', function() {
@@ -61,6 +61,7 @@ var SyncletPoll = (
         var SyncletPoll = function () {
             var t = this;
             t.uri = "/synclets";
+            t.repoll = true;
             t.installed = {};
 
             var app = {};
@@ -110,7 +111,7 @@ var SyncletPoll = (
                     }
                 }
 
-                t.timeout = setTimeout(t.query, 1000);
+                if (t.repoll) t.timeout = setTimeout(t.query, 1000);
             };
 
             t.query = function() {
@@ -127,6 +128,7 @@ var SyncletPoll = (
             };
 
             t.halt = function() {
+                t.repoll = false;
                 clearTimeout(t.timeout);
             };
 
@@ -155,7 +157,13 @@ function drawServices() {
                     }
                 }
             }
-            window.syncletPoll = new SyncletPoll(providers);
+            if (!window.syncletPoll) {
+                window.syncletPoll = new SyncletPoll(providers);
+            } else {
+                window.syncletPoll.halt();
+                delete window.syncletPoll;
+                window.syncletPoll = new SyncletPoll(providers);
+            }
         });
     });
 }

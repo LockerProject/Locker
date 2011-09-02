@@ -14,6 +14,7 @@ var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
+var url = require("url");
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -45,7 +46,7 @@ function processFacebook(svcId, data, cb) {
     if (data.images) photoInfo.thumbUrl = data.images[data.images.length - 1].source;
     if (data.width) photoInfo.width = data.width;
     if (data.height) photoInfo.height = data.height;
-    if (data.created_time) photoInfo.timestamp = data.created_time;
+    if (data.created_time) photoInfo.timestamp = data.created_time*1000;
     if (data.name) photoInfo.title = data.name;
 
     photoInfo.sources = [{service:svcId, id:data.id}];
@@ -91,6 +92,34 @@ function processFlickr(svcId, data, cb) {
 
     saveCommonPhoto(photoInfo, cb);
 
+}
+
+// pretty experimental! extract photos from your tweets using embedly :)
+function processTwitter(svcId, data, cb)
+{
+    if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
+
+    async.forEach(data.entities.urls,function(u,callback){
+        if(!u || !u.url) return callback();
+        var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
+        embed.query = {url:u.url};
+        request.get({uri:url.format(embed)},function(err,resp,body){
+            if(err || !body) return callback();
+            var js = JSON.parse(body);
+            if(!js || !js.type || js.type != "photo" || !js.url) return callback();
+
+            var photoInfo = {};
+            photoInfo.url = js.url;
+            if (js.height) photoInfo.height = js.height;
+            if (js.width) photoInfo.width = js.width;
+            photoInfo.title = data.text;
+            if (js.thumbnail_url) photoInfo.thumbnail = js.thumbnail_url;
+            if (data.createdAt) photoInfo.timestamp = new Date(data.created_at).getTime();
+
+            photoInfo.sources = [{service:svcId, id:data.id}];
+            saveCommonPhoto(photoInfo, callback);
+        });
+    },cb);
 }
 
 // look at all checkins, see if any contain attached photos
@@ -143,6 +172,7 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
+dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
@@ -151,6 +181,7 @@ dataHandlers["photo/flickr"] = processFlickr;
 exports.init = function(mongoCollection) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
+    lconfig.load('../../Config/config.json'); // ugh
 }
 
 exports.getTotalCount = function(callback) {
@@ -192,9 +223,9 @@ exports.addData = function(svcId, type, allData, callback) {
         callback = function() {};
     }
     var handler = dataHandlers[type] || processShared;
-    allData.forEach(function(data) {
-        handler(svcId, data, callback);
-    });
+    async.forEachSeries(allData,function(data,cb) {
+        handler(svcId, data, cb);
+    },callback);
 }
 
 exports.clear = function(callback) {

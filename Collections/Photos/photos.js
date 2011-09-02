@@ -43,12 +43,11 @@ app.get('/state', function(req, res) {
 });
 
 app.get('/allPhotos', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type':'application/json'
-    });
     dataStore.getAll(function(err, cursor) {
+        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
+        if(req.query["skip"]) cursor.skip(parseInt(req.query["skip"]));
         cursor.toArray(function(err, items) {
-            res.end(JSON.stringify(items));
+            res.send(items);
         });
     });
 });

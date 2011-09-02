@@ -50,6 +50,8 @@ exports.gatherPhotos = function() {
                 }
             });
         });
+        // also try twitter, fails out if none
+        gatherFromUrl("twitter","/getCurrent/tweets","tweets/twitter");
     });
 }
 
