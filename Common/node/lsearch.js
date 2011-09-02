@@ -174,6 +174,10 @@ CLEngine.prototype.deleteDocument = function(id, callback) {
     assert.ok(indexPath);
     this.lucene.deleteDocument(id, indexPath, callback);
 };
+CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
+    assert.ok(indexPath);
+    this.lucene.deleteDocumentsByType(type, indexPath, callback);
+};
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
@@ -201,6 +205,7 @@ exports.setEngine = function(engine) {
         exports.currentEngine = new NullEngine();
     }
 };
+
 exports.setIndexPath = function(newPath) {
     indexPath = newPath;
     if (!path.existsSync(indexPath)) {
@@ -245,6 +250,10 @@ exports.indexTypeAndSource = function(type, source, value, cb) {
 exports.deleteDocument = function(id, cb) {
   exports.currentEngine.deleteDocument(id, cb);  
 };
+
+exports.deleteDocumentsByType = function(type, cb) {
+  exports.currentEngine.deleteDocumentsByType(type, cb);
+}
 
 function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee

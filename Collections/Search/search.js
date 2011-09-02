@@ -55,8 +55,8 @@ app.get('/query', function(req, res) {
    });
 });
 
-app.get('/reindex', function(req, res) {
-    exports.handleGetReindex(req, function(err, response) {
+app.get('/reindexForType', function(req, res) {
+    exports.handleGetReindexForType(req.param('type'), function(err, response) {
        if (err) {
            return res.send(err, 500);
        }
@@ -197,9 +197,9 @@ exports.handleGetQuery = function(req, callback) {
     }
 };
 
-exports.handleGetReindex = function(locker, callback) {
-    // this method can happen async, but resetIndex MUST happen first before the callback
-    resetIndex(err, callback);
+exports.handleGetReindexForType = function(type, callback) {
+    // this handleGetReindex method can happen async, but resetIndex MUST happen first before the callback.  That's why we call it here
+    resetIndexForType(type, callback);
     var items;
     
     locker.providers(['photo/full', 'contact/full', 'timeline/twitter'], function(err, services) {
@@ -215,15 +215,6 @@ exports.handleGetReindex = function(locker, callback) {
         });     
     });
 };
-
-function resetIndex(err, callback) {
-    try {
-        wrench.rmdirSyncRecursive(indexPath);
-        callback(null, 'Successfully removed index');
-    } catch (E) {
-        callback(E, '');
-    }
-}
 
 function reindexType(url, type, source, callback) {
     request.get({uri:url}, function(err, res, body) {
