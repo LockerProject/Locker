@@ -31,6 +31,7 @@ function syncContacts(callback) {
                         });
                     } else {
                         responseObj.config.lastUpdate = now;
+                        responseObj.auth = auth;
                         callback(null, responseObj);
                     }
                 } else {
