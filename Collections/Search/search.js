@@ -1,5 +1,5 @@
 /*
-*'
+*
 * Copyright (C) 2011, The Locker Project
 * All rights reserved.
 *
@@ -10,22 +10,17 @@
 var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
     
-var lsearch = require('../../Common/node/lsearch');
-var lutil = require('../../Common/node/lutil');
+var lsearch = require("../../Common/node/lsearch");
 
-var lockerInfo = {};
-exports.lockerInfo = lockerInfo;
-
+var lockerInfo;
 var express = require('express'),
     connect = require('connect');
-var request = require('request');
-var async = require('async');
 var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
-    res.send('You should use a search interface instead of trying to talk to me directly.');
+    res.send("You should use a search interface instead of trying to talk to me directly.");
 });
 
 app.post('/events', function(req, res) {
@@ -48,6 +43,15 @@ app.post('/index', function(req, res) {
 
 app.get('/query', function(req, res) {
     exports.handleGetQuery(req, function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send(response);
+   });
+});
+
+app.get('/reindex', function(req, res) {
+    exports.handleGetReindex(req, function(err, response) {
        if (err) {
            return res.send(err, 500);
        }
@@ -99,43 +103,38 @@ exports.handlePostEvents = function(req, callback) {
                 return callback(err, {timeToIndex: time, docsDeleted: docsDeleted});
             });
         } else {
-            error = 'Invalid action received for /search/events POST request.';
-            console.error(error);
-            return callback(error, {});
+            console.log("Unexpected event: " + req.body.type + " and " + req.body.action);
+            res.end();
         }
     } else {
-        error = 'Unexpected event received for /search/events POST request: ' + req.body.type + ' and ' + req.body.action;
-        console.error(error);
-        return callback(error, {});
+        console.log("Unexpected event or not json " + req.headers["content-type"]);
+        res.end();
     }
 };
 
 exports.handlePostIndex = function(req, callback) {
     var error;
-    if (!req.body.type || !req.body.value || !req.body.via || !req.body.obj.source) {
+    
+    if (!req.body.type || !req.body.source || !req.body.data) {
         error = 'Invalid arguments given for /search/index POST request.';
         console.error(error);
         return callback(error, {});
     }
     
-    var value = {};
-    
     try {
-        value = JSON.parse(req.body.value);
+        data = JSON.parse(req.body.data);
     } catch (E) {
         error = 'Invalid JSON given in body for /search/index POST request.';
         console.error(error);
         return callback(error, {});
     }
     
-    var source = getSourceForEvent(req.body);
-    
-    lsearch.indexTypeAndSource(req.body.type, source, value, function(err, time) {
-        if (err) {
-            error = '/search/index POST request was unable to index data: ' + error;
-            console.error(error);
-            return callback(error, {});
+    lsearch.indexTypeAndSource(req.body.type, req.body.source, data, function(err, time) {
+        if (err) { 
+            handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+            return callback(err, {});
         }
+        handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
         return callback(null, {timeToIndex: time, docsDeleted: 0});
     });
 };
@@ -192,6 +191,54 @@ exports.handleGetQuery = function(req, callback) {
         lsearch.queryAll(q, {}, sendResults);
     }
 };
+
+exports.handleGetReindex = function(locker, callback) {
+    search.resetIndex();
+    var items;
+    
+    locker.providers(['photo/full', 'contact/full', 'timeline/twitter'], function(err, services) {
+        if (!services) return;
+        services.forEach(function(svc) {
+            if (svc.provides.indexOf('photo/full') >= 0) {
+                reindexType(locker.lockerBase + '/Me/' + svc.id + '/allPhotos', 'photo/full', 'photos', function(err) {});
+            } else if (svc.provides.indexOf('contact/full') >= 0) {
+                reindexType(locker.lockerBase + '/Me/' + svc.id + '/allContacts', 'contact/full', 'contacts', function(err) {});
+            } else if (svc.provides.indexOf('timeline/twitter') >= 0) {
+                reindexType(locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+            }
+        });     
+    });
+};
+
+function reindexType(url, type, source, callback) {
+    request.get({uri:url}, function(err, res, body) {
+        if (err) {
+            console.error('Error when attempting to reindex ' + type + ' collection: ' + err);
+            return callback(err);
+        } 
+        if (res.statusCode >= 400) {
+            var error = 'Received a ' + res.statusCode + ' when attempting to reindex ' + type + ' collection';
+            console.error(error);
+            return callback(error);
+        }
+
+        items = JSON.parse(body);
+        async.forEachSeries(items, function(item, forEachCb) {
+            var fullBody = {};
+            fullBody.type = type;
+            fullBody.source = source;
+            fullBody.data = item;
+            var req = {};
+            req.body = fullBody;
+            req.headers = {};
+            req.headers['content-type'] = 'application/json';
+            exports.handlePostIndex(req, forEachCb);
+        },function(err) {
+            console.log('Reindexing of ' + type + ' completed.');           
+            return callback(err);
+        });
+    });
+}
 
 function enrichResultsWithFullObjects(results, callback) {
     // fetch full objects of results
@@ -286,11 +333,11 @@ function handleLog(type, action, id, time) {
 
 // Process the startup JSON object
 process.stdin.resume();
-var allData = '';
+var allData = "";
 process.stdin.on('data', function(data) {
     allData += data;
-    if (allData.indexOf('\n') > 0) {
-        data = allData.substr(0, allData.indexOf('\n'));
+    if (allData.indexOf("\n") > 0) {
+        data = allData.substr(0, allData.indexOf("\n"));
         lockerInfo = JSON.parse(data);
         locker.initClient(lockerInfo);
         if (!lockerInfo || !lockerInfo.workingDirectory) {
@@ -300,7 +347,7 @@ process.stdin.on('data', function(data) {
         process.chdir(lockerInfo.workingDirectory);
 
         lsearch.setEngine(lsearch.engines.CLucene);
-        lsearch.setIndexPath(process.cwd() + '/search.index');
+        lsearch.setIndexPath(process.cwd() + "/search.index");
         
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);

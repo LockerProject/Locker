@@ -209,6 +209,15 @@ exports.setIndexPath = function(newPath) {
     
 };
 
+// CAREFUL!  Make sure all your readers/writers are closed before calling this
+exports.resetIndex = function() {
+    try {
+        wrench.rmdirSyncRecursive(indexPath);
+    } catch (E) {
+        // Ignoring if the dir does not exist
+    }
+};
+
 function exportEngineFunction(funcName) {
     var funcToRun = function() {
         assert.ok(exports.currentEngine);
