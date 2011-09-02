@@ -10,11 +10,16 @@
 var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
     
-var lsearch = require("../../Common/node/lsearch");
+var lsearch = require('../../Common/node/lsearch');
+var lutil = require('../../Common/node/lutil');
 
-var lockerInfo;
+var lockerInfo = {};
+exports.lockerInfo = lockerInfo;
+
 var express = require('express'),
     connect = require('connect');
+var request = require('request');
+var async = require('async');
 var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
