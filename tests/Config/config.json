@@ -10,6 +10,7 @@
                       "lconfig-test-local.js", 
                       "ijod-test-local.js",
                       "lpquery-test-local.js",
+                      "lsearch-test-local.js",
                       "mongo-test.js",
                       "lscheduler-test-local.js",
                       "deepCompare-test.js"],
@@ -25,7 +26,8 @@
                       "synclet-local-facebook.js",
                       "synclet-local-googleContacts.js"],
         "collections" : ["sync-contacts-test.js",
-                         "collection-links-test.js"],
+                         "collection-links-test.js",
+                         "collection-search-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
     "displayUnstable" : true,

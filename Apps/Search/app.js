@@ -63,8 +63,6 @@ function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
     
-    var DEBUG_SEARCH_OUTPUT = false;
-    
     var term = sanitize(req.param('searchterm'));
     var type = sanitize(req.param('type'));
     var results = [];

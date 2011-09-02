@@ -114,3 +114,13 @@ exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
     recurseObject(jsonObject, propertyName);
     callback(foundValues);
 };
+
+exports.trim = function(stringToTrim) {
+	return stringToTrim.replace(/^\s+|\s+$/g,"");
+}
+exports.ltrim = function(stringToTrim) {
+	return stringToTrim.replace(/^\s+/,"");
+}
+exports.rtrim = function(stringToTrim) {
+	return stringToTrim.replace(/\s+$/,"");
+}
