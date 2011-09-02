@@ -118,7 +118,7 @@ function reload(useJSON, day) {
             } else {
                 liHTML = '<li id="' + checkin._id + '" class="checkin"><span class="basic-data"><h2><a href="https://foursquare.com/venue/' + checkin.venue.id + '">' + checkin.venue.name +'</a>' + city +'</h2>';
             }
-
+day
             liHTML +='<p>You checked in at ' + new Date(checkin.createdAt * 1000);
 
             if (checkin.isMayor == true){
