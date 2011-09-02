@@ -203,8 +203,8 @@ function executeSynclet(info, synclet, callback) {
         tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
         processResponse(deleteIDs, info, synclet, response, callback);
-        info.config = lutil.extend(true, tempInfo.auth, response.auth);
         info.config = lutil.extend(true, tempInfo.config, response.config);
+        info.auth = lutil.extend(true, tempInfo.auth, response.auth);
         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
     });

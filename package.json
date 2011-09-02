@@ -17,7 +17,7 @@
         "dropbox": "=0.3.1",
         "facebook-js": "=0.0.5",
         "flickr-reflection": "=0.0.1",
-        "gdata-js": ">=0.0.4",
+        "gdata-js": ">=0.0.6",
         "github": "=0.0.6",
         "imap": "=0.2.3",
         "lastfm": "=0.4.3",

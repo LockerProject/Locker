@@ -157,11 +157,11 @@ function getClient() {
     if(auth && !gdataClient) {
         console.error('getting new client!');
         // gdataClient = require('gdata-js')(auth.clientID, auth.clientSecret, auth.redirectURI);
-        gdataClient = require('gdata-js')(auth.appKey, auth.appSecret, auth.redirectURI);
+        gdataClient = require('gdata-js')(auth.appKey || auth.clientID, auth.appSecret || auth.clientSecret, auth.redirectURI);
         gdataClient.setToken(auth.token);
         gdataClient.on('tokenRefresh', function() {
             console.error('*************** tokenRefresh!!! ***************');
-            fs.writeFile('auth.json', JSON.stringify(auth));
+            require('fs').writeFile('auth.json', JSON.stringify(auth));
         });
     }
     console.error('returning client');
