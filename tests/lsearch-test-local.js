@@ -18,7 +18,7 @@ var lsearch = require('lsearch');
 lconfig.load('./config.json');
 
 lsearch.setEngine(lsearch.engines.CLucene);
-lsearch.setIndexPath(__dirname + "/Me/search.index");
+lsearch.setIndexPath(__dirname + "/" + lconfig.me + "/search.index");
 
 suite.next().suite.addBatch({
     "Can pick the CLucene engine":{
