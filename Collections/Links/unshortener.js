@@ -129,7 +129,7 @@ var Unshorteners = {
                              }).on('error', function (e) {
                                  callback(url, true);
                              });
-        req.connection.setTimeout(5000);
+        if(req && req.connection) req.connection.setTimeout(5000);
     },
 
     generic: function (url, callback) {
