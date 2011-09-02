@@ -198,7 +198,8 @@ exports.handleGetQuery = function(req, callback) {
 };
 
 exports.handleGetReindex = function(locker, callback) {
-    search.resetIndex();
+    // this method can happen async, but resetIndex MUST happen first before the callback
+    resetIndex(err, callback);
     var items;
     
     locker.providers(['photo/full', 'contact/full', 'timeline/twitter'], function(err, services) {
@@ -214,6 +215,15 @@ exports.handleGetReindex = function(locker, callback) {
         });     
     });
 };
+
+function resetIndex(err, callback) {
+    try {
+        wrench.rmdirSyncRecursive(indexPath);
+        callback(null, 'Successfully removed index');
+    } catch (E) {
+        callback(E, '');
+    }
+}
 
 function reindexType(url, type, source, callback) {
     request.get({uri:url}, function(err, res, body) {

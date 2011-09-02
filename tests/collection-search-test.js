@@ -25,7 +25,7 @@ req.params = {};
 req.param = function(n) { return this.params[n];};
 
 lsearch.setEngine(lsearch.engines.CLucene);
-lsearch.setIndexPath(__dirname + '/Me/search.index');
+lsearch.setIndexPath(__dirname + '/' + lconfig.me + '/search.index');
 
 suite.next().suite.addBatch({
     'Can set up search collection tests' : {
