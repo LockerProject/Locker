@@ -4,5 +4,6 @@
     "desc":"A simple way to view your photos.",
     "status":"stable",
     "static":"true",
-    "handle":"photosviewer"
+    "handle":"photosviewer",
+    "autoInstall":true
 }

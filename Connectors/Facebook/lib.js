@@ -16,7 +16,11 @@ var fs = require('fs'),
 var auth;
 
 // enumeration of all fields on a user for open graph, cuz they're not all default
-var allUserFields = "id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work";
+var allUserFields = "id,name,first_name,middle_name,last_name,gender,locale,languages," +
+                    "link,username,third_party_id,timezone,updated_time,verified,bio," + 
+                    "birthday,education,email,hometown,interested_in,location,political," + 
+                    "favorite_athletes,favorite_teams,quotes,relationship_status," + 
+                    "religion,significant_other,video_upload_limits,website,work";
 
 exports.init = function(theAuth) {
     auth = theAuth;

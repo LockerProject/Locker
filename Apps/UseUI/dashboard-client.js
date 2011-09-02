@@ -24,7 +24,7 @@ app.use(connect.bodyParser());
 app.get('/apps', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
     var apps = {contacts: {url : externalBase + '/Me/contactsviewer/', id : 'contactsviewer'},
-                photos: {url : externalBase + '/Me/hellophotos/', id : 'hellophotos'},
+                photos: {url : externalBase + '/Me/photosviewer/', id : 'photosviewer'},
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
                 search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}}
     res.end(JSON.stringify(apps));

@@ -185,7 +185,8 @@ function accountPopup (elem) {
     var oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
-                 facebook: {width: 980, height: 705}
+                 facebook: {width: 980, height: 705},
+                 flickr: {width: 1000, height: 877}
                 };
     if (oauthPopupSizes[elem.data('provider')]) {
         width = oauthPopupSizes[elem.data('provider')].width;

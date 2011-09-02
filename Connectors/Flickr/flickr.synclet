@@ -1,0 +1,11 @@
+{
+    "title":"Flickr Account",
+    "status":"unstable",
+    "provides":["contact/flickr", "photo/flickr"],
+    "provider":"flickr",
+    "mongoId" : {
+        "contacts":"nsid"
+    },
+    "synclets":[{"name":"contacts", "frequency":3600},
+                {"name":"photos", "frequency": 3600}]
+}

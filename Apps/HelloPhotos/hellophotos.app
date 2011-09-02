@@ -4,7 +4,7 @@
     "desc":"A simple way to view your photos.",
     "status":"unstable",
     "static":"true",
-    "uses":["facebook", "twitter", "foursquare"],
+    "uses":["facebook", "twitter", "foursquare", "flickr"],
     "autoInstall":true,
     "handle":"hellophotos"
 }
