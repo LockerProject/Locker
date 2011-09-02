@@ -24,7 +24,7 @@ exports.sync = function(processInfo, cb) {
             statuses.push({'obj' : js, timestamp: new Date(), type : 'new'});
             if(js.id > since) since = js.id;
         },function(err){
-            responseObj.data['status/mentions'] = statuses;
+            responseObj.data.mentions = statuses;
             responseObj.config.updateState = {mentions:{since:since}};
             cb(err, responseObj);
         });
