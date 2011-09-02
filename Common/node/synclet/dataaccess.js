@@ -1,4 +1,6 @@
 var dataStore = require('./datastore')
+  , fs = require('fs')
+  , path = require('path')
   , lconfig = require('../lconfig')
   , lfs = require('../lfs')
   ;

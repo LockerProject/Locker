@@ -18,5 +18,9 @@
     "gcontacts" : {
         "appKey" : "PASTE_HERE",
         "appSecret" : "PASTE_HERE"
+    },
+    "flickr" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
     }
 }

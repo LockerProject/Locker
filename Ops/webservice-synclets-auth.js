@@ -53,6 +53,9 @@ module.exports = function(locker) {
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
     });
+    locker.get('/auth/flickr/auth', function(req, res) {
+        handleFlickr(req, res);
+    });
 };
 
 function handleOAuth2 (code, options, res) {
@@ -154,6 +157,23 @@ function handleTwitter (req, res) {
         res.end('failed to authenticate against service - ' + E);
     }
 }
+
+function handleFlickr (req, res) {
+    var client = require('flickr-js')(apiKeys.flickr.appKey, apiKeys.flickr.appSecret);
+    var frob = req.param('frob');
+    if(!frob) { //starting out
+        res.redirect(client.getAuthURL('read'));
+    } else { //finishing
+        client.getTokenFromFrob(frob, function(err, auth) {
+            auth.apiKey = apiKeys.flickr.appKey;
+            auth.apiSecret = apiKeys.flickr.appSecret;
+            auth.token = auth.token;
+            installSynclet("flickr", auth);
+            res.end("<script type='text/javascript'> window.close(); </script>");
+        });
+    }
+}
+
 
 function installSynclet (provider, auth) {
     var avail = syncManager.synclets().available;

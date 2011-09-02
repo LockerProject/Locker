@@ -182,6 +182,9 @@ $(function() {
                 if(contact.accounts.foursquare) {
                     newContact.set({foursquare: contact.accounts.foursquare[0]});
                 }
+                if(contact.accounts.flickr) {
+                    newContact.set({flickr: contact.accounts.flickr[0]});
+                }
             }
 
             this.collection.add(newContact); // add item to collection; view is updated via event 'add'
@@ -455,6 +458,7 @@ $(function() {
             contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b" class="social_link email">Email</a><% } %> ';
             contactTemplate += '<% if (typeof(facebook) != "undefined") { %><a href="<%= facebook %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
             contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(flickr) != "undefined" && typeof(flickr.data.username) != "undefined") { %><a href="http://flickr.com/people/<%= flickr.data.nsid %>" class="social_link flickr" target="_b">Flickr Profile</a><% } %>';
             contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_b">GitHub Profile</a><% } %>';
             contactTemplate += '</div>';
             contactTemplate += '<div class="clear"></div></li>';
