@@ -58,6 +58,7 @@ function httpModuleRequest(uri, callback) {
         
         thisResponse.emit('data', interceptedUris[uri].response);
         thisResponse.emit('end');
+        thisResponse.emit('close');
 
     }
     return thisRequest;
