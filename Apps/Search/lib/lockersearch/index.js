@@ -13,7 +13,7 @@ exports.search = function(type, term, offset, limit, callback) {
     
     locker.providers('search', function(error, providers) {
         if (!providers || providers.length === 0) {
-            callback('No Locker search providers found', null);
+            return callback('No Locker search providers found', null);
         }
         
         // lame regex replacement of the incoming bad encoding from the form handling.  Ugly but effective
@@ -26,20 +26,24 @@ exports.search = function(type, term, offset, limit, callback) {
           fetchURL += '&type=' + type;
         }
 
-        request.get({url:fetchURL}, function(error, request, result) {
-            if (error || !result) {
-                callback('Failed calling provider GET at ' + fetchURL, null);
+        request.get({url:fetchURL}, function(error, res, body) {
+            
+            if (error || !res) {
+                return callback('Failed calling provider GET at ' + fetchURL, null);
             }
-
-            var results = {};
-            var result = JSON.parse(result);
-             
-            results.hits = {};
-            results.hits.total = null;   
-            results.took = result.took;
-            results.hits.hits = result.hits;
-        
-            callback(null, results);
+            
+            else if (res.statusCode == 400) {
+                return callback('That\'s an valid query term, try again!', null);
+            }
+            else {
+                var results = {};
+                var result = JSON.parse(body);
+                results.hits = {};
+                results.hits.total = result.hits.length;   
+                results.took = result.took;
+                results.hits.hits = result.hits;
+                callback(null, results);
+            }
         });
     });
 };

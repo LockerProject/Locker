@@ -77,7 +77,7 @@ function processEvents(queue) {
     // Only the first one is started and it will continue until empty
     if (!queue || queue.length > 1) {
         //console.log("Bailing on the queue");
-        console.dir(queue);
+        //console.dir(queue);
         return;
     }
 

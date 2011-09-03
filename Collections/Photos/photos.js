@@ -92,6 +92,14 @@ app.get("/getPhoto/:photoId", function(req, res) {
     })
 });
 
+app.get('/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(doc));
+    })
+});
+
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
         res.writeHead(200);
@@ -133,7 +141,7 @@ process.stdin.on('data', function(data) {
     
     locker.connectToMongo(function(mongo) {
         logger.debug("connected to mongo " + mongo);
-        sync.init(lockerInfo.lockerUrl, mongo.collections.photos);
+        sync.init(lockerInfo.lockerUrl, mongo.collections.photos, mongo);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
         });

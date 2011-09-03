@@ -14,6 +14,8 @@
                       "lscheduler-test-local.js",
                       "deepCompare-test.js"],
         "client-api" : ["locker-client-test.js"],
+        "search" : ["collection-search-test.js",
+                    "lsearch-test-local.js"],
         "connectors-local" : ["connector-local-google-contacts-test.js",
                               "connector-local-github-test.js",
                               "connector-local-foursquare-test.js",
