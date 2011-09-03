@@ -27,21 +27,24 @@ exports.search = function(type, term, offset, limit, callback) {
         }
 
         request.get({url:fetchURL}, function(error, res, body) {
-            
+            var results = {};
+            results.error;
             if (error || !res) {
-                return callback('Failed calling provider GET at ' + fetchURL, null);
+                results.error = 'Failed calling provider GET at ' + fetchURL;
+                return callback('Failed calling provider GET at ' + fetchURL, results);
             }
             
-            else if (res.statusCode == 400) {
-                return callback('That\'s an valid query term, try again!', null);
+            else if (res.statusCode >= 300) {
+                results.error = 'That\'s an valid query term, try again!';
+                return callback('That\'s an valid query term, try again!', results);
             }
             else {
-                var results = {};
                 var result = JSON.parse(body);
                 results.hits = {};
                 results.hits.total = result.hits.length;   
                 results.took = result.took;
                 results.hits.hits = result.hits;
+                results.error = 
                 callback(null, results);
             }
         });

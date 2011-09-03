@@ -71,10 +71,7 @@ function(req, res) {
     var error = null;
     
     search.search(type, term, 0, 10, function(err, results) {
-      if (err) {
-        console.error(err);
-        return res.send(err);
-      }
+        
       if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
           console.error('No results object returned for search');
           results = {};
