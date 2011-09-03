@@ -72,8 +72,8 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
-            // assert.equal(response, undefined);
-            assert.equal(response.data.timeline.length, 0);
+            assert.equal(response, undefined);
+            // assert.equal(response.data.timeline.length, 0);
         }
     }
     
