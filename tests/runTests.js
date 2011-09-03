@@ -130,8 +130,10 @@ try {
 }
 
 setTimeout(function() {
+    var xunit = false;
     var vowsArgument = [];//["--supress-stdout"];
     if (process.argv.indexOf("-x") > 0) {
+        xunit = true;
         vowsArgument.push('--xunit');
     } else if (process.argv.indexOf("-d") > 0) {
         vowsArgument.push("--dot-matrix");
@@ -145,14 +147,21 @@ setTimeout(function() {
         vowsArgument.push("--nocolor");
     }
 
+    var output = '';
+
     var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
+        if (xunit) output += data;
         process.stdout.write(data);
     });
     vowsProcess.stderr.on("data", function(data) {
         process.stderr.write(data);
     });
     vowsProcess.on("exit", function(code, signal) {
+        if (xunit) {
+            output = output.substring(output.indexOf('<testsuite name="Vows test"'));
+            fs.writeFileSync('output.xml', output);
+        }
         if (code != null) {
             console.log("All tests done");
             lockerd.shutdown(code);
