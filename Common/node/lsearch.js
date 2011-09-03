@@ -9,8 +9,8 @@
 var assert = require("assert");
 var fs = require('fs');
 var path = require('path');
-var wrench = require('wrench');
 var lconfig = require('lconfig');
+var wrench = require('wrench');
 var is = require("lutil").is;
 var util = require('util');
 var indexPath;
@@ -215,16 +215,6 @@ exports.setIndexPath = function(newPath) {
     
 };
 
-// CAREFUL!  Make sure all your readers/writers are closed before calling this
-exports.resetIndex = function(callback) {
-    try {
-        wrench.rmdirSyncRecursive(indexPath);
-        callback(null)
-    } catch (E) {
-        callback(E);
-    }
-};
-
 function exportEngineFunction(funcName) {
     var funcToRun = function() {
         assert.ok(exports.currentEngine);
@@ -256,6 +246,16 @@ exports.deleteDocument = function(id, cb) {
 exports.deleteDocumentsByType = function(type, cb) {
   exports.currentEngine.deleteDocumentsByType(type, cb);
 }
+
+// CAREFUL!  Make sure all your readers/writers are closed before calling this
+exports.resetIndex = function(callback) {
+    try {
+        wrench.rmdirSyncRecursive(indexPath);
+        callback(null)
+    } catch (E) {
+        callback(E);
+    }
+};
 
 function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee

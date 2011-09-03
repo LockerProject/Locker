@@ -13,7 +13,7 @@ exports.search = function(type, term, offset, limit, callback) {
     
     locker.providers('search', function(error, providers) {
         if (!providers || providers.length === 0) {
-            callback('No Locker search providers found', null);
+            return callback('No Locker search providers found', null);
         }
         
         // lame regex replacement of the incoming bad encoding from the form handling.  Ugly but effective
@@ -29,11 +29,11 @@ exports.search = function(type, term, offset, limit, callback) {
         request.get({url:fetchURL}, function(error, res, body) {
             
             if (error || !res) {
-                callback('Failed calling provider GET at ' + fetchURL, null);
+                return callback('Failed calling provider GET at ' + fetchURL, null);
             }
             
             else if (res.statusCode == 400) {
-                callback('That\'s an valid query term, try again!', null);
+                return callback('That\'s an valid query term, try again!', null);
             }
             else {
                 var results = {};
