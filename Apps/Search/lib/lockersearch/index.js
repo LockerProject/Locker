@@ -28,15 +28,14 @@ exports.search = function(type, term, offset, limit, callback) {
 
         request.get({url:fetchURL}, function(error, res, body) {
             var results = {};
-            results.error;
             if (error || !res) {
                 results.error = 'Failed calling provider GET at ' + fetchURL;
-                return callback('Failed calling provider GET at ' + fetchURL, results);
+                return callback(results.error, results);
             }
             
             else if (res.statusCode >= 300) {
-                results.error = 'That\'s an valid query term, try again!';
-                return callback('That\'s an valid query term, try again!', results);
+                results.error = 'That\'s an invalid query term, try again!';
+                return callback(results.error, results);
             }
             else {
                 var result = JSON.parse(body);
@@ -44,7 +43,7 @@ exports.search = function(type, term, offset, limit, callback) {
                 results.hits.total = result.hits.length;   
                 results.took = result.took;
                 results.hits.hits = result.hits;
-                results.error = 
+                results.error;
                 callback(null, results);
             }
         });

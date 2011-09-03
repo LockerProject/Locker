@@ -40,6 +40,9 @@
               - if (results[r].fullobject.hasOwnProperty('thumbUrl') && results[r].fullobject.thumbUrl.length > 0)
                 .fll
                   <img height="50" class="avatar" src="#{results[r].fullobject.thumbUrl}" />
+              - else if (results[r].fullobject.hasOwnProperty('url') && results[r].fullobject.url.length > 0)
+                .fll
+                  <img height="50" class="avatar" src="#{results[r].fullobject.url}" />
               .fll
                 .upperresult
                   #{results[r].fullobject.title}
