@@ -160,6 +160,7 @@ setTimeout(function() {
     vowsProcess.on("exit", function(code, signal) {
         if (xunit) {
             output = output.substring(output.indexOf('<testsuite name="Vows test"'));
+            output = output.replace(/^\s+|\s+$/g, '');
             fs.writeFileSync('output.xml', output);
         }
         if (code != null) {
