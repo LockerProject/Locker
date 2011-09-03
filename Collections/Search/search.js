@@ -188,8 +188,8 @@ exports.handleGetQuery = function(req, callback) {
         error = 'Please supply a valid query string for /search/query GET request.';
         console.error(error);
         return callback(error, {});
-    }
-
+    } 
+    
     function sendResults(err, results, queryTime) {
         if (err) {
             error = 'Error querying via /search/query GET request.';
