@@ -27,9 +27,10 @@ var photoGatherers = {
     "photo/flickr":gatherFlickr
 };
 
-exports.gatherPhotos = function() {
+exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
+        cb(); // synchro delete, async/background reindex
         locker.providers('photo', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {

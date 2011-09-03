@@ -12,8 +12,9 @@ exports.init = function(l, dStore){
 }
 
 // manually walk and reindex all possible link sources
-exports.reIndex = function(locker) {
+exports.reIndex = function(locker,cb) {
     dataStore.clear(function(){
+        cb(); // synchro delete, async/background reindex
         locker.providers(['checkin/foursquare', 'status/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {

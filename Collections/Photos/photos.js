@@ -93,9 +93,10 @@ app.get("/getPhoto/:photoId", function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherPhotos();
-    res.writeHead(200);
-    res.end('Updating');
+    sync.gatherPhotos(function(){
+        res.writeHead(200);
+        res.end('Updating');        
+    });
 });
 
 app.post('/events', function(req, res) {

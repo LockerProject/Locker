@@ -13,9 +13,10 @@ exports.init = function(l, dStore, s){
 }
 
 // manually walk and reindex all possible link sources
-exports.reIndex = function(locker) {
+exports.reIndex = function(locker,cb) {
     search.resetIndex();
     dataStore.clear(function(){
+        cb(); // synchro delete, async/background reindex
         locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {

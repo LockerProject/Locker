@@ -11,7 +11,8 @@ var fs = require('fs')
 
 var synclets = {
     available:[],
-    installed:{}
+    installed:{},
+    executeable:true
 };
 
 exports.synclets = function() {
@@ -174,6 +175,16 @@ function executeSynclet(info, synclet, callback) {
     if (synclet.status === 'running') {
         if (callback) {
             callback('already running');
+        }
+        return;
+    }
+    // we're put on hold from running any for some reason, re-schedule them
+    if (!synclets.executeable)
+    {
+        console.log("Delaying execution of synclet "+synclet.name+" for "+info.id);
+        scheduleRun(info, synclet);
+        if (callback) {
+            callback();
         }
         return;
     }

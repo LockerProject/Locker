@@ -46,10 +46,11 @@ app.get('/state', function(req, res) {
     });
 });
 
-app.get('/reindex', function(req, res) {
-    dataIn.reIndex(locker);
-    res.writeHead(200);
-    res.end('Making cookies for temas!');
+app.get('/update', function(req, res) {
+    dataIn.reIndex(locker,function(){
+        res.writeHead(200);
+        res.end('Making cookies for temas!');        
+    });
 });
 
 app.post('/events', function(req, res) {

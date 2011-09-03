@@ -67,9 +67,10 @@ app.get('/allContacts', function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherContacts();
-    res.writeHead(200);
-    res.end('Updating');
+    sync.gatherContacts(function(){
+        res.writeHead(200);
+        res.end('Updating');        
+    });
 });
 
 app.post('/events', function(req, res) {
