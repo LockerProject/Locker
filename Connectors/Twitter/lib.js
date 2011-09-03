@@ -10,6 +10,7 @@
 var fs = require('fs'),
     request = require('request'),
     async = require('async'),
+    url = require('url'),
     sys = require('sys');
 
     
@@ -92,6 +93,17 @@ exports.getTimeline = function(arg, cbEach, cbDone) {
     getPages(arg,cbEach,cbDone);
 }
 
+// get just one chunk of a timeline, screen_name has to be me
+exports.getTimelinePage = function(arg, cbEach, cbDone) {
+    if(!arg.screen_name) return cbDone("missing screen_name");
+    if(!arg.count) arg.count = 100;
+    arg.path = '/statuses/home_timeline.json';
+    getOne(arg,function(err,js){
+        if(js) cbEach(js);
+        cbDone(err);
+    });
+}
+
 // should work for anyone, get their tweets
 exports.getTweets = function(arg, cbEach, cbDone) {
     if(!arg.screen_name) return cbDone("missing screen_name");
@@ -104,6 +116,20 @@ exports.getMentions = function(arg, cbEach, cbDone) {
     if(!arg.screen_name) return cbDone("missing screen_name");
     arg.path = '/statuses/mentions.json';
     getPages(arg,cbEach,cbDone);
+}
+
+// get replies and retweets for any tweet id
+exports.getRelated = function(arg, cbEach, cbDone) {
+    if(!arg.id) return cbDone("missing tweet id");
+    getOnePublic({path:"/related_results/show/"+arg.id+".json"},function(err,related){
+        if(err || !Array.isArray(related)) return cbDone(err);
+        getOnePublic({path:"/statuses/"+arg.id+"/retweeted_by.json"},function(err,retweeted){
+            if(err || !Array.isArray(retweeted)) return cbDone(err);
+            if(retweeted.length > 0) related.push({results:retweeted,resultType:"ReTweet"});
+            if(related.length > 0) cbEach(related);
+            cbDone();
+        });
+    });
 }
 
 // step through any sized list of ids using cursors
@@ -143,6 +169,25 @@ exports.getUsers = function(users, cbEach, cbDone) {
             users.push(id); // any non-done users push back for next attempt
         }
         me.getUsers(users, cbEach, cbDone); // loop loop till done
+    });
+}
+
+// call the api non-authenticated
+function getOnePublic(arg, cb)
+{
+    if(!arg.path) return cb("no path");
+    var api = url.parse('https://api.twitter.com/1'+arg.path);
+    delete arg.path;
+    api.query = arg;
+    request.get({uri:url.format(api)}, function(err, resp, body) {
+        var js;
+        try{
+            if(err) throw err;
+            js = JSON.parse(body);
+        }catch(E){
+            return cb(E);
+        }
+        cb(null,js);
     });
 }
 
