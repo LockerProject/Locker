@@ -1,5 +1,6 @@
 var lconfig = require('lconfig');
 lconfig.load('Config/config.json');
+var locker = require('locker');
 var assert = require('assert');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Search Collection');
@@ -8,15 +9,18 @@ var lsearch = require('lsearch');
 var search = require('../Collections/Search/search');
 var fs = require('fs');
 
-search.lockerInfo.lockerUrl = 'http://localhost:8043';
+search.lockerInfo.lockerUrl = 'http://localhost:8042';
+locker.lockerBase = search.lockerInfo.lockerUrl;
 
 var contactAddEvent = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_1.json','ascii'));
 var contactUpdateEvent = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_1_updated.json','ascii'));
+var contactAddEvent2 = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_2.json','ascii'));
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/timeline_twitter/twitter_tweet_1.json','ascii'));
 
 fakeweb.allowNetConnect = false;
-fakeweb.registerUri({uri : 'http://localhost:8043/Me/twitter/timeline/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
-fakeweb.registerUri({uri : 'http://localhost:8043/Me/contacts/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/twitter/timeline/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/4e5e9731e4884f5600595b29', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
 
 var req = {};
 req.headers = {};

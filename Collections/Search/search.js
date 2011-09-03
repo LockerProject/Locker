@@ -12,6 +12,8 @@ var fs = require('fs'),
     
 var lsearch = require('../../Common/node/lsearch');
 var lutil = require('../../Common/node/lutil');
+var lconfig = require('lconfig');
+lconfig.load('../../Config/config.json');
 
 var lockerInfo = {};
 exports.lockerInfo = lockerInfo;
@@ -55,6 +57,15 @@ app.get('/query', function(req, res) {
    });
 });
 
+app.get('/update', function(req, res) {
+    exports.handleGetUpdate(function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send('Full search reindex started');
+   });
+});
+
 app.get('/reindexForType', function(req, res) {
     exports.handleGetReindexForType(req.param('type'), function(err, response) {
        if (err) {
@@ -63,6 +74,28 @@ app.get('/reindexForType', function(req, res) {
        return res.send(response);
    });
 });
+
+exports.handleGetUpdate = function(callback) {
+    var error;
+    lsearch.resetIndex(function(err) {
+        if (err) {
+            error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
+            console.error(error);
+        }
+        return callback(err);
+    });
+    
+    reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+    reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+    locker.providers('status/twitter', function(err, services) {
+        if (!services) return;
+        services.forEach(function(svc) {
+           if (svc.provides.indexOf('status/twitter') >= 0) {
+               reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+            }
+        });     
+    });
+};
 
 exports.handlePostEvents = function(req, callback) {
     var error;
@@ -126,20 +159,12 @@ exports.handlePostIndex = function(req, callback) {
         return callback(error, {});
     }
     
-    try {
-        data = JSON.parse(req.body.data);
-    } catch (E) {
-        error = 'Invalid JSON given in body for /search/index POST request.';
-        console.error(error);
-        return callback(error, {});
-    }
-    
-    lsearch.indexTypeAndSource(req.body.type, req.body.source, data, function(err, time) {
+    lsearch.indexTypeAndSource(req.body.type, req.body.source, req.body.data, function(err, time) {
         if (err) { 
-            handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+            handleError(req.body.type, 'new', req.body.data._id, err);
             return callback(err, {});
         }
-        handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+        handleLog(req.body.type, 'new', req.body.data._id, time);
         return callback(null, {timeToIndex: time, docsDeleted: 0});
     });
 };
@@ -198,22 +223,30 @@ exports.handleGetQuery = function(req, callback) {
 };
 
 exports.handleGetReindexForType = function(type, callback) {
-    // this handleGetReindex method can happen async, but resetIndex MUST happen first before the callback.  That's why we call it here
-    resetIndexForType(type, callback);
+    // this handleGetReindex method can happen async, but deleteDocumentsByType MUST happen first before the callback.  
+    // That's why we call it here
+    lsearch.deleteDocumentsByType(type, function(err, indexTime, deletedDocs) {
+        callback(err, {indexTime: indexTime, deletedDocs: deletedDocs});
+    });
+    
     var items;
     
-    locker.providers(['photo/full', 'contact/full', 'timeline/twitter'], function(err, services) {
-        if (!services) return;
-        services.forEach(function(svc) {
-            if (svc.provides.indexOf('photo/full') >= 0) {
-                reindexType(locker.lockerBase + '/Me/' + svc.id + '/allPhotos', 'photo/full', 'photos', function(err) {});
-            } else if (svc.provides.indexOf('contact/full') >= 0) {
-                reindexType(locker.lockerBase + '/Me/' + svc.id + '/allContacts', 'contact/full', 'contacts', function(err) {});
-            } else if (svc.provides.indexOf('timeline/twitter') >= 0) {
-                reindexType(locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
-            }
-        });     
-    });
+    if (type == 'contact/full') {
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+    }
+    else if (type == 'photo/full') {
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+    }  
+    else {   
+        locker.providers(type, function(err, services) {
+            if (!services) return;
+            services.forEach(function(svc) {
+               if (svc.provides.indexOf('timeline/twitter') >= 0) {
+                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/home_timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                }
+            });     
+        });
+    }
 };
 
 function reindexType(url, type, source, callback) {
@@ -224,8 +257,8 @@ function reindexType(url, type, source, callback) {
         } 
         if (res.statusCode >= 400) {
             var error = 'Received a ' + res.statusCode + ' when attempting to reindex ' + type + ' collection';
-            console.error(error);
-            return callback(error);
+            console.error(err);
+            return callback(err);
         }
 
         items = JSON.parse(body);
@@ -240,6 +273,10 @@ function reindexType(url, type, source, callback) {
             req.headers['content-type'] = 'application/json';
             exports.handlePostIndex(req, forEachCb);
         },function(err) {
+            if (err) {
+                console.error(err);
+                return callback(err);
+            }
             console.log('Reindexing of ' + type + ' completed.');           
             return callback(err);
         });

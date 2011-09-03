@@ -9,6 +9,7 @@
 var assert = require("assert");
 var fs = require('fs');
 var path = require('path');
+var wrench = require('wrench');
 var lconfig = require('lconfig');
 var is = require("lutil").is;
 var util = require('util');
@@ -152,8 +153,8 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
     processValue(value, this.mappings[type]);
     
     if (contentTokens.length == 0) {
-        callback("No valid tokens were found to index.");
-        return;
+        console.log("No valid tokens were found to index id " + idToStore);
+        return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
@@ -215,11 +216,12 @@ exports.setIndexPath = function(newPath) {
 };
 
 // CAREFUL!  Make sure all your readers/writers are closed before calling this
-exports.resetIndex = function() {
+exports.resetIndex = function(callback) {
     try {
         wrench.rmdirSyncRecursive(indexPath);
+        callback(null)
     } catch (E) {
-        // Ignoring if the dir does not exist
+        callback(E);
     }
 };
 
