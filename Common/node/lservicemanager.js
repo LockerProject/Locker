@@ -70,7 +70,6 @@ function mapMetaData(file, type, installable) {
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
     metaData.installable = installable;
-    metaData.externalUri = lconfig.externalBase+"/Me/"+metaData.id+"/";
     serviceMap.available.push(metaData);
     if (type === "collection") {
         console.log("***** Should install collection " + metaData.handle);
@@ -154,6 +153,7 @@ function mergedManifest(dir)
         return false;
     });
     if (serviceInfo && serviceInfo.manifest) {
+        
         var fullInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + serviceInfo.manifest));
         return lutil.extend(js, fullInfo);
     } else {
@@ -224,9 +224,10 @@ exports.migrate = function(installedDir, metaData) {
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        metaData = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id +'/me.json', 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id +'/me.json', 'utf-8'));
                         metaData.version = migrations[i].substring(0, 13);
-                        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(metaData, null, 4));
+                        curMe.version = metaData.version;
+                        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run migration!");

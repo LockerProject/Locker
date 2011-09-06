@@ -1,4 +1,5 @@
 {
 	"title":"Test migrating services from one version to the next",
-	"run":"node migration-test.js"
+	"run":"node migration-test.js",
+	"srcdir":"Tests/migration-test"
 }
