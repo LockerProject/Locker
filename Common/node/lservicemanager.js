@@ -228,7 +228,9 @@ exports.migrate = function(installedDir, metaData) {
                         metaData.version = migrations[i].substring(0, 13);
                         fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(metaData, null, 4));
                     }else{
-                        // TODO we should do something serious here!!
+                        // this isn't clean but we have to do something drastic!!!
+                        console.error("failed to run migration!");
+                        process.exit(1);
                     }
                     // if they returned a string, it's a post-startup callback!
                     if (typeof ret == 'string')

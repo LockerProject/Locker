@@ -179,6 +179,7 @@ function executeSynclet(info, synclet, callback) {
         return;
     }
     // we're put on hold from running any for some reason, re-schedule them
+    // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
         console.log("Delaying execution of synclet "+synclet.name+" for "+info.id);
