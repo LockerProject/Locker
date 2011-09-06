@@ -145,15 +145,19 @@ var npm = require('npm');
             async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
                 console.log('running migration followup for '+call);
                 request.get({uri:call},cb); // TODO: are failures here critical or not?
-            },reallyFinishStartup);
+            },function(){
+                serviceManager.serviceMap().migrations = []; 
+                postStartup();
+            });
         }else{
             syncManager.findInstalled();
-            reallyFinishStartup();
+            postStartup();
         }
 
     }
     
-    function reallyFinishStartup() {
+    // scheduling and misc things
+    function postStartup() {
         thservice.start();
 
         lscheduler.masterScheduler.loadAndStart();
