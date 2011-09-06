@@ -148,37 +148,37 @@ vows.describe("Locker Client API").addBatch({
                 assert.isNull(err);
                 assert.isTrue(result);
             }
-        },
-        "events" : {
-            topic:function() {
-                var promise = new events.EventEmitter();
-                var fired = false;
+        //},
+        //"events" : {
+            //topic:function() {
+                //var promise = new events.EventEmitter();
+                //var fired = false;
 
-                try {
-                    path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
-                        if (exists) {
-                            fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
-                        }
-                    });
-                } catch (E) {
-                    console.error(E);
-                    // test the error?
-                }
-                locker.listen("test/event", "/event", function(err, resp, body) {
-                    locker.event("test/event", {"test":"value"});
-                    testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
-                        if(success)
-                            promise.emit("success", true);
-                        else
-                            promise.emit("error", false);
-                    });
-                });
-                return promise;
-            },
-            "fires an event callback": function(err, result) {
-                assert.isNull(err);
-                assert.isTrue(result);
-            }
+                //try {
+                    //path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
+                        //if (exists) {
+                            //fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
+                        //}
+                    //});
+                //} catch (E) {
+                    //console.error(E);
+                    //// test the error?
+                //}
+                //locker.listen("test/event", "/event", function(err, resp, body) {
+                    //locker.event("test/event", {"test":"value"});
+                    //testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
+                        //if(success)
+                            //promise.emit("success", true);
+                        //else
+                            //promise.emit("error", false);
+                    //});
+                //});
+                //return promise;
+            //},
+            //"fires an event callback": function(err, result) {
+                //assert.isNull(err);
+                //assert.isTrue(result);
+            //}
         }
     }
 }).export(module);
