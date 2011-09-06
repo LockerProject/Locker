@@ -21,7 +21,7 @@ suite.next().suite.addBatch({
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'https://www.google.com/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&oauth_token=ert&alt=json',
+                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&oauth_token=ert&alt=json',
                 file : __dirname + '/fixtures/googleContacts/contacts.json' });
             contacts.sync(pinfo, this.callback)
         },
