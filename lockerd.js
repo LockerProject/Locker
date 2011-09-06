@@ -28,6 +28,8 @@ var npm = require('npm');
     var spawn = require('child_process').spawn;
     var fs = require('fs');
     var path = require('path');
+    var request = require('request');
+    var async = require('async');
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
@@ -125,23 +127,38 @@ var npm = require('npm');
             serviceManager.scanDirectory(dirToScan, installable);
         });
         
-        syncManager.scanDirectory("Connectors");
-        
+        syncManager.scanDirectory("Connectors");            
 
         // look for existing things
         serviceManager.findInstalled();
-        syncManager.findInstalled();
 
-        thservice.start();
-
+        // start web server (so we can all start talking)
         webservice.startService(lconfig.lockerPort);
-
-        lscheduler.masterScheduler.loadAndStart();
-
         var lockerPortNext = "1"+lconfig.lockerPort;
         lockerPortNext++;
 
-        console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
+        // if there's any migrations, load synclets and do them but don't let synclets run till done
+        if(serviceManager.serviceMap().migrations.length > 0)
+        {
+            syncManager.synclets().executable = false;
+            syncManager.findInstalled();
+            async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
+                console.log('running migration followup for '+call);
+                request.get({uri:call},cb); // TODO: are failures here critical or not?
+            },reallyFinishStartup);
+        }else{
+            syncManager.findInstalled();
+            reallyFinishStartup();
+        }
+
+    }
+    
+    function reallyFinishStartup() {
+        thservice.start();
+
+        lscheduler.masterScheduler.loadAndStart();
+
+        console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);        
     }
 
     function shutdown(returnCode) {

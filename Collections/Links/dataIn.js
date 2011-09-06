@@ -1,6 +1,7 @@
 var request = require('request');
 var util = require('./util');
 var async = require('async');
+var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
 
@@ -13,9 +14,10 @@ exports.init = function(l, dStore, s){
 }
 
 // manually walk and reindex all possible link sources
-exports.reIndex = function(locker) {
+exports.reIndex = function(locker,cb) {
     search.resetIndex();
     dataStore.clear(function(){
+        cb(); // synchro delete, async/background reindex
         locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
@@ -43,6 +45,7 @@ exports.reIndex = function(locker) {
 exports.processEvent = function(event, callback)
 {
     if(!callback) callback = function(){};
+    // TODO: should we be only tracking event.action = new?
     // what a mess
     var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
     if(event.type.indexOf("facebook") > 0)

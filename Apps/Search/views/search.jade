@@ -1,14 +1,69 @@
 #block
   .wrapper
-    h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
+    != partial('partials/searchform', {locals: {searchPath: searchPath}})
+  
+    - if (error !== null)
+      h1 #{error}
+    - else
+      h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
     
-    ul
+    ul.searchresults
+      - var lastType
       - for (var r in results)
-        li
-          strong
-            #{results[r]._type}:
-          #{results[r].content}
-
-    #raw
-      p Raw output: 
-      code #{raw}
+        - if (results[r]._type != lastType)
+          .result-type
+            - if (results[r]._type === 'timeline/twitter')
+              | Tweets
+            - else if (results[r]._type === 'photo/full')
+              | Photos
+            - else if (results[r]._type === 'contact/full')
+              | Contacts
+            - else
+              #{results[r]._type}
+        - lastType = results[r]._type
+        - if (results[r]._type === 'contact/full')
+            li
+              - if (results[r].fullobject.hasOwnProperty('photos') && results[r].fullobject.photos.length > 0)
+                .fll
+                  <img height="50" class="avatar" src="#{results[r].fullobject.photos[0]}" />
+              .fll
+                .upperresult(style="text-transform: capitalize;")
+                  #{results[r].fullobject.name}
+                .lowerresult
+                  - if (results[r].fullobject.accounts.hasOwnProperty('twitter'))
+                    .via \@#{results[r].fullobject.accounts.twitter[0].data.screen_name}
+                  - else if (results[r].fullobject.accounts.hasOwnProperty('facebook'))
+                    .via Facebook: #{results[r].fullobject.accounts.facebook[0].data.username}
+              .clb
+        - else if (results[r]._type === 'photo/full')
+            li
+              - if (results[r].fullobject.hasOwnProperty('thumbUrl') && results[r].fullobject.thumbUrl.length > 0)
+                .fll
+                  <img height="50" class="avatar" src="#{results[r].fullobject.thumbUrl}" />
+              - else if (results[r].fullobject.hasOwnProperty('url') && results[r].fullobject.url.length > 0)
+                .fll
+                  <img height="50" class="avatar" src="#{results[r].fullobject.url}" />
+              .fll
+                .upperresult
+                  #{results[r].fullobject.title}
+                .lowerresult
+                  - for (var s in results[r].fullobject.sources)
+                    - if (results[r].fullobject.sources[s].service === 'synclet/twitter')
+                      .via via Twitter
+                    - else if (results[r].fullobject.sources[s].service === 'synclet/facebook')
+                      .via via Facebook
+              .clb
+        - else if (results[r]._type === 'timeline/twitter')
+            li
+              .fll
+                <img height="50" class="avatar" src="#{results[r].fullobject.user.profile_image_url_https}" />
+              .fll
+                .upperresult
+                  #{results[r].fullobject.text}
+                .lowerresult
+                  .via #{results[r].fullobject.created_at} \@#{results[r].fullobject.user.screen_name}
+              .clb
+    - if (raw)
+      #raw
+        p Raw output: 
+        code #{raw}

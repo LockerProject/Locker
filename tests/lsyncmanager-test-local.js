@@ -125,6 +125,13 @@ vows.describe("Synclet Manager").addBatch({
                     assert.equal(topic[i].authurl, "https://foursquare.com/oauth2/authenticate?client_id=4sq-appkey&response_type=code&redirect_uri=http://localhost:8043/auth/foursquare/auth");
                 }
             }
+        },
+        "flickr worked" : function(topic) {
+            for (var i = 0; i < topic.length; i++) {
+                if (topic[i].provider === 'flickr') {
+                    assert.equal(topic[i].authurl, "http://localhost:8043/auth/flickr/auth");
+                }
+            }
         }
     },
     "Installed services can be executed immediately rather than waiting for next run" : {
@@ -133,7 +140,11 @@ vows.describe("Synclet Manager").addBatch({
             syncManager.syncNow("testSynclet", this.callback);
         },
         "successfully" : function(err, status) {
+            console.error(syncManager.synclets().installed.testSynclet.synclets[0]);
             assert.isNull(err);
+        },
+        "and can specify a \"nextRun\" time" : function(err, status) {
+            assert.equal(syncManager.synclets().installed.testSynclet.synclets[0].nextRun.getTime(), 2424242424242);
         },
         "and after running generates data in mongo" : {
             topic: function() {
@@ -236,7 +247,7 @@ vows.describe("Synclet Manager").addBatch({
         }
     }
 }).addBatch({
-    "Removing IDs from the config will" : {
+    "If the source doesn't return an ID" : {
         topic: function() {
             allEvents[primaryType] = [];
             var self = this;
@@ -246,12 +257,21 @@ vows.describe("Synclet Manager").addBatch({
                 });
             });
         },
-        "will generate a delete event and remove the row from mongo" : function(err, count) {
+        "it will generate a delete event and remove the row from mongo" : function(err, count) {
             var events = allEvents[primaryType];
             assert.equal(count, 0);
             assert.equal(events.length, 1);
             assert.equal(events[0].type, 'delete');
             assert.equal(events[0].data.notId, 500);
+        }
+    }
+}).addBatch({
+    "Running testSynclet again" : {
+        topic: function() {
+            syncManager.syncNow("testSynclet", this.callback);
+        },
+        "with no value for 'notId'" : function(arg1, arg2, arg3) {
+            assert.equal(arg1[0].message, 'no value for primary key');
         }
     }
 }).addBatch({

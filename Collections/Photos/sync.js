@@ -15,10 +15,10 @@ var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 var logger = require("../../Common/node/logger.js").logger;
 
-exports.init = function(theLockerUrl, mongoCollection) {
+exports.init = function(theLockerUrl, mongoCollection, mongo) {
     logger.debug("Photos sync init mongoCollection(" + mongoCollection + ")");
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection);
+    dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
 
@@ -27,9 +27,10 @@ var photoGatherers = {
     "photo/flickr":gatherFlickr
 };
 
-exports.gatherPhotos = function() {
+exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
+        cb(); // synchro delete, async/background reindex
         locker.providers('photo', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
@@ -50,6 +51,8 @@ exports.gatherPhotos = function() {
                 }
             });
         });
+        // also try twitter, fails out if none
+        gatherFromUrl("twitter","/getCurrent/tweets","status/twitter");
     });
 }
 

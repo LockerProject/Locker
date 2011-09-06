@@ -79,11 +79,57 @@ exports.extend = function() {
 exports.is = function(type, obj) {
     var clas = Object.prototype.toString.call(obj).slice(8, -1);
     return obj !== undefined && obj !== null && clas === type;
-}
+};
 
 exports.addAll = function(thisArray, anotherArray) {
     if(!(thisArray && anotherArray && anotherArray.length))
         return;
     for(var i = 0; i < anotherArray.length; i++)
         thisArray.push(anotherArray[i]);
+};
+
+exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
+
+    var foundValues = [];
+    
+    function recurseObject(jsonObject, propertyName) {
+        if (exports.is("Object", jsonObject)) {
+            for (var m in jsonObject) {
+                if (jsonObject.hasOwnProperty(m)) {
+                    if (m === propertyName) {
+                        foundValues.push(jsonObject[m]);
+                    }
+                    else if (exports.is("Object", jsonObject[m])) {
+                        recurseObject(jsonObject[m], propertyName);
+                    }
+                    else if (exports.is("Array", jsonObject[m])) {
+                        for (var n=0; n<jsonObject[m].length; n++) {
+                            recurseObject(jsonObject[m][n], propertyName);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    recurseObject(jsonObject, propertyName);
+    callback(foundValues);
+};
+
+// quick/dirty sanitization ripped from the Jade template engine
+exports.sanitize = function(term){
+    return String(term)
+        .replace(/&(?!\w+;)/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+} 
+
+exports.trim = function(stringToTrim) {
+	return stringToTrim.replace(/^\s+|\s+$/g,"");
+}
+exports.ltrim = function(stringToTrim) {
+	return stringToTrim.replace(/^\s+/,"");
+}
+exports.rtrim = function(stringToTrim) {
+	return stringToTrim.replace(/\s+$/,"");
 }

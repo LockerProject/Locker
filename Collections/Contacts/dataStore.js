@@ -56,6 +56,9 @@ exports.addEvent = function(eventBody, callback) {
         case 'contact/gcontacts':
             target = exports.addGoogleContactsData;
             break;
+        case 'contact/flickr':
+            target = exports.addFlickrData;
+            break;
     }
     if(!target) {
         callback('event received could not be processed by the contacts collection');
@@ -89,6 +92,8 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addFoursquareData(data, callback);
     } else if (type == 'gcontacts') {
         exports.addGoogleContactsData(data, callback);
+    } else if (type == 'flickr') {
+        exports.addFlickrData(data, callback);
     } else if (type == 'github') {
         exports.addGithubData(endpoint, data, callback);
     }
@@ -352,6 +357,46 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             if(data.name)
                 set.name = data.name;
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.googleContacts':baseObj}, 
+                                         $addToSet:addToSet,
+                                         $set:set}, 
+                        {safe:true, upsert:true, new: true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+}
+
+exports.addFlickrData = function(flickrData, callback) {
+    var data = flickrData.data;
+    var flID  = data.nsid;
+    var cleanedName = cleanName(data.realname);
+    var query = {'accounts.flickr.data.nsid':flID};
+    var set = {};
+    var baseObj = {data:data, lastUpdated:flickrData.timeStamp || Date.now()};
+    set['accounts.flickr.$'] = baseObj;
+    //name
+    if(data.realname)
+        set.name = data.realname;
+    
+    var addToSet = {};
+    if(cleanedName)
+        addToSet['_matching.cleanedNames'] = cleanedName;
+    //photos
+    if(flID && data.iconfarm && data.iconserver)
+        addToSet.photos = 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + flID + '.jpg';
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
+                        {safe:true, new: true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise
+            var or = [{'accounts.foursquare.data.contact.flickr':flID}];
+            // var or = [];
+            if(cleanedName)
+                or.push({'_matching.cleanedNames':cleanedName});
+                
+            var set = {};
+            if(data.realname)
+                set.name = data.realname;
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.flickr':baseObj}, 
                                          $addToSet:addToSet,
                                          $set:set}, 
                         {safe:true, upsert:true, new: true}, callback);

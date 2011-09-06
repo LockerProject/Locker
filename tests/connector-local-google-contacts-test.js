@@ -65,9 +65,6 @@ suite.next().suite.addBatch({
                 fakeweb.registerUri({
                     uri : 'https://www.google.com/m8/feeds/contacts/default/full?updated-min=1970-01-01T00%3A00%3A00Z&showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&oauth_token=abc&alt=json',
                     file : __dirname + '/fixtures/googleContacts/contacts.json' });
-                fakeweb.registerUri({
-                    uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?updated-min=1970-01-01T00%3A00%3A00Z&showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&oauth_token=abc&alt=json',
-                    file : __dirname + '/fixtures/googleContacts/contacts.json' });
                 sync.syncContacts(self.callback);
             });
         },

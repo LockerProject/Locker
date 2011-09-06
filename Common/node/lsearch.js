@@ -10,6 +10,7 @@ var assert = require("assert");
 var fs = require('fs');
 var path = require('path');
 var lconfig = require('lconfig');
+var wrench = require('wrench');
 var is = require("lutil").is;
 var util = require('util');
 var indexPath;
@@ -41,7 +42,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact" : {
+        "contact/full" : {
             "_id":"_id",
             "name":"name",
             "nicknames":[],
@@ -61,13 +62,13 @@ CLEngine = function()
                 }
             ]
         },
-        "photo" : {
-            "_id":"id",
+        "photo/full" : {
+            "_id":"_id",
             "caption":"caption",
             "title":"title"
         },
-        "status/twitter" : {
-            "_id":"id",
+        "timeline/twitter" : {
+            "_id":"_id",
             "text":"text",
             "user":{
                 "name":"name",
@@ -75,7 +76,7 @@ CLEngine = function()
             }
         },
         "status/facebook" : {
-            "_id":"id",
+            "_id":"_id",
             "description":"description",
             "message":"message",
             "from":{
@@ -108,7 +109,7 @@ CLEngine = function()
     return this;
 };
 
-CLEngine.prototype.indexType = function(type, value, callback) {
+CLEngine.prototype.indexType = function(type, source, value, callback) {
     var doc = new this.cl.Document();
     
     if (!this.mappings.hasOwnProperty(type)) {
@@ -152,14 +153,17 @@ CLEngine.prototype.indexType = function(type, value, callback) {
     processValue(value, this.mappings[type]);
     
     if (contentTokens.length == 0) {
-        callback("No valid tokens were found to index.");
-        return;
+        console.log("No valid tokens were found to index id " + idToStore);
+        return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
     
     //console.log("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    if (source !== null) {
+        doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
+    }
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
     assert.ok(indexPath);
@@ -170,6 +174,10 @@ CLEngine.prototype.indexType = function(type, value, callback) {
 CLEngine.prototype.deleteDocument = function(id, callback) {
     assert.ok(indexPath);
     this.lucene.deleteDocument(id, indexPath, callback);
+};
+CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
+    assert.ok(indexPath);
+    this.lucene.deleteDocumentsByType(type, indexPath, callback);
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
@@ -185,6 +193,11 @@ CLEngine.prototype.name = function() {
 
 
 exports.setEngine = function(engine) {
+    if (engine === undefined) {
+        console.error("Falling back to search Null Engine, your indexing and queries will not work.");
+        exports.currentEngine = new NullEngine();
+        return;
+    }
     if (exports.currentEngine) exports.currentEngine = undefined;
     try {
         exports.currentEngine = new engine();
@@ -193,6 +206,7 @@ exports.setEngine = function(engine) {
         exports.currentEngine = new NullEngine();
     }
 };
+
 exports.setIndexPath = function(newPath) {
     indexPath = newPath;
     if (!path.existsSync(indexPath)) {
@@ -216,12 +230,31 @@ var indexQueue = [];
 var indexing = false;
 
 exports.indexType = function(type, value, cb) {
-    indexQueue.push({"type":type, "value":value, "cb":cb});
+    indexQueue.push({"type":type, "source":null, "value":value, "cb":cb});
+    process.nextTick(indexMore);
+};
+
+exports.indexTypeAndSource = function(type, source, value, cb) {
+    indexQueue.push({"type":type, "source":source, "value":value, "cb":cb});
     process.nextTick(indexMore);
 };
 
 exports.deleteDocument = function(id, cb) {
   exports.currentEngine.deleteDocument(id, cb);  
+};
+
+exports.deleteDocumentsByType = function(type, cb) {
+  exports.currentEngine.deleteDocumentsByType(type, cb);
+}
+
+// CAREFUL!  Make sure all your readers/writers are closed before calling this
+exports.resetIndex = function(callback) {
+    try {
+        wrench.rmdirSyncRecursive(indexPath);
+        callback(null)
+    } catch (E) {
+        callback(E);
+    }
 };
 
 function indexMore(keepGoing) {
@@ -236,7 +269,7 @@ function indexMore(keepGoing) {
     
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
-    exports.currentEngine.indexType(cur.type, cur.value, function(err, indexTime) {
+    exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         //console.log("Setting up for next tick");

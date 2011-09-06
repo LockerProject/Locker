@@ -20,7 +20,8 @@ var lutil = require(__dirname + "/lutil");
 var serviceMap = {
     available:[],
     disabled:[],
-    installed:{}
+    installed:{},
+    migrations:[]
 };
 
 var shuttingDown = null;
@@ -182,7 +183,7 @@ exports.findInstalled = function () {
                     console.log("Disabled " + js.id);
                     serviceMap.disabled.push(js.id);
                 } else {
-                    exports.migrate(dir, js);
+                    js = serviceMap.installed[js.id] = exports.migrate(dir, js);
                     addEvents(js);
                     console.log("Loaded " + js.id);
                 }
@@ -204,7 +205,7 @@ addEvents = function(info) {
 }
 
 /**
-* Migrate a service if necessary
+* Migrate a service if necessary, return new json that might have been changed
 */
 exports.migrate = function(installedDir, metaData) {
     if (!metaData.version) { metaData.version = 1; }
@@ -213,13 +214,26 @@ exports.migrate = function(installedDir, metaData) {
         migrations = fs.readdirSync(metaData.srcdir + "/migrations");
     } catch (E) {}
     if (migrations) {
+        migrations = migrations.sort(); // do in order, so versions are saved properly
         for (var i = 0; i < migrations.length; i++) {
             if (migrations[i].substring(0, 13) > metaData.version) {
                 try {
                     var cwd = process.cwd();
+                    console.log("running migration : " + migrations[i] + " for service " + metaData.title);
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
-                    if (migrate(installedDir)) {
+                    var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
+                    if (ret) {
+                        // load new file in case it changed, then save version back out
+                        metaData = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id +'/me.json', 'utf-8'));
                         metaData.version = migrations[i].substring(0, 13);
+                        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(metaData, null, 4));
+                    }else{
+                        // TODO we should do something serious here!!
+                    }
+                    // if they returned a string, it's a post-startup callback!
+                    if (typeof ret == 'string')
+                    {
+                        serviceMap.migrations.push(lconfig.externalBase+"/Me/"+metaData.id+"/"+ret);
                     }
                     process.chdir(cwd);
                 } catch (E) {
@@ -229,7 +243,7 @@ exports.migrate = function(installedDir, metaData) {
             }
         }
     }
-    return;
+    return metaData;
 }
 
 /**

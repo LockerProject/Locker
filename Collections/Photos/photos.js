@@ -43,12 +43,11 @@ app.get('/state', function(req, res) {
 });
 
 app.get('/allPhotos', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type':'application/json'
-    });
     dataStore.getAll(function(err, cursor) {
+        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
+        if(req.query["skip"]) cursor.skip(parseInt(req.query["skip"]));
         cursor.toArray(function(err, items) {
-            res.end(JSON.stringify(items));
+            res.send(items);
         });
     });
 });
@@ -93,10 +92,19 @@ app.get("/getPhoto/:photoId", function(req, res) {
     })
 });
 
+app.get('/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(doc));
+    })
+});
+
 app.get('/update', function(req, res) {
-    sync.gatherPhotos();
-    res.writeHead(200);
-    res.end('Updating');
+    sync.gatherPhotos(function(){
+        res.writeHead(200);
+        res.end('Updating');        
+    });
 });
 
 app.post('/events', function(req, res) {
@@ -133,7 +141,7 @@ process.stdin.on('data', function(data) {
     
     locker.connectToMongo(function(mongo) {
         logger.debug("connected to mongo " + mongo);
-        sync.init(lockerInfo.lockerUrl, mongo.collections.photos);
+        sync.init(lockerInfo.lockerUrl, mongo.collections.photos, mongo);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
         });

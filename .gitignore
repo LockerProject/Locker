@@ -10,6 +10,7 @@ Me/*
 node_modules
 scheduler.json
 tests/Data/
+tests/output.xml
 lockerbox*
 Config/*
 !Config/*.example

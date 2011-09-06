@@ -1,0 +1,48 @@
+{
+   "contacts":{
+      "page":"1",
+      "pages":3,
+      "per_page":"3",
+      "perpage":"3",
+      "total":7,
+      "contact":[
+         {
+            "nsid":"12345679@N00",
+            "username":"qwe",
+            "iconserver":"1366",
+            "iconfarm":2,
+            "ignored":0,
+            "realname":"qwe",
+            "friend":"1",
+            "family":"0",
+            "path_alias":"qwe",
+            "location":"Kennebunkport, ME"
+         },
+         {
+            "nsid":"12345680@N00",
+            "username":"wer",
+            "iconserver":"0",
+            "iconfarm":0,
+            "ignored":0,
+            "realname":"",
+            "friend":"0",
+            "family":"1",
+            "path_alias":"erlingqsmith",
+            "location":""
+         },
+         {
+            "nsid":"12345681@N00",
+            "username":"ert",
+            "iconserver":"67",
+            "iconfarm":1,
+            "ignored":0,
+            "realname":"Johnny",
+            "friend":"1",
+            "family":"0",
+            "path_alias":"asdf",
+            "location":"Mexico City, Mexico"
+         }
+      ]
+   },
+   "stat":"ok"
+}

@@ -10,11 +10,18 @@
 var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
     
-var lsearch = require("../../Common/node/lsearch");
+var lsearch = require('../../Common/node/lsearch');
+var lutil = require('../../Common/node/lutil');
+var lconfig = require('lconfig');
+lconfig.load('Config/config.json');
 
-var lockerInfo;
+var lockerInfo = {};
+exports.lockerInfo = lockerInfo;
+
 var express = require('express'),
     connect = require('connect');
+var request = require('request');
+var async = require('async');
 var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
@@ -23,46 +30,116 @@ app.get('/', function(req, res) {
     res.send("You should use a search interface instead of trying to talk to me directly.");
 });
 
-function handleError(type, action, id, error) {
-    console.error('Error attempting to ' + action + ' index of type "' + type + '" and id: ' + id + ' - ' + error);
-}
+app.post('/events', function(req, res) {
+    exports.handlePostEvents(req, function(err, response) {
+        if (err) {
+            return res.send(err, 500);
+        }
+        return res.send(response);
+    });
+});
 
-app.post("/events", function(req, res) {
-    if (req.headers["content-type"] === "application/json" && req.body) {
-        if (req.body.type === "contact/full") {
-            if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType("contact", req.body.obj.data, function(err, time) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                });
-            } else if (req.body.action === "delete") {
-                lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                    console.log('Received delete event for contact/full id: ' + req.body._id);
-                });
+app.post('/index', function(req, res) {
+    exports.handlePostIndex(req, function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send(response);
+   });
+});
+
+app.get('/query', function(req, res) {
+    exports.handleGetQuery(req, function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send(response);
+   });
+});
+
+app.get('/update', function(req, res) {
+    exports.handleGetUpdate(function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send('Full search reindex started');
+   });
+});
+
+app.get('/reindexForType', function(req, res) {
+    exports.handleGetReindexForType(req.param('type'), function(err, response) {
+       if (err) {
+           return res.send(err, 500);
+       }
+       return res.send(response);
+   });
+});
+
+exports.handleGetUpdate = function(callback) {
+    var error;
+    lsearch.resetIndex(function(err) {
+        if (err) {
+            error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
+            console.error(error);
+        }
+        return callback(err);
+    });
+    
+    reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+    reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+    locker.providers('status/twitter', function(err, services) {
+        if (!services) return;
+        services.forEach(function(svc) {
+           if (svc.provides.indexOf('status/twitter') >= 0) {
+               reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
             }
-            res.end();
-        } else if (req.body.type === "status/twitter") {
-            if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType(req.body.type, req.body.obj.status, function(err, time) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                });
-            } else if (req.body.action === "delete") {
-                lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                });
-            }
-            res.end();
-        } else if (req.body.type) {
-            if (req.body.action === "new" || req.body.action === "update") {
-                lsearch.indexType(req.body.type, req.body.obj, function(err, time) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                });
-            } else if (req.body.action === "delete") {
-                lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
-                    if (err) { handleError(req.body.type, req.body.action, req.body._id, err); }
-                });
-            }
-            res.end();
+        });     
+    });
+};
+
+exports.handlePostEvents = function(req, callback) {
+    var error;
+    
+    if (req.headers['content-type'] !== 'application/json') {
+        error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
+        console.error(error);
+        return callback(error, {});
+    }
+        
+    if (!req.body) {
+        error = 'Empty body received for /search/events POST request.';
+        console.error(error);
+        return callback(error, {});
+    }
+    
+    if (req.body.hasOwnProperty('type')) {
+        // FIXME Hack to handle inconsistencies between photo and contacts collection
+        if (req.body.type === 'photo') {
+            req.body.type = 'photo/full';
+            req.body.obj.data = req.body.obj;
+        }
+        // END FIXME
+        
+        var source = getSourceForEvent(req.body);
+        
+        if (req.body.action === 'new' || req.body.action === 'update') {
+            lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
+                if (err) { 
+                    handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+                    return callback(err, {});
+                }
+                handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+                return callback(err, {timeToIndex: time, docsDeleted: 0});
+            });
+        } else if (req.body.action === 'delete') {
+            lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
+                if (err) { 
+                    handleError(req.body.type, req.body.action, req.body.obj.data._id, err); 
+                    return callback(err, {});
+                }
+                handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+                return callback(err, {timeToIndex: time, docsDeleted: docsDeleted});
+            });
         } else {
             console.log("Unexpected event: " + req.body.type + " and " + req.body.action);
             res.end();
@@ -71,58 +148,231 @@ app.post("/events", function(req, res) {
         console.log("Unexpected event or not json " + req.headers["content-type"]);
         res.end();
     }
-});
+};
 
-app.post("/index", function(req, res) {
-    if (!req.body.type || !req.body.value) {
-        res.writeHead(400);
-        res.end("Invalid arguments");
-        return;
+exports.handlePostIndex = function(req, callback) {
+    var error;
+    
+    if (!req.body.type || !req.body.source || !req.body.data) {
+        error = 'Invalid arguments given for /search/index POST request.';
+        console.error(error);
+        return callback(error, {});
     }
     
-    try {
-        var value = JSON.parse(req.body.value);
-    } catch(E) {
-        res.writeHead(500);
-        res.end("invalid json in value");
-        return;
-    }
-    lsearch.indexType(req.body.type, value, function(error, time) {
-        if (error) {
-            res.writeHead(500);
-            res.end("Could not index: " + error);
-            return;
+    lsearch.indexTypeAndSource(req.body.type, req.body.source, req.body.data, function(err, time) {
+        if (err) { 
+            handleError(req.body.type, 'new', req.body.data._id, err);
+            return callback(err, {});
         }
-        res.send({indexTime:time});
+        handleLog(req.body.type, 'new', req.body.data._id, time);
+        return callback(null, {timeToIndex: time, docsDeleted: 0});
     });
-});
+};
 
-app.get("/query", function(req, res) {
-    var q = req.param("q");
-    var type = req.param("type");
-    
-    if (!q || q === '*') {
-        res.writeHead(400);
-        res.end("Must supply at least a query");
-        return;
+exports.handleGetQuery = function(req, callback) {
+    var error;
+    if (!req.param('q')) {
+        error = 'Invalid arguments given for /search/query GET request.';
+        console.error(error);
+        return callback(error, {});
     }
+
+    var q = lutil.trim(req.param('q'));
+    var type;
+    
+    if (req.param('type')) {
+        type = req.param('type');
+    }
+
+    if (!q || q.substr(0, 1) == '*') {
+        error = 'Please supply a valid query string for /search/query GET request.';
+        console.error(error);
+        return callback(error, {});
+    } 
+    
     function sendResults(err, results, queryTime) {
         if (err) {
-            res.writeHead(500);
-            res.end("Error querying: " + err);
-            return;
+            error = 'Error querying via /search/query GET request.';
+            console.error(error);
+            return callback(error, {});
         }
-        var data = {};
-        data.hits = results;
-        data.took = queryTime;
-        res.send(data);
+
+        enrichResultsWithFullObjects(results, function(err, richResults) {
+            var data = {};
+            data.took = queryTime;
+        
+            if (err) {
+                data.error = err;
+                data.hits = [];
+                error = 'Error enriching results of /search/query GET request: ' + err;
+                return callback(error, data);
+            }
+        
+            data.error = null;
+            data.hits = richResults;
+            data.total = richResults.length;
+            return callback(null, data);
+        });       
     }
+    
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);
     } else {
         lsearch.queryAll(q, {}, sendResults);
     }
-});
+};
+
+exports.handleGetReindexForType = function(type, callback) {
+    // this handleGetReindex method can happen async, but deleteDocumentsByType MUST happen first before the callback.  
+    // That's why we call it here
+    lsearch.deleteDocumentsByType(type, function(err, indexTime, deletedDocs) {
+        callback(err, {indexTime: indexTime, deletedDocs: deletedDocs});
+    });
+    
+    var items;
+    
+    if (type == 'contact/full') {
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+    }
+    else if (type == 'photo/full') {
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+    }  
+    else {   
+        locker.providers(type, function(err, services) {
+            if (!services) return;
+            services.forEach(function(svc) {
+               if (svc.provides.indexOf('timeline/twitter') >= 0) {
+                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/home_timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                }
+            });     
+        });
+    }
+};
+
+function reindexType(url, type, source, callback) {
+    request.get({uri:url}, function(err, res, body) {
+        if (err) {
+            console.error('Error when attempting to reindex ' + type + ' collection: ' + err);
+            return callback(err);
+        } 
+        if (res.statusCode >= 400) {
+            var error = 'Received a ' + res.statusCode + ' when attempting to reindex ' + type + ' collection';
+            console.error(err);
+            return callback(err);
+        }
+
+        items = JSON.parse(body);
+        async.forEachSeries(items, function(item, forEachCb) {
+            var fullBody = {};
+            fullBody.type = type;
+            fullBody.source = source;
+            fullBody.data = item;
+            var req = {};
+            req.body = fullBody;
+            req.headers = {};
+            req.headers['content-type'] = 'application/json';
+            exports.handlePostIndex(req, forEachCb);
+        },function(err) {
+            if (err) {
+                console.error(err);
+                return callback(err);
+            }
+            console.log('Reindexing of ' + type + ' completed.');           
+            return callback(err);
+        });
+    });
+}
+
+function enrichResultsWithFullObjects(results, callback) {
+    // fetch full objects of results
+    async.waterfall([
+        function(waterfallCb) {
+            cullAndSortResults(results, function(err, results) {
+                waterfallCb(err, results);
+            });
+        },
+        function(results, waterfallCb) {
+            async.forEachSeries(results, 
+                function(item, forEachCb) {
+                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/' + item._id;
+                    makeEnrichedRequest(url, item, forEachCb);
+                }, 
+                function(err) {
+                    waterfallCb(err, results);
+                }
+            ); 
+        }
+    ],
+    function(err, results) {        
+        if (err) {  
+            return callback('Error when attempting to sort and enrich search results: ' + err, []);
+        }
+        return callback(null, results);
+    });
+}
+
+function cullAndSortResults(results, callback) {
+    async.sortBy(results, function(item, sortByCb) {
+        // we concatenate the score to the type, and we use the reciprocal of the score so the sort has the best scores at the top
+        sortByCb(null, item._type + (1/item.score).toFixed(3));
+    },
+    function(err, results) {
+       callback(null, results); 
+    });
+}
+
+function makeEnrichedRequest(url, item, callback) {
+    request.get({uri:url}, function(err, res, body) {
+        if (err) {
+            console.error('Error when attempting to enrich search results: ' + err);
+            return callback(err);
+        } 
+        if (res.statusCode >= 400) {
+            var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results';
+            console.error(error);
+            return callback(error);
+        }
+
+        item.fullobject = JSON.parse(body);
+        return callback(null);
+    });
+}
+
+function getSourceForEvent(body) {
+    // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
+    var source;
+    
+    if (body.type == 'contact/full' || body.type == 'photo/full') {
+       var splitType = body.type.split('/');
+       source = splitType[0] + 's';
+    } else {
+        var splitVia = body.via.split('/');
+        var splitSource = body.obj.source.split('_');
+        source = splitVia[1] + '/' + splitSource[1];
+    }
+    return source;
+    // END FIXME
+}
+
+function handleError(type, action, id, error) {
+    console.error('Error attempting to index type "' + type + '" with action of "' + action + '" and id: ' + id + ' - ' + error);
+}
+
+function handleLog(type, action, id, time) {
+    var actionWord;
+    switch (action) {
+        case 'new':
+            actionWord = 'added';
+            break;
+        case 'update':
+            actionWord = 'updated';
+            break;
+        case 'delete':
+            actionWord = 'deleted';
+            break;
+    }
+    console.log('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
+}
 
 // Process the startup JSON object
 process.stdin.resume();
@@ -133,7 +383,7 @@ process.stdin.on('data', function(data) {
         data = allData.substr(0, allData.indexOf("\n"));
         lockerInfo = JSON.parse(data);
         locker.initClient(lockerInfo);
-        if (!lockerInfo || !lockerInfo['workingDirectory']) {
+        if (!lockerInfo || !lockerInfo.workingDirectory) {
             process.stderr.write('Was not passed valid startup information.'+data+'\n');
             process.exit(1);
         }
