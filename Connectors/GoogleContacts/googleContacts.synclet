@@ -3,5 +3,5 @@
     "status":"stable",
     "provides":["contact/gcontacts"],
     "provider":"gcontacts",
-    "synclets":[{"name": "contacts", "frequency": 20}]
+    "synclets":[{"name": "contacts", "frequency": 600}]
 }
