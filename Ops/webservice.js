@@ -340,6 +340,12 @@ locker.get("/diary", function(req, res) {
     res.write
 });
 
+locker.get('/core/revision', function(req, res) {
+    fs.readFile(path.join(lconfig.lockerDir, 'Config', 'gitrev.json'), function(err, doc) {
+        if (doc) res.send(JSON.parse(doc));
+        else res.send("git cmd not available!");
+    });
+});
 
 // EVENTING
 // anybody can listen into any service's events

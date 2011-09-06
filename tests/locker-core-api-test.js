@@ -92,7 +92,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 2);
-          }) 
+          })
         .get("", {types:"testtype"})
             .expect(200)
             .expect("and return an array of length 2", function(err, res, body) {
@@ -197,6 +197,16 @@ tests.next()
             .expect(200)
     .undiscuss().unpath()
 tests.next()
+    .path("/core/revision")
+    .discuss("returns a revision if git is available")
+        .get()
+            .expect(200)
+            .expect("didn't get a git cmd not available response", function(err, res, body) {
+                assert.notEqual(body, "git cmd not available!");
+            })
+        .unpath()
+    .undiscuss().unpath()
+tests.next()
 
     // Event basics
     .path("/core/testURLCallback/listen")
@@ -238,7 +248,7 @@ tests.next().suite.addBatch({
             var options = {
                 host:lconfig.lockerHost,
                 port:lconfig.lockerPort,
-                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
+                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"})
             };
             try {
                 fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
@@ -254,7 +264,7 @@ tests.next().suite.addBatch({
                     });
                 }, 1500);
             }).on('data', function(chunk) {
-                
+
             }).on("error", function(e) {
                 promise.emit("error", e);
             });
