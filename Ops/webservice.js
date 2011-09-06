@@ -33,7 +33,7 @@ var lcrypto = require("lcrypto");
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
 
-var dashboard;
+var dashboard, devdashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -64,7 +64,7 @@ var listeners = new Object(); // listeners for events
 locker.get('/map', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript',
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
@@ -324,7 +324,7 @@ locker.get("/diary", function(req, res) {
     var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     fs.readFile(fullPath, function(err, file) {
         if (err) {
@@ -410,19 +410,13 @@ locker.post('/core/:svcId/event', function(req, res) {
 
 locker.use(express.static(__dirname + '/static'));
 
-
 // fallback everything to the dashboard
-locker.get('/dashboard/*', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
+locker.all('/dashboard*', function(req, res) {
+    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
 });
 
-// fallback everything to the dashboard
-locker.post('/dashboard/*', function(req, res) {
-    proxied('POST', dashboard.instance,req.url.substring(11),req,res);
-});
-
-locker.get('/dashboard/', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
+locker.all('/devdashboard*', function(req, res) {
+    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
 });
 
 locker.get('/', function(req, res) {
@@ -451,6 +445,9 @@ exports.startService = function(port) {
     serviceManager.spawn(lconfig.ui, function() {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
         console.log('ui spawned');
+    });
+    serviceManager.spawn('devdashboard', function() {
+        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
     });
     locker.listen(port);
 }
