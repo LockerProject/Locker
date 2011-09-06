@@ -61,6 +61,7 @@ function httpModuleRequest(uri, callback) {
         thisResponse.emit('close');
 
     }
+    thisRequest.write = function() {}
     return thisRequest;
 }
 
