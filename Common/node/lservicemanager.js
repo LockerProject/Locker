@@ -235,7 +235,7 @@ exports.migrate = function(installedDir, metaData) {
                     // if they returned a string, it's a post-startup callback!
                     if (typeof ret == 'string')
                     {
-                        serviceMap.migrations.push(lconfig.externalBase+"/Me/"+metaData.id+"/"+ret);
+                        serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                     }
                     process.chdir(cwd);
                 } catch (E) {
