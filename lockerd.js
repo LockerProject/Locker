@@ -48,7 +48,7 @@ var npm = require('npm');
 
     if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
         console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                    'which if so inclined can be hacked into lockerd.js and added since' + 
+                    'which if so inclined can be hacked into lockerd.js and added since' +
                     ' it\'s apparently still not implemented :)\n\n');
     }
     var shuttingDown_ = false;
@@ -65,7 +65,7 @@ var npm = require('npm');
             }
             fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
         }
-        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir, 
+        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                         '--port', lconfig.mongo.port]);
         mongoProcess.stderr.on('data', function(data) {
             console.error('mongod err: ' + data);
@@ -77,7 +77,7 @@ var npm = require('npm');
             if(errorCode !== 0) {
                 var db = new mongodb.Db('locker', new mongodb.Server('127.0.0.1', lconfig.mongo.port, {}), {});
                 db.open(function(error, client) {
-                    if(error) { 
+                    if(error) {
                         console.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
                         shutdown(1);
                     } else {
@@ -119,6 +119,12 @@ var npm = require('npm');
     }
 
     function finishStartup() {
+        // get current git revision if git is available
+        var gitHead = spawn('git', ['rev-parse', '--verify', 'HEAD']);
+        gitHead.stdout.on('data', function(data) {
+            fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), JSON.stringify(data.toString()));
+        });
+
         // look for available things
         lconfig.scannedDirs.forEach(function(dirToScan) {
             console.log(dirToScan);
@@ -126,8 +132,8 @@ var npm = require('npm');
             if (dirToScan === "Collections") installable = false;
             serviceManager.scanDirectory(dirToScan, installable);
         });
-        
-        syncManager.scanDirectory("Connectors");            
+
+        syncManager.scanDirectory("Connectors");
 
         // look for existing things
         serviceManager.findInstalled();
@@ -146,7 +152,7 @@ var npm = require('npm');
                 console.log('running migration followup for '+call);
                 request.get({uri:call},cb); // TODO: are failures here critical or not?
             },function(){
-                serviceManager.serviceMap().migrations = []; 
+                serviceManager.serviceMap().migrations = [];
                 postStartup();
             });
         }else{
@@ -155,14 +161,14 @@ var npm = require('npm');
         }
 
     }
-    
+
     // scheduling and misc things
     function postStartup() {
         thservice.start();
 
         lscheduler.masterScheduler.loadAndStart();
 
-        console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);        
+        console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
     }
 
     function shutdown(returnCode) {

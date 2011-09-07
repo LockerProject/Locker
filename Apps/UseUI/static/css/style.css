@@ -11,6 +11,10 @@ body {
     font-family: arial, helvetica, sans-serif;
 }
 
+#fdbk_screen {
+    height: 100% !important;
+}
+
 .header {
     border: 0;
     background: #6e6e6e;
@@ -271,7 +275,7 @@ body {
     font-size: 11px;
     color: #bfbfbf;
     font-weight: bold;
-    
+
 }
 
 .service .provider-link.disabled {

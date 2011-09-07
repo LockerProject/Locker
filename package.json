@@ -12,11 +12,11 @@
     "dependencies": {
         "npm":">=1.0.3",
         "connect": "=1.1.4",
-        "express": "=2.1.0",
+        "express": "=2.4.3",
         "async": "=0.1.9",
         "dropbox": "=0.3.1",
         "facebook-js": "=0.0.5",
-        "gdata-js": "=0.0.5",
+        "gdata-js": ">=0.1.0",
         "flickr-js":"=0.0.0",
         "github": "=0.0.6",
         "imap": "=0.2.3",
@@ -35,9 +35,9 @@
         "unshortener": ">=0.0.8",
         "sax": ">=0.2.3",
         "readabilitySAX": "=0.1.1",
-        "mongodb": ">=0.9.6",
+        "mongodb": "=0.9.6-13",
         "winston": ">0.3.0",
         "clucene": ">=0.1.2",
-        "jade": ">= 0.0.1"
+        "jade": ">= 0.15.3"
     }
 }

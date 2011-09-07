@@ -81,19 +81,21 @@ exports.handleGetUpdate = function(callback) {
         if (err) {
             error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
             console.error(error);
+            return callback(err);
         }
+        
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+        locker.providers('status/twitter', function(err, services) {
+            if (!services) return;
+            services.forEach(function(svc) {
+               if (svc.provides.indexOf('status/twitter') >= 0) {
+                   reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                }
+            });     
+        });
+        
         return callback(err);
-    });
-    
-    reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
-    reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
-    locker.providers('status/twitter', function(err, services) {
-        if (!services) return;
-        services.forEach(function(svc) {
-           if (svc.provides.indexOf('status/twitter') >= 0) {
-               reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
-            }
-        });     
     });
 };
 
@@ -334,6 +336,21 @@ function makeEnrichedRequest(url, item, callback) {
         }
 
         item.fullobject = JSON.parse(body);
+        
+        if (item.fullobject.hasOwnProperty('created_at')) {
+            var dateDiff = new Date(new Date().getTime() - new Date(item.fullobject.created_at).getTime());
+            if (dateDiff.getUTCDate() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCDate() - 2) + ' day';
+                if (dateDiff.getUTCDate() > 3) item.fullobject.created_at_since += 's';
+            } else if (dateDiff.getUTCHours() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCHours() - 2) + ' hour';
+                if (dateDiff.getUTCHours() > 3) item.fullobject.created_at_since += 's';
+            } else if (dateDiff.getUTCMinutes() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCMinutes() - 2) + ' minute';
+                if (dateDiff.getUTCMinutes() > 3) item.fullobject.created_at_since += 's';
+            }
+            item.fullobject.created_at_since += ' ago';
+        }
         return callback(null);
     });
 }

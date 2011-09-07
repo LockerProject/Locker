@@ -171,10 +171,7 @@ vows.describe("Service Manager").addBatch({
     "Migrates services that need it during the install" : {
         topic: [],
         "changing their version" : function(topic) {
-            assert.include(serviceManager.serviceMap().installed, "migration-test");
             assert.isTrue(serviceManager.isInstalled("migration-test"));
-            assert.notEqual(serviceManager.serviceMap().installed['migration-test'], undefined);
-            assert.notEqual(serviceManager.serviceMap().installed['migration-test'].version, undefined);
             assert.equal(serviceManager.serviceMap().installed['migration-test'].version, 1308079085972);
         },
         "and running the migration successfully" : function(topic) {
