@@ -156,6 +156,7 @@ var npm = require('npm');
                         console.error("failed to run migration, bailing hard! "+util.inspect(err)+":"+util.inspect(res));
                         process.exit(1);
                     }
+                    console.log("migration success: "+JSON.stringify(body));
                     cb();
                 });
             },function(){
