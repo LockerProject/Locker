@@ -253,6 +253,7 @@ exports.resetIndex = function(callback) {
         wrench.rmdirSyncRecursive(indexPath);
         callback(null)
     } catch (E) {
+        if (E.code == "ENOENT") return callback(null);
         callback(E);
     }
 };

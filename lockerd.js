@@ -140,10 +140,14 @@ var npm = require('npm');
         serviceManager.findInstalled();
 
         // start web server (so we can all start talking)
-        webservice.startService(lconfig.lockerPort);
+        webservice.startService(lconfig.lockerPort, runMigrations);
         var lockerPortNext = "1"+lconfig.lockerPort;
         lockerPortNext++;
 
+
+    }
+
+    function runMigrations() {
         // if there's any migrations, load synclets and do them but don't let synclets run till done
         if(serviceManager.serviceMap().migrations.length > 0)
         {
@@ -168,7 +172,6 @@ var npm = require('npm');
             syncManager.findInstalled();
             postStartup();
         }
-
     }
 
     // scheduling and misc things

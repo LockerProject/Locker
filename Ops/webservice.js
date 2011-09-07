@@ -441,7 +441,7 @@ function proxied(method, svc, ppath, req, res, buffer) {
 }
 
 
-exports.startService = function(port) {
+exports.startService = function(port, cb) {
     if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
         console.error('you have specified an invalid UI in your config file.  please fix it!');
         process.exit();
@@ -455,5 +455,7 @@ exports.startService = function(port) {
     serviceManager.spawn('devdashboard', function() {
         devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
     });
-    locker.listen(port);
+    locker.listen(port, function() {
+        cb();
+    });
 }
