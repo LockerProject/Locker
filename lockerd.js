@@ -153,6 +153,43 @@ var npm = require('npm');
     }
 
     function runMigrations() {
+        var migrations = [];
+        var metaData = {version: 1};
+        try {
+            migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
+            console.error(migrations);
+            metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
+            console.error(metaData);
+        } catch (E) {}
+        if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
+        for (var i = 0; i < migrations.length; i++) {
+            if (migrations[i].substring(0, 13) > metaData.version) {
+                try {
+                    console.log("running global migration : " + migrations[i]);
+                    migrate = require(path.join(lconfig.lockerDir, "migrations", migrations[i]));
+                    var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
+                    if (ret) {
+                        // load new file in case it changed, then save version back out
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf-8'));
+                        metaData.version = migrations[i].substring(0, 13);
+                        curMe.version = metaData.version;
+                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
+                    } else {
+                        // this isn't clean but we have to do something drastic!!!
+                        console.error("failed to run global migration!");
+                        process.exit(1);
+                    }
+                    // if they returned a string, it's a post-startup callback!
+                    if (typeof ret == 'string')
+                    {
+                        serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
+                    }
+                } catch (E) {
+                    console.log("error running global migration : " + migrations[i] + " ---- " + E);
+                }
+            }
+        }
+
         // if there's any migrations, load synclets and do them but don't let synclets run till done
         if(serviceManager.serviceMap().migrations.length > 0)
         {
