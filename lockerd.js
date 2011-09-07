@@ -54,6 +54,11 @@ var npm = require('npm');
     }
     var shuttingDown_ = false;
 
+    if (lconfig.airbrakeKey) {
+        var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
+        airbrake.handleExceptions();
+    }
+
     var mongoProcess;
     path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         if(!exists) {

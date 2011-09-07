@@ -25,10 +25,11 @@ exports.load = function(filepath) {
     exports.externalPort = config.externalPort || exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.externalPath = config.externalPath || '';
+    exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
     exports.scannedDirs = config.scannedDirs || [
-        "Apps", 
-        "Collections", 
+        "Apps",
+        "Collections",
         "Connectors"
         ];
     exports.mongo = config.mongo || {
@@ -43,12 +44,12 @@ exports.load = function(filepath) {
 }
 
 function setBase() {
-    exports.lockerBase = 'http://' + exports.lockerHost + 
+    exports.lockerBase = 'http://' + exports.lockerHost +
                          (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
     exports.externalBase = 'http';
     if(exports.externalSecure === true || (exports.externalPort == 443 && exports.externalSecure !== false))
         exports.externalBase += 's';
-    exports.externalBase += '://' + exports.externalHost + 
+    exports.externalBase += '://' + exports.externalHost +
                          (exports.externalPort && exports.externalPort != 80 && exports.externalPort != 443 ? ':' + exports.externalPort : '');
     if(exports.externalPath)
         exports.externalBase += exports.externalPath;
