@@ -65,12 +65,27 @@ h1 {
 #searchForm {
   margin: 20px;
 }
+#searchterm { 
+	float: left; 
+}
+#searchtype { 
+	float: left; 
+}
+#searchButton { 
+	float: left;
+}
 #indexLinks {
   margin: 60px 0 0 0;
+}
+.result-type { 
+	font-weight: bold; 
 }
 .text {
   padding: 4px;
   font-size: 1.0em;
+}
+.wrapper {
+  margin: 30px;
 }
 .button {
   position: absolute;
@@ -124,7 +139,39 @@ h1 {
 .button:active a {
   color: white;
 }
-
+.rawcheckbox { 
+	margin: 0 0 0 20px; 
+}
 .typeSelector {
-    font-size: 2.0em;
+    font-size: 16px;
+    margin: 5px;
+}
+.searchresults .result-type { 
+	text-transform: capitalize;
+	margin: 30px 0 5px; 
+}
+.searchresults .result-type:first { 
+	margin: 50px 0 5px; 
+}
+.searchresults li { 
+	list-style-type: none; 
+	background: #eee;
+	padding: 5px;
+	margin: 8px 0;
+	border: 1px #bbb solid;
+}
+.searchresults .upperresult { 
+	 width: 600px;
+	 margin: 5px 0 0 15px;
+}
+.searchresults .lowerresult { 
+	 margin: 5px 0 3px 15px;
+	 color: #888;
+	 font-size: 0.8em;
+}
+.searchresults .avatar { 
+	 border: 1px #bbb solid;
+}
+.via { 
+	margin: 0 10px 0 0; 
 }

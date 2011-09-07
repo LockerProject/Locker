@@ -38,7 +38,6 @@ suite.next().suite.addBatch({
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1054551');
-            process.chdir(curDir);
         }
     }
 }).addBatch({
@@ -51,17 +50,33 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
                 fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=2',
                     body :'[]' });
-            process.chdir('.' + mePath);
             timeline.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.timeline[0].obj.id_str, '71348168469643264');
-            process.chdir(curDir);
         }
     }
     
+/*}).addBatch({
+    "Can handle failwhale" : {
+        topic: function() {
+            fakeweb.allowNetConnect = false;
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/account/verify_credentials.json?path=%2Faccount%2Fverify_credentials.json&include_entities=true',
+                file : __dirname + '/fixtures/twitter/verify_credentials.js' });
+            fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/home_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fhome_timeline.json&include_entities=true&page=1',
+                body : '<html>jer cant find a real example</html>'});
+            timeline.sync(pinfo, this.callback)
+        },
+        "successfully" : function(err, response) {
+            // console.error('DEBUG: err', err);
+            // console.error('DEBUG: response', response.data);
+            assert.equal(response, undefined);
+            // assert.equal(response.data.timeline.length, 0);
+        }
+    }
+ */   
 }).addBatch({
     "Can get mentions" : {
         topic: function() {
@@ -72,14 +87,12 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
                 fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/mentions.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fmentions.json&include_entities=true&page=2',
                     body :'[]' });
-            process.chdir('.' + mePath);
             mentions.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.mentions[0].obj.id_str, '71348168469643264');
-            process.chdir(curDir);
         }
     }
     
@@ -93,14 +106,20 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
                 fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&include_entities=true&page=2',
                     body :'[]' });
-            process.chdir('.' + mePath);
             tweets.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
             // console.error('DEBUG: err', err);
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.tweets[0].obj.id_str, '71348168469643264');
+        }
+    }
+}).addBatch({
+    "cleanup" : {
+        topic: [],
+        "after itself": function(topic) {
             process.chdir(curDir);
+            assert.equal(process.cwd(), curDir);
         }
     }
 })

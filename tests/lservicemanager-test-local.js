@@ -21,7 +21,8 @@ var testUtils = require(__dirname + "/test-utils.js");
 require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
+var levents = require('levents');
 var path = require('path');
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
@@ -33,12 +34,47 @@ vows.describe("Service Manager").addBatch({
         assert.include(serviceManager.serviceMap(), "available");
         assert.include(serviceManager.serviceMap(), "installed");
     },
+    "Available services" : {
+        "gathered from the filesystem" : {
+            topic:serviceManager.scanDirectory("Connectors"),
+            "found at least 10 services": function() {
+                assert.ok(serviceManager.serviceMap().available.length > 10);
+            },
+            "and can be installed" : {
+                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                "by giving a valid install instance" : function(svcMetaInfo) {
+                    assert.include(svcMetaInfo, "id");
+                },
+                "setting a version number" : function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.version, undefined);
+                },
+                "and by service map says it is installed" : function(svcMetaInfo) {
+                    assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
+                },
+                "and by creating a valid service instance directory" : function(svcMetaInfo) {
+                    statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
+                },
+                "and passes along the icon": function(svcMetaInfo) {
+                    assert.notEqual(svcMetaInfo.icon, undefined);
+                }
+            }
+        }
+    },
+}).addBatch({
     "Installed services" : {
         "are found" : {
-            topic:serviceManager.findInstalled(),
+            topic:function() {
+                serviceManager.scanDirectory("Tests");
+                serviceManager.findInstalled();
+                return "";
+            },
             "and testURLCallback exists": function() {
                 assert.include(serviceManager.serviceMap().installed, "testURLCallback");
                 assert.isTrue(serviceManager.isInstalled("testURLCallback"));
+            },
+            "manifest data is taken over me.json data" : function() {
+                console.dir(serviceManager.serviceMap().installed["event-collector"]);
+                assert.equal(serviceManager.serviceMap().installed["event-collector"].events[0][0], "configuration/listener");
             },
             "and can be spawned" : {
                 topic:function() {
@@ -87,6 +123,9 @@ vows.describe("Service Manager").addBatch({
             "found at least 10 services": function() {
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
+            "can be looked up by handle from the available sections of the service map": function() {
+                assert.equal(serviceManager.getFromAvailable("facebook").handle, "facebook");
+            },
             "and can be installed" : {
                 topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
@@ -101,14 +140,15 @@ vows.describe("Service Manager").addBatch({
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
                 },
-                "and by creating a valid auth.json file containing twitter auth info" : function(svcMetaInfo) {
-                    statInfo = fs.readFileSync(lconfig.me + "/" + svcMetaInfo.id + "/auth.json",'ascii');
-                    assert.equal(statInfo, '{"consumerKey":"daKey","consumerSecret":"daPassword"}');
-                },
                 "and passes along the icon": function(svcMetaInfo) {
                     assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
+        }
+    },
+    "Services marked as \"autoInstall\"": {
+        "are installed automatically": function() {
+            assert.includes(serviceManager.serviceMap().installed, "contactsviewer");
         }
     },
     "Collections" : {
@@ -121,15 +161,17 @@ vows.describe("Service Manager").addBatch({
         },
         "do not install stub collections" : function() {
             assert.isFalse(serviceManager.isInstalled("videos"));
+        },
+        "have event listeners defined via config files" : function() {
+            var listeners = levents.displayListeners('configuration/listener');
+            assert.equal(listeners[0].id, 'event-collector');
+            assert.equal(listeners[0].cb, '/event');
         }
     },
     "Migrates services that need it during the install" : {
         topic: [],
         "changing their version" : function(topic) {
-            assert.include(serviceManager.serviceMap().installed, "migration-test");
             assert.isTrue(serviceManager.isInstalled("migration-test"));
-            assert.notEqual(serviceManager.serviceMap().installed['migration-test'], undefined);
-            assert.notEqual(serviceManager.serviceMap().installed['migration-test'].version, undefined);
             assert.equal(serviceManager.serviceMap().installed['migration-test'].version, 1308079085972);
         },
         "and running the migration successfully" : function(topic) {
@@ -196,6 +238,11 @@ vows.describe("Service Manager").addBatch({
                     },
                     "successfully": function(err, resp, body) {
                         assert.equal(serviceManager.isInstalled('disabletest'), true);
+                        if (resp.statusCode === 500) {
+                            console.dir(body);
+                            console.dir(resp);
+                            console.dir(err);
+                        }
                         assert.equal(resp.statusCode, 200);
                         assert.equal(body, "ACTIVE");
                     }

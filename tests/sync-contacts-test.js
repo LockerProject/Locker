@@ -1,5 +1,3 @@
-
-
 var contacts = require('../Collections/Contacts/sync.js');
 var dataStore = require('../Collections/Contacts/dataStore.js');
 var assert = require("assert");
@@ -10,7 +8,7 @@ var mongoCollections;
 var svcId = 'contacts';
 
 var lconfig = require('lconfig');
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var request = require('request');
 
@@ -21,7 +19,7 @@ var friend;
 
 var thecollections = ['contacts'];
 var lconfig = require('../Common/node/lconfig');
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 
@@ -46,8 +44,8 @@ suite.next().suite.addBatch({
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.contacts;
-                    contacts.init("", mongoCollections);
-                    dataStore.init(mongoCollections);
+                    contacts.init("", mongoCollections, mongo);
+                    dataStore.init(mongoCollections, mongo);
                     dataStore.clear();
                     contacts.eventEmitter.on('contact/full', function(obj) {
                         events++;
@@ -221,7 +219,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Google Contacts ADD event with matching email" : {
         topic: function() {
-            dataStore.addEvent({"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"fake@testdata.com"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"via":"gcontacts","type":"contact/google","action":"new"}, this.callback); },
+            dataStore.addEvent({"obj":{"type":"update","data":{"id":"29a2af0a88d07f","name":"Jeremie Miller","updated":1262741637890,"email":[{"value":"fake@testdata.com"}],"groups":["67a7891b7cdf1a8a","3199e3868a10dd45"]}},"via":"gcontacts","type":"contact/gcontacts","action":"new"}, this.callback); },
         "updates to the same account": function(err, object) {
             assert.equal(object.data.accounts.foursquare[0].data.id, 2715557);
             assert.equal(object.data.accounts.foursquare[0].data.name, 'Jake Mitchell');

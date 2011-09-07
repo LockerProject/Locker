@@ -21,6 +21,8 @@ var lockerBase;
 var localServiceId;
 var baseServiceUrl;
 
+exports.lockerBase = lockerBase;
+
 exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
     var svcInfo = JSON.parse(meData);

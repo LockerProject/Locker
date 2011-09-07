@@ -1,0 +1,37 @@
+{
+    "status": "stable",
+    "title": "Flickr Account",
+    "synclets": [
+        {
+            "frequency": 3600,
+            "name": "contacts"
+        },
+        {
+            "frequency": 3600,
+            "name": "photos"
+        }
+    ],
+    "provides": [
+        "contact/flickr",
+        "photo/flickr"
+    ],
+    "mongoId": "nsid",
+    "auth": {
+        "token": {
+            "_content": "qwert"
+        },
+        "perms": {
+            "_content": "read"
+        },
+        "user": {
+            "nsid": "12345678@N00",
+            "username": "naaame",
+            "fullname": "fullllnaaame"
+        },
+        "apiKey": "sdf",
+        "apiSecret": "asf"
+    },
+    "srcdir" : "Connectors/Flickr",
+    "id": "flickr",
+    "provider": "flickr"
+}

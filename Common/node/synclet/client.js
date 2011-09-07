@@ -27,6 +27,7 @@ process.stdin.on("data", function(newData) {
 function run (processInfo) {
     clearTimeout(failTimeout);
     var run = processInfo.syncletToRun;
+    process.title += " :: provider=" + processInfo.provider + " synclet=" + processInfo.syncletToRun.name;
     var sync = require(process.cwd()+"/"+run.name+".js");
     process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {

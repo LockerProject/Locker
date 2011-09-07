@@ -126,10 +126,7 @@
              req.session.auth = req.session.auth || {};
              req.session.auth.twitter_oauth_token_secret = oauth_token_secret;
              req.session.auth.twitter_oauth_token = oauth_token;
-             var height = 750;
-             var width = 980;
-             resp = "<script type='text/javascript'>var left= (screen.width / 2) - (" + width + " / 2); var top = (screen.height / 2) - (" + height + " / 2); window.open('http://api.twitter.com/oauth/authorize?oauth_token=" + oauth_token + "', 'auth', 'menubar=no,toolbar=no,status=no,width=" + width + ",height=" + height + ",toolbar=no,left=' + left + 'top=' + top);</script>";
-             res.end(resp + '<a target=_new href=\'http://api.twitter.com/oauth/authorize?oauth_token=' + oauth_token + '\'>Authenticate</a>');
+             res.redirect('http://api.twitter.com/oauth/authorize?oauth_token=' + oauth_token);
            } else {
              callback(error, null);
            }

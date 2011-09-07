@@ -14,17 +14,17 @@ var fs = require("fs");
 var path = require("path");
 var locker = require("../Common/node/locker.js");
 var lconfig = require("../Common/node/lconfig.js");
+var levents = require('../Common/node/levents.js');
 var request = require('request');
 var testUtils = require('./test-utils');
 
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 
 vows.describe("Locker Client API").addBatch({
     "Initialization" : {
         "sets the base service URL" : function() {
             var baseURL = lconfig.lockerBase;
             locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:"test"});
-//            assert.equal(lconfig.lockerBase, "test");
             locker.initClient({workingDirectory:lconfig.me + "/testURLCallback", lockerUrl:baseURL});
         }
     }
@@ -70,7 +70,7 @@ vows.describe("Locker Client API").addBatch({
             "returns an array of 2 valid providers" : function (err, data) {
                 assert.isNull(err);
                 assert.length(data, 2);
-                
+
                 for(var i in data) {
                     if (data.hasOwnProperty(i)) {
                         assert.include(data[i], "title");
@@ -80,7 +80,7 @@ vows.describe("Locker Client API").addBatch({
                         assert.include(data[i], "id");
                     }
                 }
-                
+
                 if (data[0].title === 'Test /providers') {
                     assert.equal(data[0].title, "Test /providers");
                     assert.equal(data[1].title, "Test /providers 2");
@@ -97,7 +97,7 @@ vows.describe("Locker Client API").addBatch({
             "returns an array of 2 valid providers" : function (err, data) {
                 assert.isNull(err);
                 assert.length(data, 2);
-                
+
                 for(var i in data) {
                     if (data.hasOwnProperty(i)) {
                         assert.include(data[i], "title");
@@ -129,7 +129,7 @@ vows.describe("Locker Client API").addBatch({
                         if (exists) {
                             fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
                         }
-                    }); 
+                    });
                 } catch (E) {
                     // Make sure it's file not found and throw others
                 }
@@ -148,62 +148,37 @@ vows.describe("Locker Client API").addBatch({
                 assert.isNull(err);
                 assert.isTrue(result);
             }
-        },
-        "events" : {
-            topic:function() {
-                var promise = new events.EventEmitter();
-                var fired = false;
-                
-                try {
-                    path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
-                        if (exists) {
-                            fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
-                        }
-                    });
-                } catch (E) {
-                    console.error(E);
-                    // test the error?
-                }
-                locker.listen("test/event", "/event", function(err, resp, body) {
-                    locker.event("test/event", {"test":"value"});
-                    testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
-                        if(success)
-                            promise.emit("success", true);
-                        else
-                            promise.emit("error", false);
-                    });
-                });
-                return promise;
-            },
-            "fires an event callback": function(err, result) {
-                assert.isNull(err);
-                assert.isTrue(result);
-            },
-            "have listeners defined via config files" : {
-                topic: function() {
-                    request.post({uri : lconfig.lockerBase + '/core/testURLCallback/event', json: {type : 'configuration/listener', obj:{'sdfsdfds': 'sdfsdfsd', source: 'testing'}}});
-                    var promise = new events.EventEmitter();
-                    var fired = false;
-                    setTimeout(function() {
-                        request.get({uri : lconfig.lockerBase + '/Me/event-collector/getEvents/testing'}, function(err, resp, body) {
-                            if (err == null && body == 1) {
-                                promise.emit('success', true);
-                            } else {
-                                if (err != null) {
-                                    promise.emit('error', err);
-                                } else {
-                                    promise.emit('error', 'body was equal to ' + body + ' instead of 1');
-                                }
-                            }
-                        });
-                    }, 1500);
-                    return promise;
-                },
-                "successfully": function(err, fired) {
-                    assert.isNull(err);
-                    assert.isTrue(fired);
-                }
-            }
+        //},
+        //"events" : {
+            //topic:function() {
+                //var promise = new events.EventEmitter();
+                //var fired = false;
+
+                //try {
+                    //path.exists(lconfig.me + "/testURLCallback/event.json", function (exists) {
+                        //if (exists) {
+                            //fs.unlinkSync(lconfig.me + "/testURLCallback/event.json");
+                        //}
+                    //});
+                //} catch (E) {
+                    //console.error(E);
+                    //// test the error?
+                //}
+                //locker.listen("test/event", "/event", function(err, resp, body) {
+                    //locker.event("test/event", {"test":"value"});
+                    //testUtils.waitForPathsToExist([lconfig.me + "/testURLCallback/event.json"], 10, 1000, function(success) {
+                        //if(success)
+                            //promise.emit("success", true);
+                        //else
+                            //promise.emit("error", false);
+                    //});
+                //});
+                //return promise;
+            //},
+            //"fires an event callback": function(err, result) {
+                //assert.isNull(err);
+                //assert.isTrue(result);
+            //}
         }
     }
 }).export(module);

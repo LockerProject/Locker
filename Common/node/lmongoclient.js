@@ -20,11 +20,11 @@ module.exports = function(host, port, localServiceId, theCollectionNames) {
         mongo.db.open(function(error, client) {
             // in case the mongod process was a bit slow to start up
             if(error && !isRetry) { 
-                setTimeout(function() {
+                return setTimeout(function() {
                     connectToDB(callback, true);
                 }, 2000);
-            } else if (error) 
-                throw error;
+            }
+            if (error && error != "connection already opened") throw error;
             mongo.dbClient = client;
             callback();
         });

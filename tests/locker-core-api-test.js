@@ -17,7 +17,7 @@ var events = require("events");
 var fs = require("fs");
 var lconfig = require('../Common/node/lconfig.js');
 
-lconfig.load('config.json');
+lconfig.load('Config/config.json');
 
 var tests = RESTeasy.describe("Locker core API");
 
@@ -92,7 +92,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.isNotNull(body);
                 var providers = JSON.parse(body);
                 assert.equal(providers.length, 2);
-          }) 
+          })
         .get("", {types:"testtype"})
             .expect(200)
             .expect("and return an array of length 2", function(err, res, body) {
@@ -133,35 +133,40 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .undiscuss()
     .undiscuss().unpath()
 
+tests.next()
     .path("/Me")
     .discuss("spawn a valid service")
         .get("/spawn-valid/")
             .expect(200)
-    .undiscuss()
+    .undiscuss().unpath()
+tests.next()
+    .path("/Me")
     .discuss("not spawn an invalid service")
         .get("/spawn-invalid/")
             .expect(404)
     .undiscuss().unpath()
-
+tests.next()
     // Tests for the proxying
     .path("/Me")
     .discuss("proxy requests via GET to services")
         .get("testURLCallback/test")
             .expect(200)
             .expect({url:"/test", method:"GET"})
+    .undiscuss().unpath()
+tests.next()
+    // Tests for the proxying
+    .path("/Me")
+    .discuss("proxy requests via GET to services")
         .get("invalidServicename/test")
             .expect(404)
     .undiscuss().unpath()
-    
+tests.next()
     .path("/Me")
-    .discuss("proxy requests via POST to services")
-        .post("testURLCallback/test", {test:"test"})
-            .expect(200)
-            .expect({url:"/test", method:"POST"})
+    .discuss("proxy requests via POST to invalid services")
         .post("invalidServicename/test")
             .expect(404)
     .undiscuss().unpath()
-
+tests.next()
     .discuss("proxy handles Unicode ")
         .path("/Me/testUnicode/test")
             .get()
@@ -176,25 +181,25 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                     assert.isNotNull(json);
                 })
         .unpath()
-    .undiscuss()
-    
-    .discuss("proxy passes cookies through")
-        .path("/Me/testCookies/test")
-            .get()
-                .expect(200)
-                .expect("should pass a set-cookie header", function(err, res, body) {
-                    assert.isNull(err);
-                    assert.include(res.headers, "set-cookie");
-                })
-        .unpath()
-    .undiscuss()
-    
+    .undiscuss().unpath()
+tests.next()
     // Diary storage
     .path("/core/testURLCallback/diary")
     .discuss("store diary messages")
         .get({level:2, message:"Test message"})
             .expect(200)
     .undiscuss().unpath()
+tests.next()
+    .path("/core/revision")
+    .discuss("returns a revision if git is available")
+        .get()
+            .expect(200)
+            .expect("didn't get a git cmd not available response", function(err, res, body) {
+                assert.notEqual(body, "git cmd not available!");
+            })
+        .unpath()
+    .undiscuss().unpath()
+tests.next()
 
     // Event basics
     .path("/core/testURLCallback/listen")
@@ -236,7 +241,7 @@ tests.next().suite.addBatch({
             var options = {
                 host:lconfig.lockerHost,
                 port:lconfig.lockerPort,
-                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"}) 
+                path:"/core/testURLCallback/at?" + querystring.stringify({at:when.getTime()/1000,cb:"/write"})
             };
             try {
                 fs.unlinkSync(lconfig.me + "/testURLCallback/result.json");
@@ -252,7 +257,7 @@ tests.next().suite.addBatch({
                     });
                 }, 1500);
             }).on('data', function(chunk) {
-                
+
             }).on("error", function(e) {
                 promise.emit("error", e);
             });

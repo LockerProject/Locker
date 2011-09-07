@@ -53,10 +53,10 @@ exports.addObject = function(type, object, options, callback) {
             timeStamp = options['timeStamp'];
         }
     }
-    setCurrent(type, object, function(err, newType) {
-        if (type === 'same') return callback(err, newType);
+    setCurrent(type, object, function(err, newType, doc) {
+        if (newType === 'same') return callback(err, newType, doc);
         ijodFiles[type].addRecord(timeStamp, object, function(err) {
-            callback(err, newType);
+            callback(err, newType, doc);
         });
     });
 }
@@ -83,15 +83,20 @@ exports.removeObject = function(type, id, options, callback) {
 // mongos
 function getMongo(type, id, callback) {
     var m = mongo.collections[type];
-    if(!m) 
-        callback(new Error('invalid type:' + type), null);
+    if(!m) {
+        try {
+            mongo.addCollection(type);
+        } catch (E) {
+            return callback(E, []);
+        }
+        m = mongo.collections[type];
+    }
     else if(!(id && (typeof id === 'string' || typeof id === 'number')))
-        callback(new Error('bad id:' + id), null);
-    else
-        return m;
+        return callback(new Error('bad id:' + id), null);
+    return m;
 }
 
-exports.queryCurrent = function(type, query, options) {
+exports.queryCurrent = function(type, query, options, callback) {
     query = query || {};
     options = options || {};
     var m = mongo.collections[type];
@@ -99,7 +104,7 @@ exports.queryCurrent = function(type, query, options) {
         mongo.addCollection(type);
         m = mongo.collections[type];
     }
-    return m.find(query, options);
+    m.find(query, options).toArray(callback);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
@@ -112,17 +117,18 @@ exports.getAllCurrent = function(type, callback, options) {
             callback(E, []);
             return;
         }
-            m = mongo.collections[type];
+        m = mongo.collections[type];
     }
     m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
     var m = getMongo(type, id, callback);
-    if(m) {
-        var query = {};
-        query[mongoIDs[type]] = id;
+    if(m && id) {
+        var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
         m.findOne(query, callback);
+    } else {
+        callback('broke!', []);
     }
 }
 
@@ -134,13 +140,17 @@ function setCurrent(type, object, callback) {
             query[mongoIDs[type]] = object[mongoIDs[type]];
             m.findAndModify(query, [['_id','asc']], object, {upsert:true, safe:true}, function(err, doc) {
                 if (deepCompare(doc, {})) {
-                    callback(err, 'new');
+                    m.findOne(query, function(err, newDoc) {
+                        callback(err, 'new', newDoc);
+                    });
                 } else {
+                    var id = doc._id;
                     delete doc._id;
                     if (deepCompare(doc, object)) {
-                        callback(err, 'same');
+                        callback(err, 'same', doc);
                     } else {
-                        callback(err, 'update');
+                        doc._id = id;
+                        callback(err, 'update', doc);
                     }
                 }
             });

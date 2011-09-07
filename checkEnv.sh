@@ -16,7 +16,7 @@ check_for() {
         fi
     fi
     if [ -n "$4" ]; then
-        result=`python -c 'print tuple("$version".split(".")) > tuple("$4".split("."))'`
+        result=`python -c 'print tuple("$version".split(".")) >= tuple("$4".split("."))'`
         if [ "$result" = "False" ]; then
             echo "${txtred}$1 version $4 or greater required!${txtrst}" >&2
         fi

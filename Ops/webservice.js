@@ -15,7 +15,7 @@ var levents = require("levents");
 var lutil = require('lutil');
 var serviceManager = require("lservicemanager");
 var syncManager = require('lsyncmanager');
-var dashboard = require(__dirname + "/dashboard.js");
+// var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
@@ -32,6 +32,8 @@ var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
+
+var dashboard, devdashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -62,7 +64,7 @@ var listeners = new Object(); // listeners for events
 locker.get('/map', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript',
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
@@ -80,6 +82,25 @@ locker.get("/providers", function(req, res) {
     lutil.addAll(services, synclets);
     res.end(JSON.stringify(services));
 });
+
+locker.get("/available", function(req, res) {
+    var handle = req.param('handle');
+    if(!handle) {
+        res.writeHead(400);
+        res.end(JSON.stringify({error:'requires handle param'}));
+        return;
+    } else {
+        var service = serviceManager.getFromAvailable(handle);
+        if(!service) {
+            res.writeHead(400);
+            res.end(JSON.stringify({error:'handle ' + handle + ' not found'}));
+            return;
+        } else {
+            res.writeHead(200, {"Content-Type":"application/json"});
+            res.end(JSON.stringify(service));
+        }
+    }
+})
 
 locker.get("/encrypt", function(req, res) {
     if (!req.param("s")) {
@@ -303,7 +324,7 @@ locker.get("/diary", function(req, res) {
     var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     fs.readFile(fullPath, function(err, file) {
         if (err) {
@@ -319,6 +340,12 @@ locker.get("/diary", function(req, res) {
     res.write
 });
 
+locker.get('/core/revision', function(req, res) {
+    fs.readFile(path.join(lconfig.lockerDir, 'Config', 'gitrev.json'), function(err, doc) {
+        if (doc) res.send(JSON.parse(doc));
+        else res.send("git cmd not available!");
+    });
+});
 
 // EVENTING
 // anybody can listen into any service's events
@@ -387,19 +414,19 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
+locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
-locker.get('/*', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(1),req,res);
+locker.all('/dashboard*', function(req, res) {
+    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
 });
 
-// fallback everything to the dashboard
-locker.post('/*', function(req, res) {
-    proxied('POST', dashboard.instance,req.url.substring(1),req,res);
+locker.all('/devdashboard*', function(req, res) {
+    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
 });
 
 locker.get('/', function(req, res) {
-    proxied('GET', dashboard.instance,"",req,res);
+    res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
@@ -413,6 +440,20 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
+
 exports.startService = function(port) {
+    if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
+        console.error('you have specified an invalid UI in your config file.  please fix it!');
+        process.exit();
+    }
+    if(!serviceManager.isInstalled(lconfig.ui))
+        serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
+    serviceManager.spawn(lconfig.ui, function() {
+        dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+        console.log('ui spawned');
+    });
+    serviceManager.spawn('devdashboard', function() {
+        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
+    });
     locker.listen(port);
 }

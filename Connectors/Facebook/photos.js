@@ -28,6 +28,7 @@ exports.syncPhotos = function(callback) {
     fb.getAlbums({id:"me"},function(album){albums.push(album);},function(){
         async.forEach(albums,function(album,cbDone){
             fb.getAlbum({id:album.id},function(photo){
+                // TODO: call fb.getPhoto() here to actually sync the image locally
                 photos.push({'obj' : photo, timestamp: new Date(), type : 'new'});            
             },cbDone);
         },callback);

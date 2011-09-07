@@ -8,11 +8,14 @@
 */
 
 var collection;
+var db;
 var lconfig = require('../../Common/node/lconfig');
 var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
+var async = require("async");
+var url = require("url");
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -44,7 +47,7 @@ function processFacebook(svcId, data, cb) {
     if (data.images) photoInfo.thumbUrl = data.images[data.images.length - 1].source;
     if (data.width) photoInfo.width = data.width;
     if (data.height) photoInfo.height = data.height;
-    if (data.created_time) photoInfo.timestamp = data.created_time;
+    if (data.created_time) photoInfo.timestamp = data.created_time*1000;
     if (data.name) photoInfo.title = data.name;
 
     photoInfo.sources = [{service:svcId, id:data.id}];
@@ -92,6 +95,54 @@ function processFlickr(svcId, data, cb) {
 
 }
 
+// pretty experimental! extract photos from your tweets using embedly :)
+function processTwitter(svcId, data, cb)
+{
+    if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
+
+    async.forEach(data.entities.urls,function(u,callback){
+        if(!u || !u.url) return callback();
+        var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
+        embed.query = {url:u.url};
+        request.get({uri:url.format(embed)},function(err,resp,body){
+            if(err || !body) return callback();
+            var js = JSON.parse(body);
+            if(!js || !js.type || js.type != "photo" || !js.url) return callback();
+
+            var photoInfo = {};
+            photoInfo.url = js.url;
+            if (js.height) photoInfo.height = js.height;
+            if (js.width) photoInfo.width = js.width;
+            photoInfo.title = data.text;
+            if (js.thumbnail_url) photoInfo.thumbnail = js.thumbnail_url;
+            if (data.createdAt) photoInfo.timestamp = new Date(data.created_at).getTime();
+
+            photoInfo.sources = [{service:svcId, id:data.id}];
+            saveCommonPhoto(photoInfo, callback);
+        });
+    },cb);
+}
+
+// look at all checkins, see if any contain attached photos
+function processFoursquare(svcId, data, cb)
+{
+    if(!data || !data.photos || !Array.isArray(data.photos.items)) return cb();
+
+    async.forEach(data.photos.items,function(photo,callback){
+        if(!photo || !photo.sizes || !Array.isArray(photo.sizes.items) || photo.sizes.items.length == 0) return callback();
+        var photoInfo = {};
+        photoInfo.url = photo.sizes.items[0].url;
+        if (photo.sizes.items[0].height) photoInfo.height = photo.sizes.items[0].height;
+        if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
+        if (data.venue.name) photoInfo.title = data.venue.name;
+        photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-1].url;
+        if (photo.createdAt) photoInfo.timestamp = photo.createdAt;
+
+        photoInfo.sources = [{service:svcId, id:photo.id}];
+        saveCommonPhoto(photoInfo, callback);
+    },cb);
+}
+
 function saveCommonPhoto(photoInfo, cb) {
     // This is the only area we do basic matching on right now.  We'll do more later
     var query = [{url:photoInfo.url}];
@@ -101,6 +152,7 @@ function saveCommonPhoto(photoInfo, cb) {
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
+            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
             locker.event("photo", doc, "new");
         }
         cb(err, doc);
@@ -121,13 +173,17 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
+dataHandlers["status/twitter"] = processTwitter;
+dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 
-exports.init = function(mongoCollection) {
+exports.init = function(mongoCollection, mongo) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
+    db = mongo.dbClient;
+    lconfig.load('../../Config/config.json'); // ugh
 }
 
 exports.getTotalCount = function(callback) {
@@ -136,6 +192,11 @@ exports.getTotalCount = function(callback) {
 exports.getAll = function(callback) {
     collection.find({}, callback);
 }
+
+exports.get = function(id, callback) {
+    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
 exports.getOne = function(id, callback) {
     collection.find({"id":id}, function(error, cursor) {
         if (error) {
@@ -157,10 +218,11 @@ exports.processEvent = function(eventBody, callback) {
         callback();
         return;
     }
-
     // Run the data processing
+    var data = eventBody.obj;
+    if(eventBody.via && eventBody.via.indexOf("synclet") == 0) data = eventBody.obj.data;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, eventBody.obj, callback);
+    handler(eventBody.via, data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {
@@ -168,9 +230,9 @@ exports.addData = function(svcId, type, allData, callback) {
         callback = function() {};
     }
     var handler = dataHandlers[type] || processShared;
-    allData.forEach(function(data) {
-        handler(svcId, data, callback);
-    });
+    async.forEachSeries(allData,function(data,cb) {
+        handler(svcId, data, cb);
+    },callback);
 }
 
 exports.clear = function(callback) {

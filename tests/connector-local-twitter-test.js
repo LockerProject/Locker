@@ -22,7 +22,7 @@ var mePath = '/Data/' + svcId;
 
 var thecollections = ['friends', 'followers', 'home_timeline', 'user_timeline', 'mentions'];
 var lconfig = require('../Common/node/lconfig');
-lconfig.load("config.json");
+lconfig.load("Config/config.json");
 
 var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
 var mongoCollections;

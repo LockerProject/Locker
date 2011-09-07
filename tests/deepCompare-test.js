@@ -14,5 +14,11 @@ vows.describe("Deep Compare function").addBatch({
         'and forwards': function() {
             assert.isFalse(deepCompare(obj2, obj1));
         }
+    },
+    "Doesn't break if you pass an object with properties and an undefined object" : {
+        topic: deepCompare(obj1, undefined),
+        'successfully': function(topic) {
+            assert.isFalse(topic);
+        }
     }
 }).export(module);

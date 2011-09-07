@@ -24,7 +24,7 @@ exports.sync = function(processInfo, cb) {
         updateState = {checkins:{syncedThrough:0}}; }
     syncCheckins(function(err) {
         var responseObj = {data : {}, config : {}};
-        responseObj.data.place = places;
+        responseObj.data.checkin = places;
         responseObj.data.photo = photos;
         responseObj.data.profile = [{ obj: profile }];
         responseObj.config.updateState = updateState;
@@ -35,6 +35,9 @@ exports.sync = function(processInfo, cb) {
 var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         profile = JSON.parse(data).response.user;
+        if (profile === undefined) {
+            return callback('error attempting to get profile data - ' + data);
+        }
         getCheckins(profile.id, auth.accessToken, 0, function(err, checkins) {
             if (!checkins || !checkins.length) {
                 return callback();
@@ -75,7 +78,7 @@ function getCheckins(userID, token, offset, callback, checkins) {
             getCheckins(userID, token, offset + checkins_limit, callback, checkins);
         else {
             if (checkins[0])
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
+                updateState.checkins = {syncedThrough:checkins[0].createdAt};
             callback(err, checkins.reverse());
         }
     });

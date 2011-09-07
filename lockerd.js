@@ -28,18 +28,18 @@ var npm = require('npm');
     var spawn = require('child_process').spawn;
     var fs = require('fs');
     var path = require('path');
+    var request = require('request');
+    var async = require('async');
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
-    lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'config.json'));
+    lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
 
     var logger = require("logger");
-    //var crypto = require('crypto');
     var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
     var syncManager = require('lsyncmanager');
     var serviceManager = require("lservicemanager");
-    var dashboard = require(__dirname + "/Ops/dashboard.js");
     var mongodb = require('mongodb');
     var webservice = require(__dirname + "/Ops/webservice.js");
     var lcrypto = require("lcrypto");
@@ -48,7 +48,7 @@ var npm = require('npm');
 
     if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
         console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                    'which if so inclined can be hacked into lockerd.js and added since' + 
+                    'which if so inclined can be hacked into lockerd.js and added since' +
                     ' it\'s apparently still not implemented :)\n\n');
     }
     var shuttingDown_ = false;
@@ -65,7 +65,7 @@ var npm = require('npm');
             }
             fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
         }
-        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir, 
+        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                         '--port', lconfig.mongo.port]);
         mongoProcess.stderr.on('data', function(data) {
             console.error('mongod err: ' + data);
@@ -77,7 +77,7 @@ var npm = require('npm');
             if(errorCode !== 0) {
                 var db = new mongodb.Db('locker', new mongodb.Server('127.0.0.1', lconfig.mongo.port, {}), {});
                 db.open(function(error, client) {
-                    if(error) { 
+                    if(error) {
                         console.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
                         shutdown(1);
                     } else {
@@ -119,6 +119,12 @@ var npm = require('npm');
     }
 
     function finishStartup() {
+        // get current git revision if git is available
+        var gitHead = spawn('git', ['rev-parse', '--verify', 'HEAD']);
+        gitHead.stdout.on('data', function(data) {
+            fs.writeFileSync(path.join(lconfig.lockerDir, 'Config', 'gitrev.json'), JSON.stringify(data.toString()));
+        });
+
         // look for available things
         lconfig.scannedDirs.forEach(function(dirToScan) {
             console.log(dirToScan);
@@ -126,23 +132,41 @@ var npm = require('npm');
             if (dirToScan === "Collections") installable = false;
             serviceManager.scanDirectory(dirToScan, installable);
         });
-        
+
         syncManager.scanDirectory("Connectors");
-        
 
         // look for existing things
         serviceManager.findInstalled();
-        syncManager.findInstalled();
 
+        // start web server (so we can all start talking)
+        webservice.startService(lconfig.lockerPort);
+        var lockerPortNext = "1"+lconfig.lockerPort;
+        lockerPortNext++;
+
+        // if there's any migrations, load synclets and do them but don't let synclets run till done
+        if(serviceManager.serviceMap().migrations.length > 0)
+        {
+            syncManager.synclets().executable = false;
+            syncManager.findInstalled();
+            async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
+                console.log('running migration followup for '+call);
+                request.get({uri:call},cb); // TODO: are failures here critical or not?
+            },function(){
+                serviceManager.serviceMap().migrations = [];
+                postStartup();
+            });
+        }else{
+            syncManager.findInstalled();
+            postStartup();
+        }
+
+    }
+
+    // scheduling and misc things
+    function postStartup() {
         thservice.start();
 
-        webservice.startService(lconfig.lockerPort);
-
         lscheduler.masterScheduler.loadAndStart();
-
-        var lockerPortNext = "1"+lconfig.lockerPort;
-        dashboard.start(lockerPortNext);
-        lockerPortNext++;
 
         console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
     }
@@ -150,7 +174,6 @@ var npm = require('npm');
     function shutdown(returnCode) {
         process.stdout.write("\n");
         shuttingDown_ = true;
-        dashboard.instance.kill(dashboard.pid, "SIGINT");
         serviceManager.shutdown(function() {
             mongoProcess.kill();
             console.log("Shutdown complete.");

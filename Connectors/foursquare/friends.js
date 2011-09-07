@@ -35,6 +35,9 @@ exports.syncFriends = function(callback) {
             return callback(resp);
         }
         var self = JSON.parse(data).response.user;
+        if (self === undefined) {
+            return callback('error attempting to get profile data - ' + data);
+        }
         var userID = self.id;
         if (self.photo.indexOf("userpix") > 0) {
             request.get({uri:self.photo, encoding: 'binary'}, function(err, resp, body) {

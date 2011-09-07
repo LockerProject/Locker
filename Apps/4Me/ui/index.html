@@ -24,6 +24,37 @@ var map;
         title:"Hello World!"
     });   
   }
+
+function add_marker(lat, lng, icon, html, open) {
+
+    var myLatlng = new google.maps.LatLng(lat, lng);
+
+    if (icon) {
+        var marker = new google.maps.Marker({
+            position: myLatlng, 
+            map: map,
+    		icon: icon
+        });
+    } else {
+        var marker = new google.maps.Marker({
+            position: myLatlng, 
+            map: map,
+        });
+    }
+
+    var infowindow = new google.maps.InfoWindow({
+          content: html
+    });
+      
+    google.maps.event.addListener(marker, 'click', function() {
+          infowindow.open(map,marker);
+    });
+
+    if (open == true){
+	    infowindow.open(map,marker);
+    }
+}
+ 
 function go(f)
 {
 	var s=document.createElement('script')

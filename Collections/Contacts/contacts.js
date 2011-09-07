@@ -10,7 +10,7 @@
 // merge contacts from connectors
 require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
-lconfig.load('../../config.json');
+lconfig.load('../../Config/config.json');
 
 var fs = require('fs'),
     locker = require('locker.js');
@@ -32,6 +32,16 @@ app.get('/', function(req, res) {
     dataStore.getTotalCount(function(err, countInfo) {
         res.write('<html><p>Found '+ countInfo +' contacts</p><a href="update">refresh from connectors</a></html>');
         res.end();
+    });
+});
+
+app.get('/allMinimal', function(req, res) {
+    var offset = req.param('offset') ? req.param('offset') : 0;
+    var limit = req.param('limit') ? req.param('limit') : 250;
+    dataStore.getMinimal(offset, limit, function(err, cursor) {
+        cursor.toArray(function(err, items) {
+            res.end(JSON.stringify(items));
+        });
     });
 });
 
@@ -57,9 +67,10 @@ app.get('/allContacts', function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherContacts();
-    res.writeHead(200);
-    res.end('Updating');
+    sync.gatherContacts(function(){
+        res.writeHead(200);
+        res.end('Updating');        
+    });
 });
 
 app.post('/events', function(req, res) {
@@ -85,6 +96,14 @@ app.post('/events', function(req, res) {
     });
 });
 
+app.get('/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(doc));
+    })
+});
+
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
@@ -97,7 +116,7 @@ process.stdin.on('data', function(data) {
     process.chdir(lockerInfo.workingDirectory);
     
     locker.connectToMongo(function(mongo) {
-        sync.init(lockerInfo.lockerUrl, mongo.collections.contacts);
+        sync.init(lockerInfo.lockerUrl, mongo.collections.contacts, mongo);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
             sync.eventEmitter.on('contact/full', function(eventObj) {
