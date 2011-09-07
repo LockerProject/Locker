@@ -150,7 +150,14 @@ var npm = require('npm');
             syncManager.findInstalled();
             async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
                 console.log('running migration followup for '+call);
-                request.get({uri:call},cb); // TODO: are failures here critical or not?
+                request.get({uri:call},function(err,res,body){
+                    if(err || !res || res.statusCode != 200)
+                    {
+                        console.error("failed to run migration, bailing hard! "+util.inspect(err)+":"+util.inspect(res));
+                        process.exit(1);
+                    }
+                    cb();
+                });
             },function(){
                 serviceManager.serviceMap().migrations = [];
                 postStartup();
