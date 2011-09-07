@@ -81,19 +81,21 @@ exports.handleGetUpdate = function(callback) {
         if (err) {
             error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
             console.error(error);
+            return callback(err);
         }
+        
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+        locker.providers('status/twitter', function(err, services) {
+            if (!services) return;
+            services.forEach(function(svc) {
+               if (svc.provides.indexOf('status/twitter') >= 0) {
+                   reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                }
+            });     
+        });
+        
         return callback(err);
-    });
-    
-    reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
-    reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
-    locker.providers('status/twitter', function(err, services) {
-        if (!services) return;
-        services.forEach(function(svc) {
-           if (svc.provides.indexOf('status/twitter') >= 0) {
-               reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
-            }
-        });     
     });
 };
 
