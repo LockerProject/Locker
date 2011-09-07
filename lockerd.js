@@ -30,6 +30,7 @@ var npm = require('npm');
     var path = require('path');
     var request = require('request');
     var async = require('async');
+    var util = require('util');
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
