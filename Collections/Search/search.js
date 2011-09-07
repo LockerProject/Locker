@@ -334,6 +334,21 @@ function makeEnrichedRequest(url, item, callback) {
         }
 
         item.fullobject = JSON.parse(body);
+        
+        if (item.fullobject.hasOwnProperty('created_at')) {
+            var dateDiff = new Date(new Date().getTime() - new Date(item.fullobject.created_at).getTime());
+            if (dateDiff.getUTCDate() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCDate() - 2) + ' day';
+                if (dateDiff.getUTCDate() > 3) item.fullobject.created_at_since += 's';
+            } else if (dateDiff.getUTCHours() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCHours() - 2) + ' hour';
+                if (dateDiff.getUTCHours() > 3) item.fullobject.created_at_since += 's';
+            } else if (dateDiff.getUTCMinutes() > 2) {
+                item.fullobject.created_at_since = (dateDiff.getUTCMinutes() - 2) + ' minute';
+                if (dateDiff.getUTCMinutes() > 3) item.fullobject.created_at_since += 's';
+            }
+            item.fullobject.created_at_since += ' ago';
+        }
         return callback(null);
     });
 }

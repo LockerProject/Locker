@@ -122,14 +122,14 @@ exports.sanitize = function(term){
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-} 
+}; 
 
 exports.trim = function(stringToTrim) {
 	return stringToTrim.replace(/^\s+|\s+$/g,"");
-}
+};
 exports.ltrim = function(stringToTrim) {
 	return stringToTrim.replace(/^\s+/,"");
-}
+};
 exports.rtrim = function(stringToTrim) {
 	return stringToTrim.replace(/\s+$/,"");
-}
+};
