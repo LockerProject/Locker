@@ -122,7 +122,7 @@ var npm = require('npm');
         // get current git revision if git is available
         var gitHead = spawn('git', ['rev-parse', '--verify', 'HEAD']);
         gitHead.stdout.on('data', function(data) {
-            fs.writeFileSync(path.join(lconfig.lockerDir, 'Me', 'gitrev.json'), JSON.stringify(data.toString()));
+            fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), JSON.stringify(data.toString()));
         });
 
         // look for available things
