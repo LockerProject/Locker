@@ -72,7 +72,8 @@ module.exports = function(app) {
         dataStore.init(function() {
             dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
-                    res.send({error : err})
+                    console.error(err);
+                    res.end();
                 } else if (doc) {
                     res.writeHead(200, {'content-type' : 'application/json'});
                     res.end(JSON.stringify(doc));
