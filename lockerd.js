@@ -154,10 +154,10 @@ var npm = require('npm');
                 request.get({uri:call},function(err,res,body){
                     if(err || !res || res.statusCode != 200)
                     {
-                        console.error("failed to run migration, bailing hard! "+util.inspect(err)+":"+util.inspect(res));
-                        process.exit(1);
+                        console.error("failed to run migration, should be bailing hard! "+util.inspect(err)+":"+util.inspect(res));
+                    }else{
+                        console.log("migration success: "+JSON.stringify(body));                        
                     }
-                    console.log("migration success: "+JSON.stringify(body));
                     cb();
                 });
             },function(){
