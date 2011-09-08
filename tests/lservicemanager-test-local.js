@@ -8,7 +8,7 @@
 */
 
 /*
-* Tests the acutal implementation of the lservicemanager.  
+* Tests the acutal implementation of the lservicemanager.
 * See locker-core-ap-test.js for a test of the REST API interface to it.
 */
 var vows = require("vows");
@@ -25,7 +25,7 @@ lconfig.load("Config/config.json");
 var levents = require('levents');
 var path = require('path');
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
+var lmongo = require('../Common/node/lmongo.js');
 
 var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
@@ -73,7 +73,6 @@ vows.describe("Service Manager").addBatch({
                 assert.isTrue(serviceManager.isInstalled("testURLCallback"));
             },
             "manifest data is taken over me.json data" : function() {
-                console.dir(serviceManager.serviceMap().installed["event-collector"]);
                 assert.equal(serviceManager.serviceMap().installed["event-collector"].events[0][0], "configuration/listener");
             },
             "and can be spawned" : {
@@ -203,10 +202,10 @@ vows.describe("Service Manager").addBatch({
             "have mongo " : {
                 topic : function() {
                     var self = this;
-                    lmongoclient.connect(function(theMongo) {
+                    lmongo.init('disabletest', ['thing1','thing2'], function(theMongo, colls) {
                         mongo = theMongo;
-                        mongo.collections.thing1.save({'one':1}, function(err, doc) {
-                            mongo.collections.thing1.count(self.callback);
+                        colls.thing1.save({'one':1}, function(err, doc) {
+                            colls.thing1.count(self.callback);
                         });
                     });
                 },
@@ -227,27 +226,33 @@ vows.describe("Service Manager").addBatch({
                     assert.equal(serviceManager.isInstalled('disabletest'), false);
                     assert.equal(resp.statusCode, 503);
                     assert.equal(body, "This service has been disabled.");
-                },
-                "but can be reenabled": {
-                    topic: function() {
-                        serviceManager.enable('disabletest');
-                        var that = this;
-                        request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
-                            request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
-                        })
-                    },
-                    "successfully": function(err, resp, body) {
-                        assert.equal(serviceManager.isInstalled('disabletest'), true);
-                        if (resp.statusCode === 500) {
-                            console.dir(body);
-                            console.dir(resp);
-                            console.dir(err);
-                        }
-                        assert.equal(resp.statusCode, 200);
-                        assert.equal(body, "ACTIVE");
-                    }
                 }
             }
+        }
+    }
+}).addBatch({
+    "Reenabling services " : {
+        topic: function() {
+            serviceManager.enable('disabletest');
+            var that = this;
+            request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
+                request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
+            })
+        },
+        "works properly": function(err, resp, body) {
+            assert.equal(serviceManager.isInstalled('disabletest'), true);
+            if (!resp) {
+                console.dir(body);
+                console.dir(resp);
+                console.dir(err);
+            }
+            if (resp.statusCode === 500) {
+                console.dir(body);
+                console.dir(resp);
+                console.dir(err);
+            }
+            assert.equal(resp.statusCode, 200);
+            assert.equal(body, "ACTIVE");
         }
     }
 }).addBatch({
@@ -270,7 +275,7 @@ vows.describe("Service Manager").addBatch({
         },
         "and deletes" : {
             topic : function() {
-                mongo.collections.thing1.count(this.callback);
+                mongo.collections.disabletest.thing1.count(this.callback);
             },
             "mongo collections" : function(err, doc) {
                 assert.isNull(err);

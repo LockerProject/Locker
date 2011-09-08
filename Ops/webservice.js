@@ -139,10 +139,10 @@ locker.get("/query/:query", function(req, res) {
             return;
         }
 
-        var mongo = require("lmongoclient")(lconfig.mongo.host, lconfig.mongo.port, provider.id, provider.mongoCollections);
-        mongo.connect(function(mongo) {
+        var mongo = require("lmongo");
+        mongo.init(provider.id, provider.mongoCollections, function(mongo, colls) {
             try {
-                var collection = mongo.collections[provider.mongoCollections[0]];
+                var collection = colls[provider.mongoCollections[0]];
                 console.log("Querying " + JSON.stringify(query));
                 var options = {};
                 if (query.limit) options.limit = query.limit;
@@ -234,10 +234,11 @@ locker.post('/core/:svcId/disable', function(req, res) {
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    serviceManager.disable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.disable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 locker.post('/core/:svcId/enable', function(req, res) {
     var svcId = req.body.serviceId;
@@ -246,10 +247,11 @@ locker.post('/core/:svcId/enable', function(req, res) {
         res.end(svcId+" isn't disabled");
         return;
     }
-    serviceManager.enable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.enable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 
 // ME PROXY

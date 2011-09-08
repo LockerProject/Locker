@@ -21,6 +21,7 @@ if first time
 */
 var conf = {};
 conf._exit = false;
+exports.alive = false;
 var npm = require('npm');
 //npm.load(conf, function(er) {
   //npm.commands.install([], function(err, data) {
@@ -45,6 +46,7 @@ var npm = require('npm');
     var webservice = require(__dirname + "/Ops/webservice.js");
     var lcrypto = require("lcrypto");
     var thservice = require(__dirname + "/Ops/thservice.js");
+    var lmongo = require('lmongo');
 
 
     if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
@@ -81,7 +83,7 @@ var npm = require('npm');
         var mongodExit = function(errorCode) {
             if(shuttingDown_) return;
             if(errorCode !== 0) {
-                var db = new mongodb.Db('locker', new mongodb.Server('127.0.0.1', lconfig.mongo.port, {}), {});
+                var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
                 db.open(function(error, client) {
                     if(error) {
                         console.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
@@ -101,8 +103,8 @@ var npm = require('npm');
             mongoOutput += data;
             if(mongoOutput.match(/ waiting for connections on port/g)) {
                 mongoProcess.stdout.removeListener('data', callback);
-                checkKeys();
-            }
+                lmongo.connect(checkKeys);
+           }
         };
         mongoProcess.stdout.on('data', callback);
     });
@@ -223,6 +225,7 @@ var npm = require('npm');
         lscheduler.masterScheduler.loadAndStart();
 
         console.log('locker is running, use your browser and visit ' + lconfig.lockerBase);
+        exports.alive = true;
     }
 
     function shutdown(returnCode) {

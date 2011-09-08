@@ -23,16 +23,15 @@ lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
 locker.event = function(){};
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, "photos", thecollections);
-
+var lmongo = require('../Common/node/lmongo.js');
 
 suite.next().suite.addBatch({
     "Can process Facebook event" : {
         topic: function() {
             var self = this;
-            lmongoclient.connect(function(mongo) {
+            lmongo.init("photos", thecollections, function(mongo, colls) {
                 process.chdir("." + mePath);
-                dataStore.init(mongo.collections.photos);
+                dataStore.init(colls.photos, mongo);
                 dataStore.processEvent(facebookEvent, self.callback);
             });
         },

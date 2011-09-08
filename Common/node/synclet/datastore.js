@@ -8,25 +8,27 @@
 */
 var IJOD = require('../ijod').IJOD
   , lconfig = require('../lconfig')
-  , lmongoclient = require('../lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
+  , lmongo = require('../lmongo')
   , ijodFiles = {}
   , deepCompare = require('../deepCompare')
   , mongo
+  , colls
   , mongoIDs = {}
   ;
 
 exports.init = function(callback) {
     if (mongo) return callback();
-    lmongoclient.connect(function(_mongo) {
+    lmongo.init('synclets', [], function(_mongo) {
         mongo = _mongo;
+        colls = mongo.collections.synclets;
         callback();
     });
 }
 
 exports.addCollection = function(name, dir, id) {
     mongoIDs[dir + "_" + name] = id;
-    if(!mongo.collections[dir + "_" + name])
-        mongo.addCollection(dir + "_" + name);
+    if(!colls[dir + "_" + name])
+        mongo.addCollection('synclets', dir + "_" + name);
     if(!ijodFiles[dir + "_" + name])
         ijodFiles[dir + "_" + name] = new IJOD(name, dir);
 }
@@ -82,14 +84,14 @@ exports.removeObject = function(type, id, options, callback) {
 
 // mongos
 function getMongo(type, id, callback) {
-    var m = mongo.collections[type];
+    var m = colls[type];
     if(!m) {
         try {
-            mongo.addCollection(type);
+            mongo.addCollection('synclets', type);
         } catch (E) {
             return callback(E, []);
         }
-        m = mongo.collections[type];
+        m = colls[type];
     }
     else if(!(id && (typeof id === 'string' || typeof id === 'number')))
         return callback(new Error('bad id:' + id), null);
@@ -99,25 +101,25 @@ function getMongo(type, id, callback) {
 exports.queryCurrent = function(type, query, options, callback) {
     query = query || {};
     options = options || {};
-    var m = mongo.collections[type];
+    var m = colls[type];
     if(!m) {
-        mongo.addCollection(type);
-        m = mongo.collections[type];
+        mongo.addCollection('synclets', type);
+        m = colls[type];
     }
     m.find(query, options).toArray(callback);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
     options = options || {};
-    var m = mongo.collections[type];
+    var m = colls[type];
     if(!m) {
         try {
-            mongo.addCollection(type);
+            mongo.addCollection('synclets', type);
         } catch (E) {
             callback(E, []);
             return;
         }
-        m = mongo.collections[type];
+        m = colls[type];
     }
     m.find({}, options).toArray(callback);
 }
