@@ -23,6 +23,7 @@ lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
 locker.event = function(){};
 
+var cwd = process.cwd();
 var lmongo = require('../Common/node/lmongo.js');
 
 suite.next().suite.addBatch({
@@ -45,6 +46,7 @@ suite.next().suite.addBatch({
             dataStore.processEvent(foursquareEvent, this.callback);
         },
         "successfully" : function(err, response) {
+            process.chdir(cwd);
             assert.isNull(err);
         }
     }
