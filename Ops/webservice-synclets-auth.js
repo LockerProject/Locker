@@ -23,6 +23,10 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gcontacts/auth",
       "grantType" : "authorization_code"}
+  , glatitude = {"provider" : "glatitude",
+      "endPoint" : "https://accounts.google.com/o/oauth2/token",
+      "redirectURI" : "auth/glatitude/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
@@ -49,6 +53,9 @@ module.exports = function(locker) {
     });
     locker.get('/auth/gcontacts/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gcontacts, res);
+    });
+    locker.get('/auth/glatitude/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), glatitude, res);
     });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);

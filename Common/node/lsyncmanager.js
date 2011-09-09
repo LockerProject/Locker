@@ -193,6 +193,8 @@ function executeSynclet(info, synclet, callback) {
     info.status = synclet.status = "running";
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
+    } else if (synclet.run.substr(-3) == ".py") {
+        run = ["python", lconfig.lockerDir + "/Common/python/synclet/client.py"];
     } else {
         run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
@@ -449,6 +451,12 @@ function addUrls() {
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
                                                     "&redirect_uri=" + host + "auth/gcontacts/auth" +
                                                     "&scope=https://www.google.com/m8/feeds/&response_type=code";
+            } else if (synclet.provider === 'glatitude') {
+                if (apiKeys.glatitude)
+                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
+                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
+                                                    "&scope=" + synclet.provider_args.scope +
+                                                    "&response_type=code";
             } else if (synclet.provider === 'github') {
                 if (apiKeys.github)
                     synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
