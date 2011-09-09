@@ -32,11 +32,15 @@ var npm = require('npm');
     var request = require('request');
     var async = require('async');
     var util = require('util');
+    
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
     lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
 
+    console.log(process.pid);
+    fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
+    
     var logger = require("logger");
     var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
