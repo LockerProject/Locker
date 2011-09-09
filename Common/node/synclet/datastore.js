@@ -153,7 +153,3 @@ function getMongo(type, callback) {
 function now() {
     return new Date().getTime();
 }
-
-function now() {
-    return new Date().getTime();
-}
