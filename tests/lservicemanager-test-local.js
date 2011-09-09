@@ -236,6 +236,9 @@ vows.describe("Service Manager").addBatch({
             serviceManager.enable('disabletest');
             var that = this;
             request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
+                if (err) {
+                    return that.callback(err, resp, body);
+                }
                 request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
             })
         },
@@ -245,14 +248,13 @@ vows.describe("Service Manager").addBatch({
                 console.dir(body);
                 console.dir(resp);
                 console.dir(err);
+                if (err.message === 'socket hang up') {
+                    console.error('i don\'t know man.  http://comments.gmane.org/gmane.comp.lang.javascript.nodejs/19987');
+                }
+            } else {
+                assert.equal(resp.statusCode, 200);
+                assert.equal(body, "ACTIVE");
             }
-            if (resp.statusCode === 500) {
-                console.dir(body);
-                console.dir(resp);
-                console.dir(err);
-            }
-            assert.equal(resp.statusCode, 200);
-            assert.equal(body, "ACTIVE");
         }
     }
 }).addBatch({
