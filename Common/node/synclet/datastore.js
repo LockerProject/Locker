@@ -33,10 +33,6 @@ exports.addCollection = function(name, dir, id) {
         ijodFiles[dir + "_" + name] = new IJOD(name, dir);
 }
 
-function now() {
-    return new Date().getTime();
-}
-
 // arguments: type should match up to one of the mongo collection fields
 // object will be the object to persist
 // options is optional, but if it exists, available options are: strip + timestamp
@@ -81,62 +77,29 @@ exports.removeObject = function(type, id, options, callback) {
     })
 }
 
-
-// mongos
-function getMongo(type, id, callback) {
-    var m = colls[type];
-    if(!m) {
-        try {
-            mongo.addCollection('synclets', type);
-        } catch (E) {
-            return callback(E, []);
-        }
-        m = colls[type];
-    }
-    else if(!(id && (typeof id === 'string' || typeof id === 'number')))
-        return callback(new Error('bad id:' + id), null);
-    return m;
-}
-
 exports.queryCurrent = function(type, query, options, callback) {
     query = query || {};
     options = options || {};
-    var m = colls[type];
-    if(!m) {
-        mongo.addCollection('synclets', type);
-        m = colls[type];
-    }
+    var m = getMongo(type);
     m.find(query, options).toArray(callback);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
     options = options || {};
-    var m = colls[type];
-    if(!m) {
-        try {
-            mongo.addCollection('synclets', type);
-        } catch (E) {
-            callback(E, []);
-            return;
-        }
-        m = colls[type];
-    }
+    var m = getMongo(type, callback);
     m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
-    var m = getMongo(type, id, callback);
-    if(m && id) {
-        var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
-        m.findOne(query, callback);
-    } else {
-        callback('broke!', []);
-    }
+    if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
+    var m = getMongo(type, callback);
+    var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
+    m.findOne(query, callback);
 }
 
 function setCurrent(type, object, callback) {
-    if (type && object && callback) {
-        var m = getMongo(type, object[mongoIDs[type]], callback);
+    if (type && object && callback && object[mongoIDs[type]]) {
+        var m = getMongo(type, callback);
         if(m) {
             var query = {};
             query[mongoIDs[type]] = object[mongoIDs[type]];
@@ -172,4 +135,21 @@ function removeCurrent(type, id, callback) {
         query[mongoIDs[type]] = id;
         m.remove(query, callback);
     }
+}
+
+function getMongo(type, callback) {
+    var m = colls[type];
+    if(!m) {
+        try {
+            mongo.addCollection('synclets', type);
+        } catch (E) {
+            return callback(E, []);
+        }
+        m = colls[type];
+    }
+    return m;
+}
+
+function now() {
+    return new Date().getTime();
 }
