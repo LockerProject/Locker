@@ -80,7 +80,7 @@ function mapMetaData(file, type, installable) {
         if (metaData.status != 'stub') {
             var err = false;
             try {
-                var stat = fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle);
+                var stat = fs.statSync(path.join(lconfig.lockerDir, lconfig.me, metaData.handle));
             } catch (E) {
                 err = true
             }
@@ -100,7 +100,7 @@ function mapMetaData(file, type, installable) {
     if(metaData.autoInstall) {
         var err = false;
         try {
-            var stat = fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle);
+            var stat = fs.statSync(path.join(lconfig.lockerDir, lconfig.me, metaData.handle));
         } catch (E) {
             err = true
         }
@@ -154,7 +154,7 @@ function mergedManifest(dir)
     });
     if (serviceInfo && serviceInfo.manifest) {
 
-        var fullInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + serviceInfo.manifest));
+        var fullInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, serviceInfo.manifest)));
         return lutil.extend(js, fullInfo);
     } else {
         return js;
@@ -224,10 +224,10 @@ exports.migrate = function(installedDir, metaData) {
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id +'/me.json', 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf-8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
-                        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(curMe, null, 4));
+                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run migration!");
@@ -271,9 +271,9 @@ exports.install = function(metaData, installOverride) {
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
         var inc = 0;
         try {
-            if(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+serviceInfo.handle).isDirectory()) {
+            if(fs.statSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle)).isDirectory()) {
                 inc++;
-                while(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
+                while(fs.statSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle+"-"+inc)).isDirectory()) {inc++;}
             }
         } catch (E) {
             var suffix = (inc > 0)?"-"+inc:"";
@@ -288,8 +288,8 @@ exports.install = function(metaData, installOverride) {
     meInfo.is = serviceInfo.is;
     meInfo.uri = lconfig.lockerBase+"/Me/"+meInfo.id+"/";
     meInfo.version = Date.now();
-    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id,0755);
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id+'/me.json',JSON.stringify(meInfo));
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id),0755);
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
     serviceMap.installed[meInfo.id] = mergedManifest(path.join(lconfig.me, meInfo.id));
 
     var fullInfo = exports.metaInfo(meInfo.id);
@@ -364,13 +364,13 @@ exports.spawn = function(serviceId, callback) {
     run = run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
-    console.log('spawning into: ' + lconfig.lockerDir + '/' + lconfig.me + '/' + svc.id);
+    console.log('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        sourceDirectory: lconfig.lockerDir + "/" + svc.srcdir,
-        workingDirectory: lconfig.lockerDir + '/' + lconfig.me + '/' + svc.id, // A path into the me directory
+        sourceDirectory: path.join(lconfig.lockerDir, svc.srcdir),
+        workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
         lockerUrl:lconfig.lockerBase,
-        externalBase:lconfig.externalBase + '/Me/' + svc.id + '/'
+        externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
     };
     if(serviceInfo && serviceInfo.mongoCollections) {
         processInformation.mongo = {
@@ -380,7 +380,7 @@ exports.spawn = function(serviceId, callback) {
         processInformation.mongo.collections = serviceInfo.mongoCollections;
     }
     var env = process.env;
-    env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
+    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
     app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stdout.setEncoding("utf8");
