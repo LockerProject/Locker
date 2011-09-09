@@ -21,6 +21,7 @@
                       "synclet-local-github.js",
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
+                      "synclet-local-flickr.js",
                       "synclet-local-googleContacts.js"],
         "collections" : ["sync-contacts-test.js",
                          "collection-photos-test.js",
@@ -29,9 +30,7 @@
     },
     "displayUnstable" : true,
     "disabledTests" : [
-        "connector-IMAP-test.js",
-        "synclet-local-flickr.js",
-        "connector-flickr-test.js"
+        "connector-IMAP-test.js"
     ],
     "mongo" : {
         "dataDir": "mongoTest",
