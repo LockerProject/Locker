@@ -73,7 +73,7 @@ var npm = require('npm');
             }
             fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
         }
-        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
+        mongoProcess = spawn('mongod', ['--journal', '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                         '--port', lconfig.mongo.port]);
         mongoProcess.stderr.on('data', function(data) {
             console.error('mongod err: ' + data);
@@ -239,6 +239,10 @@ var npm = require('npm');
     }
 
     process.on("SIGINT", function() {
+        shutdown(0);
+    });
+
+    process.on("SIGTERM", function() {
         shutdown(0);
     });
 
