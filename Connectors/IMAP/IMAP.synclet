@@ -1,0 +1,7 @@
+{
+    "title":"IMAP Account",
+    "status":"stable",
+    "provides":["message/imap"],
+    "provider":"imap",
+    "synclets":[{"name": "messages", "frequency": 10}]
+}
