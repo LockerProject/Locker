@@ -20,9 +20,10 @@ exports.init = function(theLockerUrl, mongoCollection, mongo) {
     exports.eventEmitter = new EventEmitter();
 }
 
-exports.gatherContacts = function() {
+exports.gatherContacts = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
+        cb(); // synchro delete, async/background reindex
         // This should really be timered, triggered, something else
         locker.providers(['contact/facebook', 'contact/twitter', 
                           'contact/google', 'contact/foursquare', 

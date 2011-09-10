@@ -63,7 +63,7 @@ if (process.argv.length > 2) {
         process.stdout.write("argument to the script.  If -f is used the list of arguments are\n");
         process.stdout.write("treated as individual files, not groups.\n");
         process.exit(0);
-    } 
+    }
 
     if (process.argv[2] == "-l") {
         var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
@@ -129,9 +129,22 @@ try {
     process.exit(1);
 }
 
-setTimeout(function() {
+var checkLocker = function() {
+    if (lockerd.alive === true) {
+        runTests();
+    } else {
+        console.error('locker hasn\'t started yet, checking again in a second');
+        setTimeout(checkLocker, 1000);
+    }
+}
+
+checkLocker();
+
+var runTests = function() {
+    var xunit = false;
     var vowsArgument = [];//["--supress-stdout"];
     if (process.argv.indexOf("-x") > 0) {
+        xunit = true;
         vowsArgument.push('--xunit');
     } else if (process.argv.indexOf("-d") > 0) {
         vowsArgument.push("--dot-matrix");
@@ -145,14 +158,22 @@ setTimeout(function() {
         vowsArgument.push("--nocolor");
     }
 
+    var output = '';
+
     var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
+        if (xunit) output += data;
         process.stdout.write(data);
     });
     vowsProcess.stderr.on("data", function(data) {
         process.stderr.write(data);
     });
     vowsProcess.on("exit", function(code, signal) {
+        if (xunit) {
+            output = output.substring(output.indexOf('<testsuite name="Vows test"'));
+            output = output.replace(/^\s+|\s+$/g, '');
+            fs.writeFileSync('output.xml', output);
+        }
         if (code != null) {
             console.log("All tests done");
             lockerd.shutdown(code);
@@ -161,4 +182,4 @@ setTimeout(function() {
             lockerd.shutdown(1);
         }
     });
-}, 1000);
+}

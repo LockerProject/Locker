@@ -27,10 +27,12 @@ function syncContacts(callback) {
                         processFeed(result.feed.entry, function(processedContacts) {
                             responseObj.data.contact = processedContacts;
                             responseObj.config.lastUpdate = now;
+                            responseObj.auth = auth;
                             callback(null, responseObj);
                         });
                     } else {
                         responseObj.config.lastUpdate = now;
+                        responseObj.auth = auth;
                         callback(null, responseObj);
                     }
                 } else {
@@ -151,12 +153,8 @@ function getID(entry) {
 
 function getClient() {
     if(auth && !gdataClient) {
-        // gdataClient = require('gdata-js')(auth.clientID, auth.clientSecret, auth.redirectURI);
-        gdataClient = require('gdata-js')(auth.appKey, auth.appSecret, auth.redirectURI);
+        gdataClient = require('gdata-js')(auth.appKey || auth.clientID, auth.appSecret || auth.clientSecret, auth.redirectURI);
         gdataClient.setToken(auth.token);
-        gdataClient.on('tokenRefresh', function() {
-            fs.writeFile('auth.json', JSON.stringify(auth));
-        });
     }
     return gdataClient;
 }

@@ -33,7 +33,7 @@ var lcrypto = require("lcrypto");
 var proxy = new httpProxy.HttpProxy();
 var scheduler = lscheduler.masterScheduler;
 
-var dashboard;
+var dashboard, devdashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -64,7 +64,7 @@ var listeners = new Object(); // listeners for events
 locker.get('/map', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/javascript',
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
@@ -139,10 +139,10 @@ locker.get("/query/:query", function(req, res) {
             return;
         }
 
-        var mongo = require("lmongoclient")(lconfig.mongo.host, lconfig.mongo.port, provider.id, provider.mongoCollections);
-        mongo.connect(function(mongo) {
+        var mongo = require("lmongo");
+        mongo.init(provider.id, provider.mongoCollections, function(mongo, colls) {
             try {
-                var collection = mongo.collections[provider.mongoCollections[0]];
+                var collection = colls[provider.mongoCollections[0]];
                 console.log("Querying " + JSON.stringify(query));
                 var options = {};
                 if (query.limit) options.limit = query.limit;
@@ -234,10 +234,11 @@ locker.post('/core/:svcId/disable', function(req, res) {
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    serviceManager.disable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.disable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 locker.post('/core/:svcId/enable', function(req, res) {
     var svcId = req.body.serviceId;
@@ -246,10 +247,11 @@ locker.post('/core/:svcId/enable', function(req, res) {
         res.end(svcId+" isn't disabled");
         return;
     }
-    serviceManager.enable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.enable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 
 // ME PROXY
@@ -324,7 +326,7 @@ locker.get("/diary", function(req, res) {
     var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
-        "Access-Control-Allow-Origin" : "*" 
+        "Access-Control-Allow-Origin" : "*"
     });
     fs.readFile(fullPath, function(err, file) {
         if (err) {
@@ -340,6 +342,12 @@ locker.get("/diary", function(req, res) {
     res.write
 });
 
+locker.get('/core/revision', function(req, res) {
+    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), function(err, doc) {
+        if (doc) res.send(JSON.parse(doc));
+        else res.send("git cmd not available!");
+    });
+});
 
 // EVENTING
 // anybody can listen into any service's events
@@ -410,19 +418,13 @@ locker.post('/core/:svcId/event', function(req, res) {
 
 locker.use(express.static(__dirname + '/static'));
 
-
 // fallback everything to the dashboard
-locker.get('/dashboard/*', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
+locker.all('/dashboard*', function(req, res) {
+    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
 });
 
-// fallback everything to the dashboard
-locker.post('/dashboard/*', function(req, res) {
-    proxied('POST', dashboard.instance,req.url.substring(11),req,res);
-});
-
-locker.get('/dashboard/', function(req, res) {
-    proxied('GET', dashboard.instance,req.url.substring(11),req,res);
+locker.all('/devdashboard*', function(req, res) {
+    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
 });
 
 locker.get('/', function(req, res) {
@@ -441,7 +443,7 @@ function proxied(method, svc, ppath, req, res, buffer) {
 }
 
 
-exports.startService = function(port) {
+exports.startService = function(port, cb) {
     if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
         console.error('you have specified an invalid UI in your config file.  please fix it!');
         process.exit();
@@ -452,5 +454,10 @@ exports.startService = function(port) {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
         console.log('ui spawned');
     });
-    locker.listen(port);
+    serviceManager.spawn('devdashboard', function() {
+        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
+    });
+    locker.listen(port, function() {
+        cb();
+    });
 }

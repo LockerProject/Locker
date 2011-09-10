@@ -1,0 +1,13 @@
+h1 Search my Locker
+#searchForm
+  form(action='#{searchPath}', method='post')
+    select.typeSelector(name='type', id='searchtype')
+        option(value='') Search all types
+        option(value='contact/full*') Search only contacts
+        option(value='photo/full*') Search only photos
+        option(value='timeline/twitter*') Search only Twitter statuses
+    input.text(type='text', id='searchterm', name='searchterm', size='48')
+    #searchButton
+      .button.clb
+        a#searchButton(href='#') Search
+  .clb

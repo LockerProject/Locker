@@ -30,7 +30,7 @@ module.exports = function(app) {
     app.get('/synclets/:syncletId/get_profile', function(req, res) {
         lfs.readObjectFromFile(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'profile.json'), function(userInfo) {
             res.writeHead(200, {"Content-Type":"application/json"});
-            res.end(JSON.stringify(userInfo));        
+            res.end(JSON.stringify(userInfo));
         });
     });
 
@@ -67,13 +67,13 @@ module.exports = function(app) {
             });
         });
     });
-    
+
     app.get('/synclets/:syncletId/:type/:id', function(req, res) {
         dataStore.init(function() {
             dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
+                    console.error(err);
+                    res.end();
                 } else if (doc) {
                     res.writeHead(200, {'content-type' : 'application/json'});
                     res.end(JSON.stringify(doc));

@@ -62,7 +62,6 @@ exports.getEncounters = function(arg, cbEach, cbDone) {
 }
 
 function findWrap(a,b,c,cbEach,cbDone){
-    console.log("a(" + JSON.stringify(a) + ") b("+ JSON.stringify(b) + ")");
     var cursor = c.find(a);
     if (b.sort) cursor.sort(b.sort);
     if (b.limit) cursor.limit(b.limit);

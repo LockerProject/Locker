@@ -1,14 +1,3 @@
 #block
   .wrapper
-    h1 Search my Locker
-    #searchForm
-      form(action='#{searchPath}', method='post')
-        select.typeSelector(name='type')
-            option(value='') Search all types
-            option(value='contact') Search only contacts
-            option(value='photo') Search only photos
-            option(value='status/twitter') Search only Twitter statuses
-        input.text(type='text', name='searchterm', size='48')
-        #searchButton
-          .button.clb
-            a#searchButton(href='#') Search
+    != partial('partials/searchform', {locals: {searchPath: searchPath}})

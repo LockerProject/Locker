@@ -11,7 +11,8 @@ var fs = require('fs')
 
 var synclets = {
     available:[],
-    installed:{}
+    installed:{},
+    executeable:true
 };
 
 exports.synclets = function() {
@@ -140,8 +141,8 @@ exports.status = function(serviceId) {
 
 exports.syncNow = function(serviceId, callback) {
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
-    async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) { 
-        executeSynclet(synclets.installed[serviceId], synclet, cb); 
+    async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) {
+        executeSynclet(synclets.installed[serviceId], synclet, cb);
     }, callback);
 };
 
@@ -154,11 +155,11 @@ function scheduleRun(info, synclet) {
     } else {
         synclet.nextRun = new Date(Date.now() + (parseInt(synclet.frequency) * 1000));
     }
-    
+
     function run() {
         executeSynclet(info, synclet);
     }
-    
+
     var timeout = synclet.nextRun - Date.now();
     if(timeout < 0) { // now
         process.nextTick(run)
@@ -177,6 +178,17 @@ function executeSynclet(info, synclet, callback) {
         }
         return;
     }
+    // we're put on hold from running any for some reason, re-schedule them
+    // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
+    if (!synclets.executeable)
+    {
+        console.log("Delaying execution of synclet "+synclet.name+" for "+info.id);
+        scheduleRun(info, synclet);
+        if (callback) {
+            callback();
+        }
+        return;
+    }
     console.log("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     if (!synclet.run) {
@@ -188,7 +200,7 @@ function executeSynclet(info, synclet, callback) {
     var dataResponse = '';
 
     app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
-    
+
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
         console.outputModule = info.title+" "+synclet.name;
@@ -199,7 +211,7 @@ function executeSynclet(info, synclet, callback) {
     app.stdout.on('data',function (data) {
         dataResponse += data;
     });
-    
+
     app.on('exit', function (code,signal) {
         var response;
         try {
@@ -213,15 +225,18 @@ function executeSynclet(info, synclet, callback) {
         }
         console.log("Synclet "+synclet.name+" finished for "+info.id);
         info.status = synclet.status = 'processing data';
-        tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         var deleteIDs = compareIDs(info.config, response.config);
-        processResponse(deleteIDs, info, synclet, response, callback);
+        tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
+        info.auth = lutil.extend(true, tempInfo.auth, response.auth);
         info.config = lutil.extend(true, tempInfo.config, response.config);
-        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
         scheduleRun(info, synclet);
+        processResponse(deleteIDs, info, synclet, response, function(err, cbresponse) {
+            fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
+            if (callback) callback(err, cbresponse);
+        });
     });
     if (!info.config) info.config = {};
-    
+
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
@@ -273,13 +288,13 @@ function processData (deleteIDs, info, key, data, callback) {
 //    console.log("processing synclet data from "+key+" of length "+data.length);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
-    
+
     if (key.indexOf('/') !== -1) {
         collection = info.id + "_" + key.substring(key.indexOf('/') + 1);
         eventType = key.substring(0, key.indexOf('/')) + "/" + info.provider;
         key = key.substring(key.indexOf('/') + 1);
     }
-    
+
     var mongoId;
     if(typeof info.mongoId === 'string')
         mongoId = info.mongoId
@@ -287,9 +302,9 @@ function processData (deleteIDs, info, key, data, callback) {
         mongoId = info.mongoId[key + 's'] || 'id';
     else
         mongoId = 'id';
-    
+
     datastore.addCollection(key, info.id, mongoId);
-    
+
     if (deleteIDs && deleteIDs.length > 0 && data) {
         addData(collection, mongoId, data, info, eventType, function(err) {
             if(err) {
@@ -298,7 +313,7 @@ function processData (deleteIDs, info, key, data, callback) {
                 deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
             }
         });
-    } else if (data) {    
+    } else if (data) {
         addData(collection, mongoId, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
         deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
@@ -411,8 +426,8 @@ function addUrls() {
             synclet = synclets.available[i];
             if (synclet.provider === 'facebook') {
                 if (apiKeys.facebook)
-                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey + 
-                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" + 
+                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +
+                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" +
                                         "&scope=email,offline_access,read_stream,user_photos,friends_photos,user_photo_video_tags";
             } else if (synclet.provider === 'twitter') {
                 if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
@@ -420,16 +435,16 @@ function addUrls() {
                 if (apiKeys.twitter) synclet.authurl = host + "auth/flickr/auth";
             } else if (synclet.provider === 'foursquare') {
                 if (apiKeys.foursquare)
-                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey + 
+                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
                                                             "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
             } else if (synclet.provider === 'gcontacts') {
                 if (apiKeys.gcontacts)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey + 
-                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" + 
+                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
+                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" +
                                                     "&scope=https://www.google.com/m8/feeds/&response_type=code";
             } else if (synclet.provider === 'github') {
                 if (apiKeys.github)
-                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey + 
+                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
                                                     '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
             }
         }
