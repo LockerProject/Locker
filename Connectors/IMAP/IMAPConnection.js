@@ -27,6 +27,7 @@ module.exports = function(auth) {
     
     IMAPConnection.getMailboxArray = function(callback) {
         client.getBoxes(function(err, mailboxes) {
+            console.error("DEBUG: mailboxes", mailboxes);
             if(err)
                 return callback(err);
             
@@ -62,7 +63,7 @@ module.exports = function(auth) {
                         fetchMessageCallback(null, messages);
                     });
                 } catch(e) {
-                    // catch IMAP module's lame exception handling here and parse to see if it's REALLY an exception or not. Bah!
+                    // catch IMAP module's lame exception handling here to see if it's REALLY an exception!
                     if (e.message !== 'Nothing to fetch') {
                         console.error(e);
                         callback(e, 'fetch');
@@ -90,7 +91,6 @@ module.exports = function(auth) {
         client = new ImapConnection(auth);
         client.connect(function(err) {
             if(err) console.error('error connecting:', err);
-            console.error("DEBUG: mailbox", mailbox);
             client.openBox(mailbox, false, callback);
         });
     }
@@ -249,7 +249,8 @@ module.exports = function(auth) {
                     }
                     //buffers are gross
                     //TODO: mkdir -p to directory and then write file
-                    // var stream = fs.createWriteStream(getCleanFilename(id, part.partID, filename, mailbox), {flags:'w', encoding:'base64'});
+                    var filename = getCleanFilename(id, part.partID, filename, mailbox);
+                    // var stream = fs.createWriteStream(filename, {flags:'w', encoding:'base64'});
                     // stream.write(data, 'base64');
                     // stream.end();
                     if(debug) console.error('DEBUG: non-text part', part);
@@ -279,9 +280,9 @@ function getMailboxPaths(results, prefix) {
                 for(var i in moreMailboxes)
                     mailboxes.push(moreMailboxes[i]);
             }
-            return mailboxes;
         }
     }
+    return mailboxes;
 }
 
 function cleanPrefix(prefix) {

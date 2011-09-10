@@ -1,0 +1,24 @@
+{
+    "title": "IMAP Account",
+    "status": "waiting",
+    "provides": [
+        "message/imap"
+    ],
+    "provider": "imap",
+    "synclets": [
+        {
+            "name": "messages",
+            "frequency": 10
+        }
+    ],
+    "srcdir": "Connectors/IMAP",
+    "auth": { 
+        "username": "b007f1758619d3f2395abdc5b7f13c06d284b620b8330a064935e1a0511fa40b",
+        "password": "16be7986e979e6e094cee5b2f50c53b5",
+        "host": "imap.gmail.com",
+        "port": 993,
+        "secure": true,
+        "debug": false 
+    },
+    "id": "imap"
+}
