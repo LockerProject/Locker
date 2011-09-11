@@ -11,7 +11,11 @@ var fs = require('fs'),
     async = require('async'),
     ImapConnection = require('./imap').ImapConnection;
 
+var mkdirp = require('mkdirp');
+
 var debug = true;
+var saveAttachments = false;
+var FAILED_CONNECT_TIMEOUT = 10000;
 
 module.exports = function(auth) {
     var IMAPConnection = {};
@@ -90,8 +94,14 @@ module.exports = function(auth) {
         }
         client = new ImapConnection(auth);
         client.connect(function(err) {
-            if(err) console.error('error connecting:', err);
-            client.openBox(mailbox, false, callback);
+            if(err) {
+                console.error('error connecting:', err);
+                setTimeout(function() {
+                    reconnectToBox(mailbox, callback);
+                }, FAILED_CONNECT_TIMEOUT);
+            } else {
+                client.openBox(mailbox, false, callback);
+            }
         });
     }
     
@@ -203,24 +213,34 @@ module.exports = function(auth) {
             getBodyParts(headers, mailbox, callback, body);
         }
 
-        getBodyPart(headers.id, part, mailbox, function(err) {
-            if(err) {
-                reconnectToBox(mailbox, function() {
+        
+        if(saveAttachments || part.type === 'text') {
+            getBodyPart(headers.id, part, mailbox, function(err) {
+                if(err) {
+                    reconnectToBox(mailbox, function() {
+                        done();
+                    });
+                } else {
                     done();
-                });
-            } else {
-                done();
-            }
-        });
+                }
+            });
+        } else {
+            done();
+        }
     }
 
     function getBodyPart(id, part, mailbox, callback) {
         var timeout = getTimeout(part.size, throughput);
-        var partFetch = client.fetch(id, {request:{headers:false, body: '' + part.partID}});
+        var partFetch;
+        try {
+            partFetch = client.fetch(id, {request:{headers:false, body: '' + part.partID}});
+        } catch(err) {
+            return callback(err);
+        }
         var data = '';
         partFetch.on('error', function(err) {
             console.error('part fetch err', err);
-            reset();
+            callback(err);
         });
         partFetch.on('message', function(msg) {
             var t = setTimeout(function() {
@@ -240,30 +260,55 @@ module.exports = function(auth) {
                 clearTimeout(t);
                 if(part.type === 'text') {
                     part.body = data;
-                } else if(part.type) {
+                    callback();
+                } else if(part.type && saveAttachments) {
                     var filename = '';
                     if(part.disposition && part.disposition.filename && part.disposition.filename.length > 0) {
                         filename = part.disposition.filename
                     } else if(part.params && part.params.name && part.params.name.length > 0) {
                         filename = part.params.name;
                     }
-                    //buffers are gross
-                    //TODO: mkdir -p to directory and then write file
-                    var filename = getCleanFilename(id, part.partID, filename, mailbox);
-                    // var stream = fs.createWriteStream(filename, {flags:'w', encoding:'base64'});
-                    // stream.write(data, 'base64');
-                    // stream.end();
                     if(debug) console.error('DEBUG: non-text part', part);
+                    //buffers are gross
+                    saveAttachment(id, part.partID, filename, mailbox, data, function(err) {
+                        callback();
+                    });
                 } else {
                     console.error('DEBUG: nothing?? part', part);
+                    callback();
                 }
-                callback();
             });
         })
     }
-    
     return IMAPConnection;
 }
+
+function saveAttachment(messageId, partID, filename, mailbox, data, callback) {
+    var local = getCleanFilename(messageId, partID, filename, mailbox);
+    mkdirp(local.dir, 0755, function(err) {
+        if(err) {
+            console.error("DEBUG: err", err);
+        }
+        var stream = fs.createWriteStream(local.dir + local.filename, {flags:'w', encoding:'base64'});
+        stream.write(data, 'base64');
+        stream.end();
+        callback();
+    });
+}
+
+function cleanPrefix(prefix) {
+    if(typeof prefix === 'string')
+        return prefix.replace(/[^a-zA-Z0-9\/-_]/g, '_');
+    return prefix;
+}
+
+function getCleanFilename(msgID, partID, filename, mailbox, callback) {
+    var fn = msgID + '_' + partID + '_' + filename;
+    fn = fn.replace(/[^a-zA-Z0-9-_.]/g, '_');
+    var dir = 'attachments/' + cleanPrefix(mailbox) + '/';
+    return {dir:dir, filename:fn};
+}
+
 
 function getMailboxPaths(results, prefix) {
     var mailboxes = [];
@@ -283,19 +328,6 @@ function getMailboxPaths(results, prefix) {
         }
     }
     return mailboxes;
-}
-
-function cleanPrefix(prefix) {
-    if(typeof prefix === 'string')
-        return prefix.replace(/[^a-zA-Z0-9\/-_]/g, '_');
-    return prefix;
-}
-
-function getCleanFilename(msgID, partID, filename, mailbox) {
-    var fn = msgID + '_' + partID + '_' + filename;
-    fn = fn.replace(/[^a-zA-Z0-9-_.]/g, '_');
-//    attachments/' + cleanPrefix(mailbox)
-    return 'attachments/' + cleanPrefix(mailbox) + '/' + fn;
 }
 
 var throughput = 125; // KB/s

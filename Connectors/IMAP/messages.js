@@ -15,7 +15,7 @@ var lconfig = require('lconfig');
 //TODO: fix lconfig and remove this!
 lconfig.load('../../Config/config.json');
 
-var uidsPerCycle = 10;
+var uidsPerCycle = 25;
 
 exports.sync = function(processInfo, syncCallback) {
     var imapConnection;

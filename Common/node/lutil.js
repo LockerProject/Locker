@@ -125,11 +125,11 @@ exports.sanitize = function(term){
 }; 
 
 exports.trim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+|\s+$/g,"");
+    return stringToTrim.replace(/^\s+|\s+$/g,"");
 };
 exports.ltrim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+/,"");
+    return stringToTrim.replace(/^\s+/,"");
 };
 exports.rtrim = function(stringToTrim) {
-	return stringToTrim.replace(/\s+$/,"");
+    return stringToTrim.replace(/\s+$/,"");
 };
