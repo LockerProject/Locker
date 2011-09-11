@@ -53,6 +53,9 @@ module.exports = function(locker) {
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
     });
+    locker.get('/auth/tumblr/auth', function(req, res) {
+        handleTumblr(req, res);
+    });
     locker.get('/auth/flickr/auth', function(req, res) {
         handleFlickr(req, res);
     });
@@ -124,6 +127,22 @@ function handleTwitter (req, res) {
                 auth.consumerSecret = apiKeys.twitter.appSecret;
                 auth.token = newToken;
                 installSynclet("twitter", auth);
+                res.end("<script type='text/javascript'> window.close(); </script>");
+            });
+    } catch (E) {
+        res.end('failed to authenticate against service - ' + E);
+    }
+}
+
+function handleTumblr (req, res) {
+    try {
+        require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
+            .getAccessToken(req, res, function(err, newToken) {
+                var auth = {};
+                auth.consumerKey = apiKeys.tumblr.appKey;
+                auth.consumerSecret = apiKeys.tumblr.appSecret;
+                auth.token = newToken;
+                installSynclet("tumblr", auth);
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {

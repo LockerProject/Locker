@@ -1,0 +1,7 @@
+{
+    "title":"Tumblr Account",
+    "status":"stable",
+    "provider":"tumblr",
+    "provides":["status/tumblr","contact/tumblr","photo/tumblr"],
+    "synclets":[{"name": "following", "frequency": 3600},{"name": "dashboard", "frequency": 120},{"name": "posts", "frequency": 600}]
+}

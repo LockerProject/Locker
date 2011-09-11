@@ -433,6 +433,8 @@ function addUrls() {
                 if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
             } else if (synclet.provider === 'flickr') {
                 if (apiKeys.twitter) synclet.authurl = host + "auth/flickr/auth";
+            } else if (synclet.provider === 'tumblr') {
+                if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
             } else if (synclet.provider === 'foursquare') {
                 if (apiKeys.foursquare)
                     synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
