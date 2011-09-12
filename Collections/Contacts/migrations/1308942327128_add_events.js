@@ -8,6 +8,6 @@ module.exports = function(dir) {
     
     me['events'] = JSON.parse('[["contact/foursquare", "/events"],["contact/facebook", "/events"],["contact/twitter", "/events"],["contact/github", "/events"],["contact/google", "/events"]]');
     
-    fs.writeFileSync('me.json', JSON.stringify(me), 'ascii');
+    fs.writeFileSync('me.json', JSON.stringify(me), 'utf-8');
     return true;
 };
