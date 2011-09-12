@@ -23,15 +23,6 @@ exports.getAll = function(callback) {
     collection.find({}, callback);
 }
 
-// this needs to move into the query interface i think
-//
-exports.getMinimal = function(offset, limit, callback) {
-    collection.find({}, {skip: offset, limit: limit, _id : 1, fields: {addresses: 1, emails: 1, name: 1, phoneNumbers: 1, photos: 1,
-                         'accounts.facebook.data.link': 1, 'accounts.foursquare.data.id': 1,
-                         'accounts.github.data.login': 1, 'accounts.twitter.data.screen_name': 1}},
-                    callback);
-}
-
 exports.get = function(id, callback) {
     collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
 }

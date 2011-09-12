@@ -347,7 +347,7 @@ next:function () {
         if (this._input === "") {
             return this.EOF;
         } else {
-            this.parseError('Lexical error on line '+(this.yylineno+1)+'. Unrecognized text.\n'+this.showPosition(), 
+            this.parseError('Lexical error on line '+(this.yylineno+1)+'. Unrecognized text.\n'+this.showPosition(),
                     {text: "", token: null, line: this.yylineno});
         }
     },
@@ -510,6 +510,12 @@ exports.buildMongoQuery = function(parseTree) {
     // Skip into the offset supplied
     if (parseTree[1].hasOwnProperty("offset")) {
         queryResult.skip = Number(parseTree[1]["offset"]);
+    }
+    if (parseTree[1].hasOwnProperty("fields")) {
+        queryResult.fields = {};
+        for (var i = 0; i < parseTree[1].fields.length; i++) {
+            queryResult.fields[parseTree[1].fields[i][1]] = 1;
+        }
     }
 
     return queryResult;
