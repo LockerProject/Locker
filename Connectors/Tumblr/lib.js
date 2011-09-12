@@ -39,13 +39,53 @@ exports.getMe = function(arg, cbEach, cbDone) {
     });
 }
 
-// call the api non-authenticated
-function getOnePublic(arg, cb)
+exports.getFollowing = function(arg, cbEach, cbDone) {
+    var me = this;
+    arg.path = '/user/following';
+    arg.field = 'blogs';
+    var q = async.queue(function(js,cb){ // use a queue to process each block of ids
+        me.getBlog({url:js.url}, cbEach, cb);
+    },3);
+    getPages(arg, q.push, function(err){
+        if(err) return cbDone(err);
+        if(q.length() == 0) return cbDone(); // queue could be done, but likely not
+        q.drain = cbDone; // whenever it finishes...
+    });
+}
+
+exports.getBlog = function(arg, cbEach, cbDone) {
+    if(!arg.url) return cbDone("no url");
+    var u = url.parse(arg.url);
+    if(!u || !u.hostname) return cbDone("no hostname found in url");
+    arg.path = '/blog/'+u.hostname+'/info';
+    delete arg.url;
+    arg.field = 'blog';
+    getOneKey(arg, function(err, js){
+        if(err) return cbDone(err);
+        if(!js.avatar) js.avatar = base + '/blog/' + u.hostname + '/avatar';
+        cbEach(js);
+        cbDone();
+    });
+}
+
+exports.getDashboard = function(arg, cbEach, cbDone) {
+    arg.path = '/user/dashboard';
+    arg.field = 'posts';
+    arg.reblog_info = true;
+    arg.notes_info = true;
+    getPages(arg, cbEach, cbDone);
+}
+
+function getOneKey(arg, cb)
 {
     if(!arg.path) return cb("no path");
-    var api = url.parse('https://api.twitter.com/1'+arg.path);
+    if(!arg.field) return cb("no field");
+    var api = url.parse(base+arg.path);
     delete arg.path;
+    arg.api_key = auth.consumerKey;
     api.query = arg;
+    var field = arg.field;
+    delete arg.field;
     request.get({uri:url.format(api)}, function(err, resp, body) {
         var js;
         try{
@@ -54,17 +94,8 @@ function getOnePublic(arg, cb)
         }catch(E){
             return cb(E);
         }
-        cb(null,js);
-    });
-}
-
-function getOneKey(arg, cb)
-{
-    if(!arg.path) return cb("no path");
-    arg.api_key = auth.consumerKey;
-    tumblr.apiCall('GET', arg.path, arg, function(err, js){
-        if(err) return cb(err);
-        cb(null,js);
+        if(js && js.meta && js.meta.status === 200 && js.response && js.response[field]) return cb(null, js.response[field]);
+        cb("couldn't understand reponse");
     });
 }
 
@@ -80,15 +111,16 @@ function getOne(arg, cb)
 
 function getPages(arg, cbEach, cbDone)
 {
-    if(!arg.path) return cb("no path");
+    if(!arg.path) return cbDone("no path");
+    if(!arg.field) return cbDone("no field");
     arg.token = auth.token;
-    arg.include_entities = true;
-    if(!arg.page) arg.page = 1;
-    tw.apiCall('GET', arg.path, arg, function(err, js){
-        // if error.statusCode == 500, retry?
-        if(err || !Array.isArray(js) || js.length == 0) return cbDone(err);
-        for(var i = 0; i < js.length; i++) cbEach(js[i]);
-        arg.page++;
+    if(!arg.offset) arg.offset = 0;
+    if(!arg.limit) arg.limit = 20;
+    tumblr.apiCall('GET', arg.path, arg, function(err, js){
+        if(err || !js || !js.meta || js.meta.status != 200 || !js.response || !Array.isArray(js.response[arg.field]) || js.response[arg.field].length == 0) return cbDone(err);
+        for(var i = 0; i < js.response[arg.field].length; i++) cbEach(js.response[arg.field][i]);
+        if(js.response[arg.field].length < arg.limit) return cbDone(); // at the end
+        arg.offset += arg.limit;
         return getPages(arg,cbEach,cbDone);
     });
 }
