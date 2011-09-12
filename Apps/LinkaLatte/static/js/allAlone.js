@@ -1,8 +1,10 @@
+function log(m) { if (console && console.log) console.log(m); }
+
 var collectionHandle = "";
 var resultsTemplate = null;
 
 function queryLinksCollection (queryString) {
-    console.log("Querying: " + $.param({q:queryString||""}));
+    log("Querying: " + $.param({q:queryString||""}));
     $(".dateGroup").remove();
     $("#infoMsg").hide();
     var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
@@ -82,7 +84,7 @@ function queryLinksCollection (queryString) {
 }    
 
 function findLinksCollection() {
-    console.log("Finding the collection");
+    log("Finding the collection");
     $.ajax({
       url: "/providers?types=link",
       type: "GET",
@@ -168,8 +170,7 @@ $(function(){
             }
         }
     });
-    $("#main").height($(window).height() - $("header").height() - 20);
-    $("#main").width($(window).width() - 20);
+
     $("#searchForm").submit(function() {
         queryLinksCollection($("#linksQuery").val());
         return false;
