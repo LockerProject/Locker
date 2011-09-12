@@ -63,7 +63,7 @@ if (process.argv.length > 2) {
         process.stdout.write("argument to the script.  If -f is used the list of arguments are\n");
         process.stdout.write("treated as individual files, not groups.\n");
         process.exit(0);
-    } 
+    }
 
     if (process.argv[2] == "-l") {
         var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
@@ -129,7 +129,18 @@ try {
     process.exit(1);
 }
 
-setTimeout(function() {
+var checkLocker = function() {
+    if (lockerd.alive === true) {
+        runTests();
+    } else {
+        console.error('locker hasn\'t started yet, checking again in a second');
+        setTimeout(checkLocker, 1000);
+    }
+}
+
+checkLocker();
+
+var runTests = function() {
     var xunit = false;
     var vowsArgument = [];//["--supress-stdout"];
     if (process.argv.indexOf("-x") > 0) {
@@ -171,4 +182,4 @@ setTimeout(function() {
             lockerd.shutdown(1);
         }
     });
-}, 1000);
+}

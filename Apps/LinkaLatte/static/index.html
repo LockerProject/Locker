@@ -11,6 +11,7 @@
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
+  <link rel="stylesheet" href="/static/css/global.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -18,37 +19,42 @@
 
   <div id="container">
     <header>
-        <h3>LINKS</h3>
-        <span id='linkCounter'># Links</span>
-        <div><form id='searchForm'><input type='text' id='linksQuery'></input><input value='Search' type='button' id='searchLinks' /><input value='Reset' type='button' id='searchReset' /></form></div>
+        <div>
+	  <form id="searchForm">
+	  <input type="text" id="linksQuery" class="search"></input>
+	  <input value="Search" type="button" id="searchLinks" />
+	  <input value="Reset" type="button" id="searchReset" />
+	  <span id="linkCounter" class="count"></span>
+	  </form>
+	</div>
     </header>
     <div id="main" role="main">
-        <div id='infoMsg'></div>
-        <div id='results' style='display:none'>
-            <div class='templateDateGroup'>
-                <div class='dateInfo'>August 22, 2011</div>
-                <div class='linkInfo'>
-                    <img class='providerIcon' />
-                    <div class='fullInfo'>
-                        <div class='linkLine'><img onerror='hideMe()' class='favicon' /><a target='_new' href='' class='expandedLink'>http://example.com</a><span class='origLink'></span></div>
-                        <div class='linkFrom'></div>
-                        <div class='linkDescription'>This is the link description</div><div class='viewMore'>&#9654; View</div>
+        <div id="infoMsg"></div>
+        <div id="results" style="display:none">
+            <div class="templateDateGroup">
+                <div class="dateInfo">August 22, 2011</div>
+                <div class="linkInfo">
+                    <img class="providerIcon" />
+                    <div class="fullInfo">
+                        <div class="linkLine"><img onerror="hideMe()" class="favicon" /><a target="_new" href="" class="expandedLink">http://example.com</a><span class="origLink"></span></div>
+                        <div class="linkFrom"></div>
+                        <div class="linkDescription">This is the link description</div><div class="viewMore">&#9654; View</div>
                     </div>
-                    <div class='embedView'></div>
+                    <div class="embedView"></div>
                 </div>
             </div>
         </div>
-        <div id='loading'>Finding your contacts collection...</div>
+        <div id="loading">Finding your contacts collection...</div>
     </div>
     <footer>
 
     </footer>
   </div> <!--! end of #container -->
 
-  <script src="/static/js/jquery-1.6.1.min.js"></script>
+ <script src="/static/js/jquery-1.6.1.min.js"></script>
   <script src="/static/js/extensions/string.js"></script>
   <script src="/static/js/extensions/date.js"></script>
-  <script src='js/pure_min.js'></script>
+  <script src="js/pure_min.js"></script>
   <script defer src="js/allAlone.js"></script>
   
 </body>

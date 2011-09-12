@@ -184,9 +184,9 @@ tests.next()
     .undiscuss().unpath()
 tests.next()
     // Diary storage
-    .path("/core/testURLCallback/diary")
+    .path("/core/testURLCallback/diary?" + querystring.stringify({level:2, message:"Test message"}))
     .discuss("store diary messages")
-        .get({level:2, message:"Test message"})
+        .get()
             .expect(200)
     .undiscuss().unpath()
 tests.next()
@@ -202,9 +202,9 @@ tests.next()
 tests.next()
 
     // Event basics
-    .path("/core/testURLCallback/listen")
+    .path("/core/testURLCallback/listen?" + querystring.stringify({type:"test/event2", cb:"/event"}))
     .discuss("register a listener for an event")
-        .get({type:"test/event2", cb:"/event"})
+        .get()
             .expect(200)
     .undiscuss().unpath();
 
@@ -225,9 +225,9 @@ tests.next()
     .undiscuss().unpath()
 
     // Makes sure the /listen is done first
-    .path("/core/testURLCallback/deafen")
+    .path("/core/testURLCallback/deafen?" + querystring.stringify({type:"test/event2", cb:"/event"}))
     .discuss("deafen a listener for an event")
-        .get({type:"test/event2", cb:"/event"})
+        .get()
             .expect(200)
     .undiscuss().unpath();
 

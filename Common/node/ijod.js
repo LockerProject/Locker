@@ -13,14 +13,15 @@
 */
 
 var fs = require('fs'),
-    lconfig = require('lconfig')
+    lconfig = require('lconfig'),
+    path = require('path'),
     lfs = require(__dirname + '/lfs');
 
 function IJOD(name, dir) {
     this.name = name;
     this.dataFileName = name + '.json';
     if (dir) {
-        this.dataFile = fs.openSync(process.cwd() + "/" + lconfig.me + "/" + dir + "/" + this.dataFileName, 'a');
+        this.dataFile = fs.openSync(path.join(process.cwd(),lconfig.me, dir, this.dataFileName), 'a');
     } else {
         this.dataFile = fs.openSync(this.dataFileName, 'a');
     }

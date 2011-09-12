@@ -139,14 +139,15 @@ locker.get("/query/:query", function(req, res) {
             return;
         }
 
-        var mongo = require("lmongoclient")(lconfig.mongo.host, lconfig.mongo.port, provider.id, provider.mongoCollections);
-        mongo.connect(function(mongo) {
+        var mongo = require("lmongo");
+        mongo.init(provider.id, provider.mongoCollections, function(mongo, colls) {
             try {
-                var collection = mongo.collections[provider.mongoCollections[0]];
+                var collection = colls[provider.mongoCollections[0]];
                 console.log("Querying " + JSON.stringify(query));
                 var options = {};
                 if (query.limit) options.limit = query.limit;
                 if (query.skip) options.skip = query.skip;
+                if (query.fields) options.fields = query.fields;
                 collection.find(query.query, options, function(err, foundObjects) {
                     if (err) {
                         res.writeHead(500);
@@ -234,10 +235,11 @@ locker.post('/core/:svcId/disable', function(req, res) {
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    serviceManager.disable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.disable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 locker.post('/core/:svcId/enable', function(req, res) {
     var svcId = req.body.serviceId;
@@ -246,10 +248,11 @@ locker.post('/core/:svcId/enable', function(req, res) {
         res.end(svcId+" isn't disabled");
         return;
     }
-    serviceManager.enable(svcId);
-    res.writeHead(200);
-    res.end("OKTHXBI");
-})
+    serviceManager.enable(svcId, function() {
+        res.writeHead(200);
+        res.end("OKTHXBI");
+    });
+});
 
 
 // ME PROXY
@@ -441,7 +444,7 @@ function proxied(method, svc, ppath, req, res, buffer) {
 }
 
 
-exports.startService = function(port) {
+exports.startService = function(port, cb) {
     if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
         console.error('you have specified an invalid UI in your config file.  please fix it!');
         process.exit();
@@ -455,5 +458,7 @@ exports.startService = function(port) {
     serviceManager.spawn('devdashboard', function() {
         devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
     });
-    locker.listen(port);
+    locker.listen(port, function() {
+        cb();
+    });
 }

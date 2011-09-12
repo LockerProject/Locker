@@ -26,8 +26,7 @@ var locker = {};
 locker.event = function(){};
 util.expandUrl = function(a,b,c){b(a.url);c();} // fakeweb doesn't support HEAD reqs AFAICT :(
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, "links", thecollections);
-
+var lmongo = require('../Common/node/lmongo.js');
 
 suite.next().suite.addBatch({
     "Can process Tweet" : {
@@ -36,10 +35,10 @@ suite.next().suite.addBatch({
             var self = this;
             fakeweb.registerUri({uri : 'http://bit.ly/jBrrAe', body:'', contentType:"text/html" });
             fakeweb.registerUri({uri : 'http://bit.ly/jO9Pfy', body:'', contentType:"text/html" });
-            
-            lmongoclient.connect(function(mongo) {
+
+            lmongo.init("links", thecollections, function(mongo, colls) {
                 process.chdir("." + mePath);
-                dataStore.init(mongo.collections.link,mongo.collections.encounter);
+                dataStore.init(colls.link, colls.encounter);
                 search.init(dataStore);
                 dataIn.init(locker, dataStore, search);
                 dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});

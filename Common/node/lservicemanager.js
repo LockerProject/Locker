@@ -80,7 +80,7 @@ function mapMetaData(file, type, installable) {
         if (metaData.status != 'stub') {
             var err = false;
             try {
-                var stat = fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle);
+                var stat = fs.statSync(path.join(lconfig.lockerDir, lconfig.me, metaData.handle));
             } catch (E) {
                 err = true
             }
@@ -100,17 +100,17 @@ function mapMetaData(file, type, installable) {
     if(metaData.autoInstall) {
         var err = false;
         try {
-            var stat = fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+metaData.handle);
+            var stat = fs.statSync(path.join(lconfig.lockerDir, lconfig.me, metaData.handle));
         } catch (E) {
             err = true
-        }    
+        }
         if(err || !stat) {
             exports.install(metaData);
         }
     }
     return metaData;
 }
-    
+
 /**
 * The types of services that are currently understood
 */
@@ -140,7 +140,7 @@ exports.scanDirectory = function(dir, installable) {
     }
 }
 
-function mergedManifest(dir) 
+function mergedManifest(dir)
 {
     // Don't use metainfo here because we aren't fully setup
     var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
@@ -153,8 +153,8 @@ function mergedManifest(dir)
         return false;
     });
     if (serviceInfo && serviceInfo.manifest) {
-        
-        var fullInfo = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + serviceInfo.manifest));
+
+        var fullInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, serviceInfo.manifest)));
         return lutil.extend(js, fullInfo);
     } else {
         return js;
@@ -201,7 +201,7 @@ addEvents = function(info) {
             levents.addListener(ev[0], info.id, ev[1]);
         }
     }
-    
+
 }
 
 /**
@@ -224,10 +224,10 @@ exports.migrate = function(installedDir, metaData) {
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id +'/me.json', 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf-8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
-                        fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + metaData.id + '/me.json', JSON.stringify(curMe, null, 4));
+                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run migration!");
@@ -236,7 +236,7 @@ exports.migrate = function(installedDir, metaData) {
                     // if they returned a string, it's a post-startup callback!
                     if (typeof ret == 'string')
                     {
-                        serviceMap.migrations.push(lconfig.externalBase+"/Me/"+metaData.id+"/"+ret);
+                        serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                     }
                     process.chdir(cwd);
                 } catch (E) {
@@ -271,9 +271,9 @@ exports.install = function(metaData, installOverride) {
         // the inanity of this try/catch bullshit is drrrrrrnt but async is stupid here and I'm offline to find a better way atm
         var inc = 0;
         try {
-            if(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+serviceInfo.handle).isDirectory()) {
+            if(fs.statSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle)).isDirectory()) {
                 inc++;
-                while(fs.statSync(lconfig.lockerDir+"/" + lconfig.me + "/"+serviceInfo.handle+"-"+inc).isDirectory()) {inc++;}
+                while(fs.statSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.handle+"-"+inc)).isDirectory()) {inc++;}
             }
         } catch (E) {
             var suffix = (inc > 0)?"-"+inc:"";
@@ -282,16 +282,16 @@ exports.install = function(metaData, installOverride) {
     } else {
         var hash = crypto.createHash('md5');
         hash.update(Math.random()+'');
-        meInfo.id = hash.digest('hex');        
+        meInfo.id = hash.digest('hex');
     }
     meInfo.srcdir = serviceInfo.srcdir;
     meInfo.is = serviceInfo.is;
     meInfo.uri = lconfig.lockerBase+"/Me/"+meInfo.id+"/";
     meInfo.version = Date.now();
-    fs.mkdirSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id,0755);
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/"+meInfo.id+'/me.json',JSON.stringify(meInfo));
+    fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id),0755);
+    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
     serviceMap.installed[meInfo.id] = mergedManifest(path.join(lconfig.me, meInfo.id));
-    
+
     var fullInfo = exports.metaInfo(meInfo.id);
     addEvents(fullInfo);
     fullInfo.externalUri = lconfig.externalBase+"/Me/"+meInfo.id+"/";
@@ -340,7 +340,7 @@ exports.spawn = function(serviceId, callback) {
             svc.starting = [callback];
         }
     }
-    
+
     //get the run command from the serviceMap based on the service's source directory (possible versioning problem here)
     var run;
     var serviceInfo;
@@ -360,17 +360,17 @@ exports.spawn = function(serviceId, callback) {
         console.error('Could not spawn service from source directory', svc.srcdir);
         return;
     }
-    
+
     run = run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
-    console.log('spawning into: ' + lconfig.lockerDir + '/' + lconfig.me + '/' + svc.id);
+    console.log('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        sourceDirectory: lconfig.lockerDir + "/" + svc.srcdir,
-        workingDirectory: lconfig.lockerDir + '/' + lconfig.me + '/' + svc.id, // A path into the me directory
+        sourceDirectory: path.join(lconfig.lockerDir, svc.srcdir),
+        workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
         lockerUrl:lconfig.lockerBase,
-        externalBase:lconfig.externalBase + '/Me/' + svc.id + '/'
+        externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
     };
     if(serviceInfo && serviceInfo.mongoCollections) {
         processInformation.mongo = {
@@ -380,7 +380,7 @@ exports.spawn = function(serviceId, callback) {
         processInformation.mongo.collections = serviceInfo.mongoCollections;
     }
     var env = process.env;
-    env["NODE_PATH"] = lconfig.lockerDir+'/Common/node/';
+    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
     app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stdout.setEncoding("utf8");
@@ -443,7 +443,7 @@ exports.spawn = function(serviceId, callback) {
             }
         }
         console.outputModule = mod;
-        
+
     });
     app.on('exit', function (code,signal) {
         console.log(svc.id + " process has ended. (" + code + ":" + signal + ")");
@@ -536,7 +536,7 @@ exports.shutdown = function(cb) {
     checkForShutdown();
 }
 
-exports.disable = function(id) {
+exports.disable = function(id, callback) {
     if(!id)
         return;
     serviceMap.disabled.push(id);
@@ -551,20 +551,23 @@ exports.disable = function(id) {
                 process.kill(svc.pid, "SIGINT");
             } catch (e) {}
         }
+        delete svc.uriLocal;
+        delete svc.pid;
+        delete svc.port;
     }
     // save out all updated meta fields (pretty print!)
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
+    fs.writeFile(path.join(lconfig.lockerDir, lconfig.me, id, 'me.json'), JSON.stringify(svc, null, 4), callback);
 }
 
 exports.uninstall = function(serviceId, callback) {
     var svc = serviceMap.installed[serviceId];
-    var lmongoclient = require('lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, svc.id, svc.mongoCollections);
-    lmongoclient.connect(function(mongo) {
-        var keys = Object.getOwnPropertyNames(mongo.collections);
+    var lmongo = require('lmongo');
+    lmongo.init(svc.id, svc.mongoCollections, function(mongo, colls) {
+        var keys = Object.getOwnPropertyNames(colls);
         (function deleteCollection (keys, callback) {
             if (keys.length > 0) {
                 key = keys.splice(0, 1);
-                coll = mongo.collections[key];
+                coll = colls[key];
                 coll.drop(function() {deleteCollection(keys, callback);});
             } else {
                 callback();
@@ -578,10 +581,10 @@ exports.uninstall = function(serviceId, callback) {
             delete serviceMap.installed[serviceId];
             callback();
         });
-    })
-};
+    });
+}
 
-exports.enable = function(id) {
+exports.enable = function(id, callback) {
     if(!id)
         return;
     serviceMap.disabled.splice(serviceMap.disabled.indexOf(id), 1);
@@ -595,7 +598,7 @@ exports.enable = function(id) {
     if(!svc)
         return;
     // save out all updated meta fields (pretty print!)
-    fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + id + '/me.json', JSON.stringify(svc, null, 4));
+    fs.writeFile(path.join(lconfig.lockerDir, lconfig.me, id, 'me.json'), JSON.stringify(svc, null, 4), callback);
 };
 
 /**

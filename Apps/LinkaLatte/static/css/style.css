@@ -1,8 +1,5 @@
 body {
     font-family:sans-serif;
-    background-color:white;
-    width:100%;
-    height:100%;
 }
 
 #infoMsg {
@@ -11,16 +8,19 @@ body {
     font-style:italic;
     text-align:center;
 }
+
 .info {
     border:1px dotted #666;
     background-color:#ccc;
     color:#666;
 }
+
 .error {
     border:1px dotted #D8000C;
     color: #D8000C;
     background-color: #FFBABA;    
 }
+
 #loading {
     font-style:italic;
 }
@@ -42,8 +42,6 @@ header input#linksQuery {
 }
 
 #linkCounter {
-    font-size:80%;
-    color:#666;
 }
 
 /* Group Styles */
@@ -55,8 +53,9 @@ header input#linksQuery {
     margin-top:5px;
 }
 #main {
-    overflow:scroll;
+/*    overflow:scroll;*/
 }
+
 /* Link Styles */
 .linkInfo {
     clear:both;

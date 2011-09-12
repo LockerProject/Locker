@@ -8,31 +8,29 @@
 */
 var IJOD = require('../ijod').IJOD
   , lconfig = require('../lconfig')
-  , lmongoclient = require('../lmongoclient')(lconfig.mongo.host, lconfig.mongo.port, 'synclets', [])
+  , lmongo = require('../lmongo')
   , ijodFiles = {}
   , deepCompare = require('../deepCompare')
   , mongo
+  , colls
   , mongoIDs = {}
   ;
 
 exports.init = function(callback) {
     if (mongo) return callback();
-    lmongoclient.connect(function(_mongo) {
+    lmongo.init('synclets', [], function(_mongo) {
         mongo = _mongo;
+        colls = mongo.collections.synclets;
         callback();
     });
 }
 
 exports.addCollection = function(name, dir, id) {
     mongoIDs[dir + "_" + name] = id;
-    if(!mongo.collections[dir + "_" + name])
-        mongo.addCollection(dir + "_" + name);
+    if(!colls[dir + "_" + name])
+        mongo.addCollection('synclets', dir + "_" + name);
     if(!ijodFiles[dir + "_" + name])
         ijodFiles[dir + "_" + name] = new IJOD(name, dir);
-}
-
-function now() {
-    return new Date().getTime();
 }
 
 // arguments: type should match up to one of the mongo collection fields
@@ -79,62 +77,29 @@ exports.removeObject = function(type, id, options, callback) {
     })
 }
 
-
-// mongos
-function getMongo(type, id, callback) {
-    var m = mongo.collections[type];
-    if(!m) {
-        try {
-            mongo.addCollection(type);
-        } catch (E) {
-            return callback(E, []);
-        }
-        m = mongo.collections[type];
-    }
-    else if(!(id && (typeof id === 'string' || typeof id === 'number')))
-        return callback(new Error('bad id:' + id), null);
-    return m;
-}
-
 exports.queryCurrent = function(type, query, options, callback) {
     query = query || {};
     options = options || {};
-    var m = mongo.collections[type];
-    if(!m) {
-        mongo.addCollection(type);
-        m = mongo.collections[type];
-    }
+    var m = getMongo(type);
     m.find(query, options).toArray(callback);
 }
 
 exports.getAllCurrent = function(type, callback, options) {
     options = options || {};
-    var m = mongo.collections[type];
-    if(!m) {
-        try {
-            mongo.addCollection(type);
-        } catch (E) {
-            callback(E, []);
-            return;
-        }
-        m = mongo.collections[type];
-    }
+    var m = getMongo(type, callback);
     m.find({}, options).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
-    var m = getMongo(type, id, callback);
-    if(m && id) {
-        var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
-        m.findOne(query, callback);
-    } else {
-        callback('broke!', []);
-    }
+    if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
+    var m = getMongo(type, callback);
+    var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
+    m.findOne(query, callback);
 }
 
 function setCurrent(type, object, callback) {
-    if (type && object && callback) {
-        var m = getMongo(type, object[mongoIDs[type]], callback);
+    if (type && object && callback && object[mongoIDs[type]]) {
+        var m = getMongo(type, callback);
         if(m) {
             var query = {};
             query[mongoIDs[type]] = object[mongoIDs[type]];
@@ -170,4 +135,21 @@ function removeCurrent(type, id, callback) {
         query[mongoIDs[type]] = id;
         m.remove(query, callback);
     }
+}
+
+function getMongo(type, callback) {
+    var m = colls[type];
+    if(!m) {
+        try {
+            mongo.addCollection('synclets', type);
+        } catch (E) {
+            return callback(E, []);
+        }
+        m = colls[type];
+    }
+    return m;
+}
+
+function now() {
+    return new Date().getTime();
 }
