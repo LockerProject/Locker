@@ -38,11 +38,18 @@ vows.describe("Query System").addBatch({
             }
         }
     },
+    "Defining fields in the query" : {
+        topic: lpquery.parse("/getPhotos?fields=['_id','title']&offset=0"),
+        "generates a proper mongo query" : function(topic) {
+            var mongoQuery = lpquery.buildMongoQuery(topic);
+            assert.deepEqual(mongoQuery, {collection:"photos", fields:{'_id' : 1, 'title' : 1}, skip: 0, query: {}});
+        }
+    },
     "Advanced query operators" : {
         topic:lpquery.parse("/getPhotos?terms=[gt:21+, gte:22+., lt:20-, lte:19-., (key:1 OR key:2)]&limit=10"),
         "generate a valid parse tree":function(topic) {
             assert.deepEqual(topic, [ 'Photos',
-              { terms: 
+              { terms:
                  [ [ 'keyValue', 'gt', [ '+', 21 ] ],
                    [ 'keyValue', 'gte', [ '+.', 22 ] ],
                    [ 'keyValue', 'lt', [ '-', 20 ] ],
