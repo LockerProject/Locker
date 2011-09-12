@@ -24,7 +24,7 @@
         <span class="gray">\/</span></div>
       </div>
           <div id="nav-search">
-<form action="?" method="get">
+<form id="nav-search" action="?" method="get">
 <input placeholder="&nbsp;Search your contacts, links, photos" type="text" class="search" />
 <input type="submit" class="submit" value="Search" />
 </form>
@@ -57,6 +57,14 @@
   var is_ssl = ("https:" == document.location.protocol);
   var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
   document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+<script type="text/javascript" charset="utf-8">
+$('#nav-search').submit(function() {
+  alert('Handler for .submit() called.');
+  return false;
+});
+
 </script>
 
 <script type="text/javascript" charset="utf-8">
