@@ -55,7 +55,8 @@ function(req, res) {
     res.render('index', {
       error: null,
       homePath: '/Me/' + me.id,
-      searchPath: '/Me/' + me.id + '/search'
+      searchPath: '/Me/' + me.id + '/search',
+      term: ''
     });
 });
 
