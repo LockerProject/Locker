@@ -76,6 +76,16 @@ exports.getDashboard = function(arg, cbEach, cbDone) {
     getPages(arg, cbEach, cbDone);
 }
 
+exports.getPages = function(arg, cbEach, cbDone) {
+    if(!arg.blog) return cbDone("no blog");
+    arg.path = '/blog/'+arg.blog+'/posts';
+    delete arg.blog;
+    arg.field = 'posts';
+    arg.reblog_info = true;
+    arg.notes_info = true;
+    getPagesKey(arg, cbEach, cbDone);
+}
+
 function getOneKey(arg, cb)
 {
     if(!arg.path) return cb("no path");
@@ -122,6 +132,19 @@ function getPages(arg, cbEach, cbDone)
         if(js.response[arg.field].length < arg.limit) return cbDone(); // at the end
         arg.offset += arg.limit;
         return getPages(arg,cbEach,cbDone);
+    });
+}
+
+function getPagesKey(arg, cbEach, cbDone)
+{
+    if(!arg.offset) arg.offset = 0;
+    if(!arg.limit) arg.limit = 20;
+    getOneKey(arg, function(err, arr){
+        if(err || !arr || !Array.isArray(arr) || arr.length == 0) return cbDone(err);
+        for(var i = 0; i < arr.length; i++) cbEach(arr[i]);
+        if(arr.length < arg.limit) return cbDone(); // at the end
+        arg.offset += arg.limit;
+        return getPagesKey(arg,cbEach,cbDone);
     });
 }
 
