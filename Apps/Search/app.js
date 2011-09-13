@@ -59,7 +59,7 @@ function(req, res) {
     });
 });
 
-app.post('/search',
+app.get('/search',
 function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
