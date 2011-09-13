@@ -32,3 +32,11 @@ input.search {
 .count {
     color: #555;
 }
+
+footer.useui {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: #ccc;
+}
