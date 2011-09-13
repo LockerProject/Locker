@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var contacts = require('../Connectors/GoogleContacts/contacts');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
@@ -60,9 +60,9 @@ function pad(n){
 }
 function getISODateString(dt){
     return dt.getUTCFullYear() + '-' +
-           pad(dt.getUTCMonth() + 1) + '-' + 
-           pad(dt.getUTCDate()) + 'T' + 
-           pad(dt.getUTCHours()) + ':' + 
+           pad(dt.getUTCMonth() + 1) + '-' +
+           pad(dt.getUTCDate()) + 'T' +
+           pad(dt.getUTCHours()) + ':' +
            pad(dt.getUTCMinutes()) + ':' +
            pad(dt.getUTCSeconds()) + 'Z';
 }

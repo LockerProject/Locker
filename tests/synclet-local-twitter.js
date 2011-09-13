@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var friends = require('../Connectors/Twitter/friends');
 var timeline = require('../Connectors/Twitter/timeline');
 var tweets = require('../Connectors/Twitter/tweets');
@@ -58,7 +58,7 @@ suite.next().suite.addBatch({
             assert.equal(response.data.timeline[0].obj.id_str, '71348168469643264');
         }
     }
-    
+
 /*}).addBatch({
     "Can handle failwhale" : {
         topic: function() {
@@ -76,7 +76,7 @@ suite.next().suite.addBatch({
             // assert.equal(response.data.timeline.length, 0);
         }
     }
- */   
+ */
 }).addBatch({
     "Can get mentions" : {
         topic: function() {
@@ -95,7 +95,7 @@ suite.next().suite.addBatch({
             assert.equal(response.data.mentions[0].obj.id_str, '71348168469643264');
         }
     }
-    
+
 }).addBatch({
     "Can get tweets" : {
         topic: function() {

@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Links/dataStore');
 var dataIn = require('../Collections/Links/dataIn');
 var util = require('../Collections/Links/util');

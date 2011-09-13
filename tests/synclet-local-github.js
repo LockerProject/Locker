@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var users = require('../Connectors/GitHub/users');
 var repos = require('../Connectors/GitHub/repos');
 var assert = require("assert");

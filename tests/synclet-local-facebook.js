@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var friends = require('../Connectors/Facebook/friends');
 var home = require('../Connectors/Facebook/home');
 var photos = require('../Connectors/Facebook/photos');
@@ -45,7 +45,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/facebook/home.json' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
                 body :'{"data":[]}' });
-            
+
             home.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
@@ -53,7 +53,7 @@ suite.next().suite.addBatch({
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.home[0].obj.id, '100002438955325_224550747571079');
         }
-    }    
+    }
 }).addBatch({
     "Can get photos" : {
         topic: function() {
@@ -67,7 +67,7 @@ suite.next().suite.addBatch({
             // console.error('DEBUG: response', response.data);
             assert.equal(response.data.photo[0].obj.id, '214713967594');
         }
-    }    
+    }
 }).addBatch({
     "cleanup" : {
         topic: [],

@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var photos = require('../Connectors/Flickr/photos');
 var contacts = require('../Connectors/Flickr/contacts');
 var assert = require("assert");
