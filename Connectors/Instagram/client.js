@@ -119,7 +119,7 @@ app.get('/profile', function(req, res) {
 app.get('/getprofile',
 function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
-    fs.readFile('profile.json', 'utf-8', function(err, file) {  
+    fs.readFile('profile.json', 'utf8', function(err, file) {  
         if (err) {
             res.end();
             return;
@@ -147,7 +147,7 @@ function(req, res) {
 app.get('/getphotos',
 function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
-    fs.readFile('connections.json', 'utf-8', function(err, file) {  
+    fs.readFile('connections.json', 'utf8', function(err, file) {  
         if(err) {
             res.end();
             return;

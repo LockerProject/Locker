@@ -65,7 +65,7 @@ exports.providers = function(types) {
 * Map a meta data file JSON with a few more fields and make it available
 */
 function mapMetaData(file, type, installable) {
-    var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    var metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
@@ -143,7 +143,7 @@ exports.scanDirectory = function(dir, installable) {
 function mergedManifest(dir)
 {
     // Don't use metainfo here because we aren't fully setup
-    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
     var serviceInfo = {};
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == js.srcdir) {
@@ -224,7 +224,7 @@ exports.migrate = function(installedDir, metaData) {
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
                         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), JSON.stringify(curMe, null, 4));
@@ -382,7 +382,6 @@ exports.spawn = function(serviceId, callback) {
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
     app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
-    app.stdout.setEncoding("utf8");
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;

@@ -135,7 +135,7 @@ stdin.on('data', function (chunk) {
     // try stealing imap's auth to get going
     lcrypto.loadKeys(function(){
         try {
-            var authData = JSON.parse(fs.readFileSync('../imap/auth.json', 'utf-8'));
+            var authData = JSON.parse(fs.readFileSync('../imap/auth.json', 'utf8'));
             if(authData && authData.hasOwnProperty('username') && authData.hasOwnProperty('password') && authData.hasOwnProperty('host') && authData.hasOwnProperty('port'))
             {
                     authData.username = lcrypto.decrypt(authData.username);

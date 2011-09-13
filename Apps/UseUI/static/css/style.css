@@ -44,8 +44,8 @@ background: linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%);
 .header .home-logo {
     float: left;
 /*     clear: left; */
-    margin-left: 10px;
-    margin-top: 9px;
+    margin-left: 25px;
+    margin-top: 5px;
     cursor: pointer;
 }
 

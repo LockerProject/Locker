@@ -45,7 +45,7 @@ exports.isAuthed = function() {
             return true;
         }
     
-        var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
+        var authData = JSON.parse(fs.readFileSync('auth.json', 'utf8'));
         console.error('DEBUG: authData', authData);
         if(authData.hasOwnProperty('username') && 
            authData.hasOwnProperty('password') && 

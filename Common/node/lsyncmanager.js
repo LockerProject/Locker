@@ -58,7 +58,7 @@ exports.findInstalled = function (callback) {
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
             if(!path.existsSync(dir+'/me.json')) continue;
-            var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+            var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
             if (js.synclets) {
                 exports.migrate(dir, js);
                 console.log("Loaded synclets for "+js.id);
@@ -401,7 +401,7 @@ exports.migrate = function(installedDir, metaData) {
 * Map a meta data file JSON with a few more fields and make it available
 */
 function mapMetaData(file) {
-    var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    var metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
     metaData.srcdir = path.dirname(file);
     synclets.available.push(metaData);
     return metaData;

@@ -14,7 +14,7 @@ var fs = require('fs'),
     request = require('request'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
-    
+
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
 var util = require("./util"); // handy things for anyone and used within dataIn
@@ -83,7 +83,7 @@ app.get('/search', function(req, res) {
 app.get('/update', function(req, res) {
     dataIn.reIndex(locker, function(){
         res.writeHead(200);
-        res.end('Extra mince!');        
+        res.end('Extra mince!');
     });
 });
 
@@ -137,7 +137,7 @@ function genericApi(name,f)
                 res.end(JSON.stringify(results));
             }
         });
-    });   
+    });
 }
 
 // expose way to get raw links and encounters
@@ -151,7 +151,7 @@ app.get('/getLinksFull', function(req, res) {
     if (req.query.offset) {
         options.offset = parseInt(req.query.offset);
     }
-    dataStore.getLinks(options, function(item) { results.push(item); }, function(err) { 
+    dataStore.getLinks(options, function(item) { results.push(item); }, function(err) {
         async.forEach(results, function(link, callback) {
             link.encounters = [];
             dataStore.getEncounters({"link":link.link}, function(encounter) {
@@ -186,14 +186,15 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link,mongo.collections.encounter);
+        dataStore.init(mongo.collections.link,mongo.collections.encounter,mongo.collections.queue);
         search.init(dataStore);
         dataIn.init(locker, dataStore, search);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
         });
+        dataIn.loadQueue();
     });
 });

@@ -18,7 +18,7 @@ var fs = require('fs'),
  * Appends an array of objects as lined-delimited JSON to the file at the specified path
  */
 exports.appendObjectsToFile = function(path, objects) {
-    var stream = fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf-8'});
+    var stream = fs.createWriteStream(path, {'flags':'a', 'encoding': 'utf8'});
     for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
     stream.end();
@@ -28,7 +28,7 @@ exports.appendObjectsToFile = function(path, objects) {
  * Writes an array of objects as lined-delimited JSON to the file at the specified path
  */
 exports.writeObjectsToFile = function(path, objects) {
-    var stream = fs.createWriteStream(path, {'encoding': 'utf-8'});
+    var stream = fs.createWriteStream(path, {'encoding': 'utf8'});
     for(var i = 0; i < objects.length; i++)
         stream.write(JSON.stringify(objects[i]) + '\n');
     stream.end();
@@ -38,7 +38,7 @@ exports.writeObjectsToFile = function(path, objects) {
  * Reads an array of objects as lined-delimited JSON from the file at the specified path
  */
 exports.readObjectsFromFile = function(path, callback) {
-    var stream = fs.createReadStream(path, {'encoding': 'utf-8'});
+    var stream = fs.createReadStream(path, {'encoding': 'utf8'});
     var data = "";
     stream.on('data', function(newData) {
         data += newData;
@@ -61,7 +61,7 @@ exports.readObjectsFromFile = function(path, callback) {
  * Reads an array of objects as lined-delimited JSON from the file at the specified path
  */
 exports.readObjectFromFile = function(path, callback) {
-    var stream = fs.createReadStream(path, {'encoding': 'utf-8'});
+    var stream = fs.createReadStream(path, {'encoding': 'utf8'});
     var data = "";
     stream.on('data', function(newData) {
         data += newData;
