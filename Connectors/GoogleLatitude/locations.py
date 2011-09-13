@@ -32,7 +32,7 @@ def sync(process_info):
             'auth' : auth,
             'config' : { 'updateState' : update_state, },
             'data' : {
-                'locations' : [ dress_up_location(l) for l in locations ],
+                'location' : [ dress_up_location(l) for l in locations ],
             },
     }
     return return_info

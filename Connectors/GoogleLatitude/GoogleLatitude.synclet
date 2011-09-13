@@ -11,6 +11,9 @@
     "provides": [
         "location/glatitude"
     ],
+    "mongoId" : {
+        "locations": "timestampMs"
+    },
     "provider": "glatitude",
     "provider_args": {
         "scope": "https://www.googleapis.com/auth/latitude.all.best"
