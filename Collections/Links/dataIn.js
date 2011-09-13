@@ -94,7 +94,7 @@ var encounterQueue = async.queue(function(e, callback) {
     util.extractUrls({text:e.text},function(u){ urls.push(u); }, function(err){
         if(err) return callback(err);
         // for each one, run linkMagic on em
-        if (urls.length === 0) return callback();
+        if (urls.length === 0) return dataStore.dequeue(e, callback);
         async.forEach(urls,function(u,cb){
             linkMagic(u,function(link){
                 // make sure to pass in a new object, asyncutu
