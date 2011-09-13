@@ -2,6 +2,9 @@
 
 body {
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+  margin-left: 20px;
+  margin-right: 20px;
+  padding: 0px;
 }
 
 h1, h2, h3 {
