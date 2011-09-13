@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>the locker project</title>
   <link rel="stylesheet" href="css/reset.css" />
@@ -10,17 +10,24 @@
 <body class="app-page">
 
   <div class="header">
-    <a class="back-button" href="index.html"><img src="img/home.png"></a>
+    <a class="home-logo" href="index.html"><img src="img/tlp_logo.png"></a>
     <div class="app-links">
-      <a class="app-link" id="photos" href="#photos">PHOTOS</a>
-      <a class="app-link" id="contacts" href="#contacts">CONTACTS</a>
-      <a class="app-link" id="links" href="#links">LINKS</a>
-      <a class="app-link" id="search" href="#search">SEARCH</a>
+      <a class="app-link" id="photos" href="#photos">photos</a>
+      <a class="app-link" id="contacts" href="#contacts">contacts</a>
+      <a class="app-link" id="links" href="#links">links</a>
+<!--       <a class="app-link" id="search" href="#search">search</a> -->
+      <img class="divider" src="img/divider.png">
     </div>
-    <div class="services-box-container">
+<div class="services-box-container">
       <div class="services-box">SERVICES
         <span class="gray">\/</span></div>
       </div>
+          <div id="nav-search">
+<form id="nav-search" action="?" method="get">
+<input placeholder="&nbsp;Search your contacts, links, photos" type="text" class="search" />
+<input type="submit" class="submit" value="Search" />
+</form>
+</div>
     </div>
   </div>
   <div id="services">
@@ -45,28 +52,20 @@
 <script src="/static/js/jquery-1.6.1.min.js"></script>
 <script type="text/javascript" src="js/app.js"></script>
 <script src="js/spin.min.js"></script>
-<script type="text/javascript" charset="utf-8">
+<script type="text/javascript" charset="UTF-8">
   var is_ssl = ("https:" == document.location.protocol);
   var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
   document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
 
-<script type="text/javascript" charset="utf-8">
-  var feedback_widget_options = {};
 
+<script type="text/javascript" charset="UTF-8">
+ var feedback_widget_options = {};
   feedback_widget_options.display = "overlay";
   feedback_widget_options.company = "locker_project";
   feedback_widget_options.placement = "bottom";
   feedback_widget_options.color = "#222";
   feedback_widget_options.style = "question";
-
-
-
-
-
-
-
-
   var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
 </script>
 </html>

@@ -14,5 +14,10 @@ $(document).ready(
         $('#main .box').mouseleave(function() {
             $(this).removeClass('clicked');
         });
+        $('#nav-search').submit(function() {
+            alert('Handler for .submit() called.');
+            return false;
+         });
+
     }
 );

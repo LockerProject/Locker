@@ -14,7 +14,7 @@ lconfig.load('../../Config/config.json');
 
 var fs = require('fs'),
     locker = require('locker.js');
-    
+
 var sync = require('./sync');
 var dataStore = require("./dataStore");
 
@@ -32,16 +32,6 @@ app.get('/', function(req, res) {
     dataStore.getTotalCount(function(err, countInfo) {
         res.write('<html><p>Found '+ countInfo +' contacts</p><a href="update">refresh from connectors</a></html>');
         res.end();
-    });
-});
-
-app.get('/allMinimal', function(req, res) {
-    var offset = req.param('offset') ? req.param('offset') : 0;
-    var limit = req.param('limit') ? req.param('limit') : 250;
-    dataStore.getMinimal(offset, limit, function(err, cursor) {
-        cursor.toArray(function(err, items) {
-            res.end(JSON.stringify(items));
-        });
     });
 });
 
@@ -69,7 +59,7 @@ app.get('/allContacts', function(req, res) {
 app.get('/update', function(req, res) {
     sync.gatherContacts(function(){
         res.writeHead(200);
-        res.end('Updating');        
+        res.end('Updating');
     });
 });
 
@@ -80,14 +70,14 @@ app.post('/events', function(req, res) {
         res.end('bad data');
         return;
     }
-    
+
     dataStore.addEvent(req.body, function(err, eventObj) {
         if (err) {
             res.writeHead(500);
             res.end(err);
         } else {
             if (eventObj) {
-                
+
                 locker.event("contact/full", eventObj);
             }
             res.writeHead(200);
@@ -114,13 +104,13 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.contacts, mongo);
         app.listen(lockerInfo.port, 'localhost', function() {
             process.stdout.write(data);
             sync.eventEmitter.on('contact/full', function(eventObj) {
-                locker.event('contact/full', eventObj);     
+                locker.event('contact/full', eventObj);
             });
             // gatherContacts();
         });

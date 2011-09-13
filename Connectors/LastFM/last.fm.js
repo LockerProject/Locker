@@ -89,7 +89,7 @@ function now() {
 
 function readMeta(user) {
     try {
-        return JSON.parse(fs.readFileSync('my/' + user + '/meta.json', 'utf-8'));
+        return JSON.parse(fs.readFileSync('my/' + user + '/meta.json', 'utf8'));
     } catch(err) { 
         return {'newest':0}
     }
@@ -112,7 +112,7 @@ function writeTracks(user) {
     stream.end();
     var meta = {"newest":newest};
     if(debug) console.log('meta: ' + JSON.stringify(meta));
-    fs.writeFileSync('my/' + user + '/meta.json', JSON.stringify(meta), 'utf-8');
+    fs.writeFileSync('my/' + user + '/meta.json', JSON.stringify(meta), 'utf8');
 }
 
 

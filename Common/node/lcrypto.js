@@ -43,10 +43,10 @@ exports.loadKeys = function(callback) {
                 symKey = fs.readFileSync(__dirname + "/../../" + lconfig.me + "/symKey", "utf8");
             path.exists(__dirname + "/../../" + lconfig.me + "/key", function(exists) {
                 if (exists === true)
-                    idKey = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key','utf-8');
+                    idKey = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key','utf8');
                 path.exists(__dirname + "/../../" + lconfig.me + "/key.pub", function(exists) {
                     if (exists === true)
-                        idKeyPub = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key.pub','utf-8');
+                        idKeyPub = fs.readFileSync(__dirname + '/../../' + lconfig.me + '/key.pub','utf8');
                     if(typeof callback === 'function')
                         callback();
                 });

@@ -176,7 +176,7 @@ var npm = require('npm');
                     var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
                         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));

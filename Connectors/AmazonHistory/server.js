@@ -23,7 +23,7 @@ var app = express.createServer(
 
 var resCount=0;
 function readJSON(res,file) {
-    var data = fs.readFileSync(file, "utf-8");
+    var data = fs.readFileSync(file, "utf8");
     var lines = data.split('\n');
     res.write("found "+lines.length+" entries in "+file);
     resCount--;

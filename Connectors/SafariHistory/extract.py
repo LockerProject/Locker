@@ -6,7 +6,7 @@
 #
 
 #!/usr/bin/env python
-# encoding: utf-8
+# encoding: UTF-8
 """
 untitled.py
 

@@ -41,7 +41,7 @@ $(function() {
     });
 
     // View used for details, overview
-    var SideView = Backbone.View.extend({ 
+    var SideView = Backbone.View.extend({
         el: $('aside div.detail'),
 
         events: {},
@@ -58,7 +58,7 @@ $(function() {
     });
 
     // List View for Contacts
-    var ListView = Backbone.View.extend({ 
+    var ListView = Backbone.View.extend({
         el: $('body'), // attaches `this.el` to an existing element.
 
         _s: {
@@ -105,7 +105,7 @@ $(function() {
             $(ev.currentTarget).addClass('clicked');
             this.drawDetailsPane(cid);
         },
-        
+
         drawDetailsPane: function(cid) {
             displayedContact = cid;
             var self = this;
@@ -119,7 +119,7 @@ $(function() {
                 self.updateDetails(model.get('detailedData'));
             }
         },
-        
+
         hideDetailsPane: function() {
             displayedContact = '';
             $('aside').css('z-index', -1);
@@ -210,11 +210,13 @@ $(function() {
         load: function load(callback) {
             $('#loader').show();
             var that = this;
-            var baseURL = '/Me/contacts';
+            var baseURL = '/query/getContact';
+            var fields = "['_id','addresses','emails','name','phoneNumbers','photos','accounts.facebook.data.link'," +
+                         "'accounts.foursquare.data.id','accounts.github.data.login','accounts.twitter.data.screen_name']";
             var offset = 0;
 
             (function getContactsCB() {
-                $.getJSON(baseURL + '/allMinimal', {offset:offset, limit: 250}, function(contacts) {
+                $.getJSON(baseURL, {offset:offset, limit: 250, fields: fields}, function(contacts) {
                     if (contacts.length === 0) {
                         $('#loader').hide();
                         return callback();
@@ -497,9 +499,9 @@ $(function() {
 
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
-            
+
             countEl.html(tmp.length);
-            
+
             if ($('.contact').length === 1) {
                 this.drawDetailsPane($('.contact').data('cid'));
                 $('.contact').addClass('clicked');

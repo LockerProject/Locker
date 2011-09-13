@@ -5,10 +5,10 @@
     "status":"stable",
     "handle":"links",
     "provides":["link"],
-    "mongoCollections": ["link","encounter"],
+    "mongoCollections": ["link","encounter","queue"],
     "events":[["link/facebook","/events"]
-		,["link/twitter","/events"]
-		,["timeline/twitter","/events"]
-		,["home/facebook","/events"]
-		]
+        ,["link/twitter","/events"]
+        ,["timeline/twitter","/events"]
+        ,["home/facebook","/events"]
+    ]
 }
