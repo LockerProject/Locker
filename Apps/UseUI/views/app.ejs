@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><% if (hostedEnv === 'singly') { %>singly<% } else { %>the locker project<% } %></title>
+  <title><%= dashboard.title %></title>
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="/static/css/global.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -13,11 +13,7 @@
 
   <div class="header">
     <a class="home-logo" href="app.html">
-		<% if (hostedEnv === 'singly') { %>
-			<img src="img/singly_logo.png"></a>
-		<% } else { %>
-			<img src="img/tlp_logo.png"></a>
-		<% } %>
+		<img src="<%= dashboard.logo %>"></a>
     <div class="app-links">
       <a class="app-link" id="photos" href="#photos" title='Loading photo count...'>PHOTOS</a>
       <a class="app-link" id="contacts" href="#contacts" title='Loading contacts count...'>CONTACTS</a>
@@ -65,11 +61,7 @@
 
 
 <footer>
-<% if (hostedEnv === 'singly') { %>
-	<a href="http://singly.com/#about" target="_blank">About Singly</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a>
-<% } else { %>
-	<a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a>
-<% } %>
+	<%- dashboard.footerHTML %>
 </footer>
 
 <script src="/static/js/jquery-1.6.1.min.js"></script>

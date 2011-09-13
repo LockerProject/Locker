@@ -12,5 +12,10 @@
         "dataDir": "mongodata",
         "host": "localhost",
         "port": 27018
-    }
+    },
+		"dashboard" : {
+				"title": "the locker project",
+				"logo": "img/tlp_logo.png",
+				"footerHTML": '<a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a>'
+		}
 }
