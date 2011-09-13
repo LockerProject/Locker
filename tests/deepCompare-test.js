@@ -20,5 +20,11 @@ vows.describe("Deep Compare function").addBatch({
         'successfully': function(topic) {
             assert.isFalse(topic);
         }
+    },
+    "Doesn't break if you pass a null object" : {
+        topic: deepCompare(obj1, null),
+        'successfully': function(topic) {
+            assert.isFalse(topic);
+        }
     }
 }).export(module);
