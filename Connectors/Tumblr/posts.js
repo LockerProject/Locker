@@ -24,16 +24,15 @@ exports.sync = function(processInfo, cb) {
     var me;
     tumblr.getMe({},function(js){ me=js}, function(err){
     	if(err || !me) return cb(err, responseObj);
-    });
-
-    var posts = [];
-    tumblr.getPosts({blog:me.primary, since_id:since}, function(post){
-        posts.push({'obj' : post, timestamp: new Date(), type : 'new'});
-        if(post.id > since) since = post.id;
-    }, function(err) {
-            if (err) console.error(err);
-            responseObj.data.posts = posts;
-            responseObj.config.updateState = {posts:{since:since}};            
-            cb(err, responseObj);
+        var posts = [];
+        tumblr.getPosts({blog:me.host, since_id:since}, function(post){
+            posts.push({'obj' : post, timestamp: new Date(), type : 'new'});
+            if(post.id > since) since = post.id;
+        }, function(err) {
+                if (err) console.error(err);
+                responseObj.data.post = posts;
+                responseObj.config.updateState = {posts:{since:since}};            
+                cb(err, responseObj);
+        });
     });
 }

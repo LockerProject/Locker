@@ -11,6 +11,7 @@ var fs = require('fs'),
     request = require('request'),
     async = require('async'),
     url = require('url'),
+    crypto = require("crypto"),
     sys = require('sys');
 
     
@@ -76,7 +77,7 @@ exports.getDashboard = function(arg, cbEach, cbDone) {
     getPages(arg, cbEach, cbDone);
 }
 
-exports.getPages = function(arg, cbEach, cbDone) {
+exports.getPosts = function(arg, cbEach, cbDone) {
     if(!arg.blog) return cbDone("no blog");
     arg.path = '/blog/'+arg.blog+'/posts';
     delete arg.blog;
@@ -126,8 +127,12 @@ function getPages(arg, cbEach, cbDone)
     arg.token = auth.token;
     if(!arg.offset) arg.offset = 0;
     if(!arg.limit) arg.limit = 20;
+    if(arg.since_id == 0) delete arg.since_id; // apparently sending a 0 drastically changes the result set selection, for dashboard at least
     tumblr.apiCall('GET', arg.path, arg, function(err, js){
         if(err || !js || !js.meta || js.meta.status != 200 || !js.response || !Array.isArray(js.response[arg.field]) || js.response[arg.field].length == 0) return cbDone(err);
+        var hash = crypto.createHash("sha1").update(JSON.stringify(js.response[arg.field][0])).digest('hex');
+        if(arg.dup === hash) return cbDone(); // tumblr keeps returning stuff even when increasing offset, have to dup check
+        arg.dup = hash;
         for(var i = 0; i < js.response[arg.field].length; i++) cbEach(js.response[arg.field][i]);
         if(js.response[arg.field].length < arg.limit) return cbDone(); // at the end
         arg.offset += arg.limit;

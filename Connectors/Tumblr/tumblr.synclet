@@ -2,6 +2,9 @@
     "title":"Tumblr Account",
     "status":"stable",
     "provider":"tumblr",
-    "provides":["status/tumblr","contact/tumblr","photo/tumblr"],
-    "synclets":[{"name": "following", "frequency": 3600},{"name": "dashboard", "frequency": 120},{"name": "posts", "frequency": 600}]
+    "provides":["dashboard/tumblr","post/tumblr","contact/tumblr"],
+    "mongoId" : {
+        "contacts":"name"
+    },
+    "synclets":[{"name": "contacts", "frequency": 3600},{"name": "dashboard", "frequency": 120},{"name": "posts", "frequency": 600}]
 }
