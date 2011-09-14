@@ -18,7 +18,8 @@
 
   <div class="header">
     <a class="home-logo" href="app.html">
-		<img src="img/<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>tlp_logo.png<% } %>"></a>
+			<img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
+		</a>
     <div class="app-links">
       <a class="app-link" id="photos" href="#photos" title='Loading photo count...'>PHOTOS</a>
       <a class="app-link" id="contacts" href="#contacts" title='Loading contacts count...'>CONTACTS</a>
