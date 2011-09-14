@@ -239,9 +239,16 @@ function executeSynclet(info, synclet, callback) {
 
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
-    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
+    app.stdin.on('error',function(err){
+        console.error("stdinerr:",err);
+    });
+    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information        
     delete info.syncletToRun;
 };
+
+process.on('uncaughtException',function(e){
+   console.error("UCE: ",e); 
+});
 
 function compareIDs (originalConfig, newConfig) {
     var resp = {};
