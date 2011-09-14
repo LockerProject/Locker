@@ -3,11 +3,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
-	<% if (dashboard && dashboard.customTitle) { %>
-		<%= dashboard.customTitle %>
-	<% } else {%>
-		the locker project
-	<% } %></title>
+  <% if (dashboard && dashboard.customTitle) { %>
+    <%= dashboard.customTitle %>
+  <% } else {%>
+    the locker project
+  <% } %></title>
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="/static/css/global.css" />
   <link rel="stylesheet" href="css/style.css" />
@@ -17,9 +17,9 @@
 <body class="app-page">
 
   <div class="header">
-    <a class="home-logo" href="app.html">
-			<img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
-		</a>
+    <a class="home-logo" href="index.html">
+      <img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
+    </a>
     <div class="app-links">
       <a class="app-link" id="photos" href="#photos" title='Loading photo count...'>PHOTOS</a>
       <a class="app-link" id="contacts" href="#contacts" title='Loading contacts count...'>CONTACTS</a>
@@ -66,11 +66,11 @@
   </div>
 
 <footer class="useui">
-	<% if (customFooter) { %>
-		<%- customFooter %>
-	<% } else { %>
-		<a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a> | <a href="https://github.com/LockerProject/Locker/commit/<%= revision %>">ver: <%= revision %></a>
-	<% } %>
+  <% if (customFooter) { %>
+    <%- customFooter %>
+  <% } else { %>
+    <a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a> | <a href="https://github.com/LockerProject/Locker/commit/<%= revision %>">ver: <%= revision %></a>
+  <% } %>
 </footer>
 
 <script src="/static/js/jquery-1.6.1.min.js"></script>
