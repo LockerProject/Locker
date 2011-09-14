@@ -38,7 +38,7 @@
         "clucene": "=0.1.2",
         "jade": "= 0.15.4",
         "airbrake": "=0.2.2",
-        "node-fakeweb": "=0.0.1",
+        "node-fakeweb": "=0.0.2",
 
 
         "hashish": "=0.0.4",
