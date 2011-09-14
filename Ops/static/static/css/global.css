@@ -2,8 +2,8 @@
 
 body {
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
-  margin-left: 20px;
-  margin-right: 20px;
+  margin-left: 25px;
+  margin-right: 25px;
   padding: 0px;
 }
 
@@ -31,4 +31,8 @@ input.search {
 
 .count {
     color: #555;
+}
+
+#nav-search {
+    overflow: hidden;
 }

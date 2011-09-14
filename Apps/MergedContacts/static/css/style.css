@@ -241,7 +241,7 @@ aside div.detail div {
 
 #searchBox #count {
     color: #fff;
-    width: 20px;
+    width: 100px;
     height: 0;
     font-size: 14px;
     font-family:'nevisBold';
@@ -426,7 +426,6 @@ a.email {
     -moz-box-shadow:inset 0 1px #ccc, inset 0 -1px 2px #999, 0 0 0 0.5px rgba(102,102,102,0.45);
     -webkit-box-shadow:inset 0 1px #ccc, inset 0 -1px 2px #999, 0 0 0 0.5px rgba(102,102,102,0.45);
     padding:4px;
-    width:400px;
     margin: 0px 20px 0px 20px;
 }
  
@@ -443,7 +442,16 @@ a.email {
 }
  
 #search_box input,
-#search_box input:focus { border:none; color:#999; outline:none; font: 14px 'MuliRegular', Helvetica, Arial, sans-serif; margin:11px 0; width:335px; }
+#search_box input:focus { 
+    border:none; 
+    color:#999; 
+    outline:none; 
+    font: 14px 'MuliRegular', Helvetica, Arial, sans-serif; 
+    margin:11px 0; 
+    width:335px; 
+    overflow: hidden; 
+}
+
 #search_box button {
     background:-moz-linear-gradient(top, #453e26, #000);
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#453e26), to(#000));
@@ -457,7 +465,7 @@ a.email {
     position:absolute;
     right:2px;
     top:2px;
-    width:45px;
+    width:0px;
 }
 
 
