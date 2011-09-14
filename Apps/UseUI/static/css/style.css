@@ -264,7 +264,7 @@ display:none;
 .services-box {
     cursor: pointer;
     float: right;
-    margin-right: 50px;
+    margin-right: 150px;
     background-color: #67abdc;
     margin-top: 27px;
     padding: 5px;
@@ -364,6 +364,32 @@ display:none;
     height: 100%;
 }
 
+#counters {
+    position:absolute;
+    right:20px;
+    top:6px;
+    font-size:10px;
+}
 
+.tooltip {
+    display:none;
+    background:transparent url(../img/white_arrow.png) no-repeat;
+    font-size:80%;
+    height:122px;
+    width:209px;
+}
 
+.tooltip div {
+    margin:12px;
+    margin-top:45px;
+    word-wrap:break-word;
+    color:#000;
+    text-align:center; 
+    font-weight: bold;
+}
 
+.tooltip .lastUpdated {
+    font-size: 10px;
+    margin-top: 10px;
+    font-weight: normal;
+}

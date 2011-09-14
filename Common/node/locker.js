@@ -27,8 +27,8 @@ exports.initClient = function(instanceInfo) {
     var meData = fs.readFileSync(instanceInfo.workingDirectory + "/me.json");
     var svcInfo = JSON.parse(meData);
     localServiceId = svcInfo.id;
-    lockerBase = instanceInfo.lockerUrl;
-    baseServiceUrl = lockerBase + "/core/" + localServiceId;
+    exports.lockerBase = instanceInfo.lockerUrl;
+    baseServiceUrl = exports.lockerBase + "/core/" + localServiceId;
     if(instanceInfo.mongo) {
         lmongoclient = require(__dirname + '/lmongoclient')(instanceInfo.mongo.host, instanceInfo.mongo.port, 
                                                             localServiceId, instanceInfo.mongo.collections);
@@ -62,14 +62,14 @@ exports.makeRequest = function(httpOpts, body, callback) {
 };
 
 exports.map = function(callback) {
-    request.get({url:lockerBase + "/map"}, function(error, res, body) {
+    request.get({url:exports.lockerBase + "/map"}, function(error, res, body) {
         callback(error, body ? JSON.parse(body) : undefined);
     });
 };
 
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
-    request.get({url:lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, 
+    request.get({url:exports.lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})}, 
     function(error, res, body) {
         callback(error, body ? JSON.parse(body) : undefined);
     });
@@ -102,6 +102,14 @@ exports.event = function(type, obj, action) {
  */
 exports.listen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})}, 
+    function(error, response, body) {
+        if(error) sys.debug(error);
+        if(callbackFunction) callbackFunction(error);
+    });
+};
+
+exports.deafen = function(type, callbackEndpoint, callbackFunction) {
+    request.get({url:baseServiceUrl + '/deafen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})}, 
     function(error, response, body) {
         if(error) sys.debug(error);
         if(callbackFunction) callbackFunction(error);

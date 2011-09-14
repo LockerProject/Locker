@@ -38,12 +38,14 @@ app.get('/', function(req, res) {
 });
 
 app.get('/state', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'application/json'
-    });
     dataStore.getTotalLinks(function(err, countInfo) {
-        res.write('{"updated":'+new Date().getTime()+',"ready":1,"count":'+ countInfo +'}');
-        res.end();
+        if(err) return res.send(err, 500);
+        var updated = new Date().getTime();
+        try {
+            var js = JSON.parse(fs.readFileSync('state.json'));
+            if(js && js.updated) updated = js.updated;
+        } catch(E) {}
+        res.send({ready:1, count:countInfo, updated:updated});
     });
 });
 

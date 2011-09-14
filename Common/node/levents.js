@@ -21,6 +21,11 @@ var processingEvents = {}; // just a map of arrays of the service events that ar
 exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
+    // Remove the previous listener for the id
+    eventListeners[type] = eventListeners[type].filter(function(entry) {
+        if (entry["id"] == id) return false;
+        return true;
+    });
     eventListeners[type].push({"id":id, "cb":cb});
 }
 

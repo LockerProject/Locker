@@ -2,6 +2,7 @@
     "lockerHost" : "localhost",
     "lockerPort" : 8043,
     "me" : "Data",
+    "ui":"useui",
     "scannedDirs" : ["Apps", "Connectors", "Collections", "Tests"],
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
@@ -26,6 +27,7 @@
         "collections" : ["sync-contacts-test.js",
                          "collection-photos-test.js",
                          "collection-links-test.js"],
+        "apps" : ["app-useui-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
     "displayUnstable" : true,

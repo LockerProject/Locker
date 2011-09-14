@@ -7,6 +7,7 @@
 *
 */
 var logger = require(__dirname + "/../../Common/node/logger").logger;
+var fs = require('fs');
 
 // in the future we'll probably need a visitCollection too
 var linkCollection, encounterCollection, queueCollection;
@@ -91,12 +92,25 @@ function findWrap(a,b,c,cbEach,cbDone){
     });
 }
 
+var writeTimer = false;
+function updateState()
+{
+    if (writeTimer) {
+        clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(function() {
+        try {
+            fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+        } catch (E) {}
+    }, 5000);    
+}
 
 // insert new (fully normalized) link, ignore or replace if it already exists?
 // {link:"http://foo.com/bar", title:"Foo", text:"Foo bar is delicious.", favicon:"http://foo.com/favicon.ico"}
 exports.addLink = function(link, callback) {
 //    logger.debug("addLink: "+JSON.stringify(link));
     linkCollection.findAndModify({"link":link.link}, [['_id','asc']], {$set:link}, {safe:true, upsert:true, new: true}, callback);
+    updateState();
 }
 
 exports.updateLinkAt = function(link, at, callback) {
