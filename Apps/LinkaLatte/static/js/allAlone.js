@@ -200,7 +200,7 @@ function updateLinkCount() {
             setTimeout(updateLinkCount, 10000);
         },
         success: function(data) {
-            $("#linkCounter").text(data.count + " total");
+            $("#linkCounter").text(data.count + " links");
         }
       });
 }

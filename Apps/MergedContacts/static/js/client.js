@@ -62,7 +62,7 @@ $(function() {
         el: $('body'), // attaches `this.el` to an existing element.
 
         _s: {
-            searchIndicator: "search your contacts"
+            searchIndicator: "Search..."
         },
 
         sortType: "firstname",
@@ -80,7 +80,7 @@ $(function() {
         searchChangeHandler: function() {
             var q = $("input#search").val();
             if (q.length > 0 && q != this._s.searchIndicator) {
-                this.render({q: q});
+                this.render({q: q})
             } else {
                 this.render();
             }
@@ -126,7 +126,7 @@ $(function() {
             $('#main').stop().animate({
                 marginRight: '0px'}, 750, function() {
                     $('.detail').hide();
-                });
+                })
             return $('.clicked').removeClass('clicked');
         },
 
@@ -154,12 +154,12 @@ $(function() {
                     firstname: names[0],
                     lastname: names[names.length - 1],
                     name: contact.name
-                });
+                })
             }
 
             newContact.set({
                 name: contact.name,
-                id: contact._id
+                id: contact._id,
             });
 
             // copy email
@@ -408,7 +408,7 @@ $(function() {
             // default to empty
             config = config || {};
             var filteredCollection,
-                contactsEl, countEl, contactTemplate, contactsHTML,
+                contactsEl, contactTemplate, contactsHTML,
                 searchFilter, addContactToHTML;
 
             var that = this;
@@ -500,9 +500,7 @@ $(function() {
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
 
-            var prependText = ' found';
-            if (typeof(config.q) == "undefined") prependText = ' total';
-            countEl.html(tmp.length + prependText);
+            countEl.html(tmp.length);
 
             if ($('.contact').length === 1) {
                 this.drawDetailsPane($('.contact').data('cid'));

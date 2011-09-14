@@ -42,40 +42,7 @@ $(document).ready(
             $('.selected').removeClass('selected');
             $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
             return false;
-        });
-        
-        
-        $(".app-link[title]").tooltip(
-            {
-                position:"bottom center",
-                predelay:750,
-                effect: 'fade',
-                onBeforeShow: function(ev) {
-                    var id = this.getTrigger().attr("id");
-                    // Chop off the s!
-                    id = id.substring(0, id.length - 1);
-                    var tip = $('.' + id + 'sTotalCount').text() + '<br /><div class="lastUpdated">';
-                    if (allCounts[id] && allCounts[id].lastUpdate) {
-                        var timeDiff = Date.now() - allCounts[id].lastUpdate;
-                        if (timeDiff < 60000) {
-                            tip += 'last updated less than a minute ago';
-                        } else if (timeDiff < 3600000) {
-                            tip += 'last updated ' + Math.floor(timeDiff / 60000) + ' minutes ago';
-                        } else if (timeDiff < 43200000) {
-                            tip += 'last updated over an hour ago';
-                        } else if (timeDiff < 43800000) {
-                            tip += 'last updated ' + Math.floor(timeDiff / 3600000) + ' hours ago';
-                        } else {
-                            var d = new Date;
-                            d.setTime(allCounts[id].lastUpdate);
-                            //log(allCounts);
-                            tip += 'last updated ' + d.toString();
-                        }
-                        tip += '</div>';
-                    }
-                    this.getTip().html('<div>' + tip + '</div>');
-                }
-            });
+         });
 
         renderApp();
 
