@@ -1,5 +1,5 @@
 /* Generic log function for debugging. */
-var log = function(msg) { if (console && console.log) console.debug(msg); }
+var log = function(msg) { if (console && console.log) console.debug(msg); };
 
 /**
  * Reload the display (get photos, render them)
@@ -17,8 +17,8 @@ function reload(offset, limit, useJSON) {
     photos = photos.sort(function(lh, rh) {
         var rhc = parseInt(rh.timestamp);
         var lhc = parseInt(lh.timestamp);
-        console.log(rhc);
-        console.log(lhc);
+        log(rhc);
+        log(lhc);
         if (isNaN(rhc) || isNaN(lhc)) {
             console.dir(rh);
             console.dir(lh);
@@ -27,7 +27,7 @@ function reload(offset, limit, useJSON) {
         if (lhc > (Date.now() / 1000)) lhc = lhc / 1000;
         return rhc - lhc;
     });
-    console.log(photos);
+    log(photos);
 	// find the unordered list in our document to append to
         var photosList = $("#main");
 
@@ -36,6 +36,7 @@ function reload(offset, limit, useJSON) {
 	
 	// populate the list with our photos
 	if (photos.length == 0) photosList.append("<div>Sorry, no photos found!</div>");
+        var photo, title, photo;
         for (var i in photos) {
 	    photo = photos[i];
 	    
@@ -64,5 +65,5 @@ function reload(offset, limit, useJSON) {
 
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 9000, false);
+    reload(0, 100, false);
 });

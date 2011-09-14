@@ -36,6 +36,14 @@ $(document).ready(
             return false;
         });
 
+        $('#nav-search').submit(function() {
+            var inputText = $("#nav-search .search").val();
+            window.location.hash = "search";
+            $('.selected').removeClass('selected');
+            $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
+            return false;
+         });
+
         renderApp();
 
         $(window).resize(resizeFrame);

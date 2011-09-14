@@ -27,7 +27,7 @@ var syncManager = require('lsyncmanager')
   ;
 
 try{
-    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'ascii'))
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
 }catch(e){}
 
 if (lconfig.externalSecure) {

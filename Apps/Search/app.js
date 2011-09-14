@@ -55,11 +55,12 @@ function(req, res) {
     res.render('index', {
       error: null,
       homePath: '/Me/' + me.id,
-      searchPath: '/Me/' + me.id + '/search'
+      searchPath: '/Me/' + me.id + '/search',
+      term: ''
     });
 });
 
-app.post('/search',
+app.get('/search',
 function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);

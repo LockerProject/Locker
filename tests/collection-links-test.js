@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Links/dataStore');
 var dataIn = require('../Collections/Links/dataIn');
 var util = require('../Collections/Links/util');
@@ -19,7 +19,7 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/links';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['link','encounter'];
+var thecollections = ['link','encounter','queue'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = {};
@@ -38,7 +38,7 @@ suite.next().suite.addBatch({
 
             lmongo.init("links", thecollections, function(mongo, colls) {
                 process.chdir("." + mePath);
-                dataStore.init(colls.link, colls.encounter);
+                dataStore.init(colls.link, colls.encounter, colls.queue);
                 search.init(dataStore);
                 dataIn.init(locker, dataStore, search);
                 dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});

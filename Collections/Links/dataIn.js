@@ -37,7 +37,7 @@ exports.reIndex = function(locker,cb) {
                     });
                 }
             });
-        });        
+        });
     });
 }
 
@@ -63,7 +63,7 @@ function getLinks(getter, lurl, callback) {
     request.get({uri:lurl}, function(err, resp, body) {
         var arr;
         try{
-            arr = JSON.parse(body);            
+            arr = JSON.parse(body);
         }catch(E){
             return callback();
         }
@@ -76,14 +76,17 @@ function getLinks(getter, lurl, callback) {
     });
 }
 
-function processEncounter(e, cb) 
+function processEncounter(e, cb)
 {
-    encounterQueue.push(e, function(arg){
-        console.error("QUEUE SIZE: "+encounterQueue.length());        
-        cb(arg);
+    dataStore.enqueue(e, function() {
+        encounterQueue.push(e, function(arg){
+            console.error("QUEUE SIZE: "+encounterQueue.length());
+            cb();
+        });
     });
     console.error("QUEUE SIZE: "+encounterQueue.length());
 }
+
 var encounterQueue = async.queue(function(e, callback) {
     // do all the dirty work to store a new encounter
     var urls = [];
@@ -91,7 +94,7 @@ var encounterQueue = async.queue(function(e, callback) {
     util.extractUrls({text:e.text},function(u){ urls.push(u); }, function(err){
         if(err) return callback(err);
         // for each one, run linkMagic on em
-        if (urls.length === 0) return callback();
+        if (urls.length === 0) return dataStore.dequeue(e, callback);
         async.forEach(urls,function(u,cb){
             linkMagic(u,function(link){
                 // make sure to pass in a new object, asyncutu
@@ -104,9 +107,21 @@ var encounterQueue = async.queue(function(e, callback) {
                     });
                 }); // once resolved, store the encounter
             });
-        }, callback);
+        }, function() {
+            dataStore.dequeue(e, callback);
+        });
     });
 }, 5);
+
+exports.loadQueue = function() {
+    dataStore.fetchQueue(function(err, docs) {
+        for (var i = 0; i < docs.length; i++) {
+            encounterQueue.push(docs[i].obj, function(arg) {
+                console.error("QUEUE SIZE: " + encounterQueue.length());
+            });
+        }
+    });
+}
 
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){

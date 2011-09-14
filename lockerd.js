@@ -77,7 +77,7 @@ var npm = require('npm');
             }
             fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
         }
-        mongoProcess = spawn('mongod', ['--journal', '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
+        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                         '--port', lconfig.mongo.port]);
         mongoProcess.stderr.on('data', function(data) {
             console.error('mongod err: ' + data);
@@ -176,7 +176,7 @@ var npm = require('npm');
                     var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
                         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));

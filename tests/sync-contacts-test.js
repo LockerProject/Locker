@@ -3,7 +3,7 @@ var dataStore = require('../Collections/Contacts/dataStore.js');
 var assert = require("assert");
 var vows = require("vows");
 var currentDir = process.cwd();
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var mongoCollections;
 var svcId = 'contacts';
 
@@ -102,7 +102,7 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(resp, 7);
         }
-    }    
+    }
 }).addBatch({
     "Can pull in the contacts from twitter" : {
         topic : function() {
@@ -229,5 +229,5 @@ suite.next().suite.addBatch({
         }
     }
 });
-        
+
 suite.export(module);

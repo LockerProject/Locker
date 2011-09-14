@@ -1,5 +1,5 @@
 module.exports = function Equals(obj1, obj2) {
-    if (typeof(obj2) === 'undefined') {
+    if (typeof(obj2) === 'undefined' || obj2 === null) {
         return false;
     }
 

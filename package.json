@@ -34,11 +34,12 @@
         "unshortener": "=0.0.8",
         "readabilitySAX": "=0.2.2",
         "mongodb": "=0.9.6-13",
-        "winston": "=0.4.0",
+        "winston": "=0.5.0",
         "clucene": "=0.1.2",
         "socket.io": "=0.8.4",
         "jade": "= 0.15.4",
         "airbrake": "=0.2.2",
+        "node-fakeweb": "=0.0.2",
 
 
         "hashish": "=0.0.4",

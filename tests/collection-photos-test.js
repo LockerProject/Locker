@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Photos/dataStore');
 var sync = require('../Collections/Photos/sync');
 var assert = require("assert");

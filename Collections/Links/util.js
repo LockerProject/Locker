@@ -38,7 +38,7 @@ exports.extractUrls = function(arg, cbEach, cbDone) {
 exports.extractText = function(arg, cbEach, cbDone) {
     if(!arg.html) return cbDone("no html");
 
-	var contentLength = 0, skipLevel = 0, 
+	var contentLength = 0, skipLevel = 0,
 		parser, readable, ret;
 
     try{
@@ -55,7 +55,7 @@ exports.extractText = function(arg, cbEach, cbDone) {
     	    ret = readable.getArticle("text");
     	    contentLength = ret.textLength;
     	    skipLevel += 1;
-    	}        
+	}
     }catch(E){
         return cbDone(E);
     }
@@ -65,7 +65,7 @@ exports.extractText = function(arg, cbEach, cbDone) {
 	    // normalize all whitespace nicely
 	    if (ret.text) ret.text = ret.text.replace(/\s+/g, ' ');
 	    if (ret.title) ret.title = ret.title.replace(/\s+/g, ' ');
-    	cbEach(ret);
+        cbEach(ret);
 	}
 	cbDone();
 }
@@ -90,6 +90,6 @@ exports.fetchHTML = function(arg, cbEach, cbDone) {
 	    cbEach(body);
 	    cbDone();
 	});
-	
+
 }
 
