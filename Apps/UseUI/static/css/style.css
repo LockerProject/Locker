@@ -11,6 +11,20 @@ body {
     font-family: arial, helvetica, sans-serif;
 }
 
+footer {
+  	background-color: #BBB;
+	height: 24px;
+	text-align: center;
+	font-size: 0.8em;
+	padding: 6px 0 0 0;
+}
+
+footer a { 
+	color: #fff;	 
+	text-decoration: underline;
+	margin: 0 15px;
+}
+
 #fdbk_screen {
     height: 100% !important;
 }

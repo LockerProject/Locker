@@ -9,23 +9,50 @@
 
 var express = require('express'),
     connect = require('connect'),
+    path = require('path'),
     async = require('async'),
     fs = require('fs'),
     socketio = require('socket.io'),
     request = require('request');
 var logger = require("logger").logger;
 
+
 var externalBase;
 var locker;
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
-    app.use(express.static(__dirname + '/static'));
     app.listen(listenPort, callback);
-}
+};
 
 var app = express.createServer();
-app.use(connect.bodyParser());
+
+app.configure(function() {
+    app.set('views', __dirname + '/views');
+    app.set('view engine', 'ejs');
+    app.set('view options', {
+      layout: false
+    });
+    app.use(express.bodyParser());
+    app.use(express.static(__dirname + '/static'));
+});
+
+app.get('/app', 
+function(req, res) {
+    var lconfig = require('../../Common/node/lconfig.js');
+    lconfig.load('../../Config/config.json');
+    var rev = fs.readFileSync(path.join(lconfig.lockerDir, '/../', 'gitrev.json'), 'utf8');
+    var customFooter;
+    if (lconfig.dashboard && lconfig.dashboard.customFooter) {
+        customFooter = fs.readFileSync(__dirname + '/views/' + lconfig.dashboard.customFooter, 'utf8');
+    }
+    res.render('app', {
+        dashboard: lconfig.dashboard,
+        customFooter: customFooter,
+        revision: rev.substring(1,11)
+    });
+});
+
 // dumb defaults
 var options = { logger: {
    info: new Function(),
@@ -40,7 +67,7 @@ app.get('/apps', function(req, res) {
     var apps = {contacts: {url : externalBase + '/Me/contactsviewer/', id : 'contactsviewer'},
                 photos: {url : externalBase + '/Me/photosviewer/', id : 'photosviewer'},
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
-                search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}}
+                search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}};
     res.end(JSON.stringify(apps));
 });
 
