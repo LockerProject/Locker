@@ -111,7 +111,9 @@ function handleOAuth2Post (code, options, res) {
                   client_secret:apiKeys[options.provider].appSecret,
                   redirect_uri:host + options.redirectURI};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
-           auth = {};
+            auth = {};
+            auth.appKey = apiKeys[options.provider].appKey;
+            auth.appSecret = apiKeys[options.provider].appSecret;
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
