@@ -45,6 +45,25 @@ FileBugLogger.prototype.open = function(cb) {
 
 var transports = [new ModuleConsoleLogger({colorize:true,timestamp:true})];
 if (lconfig.logFile) {
-    transports.push(new FileBugLogger({filename:path.join("Logs", lconfig.logFile)}));
+    var fileLogger = new FileBugLogger({filename:path.join("Logs", lconfig.logFile)});
+    fileLogger.on("open", function() {
+        var realWrite = fileLogger.stream.write;
+        fileLogger.stream.write = function(data) {
+            if (!fileLogger.stream.writable) {
+                console.error("Could not write ", data);
+            } else {
+                realWrite.call(fileLogger.stream, data, "utf8");
+            }
+        }
+    });
+    transports.push(fileLogger);
 }
 exports["logger"] = new (winston.Logger)({"transports":transports});
+var realLog = exports.logger.log;
+exports.logger.log = function(level, msg) {
+    try {
+        realLog.call(exports.logger, level, msg.toString('utf8'));
+    } catch (E) {
+        realLog.call(exports.logger, level, msg);
+    }
+}
