@@ -38,16 +38,26 @@ def run(process_info):
         logging.error("error writing synclet results to stdout: %s" % (e,))
 
 if __name__ == "__main__":
-    # Process the startup JSON object (json.loads will take utf-8 directly)
+    #logging.getLogger().setLevel('DEBUG')
+
+    # Process the startup JSON object
+    # We can't use the usual "for line in sys.stdin" idiom because the
+    # file-object iterator reads ahead past the end of the current line and
+    # will hang when there's no more input but stdin stays open.
     json_input = []
     input_error = None
-    for line in sys.stdin:
+    line = sys.stdin.readline()
+    # XXX: this will never exit if malformed json input is received but stdin
+    # is kept open by the sender
+    while line != "": # readline() returns "" on EOF
         json_input.append(line)
         try:
+            # json.loads will take utf-8 directly
             info = json.loads(''.join(json_input))
             break
         except ValueError, e:
             input_error = e
+        line = sys.stdin.readline()
     else:
         logging.error("synclet parsing of stdin failed - %s" % input_error)
         exit(1)
