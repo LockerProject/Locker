@@ -131,16 +131,16 @@ exports.handlePostEvents = function(req, callback) {
                     return callback(err, {});
                 }
                 handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
-                return callback(err, {timeToIndex: time, docsDeleted: 0});
+                return callback(err, {timeToIndex: time});
             });
         } else if (req.body.action === 'delete') {
-            lsearch.deleteDocument(req.body.obj.data._id, function(err, time, docsDeleted) {
+            lsearch.deleteDocument(req.body.obj.data._id, function(err, time) {
                 if (err) { 
                     handleError(req.body.type, req.body.action, req.body.obj.data._id, err); 
                     return callback(err, {});
                 }
                 handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
-                return callback(err, {timeToIndex: time, docsDeleted: docsDeleted});
+                return callback(err, {timeToIndex: time});
             });
         } else {
             console.log("Unexpected event: " + req.body.type + " and " + req.body.action);
@@ -167,7 +167,7 @@ exports.handlePostIndex = function(req, callback) {
             return callback(err, {});
         }
         handleLog(req.body.type, 'new', req.body.data._id, time);
-        return callback(null, {timeToIndex: time, docsDeleted: 0});
+        return callback(null, {timeToIndex: time});
     });
 };
 
@@ -227,8 +227,8 @@ exports.handleGetQuery = function(req, callback) {
 exports.handleGetReindexForType = function(type, callback) {
     // this handleGetReindex method can happen async, but deleteDocumentsByType MUST happen first before the callback.  
     // That's why we call it here
-    lsearch.deleteDocumentsByType(type, function(err, indexTime, deletedDocs) {
-        callback(err, {indexTime: indexTime, deletedDocs: deletedDocs});
+    lsearch.deleteDocumentsByType(type, function(err, indexTime) {
+        callback(err, {indexTime: indexTime});
     });
     
     var items;
