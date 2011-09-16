@@ -326,21 +326,23 @@ function processData (deleteIDs, info, key, data, callback) {
 }
 
 function deleteData (collection, mongoId, deleteIds, info, eventType, callback) {
-    async.forEach(deleteIds, function(id, cb) {
+    var q = async.queue(function(id, cb) {
         var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
         newEvent.obj.data[mongoId] = id;
         newEvent.fromService = "synclet/" + info.id;
         levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
-    }, callback);
+    }, 5);
+    deleteIds.forEach(q.push);
+    q.drain = callback;
 }
 
 function addData (collection, mongoId, data, info, eventType, callback) {
     var errs = [];
-    async.forEach(data, function(object, cb) {
+    var q = async.queue(function(object, cb) {
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                console.error('rut roh! no value for primary key!');
+                console.error('rut roh! no value for primary key!: '+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 cb();
                 return;
@@ -359,16 +361,15 @@ function addData (collection, mongoId, data, info, eventType, callback) {
                 });
             }
         }
-    }, function(err) {
-        if (err) {
-            errs.push(err);
-        }
+    }, 5);
+    data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
+    q.drain = function() {
         if (errs.length > 0) {
             callback(errs);
         } else {
             callback();
         }
-    });
+    };
 }
 
 /**
