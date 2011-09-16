@@ -50,7 +50,6 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
     }
 }).addBatch({
@@ -79,7 +78,6 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
     }
 }).addBatch({
@@ -108,7 +106,6 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
     }
 }).addBatch({

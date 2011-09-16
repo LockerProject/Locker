@@ -167,8 +167,8 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
     doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
     assert.ok(indexPath);
-    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime, docsReplaced) {
-    callback(err, indexTime, docsReplaced);
+    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime) {
+        callback(err, indexTime);
     });
 };
 CLEngine.prototype.deleteDocument = function(id, callback) {
