@@ -148,6 +148,7 @@ locker.get("/query/:query", function(req, res) {
                 if (query.limit) options.limit = query.limit;
                 if (query.skip) options.skip = query.skip;
                 if (query.fields) options.fields = query.fields;
+                if (query.sort) options.sort = query.sort;
                 collection.find(query.query, options, function(err, foundObjects) {
                     if (err) {
                         res.writeHead(500);
