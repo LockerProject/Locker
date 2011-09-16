@@ -66,7 +66,7 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
             assert.equal(response.hits[0]._source, 'contacts');
-            assert.equal(response.hits[0].content, 'Matt Berry');
+            assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({
@@ -94,7 +94,7 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
             assert.equal(response.hits[0]._source, 'contacts');
-            assert.equal(response.hits[0].content, 'Matthew Berry');
+            assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({

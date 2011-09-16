@@ -46,6 +46,15 @@ CLEngine = function()
             "_id":"_id",
             "name":"name",
             "nicknames":[],
+            "accounts":{
+                "twitter":[
+                    {
+                        "data":{
+                            "description":"description"
+                        }
+                    }
+                ]
+            },
             "email":[
                 {
                     "value":"value"

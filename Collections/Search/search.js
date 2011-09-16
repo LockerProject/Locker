@@ -194,7 +194,7 @@ exports.handleGetQuery = function(req, callback) {
     
     function sendResults(err, results, queryTime) {
         if (err) {
-            error = 'Error querying via /search/query GET request.';
+            error = 'Error querying via /search/query GET request: '+JSON.stringify(err);
             console.error(error);
             return callback(error, {});
         }
