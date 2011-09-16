@@ -445,6 +445,11 @@ function addUrls() {
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
                                                     "&redirect_uri=" + host + "auth/gcontacts/auth" +
                                                     "&scope=https://www.google.com/m8/feeds/&response_type=code";
+            } else if (synclet.provider === 'gplus') {
+                if (apiKeys.gplus)
+                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
+                                                    "&redirect_uri=" + host + "auth/gplus/auth" +
+                                                    "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
             } else if (synclet.provider === 'github') {
                 if (apiKeys.github)
                     synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +

@@ -5,6 +5,6 @@
     "status":"stable",
     "static":"true",
     "handle":"photosviewer",
-    "uses":["facebook", "twitter", "foursquare", "flickr"],
+    "uses":["facebook", "twitter", "foursquare", "flickr", "gplus"],
     "autoInstall":true
 }
