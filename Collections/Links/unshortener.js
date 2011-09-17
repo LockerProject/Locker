@@ -11,6 +11,7 @@ exports.expand = function (url, options, callback) {
     options = (typeof(arguments[1]) !== 'function') ? arguments[1] : {};
 
     url = (typeof(url) === 'object') ? url : urllib.parse(url);
+    if(!url) return callback(); // duh
 
     mapping(url, options)(callback);
 };
@@ -151,7 +152,7 @@ var Unshorteners = {
 
 	var handle = function (res) {
 	    if (res.statusCode === 301 || res.statusCode === 302) {
-		exports.expand(res.headers.location, callback);
+		exports.expand(urllib.format(urllib.resolve(url,urllib.parse(res.headers.location))), callback);
 	    }else if (res.statusCode === 200){
 		callback(url);
 	    }else{

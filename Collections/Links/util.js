@@ -10,7 +10,7 @@ var logger = require(__dirname + "/../../Common/node/logger").logger;
 exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
     unshortener.expand(arg.url, function(u){
-        if(!u.host) return cbDone(arg.url)
+        if(!u || !u.host) return cbDone(arg.url)
         cbEach(url.format(u));
         cbDone();
     });
