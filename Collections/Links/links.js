@@ -15,6 +15,7 @@ var fs = require('fs'),
     lconfig = require('../../Common/node/lconfig.js');
     locker = require('../../Common/node/locker.js');
 var async = require("async");
+lconfig.load('../../Config/config.json');
 
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
