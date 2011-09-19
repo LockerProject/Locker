@@ -154,7 +154,7 @@ function updateState()
         try {
             fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
-    }, 5000);    
+    }, 5000);
 }
 
 function saveCommonPhoto(photoInfo, cb) {
