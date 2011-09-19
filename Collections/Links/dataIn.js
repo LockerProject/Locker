@@ -88,13 +88,15 @@ function processEncounter(e, cb)
 }
 
 var encounterQueue = async.queue(function(e, callback) {
+    // immediately dequeue in case processing makes something go wrong
+    dataStore.dequeue(e);
     // do all the dirty work to store a new encounter
     var urls = [];
     // extract all links
     util.extractUrls({text:e.text},function(u){ urls.push(u); }, function(err){
         if(err) return callback(err);
         // for each one, run linkMagic on em
-        if (urls.length === 0) return dataStore.dequeue(e, callback);
+        if (urls.length === 0) return callback();
         async.forEach(urls,function(u,cb){
             linkMagic(u,function(link){
                 // make sure to pass in a new object, asyncutu
@@ -107,9 +109,7 @@ var encounterQueue = async.queue(function(e, callback) {
                     });
                 }); // once resolved, store the encounter
             });
-        }, function() {
-            dataStore.dequeue(e, callback);
-        });
+        }, callback);
     });
 }, 5);
 
