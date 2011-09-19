@@ -10,7 +10,7 @@
 // merge contacts from connectors
 
 var locker = require('../../Common/node/locker.js');
-    
+
 var fs = require('fs');
 var sync = require('./sync');
 var dataStore = require("./dataStore");
@@ -106,7 +106,7 @@ app.get('/:id', function(req, res, next) {
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
         res.writeHead(200);
-        res.end('Updating');        
+        res.end('Updating');
     });
 });
 
@@ -117,7 +117,7 @@ app.post('/events', function(req, res) {
         res.end("Invalid Event");
         return;
     }
-    
+
     dataStore.processEvent(req.body, function(error) {
         if (error) {
             logger.debug("Error processing: " + error);
@@ -125,7 +125,7 @@ app.post('/events', function(req, res) {
             res.end(error);
             return;
         }
-        
+
         res.writeHead(200);
         res.end("Event Handled");
     });
@@ -141,7 +141,7 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         logger.debug("connected to mongo " + mongo);
         sync.init(lockerInfo.lockerUrl, mongo.collections.photos, mongo);
