@@ -115,6 +115,7 @@ var encounterQueue = async.queue(function(e, callback) {
 
 exports.loadQueue = function() {
     dataStore.fetchQueue(function(err, docs) {
+        if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
             encounterQueue.push(docs[i].obj, function(arg) {
                 console.error("QUEUE SIZE: " + encounterQueue.length());
