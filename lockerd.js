@@ -32,7 +32,7 @@ var npm = require('npm');
     var request = require('request');
     var async = require('async');
     var util = require('util');
-    
+
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
     var lconfig = require('lconfig');
@@ -40,7 +40,7 @@ var npm = require('npm');
 
     console.log(process.pid);
     fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
-    
+
     var logger = require("logger");
     var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
@@ -252,10 +252,10 @@ var npm = require('npm');
             var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
             airbrake.notify(err, function(err, url) {
                 if(url) console.log(url);
-                shutdown(0);
+                shutdown(1);
             });
         }else{
-            shutdown(0);            
+            shutdown(1);
         }
     });
 
