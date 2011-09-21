@@ -32,7 +32,7 @@ function hashPlace(place)
 exports.getPlaces = function(arg, cbEach, cbDone) {
     var f = (arg.id)?{link:arg.link}:{};
     delete arg.id;
-    var sort, limit;
+    var sort, limit, offset;
     if(arg.sort)
     {
         sort=arg.sort;
@@ -40,13 +40,19 @@ exports.getPlaces = function(arg, cbEach, cbDone) {
     }
     if(arg.limit)
     {
-        limit=arg.limit;
+        limit=parseInt(arg.limit);
         delete arg.limit;
     }
-    // how to handle start=x?
+    if(arg.offset)
+    {
+        offset=parseInt(arg.offset);
+        delete arg.offset;
+    }
+    if(arg.me) arg.me = (arg.me === 'true')?true:false;
     var cursor = placeCollection.find(arg);
     if (sort) cursor.sort(sort);
     if (limit) cursor.limit(limit);
+    if (offset) cursor.skip(offset);
     cursor.each(function(err, item) {
         if (item != null) {
             cbEach(item);

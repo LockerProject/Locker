@@ -19,17 +19,16 @@ exports.reIndex = function(locker,cb) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('checkin/foursquare') >= 0) {
-                    getCurrently(do4sq, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/places', function() {
-                        getCurrently(do4sq, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/recent', function() {
-                            getCurrently(do4sq, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/checkins', function() {
-                                console.error('foursquare done!');
-                            });
-                        });
-                    });
+                    // lots of naming confusion, try them all
+                    getCurrently(do4sq, true, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/places', function(){});
+                    getCurrently(do4sq, false, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/recent', function(){});
+                    getCurrently(do4sq, false, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/recents', function(){});
+                    getCurrently(do4sq, true, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/checkins', function(){});
+                    getCurrently(do4sq, true, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/checkin', function(){});
                 } else if(svc.provides.indexOf('status/twitter') >= 0) {
-                    getCurrently(doTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
-                        getCurrently(doTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
-                            getCurrently(doTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/tweets', function() {
+                    getCurrently(doTwitter, false, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
+                        getCurrently(doTwitter, false, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
+                            getCurrently(doTwitter, true, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/tweets', function() {
                                 console.error('twitter done!');
                             });
                         });
@@ -42,7 +41,7 @@ exports.reIndex = function(locker,cb) {
 }
 
 // used by reIndex to fetch and process each service
-function getCurrently(getter, lurl, callback) {
+function getCurrently(getter, me, lurl, callback) {
 logger.debug("fetching "+lurl);
     request.get({uri:lurl}, function(err, resp, body) {
         var arr;
@@ -52,7 +51,7 @@ logger.debug("fetching "+lurl);
             return callback();
         }
         async.forEachSeries(arr,function(a,cb){
-            var e = getter(a);
+            var e = getter(a,me);
             processPlace(e,function(err){if(err) console.log("getCurrently error:"+err); cb();});
         },callback);
     });
@@ -85,9 +84,11 @@ function processPlace(e, cb)
 }
 
 // hack to inspect until we find any [123,456] 
-function firstLL(o)
+function firstLL(o,reversed)
 {
-    if(Array.isArray(o) && o.length == 2 && typeof o[0] == 'number' && typeof o[1] == 'number') return o;
+    if(Array.isArray(o) && o.length == 2 && typeof o[0] == 'number' && typeof o[1] == 'number') {
+        return (reversed) ? [o[1],o[0]] : o; // reverse them optionally
+    }
     if(typeof o != 'object') return null;
     for(var i in o)
     {
@@ -97,10 +98,11 @@ function firstLL(o)
     return null;
 }
 
-function do4sq(checkin)
+function do4sq(checkin, me)
 {
     if(!checkin.venue || !checkin.venue.location || !checkin.venue.location.lat || !checkin.venue.location.lng) return null;
     var e = {id:checkin.id
+        , me:me
         , network:"foursquare"
         , lat: checkin.venue.location.lat
         , lng: checkin.venue.location.lng
@@ -116,12 +118,14 @@ function do4sq(checkin)
     return e;
 }
 
-function doTwitter(tweet)
+function doTwitter(tweet, me)
 {
-    if(!tweet.place) return null;
-    var ll = firstLL(tweet.place);
+    var ll = firstLL(tweet.geo);
+    if(!ll) ll = firstLL(tweet.place, true);
+    if(!ll) ll = firstLL(tweet.coordinates, true);
     if(!ll) return null;
     var e = {id:tweet.id
+        , me:me
         , lat: ll[0]
         , lng: ll[1]
         , network:"twitter"
