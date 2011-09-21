@@ -242,7 +242,7 @@ function executeSynclet(info, synclet, callback) {
     app.stdin.on('error',function(err){
         console.error("STDIN error:",err);
     });
-    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information        
+    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     delete info.syncletToRun;
 };
 
