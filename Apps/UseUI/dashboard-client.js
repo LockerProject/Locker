@@ -26,6 +26,7 @@ module.exports = function(passedLocker, passedExternalBase, listenPort, callback
 };
 
 var app = express.createServer();
+app.use(express.cookieParser());
 
 app.configure(function() {
     app.set('views', __dirname + '/views');
@@ -153,7 +154,9 @@ function bootState()
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("got new socket.io connection");
+    logger.debug("+++++++++++++++");
+    logger.debug("++++++++++ got new socket.io connection");
+    logger.debug("+++++++++++++++");
     bootState();
     isSomeoneListening++;
     var counts = {};

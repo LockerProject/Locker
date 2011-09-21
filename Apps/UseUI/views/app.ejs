@@ -1,50 +1,68 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>
-      <% if (dashboard && dashboard.customTitle) { %>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>
+    <% if (dashboard && dashboard.customTitle) { %>
       <%= dashboard.customTitle %>
-      <% } else {%>
+    <% } else {%>
       the locker project
-      <% } %>
-    </title>
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="/static/css/global.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css"/>
+    <% } %>
+  </title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="/static/css/global.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css"/>
 </head>
 
 <body class="app-page">
-  
+
   <div class="header">
     <a class="home-logo" href="index.html">
       <img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
     </a>
     <div class="app-links">
-      <a class="app-link" id="photos" href="#photos" title='Loading photo count...'>PHOTOS</a>
-      <a class="app-link" id="contacts" href="#contacts" title='Loading contacts count...'>CONTACTS</a>
-      <a class="app-link" id="links" href="#links" title='Loading links count...'>LINKS</a>
-      <!--       <a class="app-link" id="search" href="#search">search</a> -->
-      <img class="divider" src="img/divider.png"/>
-    </div>
-    <div id='counters'>
       <ul>
-	<li class='contactsTotalCount'>0 contacts</li>
-	<li class='linksTotalCount'>0 links</li>
-	<li class='photosTotalCount'>0 photos</li>
+      <li class='app-link' id="photos">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#photos" title='Loading photo count...'>PHOTOS</a>
+          <div class='photosTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
+      <li class="app-link" id="contacts">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#contacts" title='Loading contacts count...'>CONTACTS</a>
+          <div class='contactsTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
+      <li class="app-link" id="links">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#links" title='Loading links count...'>LINKS</a>
+          <div class='linksTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
       </ul>
     </div>
-    <div class="services-box-container">
-      <div class="services-box">SERVICES
-      <span class="gray">\/</span></div>
-    </div>
+    <img class="divider" src="img/divider.png">    
     <div id="nav-search">
       <form id="nav-search" action="?" method="get">
-	<input placeholder="&nbsp;Search" type="text" class="search" />
-	<input type="submit" class="submit" value="Search" />
+        <input placeholder="&nbsp;Search your contacts, links, photos" type="text" class="search" />
+        <input type="submit" class="submit" value="Search" />
       </form>
     </div>
+    <% if (dashboard && dashboard.customLogout) { %>
+    <div id='customLogout'>
+      <div id='menuExpander'><div class='userEmail'></div><div class='expander'>&#x25BC;</div></div>
+      <div id='userMenu'>
+        <div class='user-name'></div>
+        <div class='signout-link'><a href='<%= dashboard.customLogout %>'>Sign Out</a></div>
+      </div>
+    </div>
+    <% } %>
+    
+  </div>
+  <div class="services-box-container">
+    <div class="services-box">SERVICES&nbsp;&#x25BC;</div>
   </div>
   <div id="services">
     <div id="choose-services">
@@ -64,7 +82,7 @@
   <div id="iframeWrapper">
     <iframe id="appFrame"></iframe>
   </div>
-  
+
   <footer class="useui">
     <% if (customFooter) { %>
     <%- customFooter %>
@@ -82,7 +100,7 @@
     var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
     document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
   </script>
-  
+
   <script type="text/javascript" charset="UTF-8">
     var feedback_widget_options = {};
     feedback_widget_options.display = "overlay";
@@ -92,8 +110,12 @@
     feedback_widget_options.style = "question";
     var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
   </script>
-  
+
   <script src="socket.io/socket.io.js"></script>
   <script type="text/javascript" charset="utf-8" src='js/client.io.js'></script>
   <script type="text/javascript" src='js/tooltip.min.js'></script>
+  <% if (dashboard && dashboard.customHostedEndpoint) { %>
+  <script type='text/javascript' src='js/hosted.js'></script>
+  <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>;
+  <% } %>
 </html>
