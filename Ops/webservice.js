@@ -443,7 +443,9 @@ locker.all("/socket.io*", function(req, res) {
 // proxy websockets
 locker.on('upgrade', function(req, socket, head) {
     // TODO be selective about who they're routing too?
-    console.log("websocket proxying to dashboard");
+    console.log("*************");
+    console.log("********** websocket proxying to dashboard");
+    console.log("*************");
   proxy.proxyWebSocketRequest(req, socket, head, {
       host: url.parse(dashboard.instance.uriLocal).hostname,
       port: url.parse(dashboard.instance.uriLocal).port,

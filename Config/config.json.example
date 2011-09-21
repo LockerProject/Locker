@@ -13,9 +13,10 @@
         "host": "localhost",
         "port": 27018
     },
-		"dashboard" : {
-				"customLogo": "tlp_logo.png",
-		   	"customFooter": "singly-footer.html",
-		    "customTitle": "the locker project"
-		}
+    "dashboard" : {
+        "customLogo": "tlp_logo.png",
+        "customFooter": "singly-footer.html",
+        "customTitle": "the locker project",
+	"customLogout": "singly-logout.html"
+    }
 }

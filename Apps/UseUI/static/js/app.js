@@ -27,9 +27,12 @@ $(document).ready(
         // close service drawer button
         $('#service-closer').click(function() {
             userClosed = true;
-            $('.services-box').show();
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-            $('#services').animate({height: "0px"}, {duration: 200, queue: false}, function() { resizeFrame(); });
+            $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() { 
+                    $('.services-box-container').show();
+                    resizeFrame();
+                }
+            });
         });
 
         // service buttons
@@ -48,7 +51,6 @@ $(document).ready(
             $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
             return false;
         });
-
 
         $(".app-link[title]").tooltip({
             position:"bottom center",
@@ -275,11 +277,12 @@ function renderApp() {
 };
 
 function expandServices() {
-    $('.services-box').hide();
+    $('.services-box-container').hide();
     $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
     $('#services').animate({height: "110px"}, {duration: 200});
 }
 
 function resizeFrame() {
-    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
+    $('#appFrame').height($(window).height() - $(".services-box-container").height() - $('#services').height() - $('.header').height() - 6);
+    $("#appFrame").width($(window).width());
 }
