@@ -31,7 +31,7 @@ $(document).ready(
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
             $('#services').animate({height: "0px"}, {duration: 200, queue: false}, function() { resizeFrame(); });
         });
-        
+
         // service buttons
         $('#service-selector').delegate('.provider-link', 'click', function() {
             if ($(this).hasClass('disabled')) return false;
@@ -48,8 +48,8 @@ $(document).ready(
             $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
             return false;
         });
-        
-        
+
+
         $(".app-link[title]").tooltip({
             position:"bottom center",
             predelay:750,
@@ -81,7 +81,7 @@ $(document).ready(
         });
 
         renderApp();
-        
+
         $(window).resize(resizeFrame);
         resizeFrame();
     }
