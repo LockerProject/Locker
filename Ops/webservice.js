@@ -281,9 +281,17 @@ function proxyRequest(method, req, res) {
         return;
     }
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
-        res.writeHead(404);
-        res.end("so sad, couldn't find "+id);
-        return;
+        var map = serviceManager.serviceMap();
+        var match = false;
+        map.available.forEach(function(s){ if(s.handle === id) match = s; });
+        if(!match)
+        {
+            res.writeHead(404);
+            res.end("so sad, couldn't find "+id);
+            return;
+        }
+        console.log("auto-installing "+id);
+        serviceManager.install(match); // magically auto-install!
     }
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
