@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>
-      <% if (dashboard && dashboard.customTitle) { %>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>
+    <% if (dashboard && dashboard.customTitle) { %>
       <%= dashboard.customTitle %>
-      <% } else {%>
+    <% } else {%>
       the locker project
-      <% } %>
-    </title>
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="/static/css/global.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css"/>
+    <% } %>
+  </title>
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="/static/css/global.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css"/>
 </head>
 
 <body class="app-page">
-  
+
   <div class="header">
     <a class="home-logo" href="index.html">
       <img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
@@ -30,9 +30,9 @@
     </div>
     <div id='counters'>
       <ul>
-	<li class='contactsTotalCount'>0 contacts</li>
-	<li class='linksTotalCount'>0 links</li>
-	<li class='photosTotalCount'>0 photos</li>
+        <li class='contactsTotalCount'>0 contacts</li>
+        <li class='linksTotalCount'>0 links</li>
+        <li class='photosTotalCount'>0 photos</li>
       </ul>
     </div>
     <div class="services-box-container">
@@ -41,8 +41,8 @@
     </div>
     <div id="nav-search">
       <form id="nav-search" action="?" method="get">
-	<input placeholder="&nbsp;Search" type="text" class="search" />
-	<input type="submit" class="submit" value="Search" />
+        <input placeholder="&nbsp;Search" type="text" class="search" />
+        <input type="submit" class="submit" value="Search" />
       </form>
     </div>
   </div>
@@ -64,7 +64,7 @@
   <div id="iframeWrapper">
     <iframe id="appFrame"></iframe>
   </div>
-  
+
   <footer class="useui">
     <% if (customFooter) { %>
     <%- customFooter %>
@@ -82,7 +82,7 @@
     var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
     document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
   </script>
-  
+
   <script type="text/javascript" charset="UTF-8">
     var feedback_widget_options = {};
     feedback_widget_options.display = "overlay";
@@ -92,7 +92,7 @@
     feedback_widget_options.style = "question";
     var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
   </script>
-  
+
   <script src="socket.io/socket.io.js"></script>
   <script type="text/javascript" charset="utf-8" src='js/client.io.js'></script>
   <script type="text/javascript" src='js/tooltip.min.js'></script>
