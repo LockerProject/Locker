@@ -47,16 +47,33 @@ Date.prototype.yyyymmdd = function() {
 function loadPlaces(cb){
     request.get({uri:"http://localhost:8042/Me/places/getPlaces?me=true",json:true},function(err,res,body){
         if(err || !body) return cb();
-        csv = "Date,Color\n";
-        body.forEach(function(p){
-            var d = new Date(p.at);
-            csv += d.yyyymmdd();
-            csv += "," + Math.round(long2num(p.lng));
-            csv += "\n";
-        });
+        var places = [];
+        body.forEach(function(p){places.push({at:p.at, c:long2num(p.lng)})});
+        places = places.sort(function(a,b){return (a.at - b.at)});
+        csvBuild(places);
         cb();
     });
 };
+
+function csvBuild(places)
+{
+    var now = new Date().getTime();
+    var last = Math.round(places.shift().c);
+    csv = "Date,Color\n";
+    for(var i = 1262333360000; i < now; i += 43200000)
+    {
+        var a = [last]; // use last one to average or set next
+        while(places.length > 0 && places[0].at < i) a.push(places.shift().c);
+        if(a.length == 1 && places.length > 0) a.push(places[0].c); // average closer to the next one
+        var sum=0;
+        for(var j=0;j<a.length;j++) sum += a[j];
+        last = Math.round(sum/a.length);
+        var d = new Date(i);
+        csv += d.yyyymmdd();
+        csv += "," + last;
+        csv += "\n";
+    }
+}
 
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');
