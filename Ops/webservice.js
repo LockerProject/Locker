@@ -45,7 +45,7 @@ var locker = express.createServer(
                 }
             },
             function(req, res, next) {
-                if (req.url.substring(0, 13) == '/auth/twitter') {
+                if (req.url.substring(0, 13) == '/auth/twitter' || req.url.substring(0, 12) == '/auth/tumblr') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
