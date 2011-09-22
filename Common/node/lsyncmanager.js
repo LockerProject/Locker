@@ -242,7 +242,7 @@ function executeSynclet(info, synclet, callback) {
     app.stdin.on('error',function(err){
         console.error("STDIN error:",err);
     });
-    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information        
+    app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     delete info.syncletToRun;
 };
 
@@ -436,7 +436,7 @@ function addUrls() {
             } else if (synclet.provider === 'twitter') {
                 if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
             } else if (synclet.provider === 'flickr') {
-                if (apiKeys.twitter) synclet.authurl = host + "auth/flickr/auth";
+                if (apiKeys.flickr) synclet.authurl = host + "auth/flickr/auth";
             } else if (synclet.provider === 'tumblr') {
                 if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
             } else if (synclet.provider === 'foursquare') {
