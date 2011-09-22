@@ -1,6 +1,9 @@
 var fs = require("fs");
 var g = require("./lib.js");
 var me = JSON.parse(fs.readFileSync('../../Me/gplus/me.json'));
+var me2 = JSON.parse(fs.readFileSync('../../Config/apikeys.json'));
+me.auth.appKey = me2.gplus.appKey;
+me.auth.appSecret = me2.gplus.appSecret;
 g.init(me.auth);
 var me;
 g.getMe({},function(js){  console.log("ME\t"+JSON.stringify(js)); me=js}, function(err){

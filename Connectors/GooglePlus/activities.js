@@ -8,8 +8,13 @@
 */
 
 var gplus = require('../../Connectors/GooglePlus/lib.js');
+var fs = require('fs');
 
 exports.sync = function(processInfo, cb) {
+    // temp hack to get this stuff that isn't in .auth
+    var keys = JSON.parse(fs.readFileSync('../../Config/apikeys.json'));
+    processInfo.auth.appKey = keys.gplus.appKey;
+    processInfo.auth.appSecret = keys.gplus.appSecret;
     gplus.init(processInfo.auth);
     var me;
     var responseObj = {data : {}, config:{}};

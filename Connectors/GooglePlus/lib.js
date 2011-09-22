@@ -12,6 +12,7 @@ var fs = require('fs'),
     async = require('async'),
     url = require('url'),
     crypto = require("crypto"),
+    querystring = require('querystring'),
     sys = require('sys');
 
     
@@ -56,7 +57,7 @@ function getOne(arg, cb)
     var api = url.parse(base+arg.path);
     delete arg.path;
     api.query = arg;
-    request.get({uri:url.format(api), json:true}, function(err, resp, js) {
+    getter({uri:url.format(api), json:true}, function(err, resp, js) {
         if(js) return cb(null, js);
         cb("couldn't understand reponse");
     });
@@ -72,7 +73,7 @@ function getPagesAuth(arg, cbEach, cbDone)
     arg.access_token = auth.token.access_token;
     var api = url.parse(base+arg.path);
     api.query = arg;
-    request.get({uri:url.format(api), json:true}, function(err, resp, js) {
+    getter({uri:url.format(api), json:true}, function(err, resp, js) {
         if(err || !js) return cbDone(err);
         if(js.error) return cbDone(js.error);
         if(!Array.isArray(js[arg.field]) || js[arg.field].length == 0) return cbDone();
@@ -83,4 +84,43 @@ function getPagesAuth(arg, cbEach, cbDone)
     });
 }
 
+// wrap so we can detect refresh token needed
+function getter(options, callback)
+{
+    request.get(options, function(err, res, js) {
+        if(res.statusCode != 401) return callback(err, res, js);
+        tryRefresh(function(err){
+            if(err) return callback(err);
+            var api = url.parse(options.uri,true);
+            api.query.access_token = auth.token.access_token;
+            delete api.search; // node url format bug, ignores query!
+            options.uri = url.format(api);
+            request.get(options, callback); // try again once more
+        });
+    });
+}
+
+function tryRefresh(callback) {
+    var options = {
+        uri: 'https://accounts.google.com/o/oauth2/token',
+        method: 'POST',
+        body: querystring.stringify({client_id:auth.appKey,
+                        client_secret:auth.appSecret,
+                        refresh_token:auth.token.refresh_token,
+                        grant_type:'refresh_token'
+                       }),
+        headers: {'Content-Type':'application/x-www-form-urlencoded'}
+    };
+    request(options, function(err, res, body){
+        var js;
+        try {
+            if(err) throw err;
+            js = JSON.parse(body);
+        } catch(E) {
+            return callback(E);
+        }
+        auth.token.access_token = js.access_token;
+        return callback();
+    });
+}
 
