@@ -2,9 +2,15 @@ function log(m) { if (console && console.log) console.log(m); }
 var app, timeout, appId;
 var providers = [];
 var userClosed = false;
+var retryTime = 1000;
 
 $(document).ready(
     function() {
+        // any mouse activity resets it
+        $(document).mousemove( function() {
+            retryTime = 1000;
+        } );
+
         app = window.location.hash.substring(1);
 
         $('.app-select').click(function() {
@@ -148,6 +154,7 @@ var SyncletPoll = (
             };
 
             t.handleResponse = function(data, err, resp) {
+                if(retryTime < 10000) retryTime += 500;
                 for (app in data.installed) {
                     app = data.installed[app];
 
@@ -157,7 +164,7 @@ var SyncletPoll = (
                     }
                 }
 
-                if (t.repoll) t.timeout = setTimeout(t.query, 1000);
+                if (t.repoll) t.timeout = setTimeout(t.query, retryTime);
             };
 
             t.query = function() {
