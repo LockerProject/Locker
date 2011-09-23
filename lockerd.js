@@ -1,7 +1,7 @@
 var forever = require('forever');
 
 var child = new (forever.Monitor)('_lockerd.js', {
-    spinSleepTime: 2000,
+    spinSleepTime: 30000,
     minUptime: 10000,
     options: []
 });
