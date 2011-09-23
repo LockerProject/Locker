@@ -461,6 +461,9 @@ exports.spawn = function(serviceId, callback) {
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+    app.stdin.on('error',function(err){
+        console.error("STDIN error:",err);
+    });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;

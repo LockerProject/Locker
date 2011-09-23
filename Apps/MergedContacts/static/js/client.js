@@ -1,6 +1,8 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
 var displayedContact = '';
 
+var hack = false;
+var total = 0;
 $(function() {
 
     $(document).keydown(function(e) {
@@ -68,7 +70,7 @@ $(function() {
         sortType: "firstname",
 
         events: {
-            'keyup input#search' : 'searchChangeHandler',
+            'keyup input#search' : 'loadSearch',
             'change #sort'       : 'sortChangeHandler',
 
             'hover #contacts li' : 'hoverContactHandler',
@@ -77,20 +79,20 @@ $(function() {
             'blur #search'       : 'blurSearchHandler'
         },
 
-        searchChangeHandler: function() {
-            var q = $("input#search").val();
-            if (q.length > 0 && q != this._s.searchIndicator) {
-                this.render({q: q})
-            } else {
-                this.render();
-            }
-        },
-
         sortChangeHandler: function() {
             var sortVal = $("#sort").val();
+            var q = $("input#search").val();
             log("change sort to " + sortVal);
             this.sortType = sortVal;
-            this.searchChangeHandler();
+            if(q.length > 0 && q != this._s.searchIndicator)
+            {
+                this.render({q: q});
+                return;
+            }
+            this.offset = 0;
+            this.collection._reset();
+            this.load();
+            this.render();
         },
 
         hoverContactHandler: function() {
@@ -191,15 +193,26 @@ $(function() {
         },
 
         initialize: function(){
-            _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'searchChangeHandler', 'load', 'render', 'addContact'); // fixes loss of context for 'this' within methods
+            _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'load', 'render', 'addContact', 'loadSearch'); // fixes loss of context for 'this' within methods
             that = this;
 
-            this.collection = new AddressBook();
+            that.collection = new AddressBook();
 
+            that.offset = 0;
+            if(!hack) hack = that;
+            $(window).scroll(function(){
+              if  ($(window).scrollTop() >= ($(document).height() - $(window).height() - 200)){
+                hack.load(function(){});
+              }
+            });
             // TODO: clean up so the search is a proper view.
             that.blurSearchHandler();
-            this.load(function() {
+            that.load(function() {
                 $("#searchBox").slideDown();
+            });
+            $.getJSON('/Me/contacts/state', {}, function(state) {
+                total = state.count;
+                $("#count").html(total);
             });
         },
 
@@ -208,31 +221,62 @@ $(function() {
          * @param callback
          */
         load: function load(callback) {
-            $('#loader').show();
             var that = this;
+            var q = $("input#search").val();
+            if(q.length > 0 && q != this._s.searchIndicator) return callback();
+            log("loading "+that.offset);
+            if(!callback) callback = function(){};
+            if(that.offset > total) return callback();
+            if(that.loading) return callback();
+            that.loading = true;
             var baseURL = '/query/getContact';
             var fields = "['_id','addresses','emails','name','phoneNumbers','photos','accounts.facebook.data.link'," +
                          "'accounts.foursquare.data.id','accounts.github.data.login','accounts.twitter.data.screen_name']";
-            var offset = 0;
+            var sort = '\'{"'+that.sortType+'sort":1}\'';
+            var terms = "["+that.sortType+"sort:\"a\"+]";
 
-            (function getContactsCB() {
-                $.getJSON(baseURL, {offset:offset, limit: 250, fields: fields}, function(contacts) {
-                    if (contacts.length === 0) {
-                        $('#loader').hide();
-                        return callback();
-                    }
-                    for(var i in contacts) {
-                        // only add contacts if they have a name or email. might change this.
-                        if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
-                        if (contacts[i].emails || contacts[i].name) {
-                            that.addContact(contacts[i]);
-                        }
-                    }
-                    that.render();
-                    offset += 250;
-                    getContactsCB();
-                });
-            })();
+            $.getJSON(baseURL, {offset:that.offset, limit: 50, fields: fields, sort: sort, terms: terms}, function(contacts) {
+                that.loading = false;
+                for(var i in contacts) {
+                    that.addContact(contacts[i]);
+                }
+                that.render();
+                that.offset += 50;
+                return callback();
+            });
+        },
+
+        /**
+         * Load the contacts data from a search result
+         * @param callback
+         */
+        loadSearch: function loadSearch() {
+            var that = this;
+            var q = $("input#search").val();
+            if(that.searching == q) return;
+            that.searching = q;
+            log("searching "+q);
+            if(q == '')
+            {
+                that.sortChangeHandler();
+                return;
+            }
+            that.collection._reset();
+            var baseURL = '/Me/search/query';
+            var type = 'contact/full*';
+            
+            $.getJSON(baseURL, {q: q + "*", type: type, limit: 20}, function(results) {
+                if(q != $("input#search").val())
+                {
+                    log("too slow");
+                    return;
+                }
+                for(var i in results.hits) {
+                    that.addContact(results.hits[i].fullobject);
+                }
+                that.render({q:q}); // additionally filter
+                return;
+            });
         },
 
         /**
@@ -407,6 +451,7 @@ $(function() {
         render: function(config){
             // default to empty
             config = config || {};
+            log("rendering "+config.q);
             var filteredCollection,
                 contactsEl, contactTemplate, contactsHTML,
                 searchFilter, addContactToHTML;
@@ -492,7 +537,7 @@ $(function() {
 
             var sortFn = function(c) {
                 if (c.get(that.sortType)) {
-                    return c.get(that.sortType);
+                    return c.get(that.sortType).toLowerCase();
                 }
                 return "zzz"; // force to the end of the sort
             };
@@ -500,7 +545,12 @@ $(function() {
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
 
-            countEl.html(tmp.length);
+            if(config.q)
+            {
+                countEl.html(tmp.length);
+            }else{
+                countEl.html(total);
+            }
 
             if ($('.contact').length === 1) {
                 this.drawDetailsPane($('.contact').data('cid'));

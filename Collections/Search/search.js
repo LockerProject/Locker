@@ -181,9 +181,14 @@ exports.handleGetQuery = function(req, callback) {
 
     var q = lutil.trim(req.param('q'));
     var type;
+    var limit;
     
     if (req.param('type')) {
         type = req.param('type');
+    }
+
+    if (req.param('limit')) {
+        limit = req.param('limit');
     }
 
     if (!q || q.substr(0, 1) == '*') {
@@ -198,6 +203,8 @@ exports.handleGetQuery = function(req, callback) {
             console.error(error);
             return callback(error, {});
         }
+
+        if(limit) results = results.slice(0,limit);
 
         enrichResultsWithFullObjects(results, function(err, richResults) {
             var data = {};
@@ -324,7 +331,7 @@ function cullAndSortResults(results, callback) {
 }
 
 function makeEnrichedRequest(url, item, callback) {
-    request.get({uri:url}, function(err, res, body) {
+    request.get({uri:url, json:true}, function(err, res, body) {
         if (err) {
             console.error('Error when attempting to enrich search results: ' + err);
             return callback(err);
@@ -335,7 +342,7 @@ function makeEnrichedRequest(url, item, callback) {
             return callback(error);
         }
 
-        item.fullobject = JSON.parse(body);
+        item.fullobject = body;
         
         if (item.fullobject.hasOwnProperty('created_at')) {
             var dateDiff = new Date(new Date().getTime() - new Date(item.fullobject.created_at).getTime());
