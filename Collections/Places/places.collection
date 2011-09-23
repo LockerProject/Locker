@@ -9,5 +9,6 @@
     "events":[["checkin/foursquare","/events"]
 		,["status/twitter","/events"]
 		,["timeline/twitter","/events"]
+		,["location/glatitude","/events"]
 		]
 }
