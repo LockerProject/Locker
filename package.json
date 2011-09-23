@@ -42,6 +42,7 @@
         "airbrake": "=0.2.2",
         "node-fakeweb": "=0.0.2",
         "ejs": "=0.4.3",
+        "forever": "=0.6.7",
 
 
         "hashish": "=0.0.4",
@@ -64,6 +65,11 @@
         "timespan": "2.2.0",
         "wrench": "1.1.0",
         "xml2js": "0.1.10",
-        "ejs": "0.4.3"
+        "ejs": "0.4.3",
+        "timespan":"2.0.1",
+        "portfinder":"0.2.0",
+        "cliff":"0.1.5",
+        "daemon":"0.3.0",
+        "nconf":"0.4.1"
     }
 }
