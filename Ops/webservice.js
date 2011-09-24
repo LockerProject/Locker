@@ -255,11 +255,16 @@ locker.post('/core/:svcId/enable', function(req, res) {
     });
 });
 
-
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
-    proxyRequest('GET', req, res);
+    // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
+    if(req.originalUrl.match(/^\/Me\/[a-z]+$/)) {
+        console.error('redirecting ' + req.originalUrl + ' to ' + req.originalUrl + '/')
+        res.redirect(req.originalUrl + '/');
+    } else {
+        proxyRequest('GET', req, res);
+    }
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
@@ -433,10 +438,6 @@ locker.all('/dashboard*', function(req, res) {
     proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
 });
 
-locker.all('/devdashboard*', function(req, res) {
-    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
-});
-
 locker.all("/socket.io*", function(req, res) {
     if (dashboard && dashboard.instance) proxied(req.method, dashboard.instance, req.url, req, res);
 });
@@ -478,9 +479,6 @@ exports.startService = function(port, cb) {
     serviceManager.spawn(lconfig.ui, function() {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
         console.log('ui spawned');
-    });
-    serviceManager.spawn('devdashboard', function() {
-        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
     });
     locker.listen(port, function() {
         cb();
