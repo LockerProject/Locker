@@ -84,6 +84,9 @@ vows.describe("Synclet Manager").addBatch({
                     // assert.isTrue(topic.nextRun > new Date() + 110);
                     // assert.isTrue(topic.nextRun < new Date() + 130);
                 }
+            },
+             "manifest data is properly surfaced in the providers call" : function() {
+                assert.equal(syncManager.providers(['contact/twitter'])[0].title, 'Twitter Account');
             }
         }
     }
