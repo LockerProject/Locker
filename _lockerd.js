@@ -32,6 +32,7 @@ var npm = require('npm');
     var request = require('request');
     var async = require('async');
     var util = require('util');
+    require('graceful-fs');
 
 
     // This lconfig stuff has to come before and other locker modules are loaded!!
