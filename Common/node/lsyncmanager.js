@@ -60,6 +60,7 @@ exports.findInstalled = function (callback) {
             if(!path.existsSync(dir+'/me.json')) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
             if (js.synclets) {
+                js = mergeManifest(js);
                 exports.migrate(dir, js);
                 console.log("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
@@ -167,6 +168,22 @@ function scheduleRun(info, synclet) {
         setTimeout(run, timeout);
     }
 };
+
+function mergeManifest(js) {
+    if (js.srcdir) {
+        var dir = path.join(lconfig.lockerDir, js.srcdir);
+        var files = fs.readdirSync(dir);
+        for (var i = 0; i < files.length; i++) {
+            var fullPath = dir + '/' + files[i];
+            var stats = fs.statSync(fullPath);
+            if (RegExp("\\.synclet$").test(fullPath)) {
+                newData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                lutil.extend(js, newData);
+            }
+        }
+    }
+    return js;
+}
 
 /**
 * Executes a synclet
