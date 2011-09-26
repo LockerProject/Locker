@@ -87,7 +87,7 @@ function processFlickr(svcId, data, cb) {
     if (data.url_t) photoInfo.thumbnail = data.url_t;
     if (data.datetaken) {
         var d = new Date(data.datetaken);
-        photoInfo.timestap = d.getTime();
+        photoInfo.timestamp = d.getTime();
     }
 
     photoInfo.sources = [{service:svcId, id:data.id}];
