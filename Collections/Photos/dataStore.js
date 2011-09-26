@@ -137,7 +137,7 @@ function processFoursquare(svcId, data, cb)
         if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
         if (data.venue.name) photoInfo.title = data.venue.name;
         photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-2].url;
-        if (photo.createdAt) photoInfo.timestamp = photo.createdAt;
+        if (photo.createdAt) photoInfo.timestamp = new Date(photo.createdAt).getTime();
 
         photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
         saveCommonPhoto(photoInfo, callback);
