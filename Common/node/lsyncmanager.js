@@ -60,7 +60,6 @@ exports.findInstalled = function (callback) {
             if(!path.existsSync(dir+'/me.json')) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
             if (js.synclets) {
-                var js = mergeManifest(js);
                 exports.migrate(dir, js);
                 console.log("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
@@ -74,26 +73,6 @@ exports.findInstalled = function (callback) {
             console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
-}
-
-// combined an installed me.json info with any of it's manifest changes, a stopgap until these things can be separated cleanly
-function mergeManifest(js)
-{
-    var serviceInfo = {};
-    synclets.available.some(function(svcInfo) {
-        if (svcInfo.srcdir == js.srcdir) {
-            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
-            return true;
-        }
-        return false;
-    });
-    if (serviceInfo && serviceInfo.manifest) {
-        var fullInfo = JSON.parse(fs.readFileSync(serviceInfo.manifest));
-        return lutil.extend(js, fullInfo);
-    } else {
-        return js;
-    }
-
 }
 
 exports.scanDirectory = function(dir) {
@@ -427,7 +406,6 @@ exports.migrate = function(installedDir, metaData) {
 */
 function mapMetaData(file) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
-    metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
     synclets.available.push(metaData);
     return metaData;
