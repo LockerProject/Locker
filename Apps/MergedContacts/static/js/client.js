@@ -5,6 +5,10 @@ var hack = false;
 var total = 0;
 $(function() {
 
+    $('a', $('.detail')).live('click', function() {
+        top.location.href = $(this).attr('href');
+    });
+
     $(document).keydown(function(e) {
         // disable enter
         if (e.keyCode === 13) return false;
@@ -264,7 +268,7 @@ $(function() {
             that.collection._reset();
             var baseURL = '/Me/search/query';
             var type = 'contact/full*';
-            
+
             $.getJSON(baseURL, {q: q + "*", type: type, limit: 20}, function(results) {
                 if(q != $("input#search").val())
                 {
