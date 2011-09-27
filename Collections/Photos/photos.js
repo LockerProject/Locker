@@ -95,18 +95,9 @@ app.get("/getPhoto/:photoId", function(req, res) {
     })
 });
 
-app.get('/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
-    dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
-    })
-});
-
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
-        res.writeHead(200);
-        res.end('Updating');
+        res.send('Updating');
     });
 });
 
@@ -130,6 +121,15 @@ app.post('/events', function(req, res) {
         res.end("Event Handled");
     });
 });
+
+app.get('/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(doc));
+    })
+});
+
 
 // Process the startup JSON object
 process.stdin.resume();

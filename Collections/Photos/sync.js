@@ -24,29 +24,30 @@ exports.init = function(theLockerUrl, mongoCollection, mongo) {
 
 var photoGatherers = {
     "photo/twitpic":gatherTwitpic,
-    "photo/flickr":gatherFlickr
+    "checkin/foursquare":gatherFoursquare
 };
 
 exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
         cb(); // synchro delete, async/background reindex
-        locker.providers('photo', function(err, services) {
+        locker.providers(['photo','checkin','status'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 var gathered = false;
                 var lastType = "";
                 svc.provides.forEach(function(providedType) {
-                    if (providedType == "photo" || providedType.indexOf("photo") < 0) return;
-                    logger.debug(providedType);
-                    lastType = providedType;
-                    if (photoGatherers.hasOwnProperty(providedType)) {
-                        gathered = true;
-                        photoGatherers[providedType](svc.id);
+                    if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 || providedType.indexOf('checkin/foursquare') === 0 || providedType.indexOf('status/twitter') === 0)) {
+                        logger.debug(providedType);
+                        lastType = providedType;
+                        if (photoGatherers.hasOwnProperty(providedType)) {
+                            gathered = true;
+                            photoGatherers[providedType](svc.id);
+                        }
                     }
                 });
                 // Try the basic type gatherer
-                if (!gathered && svc.is == "connector") {
+                if (!gathered) {
                     basicPhotoGatherer(svc.id, lastType);
                 }
             });
@@ -61,12 +62,12 @@ function gatherTwitpic(svcId) {
     gatherFromUrl(svcId, "/allPhotos", "photo/twitpic");
 }
 
-function gatherFlickr(svcId) {
-    gatherFromUrl(svcId, "/allPhotos", "photo/flickr");
+function gatherFoursquare(svcId) {
+    gatherFromUrl(svcId, "/getCurrent/checkin", 'checkin/foursquare');
 }
 
 function basicPhotoGatherer(svcId, type, provides) {
-    gatherFromUrl(svcId, "/getCurrent/photos", type);
+    gatherFromUrl(svcId, "/getCurrent/photo", type);
 }
 
 function gatherFromUrl(svcId, url, type) {
