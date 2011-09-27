@@ -116,7 +116,7 @@ function processTwitter(svcId, data, cb)
             if (js.width) photoInfo.width = js.width;
             photoInfo.title = data.text;
             if (js.thumbnail_url) photoInfo.thumbnail = js.thumbnail_url;
-            if (data.createdAt) photoInfo.timestamp = new Date(data.created_at).getTime();
+            if (data.created_at) photoInfo.timestamp = new Date(data.created_at).getTime();
 
             photoInfo.sources = [{service:svcId, id:data.id, data:data}];
             saveCommonPhoto(photoInfo, callback);
@@ -137,7 +137,7 @@ function processFoursquare(svcId, data, cb)
         if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
         if (data.venue.name) photoInfo.title = data.venue.name;
         photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-2].url;
-        if (photo.createdAt) photoInfo.timestamp = new Date(photo.createdAt).getTime();
+        if (data.createdAt) photoInfo.timestamp = new Date(data.createdAt).getTime() * 1000;
 
         photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
         saveCommonPhoto(photoInfo, callback);
