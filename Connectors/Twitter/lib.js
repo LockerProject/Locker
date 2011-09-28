@@ -46,11 +46,20 @@ exports.getMyFriends = function(arg, cbEach, cbDone) {
         getOne(arg,function(err,js){
             if(err || !js.ids || js.ids.length == 0) return cbDone(err);
             me.getUsers(js.ids, function(friend){
-                // background cache pic
-                request.get({uri:friend.profile_image_url, encoding:'binary'}, function(err, resp, body) {
-                    var photoExt = friend.profile_image_url.substring(friend.profile_image_url.lastIndexOf('.'));
-                    fs.writeFile('friends/' + friend.id_str + "." + photoExt, body, 'binary');
-                });
+                if(!friend) return;
+                // load orig if any
+                var orig;
+                try {
+                    orig = JSON.parse(fs.readFileSync('friends/'+friend.id_str+'.json'));
+                }catch(E){}
+                // background cache pic if it's new or changed
+                if(!orig || orig.profile_image_url != friend.profile_image_url)
+                {
+                    request.get({uri:friend.profile_image_url, encoding:'binary'}, function(err, resp, body) {
+                        var photoExt = friend.profile_image_url.substring(friend.profile_image_url.lastIndexOf('.'));
+                        fs.writeFile('friends/' + friend.id_str + photoExt, body, 'binary');
+                    });                    
+                }
                 // background cache data
                 fs.writeFile('friends/'+friend.id_str+'.json', JSON.stringify(friend));
                 cbEach(friend);
