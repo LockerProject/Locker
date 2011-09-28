@@ -43,7 +43,7 @@
       </li>
       </ul>
     </div>
-    <img class="divider" src="img/divider.png">    
+    <img class="divider" src="img/divider.png">
     <div id="nav-search">
       <form id="nav-search" action="?" method="get">
         <input placeholder="&nbsp;Search your contacts, links, photos" type="text" class="search" />
@@ -59,7 +59,7 @@
       </div>
     </div>
     <% } %>
-    
+
   </div>
   <div class="services-box-container">
     <div class="services-box">SERVICES&nbsp;&#x25BC;</div>
@@ -82,14 +82,6 @@
   <div id="iframeWrapper">
     <iframe id="appFrame"></iframe>
   </div>
-
-  <footer class="useui">
-    <% if (customFooter) { %>
-    <%- customFooter %>
-    <% } else { %>
-    <a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a> | <a href="https://github.com/LockerProject/Locker/commit/<%= revision %>">ver: <%= revision %></a>
-    <% } %>
-  </footer>
 
   <script src="/static/js/jquery-1.6.1.min.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
@@ -116,6 +108,6 @@
   <script type="text/javascript" src='js/tooltip.min.js'></script>
   <% if (dashboard && dashboard.customHostedEndpoint) { %>
   <script type='text/javascript' src='js/hosted.js'></script>
-  <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>;
+  <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>
   <% } %>
 </html>
