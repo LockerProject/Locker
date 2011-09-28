@@ -19,8 +19,8 @@ footer {
 	padding: 6px 0 0 0;
 }
 
-footer a { 
-	color: #fff;	 
+footer a {
+	color: #fff;
 	text-decoration: underline;
 	margin: 0 15px;
 }
@@ -120,7 +120,7 @@ background: linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%);
     background-color: #4d4d4d;
 
     box-shadow: inset 0 1px 3px 1px rgba(0,0,0,0.36);
-    
+
 }
 
 .app-link.selected {
@@ -177,7 +177,7 @@ display:none;
 }
 
 .block {
-    width: 25%;
+    width: 33.3333%;
     margin: 0;
     padding: 0;
     border: 0;
@@ -185,13 +185,12 @@ display:none;
 }
 
 #main {
-    width: 655px;
+    width: 505px;
     margin: 50px auto 0px auto;
 }
 
 #main .title {
-    width: 505px;
-    margin-left: 80px;
+    margin-left: 5px;
     font-size: 34px;
     font-weight: bold;
     color: #6e6e6e;
@@ -207,11 +206,10 @@ display:none;
 }
 
 #main .body-header {
-    width: 505px;
     margin-top: 10px;
     letter-spacing: 1px;
     font-size: 20.25px;
-    margin-left: 90px;
+    margin-left: 15px;
     font-weight: bold;
     margin-bottom: 15px;
 }
@@ -220,7 +218,7 @@ display:none;
     cursor: pointer;
     background-color: white;
     color: #989898;
-    padding: 10px 0px 5px 0px;
+    padding: 10px 25px 5px 25px;
     margin: 0px 11px;
     border-radius: 12px;
     -moz-box-shadow: 0px 3px 1px rgba(0, 0, 0, .31);
@@ -272,7 +270,7 @@ display:none;
 
 #main .imageBox {
     height: 90px;
-    background-position: 25px 0px;
+    background-position: 0px 0px;
     background-repeat: no-repeat;
 }
 
@@ -442,7 +440,7 @@ display:none;
     margin-top:45px;
     word-wrap:break-word;
     color:#000;
-    text-align:center; 
+    text-align:center;
     font-weight: bold;
 }
 
@@ -475,7 +473,7 @@ display:none;
 }
 
 .userEmail {
-    
+
 }
 
 .userMenu {
