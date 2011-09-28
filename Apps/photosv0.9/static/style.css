@@ -1,3 +1,7 @@
+body {
+    font-family: arial;
+}
+
 .gradient {
     background: rgb(120,180,226); /* Old browsers */
     background: -moz-linear-gradient(top, rgba(120,180,226,1) 0%, rgba(38,97,124,1) 100%); /* FF3.6+ */
@@ -12,7 +16,7 @@
 #page_wrapper {
     background: #dbdbdb;
     border-radius: 15px;
-    width: 800px;
+    width: 802px;
     padding: 15px;
 }
 
@@ -22,11 +26,11 @@
 }
 
 .header-row .header-text {
+    float: right;
     text-align: center;
-    width: 800px;
-    position: absolute;
+    width: 556px;
+    margin-right: 117px;
     color: white;
-    font-family: arial;
     font-weight: bold;
     text-shadow: #000 1px 1px 2px;
     font-size: 24px;
@@ -35,10 +39,12 @@
 
 .header-row .back-button {
     display: none;
+    cursor: pointer;
     background-image: url('images/button-bg.png');
     width: 117px;
     height: 30px;
     float: left;
+    z-index: 5;
     margin-left: 10px;
     margin-top: 3px;
 }
@@ -59,6 +65,8 @@
     width: 800px;
     height: 50px;
     background-color: white;
+    position: relative;
+    cursor: pointer;
 }
 
 .gallery-row li {
@@ -80,7 +88,6 @@
     color: white;
     font-size: 24px;
     font-weight: bold;
-    font-family: arial;
     text-shadow: #000 1px 1px 2px;
 }
 
@@ -90,4 +97,29 @@
 
 .gallery-row.template {
     display: none;
+}
+
+.gallery-row .hoverstate {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 50px;
+    background-color: rgba(40, 40, 40, .5);
+}
+
+.gallery-row .hoverstate p {
+    color: white;
+    text-shadow: #000 1px 1px 2px;
+    font-weight: bold;
+    font-style: italic;
+    text-align: center;
+    width: 800px;
+    font-size: 24px;
+    margin-top: 11px;
+}
+
+.gallery-row:hover .hoverstate {
+    display: block;
 }

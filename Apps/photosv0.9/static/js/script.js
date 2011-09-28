@@ -3,10 +3,13 @@ var monthNames = [ "January", "February", "March", "April", "May", "June",
 var yearbuckets = {};
 var monthbuckets = {};
 var daybuckets = {};
+var curState = {};
 
 $(function() {
     var sort = '\'{"timestamp":-1}\'';
     $.getJSON('/query/getPhoto', {'sort':sort}, processResults);
+    $('#page_wrapper').delegate('ul', 'click', moveIn);
+    $('.back-button').click(moveOut);
 });
 
 var processResults = function(photos) {
@@ -30,12 +33,24 @@ var processResults = function(photos) {
 };
 
 var renderBoxes = function(bucket) {
+    $('.gallery-row:not(.template)').remove();
     var keys = rsortedKeys(bucket);
     for (var i = 0; i < keys.length; i++) {
         var thisBucket = bucket[keys[i]];
         var newRow = $('.gallery-row.template').clone();
         newRow.removeClass('template');
-        newRow.find('.title p').text(keys[i]);
+        var text = keys[i];
+        if (curState.year) {
+            if (curState.month) {
+                text = monthNames[curState.month] + " " + keys[i];
+            } else {
+                text = monthNames[keys[i]];
+            }
+        }
+        newRow.find('.title p').text(text);
+        var hoverText = text + ' - ' + thisBucket.length + ' Photo';
+        if (thisBucket.length > 1) { hoverText += 's'; }
+        newRow.find('.hoverstate p').text(hoverText);
         var max = thisBucket.length > 12 ? 12 : thisBucket.length;
         var imKeys = [];
         var j = 0;
@@ -51,6 +66,7 @@ var renderBoxes = function(bucket) {
             newItem.find('div').css('background-image', 'url("' + thumbUrl + '")');
             newRow.append(newItem);
         }
+        newRow.data('key', keys[i]);
         $('#page_wrapper').append(newRow);
     }
 }
@@ -64,4 +80,46 @@ var rsortedKeys = function(obj) {
     }
 
     return keys.sort(function(a, b) { return b - a; });
+}
+
+var moveIn = function() {
+    if (curState.year) {
+        if (curState.month) {
+            return;
+        } else {
+            curState.month = $(this).data('key');
+        }
+    } else {
+        curState.year = $(this).data('key');
+    }
+    renderState();
+}
+
+var moveOut = function() {
+    if (curState.month) {
+        delete curState.month;
+    } else {
+        delete curState.year;
+    }
+    renderState();
+}
+
+var renderState = function() {
+    if (curState.year) {
+        $('.back-button').show();
+        if (curState.month) {
+            $('.back-button p').text(curState.year);
+            $('.header-text').text(monthNames[curState.month] + " " + curState.year);
+            renderBoxes(daybuckets[curState.year][curState.month]);
+        } else {
+            $('.back-button p').text('All Photos');
+            $('.header-text').text(curState.year);
+            renderBoxes(monthbuckets[curState.year]);
+        }
+    } else {
+        $('.back-button').hide();
+        $('.header-text').text('Photos');
+        renderBoxes(yearbuckets);
+    }
+
 }
