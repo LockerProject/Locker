@@ -55,7 +55,7 @@ body {
     width: 80px;
     margin-right: 10px;
     color: #444;
-    margin-top: 5px;
+    margin-top: 6px;
     font-weight: bold;
 }
 
@@ -64,7 +64,7 @@ body {
     border: solid 1px #444;
     width: 800px;
     height: 50px;
-    background-color: white;
+    background-color: #999;
     position: relative;
     cursor: pointer;
 }
@@ -122,4 +122,11 @@ body {
 
 .gallery-row:hover .hoverstate {
     display: block;
+}
+
+#galleria {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
 }

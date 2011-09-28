@@ -10,6 +10,13 @@ $(function() {
     $.getJSON('/query/getPhoto', {'sort':sort}, processResults);
     $('#page_wrapper').delegate('ul', 'click', moveIn);
     $('.back-button').click(moveOut);
+    Galleria.loadTheme('js/themes/classic/galleria.classic.min.js');
+    $(document).keydown(function(e) {
+        if (e.keyCode === 27) {
+            $('#galleria').css('height', 0).css('width', 0);
+            $('#galleria').html('');
+        }
+    });
 });
 
 var processResults = function(photos) {
@@ -22,6 +29,8 @@ var processResults = function(photos) {
         var year = timestamp.getFullYear();
         var month = timestamp.getMonth();
         var day = timestamp.getDate();
+        photos[i].thumbUrl = photos[i].thumbnail || photos[i].url;
+        photos[i].date = monthNames[month] + ' ' + day + ', ' + year;
         if (!yearbuckets[year]) { yearbuckets[year] = []; monthbuckets[year] = []; daybuckets[year] = []; };
         yearbuckets[year].push(photos[i]);
         if (!monthbuckets[year][month]) { monthbuckets[year][month] = []; daybuckets[year][month] = []; };
@@ -62,7 +71,7 @@ var renderBoxes = function(bucket) {
             var num = imKeys.splice(Math.floor(Math.random()*imKeys.length), 1);
             var image = thisBucket[num];
             var newItem = $('<li class="gallery-item"><div></div></li>');
-            var thumbUrl = image.thumbUrl || image.thumbnail || image.url;
+            var thumbUrl = image.thumbUrl;
             newItem.find('div').css('background-image', 'url("' + thumbUrl + '")');
             newRow.append(newItem);
         }
@@ -85,11 +94,18 @@ var rsortedKeys = function(obj) {
 var moveIn = function() {
     if (curState.year) {
         if (curState.month) {
+            drawGallery(daybuckets[curState.year][curState.month][$(this).data('key')]);
             return;
         } else {
+            if (monthbuckets[curState.year][$(this).data('key')].length < 11) {
+                return drawGallery(monthbuckets[curState.year][$(this).data('key')]);
+            }
             curState.month = $(this).data('key');
         }
     } else {
+        if (yearbuckets[$(this).data('key')].length < 11) {
+            return drawGallery(yearbuckets[$(this).data('key')]);
+        }
         curState.year = $(this).data('key');
     }
     renderState();
@@ -122,4 +138,24 @@ var renderState = function() {
         renderBoxes(yearbuckets);
     }
 
+}
+
+var drawGallery = function(bucket) {
+    var data = [];
+    console.log(bucket);
+    for (var i = 0; i < bucket.length; i++) {
+        var newObj = {};
+        newObj.image = bucket[i].url;
+        newObj.thumb = bucket[i].thumbUrl || bucket[i].thumbnail || bucket[i].url;
+        newObj.title = bucket[i].title;
+        console.log(bucket[i].date);
+        newObj.description = bucket[i].date;
+        newObj.link = bucket[i].sourceLink;
+        data.push(newObj);
+    }
+    $('#galleria').css('height', window.innerHeight);
+    $('#galleria').css('width', window.innerWidth);
+    $('#galleria').galleria({
+        data_source: data
+    });
 }
