@@ -4,5 +4,7 @@
     "desc":"A fancy mobile interface to view your links by service (Flickr, Twitter, etc).",
     "status":"unstable",
     "static":"true",
-    "handle":"photomerge"
+    "uses":["facebook", "twitter", "foursquare", "flickr"],
+    "autoInstall":true,
+    "handle":"photosv09"
 }
