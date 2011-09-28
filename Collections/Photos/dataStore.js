@@ -131,10 +131,11 @@ function processTwitter(svcId, data, cb)
 function processFoursquare(svcId, data, cb)
 {
     if(!data || !data.photos || !Array.isArray(data.photos.items)) return cb();
+    var photoInfo = {};
 
     async.forEach(data.photos.items,function(photo,callback){
         if(!photo || !photo.sizes || !Array.isArray(photo.sizes.items) || photo.sizes.items.length == 0) return callback();
-        var photoInfo = {};
+        photoInfo = {};
         photoInfo.url = photo.sizes.items[0].url;
         if (photo.sizes.items[0].height) photoInfo.height = photo.sizes.items[0].height;
         if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
@@ -145,7 +146,7 @@ function processFoursquare(svcId, data, cb)
 
         photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
         saveCommonPhoto(photoInfo, callback);
-    },cb);
+    }, function(err) { cb(err, photoInfo); });
 }
 
 var writeTimer = false;
@@ -170,8 +171,6 @@ function saveCommonPhoto(photoInfo, cb) {
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
-            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
-            locker.event("photo", doc, "new");
             updateState();
         }
         cb(err, doc);
