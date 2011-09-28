@@ -114,7 +114,11 @@ function handleOAuth2Post (code, options, res) {
                   client_secret:apiKeys[options.provider].appSecret,
                   redirect_uri:host + options.redirectURI};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
-           auth = {};
+            auth = {};
+            if (options.provider === 'gcontacts') {
+                auth.clientID = apiKeys[options.provider].appKey;
+                auth.clientSecret = apiKeys[options.provider].appSecret;
+            }
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");

@@ -88,7 +88,7 @@ function getPagesAuth(arg, cbEach, cbDone)
 function getter(options, callback)
 {
     request.get(options, function(err, res, js) {
-        if(res.statusCode != 401) return callback(err, res, js);
+        if(err || res.statusCode != 401) return callback(err, res, js);
         tryRefresh(function(err){
             if(err) return callback(err);
             var api = url.parse(options.uri,true);

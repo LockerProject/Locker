@@ -86,17 +86,19 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         var evInfo = eventInfo[req.body.type];
-        evInfo.new++;
         if (evInfo.timer) {
             clearTimeout(evInfo.timer);
         }
-        evInfo.timer = setTimeout(function() {
-            evInfo.count += evInfo.new;
-            evInfo.updated = new Date().getTime();
-            io.sockets.emit('event',{"name":evInfo.name, "new":evInfo.new, "count":evInfo.count, "updated":evInfo.updated});
-            evInfo.new = 0;
-            saveState();
-        }, 2000);
+        evInfo.timer = function(ev){ evInfo = ev; return setTimeout(function() {
+            // stuff changed, go get the newest total to see if it did
+            request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
+                if(!body || !body.count || evInfo.count == body.count) return;
+                io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated});
+                evInfo.count = body.count;
+                evInfo.updated = body.updated;
+                saveState();
+            });
+        }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated    
     }
 });
 
