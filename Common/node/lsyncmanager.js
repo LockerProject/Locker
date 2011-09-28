@@ -60,7 +60,7 @@ exports.findInstalled = function (callback) {
             if(!path.existsSync(dir+'/me.json')) continue;
             var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
             if (js.synclets) {
-                var js = mergeManifest(js);
+                js = mergeManifest(js);
                 exports.migrate(dir, js);
                 console.log("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
@@ -74,26 +74,6 @@ exports.findInstalled = function (callback) {
             console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
-}
-
-// combined an installed me.json info with any of it's manifest changes, a stopgap until these things can be separated cleanly
-function mergeManifest(js)
-{
-    var serviceInfo = {};
-    synclets.available.some(function(svcInfo) {
-        if (svcInfo.srcdir == js.srcdir) {
-            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
-            return true;
-        }
-        return false;
-    });
-    if (serviceInfo && serviceInfo.manifest) {
-        var fullInfo = JSON.parse(fs.readFileSync(serviceInfo.manifest));
-        return lutil.extend(js, fullInfo);
-    } else {
-        return js;
-    }
-
 }
 
 exports.scanDirectory = function(dir) {
@@ -189,6 +169,30 @@ function scheduleRun(info, synclet) {
     }
 };
 
+function localError(base, err)
+{
+//    var mod = console.outputModule;
+//    console.outputModule = base;
+    console.error(base+"\t"+err);
+//    console.outputModule = mod;    
+}
+
+function mergeManifest(js) {
+    if (js.srcdir) {
+        var dir = path.join(lconfig.lockerDir, js.srcdir);
+        var files = fs.readdirSync(dir);
+        for (var i = 0; i < files.length; i++) {
+            var fullPath = dir + '/' + files[i];
+            var stats = fs.statSync(fullPath);
+            if (RegExp("\\.synclet$").test(fullPath)) {
+                newData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                lutil.extend(js, newData);
+            }
+        }
+    }
+    return js;
+}
+
 /**
 * Executes a synclet
 */
@@ -223,10 +227,7 @@ function executeSynclet(info, synclet, callback) {
     app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
     app.stderr.on('data', function (data) {
-        var mod = console.outputModule;
-        console.outputModule = info.title+" "+synclet.name;
-        console.error(data.toString());
-        console.outputModule = mod;
+        localError(info.title+" "+synclet.name, "STDERR: "+data.toString());
     });
 
     app.stdout.on('data',function (data) {
@@ -238,8 +239,7 @@ function executeSynclet(info, synclet, callback) {
         try {
             response = JSON.parse(dataResponse);
         } catch (E) {
-            console.error(E);
-            console.error(dataResponse);
+            localError(info.title+" "+synclet.name, "response fail: "+E+" of "+dataResponse);
             info.status = synclet.status = 'failed : ' + E;
             if (callback) callback(E);
             return;
@@ -261,7 +261,7 @@ function executeSynclet(info, synclet, callback) {
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
     app.stdin.on('error',function(err){
-        console.error("STDIN error:",err);
+        localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     delete info.syncletToRun;
@@ -363,7 +363,7 @@ function addData (collection, mongoId, data, info, eventType, callback) {
     var q = async.queue(function(object, cb) {
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                console.error('rut roh! no value for primary key!: '+JSON.stringify(object.obj));
+                localError(info.title, "missing key: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 cb();
                 return;
@@ -427,7 +427,6 @@ exports.migrate = function(installedDir, metaData) {
 */
 function mapMetaData(file) {
     var metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
-    metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
     synclets.available.push(metaData);
     return metaData;

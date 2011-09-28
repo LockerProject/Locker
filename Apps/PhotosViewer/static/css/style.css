@@ -1,6 +1,10 @@
 /* Get stylin here */
 body { margin: 10px; }
 
+.box {
+    float: left;
+}
+
 .photo {
     margin: 10px;
     margin-bottom: 8px;
@@ -9,7 +13,7 @@ body { margin: 10px; }
 }
 
 .photo img {
-    box-shadow: 1px 0px 5px rgba(0,0,0,0.7);   
+    box-shadow: 1px 0px 5px rgba(0,0,0,0.7);
     width: 285px;
 }
 
@@ -32,4 +36,4 @@ body { margin: 10px; }
     width: 100%;
     font-size: 20px;
 }
-    
+

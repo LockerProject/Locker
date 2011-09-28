@@ -6,15 +6,15 @@ function photoApp() {
     var offset = 0;
     var limit = 50;
     var $photosList = $("#main");
-    
+
     var timeSort = function(lh, rh) {
                 var rhc = parseInt(rh.timestamp);
                 var lhc = parseInt(lh.timestamp);
                 //log(rhc);
                 //log(lhc);
                 if (isNaN(rhc) || isNaN(lhc)) {
-                    //console.dir(rh);
-                    //console.dir(lh);
+                    console.dir(rh);
+                    console.dir(lh);
                 }
                 if (rhc > (Date.now() / 1000)) rhc = rhc / 1000;
                 if (lhc > (Date.now() / 1000)) lhc = lhc / 1000;
@@ -28,7 +28,7 @@ function photoApp() {
         for (var i in photos) {
 	    p = photos[i];
 	    title = p.title ? p.title : "Unititled";
-	    photoHTML += '<div id="' + p._id + '" class="photo" style="position: absolute; top:-1000px;"><img src="/Me/photos/fullPhoto/' + p.id+ '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div>';
+	    photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="/Me/photos/fullPhoto/' + p.id+ '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
 	}
         return photoHTML;
     };
@@ -38,13 +38,13 @@ function photoApp() {
 
 	// clear the list
 	$photosList.html('');
-	
+
 	// populate the list with our photos
 	if (photos.length == 0) $photosList.append("<div>Sorry, no photos found!</div>");
 
 	$photosList.append(HTMLFromPhotoJSON(photos));
-  
-        $photosList.imagesLoaded( 
+
+        $photosList.imagesLoaded(
             function(){
                 $photosList.masonry(
                     {
@@ -57,27 +57,30 @@ function photoApp() {
     var getMorePhotosCB = function(photos) {
         var $newElems;
         if (photos.length == 0) return;
-        
+
 	$newElems = $(HTMLFromPhotoJSON(photos));
         $photosList.append($newElems);
-        
+
         // ensure that images load before adding to masonry layout
         $newElems.imagesLoaded(
             function(){
-                $photosList.masonry( 'appended', $newElems, true ); 
+                $photosList.masonry( 'appended', $newElems, true );
             });
         offset += limit;
     };
+
+    var sort = '\'{"timestamp":-1}\'';
 
     var loadMorePhotosHandler = function() {
         $.getJSON(
 	    '/query/getPhoto',
 	    {
                 'offset':offset,
-                'limit':limit
-            }, 
+                'limit':limit,
+                'sort':sort
+            },
             getMorePhotosCB
-        );        
+        );
 
     };
 
@@ -85,16 +88,16 @@ function photoApp() {
     $.getJSON(
 	'/query/getPhoto',
 	{
-            'offset':offset, 
-            'limit':limit
-        }, 
+            'offset':offset,
+            'limit':limit,
+            'sort':sort
+    },
 	getPhotosCB
     );
 
     $("#moarphotos").click( loadMorePhotosHandler );
 
     // TODO: make this keep in sync!
-    $("#photoCounter").html(window.parent.allCounts.photo.count + ' total');
 }
 
 /* jQuery syntactic sugar for onDomReady */
