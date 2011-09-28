@@ -17,6 +17,9 @@ body {
     background: #dbdbdb;
     border-radius: 15px;
     width: 802px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
     padding: 15px;
 }
 

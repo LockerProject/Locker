@@ -156,6 +156,7 @@ var drawGallery = function(bucket) {
     $('#galleria').css('height', window.innerHeight);
     $('#galleria').css('width', window.innerWidth);
     $('#galleria').galleria({
+        popupLinks: true,
         data_source: data
     });
 }
