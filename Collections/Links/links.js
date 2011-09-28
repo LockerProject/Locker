@@ -127,6 +127,21 @@ app.post('/events', function(req, res) {
     res.end('ok');
 });
 
+app.get('/ready', function(req, res) {
+    dataStore.getTotalLinks(function(err, resp) {
+        if (err) {
+            res.writeHead(500);
+            return res.end(err);
+        }
+        res.writeHead(200);
+        if (resp === 0) {
+            return res.end('false');
+        } else {
+            return res.end('true');
+        }
+    });
+});
+
 function genericApi(name,f)
 {
     app.get(name,function(req,res){
