@@ -15,6 +15,10 @@ $(function() {
         if (e.keyCode === 27) {
             $('#galleria').css('height', 0).css('width', 0);
             $('#galleria').html('');
+        } else if (e.keyCode === 37) {
+            Galleria.get(0).prev();
+        } else if (e.keyCode === 39) {
+            Galleria.get(0).next();
         }
     });
 });
