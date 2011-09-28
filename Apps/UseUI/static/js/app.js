@@ -1,7 +1,7 @@
 function log(m) { if (console && console.log) console.log(m); }
 var app, timeout, appId;
 var providers = [];
-var userClosed = false;
+var manuallyClosed = false;
 var retryTime = 1000;
 
 $(document).ready(
@@ -32,7 +32,7 @@ $(document).ready(
 
         // close service drawer button
         $('#service-closer').click(function() {
-            userClosed = true;
+            manuallyClosed = true;
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
             $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() { 
                     $('.services-box-container').show();
@@ -270,11 +270,11 @@ function renderApp() {
                     clearTimeout(timeout);
                 }
                 else {
-                    if (!userClosed && $('#services').height() === 0) expandServices();
-                    if (!timeout) {
-                        // log('loading page');
-                        $("#appFrame")[0].contentWindow.location.replace(data[app].url + "notready.html");
-                    }
+                    if (!manuallyClosed && $('#services').height() === 0) expandServices();
+                    var currentLocation = $("#appFrame")[0].contentWindow.location;
+                    var newLocation = data[app].url + "notready.html";
+                    if (currentLocation.toString() !== newLocation)
+                        currentLocation.replace(newLocation);
                     clearTimeout(timeout);
                     timeout = setTimeout(function() {poll(data);}, 1000);
                     // log(timeout);
