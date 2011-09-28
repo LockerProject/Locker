@@ -247,6 +247,7 @@ var npm = require('npm');
     });
 
     process.on('uncaughtException', function(err) {
+        if (shuttingDown_ === true) { process.exit(1); }
         console.error(util.inspect(err));
         if(err && err.stack) console.error(util.inspect(err.stack));
         if (lconfig.airbrakeKey) {
