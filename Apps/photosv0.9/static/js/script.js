@@ -160,7 +160,12 @@ var drawGallery = function(bucket) {
     $('#galleria').css('height', window.innerHeight);
     $('#galleria').css('width', window.innerWidth);
     $('#galleria').galleria({
+        debug: false,
         popupLinks: true,
         data_source: data
+    });
+    $('#galleria').delegate('.galleria-info-close', 'click', function() {
+        $('#galleria').css('height', 0).css('width', 0);
+        $('#galleria').html('');
     });
 }

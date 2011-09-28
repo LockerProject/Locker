@@ -21,18 +21,19 @@ Galleria.addTheme({
         thumbCrop:  'height',
 
         // set this to false if you want to show the caption all the time:
-        _toggleInfo: true
+        _toggleInfo: false
     },
     init: function(options) {
 
         // add some elements
-        this.addElement('info-link','info-close');
+        this.addElement('info-close');
         this.append({
             'info' : ['info-link','info-close']
         });
 
+
         // cache some stuff
-        var info = this.$('info-link,info-text'),
+        var info = this.$('info-text'),
             touch = Galleria.TOUCH,
             click = touch ? 'touchstart' : 'click';
 
@@ -47,14 +48,8 @@ Galleria.addTheme({
         }
 
         // toggle info
-        if ( options._toggleInfo === true ) {
-            info.bind( click, function() {
-                info.toggle();
-            });
-        } else {
-            info.show();
-            this.$('info-link, info-close').hide();
-        }
+        info.show();
+        this.$('info-link').hide();
 
         // bind some stuff
         this.bind('thumbnail', function(e) {
@@ -80,14 +75,16 @@ Galleria.addTheme({
                 this.$('loader').show().fadeTo(200, 0.4);
             }
 
-            this.$('info').toggle( this.hasInfo() );
-
             $(e.thumbTarget).css('opacity',1).parent().siblings().children().css('opacity', 0.6);
         });
 
         this.bind('loadfinish', function(e) {
             this.$('loader').fadeOut(200);
         });
+
+        $('.galleria-info').unbind();
+        $('.galleria-info-text').unbind();
+        $('.galleria-info-totle').unbind();
     }
 });
 
