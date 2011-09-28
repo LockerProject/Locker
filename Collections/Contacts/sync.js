@@ -46,7 +46,7 @@ exports.gatherContacts = function(cb) {
                             console.error('flickr done!');
                         });
                     } else if(svc.provides.indexOf('contact/gcontacts') >= 0) {
-                        exports.getContacts("google", "contact", svc.id, function() {
+                        exports.getContacts("gcontacts", "contact", svc.id, function() {
                             console.error('gcontacts done!');
                         });
                     } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
