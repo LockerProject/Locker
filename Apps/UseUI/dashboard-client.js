@@ -43,13 +43,8 @@ function(req, res) {
     var lconfig = require('../../Common/node/lconfig.js');
     lconfig.load('../../Config/config.json');
     var rev = fs.readFileSync(path.join(lconfig.lockerDir, '/../', 'gitrev.json'), 'utf8');
-    var customFooter;
-    if (lconfig.dashboard && lconfig.dashboard.customFooter) {
-        customFooter = fs.readFileSync(__dirname + '/views/' + lconfig.dashboard.customFooter, 'utf8');
-    }
     res.render('app', {
         dashboard: lconfig.dashboard,
-        customFooter: customFooter,
         revision: rev.substring(1,11)
     });
 });
@@ -98,7 +93,7 @@ app.post('/event', function(req, res) {
                 evInfo.updated = body.updated;
                 saveState();
             });
-        }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated    
+        }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
     }
 });
 

@@ -8,6 +8,7 @@ var RESTeasy = require('api-easy');
 var vows = require("vows");
 var suite = RESTeasy.describe("Links Collection");
 var fs = require('fs');
+var request = require('request');
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/links/twitter_event_2.json','ascii'));
 var facebookEvent = JSON.parse(fs.readFileSync('fixtures/events/links/facebook_event_1.json','ascii'));
 
@@ -29,6 +30,26 @@ util.expandUrl = function(a,b,c){b(a.url);c();} // fakeweb doesn't support HEAD 
 var lmongo = require('../Common/node/lmongo.js');
 
 suite.next().suite.addBatch({
+    "Says it isn't when ready" : {
+        topic: function() {
+            var self = this;
+            process.chdir("." + mePath);
+            lmongo.init("links", thecollections, function(mongo, colls) {
+                dataStore.init(colls.link, colls.encounter, colls.queue);
+                search.init(dataStore);
+                dataIn.init(locker, dataStore, search);
+
+                dataStore.clear(function() {
+                    request.get({uri:lconfig.lockerBase + "/Me/links/ready"}, self.callback);
+                });
+            });
+        },
+        "when it's not": function(err, resp, body) {
+            assert.isNull(err);
+            assert.equal(body, 'false');
+        }
+    }
+}).addBatch({
     "Can process Tweet" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
@@ -36,13 +57,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({uri : 'http://bit.ly/jBrrAe', body:'', contentType:"text/html" });
             fakeweb.registerUri({uri : 'http://bit.ly/jO9Pfy', body:'', contentType:"text/html" });
 
-            lmongo.init("links", thecollections, function(mongo, colls) {
-                process.chdir("." + mePath);
-                dataStore.init(colls.link, colls.encounter, colls.queue);
-                search.init(dataStore);
-                dataIn.init(locker, dataStore, search);
-                dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});
-            });
+            dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});
         },
         "successfully" : function(err, response) {
             assert.equal(response, 2);
@@ -67,6 +82,16 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.equal(response.length, 2);
+        }
+    }
+}).addBatch({
+    "is now ready" : {
+        topic: function() {
+            request.get({uri:lconfig.lockerBase + "/Me/links/ready"}, this.callback);
+        },
+        "once there's data" : function(err, resp, body) {
+            assert.isNull(err);
+            assert.equal(body, 'true');
         }
     }
 });

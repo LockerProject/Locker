@@ -89,6 +89,21 @@ app.post('/events', function(req, res) {
     });
 });
 
+app.get('/ready', function(req, res) {
+    dataStore.getTotalCount(function(err, resp) {
+        if (err) {
+            res.writeHead(500);
+            return res.end(err);
+        }
+        res.writeHead(200);
+        if (resp === 0) {
+            return res.end('false');
+        } else {
+            return res.end('true');
+        }
+    });
+});
+
 app.get('/:id', function(req, res, next) {
     if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {

@@ -95,6 +95,22 @@ app.get("/getPhoto/:photoId", function(req, res) {
     })
 });
 
+app.get('/ready', function(req, res) {
+    dataStore.getTotalCount(function(err, resp) {
+        if (err) {
+            res.writeHead(500);
+            return res.end(err);
+        }
+        res.writeHead(200);
+        if (resp === 0) {
+            return res.end('false');
+        } else {
+            return res.end('true');
+        }
+    });
+});
+
+
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
         res.send('Updating');
