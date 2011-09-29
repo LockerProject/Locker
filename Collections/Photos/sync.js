@@ -73,7 +73,7 @@ function basicPhotoGatherer(svcId, type, provides) {
 function gatherFromUrl(svcId, url, type) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcId + url}, function(err, resp, body) {
         if (err) {
-            console.debug("Error getting basic photos from " + svcId);
+            logger.debug("Error getting basic photos from " + svcId);
             return;
         }
         try {
