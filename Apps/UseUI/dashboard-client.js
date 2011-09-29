@@ -45,7 +45,6 @@ function(req, res) {
     var rev = fs.readFileSync(path.join(lconfig.lockerDir, '/../', 'gitrev.json'), 'utf8');
     res.render('app', {
         dashboard: lconfig.dashboard,
-        customFooter: customFooter,
         revision: rev.substring(1,11)
     });
 });
