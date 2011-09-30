@@ -86,7 +86,7 @@ function processFlickr(svcId, data, cb) {
     if (data.width_l) photoInfo.width = data.width_l;
     if (data.title) photoInfo.title = data.title
     if (data.url_t) photoInfo.thumbnail = data.url_t;
-    photoInfo.sourceLink = "http://www.flickr.com/photos/" + data.owner + "/" + data.id + "/";
+    if (data.owner && data.id) photoInfo.sourceLink = "http://www.flickr.com/photos/" + data.owner + "/" + data.id + "/";
     if (data.datetaken) {
         var d = new Date(data.datetaken);
         photoInfo.timestamp = d.getTime();
