@@ -4,6 +4,7 @@ var yearbuckets = {};
 var monthbuckets = {};
 var daybuckets = {};
 var curState = {};
+var curGallery = -1;
 
 $(function() {
     var sort = '\'{"timestamp":-1}\'';
@@ -16,9 +17,9 @@ $(function() {
             $('#galleria').css('height', 0).css('width', 0);
             $('#galleria').html('');
         } else if (e.keyCode === 37) {
-            Galleria.get(0).prev();
+            Galleria.get(curGallery).prev();
         } else if (e.keyCode === 39) {
-            Galleria.get(0).next();
+            Galleria.get(curGallery).next();
         }
     });
 });
@@ -164,6 +165,7 @@ var drawGallery = function(bucket) {
         popupLinks: true,
         data_source: data
     });
+    curGallery++;
     $('#galleria').delegate('.galleria-info-close', 'click', function() {
         $('#galleria').css('height', 0).css('width', 0);
         $('#galleria').html('');
