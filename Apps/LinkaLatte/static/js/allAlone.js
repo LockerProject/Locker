@@ -143,7 +143,7 @@ $(function(){
                             return theClass;
                         },
                         "img.favicon@src":"link.favicon",
-                        "a":function(arg) {
+                        "a.expandedLink":function(arg) {
                             if (arg.item.link.length > 100) {
                                 return arg.item.link.substring(0, 100) + "...";
                             } else {
@@ -151,7 +151,7 @@ $(function(){
                             }
                         },
                         "a@href":"link.link",
-                        "a.linkDescription":"link.title",
+                        "span.linkDescription":"link.title",
                         "div.linkFrom":function(arg) {
                             return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ");
                         },
