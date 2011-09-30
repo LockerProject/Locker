@@ -147,13 +147,11 @@ var renderState = function() {
 
 var drawGallery = function(bucket) {
     var data = [];
-    console.log(bucket);
     for (var i = 0; i < bucket.length; i++) {
         var newObj = {};
         newObj.image = bucket[i].url;
         newObj.thumb = bucket[i].thumbUrl || bucket[i].thumbnail || bucket[i].url;
         newObj.title = bucket[i].title;
-        console.log(bucket[i].date);
         newObj.description = bucket[i].date;
         newObj.link = bucket[i].sourceLink;
         data.push(newObj);
