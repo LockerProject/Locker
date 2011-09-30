@@ -12,8 +12,12 @@ process.on('SIGINT', function() { stop(); });
 process.on('SIGTERM', function() { stop(); });
 
 var stop = function() {
-    var event = child.stop();
-    event.on('stopAll', function() {
-        process.exit();
-    });
+    if (child.child.pid) {
+        var event = child.stop();
+        event.on('stopAll', function() {
+            process.exit();
+        });
+    } else {
+        process.exit(0);
+    }
 }
