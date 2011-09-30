@@ -88,12 +88,12 @@
     color: #bbb;
 }
 .galleria-info-close {
-    width: 9px;
-    height: 9px;
+    height: 20px;
+    width: 155px;
     position: absolute;
-    top: 16px;
-    right: 100px;
-    background-position: -753px -11px;
+    top: 10px;
+    right: 300px;
+    background-position: -730px -5px;
     opacity: .5;
     filter: alpha(opacity=50);
     cursor: pointer;
