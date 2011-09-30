@@ -10,6 +10,7 @@
 var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
+var lutil = require('../../Common/node/lutil');
 var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
@@ -157,7 +158,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
     }, 5000);
 }

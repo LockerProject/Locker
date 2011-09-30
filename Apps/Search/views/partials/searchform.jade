@@ -1,11 +1,11 @@
-h1 Search my Locker
+h1 Search people, tweets, links, photos...
 #searchForm
   form(action='#{searchPath}', method='get')
     select.typeSelector(name='type', id='searchtype')
         option(value='') Search all types
-        option(value='contact/full*') Search only contacts
+        option(value='contact/full*') Search only people
         option(value='photo/full*') Search only photos
-        option(value='timeline/twitter*') Search only Twitter statuses
+        option(value='timeline/twitter*') Search only tweets
     input.text(type='text', id='searchterm', name='searchterm', size='48', value='#{term}')
     #searchButton
       .button.clb

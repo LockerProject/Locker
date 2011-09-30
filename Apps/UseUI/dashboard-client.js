@@ -15,7 +15,7 @@ var express = require('express'),
     socketio = require('socket.io'),
     request = require('request');
 var logger = require("logger").logger;
-
+var lutil = require('lutil');
 
 var externalBase;
 var locker;
@@ -105,7 +105,7 @@ function saveState()
     for (var key in eventInfo) {
         if (eventInfo.hasOwnProperty(key)) counts[key] = {count:eventInfo[key].count};
     }
-    fs.writeFileSync("state.json", JSON.stringify(counts));
+    lutil.atomicWriteFileSync("state.json", JSON.stringify(counts));
 }
 
 // compare last-sent totals to current ones and send differences

@@ -125,7 +125,8 @@ exports.install = function(metaData) {
     synclets.installed[serviceInfo.id] = serviceInfo;
     serviceInfo.version = Date.now();
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id),0755);
-    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'me.json'),JSON.stringify(serviceInfo, null, 4));
+    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, serviceInfo.id, 'me.json'),
+                              JSON.stringify(serviceInfo, null, 4));
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
@@ -252,7 +253,8 @@ function executeSynclet(info, synclet, callback) {
         info.config = lutil.extend(true, tempInfo.config, response.config);
         scheduleRun(info, synclet);
         processResponse(deleteIDs, info, synclet, response, function(err, cbresponse) {
-            fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), JSON.stringify(info, null, 4));
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), 
+                                      JSON.stringify(info, null, 4));
             if (callback) callback(err, cbresponse);
         });
     });

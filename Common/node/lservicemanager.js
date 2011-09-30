@@ -227,7 +227,8 @@ exports.migrate = function(installedDir, metaData) {
                         var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
-                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), JSON.stringify(curMe, null, 4));
+                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 
+                                                  JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run migration!");
@@ -289,7 +290,7 @@ exports.install = function(metaData, installOverride) {
     meInfo.uri = lconfig.lockerBase+"/Me/"+meInfo.id+"/";
     meInfo.version = Date.now();
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id),0755);
-    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
+    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
     serviceMap.installed[meInfo.id] = mergedManifest(path.join(lconfig.me, meInfo.id));
 
     var fullInfo = exports.metaInfo(meInfo.id);

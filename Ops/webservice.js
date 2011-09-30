@@ -435,7 +435,8 @@ locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
-    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
+    req.url = '/Me/' + dashboard.instance.handle + '/' + req.url.substring(11);
+    proxyRequest(req.method, req, res);
 });
 
 locker.all("/socket.io*", function(req, res) {

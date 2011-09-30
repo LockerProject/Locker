@@ -32,6 +32,7 @@ var npm = require('npm');
     var request = require('request');
     var async = require('async');
     var util = require('util');
+    var lutil = require('lutil');
     require('graceful-fs');
 
 
@@ -175,7 +176,7 @@ var npm = require('npm');
                         var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
-                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
+                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
                     } else {
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run global migration!");

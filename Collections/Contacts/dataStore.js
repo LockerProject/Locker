@@ -11,6 +11,7 @@ var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
 var fs = require('fs');
+var lutil = require('lutil');
 
 exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
@@ -36,7 +37,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
     }, 5000);    
 }

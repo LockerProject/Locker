@@ -3,9 +3,9 @@
     != partial('partials/searchform', {locals: {searchPath: searchPath}})
   
     - if (error !== null)
-      h1 #{error}
+      h3 #{error}
     - else
-      h1 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
+      h3 Found #{total} results for &quot;#{term}&quot; in #{took}ms:
     
     ul.searchresults
       - var lastType
@@ -17,7 +17,7 @@
             - else if (results[r]._type === 'photo/full')
               | Photos
             - else if (results[r]._type === 'contact/full')
-              | Contacts
+              | People
             - else
               #{results[r]._type}
         - lastType = results[r]._type
