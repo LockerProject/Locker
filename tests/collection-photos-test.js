@@ -29,15 +29,17 @@ var lmongo = require('../Common/node/lmongo.js');
 suite.next().suite.addBatch({
     "Can process Facebook event" : {
         topic: function() {
+            process.chdir("." + mePath);
             var self = this;
             lmongo.init("photos", thecollections, function(mongo, colls) {
-                process.chdir("." + mePath);
                 dataStore.init(colls.photos, mongo);
                 dataStore.processEvent(facebookEvent, self.callback);
             });
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
+            assert.equal(response.sourceLink, 'http://www.facebook.com/photo.php?pid=1887967&id=709761820');
+            assert.equal(response.timestamp, 1233685472000);
         }
     }
 }).addBatch({
@@ -46,9 +48,14 @@ suite.next().suite.addBatch({
             dataStore.processEvent(foursquareEvent, this.callback);
         },
         "successfully" : function(err, response) {
-            process.chdir(cwd);
             assert.isNull(err);
+            assert.equal(response.timestamp, 1303341763000);
+            assert.equal(response.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
         }
+    }
+}).addBatch({
+    "cleanup" : function() {
+        process.chdir(cwd);
     }
 });
 
