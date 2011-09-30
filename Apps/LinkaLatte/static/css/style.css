@@ -86,15 +86,15 @@ header input#linksQuery {
 a.expandedLink {
     color:#7f7f7f;
     margin-left: 4px;
-    font-size:95%;
+    font-size:85%;
 }
 .linkDescription {
     padding:2px;
-    font-size:90%;
+    font-size:95%;
 }
 .origLink {
     color:#666;
-    font-size:90%;
+    font-size:85%;
     padding-left:4px;
 }
 .linkFrom {

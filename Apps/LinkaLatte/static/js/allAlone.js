@@ -151,7 +151,7 @@ $(function(){
                             }
                         },
                         "a@href":"link.link",
-                        "div.linkDescription":"link.title",
+                        "a.linkDescription":"link.title",
                         "div.linkFrom":function(arg) {
                             return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ");
                         },
