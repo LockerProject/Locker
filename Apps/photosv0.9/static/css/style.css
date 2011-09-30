@@ -43,7 +43,7 @@ body {
 .header-row .back-button {
     display: none;
     cursor: pointer;
-    background-image: url('img/button-bg.png');
+    background-image: url('../img/button-bg.png');
     width: 117px;
     height: 30px;
     float: left;
