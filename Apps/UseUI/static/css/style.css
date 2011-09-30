@@ -194,6 +194,7 @@ display:none;
     font-size: 34px;
     font-weight: bold;
     color: #6e6e6e;
+    text-align: center;
 }
 
 #main .body {
@@ -211,6 +212,7 @@ display:none;
     font-size: 20.25px;
     margin-left: 15px;
     font-weight: bold;
+    text-align: center;
     margin-bottom: 15px;
 }
 
