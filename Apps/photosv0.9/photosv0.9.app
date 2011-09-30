@@ -2,7 +2,9 @@
     "title":"Photo Merge",
     "action":"View your photos!",
     "desc":"A fancy mobile interface to view your links by service (Flickr, Twitter, etc).",
-    "status":"unstable",
+    "status":"stable",
     "static":"true",
-    "handle":"photomerge"
+    "handle":"photosv09",
+    "uses":["facebook", "twitter", "foursquare", "flickr"],
+    "autoInstall":true
 }
