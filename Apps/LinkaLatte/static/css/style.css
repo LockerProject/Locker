@@ -65,12 +65,12 @@ header input#linksQuery {
 }
 .providerIcon {
     float:left;
-    height:32px;
-    width:32px;
-    margin-top:4px;
+    height:16px;
+    width:16px;
+    vertical-align:middle;
 }
 .fullInfo {
-    margin-left:36px;
+    margin-left:16px;
     min-height:32px;
     padding:4px 4px 4px 6px;
     word-wrap:break-word;
@@ -79,9 +79,10 @@ header input#linksQuery {
     background-color:#e2e2e2;
 }
 .favicon {
-    width:16px;
+    float:left;
     height:16px;
-    vertical-align:middle;
+    width:16px;
+    margin-top:4px;
 }
 a.expandedLink {
     color:#7f7f7f;

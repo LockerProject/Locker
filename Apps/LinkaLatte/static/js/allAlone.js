@@ -152,10 +152,10 @@ $(function(){
                         },
                         "a@href":"link.link",
                         "span.linkDescription":"link.title",
-                        "div.linkFrom":function(arg) {
+                        "span.linkFrom":function(arg) {
                             return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ");
                         },
-                        "div.linkFrom@style":function(arg) {
+                        "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
                         },
                         "span.origLink@style":function(arg) {
