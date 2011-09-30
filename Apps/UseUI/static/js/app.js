@@ -34,7 +34,7 @@ $(document).ready(
         $('#service-closer').click(function() {
             manuallyClosed = true;
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-            $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() { 
+            $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
                     $('.services-box-container').show();
                     resizeFrame();
                 }
@@ -291,6 +291,6 @@ function expandServices() {
 }
 
 function resizeFrame() {
-    $('#appFrame').height($(window).height() - $(".services-box-container").height() - $('#services').height() - $('.header').height() - 6);
+    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
     $("#appFrame").width($(window).width());
 }
