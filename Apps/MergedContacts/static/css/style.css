@@ -44,14 +44,14 @@ body {
     color: rgb(104,104,104);
 }
 
-#content {  
-    display: table;  
-}  
-  
+#content {
+    display: table;
+}
+
 #main {
     height: 100%;
     margin-right: 0px;
-}  
+}
 
 aside {
     z-index: -1;
@@ -65,7 +65,7 @@ aside {
     background-color: rgb(235,235,235);
     box-shadow: rgba(0,0,0,0.4) -2px 2px 2px 0px inset;
     font-family: 'MuliLight';
-}  
+}
 
 aside a {
     color: rgb(51,204,255);
@@ -115,7 +115,7 @@ aside img.icon {
     float:left;
     border: none;
     margin-top: 2px;
-    margin-right: 10px;  
+    margin-right: 10px;
 }
 
 aside div.detail {
@@ -157,7 +157,6 @@ aside div.detail div {
 
 .contact div.contactActions {
     float: right;
-    width: 200px;
     padding-right: 10px;
     text-align: right;
 }
@@ -396,7 +395,7 @@ a.email {
 }
 
 
-#search_box { 
+#search_box {
     background:-moz-linear-gradient(top, #ccc, #999);
     background:-webkit-gradient(linear, 0 0, 0 100%, from(#ccc), to(#999));
     border:1px solid #999;
@@ -409,8 +408,8 @@ a.email {
     width:400px;
     margin: 0px 20px 0px 20px;
 }
- 
-#search_box .wrapper { 
+
+#search_box .wrapper {
     background:#fff;
     border:1px solid #999;
     -moz-border-radius:2px;
@@ -421,7 +420,7 @@ a.email {
     padding-left:10px;
     position:relative;
 }
- 
+
 #search_box input,
 #search_box input:focus { border:none; color:#999; outline:none; font: 14px 'MuliRegular', Helvetica, Arial, sans-serif; margin:11px 0; width:335px; }
 #search_box button {
