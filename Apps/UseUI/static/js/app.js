@@ -262,8 +262,8 @@ function renderApp() {
         appId = data[app].id;
         drawServices();
         (function poll (data) {
-            $.getJSON(data[app].url + "ready", function(state) {
-                ready = state;
+            $.getJSON("/Me/" + app + "/state", function(state) {
+                ready = state.count > 0;
                 if (ready) {
                     // log('clearing timeout');
                     $("#appFrame")[0].contentWindow.location.replace(data[app].url);
