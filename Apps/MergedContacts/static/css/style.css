@@ -333,9 +333,12 @@ a.github {
     background: url('../img/www.addictedtocoffee.de/github.png');
 }
 
-
 a.flickr {
     background: url('../img/www.addictedtocoffee.de/flickr.png');
+}
+
+a.foursquare {
+    background: url('../img/www.addictedtocoffee.de/foursquare.png');
 }
 
 a.email {
