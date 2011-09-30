@@ -8,6 +8,7 @@
 */
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var fs = require('fs');
+var lutil = require('lutil');
 
 // in the future we'll probably need a visitCollection too
 var linkCollection, encounterCollection, queueCollection;
@@ -100,7 +101,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
     }, 5000);    
 }

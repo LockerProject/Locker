@@ -1,3 +1,6 @@
+var fs = require("fs");
+var path = require("path");
+
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
  *
@@ -133,3 +136,17 @@ exports.ltrim = function(stringToTrim) {
 exports.rtrim = function(stringToTrim) {
 	return stringToTrim.replace(/\s+$/,"");
 };
+
+exports.atomicWriteFileSync = function(dest, data) {
+    var tmp = dest + '.tmp';
+    var bkp = dest + '.bkp';
+    fs.writeFileSync(tmp, data);
+    if(data.length && fs.statSync(tmp).size !== data.length) throw new Error('atomic write error! file size !== data.length');
+    try {
+        fs.renameSync(dest, bkp);
+    } catch(err) {
+        if(! err.code === 'ENOENT')
+            throw err;
+    }
+    fs.renameSync(tmp, dest);
+}
