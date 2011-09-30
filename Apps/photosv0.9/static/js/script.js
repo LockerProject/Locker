@@ -4,6 +4,7 @@ var yearbuckets = {};
 var monthbuckets = {};
 var daybuckets = {};
 var curState = {};
+var curGallery = -1;
 
 $(function() {
     var sort = '\'{"timestamp":-1}\'';
@@ -16,9 +17,9 @@ $(function() {
             $('#galleria').css('height', 0).css('width', 0);
             $('#galleria').html('');
         } else if (e.keyCode === 37) {
-            Galleria.get(0).prev();
+            Galleria.get(curGallery).prev();
         } else if (e.keyCode === 39) {
-            Galleria.get(0).next();
+            Galleria.get(curGallery).next();
         }
     });
 });
@@ -146,13 +147,11 @@ var renderState = function() {
 
 var drawGallery = function(bucket) {
     var data = [];
-    console.log(bucket);
     for (var i = 0; i < bucket.length; i++) {
         var newObj = {};
         newObj.image = bucket[i].url;
         newObj.thumb = bucket[i].thumbUrl || bucket[i].thumbnail || bucket[i].url;
         newObj.title = bucket[i].title;
-        console.log(bucket[i].date);
         newObj.description = bucket[i].date;
         newObj.link = bucket[i].sourceLink;
         data.push(newObj);
@@ -164,6 +163,7 @@ var drawGallery = function(bucket) {
         popupLinks: true,
         data_source: data
     });
+    curGallery++;
     $('#galleria').delegate('.galleria-info-close', 'click', function() {
         $('#galleria').css('height', 0).css('width', 0);
         $('#galleria').html('');
