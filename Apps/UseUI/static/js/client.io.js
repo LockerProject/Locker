@@ -34,15 +34,56 @@ function updateCounts(name, count, updated) {
 var socket = io.connect();
 var once = false;
 
+
+// detect window focus changes
+var window_focus = true;
+$(window).focus(function() {
+    window_focus = true;
+    console.log('window_focus =', window_focus);
+    dequeueGritters();
+}).blur(function() {
+    window_focus = false;
+    console.log('window_focus =', window_focus);
+});
+
+var gritterEvents = {};
+function queueGritter(name, count) {
+    console.log('queueGritter window_focus =', window_focus);
+    if(window_focus) {
+        showGritter(name, count);
+    } else {
+        if(gritterEvents[name]) {
+            gritterEvents[name] += count;
+        } else {
+            gritterEvents[name] = count;
+        }
+    }
+}
+
+function dequeueGritters() {
+    for(var i in gritterEvents) {
+        if(gritterEvents[i]) {
+            showGritter(i, gritterEvents[i]);
+            gritterEvents[i] = 0;
+        }
+    }
+}
+
+function showGritter(name, count) {
+    var prettyName = name;
+    if(count > 1) prettyName += 's';
+    $.gritter.add({
+      title:"New " + prettyName,
+      text:"Got " + count + " new " + prettyName,
+      image: "img/" + name + "s.png",
+      time:5000
+    });
+}
+
 socket.on('event', function (body) {
   console.log("got event: ", body);
   updateCounts(body.name, body.count, body.updated);
-  $.gritter.add({
-    title:"New " + body.name + "s",
-    text:"Got " + body.new + " new " + body.name + "s",
-    image: "img/" + body.name + "s.png",
-    time:5000
-  });
+  queueGritter(body.name, body.new);
 });
 socket.on("counts", function(counts) {
   console.log("Counts:",counts);
