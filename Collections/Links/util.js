@@ -38,36 +38,30 @@ exports.extractUrls = function(arg, cbEach, cbDone) {
 exports.extractText = function(arg, cbEach, cbDone) {
     if(!arg.html) return cbDone("no html");
 
-	var contentLength = 0, skipLevel = 0,
-		parser, readable, ret;
+    var contentLength = 0, skipLevel = 0, parser, readable, ret;
 
     try{
-    	// keep skipping unless/until we have a decent amount of text
-    	while(contentLength < 250 && skipLevel < 4){
-    	    parser = sax.parser(false, {
-    		    lowercasetags : true
-    		});
-
-    	    readable = new readability.process(parser, {skipLevel:skipLevel});
-
-    	    parser.write(arg.html).close();
-
-    	    ret = readable.getArticle("text");
-    	    contentLength = ret.textLength;
-    	    skipLevel += 1;
-	}
+        // keep skipping unless/until we have a decent amount of text
+        while(contentLength < 250 && skipLevel < 4){
+            parser = sax.parser(false, { lowercasetags : true });
+            readable = new readability.process(parser, {skipLevel:skipLevel});
+            parser.write(arg.html).close();
+            ret = readable.getArticle("text");
+            contentLength = ret.textLength;
+            skipLevel += 1;
+        }
     }catch(E){
         return cbDone(E);
     }
 
-	if(ret)
-	{
-	    // normalize all whitespace nicely
-	    if (ret.text) ret.text = ret.text.replace(/\s+/g, ' ');
-	    if (ret.title) ret.title = ret.title.replace(/\s+/g, ' ');
+    if(ret)
+    {
+        // normalize all whitespace nicely
+        if (ret.text) ret.text = ret.text.replace(/\s+/g, ' ');
+        if (ret.title) ret.title = ret.title.replace(/\s+/g, ' ');
         cbEach(ret);
-	}
-	cbDone();
+    }
+    cbDone();
 }
 
 // take the html of a page and determine the favicon
@@ -85,11 +79,14 @@ exports.extractFavicon = function(arg, cbEach, cbDone) {
 exports.fetchHTML = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
     // sending blank accept encoding I guess means "none"
-    request.get({uri:arg.url, headers:{"Accept":"text/html","Accept-Encoding":""}, timeout:5000},function(err,resp,body){
-	   if(err || resp.statusCode != 200 || !resp.headers["content-type"] || resp.headers["content-type"].indexOf("text/html") != 0) return cbDone(err);
-	    cbEach(body);
-	    cbDone();
-	});
-
+    try {
+        request.get({uri:arg.url, headers:{"Accept":"text/html","Accept-Encoding":""}, timeout:5000},function(err,resp,body){
+            if(err || resp.statusCode != 200 || !resp.headers["content-type"] || resp.headers["content-type"].indexOf("text/html") != 0) return cbDone(err);
+            cbEach(body);
+            cbDone();
+      });
+    } catch(E) {
+        cbDone(E);
+    }
 }
 
