@@ -46,7 +46,7 @@ Date.prototype.yyyymmdd = function() {
 
 function loadPlaces(cb){
     request.get({uri:locker.lockerBase+"/Me/places/getPlaces?me=true",json:true},function(err,res,body){
-        if(err || !body) return cb();
+        if(err || !body || body.length == 0) return cb();
         var places = [];
         body.forEach(function(p){places.push({at:p.at, c:long2num(p.lng)})});
         places = places.sort(function(a,b){return (a.at - b.at)});
@@ -85,7 +85,7 @@ stdin.on('data', function (chunk) {
         app.listen(processInfo.port,function() {
             var returnedInfo = {};
             console.log(JSON.stringify(returnedInfo));
-        });        
+        });
     });
 });
 
