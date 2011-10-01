@@ -61,7 +61,7 @@ var io = socketio.listen(app,options);
 app.get('/apps', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
     var apps = {contacts: {url : externalBase + '/Me/contactsviewer/', id : 'contactsviewer'},
-                photos: {url : externalBase + '/Me/photosviewer/', id : 'photosviewer'},
+                photos: {url : externalBase + '/Me/photosv09/', id : 'photosv09'},
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
                 search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}};
     res.end(JSON.stringify(apps));
