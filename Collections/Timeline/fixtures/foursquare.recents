@@ -1,0 +1,65 @@
+{
+    "type": "recents/foursquare",
+    "via": "synclet/foursquare",
+    "timestamp": 1315977793913,
+    "action": "new",
+    "obj": {
+        "source": "foursquare_recents",
+        "data": {
+            "_id": "4e703a41ca17313fd2cccc6b",
+            "id": "4e703881d4c03fcb653e0251",
+            "createdAt": 1315977345,
+            "type": "checkin",
+            "timeZone": "America/Chicago",
+            "entities": [],
+            "user": {
+                "id": "10598838",
+                "firstName": "Lis",
+                "lastName": "Miller",
+                "photo": "https://playfoursquare.s3.amazonaws.com/userpix_thumbs/ZHSLPGESZ530RZEK.jpg",
+                "gender": "female",
+                "homeCity": "Cascade, IA",
+                "relationship": "friend"
+            },
+            "venue": {
+                "id": "4e1362df18a84f0f0325cb37",
+                "name": "Home: 605 Garfield St SW",
+                "contact": {},
+                "location": {
+                    "address": "605 Garfield St. SW",
+                    "lat": 42.292913,
+                    "lng": -91.018424,
+                    "city": "Cascade",
+                    "state": "IA"
+                },
+                "categories": [{
+                    "id": "4bf58dd8d48988d103941735",
+                    "name": "Home",
+                    "pluralName": "Homes",
+                    "shortName": "Home",
+                    "icon": "https://foursquare.com/img/categories/building/home.png",
+                    "parents": ["Residences"],
+                    "primary": true
+                }],
+                "verified": false,
+                "stats": {
+                    "checkinsCount": 246,
+                    "usersCount": 4,
+                    "tipCount": 0
+                }
+            },
+            "source": {
+                "name": "foursquare for iPhone",
+                "url": "https://foursquare.com/download/#/iphone"
+            },
+            "photos": {
+                "count": 0,
+                "items": []
+            },
+            "comments": {
+                "count": 0,
+                "items": []
+            }
+        }
+    }
+}

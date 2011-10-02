@@ -76,6 +76,26 @@ exports.findInstalled = function (callback) {
     }
 }
 
+// combined an installed me.json info with any of it's manifest changes, a stopgap until these things can be separated cleanly
+function mergeManifest(js)
+{
+    var serviceInfo = {};
+    synclets.available.some(function(svcInfo) {
+        if (svcInfo.srcdir == js.srcdir) {
+            for(var a in svcInfo){serviceInfo[a]=svcInfo[a];}
+            return true;
+        }
+        return false;
+    });
+    if (serviceInfo && serviceInfo.manifest) {
+        var fullInfo = JSON.parse(fs.readFileSync(serviceInfo.manifest));
+        return lutil.extend(js, fullInfo);
+    } else {
+        return js;
+    }
+
+}
+
 exports.scanDirectory = function(dir) {
     datastore = require('./synclet/datastore');
     var files = fs.readdirSync(dir);

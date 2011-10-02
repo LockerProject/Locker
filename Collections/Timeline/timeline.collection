@@ -1,0 +1,15 @@
+{
+    "title":"Timeline",
+    "desc":"A collection of socially shared items from various networks.",
+    "run":"node timeline.js",
+    "status":"stable",
+    "handle":"timeline",
+    "provides":["item"],
+    "mongoCollections": ["item","response"],
+    "events":[["recents/foursquare","/events"]
+		,["timeline/twitter","/events"]
+		,["related/twitter","/events"]
+		,["home/facebook","/events"]
+		,["link","/events"]
+		]
+}

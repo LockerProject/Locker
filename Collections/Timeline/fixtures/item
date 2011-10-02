@@ -1,0 +1,23 @@
+{
+	"id":"4e703a41ca17313fd2cccc6b",
+	"first":12345566778,
+	"last":12356456779,
+	"keys":{
+		"tweet://twitter/#235123423421":"tweet://twitter/timeline?id=twitter#235123423421",
+	},
+	"ref":"tweet://twitter/timeline?id=twitter#235123423421",
+	"refs":[
+		"tweet://twitter/timeline?id=twitter#235123423421",
+	],
+	pri:4,
+	me:false,
+	text:"This is my text",
+	from:{
+		"id":"contact://twitter/#jeremie",
+		"icon":"http://twitter.com/icon.png",
+		"name":"Jer"
+	},
+	froms:{
+		"contact://twitter/#jeremie":"tweet://twitter/timeline?id=twitter#235123423421"
+	}
+}

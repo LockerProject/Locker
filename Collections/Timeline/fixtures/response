@@ -1,0 +1,13 @@
+{
+	"id":"hash generated from all KVs below",
+	"item":"4e703a41ca17313fd2cccc6b",
+	"at":12345566778,
+	"ref":"tweet://twitter/timeline?id=twitter#235123423421",
+	"text":"This is my text",
+	"type":"comment"
+	from:{
+		"id":"contact://twitter/#jeremie",
+		"icon":"http://twitter.com/icon.png",
+		"name":"Jer"
+	},
+}

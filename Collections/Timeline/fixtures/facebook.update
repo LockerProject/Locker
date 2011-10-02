@@ -1,0 +1,63 @@
+{
+    "type": "home/facebook",
+    "via": "synclet/facebook",
+    "timestamp": 1315976215195,
+    "action": "update",
+    "obj": {
+        "source": "facebook_home",
+        "type": "update",
+        "data": {
+            "id": "1264086533_2419826536086",
+            "from": {
+                "name": "Mindframe Theaters",
+                "id": "1264086533"
+            },
+            "picture": "http://vthumb.ak.fbcdn.net/hvthumb-ak-snc6/244520_2419869537161_2419826536086_33311_1352_t.jpg",
+            "link": "http://www.facebook.com/photo.php?v=2419826536086",
+            "source": "http://video.l3.fbcdn.net/cfs-l3-ash4/342015/380/2419826536086_60821.mp4?oh=115eecc26ea0e77e74bdfb39d3860a33&oe=4E72D400&l3s=20110914043344&l3e=20110916044344&lh=065388ed3f72cef427b4b",
+            "name": "The Tree of Life - 9/16 [HD]",
+            "properties": [{
+                "name": "Length",
+                "text": "2:11"
+            }],
+            "icon": "http://static.ak.fbcdn.net/rsrc.php/v1/yD/r/DggDhA4z4tO.gif",
+            "actions": [{
+                "name": "Comment",
+                "link": "http://www.facebook.com/1264086533/posts/2419826536086"
+            },
+            {
+                "name": "Like",
+                "link": "http://www.facebook.com/1264086533/posts/2419826536086"
+            }],
+            "type": "video",
+            "object_id": "2419826536086",
+            "application": {
+                "name": "Video",
+                "id": "2392950137"
+            },
+            "created_time": 1315859039,
+            "updated_time": 1315864735,
+            "likes": {
+                "data": [{
+                    "name": "Will Kelly",
+                    "id": "760380150"
+                }],
+                "count": 9
+            },
+            "comments": {
+                "data": [{
+                    "id": "1264086533_2419826536086_3034673",
+                    "from": {
+                        "name": "Bryan J. Zygmont",
+                        "id": "62106448"
+                    },
+                    "message": "Thank you.  See you soon.",
+                    "created_time": 1315864735
+                }],
+                "count": 1
+            },
+            "_id": "4e6e6d354f7f2ab135d2782b"
+        }
+    }
+}
+Ó
