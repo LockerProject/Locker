@@ -238,8 +238,7 @@ exports.processEvent = function(eventBody, callback) {
         return;
     }
     // Run the data processing
-    var data = eventBody.obj;
-    if(eventBody.via && eventBody.via.indexOf("synclet") == 0) data = eventBody.obj.data;
+    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
     handler(eventBody.via, data, callback);
 }

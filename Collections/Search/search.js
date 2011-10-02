@@ -370,9 +370,14 @@ function getSourceForEvent(body) {
        var splitType = body.type.split('/');
        source = splitType[0] + 's';
     } else {
-        var splitVia = body.via.split('/');
+        var via = body.via;
+        if(body.via.indexOf('/'))
+        { // shouldn't need this anymore
+            var splitVia = body.via.split('/');
+            via = splitVia[1];
+        }
         var splitSource = body.obj.source.split('_');
-        source = splitVia[1] + '/' + splitSource[1];
+        source = via + '/' + splitSource[1];
     }
     return source;
     // END FIXME

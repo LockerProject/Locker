@@ -175,7 +175,7 @@ function localError(base, err)
 //    var mod = console.outputModule;
 //    console.outputModule = base;
     console.error(base+"\t"+err);
-//    console.outputModule = mod;    
+//    console.outputModule = mod;
 }
 
 function mergeManifest(js) {
@@ -253,7 +253,7 @@ function executeSynclet(info, synclet, callback) {
         info.config = lutil.extend(true, tempInfo.config, response.config);
         scheduleRun(info, synclet);
         processResponse(deleteIDs, info, synclet, response, function(err, cbresponse) {
-            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'), 
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'),
                                       JSON.stringify(info, null, 4));
             if (callback) callback(err, cbresponse);
         });
@@ -352,7 +352,7 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
     var q = async.queue(function(id, cb) {
         var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
         newEvent.obj.data[mongoId] = id;
-        newEvent.fromService = "synclet/" + info.id;
+        newEvent.fromService = info.id;
         levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
         datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
     }, 5);
@@ -371,7 +371,7 @@ function addData (collection, mongoId, data, info, eventType, callback) {
                 return;
             }
             var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
-            newEvent.fromService = "synclet/" + info.id;
+            newEvent.fromService = info.id;
             if (object.type === 'delete') {
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
                 levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
