@@ -151,9 +151,7 @@ function bootState()
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("+++++++++++++++");
-    logger.debug("++++++++++ got new socket.io connection");
-    logger.debug("+++++++++++++++");
+    logger.debug("++ got new socket.io connection");
     bootState();
     isSomeoneListening++;
     var counts = {};
