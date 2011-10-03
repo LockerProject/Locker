@@ -66,7 +66,8 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
             assert.equal(response.hits[0]._source, 'contacts');
-            assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({
@@ -94,7 +95,8 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
             assert.equal(response.hits[0]._source, 'contacts');
-            assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({
@@ -122,7 +124,8 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({
@@ -139,7 +142,8 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({
@@ -156,7 +160,8 @@ suite.next().suite.addBatch({
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({

@@ -24,6 +24,9 @@ var request = require('request');
 var async = require('async');
 var app = express.createServer(connect.bodyParser());
 
+var maxCloseTimeout = null;
+var MAX_CLOSE_TIMEOUT = 10000;
+
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
@@ -131,6 +134,10 @@ exports.handlePostEvents = function(req, callback) {
                     return callback(err, {});
                 }
                 handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+                if (maxCloseTimeout) clearTimeout(maxCloseTimeout);
+                maxCloseTimeout = setTimeout(function() {
+                    lsearch.flushAndCloseWriter();
+                }, MAX_CLOSE_TIMEOUT);
                 return callback(err, {timeToIndex: time});
             });
         } else if (req.body.action === 'delete') {
@@ -259,7 +266,7 @@ exports.handleGetReindexForType = function(type, callback) {
 };
 
 function reindexType(url, type, source, callback) {
-    request.get({uri:url}, function(err, res, body) {
+    var reqObj = request.get({uri:url}, function(err, res, body) {
         if (err) {
             console.error('Error when attempting to reindex ' + type + ' collection: ' + err);
             return callback(err);
@@ -280,8 +287,12 @@ function reindexType(url, type, source, callback) {
             req.body = fullBody;
             req.headers = {};
             req.headers['content-type'] = 'application/json';
-            exports.handlePostIndex(req, forEachCb);
+            exports.handlePostIndex(req, function() { 
+                req = null;
+                forEachCb.call();
+            });
         },function(err) {
+            reqObj = null;
             if (err) {
                 console.error(err);
                 return callback(err);
