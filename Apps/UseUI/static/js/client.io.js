@@ -1,3 +1,5 @@
+var debug = false;
+var log = function(msg) { if (console && console.log && debug) console.debug(msg); };
 
 /// Format a number with commas
 /*
@@ -39,16 +41,16 @@ var once = false;
 var window_focus = true;
 $(window).focus(function() {
     window_focus = true;
-    console.log('window_focus =', window_focus);
+    log('window_focus =', window_focus);
     dequeueGritters();
 }).blur(function() {
     window_focus = false;
-    console.log('window_focus =', window_focus);
+    log('window_focus =', window_focus);
 });
 
 var gritterEvents = {};
 function queueGritter(name, count) {
-    console.log('queueGritter window_focus =', window_focus);
+    log('queueGritter window_focus =', window_focus);
     if(window_focus) {
         showGritter(name, count);
     } else {
@@ -81,16 +83,16 @@ function showGritter(name, count) {
 }
 
 socket.on('event', function (body) {
-  console.log("got event: ", body);
+  log("got event: ", body);
   updateCounts(body.name, body.count, body.updated);
   queueGritter(body.name, body.new);
 });
 socket.on("counts", function(counts) {
-  console.log("Counts:",counts);
+  log("Counts:",counts);
     for (key in counts) {
         if (counts.hasOwnProperty(key)) {
             updateCounts(key, counts[key].count, counts[key].updated);
         }
     }
-    
+
 });

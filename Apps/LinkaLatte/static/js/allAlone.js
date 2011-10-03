@@ -1,4 +1,5 @@
-function log(m) { if (console && console.log) console.log(m); }
+var debug = false;
+function log(m) { if (console && console.log && debug) console.log(m); }
 
 var collectionHandle = "";
 var resultsTemplate = null;
@@ -33,7 +34,7 @@ function queryLinksCollection (queryString) {
             nextDate.setMinutes(0);
             nextDate.setSeconds(0);
             nextDate.setMilliseconds(0);
-            
+
             // If it's a different date let's start a new group of links
             if (!curDate || nextDate.getTime() != curDate.getTime()) {
                 var newDateGroup = {date:nextDate.strftime("%A, %B %d, %Y"), links:[]};
@@ -41,7 +42,7 @@ function queryLinksCollection (queryString) {
                 curLinks = newDateGroup.links;
                 curDate = nextDate;
             }
-            
+
             curLinks.push(data[i]);
         }
         $("#results").render({groups:dateGroups,groupClass:"dateGroup"}, resultsTemplate);
@@ -81,14 +82,14 @@ function queryLinksCollection (queryString) {
         //called when there is an error
       }
     });
-}    
+}
 
 function findLinksCollection() {
     log("Finding the collection");
     $.ajax({
       url: "/providers?types=link",
       type: "GET",
-      dataType: "json",    
+      dataType: "json",
       success: function(data) {
           for (var i = 0; i < data.length; ++i) {
               if (data[i].provides.indexOf("link") > -1 && data[i].is === "collection") {
@@ -109,7 +110,7 @@ function findLinksCollection() {
       error: function() {
           showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
       }
-    });    
+    });
 }
 
 function showError(errorMessage) {
