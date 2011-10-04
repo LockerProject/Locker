@@ -3,7 +3,7 @@
     "title": "Github Account",
     "synclets": [
         {
-            "frequency": 120,
+            "frequency": 3600,
             "name": "users"
         }
     ],

@@ -34,11 +34,9 @@ exports.sync = function(processInfo, cb) {
 
 var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
-        var profile;
         try {
-            profile = JSON.parse(data).response.user;            
-        }catch(E){}
-        if (profile === undefined) {
+            profile = JSON.parse(data).response.user;
+        } catch(err) {
             return callback('error attempting to get profile data - ' + data);
         }
         getCheckins(profile.id, auth.accessToken, 0, function(err, checkins) {
@@ -63,26 +61,31 @@ var syncCheckins = function (callback) {
 function getCheckins(userID, token, offset, callback, checkins) {
     if(!checkins)
         checkins = [];
-    var latest = 1;
+    var latest = 0;
     if(updateState.checkins && updateState.checkins.syncedThrough)
         latest = updateState.checkins.syncedThrough;
+    latest += 1; //"afterTimestamp" is really "afterOrEqualToTimestamp"
     request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset +
                                                             '&oauth_token=' + token + '&afterTimestamp=' + latest},
     function(err, resp, data) {
-        var response = JSON.parse(data).response;
-        if(!(response.checkins && response.checkins.items)) { //we got nothing
-            if(checkins.length > 0)
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
-            return callback(err, checkins.reverse());
-        }
-        var newCheckins = response.checkins.items;
-        addAll(checkins, newCheckins);
-        if(newCheckins && newCheckins.length == checkins_limit)
-            getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {
-            if (checkins[0])
-                updateState.checkins = {syncedThrough:checkins[0].createdAt};
-            callback(err, checkins.reverse());
+        try {
+            var response = JSON.parse(data).response;
+            if(!(response.checkins && response.checkins.items)) { //we got nothing
+                if(checkins.length > 0)
+                    updateState.checkins.syncedThrough = checkins[0].createdAt;
+                return callback(err, checkins.reverse());
+            }
+            var newCheckins = response.checkins.items;
+            addAll(checkins, newCheckins);
+            if(newCheckins && newCheckins.length == checkins_limit)
+                getCheckins(userID, token, offset + checkins_limit, callback, checkins);
+            else {
+                if (checkins[0])
+                    updateState.checkins = {syncedThrough:checkins[0].createdAt};
+                callback(err, checkins.reverse());
+            }
+        } catch (E) {
+            callback(E);
         }
     });
 }
