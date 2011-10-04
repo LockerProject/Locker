@@ -4,6 +4,7 @@ var async = require('async');
 var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
+var debug = false;
 
 var dataStore, locker, search;
 // internally we need these for happy fun stuff
@@ -80,11 +81,11 @@ function processEncounter(e, cb)
 {
     dataStore.enqueue(e, function() {
         encounterQueue.push(e, function(arg){
-            console.error("QUEUE SIZE: "+encounterQueue.length());
+            if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
             cb();
         });
     });
-    console.error("QUEUE SIZE: "+encounterQueue.length());
+    if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
