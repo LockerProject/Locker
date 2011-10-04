@@ -1,4 +1,5 @@
-function log(m) { if (console && console.log) console.log(m); }
+var debug = true;
+var log = function(m) { if (debug && console && console.log) console.log(m); }
 var app, timeout, appId;
 var providers = [];
 var manuallyClosed = false;
@@ -58,6 +59,11 @@ $(document).ready(
             return false;
         });
 
+        // disable pass through click events when an area is blurred
+        $('.blur').click(function() {
+            return false;
+        });
+
         $(".app-link[title]").tooltip({
             position:"bottom center",
             predelay:750,
@@ -79,7 +85,7 @@ $(document).ready(
                     } else {
                         var d = new Date;
                         d.setTime(allCounts[id].lastUpdate);
-                        //log(allCounts);
+                        log(allCounts);
                         tip += 'last updated ' + d.toString();
                     }
                     tip += '</div>';
@@ -100,16 +106,6 @@ $(document).ready(
  */
 var SyncletPoll = (
     function () {
-        var spinnerOpts = {
-            lines: 12,
-            length: 5,
-            width: 3,
-            radius: 8,
-            trail: 60,
-            speed: 1.0,
-            shadow: false
-        };
-
         var SyncletPoll = function () {
             var t = this;
             t.uri = "/synclets";
@@ -134,18 +130,11 @@ var SyncletPoll = (
 
                 if (b.lastState == b.state) return;
 
-                // log("["+provider+"] " + state);
-
                 if (b.state == "running" || b.state == "processing data") {
-                    if (typeof(b.spinner) == "undefined" && !(b.$el.find('.checkmark').is(':visible'))) {
-                        var target = b.$el.find(".spinner")[0];
+                    if (!(b.$el.find('.checkmark').is(':visible'))) {
                         b.$el.find('a').addClass("disabled");
-                        b.spinner = new Spinner(spinnerOpts).spin(target);
-                    } else if (!(b.$el.find('.checkmark').is(':visible'))) {
-                        b.spinner.spin();
                     }
                 } else if (b.state == "waiting") {
-                    if (b.spinner) b.spinner.stop();
                     b.$el.find('.checkmark').show();
                 }
 
@@ -155,13 +144,20 @@ var SyncletPoll = (
 
             t.handleResponse = function(data, err, resp) {
                 if(retryTime < 10000) retryTime += 500;
+                var hasProps = false;
+                globalvar = data.installed;
                 for (app in data.installed) {
+                    hasProps = true;
+                    window.guidedSetup.servicesAdded();
                     app = data.installed[app];
 
                     if (providers.indexOf(app.provider) != -1) {
                         // update app button with "pending" gfx
                         t.updateState(app.provider, app.status);
                     }
+                }
+                if (!hasProps && !window.guidedSetup) {
+                    window.guidedSetup = new GuidedSetup();
                 }
 
                 if (t.repoll) t.timeout = setTimeout(t.query, retryTime);
@@ -265,7 +261,7 @@ function renderApp() {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
                 if (ready) {
-                    // log('clearing timeout');
+                    log('clearing timeout');
                     $("#appFrame")[0].contentWindow.location.replace(data[app].url);
                     clearTimeout(timeout);
                 }
@@ -277,7 +273,7 @@ function renderApp() {
                         currentLocation.replace(newLocation);
                     clearTimeout(timeout);
                     timeout = setTimeout(function() {poll(data);}, 1000);
-                    // log(timeout);
+                    log(timeout);
                 }
             });
         })(data);
@@ -294,3 +290,101 @@ function resizeFrame() {
     $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
     $("#appFrame").width($(window).width());
 }
+
+
+function drawGuidedSetup() {
+    if (guidedSetupActive) return;
+    guidedSetupActive = true;
+    $('.blur').show();
+}
+
+
+/*
+ * GuidedSetup
+ */
+var GuidedSetup = (
+    function () {
+        var GuidedSetup = function () {
+            var t = this;
+            var page = 0;
+            var text = {};
+            var synced = false;
+            text.header = ['Welcome to your locker!', 'Setting up your locker', 'Exploring your locker'];
+            text.forward = ['NEXT', 'NEXT', 'FINISH'];
+            text.body = [];
+            text.body[0] = "<p>Welcome!</p><p>Your locker will act a digital repository for all of the things you're producing on the internet.</p>" +
+                           "<p>It gives you an easy way to view all of the bits of things you're generating across the web.</p>" +
+                           "<p>Click next to begin setting up your locker!</p>";
+            text.body[1] = "<p>To begin, you'll need to authorize your locker to pull down data from a few services.</p>" +
+                           "<p>You don't need to give your locker access to everything, but the more services it has to work with, the more useful you'll find it!</p>" +
+                           "<p>We, Singly, don't have access to any of the bits of information that are stored in your locker.  This is a private, secure, place for you to access your data.</p>" +
+                           "<p>Once you've authorized at least one of these services, click the next button to learn a bit about how to explore the things that we're storing for you!</p>";
+            text.body[2] = "<p>Across the header bar, you'll find a few of the first services we've built to start exploring the things we've aggregated for you.</p>" +
+                           "<p>Each of these are acting as a unified view of that type of information across all of the services you've given us access to.</p>" +
+                           "<p>Photos will give you an easy way to look through all the photos you've been generating across various services</p>" +
+                           "<p>People lets you have access to all of your friends across all of the services you've given us access to." +
+                           "<p>Finally, Links is a unique way to go through all of the web sites that you're friends have been linking to." +
+                           "<p>We hope you enjoy this service as much as we've been enjoying building it!</p>";
+
+
+            t.drawGuidedSetup = function() {
+                $('.blur').show();
+                $('.close-box').click(function() {
+                    $('.blur').hide();
+                });
+                $('.forward').click(t.moveForward);
+                $(document).keydown(function(e) {
+                    if (e.keyCode === 27) {
+                        $('.blur').hide();
+                    }
+                });
+
+                t.updateText();
+            };
+
+            t.moveForward = function() {
+                if (page === 0 && t.synced === false) {
+                    $('.forward').addClass('disabled');
+                    $('.forward').attr('title', 'You must authorize a service to continue!');
+                }
+                if (page === 1 && t.synced === false) {
+                    return;
+                }
+                if (page === 2) {
+                    return $('.blur').hide();
+                }
+                page++;
+                t.updateBlurs();
+                t.updateText();
+            }
+
+            t.servicesAdded = function() {
+                if (t.synced) return;
+                t.synced === true;
+                $('.forward').removeClass('disabled');
+                $('.forward').attr('title', '');
+            }
+
+            t.updateBlurs = function() {
+                $('.blur').show();
+                if (page === 1) {
+                    $('#services .blur').hide();
+                } else if (page === 2) {
+                    $('.header .blur').hide();
+                }
+            }
+
+            t.updateText = function() {
+                $('.header-text').text(text.header[page]);
+                $('.forward-button-text').text(text.forward[page]);
+                $('.lightbox .body').html(text.body[page]);
+            }
+
+            t.drawGuidedSetup();
+        };
+
+        return function () {
+            return new GuidedSetup();
+        };
+
+    })();

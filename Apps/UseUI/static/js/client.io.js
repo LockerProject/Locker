@@ -1,6 +1,3 @@
-var debug = false;
-var log = function(msg) { if (console && console.log && debug) console.debug(msg); };
-
 /// Format a number with commas
 /*
 * Public domain from http://www.mredkj.com/javascript/nfbasic.html
