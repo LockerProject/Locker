@@ -430,9 +430,12 @@ body {
 }
 
 .lightbox .forward.disabled {
-    background: #bbbbbb !important;
+    background: #555 !important;
     cursor: auto;
     color: #222 !important;
+    -moz-box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
 }
 
 .lightbox .forward:hover {

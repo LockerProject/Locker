@@ -308,7 +308,7 @@ var GuidedSetup = (
             var t = this;
             var page = 0;
             var text = {};
-            var synced = false;
+            t.synced = false;
             text.header = ['Welcome to your locker!', 'Setting up your locker', 'Exploring your locker'];
             text.forward = ['NEXT', 'NEXT', 'FINISH'];
             text.body = [];
@@ -343,9 +343,13 @@ var GuidedSetup = (
             };
 
             t.moveForward = function() {
+                log('moving forward!');
+                log(page);
+                log(t.synced);
                 if (page === 0 && t.synced === false) {
                     $('.forward').addClass('disabled');
                     $('.forward').attr('title', 'You must authorize a service to continue!');
+                    $('.forward-buttton-text').attr('title', 'You must authorize a service to continue!');
                 }
                 if (page === 1 && t.synced === false) {
                     return;
@@ -359,10 +363,12 @@ var GuidedSetup = (
             }
 
             t.servicesAdded = function() {
+                log('added services!');
                 if (t.synced) return;
-                t.synced === true;
+                t.synced = true;
                 $('.forward').removeClass('disabled');
                 $('.forward').attr('title', '');
+                $('.forward-button-text').attr('title', '');
             }
 
             t.updateBlurs = function() {
@@ -375,10 +381,18 @@ var GuidedSetup = (
             }
 
             t.updateText = function() {
-                $('.header-text').text(text.header[page]);
-                $('.forward-button-text').text(text.forward[page]);
-                $('.lightbox .body').html(text.body[page]);
-            }
+                $('.header-text').animate({opacity: 0}, {duration: 200, queue: false});
+                $('.forward-button-text').animate({opacity: 0}, {duration: 200, queue: false});
+                $('.lightbox .body').animate({opacity: 0}, {duration: 200, queue: false, complete:function() {
+                    $('.header-text').text(text.header[page]);
+                    $('.forward-button-text').text(text.forward[page]);
+                    $('.lightbox .body').html(text.body[page]);
+                    $('.header-text').animate({opacity: 1}, {duration: 200, queue: false});
+                    $('.forward-button-text').animate({opacity: 1}, {duration: 200, queue: false});
+                    $('.lightbox .body').animate({opacity: 1}, {duration: 200, queue: false});
+                }});
+
+           }
 
             t.drawGuidedSetup();
         };
