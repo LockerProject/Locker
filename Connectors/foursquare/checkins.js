@@ -68,20 +68,24 @@ function getCheckins(userID, token, offset, callback, checkins) {
     request.get({uri:'https://api.foursquare.com/v2/users/self/checkins.json?limit=' + checkins_limit + '&offset=' + offset +
                                                             '&oauth_token=' + token + '&afterTimestamp=' + latest},
     function(err, resp, data) {
-        var response = JSON.parse(data).response;
-        if(!(response.checkins && response.checkins.items)) { //we got nothing
-            if(checkins.length > 0)
-                updateState.checkins.syncedThrough = checkins[0].createdAt;
-            return callback(err, checkins.reverse());
-        }
-        var newCheckins = response.checkins.items;
-        addAll(checkins, newCheckins);
-        if(newCheckins && newCheckins.length == checkins_limit)
-            getCheckins(userID, token, offset + checkins_limit, callback, checkins);
-        else {
-            if (checkins[0])
-                updateState.checkins = {syncedThrough:checkins[0].createdAt};
-            callback(err, checkins.reverse());
+        try {
+            var response = JSON.parse(data).response;
+            if(!(response.checkins && response.checkins.items)) { //we got nothing
+                if(checkins.length > 0)
+                    updateState.checkins.syncedThrough = checkins[0].createdAt;
+                return callback(err, checkins.reverse());
+            }
+            var newCheckins = response.checkins.items;
+            addAll(checkins, newCheckins);
+            if(newCheckins && newCheckins.length == checkins_limit)
+                getCheckins(userID, token, offset + checkins_limit, callback, checkins);
+            else {
+                if (checkins[0])
+                    updateState.checkins = {syncedThrough:checkins[0].createdAt};
+                callback(err, checkins.reverse());
+            }
+        } catch (E) {
+            callback(E);
         }
     });
 }
