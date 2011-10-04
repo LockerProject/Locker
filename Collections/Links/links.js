@@ -217,8 +217,9 @@ process.stdin.on('data', function(data) {
         dataStore.init(mongo.collections.link,mongo.collections.encounter,mongo.collections.queue);
         search.init(dataStore);
         dataIn.init(locker, dataStore, search);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        app.listen(0, 'localhost', function() {
+            var returnedInfo = {port: app.address().port};
+            process.stdout.write(JSON.stringify(returnedInfo));
         });
         dataIn.loadQueue();
     });

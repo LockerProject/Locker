@@ -14,7 +14,7 @@ var fs = require('fs'),
     request = require('request'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
-    
+
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw places
 var util = require("./util"); // handy things for anyone and used within place processing
@@ -52,7 +52,7 @@ app.get('/state', function(req, res) {
 app.get('/update', function(req, res) {
     dataIn.reIndex(locker,function(){
         res.writeHead(200);
-        res.end('Making cookies for temas!');        
+        res.end('Making cookies for temas!');
     });
 });
 
@@ -84,7 +84,7 @@ function genericApi(name,f)
                 res.end(JSON.stringify(results));
             }
         });
-    });   
+    });
 }
 
 
@@ -107,13 +107,14 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
         dataStore.init(mongo.collections.place);
         dataIn.init(locker, dataStore);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        app.listen(0, function() {
+            var returnedInfo = {port: app.address().port};
+            process.stdout.write(JSON.stringify(returnedInfo));
         });
     });
 });
