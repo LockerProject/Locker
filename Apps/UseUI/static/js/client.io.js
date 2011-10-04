@@ -73,7 +73,12 @@ function dequeueGritters() {
 
 function showGritter(name, count) {
     var prettyName = name;
-    if(count > 1) prettyName += 's';
+    if(name == 'contact') {
+        if(count > 1) prettyName = 'people';
+        else prettyName = 'person';
+    } else if(count > 1) {
+        prettyName += 's';
+    }
     $.gritter.add({
       title:"New " + prettyName,
       text:"Got " + count + " new " + prettyName,
