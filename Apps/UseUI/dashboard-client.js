@@ -16,6 +16,8 @@ var express = require('express'),
     request = require('request');
 var logger = require("logger").logger;
 var lutil = require('lutil');
+var lconfig = require('../../Common/node/lconfig.js');
+lconfig.load('../../Config/config.json');
 
 var externalBase;
 var locker;
@@ -38,16 +40,15 @@ app.configure(function() {
     app.use(express.static(__dirname + '/static'));
 });
 
-app.get('/app',
-function(req, res) {
-    var lconfig = require('../../Common/node/lconfig.js');
-    lconfig.load('../../Config/config.json');
-    var rev = fs.readFileSync(path.join(lconfig.lockerDir, '/../', 'gitrev.json'), 'utf8');
+var drawPage = function(req, res) {
     res.render('app', {
         dashboard: lconfig.dashboard,
-        revision: rev.substring(1,11)
     });
-});
+}
+
+app.get('/app', drawPage);
+app.get('/', drawPage);
+
 
 // dumb defaults
 var options = { logger: {

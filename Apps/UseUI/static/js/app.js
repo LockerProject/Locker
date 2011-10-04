@@ -11,7 +11,7 @@ $(document).ready(
             retryTime = 1000;
         } );
 
-        app = window.location.hash.substring(1);
+        app = window.location.hash.substring(1) || "contacts";
 
         $('.app-select').click(function() {
             $('.app-select').toggleClass('on');
