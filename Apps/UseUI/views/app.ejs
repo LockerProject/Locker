@@ -122,4 +122,10 @@
     <script type='text/javascript' src='js/hosted.js'></script>
     <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>
   <% } %>
+  <% if (closed) { %>
+    <script type='text/javascript'>
+      $(document).ready(function() { manuallyClosed = true; });
+    </script>
+  <% } %>
+
 </html>

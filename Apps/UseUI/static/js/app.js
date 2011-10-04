@@ -34,6 +34,7 @@ $(document).ready(
         // close service drawer button
         $('#service-closer').click(function() {
             manuallyClosed = true;
+            $.post('closed', function(data) { log("success"); });
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
             $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
                     $('.services-box-container').show();
@@ -114,7 +115,13 @@ var SyncletPoll = (
 
             var app = {};
 
-            t.updateState = function(provider, state) {
+            t.updateState = function(provider, app) {
+                state = app.status;
+                if (app.finishedOnce) {
+                    $('#' + provider + "connect").find('.checkmark').show().removeClass('disabled');
+                    return;
+                }
+
                 var b =  {
                     "lastState": "",
                     "state": state,
@@ -148,12 +155,12 @@ var SyncletPoll = (
                 globalvar = data.installed;
                 for (app in data.installed) {
                     hasProps = true;
-                    window.guidedSetup.servicesAdded();
+                    if (window.guidedSetup) window.guidedSetup.servicesAdded();
                     app = data.installed[app];
 
                     if (providers.indexOf(app.provider) != -1) {
                         // update app button with "pending" gfx
-                        t.updateState(app.provider, app.status);
+                        t.updateState(app.provider, app);
                     }
                 }
                 if (!hasProps && !window.guidedSetup) {
@@ -219,7 +226,7 @@ function drawServices() {
 
 function drawService(synclet) {
     var newService = $('.service.template').clone();
-    newService.find('.provider-icon').attr('src', 'img/icons/' + synclet.provider + '.png');
+    newService.find('.provider-icon').attr('src', 'img/icons/' + synclet.provider + '.png').attr('title', synclet.info);
     newService.find('.provider-link').attr('href', synclet.authurl).data('provider', synclet.provider);
     newService.find('.provider-name').text(synclet.provider);
     newService.removeClass('template');

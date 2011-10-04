@@ -70,18 +70,26 @@ function dequeueGritters() {
 
 function showGritter(name, count) {
     var prettyName = name;
-    if(name == 'contact') {
-        if(count > 1) prettyName = 'people';
-        else prettyName = 'person';
-    } else if(count > 1) {
-        prettyName += 's';
+    if (name == 'newservice') {
+      $.gritter.add({
+        title:"Authorized " + count,
+        text:"Beginning to aggregate data from this source.",
+        time: 5000
+      });
+    } else {
+      if(name == 'contact') {
+          if(count > 1) prettyName = 'people';
+          else prettyName = 'person';
+      } else if(count > 1) {
+          prettyName += 's';
+      }
+      $.gritter.add({
+        title:"New " + prettyName,
+        text:"Got " + count + " new " + prettyName,
+        image: "img/" + name + "s.png",
+        time:5000
+      });
     }
-    $.gritter.add({
-      title:"New " + prettyName,
-      text:"Got " + count + " new " + prettyName,
-      image: "img/" + name + "s.png",
-      time:5000
-    });
 }
 
 socket.on('event', function (body) {
@@ -89,6 +97,12 @@ socket.on('event', function (body) {
   updateCounts(body.name, body.count, body.updated);
   queueGritter(body.name, body.new);
 });
+
+socket.on('newservice', function(name) {
+  log('got new service: ', name);
+  queueGritter('newservice', name);
+});
+
 socket.on("counts", function(counts) {
   log("Counts:",counts);
     for (key in counts) {
