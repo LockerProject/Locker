@@ -50,7 +50,7 @@ exports.syncFriends = function(callback) {
 
             });
         }
-        request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, function(err, resp, body) {
+        request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken + '&limit=500'}, function(err, resp, body) {
             var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
             friendIDs = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
             downloadUsers(friends, function(err) {
