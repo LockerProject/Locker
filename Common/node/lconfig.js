@@ -41,6 +41,7 @@ exports.load = function(filepath) {
     exports.lockerDir = process.cwd();
     exports.logFile = config.logFile || undefined;
     exports.ui = config.ui || 'devdashboard';
+    exports.dashboard = config.dashboard;
 }
 
 function setBase() {

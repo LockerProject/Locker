@@ -10,6 +10,8 @@
 var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
+var fs = require('fs');
+var lutil = require('lutil');
 
 exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
@@ -23,17 +25,21 @@ exports.getAll = function(callback) {
     collection.find({}, callback);
 }
 
-// this needs to move into the query interface i think
-//
-exports.getMinimal = function(offset, limit, callback) {
-    collection.find({}, {skip: offset, limit: limit, _id : 1, fields: {addresses: 1, emails: 1, name: 1, phoneNumbers: 1, photos: 1,
-                         'accounts.facebook.data.link': 1, 'accounts.foursquare.data.id': 1,
-                         'accounts.github.data.login': 1, 'accounts.twitter.data.screen_name': 1}},
-                    callback);
-}
-
 exports.get = function(id, callback) {
     collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
+var writeTimer = false;
+function updateState()
+{
+    if (writeTimer) {
+        clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(function() {
+        try {
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+        } catch (E) {}
+    }, 5000);    
 }
 
 exports.addEvent = function(eventBody, callback) {
@@ -76,6 +82,7 @@ exports.addEvent = function(eventBody, callback) {
                 // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
                 //
                 // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
+                updateState();
                 var eventObj = {source: "contacts", type:eventBody.obj.type, data:doc};
                 return callback(undefined, eventObj);
             });
@@ -116,8 +123,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     baseObj[relationship] = true;
     set['accounts.twitter.$'] = baseObj;
     //name
-    if(data.name)
-        set.name = data.name;
+    setName(set, data.name);
     var addToSet = {'_matching.cleanedNames':cleanedName};
     //photos
     if(data.profile_image_url)
@@ -136,8 +142,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
             if(cleanedName)
                 or.push({'_matching.cleanedNames':cleanedName});
             var set = {};
-            if(data.name)
-                set.name = data.name;
+            setName(set, data.name);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.twitter':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
@@ -164,8 +169,7 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
     baseObj[relationship] = true;
     set['accounts.github.$'] = baseObj;
     //name
-    if(data.name)
-        set.name = data.name;
+    setName(set, data.name);
     var addToSet = {};
     if(cleanedName)
         addToSet['_matching.cleanedNames'] = cleanedName;
@@ -174,7 +178,10 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
         addToSet.nicknames = data.login;
     //email
     if(data.email)
+    {
         addToSet.emails = {value:data.email};
+        set.emailsort = data.email;
+    }
     if(data.gravatar_id)
         addToSet.photos = 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
     collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
@@ -184,11 +191,13 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
             var or = [{'accounts.github.data.id':data.id}];
             if(cleanedName)
                 or.push({'_matching.cleanedNames':cleanedName});
-            if (data.email)
-                or.push({'emails.value' : data.email});
             var set = {};
-            if(data.name)
-                set.name = data.name;
+            if (data.email)
+            {
+                or.push({'emails.value' : data.email});
+                set.emailsort = data.email;
+            }
+            setName(set, data.name);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.github':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
@@ -202,15 +211,15 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
 exports.addFoursquareData = function(foursquareData, callback) {
     var data = foursquareData.data;
     var foursquareID = data.id;
-    var name = data.firstName + ' ' + data.lastName;
+    var name = data.firstName;
+    if(data.lastName) name += ' ' + data.lastName;
     var cleanedName = cleanName(name);
     var query = {'accounts.foursquare.data.id':foursquareID};
     var set = {};
     var baseObj = {data:data, lastUpdated:foursquareData.timeStamp || new Date().getTime()};
     set['accounts.foursquare.$'] = baseObj;
     //name
-    if(name)
-        set.name = name;
+    setName(set, name);
     //gender
     if(data.gender)
         set.gender = data.gender;
@@ -225,7 +234,10 @@ exports.addFoursquareData = function(foursquareData, callback) {
         addToSet.phoneNumbers = {value:data.contact.phone, type:'mobile'};
     //email
     if(data.contact.email)
+    {
         addToSet.emails = {value:data.contact.email};
+        set.emailsort = data.contact.email;
+    }
     //addresses
     if(data.homeCity)
         addToSet.addresses = {type:'location', value:data.homeCity};
@@ -240,8 +252,12 @@ exports.addFoursquareData = function(foursquareData, callback) {
             if(data.contact.facebook)
                 or.push({'accounts.facebook.data.id':data.contact.facebook});
             var set = {};
-            if(name)
-                set.name = name;
+            if (data.contact.email)
+            {
+                or.push({'emails.value' : data.contact.email});
+                set.emailsort = data.contact.email;
+            }
+            setName(set, name);
             if(data.gender)
                 set.gender = data.gender;
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.foursquare':baseObj},
@@ -263,8 +279,7 @@ exports.addFacebookData = function(facebookData, callback) {
     var baseObj = {data:data, lastUpdated:facebookData.timeStamp || new Date().getTime()};
     set['accounts.facebook.$'] = baseObj;
     //name
-    if(data.name)
-        set.name = data.name;
+    setName(set, data.name);
 
     var addToSet = {};
     if(cleanedName)
@@ -281,8 +296,7 @@ exports.addFacebookData = function(facebookData, callback) {
                 or.push({'_matching.cleanedNames':cleanedName});
 
             var set = {};
-            if(data.name)
-                set.name = data.name;
+            setName(set, data.name);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.facebook':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
@@ -301,8 +315,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     var set = {};
     var baseObj = {data:googleContactsData.data, lastUpdated:data.lastUpdated || new Date().getTime()};
     set['accounts.googleContacts.$'] = baseObj;
-    if(data.name)
-        set.name = data.name;
+    setName(set, data.name);
 
     var addToSet = {};
     if(cleanedName)
@@ -337,6 +350,7 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             if(!(data.email[i] && data.email[i].value))
                 continue;
             data.email[i].value = data.email[i].value.toLowerCase();
+            if(!set.emailsort) set.emailsort = data.email[i].value.toLowerCase();
             emails.push(data.email[i]);
         }
         addToSet.emails = {$each:emails};
@@ -348,14 +362,14 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
             var or = [{'accounts.googleContacts.data.id':gcID}];
             if(cleanedName)
                 or.push({'_matching.cleanedNames':cleanedName});
+            var set = {};
             if (emails) {
                 for (var i in emails) {
                     or.push({'emails.value' : emails[i].value});
+                    if(!set.emailsort) set.emailsort = emails[i].value;
                 }
             }
-            var set = {};
-            if(data.name)
-                set.name = data.name;
+            setName(set, data.name);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.googleContacts':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
@@ -375,8 +389,7 @@ exports.addFlickrData = function(flickrData, callback) {
     var baseObj = {data:data, lastUpdated:flickrData.timeStamp || Date.now()};
     set['accounts.flickr.$'] = baseObj;
     //name
-    if(data.realname)
-        set.name = data.realname;
+    setName(set, data.realname);
 
     var addToSet = {};
     if(cleanedName)
@@ -394,8 +407,7 @@ exports.addFlickrData = function(flickrData, callback) {
                 or.push({'_matching.cleanedNames':cleanedName});
 
             var set = {};
-            if(data.realname)
-                set.name = data.realname;
+            setName(set, data.realname);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.flickr':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
@@ -414,4 +426,13 @@ function cleanName(name) {
     if(!name || typeof name != 'string')
         return name;
     return name.toLowerCase();
+}
+
+function setName(set, name)
+{
+    if(!name || typeof name != 'string') return;
+    set.name = name;
+    set.firstnamesort = name.toLowerCase();
+    var space = name.lastIndexOf(' ');
+    if(space > 1) set.lastnamesort = name.substr(space+1).toLowerCase();
 }

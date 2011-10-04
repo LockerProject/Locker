@@ -1,0 +1,135 @@
+body {
+    font-family: arial;
+}
+
+.gradient {
+    background: rgb(120,180,226); /* Old browsers */
+    background: -moz-linear-gradient(top, rgba(120,180,226,1) 0%, rgba(38,97,124,1) 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(120,180,226,1)), color-stop(100%,rgba(38,97,124,1))); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%); /* Opera11.10+ */
+    background: -ms-linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%); /* IE10+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#78b4e2', endColorstr='#26617c',GradientType=0 ); /* IE6-9 */
+    background: linear-gradient(top, rgba(120,180,226,1) 0%,rgba(38,97,124,1) 100%); /* W3C */
+}
+
+#page_wrapper {
+    background: #dbdbdb;
+    border-radius: 15px;
+    width: 802px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    padding: 15px;
+}
+
+.header-row {
+    height: 35px;
+    border: solid 1px #333;
+}
+
+.header-row .header-text {
+    float: right;
+    text-align: center;
+    width: 556px;
+    margin-right: 117px;
+    color: white;
+    font-weight: bold;
+    text-shadow: #000 1px 1px 2px;
+    font-size: 24px;
+    margin-top: 4px;
+}
+
+.header-row .back-button {
+    display: none;
+    cursor: pointer;
+    background-image: url('../img/button-bg.png');
+    width: 117px;
+    height: 30px;
+    float: left;
+    z-index: 5;
+    margin-left: 10px;
+    margin-top: 3px;
+}
+
+.header-row .back-button p {
+    float: right;
+    text-align: center;
+    width: 80px;
+    margin-right: 10px;
+    color: #444;
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+.gallery-row {
+    margin-top: 8px;
+    border: solid 1px #444;
+    width: 800px;
+    height: 50px;
+    background-color: #999;
+    position: relative;
+    cursor: pointer;
+}
+
+.gallery-row li {
+    height: 50px;
+    float: left;
+    list-style: none;
+    width: 50px;
+}
+
+.gallery-row li div {
+    width: 50px;
+    height: 50px;
+    background-position: center;
+}
+
+.gallery-row li.title {
+    width: 200px;
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: #000 1px 1px 2px;
+}
+
+.gallery-row li.title p {
+    margin-top: 12px;
+}
+
+.gallery-row.template {
+    display: none;
+}
+
+.gallery-row .hoverstate {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 800px;
+    height: 50px;
+    background-color: rgba(40, 40, 40, .5);
+}
+
+.gallery-row .hoverstate p {
+    color: white;
+    text-shadow: #000 1px 1px 2px;
+    font-weight: bold;
+    font-style: italic;
+    text-align: center;
+    width: 800px;
+    font-size: 24px;
+    margin-top: 11px;
+}
+
+.gallery-row:hover .hoverstate {
+    display: block;
+}
+
+#galleria {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+}

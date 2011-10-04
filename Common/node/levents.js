@@ -21,6 +21,11 @@ var processingEvents = {}; // just a map of arrays of the service events that ar
 exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
+    // Remove the previous listener for the id
+    eventListeners[type] = eventListeners[type].filter(function(entry) {
+        if (entry["id"] == id) return false;
+        return true;
+    });
     eventListeners[type].push({"id":id, "cb":cb});
 }
 
@@ -55,7 +60,7 @@ exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
     var queue = processingEvents[fromServiceId];
     queue.push(newEventInfo);
     // We bail out unless this is the first time into the queue
-    if (queue.length == 1) 
+    if (queue.length == 1)
         processEvents(queue);
     else
         process.nextTick(function() { processEvents(queue); });
@@ -98,7 +103,8 @@ function processEvents(queue) {
                 path: "/Me/" + listener.id + listener.cb,
                 method:"POST",
                 headers: {
-                    "Content-Type":"application/json"
+                    "Content-Type":"application/json",
+                    "Connection":"keep-alive"
                 }
             };
             logger.debug("Firing event to " + listener.id + " to " + listener.cb);

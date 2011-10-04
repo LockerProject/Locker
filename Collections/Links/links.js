@@ -12,9 +12,11 @@
 var fs = require('fs'),
     url = require('url'),
     request = require('request'),
+    lconfig = require('../../Common/node/lconfig.js');
     locker = require('../../Common/node/locker.js');
 var async = require("async");
-    
+lconfig.load('../../Config/config.json');
+
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
 var util = require("./util"); // handy things for anyone and used within dataIn
@@ -38,12 +40,14 @@ app.get('/', function(req, res) {
 });
 
 app.get('/state', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'application/json'
-    });
     dataStore.getTotalLinks(function(err, countInfo) {
-        res.write('{"updated":'+new Date().getTime()+',"ready":1,"count":'+ countInfo +'}');
-        res.end();
+        if(err) return res.send(err, 500);
+        var updated = new Date().getTime();
+        try {
+            var js = JSON.parse(fs.readFileSync('state.json'));
+            if(js && js.updated) updated = js.updated;
+        } catch(E) {}
+        res.send({ready:1, count:countInfo, updated:updated});
     });
 });
 
@@ -83,7 +87,7 @@ app.get('/search', function(req, res) {
 app.get('/update', function(req, res) {
     dataIn.reIndex(locker, function(){
         res.writeHead(200);
-        res.end('Extra mince!');        
+        res.end('Extra mince!');
     });
 });
 
@@ -123,6 +127,21 @@ app.post('/events', function(req, res) {
     res.end('ok');
 });
 
+app.get('/ready', function(req, res) {
+    dataStore.getTotalLinks(function(err, resp) {
+        if (err) {
+            res.writeHead(500);
+            return res.end(err);
+        }
+        res.writeHead(200);
+        if (resp === 0) {
+            return res.end('false');
+        } else {
+            return res.end('true');
+        }
+    });
+});
+
 function genericApi(name,f)
 {
     app.get(name,function(req,res){
@@ -137,7 +156,7 @@ function genericApi(name,f)
                 res.end(JSON.stringify(results));
             }
         });
-    });   
+    });
 }
 
 // expose way to get raw links and encounters
@@ -151,7 +170,7 @@ app.get('/getLinksFull', function(req, res) {
     if (req.query.offset) {
         options.offset = parseInt(req.query.offset);
     }
-    dataStore.getLinks(options, function(item) { results.push(item); }, function(err) { 
+    dataStore.getLinks(options, function(item) { results.push(item); }, function(err) {
         async.forEach(results, function(link, callback) {
             link.encounters = [];
             dataStore.getEncounters({"link":link.link}, function(encounter) {
@@ -175,6 +194,12 @@ for(var f in util)
     genericApi('/'+f,util[f]);
 }
 
+// catch exceptions, links are very garbagey
+if (lconfig.airbrakeKey) {
+    var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
+    airbrake.handleExceptions();
+}
+
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
@@ -186,14 +211,16 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link,mongo.collections.encounter);
+        dataStore.init(mongo.collections.link,mongo.collections.encounter,mongo.collections.queue);
         search.init(dataStore);
         dataIn.init(locker, dataStore, search);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        app.listen(0, 'localhost', function() {
+            var returnedInfo = {port: app.address().port};
+            process.stdout.write(JSON.stringify(returnedInfo));
         });
+        dataIn.loadQueue();
     });
 });

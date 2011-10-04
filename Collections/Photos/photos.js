@@ -10,7 +10,7 @@
 // merge contacts from connectors
 
 var locker = require('../../Common/node/locker.js');
-    
+
 var fs = require('fs');
 var sync = require('./sync');
 var dataStore = require("./dataStore");
@@ -33,14 +33,17 @@ app.get('/', function(req, res) {
 });
 
 app.get('/state', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'application/json'
-    });
     dataStore.getTotalCount(function(err, countInfo) {
-        res.write('{"updated":'+new Date().getTime()+',"ready":1,"count":'+ countInfo +'}');
-        res.end();
+        if(err) return res.send(err, 500);
+        var updated = new Date().getTime();
+        try {
+            var js = JSON.parse(fs.readFileSync('state.json'));
+            if(js && js.updated) updated = js.updated;
+        } catch(E) {}
+        res.send({ready:1, count:countInfo, updated:updated});
     });
 });
+
 
 app.get('/allPhotos', function(req, res) {
     dataStore.getAll(function(err, cursor) {
@@ -92,18 +95,25 @@ app.get("/getPhoto/:photoId", function(req, res) {
     })
 });
 
-app.get('/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
-    dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
-    })
+app.get('/ready', function(req, res) {
+    dataStore.getTotalCount(function(err, resp) {
+        if (err) {
+            res.writeHead(500);
+            return res.end(err);
+        }
+        res.writeHead(200);
+        if (resp === 0) {
+            return res.end('false');
+        } else {
+            return res.end('true');
+        }
+    });
 });
+
 
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
-        res.writeHead(200);
-        res.end('Updating');        
+        res.send('Updating');
     });
 });
 
@@ -114,7 +124,7 @@ app.post('/events', function(req, res) {
         res.end("Invalid Event");
         return;
     }
-    
+
     dataStore.processEvent(req.body, function(error) {
         if (error) {
             logger.debug("Error processing: " + error);
@@ -122,11 +132,20 @@ app.post('/events', function(req, res) {
             res.end(error);
             return;
         }
-        
+
         res.writeHead(200);
         res.end("Event Handled");
     });
 });
+
+app.get('/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(doc));
+    })
+});
+
 
 // Process the startup JSON object
 process.stdin.resume();
@@ -138,12 +157,13 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         logger.debug("connected to mongo " + mongo);
         sync.init(lockerInfo.lockerUrl, mongo.collections.photos, mongo);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        app.listen(0, function() {
+            var returnedInfo = {port: app.address().port};
+            process.stdout.write(JSON.stringify(returnedInfo));
         });
     });
 });

@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var checkins = require('../Connectors/foursquare/checkins');
 var friends = require('../Connectors/foursquare/friends');
 var recents = require('../Connectors/foursquare/recent');

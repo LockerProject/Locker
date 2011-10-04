@@ -1,7 +1,13 @@
 var log = function(msg) { if (console && console.log) console.debug(msg); };
 var displayedContact = '';
 
+var hack = false;
+var total = 0;
 $(function() {
+
+    $('a', $('.detail')).live('click', function() {
+        top.location.href = $(this).attr('href');
+    });
 
     $(document).keydown(function(e) {
         // disable enter
@@ -41,7 +47,7 @@ $(function() {
     });
 
     // View used for details, overview
-    var SideView = Backbone.View.extend({ 
+    var SideView = Backbone.View.extend({
         el: $('aside div.detail'),
 
         events: {},
@@ -58,7 +64,7 @@ $(function() {
     });
 
     // List View for Contacts
-    var ListView = Backbone.View.extend({ 
+    var ListView = Backbone.View.extend({
         el: $('body'), // attaches `this.el` to an existing element.
 
         _s: {
@@ -68,7 +74,7 @@ $(function() {
         sortType: "firstname",
 
         events: {
-            'keyup input#search' : 'searchChangeHandler',
+            'keyup input#search' : 'loadSearch',
             'change #sort'       : 'sortChangeHandler',
 
             'hover #contacts li' : 'hoverContactHandler',
@@ -77,20 +83,20 @@ $(function() {
             'blur #search'       : 'blurSearchHandler'
         },
 
-        searchChangeHandler: function() {
-            var q = $("input#search").val();
-            if (q.length > 0 && q != this._s.searchIndicator) {
-                this.render({q: q})
-            } else {
-                this.render();
-            }
-        },
-
         sortChangeHandler: function() {
             var sortVal = $("#sort").val();
+            var q = $("input#search").val();
             log("change sort to " + sortVal);
             this.sortType = sortVal;
-            this.searchChangeHandler();
+            if(q.length > 0 && q != this._s.searchIndicator)
+            {
+                this.render({q: q});
+                return;
+            }
+            this.offset = 0;
+            this.collection._reset();
+            this.load();
+            this.render();
         },
 
         hoverContactHandler: function() {
@@ -105,7 +111,7 @@ $(function() {
             $(ev.currentTarget).addClass('clicked');
             this.drawDetailsPane(cid);
         },
-        
+
         drawDetailsPane: function(cid) {
             displayedContact = cid;
             var self = this;
@@ -119,7 +125,7 @@ $(function() {
                 self.updateDetails(model.get('detailedData'));
             }
         },
-        
+
         hideDetailsPane: function() {
             displayedContact = '';
             $('aside').css('z-index', -1);
@@ -186,20 +192,31 @@ $(function() {
                     newContact.set({flickr: contact.accounts.flickr[0]});
                 }
             }
-
+            
             this.collection.add(newContact); // add item to collection; view is updated via event 'add'
         },
 
         initialize: function(){
-            _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'searchChangeHandler', 'load', 'render', 'addContact'); // fixes loss of context for 'this' within methods
+            _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'load', 'render', 'addContact', 'loadSearch'); // fixes loss of context for 'this' within methods
             that = this;
 
-            this.collection = new AddressBook();
+            that.collection = new AddressBook();
 
+            that.offset = 0;
+            if(!hack) hack = that;
+            $(window).scroll(function(){
+              if  ($(window).scrollTop() >= ($(document).height() - $(window).height() - 200)){
+                hack.load(function(){});
+              }
+            });
             // TODO: clean up so the search is a proper view.
             that.blurSearchHandler();
-            this.load(function() {
+            that.load(function() {
                 $("#searchBox").slideDown();
+            });
+            $.getJSON('/Me/contacts/state', {}, function(state) {
+                total = state.count;
+                $("#count").html(total);
             });
         },
 
@@ -208,29 +225,63 @@ $(function() {
          * @param callback
          */
         load: function load(callback) {
-            $('#loader').show();
             var that = this;
-            var baseURL = '/Me/contacts';
-            var offset = 0;
+            var q = $("input#search").val();
+            if(q.length > 0 && q != this._s.searchIndicator) return callback();
+            log("loading "+that.offset);
+            if(!callback) callback = function(){};
+            if(that.offset > total) return callback();
+            if(that.loading) return callback();
+            that.loading = true;
+            var baseURL = '/query/getContact';
+            var fields = "['_id','addresses','emails','name','phoneNumbers','photos','accounts.facebook.data.link'," +
+                         "'accounts.foursquare.data.id','accounts.github.data.login','accounts.twitter.data.screen_name'," +
+                         "'accounts.flickr.data.username','accounts.flickr.data.nsid']";
+            var sort = '\'{"'+that.sortType+'sort":1}\'';
+            var terms = "["+that.sortType+"sort:\"a\"+]";
 
-            (function getContactsCB() {
-                $.getJSON(baseURL + '/allMinimal', {offset:offset, limit: 250}, function(contacts) {
-                    if (contacts.length === 0) {
-                        $('#loader').hide();
-                        return callback();
-                    }
-                    for(var i in contacts) {
-                        // only add contacts if they have a name or email. might change this.
-                        if (typeof(contacts.account) != "undefined" && typeof(contacts.account.facebook) != "undefined") log(contacts[i]);
-                        if (contacts[i].emails || contacts[i].name) {
-                            that.addContact(contacts[i]);
-                        }
-                    }
-                    that.render();
-                    offset += 250;
-                    getContactsCB();
-                });
-            })();
+            $.getJSON(baseURL, {offset:that.offset, limit: 50, fields: fields, sort: sort, terms: terms}, function(contacts) {
+                that.loading = false;
+                for(var i in contacts) {
+                    that.addContact(contacts[i]);
+                }
+                that.render();
+                that.offset += 50;
+                return callback();
+            });
+        },
+
+        /**
+         * Load the contacts data from a search result
+         * @param callback
+         */
+        loadSearch: function loadSearch() {
+            var that = this;
+            var q = $("input#search").val();
+            if(that.searching == q) return;
+            that.searching = q;
+            log("searching "+q);
+            if(q == '')
+            {
+                that.sortChangeHandler();
+                return;
+            }
+            that.collection._reset();
+            var baseURL = '/Me/search/query';
+            var type = 'contact/full*';
+
+            $.getJSON(baseURL, {q: q + "*", type: type, limit: 20}, function(results) {
+                if(q != $("input#search").val())
+                {
+                    log("too slow");
+                    return;
+                }
+                for(var i in results.hits) {
+                    that.addContact(results.hits[i].fullobject);
+                }
+                that.render({q:q}); // additionally filter
+                return;
+            });
         },
 
         /**
@@ -405,6 +456,7 @@ $(function() {
         render: function(config){
             // default to empty
             config = config || {};
+            log("rendering "+config.q);
             var filteredCollection,
                 contactsEl, contactTemplate, contactsHTML,
                 searchFilter, addContactToHTML;
@@ -455,11 +507,12 @@ $(function() {
             contactTemplate += '<strong><% if (typeof(name) != "undefined") { %><%= name %><% } %></strong>';
             contactTemplate += '</div>';
             contactTemplate += '<div class="contactActions">';
-            contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_b" class="social_link email">Email</a><% } %> ';
-            contactTemplate += '<% if (typeof(facebook) != "undefined") { %><a href="<%= facebook %>" class="social_link facebook" target="_b">Facebook Profile</a><% } %>';
-            contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_b">Twitter Profile</a><% } %>';
-            contactTemplate += '<% if (typeof(flickr) != "undefined" && typeof(flickr.data.username) != "undefined") { %><a href="http://flickr.com/people/<%= flickr.data.nsid %>" class="social_link flickr" target="_b">Flickr Profile</a><% } %>';
-            contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_b">GitHub Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(email) != "undefined") { %><a href="mailto:<%= email %>" target="_blank" class="social_link email">Email</a><% } %> ';
+            contactTemplate += '<% if (typeof(facebook) != "undefined") { %><a href="<%= facebook %>" class="social_link facebook" target="_blank">Facebook Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(twitterHandle) != "undefined" && typeof(twitterHandle.data.screen_name) != "undefined") { %><a href="http://twitter.com/<%= twitterHandle.data.screen_name %>" class="social_link twitter" target="_blank">Twitter Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(flickr) != "undefined" && typeof(flickr.data.username) != "undefined") { %><a href="http://flickr.com/people/<%= flickr.data.nsid %>" class="social_link flickr" target="_blank">Flickr Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(foursquare) != "undefined" && typeof(foursquare.data.id) != "undefined") { %><a href="http://foursquare.com/user/<%= foursquare.data.id %>" class="social_link foursquare" target="_blank">Foursquare Profile</a><% } %>';
+            contactTemplate += '<% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_blank">GitHub Profile</a><% } %>';
             contactTemplate += '</div>';
             contactTemplate += '<div class="clear"></div></li>';
 
@@ -490,16 +543,21 @@ $(function() {
 
             var sortFn = function(c) {
                 if (c.get(that.sortType)) {
-                    return c.get(that.sortType);
+                    return c.get(that.sortType).toLowerCase();
                 }
                 return "zzz"; // force to the end of the sort
             };
 
             tmp = _.sortBy(tmp, sortFn);
             _.each(tmp, addContactToHTML);
-            
-            countEl.html(tmp.length);
-            
+
+            if(config.q)
+            {
+                countEl.html(tmp.length);
+            }else{
+                countEl.html(total);
+            }
+
             if ($('.contact').length === 1) {
                 this.drawDetailsPane($('.contact').data('cid'));
                 $('.contact').addClass('clicked');

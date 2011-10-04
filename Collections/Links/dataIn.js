@@ -4,6 +4,7 @@ var async = require('async');
 var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
+var debug = false;
 
 var dataStore, locker, search;
 // internally we need these for happy fun stuff
@@ -37,7 +38,7 @@ exports.reIndex = function(locker,cb) {
                     });
                 }
             });
-        });        
+        });
     });
 }
 
@@ -63,7 +64,7 @@ function getLinks(getter, lurl, callback) {
     request.get({uri:lurl}, function(err, resp, body) {
         var arr;
         try{
-            arr = JSON.parse(body);            
+            arr = JSON.parse(body);
         }catch(E){
             return callback();
         }
@@ -76,15 +77,20 @@ function getLinks(getter, lurl, callback) {
     });
 }
 
-function processEncounter(e, cb) 
+function processEncounter(e, cb)
 {
-    encounterQueue.push(e, function(arg){
-        console.error("QUEUE SIZE: "+encounterQueue.length());        
-        cb(arg);
+    dataStore.enqueue(e, function() {
+        encounterQueue.push(e, function(arg){
+            if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
+            cb();
+        });
     });
-    console.error("QUEUE SIZE: "+encounterQueue.length());
+    if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
 }
+
 var encounterQueue = async.queue(function(e, callback) {
+    // immediately dequeue in case processing makes something go wrong
+    dataStore.dequeue(e);
     // do all the dirty work to store a new encounter
     var urls = [];
     // extract all links
@@ -107,6 +113,17 @@ var encounterQueue = async.queue(function(e, callback) {
         }, callback);
     });
 }, 5);
+
+exports.loadQueue = function() {
+    dataStore.fetchQueue(function(err, docs) {
+        if(!docs) return;
+        for (var i = 0; i < docs.length; i++) {
+            encounterQueue.push(docs[i].obj, function(arg) {
+                console.error("QUEUE SIZE: " + encounterQueue.length());
+            });
+        }
+    });
+}
 
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){

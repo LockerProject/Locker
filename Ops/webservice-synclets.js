@@ -7,7 +7,9 @@ module.exports = function(locker) {
             'Content-Type': 'text/javascript',
             "Access-Control-Allow-Origin" : "*" 
         });
-        res.end(JSON.stringify(syncManager.synclets()));
+        var synclets = JSON.parse(JSON.stringify(syncManager.synclets()));
+        for(var s in synclets.installed) delete synclets.installed[s].config;
+        res.end(JSON.stringify(synclets));
     });    
 
     // given a bunch of json describing a synclet, make a home for it on disk and add it to our map

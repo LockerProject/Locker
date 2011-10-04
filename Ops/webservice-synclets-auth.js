@@ -23,11 +23,15 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gcontacts/auth",
       "grantType" : "authorization_code"}
+  , gplus = {"provider" : "gplus",
+      "endPoint" : "https://accounts.google.com/o/oauth2/token",
+      "redirectURI" : "auth/gplus/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
 try{
-    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'ascii'))
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
 }catch(e){}
 
 if (lconfig.externalSecure) {
@@ -50,8 +54,14 @@ module.exports = function(locker) {
     locker.get('/auth/gcontacts/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gcontacts, res);
     });
+    locker.get('/auth/gplus/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), gplus, res);
+    });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
+    });
+    locker.get('/auth/tumblr/auth', function(req, res) {
+        handleTumblr(req, res);
     });
     locker.get('/auth/flickr/auth', function(req, res) {
         handleFlickr(req, res);
@@ -104,7 +114,11 @@ function handleOAuth2Post (code, options, res) {
                   client_secret:apiKeys[options.provider].appSecret,
                   redirect_uri:host + options.redirectURI};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
-           auth = {};
+            auth = {};
+            if (options.provider === 'gcontacts') {
+                auth.clientID = apiKeys[options.provider].appKey;
+                auth.clientSecret = apiKeys[options.provider].appSecret;
+            }
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
             res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
@@ -124,6 +138,22 @@ function handleTwitter (req, res) {
                 auth.consumerSecret = apiKeys.twitter.appSecret;
                 auth.token = newToken;
                 installSynclet("twitter", auth);
+                res.end("<script type='text/javascript'> window.close(); </script>");
+            });
+    } catch (E) {
+        res.end('failed to authenticate against service - ' + E);
+    }
+}
+
+function handleTumblr (req, res) {
+    try {
+        require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
+            .getAccessToken(req, res, function(err, newToken) {
+                var auth = {};
+                auth.consumerKey = apiKeys.tumblr.appKey;
+                auth.consumerSecret = apiKeys.tumblr.appSecret;
+                auth.token = newToken;
+                installSynclet("tumblr", auth);
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {

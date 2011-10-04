@@ -1,10 +1,16 @@
 function log(m) { if (console && console.log) console.log(m); }
 var app, timeout, appId;
 var providers = [];
-var userClosed = false;
+var manuallyClosed = false;
+var retryTime = 1000;
 
 $(document).ready(
     function() {
+        // any mouse activity resets it
+        $(document).mousemove( function() {
+            retryTime = 1000;
+        } );
+
         app = window.location.hash.substring(1);
 
         $('.app-select').click(function() {
@@ -19,21 +25,67 @@ $(document).ready(
             return false;
         });
 
+        // open service drawer button
         $('.services-box').click(function() {
             expandServices();
         });
 
+        // close service drawer button
         $('#service-closer').click(function() {
-            userClosed = true;
-            $('.services-box').show();
+            manuallyClosed = true;
             $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-            $('#services').animate({height: "0px"}, {duration: 200, queue: false}, function() { resizeFrame(); });
+            $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+                    $('.services-box-container').show();
+                    resizeFrame();
+                }
+            });
         });
 
+        // service buttons
         $('#service-selector').delegate('.provider-link', 'click', function() {
             if ($(this).hasClass('disabled')) return false;
             accountPopup($(this));
             return false;
+        });
+
+        // search box
+        $('#nav-search').submit(function() {
+            var inputText = $("#nav-search .search").val();
+            $("#nav-search .search").val("");
+            window.location.hash = "search";
+            $('.selected').removeClass('selected');
+            $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
+            return false;
+        });
+
+        $(".app-link[title]").tooltip({
+            position:"bottom center",
+            predelay:750,
+            onBeforeShow: function(ev) {
+                var id = this.getTrigger().attr("id");
+                // Chop off the s!
+                id = id.substring(0, id.length - 1);
+                var tip = $('.' + id + 'sTotalCount').text() + '<br /><div class="lastUpdated">';
+                if (allCounts[id] && allCounts[id].lastUpdate) {
+                    var timeDiff = Date.now() - allCounts[id].lastUpdate;
+                    if (timeDiff < 60000) {
+                        tip += 'last updated less than a minute ago';
+                    } else if (timeDiff < 3600000) {
+                        tip += 'last updated ' + Math.floor(timeDiff / 60000) + ' minutes ago';
+                    } else if (timeDiff < 43200000) {
+                        tip += 'last updated over an hour ago';
+                    } else if (timeDiff < 43800000) {
+                        tip += 'last updated ' + Math.floor(timeDiff / 3600000) + ' hours ago';
+                    } else {
+                        var d = new Date;
+                        d.setTime(allCounts[id].lastUpdate);
+                        //log(allCounts);
+                        tip += 'last updated ' + d.toString();
+                    }
+                    tip += '</div>';
+                }
+                this.getTip().html('<div>' + tip + '</div>');
+            }
         });
 
         renderApp();
@@ -102,6 +154,7 @@ var SyncletPoll = (
             };
 
             t.handleResponse = function(data, err, resp) {
+                if(retryTime < 10000) retryTime += 500;
                 for (app in data.installed) {
                     app = data.installed[app];
 
@@ -111,7 +164,7 @@ var SyncletPoll = (
                     }
                 }
 
-                if (t.repoll) t.timeout = setTimeout(t.query, 1000);
+                if (t.repoll) t.timeout = setTimeout(t.query, retryTime);
             };
 
             t.query = function() {
@@ -185,6 +238,7 @@ function accountPopup (elem) {
     var oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
+                 tumblr: {width: 630, height: 500},
                  facebook: {width: 980, height: 705},
                  flickr: {width: 1000, height: 877}
                 };
@@ -208,21 +262,21 @@ function renderApp() {
         appId = data[app].id;
         drawServices();
         (function poll (data) {
-            $.getJSON(data[app].url + "ready", function(state) {
-                ready = state;
+            $.getJSON("/Me/" + app + "/state", function(state) {
+                ready = state.count > 0;
                 if (ready) {
                     // log('clearing timeout');
                     $("#appFrame")[0].contentWindow.location.replace(data[app].url);
                     clearTimeout(timeout);
                 }
                 else {
-                    if (!userClosed && $('#services').height() === 0) expandServices();
-                    if (!timeout) {
-                        // log('loading page');
-                        $("#appFrame")[0].contentWindow.location.replace(data[app].url + "notready.html");
-                    }
+                    if (!manuallyClosed && $('#services').height() === 0) expandServices();
+                    var currentLocation = $("#appFrame")[0].contentWindow.location;
+                    var newLocation = data[app].url + "notready.html";
+                    if (currentLocation.toString() !== newLocation)
+                        currentLocation.replace(newLocation);
                     clearTimeout(timeout);
-                    timeout = setTimeout(function() {poll(data)}, 1000);
+                    timeout = setTimeout(function() {poll(data);}, 1000);
                     // log(timeout);
                 }
             });
@@ -231,11 +285,12 @@ function renderApp() {
 };
 
 function expandServices() {
-    $('.services-box').hide();
+    $('.services-box-container').hide();
     $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
     $('#services').animate({height: "110px"}, {duration: 200});
 }
 
 function resizeFrame() {
     $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
+    $("#appFrame").width($(window).width());
 }

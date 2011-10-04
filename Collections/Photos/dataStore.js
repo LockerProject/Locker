@@ -10,12 +10,14 @@
 var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
+var lutil = require('../../Common/node/lutil');
 var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
 var url = require("url");
+var fs = require('fs');
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -29,7 +31,7 @@ function processTwitPic(svcId, data, cb) {
     if (data.thumb) photoInfo.thumbnail = data.thumb;
     photoInfo.timestamp = Date.now();
 
-    photoInfo.sources = [{service:svcId, id:data.id}];
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
     saveCommonPhoto(photoInfo, cb);
 }
@@ -44,13 +46,14 @@ function processFacebook(svcId, data, cb) {
     }
     photoInfo.url = data.source;
     // TODO:  For now we're just taking the smallest one, there's also an icon field
-    if (data.images) photoInfo.thumbUrl = data.images[data.images.length - 1].source;
+    if (data.images) photoInfo.thumbnail = data.images[data.images.length - 1].source;
     if (data.width) photoInfo.width = data.width;
     if (data.height) photoInfo.height = data.height;
     if (data.created_time) photoInfo.timestamp = data.created_time*1000;
     if (data.name) photoInfo.title = data.name;
+    if (data.link) photoInfo.sourceLink = data.link;
 
-    photoInfo.sources = [{service:svcId, id:data.id}];
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
     saveCommonPhoto(photoInfo, cb);
 }
@@ -58,7 +61,7 @@ function processFacebook(svcId, data, cb) {
 function processShared(svcId, data, cb) {
     logger.log("debug", "Shared processing of a pic");
 
-    var commonFields = ["url", "height", "width", "timestamp", "title", "mime-type", "thumbUrl", "size", "caption"];
+    var commonFields = ["url", "height", "width", "timestamp", "title", "mime-type", "thumbnail", "sourceLink", "size", "caption"];
     if (!data.url) {
         cb("Must have a url");
         return ;
@@ -67,7 +70,7 @@ function processShared(svcId, data, cb) {
     commonFields.forEach(function(fieldName) {
         if (data.hasOwnProperty(fieldName)) photoInfo[fieldName] = data[fieldName];
     });
-    if (data.id) photoInfo.sources = [{service:svcId, id:data.id}];
+    if (data.id) photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
     saveCommonPhoto(photoInfo, cb);
 }
@@ -84,12 +87,13 @@ function processFlickr(svcId, data, cb) {
     if (data.width_l) photoInfo.width = data.width_l;
     if (data.title) photoInfo.title = data.title
     if (data.url_t) photoInfo.thumbnail = data.url_t;
+    if (data.owner && data.id) photoInfo.sourceLink = "http://www.flickr.com/photos/" + data.owner + "/" + data.id + "/";
     if (data.datetaken) {
         var d = new Date(data.datetaken);
-        photoInfo.timestap = d.getTime();
+        photoInfo.timestamp = d.getTime();
     }
 
-    photoInfo.sources = [{service:svcId, id:data.id}];
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
     saveCommonPhoto(photoInfo, cb);
 
@@ -115,9 +119,10 @@ function processTwitter(svcId, data, cb)
             if (js.width) photoInfo.width = js.width;
             photoInfo.title = data.text;
             if (js.thumbnail_url) photoInfo.thumbnail = js.thumbnail_url;
-            if (data.createdAt) photoInfo.timestamp = new Date(data.created_at).getTime();
+            if (data.created_at) photoInfo.timestamp = new Date(data.created_at).getTime();
+            photoInfo.sourceLink = "http://twitter.com/#!/" + data.user.screen_name + "/status/" + data.id_str;
 
-            photoInfo.sources = [{service:svcId, id:data.id}];
+            photoInfo.sources = [{service:svcId, id:data.id, data:data}];
             saveCommonPhoto(photoInfo, callback);
         });
     },cb);
@@ -127,20 +132,35 @@ function processTwitter(svcId, data, cb)
 function processFoursquare(svcId, data, cb)
 {
     if(!data || !data.photos || !Array.isArray(data.photos.items)) return cb();
+    var photoInfo = {};
 
     async.forEach(data.photos.items,function(photo,callback){
         if(!photo || !photo.sizes || !Array.isArray(photo.sizes.items) || photo.sizes.items.length == 0) return callback();
-        var photoInfo = {};
+        photoInfo = {};
         photoInfo.url = photo.sizes.items[0].url;
         if (photo.sizes.items[0].height) photoInfo.height = photo.sizes.items[0].height;
         if (photo.sizes.items[0].width) photoInfo.width = photo.sizes.items[0].width;
         if (data.venue.name) photoInfo.title = data.venue.name;
-        photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-1].url;
-        if (photo.createdAt) photoInfo.timestamp = photo.createdAt;
+        photoInfo.thumbnail = photo.sizes.items[photo.sizes.items.length-2].url;
+        if (data.createdAt) photoInfo.timestamp = new Date(data.createdAt).getTime() * 1000;
+        photoInfo.sourceLink = "http://foursquare.com/user/" + photo.user.id + "/checkin/" + data.id;
 
-        photoInfo.sources = [{service:svcId, id:photo.id}];
+        photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
         saveCommonPhoto(photoInfo, callback);
-    },cb);
+    }, function(err) { cb(err, photoInfo); });
+}
+
+var writeTimer = false;
+function updateState()
+{
+    if (writeTimer) {
+        clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(function() {
+        try {
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+        } catch (E) {}
+    }, 5000);
 }
 
 function saveCommonPhoto(photoInfo, cb) {
@@ -152,8 +172,7 @@ function saveCommonPhoto(photoInfo, cb) {
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
-            logger.debug("PHOTODOCO:"+JSON.stringify(doc));
-            locker.event("photo", doc, "new");
+            updateState();
         }
         cb(err, doc);
     });
@@ -219,8 +238,7 @@ exports.processEvent = function(eventBody, callback) {
         return;
     }
     // Run the data processing
-    var data = eventBody.obj;
-    if(eventBody.via && eventBody.via.indexOf("synclet") == 0) data = eventBody.obj.data;
+    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
     handler(eventBody.via, data, callback);
 }

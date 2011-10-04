@@ -4,7 +4,7 @@ var locker = require('locker');
 var assert = require('assert');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Search Collection');
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var lsearch = require('lsearch');
 var search = require('../Collections/Search/search');
 var fs = require('fs');
@@ -50,11 +50,10 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
     }
 }).addBatch({
-    'Can query new contact just indexed' : {  
+    'Can query new contact just indexed' : {
         topic: function() {
             req.params.q = 'matt';
             req.params.type = 'contact/full*';
@@ -63,15 +62,16 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
-            assert.equal(response.hits.length, 1);          
+            assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
             assert.equal(response.hits[0]._source, 'contacts');
-            assert.equal(response.hits[0].content, 'Matt Berry');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({
-    'Can index updated contacts collection event' : {  
+    'Can index updated contacts collection event' : {
         topic: function() {
             req.body = contactUpdateEvent;
             search.handlePostEvents(req, this.callback);
@@ -79,11 +79,10 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
     }
 }).addBatch({
-    'Can query updated contact just indexed' : {  
+    'Can query updated contact just indexed' : {
         topic: function() {
             req.params.q = 'matthew';
             req.params.type = 'contact/full*';
@@ -93,14 +92,15 @@ suite.next().suite.addBatch({
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');    
+            assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
             assert.equal(response.hits[0]._type, 'contact/full');
-            assert.equal(response.hits[0]._source, 'contacts');                 
-            assert.equal(response.hits[0].content, 'Matthew Berry');
+            assert.equal(response.hits[0]._source, 'contacts');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');
         }
     }
 }).addBatch({
-    'Can index new twitter status synclet event' : {      
+    'Can index new twitter status synclet event' : {
         topic: function() {
             req.body = twitterEvent;
             search.handlePostEvents(req, this.callback);
@@ -108,11 +108,10 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.ok(response.hasOwnProperty('timeToIndex'));
-            assert.ok(response.hasOwnProperty('docsDeleted'));
         }
-    } 
+    }
 }).addBatch({
-    'Can query new twitter status synclet just indexed, within tweet body' : {  
+    'Can query new twitter status synclet just indexed, within tweet body' : {
         topic: function() {
             req.params.q = 'forkly';
             req.params.type = 'timeline/twitter*';
@@ -121,15 +120,16 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
-            assert.equal(response.hits.length, 1);          
+            assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({
-    'Can query new twitter status synclet just indexed, within tweet author' : {  
+    'Can query new twitter status synclet just indexed, within tweet author' : {
         topic: function() {
             req.params.q = 'David';
             req.params.type = 'timeline/twitter*';
@@ -138,15 +138,16 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
-            assert.equal(response.hits.length, 1);          
+            assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({
-    'Can query new twitter status synclet just indexed, within tweet handle' : {  
+    'Can query new twitter status synclet just indexed, within tweet handle' : {
         topic: function() {
             req.params.q = 'davidcohen';
             req.params.type = 'timeline/twitter*';
@@ -155,11 +156,12 @@ suite.next().suite.addBatch({
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
-            assert.equal(response.hits.length, 1);          
+            assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
             assert.equal(response.hits[0]._type, 'timeline/twitter');
             assert.equal(response.hits[0]._source, 'twitter/timeline');
-            assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
+            // Content is longer stored
+            // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
     }
 }).addBatch({
@@ -177,7 +179,7 @@ suite.next().suite.addBatch({
     }
 }).addBatch({
     'Can handle crazy shit entered as the query term like ' : {
-        '*': {            
+        '*': {
             topic: function() {
                 req.params.q = '*';
                 search.handleGetQuery(req, this.callback);
@@ -186,7 +188,7 @@ suite.next().suite.addBatch({
                 assert.equal(err, 'Please supply a valid query string for /search/query GET request.');
             }
         },
-        'anything starting with a *': {            
+        'anything starting with a *': {
             topic: function() {
                 req.params.q = '*ka8s';
                 search.handleGetQuery(req, this.callback);

@@ -34,7 +34,10 @@ exports.sync = function(processInfo, cb) {
 
 var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
-        profile = JSON.parse(data).response.user;
+        var profile;
+        try {
+            profile = JSON.parse(data).response.user;            
+        }catch(E){}
         if (profile === undefined) {
             return callback('error attempting to get profile data - ' + data);
         }

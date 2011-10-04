@@ -3,7 +3,7 @@ var dataStore = require('../Collections/Contacts/dataStore.js');
 var assert = require("assert");
 var vows = require("vows");
 var currentDir = process.cwd();
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var mongoCollections;
 var svcId = 'contacts';
 
@@ -38,7 +38,8 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/event-collector/listen/contact%2Ffull' });
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/friends',
-                file: __dirname + '/fixtures/contacts/foursquare_friends.json' });
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json')) });
             var self = this;
             process.chdir('./' + lconfig.me + '/contacts');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
@@ -79,7 +80,8 @@ suite.next().suite.addBatch({
         topic : function() {
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/facebook/getCurrent/friends',
-                file: __dirname + '/fixtures/contacts/facebook_friends.json' });
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json')) });
             var self = this;
             contacts.getContacts("facebook", "friends", "facebook", function() {
                 dataStore.getTotalCount(self.callback);
@@ -102,13 +104,14 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(resp, 7);
         }
-    }    
+    }
 }).addBatch({
     "Can pull in the contacts from twitter" : {
         topic : function() {
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/friends',
-                file: __dirname + '/fixtures/contacts/twitter_friends.json' });
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json')) });
             var self = this;
             contacts.getContacts("twitter", "friends", "twitter", function() {
                 dataStore.getTotalCount(self.callback);
@@ -137,7 +140,8 @@ suite.next().suite.addBatch({
         topic : function() {
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/followers',
-                file: __dirname + '/fixtures/contacts/twitter_followers.json' });
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json')) });
             var self = this;
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
             // be going direct to mongo like this in a test
@@ -163,7 +167,7 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = true;
             process.chdir('../..');
             assert.equal(process.cwd(), currentDir);
-            assert.equal(events, 17);
+            assert.equal(events, 9);
         }
     }
 }).addBatch({
@@ -229,5 +233,5 @@ suite.next().suite.addBatch({
         }
     }
 });
-        
+
 suite.export(module);

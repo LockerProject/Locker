@@ -7,7 +7,8 @@
     "provides":["place"],
     "mongoCollections": ["place"],
     "events":[["checkin/foursquare","/events"]
-		,["status/twitter","/events"]
-		,["timeline/twitter","/events"]
-		]
+    ,["recents/foursquare","/events"]
+    ,["status/twitter","/events"]
+    ,["timeline/twitter","/events"]
+    ]
 }

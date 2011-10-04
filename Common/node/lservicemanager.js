@@ -65,7 +65,7 @@ exports.providers = function(types) {
 * Map a meta data file JSON with a few more fields and make it available
 */
 function mapMetaData(file, type, installable) {
-    var metaData = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    var metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
@@ -143,7 +143,7 @@ exports.scanDirectory = function(dir, installable) {
 function mergedManifest(dir)
 {
     // Don't use metainfo here because we aren't fully setup
-    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf-8'));
+    var js = JSON.parse(fs.readFileSync(dir+'/me.json', 'utf8'));
     var serviceInfo = {};
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == js.srcdir) {
@@ -224,10 +224,11 @@ exports.migrate = function(installedDir, metaData) {
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
                         // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf-8'));
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), 'utf8'));
                         metaData.version = migrations[i].substring(0, 13);
                         curMe.version = metaData.version;
-                        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'), JSON.stringify(curMe, null, 4));
+                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, metaData.id, 'me.json'),
+                                                  JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
                         console.error("failed to run migration!");
@@ -285,11 +286,17 @@ exports.install = function(metaData, installOverride) {
         meInfo.id = hash.digest('hex');
     }
     meInfo.srcdir = serviceInfo.srcdir;
+    meInfo.version = 1;
+    if (path.existsSync(path.join(lconfig.lockerDir, serviceInfo.srcdir, 'migrations'))) {
+        var files = fs.readdirSync(path.join(lconfig.lockerDir, serviceInfo.srcdir, 'migrations'));
+        console.error(files.sort());
+        var maxMigration = files.sort()[files.length - 1];
+        meInfo.version = maxMigration.substring(0, 13);
+    }
     meInfo.is = serviceInfo.is;
     meInfo.uri = lconfig.lockerBase+"/Me/"+meInfo.id+"/";
-    meInfo.version = Date.now();
     fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id),0755);
-    fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
+    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, meInfo.id, 'me.json'),JSON.stringify(meInfo));
     serviceMap.installed[meInfo.id] = mergedManifest(path.join(lconfig.me, meInfo.id));
 
     var fullInfo = exports.metaInfo(meInfo.id);
@@ -383,7 +390,6 @@ exports.spawn = function(serviceId, callback) {
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
     app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
     app.stdout.setEncoding("utf8");
-    app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;
         console.outputModule = svc.title;
@@ -462,6 +468,9 @@ exports.spawn = function(serviceId, callback) {
         checkForShutdown();
     });
     console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+    app.stdin.on('error',function(err){
+        console.error("STDIN error:",err);
+    });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;

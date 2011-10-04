@@ -1,8 +1,11 @@
+var debug = false;
+function log(m) { if (console && console.log && debug) console.log(m); }
+
 var collectionHandle = "";
 var resultsTemplate = null;
 
 function queryLinksCollection (queryString) {
-    console.log("Querying: " + $.param({q:queryString||""}));
+    log("Querying: " + $.param({q:queryString||""}));
     $(".dateGroup").remove();
     $("#infoMsg").hide();
     var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
@@ -31,7 +34,7 @@ function queryLinksCollection (queryString) {
             nextDate.setMinutes(0);
             nextDate.setSeconds(0);
             nextDate.setMilliseconds(0);
-            
+
             // If it's a different date let's start a new group of links
             if (!curDate || nextDate.getTime() != curDate.getTime()) {
                 var newDateGroup = {date:nextDate.strftime("%A, %B %d, %Y"), links:[]};
@@ -39,7 +42,7 @@ function queryLinksCollection (queryString) {
                 curLinks = newDateGroup.links;
                 curDate = nextDate;
             }
-            
+
             curLinks.push(data[i]);
         }
         $("#results").render({groups:dateGroups,groupClass:"dateGroup"}, resultsTemplate);
@@ -68,26 +71,25 @@ function queryLinksCollection (queryString) {
                   },
                   error: function() {
 
-                  },
+                  }
                 });
                 E.html("<img src='img/ajax-loader.gif' /> Loading...");
                 //$(this).html("&#9654; View");
             }
-        })
+        });
       },
       error: function() {
         //called when there is an error
-      },
+      }
     });
-    
 }
-function findLinksCollection()
-{
-    console.log("Finding the collection");
+
+function findLinksCollection() {
+    log("Finding the collection");
     $.ajax({
       url: "/providers?types=link",
       type: "GET",
-      dataType: "json",    
+      dataType: "json",
       success: function(data) {
           for (var i = 0; i < data.length; ++i) {
               if (data[i].provides.indexOf("link") > -1 && data[i].is === "collection") {
@@ -107,12 +109,11 @@ function findLinksCollection()
       },
       error: function() {
           showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
-      },
+      }
     });
-    
 }
-function showError(errorMessage)
-{
+
+function showError(errorMessage) {
     $("#infoMsg").text(errorMessage);
     $("#infoMsg").attr("class", "error");
     $("#infoMsg").show();
@@ -143,7 +144,7 @@ $(function(){
                             return theClass;
                         },
                         "img.favicon@src":"link.favicon",
-                        "a":function(arg) {
+                        "a.expandedLink":function(arg) {
                             if (arg.item.link.length > 100) {
                                 return arg.item.link.substring(0, 100) + "...";
                             } else {
@@ -151,11 +152,11 @@ $(function(){
                             }
                         },
                         "a@href":"link.link",
-                        "div.linkDescription":"link.title",
-                        "div.linkFrom":function(arg) {
+                        "span.linkDescription":"link.title",
+                        "span.linkFrom":function(arg) {
                             return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ");
                         },
-                        "div.linkFrom@style":function(arg) {
+                        "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
                         },
                         "span.origLink@style":function(arg) {
@@ -164,14 +165,13 @@ $(function(){
                         "span.origLink":function(arg) {
                             var orig = arg.item.encounters[arg.item.encounters.length - 1].orig;
                             return orig != arg.item.link ? "(" + orig + ")" : "";
-                        },
+                        }
                     }
                 }
             }
         }
     });
-    $("#main").height($(window).height() - $("header").height() - 20);
-    $("#main").width($(window).width() - 20);
+
     $("#searchForm").submit(function() {
         queryLinksCollection($("#linksQuery").val());
         return false;
@@ -180,16 +180,15 @@ $(function(){
         $("#linksQuery").val("");
         queryLinksCollection();
         return false;
-    })
+    });
     findLinksCollection();
     $("#searchLinks").click(function(){
         queryLinksCollection($("#linksQuery").val());
         return false;
     });
-})
+});
 
-function hideMe()
-{
+function hideMe() {
     $(event.srcElement).hide();
 }
 
@@ -203,6 +202,6 @@ function updateLinkCount() {
         },
         success: function(data) {
             $("#linkCounter").text(data.count + " links");
-        },
+        }
       });
 }

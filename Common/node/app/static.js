@@ -25,9 +25,9 @@ stdin.on('data', function (chunk) {
     app.get('/', function(req, res) {
         res.render('static/index.html');
     })
-    app.listen(processInfo.port,function() {
-        var returnedInfo = {};
-        console.log(JSON.stringify(returnedInfo));
+    app.listen(0,function() {
+        var returnedInfo = {port: app.address().port};
+        process.stdout.write(JSON.stringify(returnedInfo));
     });
     app.get('/ready', function(req, res) {
         res.writeHead(200);

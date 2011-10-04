@@ -7,18 +7,25 @@
 *
 */
 var logger = require(__dirname + "/../../Common/node/logger").logger;
+var fs = require('fs');
+var lutil = require('lutil');
 
 // in the future we'll probably need a visitCollection too
-var linkCollection, encounterCollection;
+var linkCollection, encounterCollection, queueCollection;
 
-exports.init = function(lCollection, eCollection) {
+exports.init = function(lCollection, eCollection, qCollection) {
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
     encounterCollection = eCollection;
+    queueCollection = qCollection;
 }
 
 exports.clear = function(callback) {
-    linkCollection.drop(function(){encounterCollection.drop(callback)});
+    linkCollection.drop(function() {
+        encounterCollection.drop(function() {
+            queueCollection.drop(callback);
+        });
+    });
 }
 
 exports.getTotalLinks = function(callback) {
@@ -26,6 +33,18 @@ exports.getTotalLinks = function(callback) {
 }
 exports.getTotalEncounters = function(callback) {
     encounterCollection.count(callback);
+}
+
+exports.enqueue = function(obj, callback) {
+    queueCollection.findAndModify({"text":obj.text}, [['_id','asc']], {$set:{'obj' : obj, 'at' : Date.now()}}, {safe:true, upsert:true, new: true}, callback);
+}
+
+exports.dequeue = function(obj, callback) {
+    queueCollection.remove({"text":obj.text}, callback);
+}
+
+exports.fetchQueue = function(callback) {
+    queueCollection.find().sort({at: -1}).toArray(callback);
 }
 
 // handy to check all the original urls we've seen to know if we already have a link expanded/done
@@ -74,12 +93,25 @@ function findWrap(a,b,c,cbEach,cbDone){
     });
 }
 
+var writeTimer = false;
+function updateState()
+{
+    if (writeTimer) {
+        clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(function() {
+        try {
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+        } catch (E) {}
+    }, 5000);    
+}
 
-// insert new (fully normalized) link, ignore or replace if it already exists? 
+// insert new (fully normalized) link, ignore or replace if it already exists?
 // {link:"http://foo.com/bar", title:"Foo", text:"Foo bar is delicious.", favicon:"http://foo.com/favicon.ico"}
 exports.addLink = function(link, callback) {
 //    logger.debug("addLink: "+JSON.stringify(link));
     linkCollection.findAndModify({"link":link.link}, [['_id','asc']], {$set:link}, {safe:true, upsert:true, new: true}, callback);
+    updateState();
 }
 
 exports.updateLinkAt = function(link, at, callback) {
@@ -95,9 +127,9 @@ exports.addEncounter = function(encounter, callback) {
     encounter["_hash"] = _hash;
     var options = {safe:true, upsert:true, new: true};
     encounterCollection.findAndModify({"_hash":_hash}, [['_id','asc']], {$set:encounter}, options, function(err, doc) {
+        if (!doc) return callback(err);
         delete doc["_hash"];
         callback(err, doc);
     });
 }
 
-    

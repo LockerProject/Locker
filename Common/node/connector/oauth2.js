@@ -55,7 +55,7 @@ exports.isAuthed = function() {
             return true;
 
         // Try to read it in
-        var authData = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
+        var authData = JSON.parse(fs.readFileSync('auth.json', 'utf8'));
         exports.auth = authData;
         if(authData.hasOwnProperty("accessToken")) {
             return true;

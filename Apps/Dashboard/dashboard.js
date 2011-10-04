@@ -21,7 +21,6 @@ var stdin = process.openStdin();
 stdin.setEncoding('utf8');
 stdin.on('data', function (chunk) {
     var processInfo = JSON.parse(chunk);
-    console.error('DEBUG: processInfo', processInfo);
     process.chdir(processInfo.workingDirectory);
     require('./dashboard-client')(lconfig.lockerHost, lconfig.lockerPort, processInfo.port, lconfig.externalBase);
     process.stdout.write(JSON.stringify({port: processInfo.port}));

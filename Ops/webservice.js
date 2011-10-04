@@ -30,7 +30,7 @@ var lconfig = require("lconfig");
 
 var lcrypto = require("lcrypto");
 
-var proxy = new httpProxy.HttpProxy();
+var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
 
 var dashboard, devdashboard;
@@ -45,7 +45,7 @@ var locker = express.createServer(
                 }
             },
             function(req, res, next) {
-                if (req.url.substring(0, 13) == '/auth/twitter') {
+                if (req.url.substring(0, 13) == '/auth/twitter' || req.url.substring(0, 12) == '/auth/tumblr') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -147,6 +147,8 @@ locker.get("/query/:query", function(req, res) {
                 var options = {};
                 if (query.limit) options.limit = query.limit;
                 if (query.skip) options.skip = query.skip;
+                if (query.fields) options.fields = query.fields;
+                if (query.sort) options.sort = query.sort;
                 collection.find(query.query, options, function(err, foundObjects) {
                     if (err) {
                         res.writeHead(500);
@@ -253,11 +255,16 @@ locker.post('/core/:svcId/enable', function(req, res) {
     });
 });
 
-
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get('/Me/*', function(req,res){
-    proxyRequest('GET', req, res);
+    // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
+    if(req.originalUrl.match(/^\/Me\/[a-z]+$/)) {
+        console.error('redirecting ' + req.originalUrl + ' to ' + req.originalUrl + '/')
+        res.redirect(req.originalUrl + '/');
+    } else {
+        proxyRequest('GET', req, res);
+    }
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
@@ -279,13 +286,21 @@ function proxyRequest(method, req, res) {
         return;
     }
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
-        res.writeHead(404);
-        res.end("so sad, couldn't find "+id);
-        return;
+        var map = serviceManager.serviceMap();
+        var match = false;
+        map.available.forEach(function(s){ if(s.handle === id) match = s; });
+        if(!match)
+        {
+            res.writeHead(404);
+            res.end("so sad, couldn't find "+id);
+            return;
+        }
+        console.log("auto-installing "+id);
+        serviceManager.install(match); // magically auto-install!
     }
     if (!serviceManager.isRunning(id)) {
         console.log("Having to spawn " + id);
-        var buffer = proxy.buffer(req);
+        var buffer = httpProxy.buffer(req);
         serviceManager.spawn(id,function(){
             proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
         });
@@ -420,11 +435,23 @@ locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
-    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
+    req.url = '/Me/' + dashboard.instance.handle + '/' + req.url.substring(11);
+    proxyRequest(req.method, req, res);
 });
 
-locker.all('/devdashboard*', function(req, res) {
-    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
+locker.all("/socket.io*", function(req, res) {
+    if (dashboard && dashboard.instance) proxied(req.method, dashboard.instance, req.url, req, res);
+});
+// proxy websockets
+locker.on('upgrade', function(req, socket, head) {
+    // TODO be selective about who they're routing too?
+    console.log("** websocket proxying to dashboard");
+    var buffer = httpProxy.buffer(socket);
+    proxy.proxyWebSocketRequest(req, socket, head, {
+        host: url.parse(dashboard.instance.uriLocal).hostname,
+        port: url.parse(dashboard.instance.uriLocal).port,
+        buffer: buffer
+  });
 });
 
 locker.get('/', function(req, res) {
@@ -453,9 +480,6 @@ exports.startService = function(port, cb) {
     serviceManager.spawn(lconfig.ui, function() {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
         console.log('ui spawned');
-    });
-    serviceManager.spawn('devdashboard', function() {
-        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
     });
     locker.listen(port, function() {
         cb();

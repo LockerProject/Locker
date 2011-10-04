@@ -1,8 +1,5 @@
-body {
-    font-family:sans-serif;
-    background-color:white;
-    width:100%;
-    height:100%;
+#container {
+    padding: 10px;
 }
 
 #infoMsg {
@@ -11,16 +8,19 @@ body {
     font-style:italic;
     text-align:center;
 }
+
 .info {
     border:1px dotted #666;
     background-color:#ccc;
     color:#666;
 }
+
 .error {
     border:1px dotted #D8000C;
     color: #D8000C;
     background-color: #FFBABA;    
 }
+
 #loading {
     font-style:italic;
 }
@@ -42,8 +42,6 @@ header input#linksQuery {
 }
 
 #linkCounter {
-    font-size:80%;
-    color:#666;
 }
 
 /* Group Styles */
@@ -55,8 +53,9 @@ header input#linksQuery {
     margin-top:5px;
 }
 #main {
-    overflow:scroll;
+/*    overflow:scroll;*/
 }
+
 /* Link Styles */
 .linkInfo {
     clear:both;
@@ -66,12 +65,12 @@ header input#linksQuery {
 }
 .providerIcon {
     float:left;
-    height:32px;
-    width:32px;
-    margin-top:4px;
+    height:16px;
+    width:16px;
+    vertical-align:middle;
 }
 .fullInfo {
-    margin-left:36px;
+    margin-left:16px;
     min-height:32px;
     padding:4px 4px 4px 6px;
     word-wrap:break-word;
@@ -80,22 +79,23 @@ header input#linksQuery {
     background-color:#e2e2e2;
 }
 .favicon {
-    width:16px;
+    float:left;
     height:16px;
-    vertical-align:middle;
+    width:16px;
+    margin-top:4px;
 }
 a.expandedLink {
     color:#7f7f7f;
     margin-left: 4px;
-    font-size:95%;
+    font-size:85%;
 }
 .linkDescription {
     padding:2px;
-    font-size:90%;
+    font-size:95%;
 }
 .origLink {
     color:#666;
-    font-size:90%;
+    font-size:85%;
     padding-left:4px;
 }
 .linkFrom {
