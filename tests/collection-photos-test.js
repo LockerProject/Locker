@@ -33,24 +33,24 @@ suite.next().suite.addBatch({
             var self = this;
             lmongo.init("photos", thecollections, function(mongo, colls) {
                 dataStore.init(colls.photos, mongo);
-                dataStore.processEvent(facebookEvent, self.callback);
+                dataStore.addEvent(facebookEvent, self.callback);
             });
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.sourceLink, 'http://www.facebook.com/photo.php?pid=1887967&id=709761820');
-            assert.equal(response.timestamp, 1233685472000);
+            assert.equal(response.data.sourceLink, 'http://www.facebook.com/photo.php?pid=1887967&id=709761820');
+            assert.equal(response.data.timestamp, 1233685472000);
         }
     }
 }).addBatch({
     "Can process Foursquare event" : {
         topic: function() {
-            dataStore.processEvent(foursquareEvent, this.callback);
+            dataStore.addEvent(foursquareEvent, this.callback);
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.timestamp, 1303341763000);
-            assert.equal(response.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
+            assert.equal(response.data.timestamp, 1303341763000);
+            assert.equal(response.data.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
         }
     }
 }).addBatch({

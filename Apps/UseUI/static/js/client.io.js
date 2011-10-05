@@ -23,7 +23,7 @@ allCounts = {};
 function updateCounts(name, count, updated) {
   updated = updated || 0;
   if (!allCounts.hasOwnProperty(name)) allCounts[name] = {};
-  allCounts[name].lastUpdate = updated
+  allCounts[name].lastUpdate = updated;
   allCounts[name].count= count;
   var msg = addCommas(count);
   $("." + name + "sTotalCount").text(msg);
@@ -94,7 +94,7 @@ socket.on('event', function (body) {
 });
 socket.on("counts", function(counts) {
   log("Counts:",counts);
-    for (key in counts) {
+    for (var key in counts) {
         if (counts.hasOwnProperty(key)) {
             updateCounts(key, counts[key].count, counts[key].updated);
         }
