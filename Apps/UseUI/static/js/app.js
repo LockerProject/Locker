@@ -36,12 +36,7 @@ $(document).ready(
             if ($('.blur:visible').length === 0) {
                 manuallyClosed = true;
                 $.post('closed', function(data) { log("success"); });
-                $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-                $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
-                        $('.services-box-container').show();
-                        resizeFrame();
-                    }
-                });
+                closeServices();
             }
         });
 
@@ -276,9 +271,10 @@ function renderApp() {
                     log('clearing timeout');
                     $("#appFrame")[0].contentWindow.location.replace(data[app].url);
                     clearTimeout(timeout);
+                    if (manuallyClosed) closeServices();
                 }
                 else {
-                    if (!manuallyClosed && $('#services').height() === 0) expandServices();
+                    if ($('#services').height() === 0) expandServices();
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
                     var newLocation = data[app].url + "notready.html";
                     if (currentLocation.toString() !== newLocation)
@@ -308,6 +304,15 @@ function drawGuidedSetup() {
     if (guidedSetupActive) return;
     guidedSetupActive = true;
     $('.blur').show();
+}
+
+function closeServices() {
+    $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
+        $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+            $('.services-box-container').show();
+            resizeFrame();
+        }
+    });
 }
 
 
