@@ -231,16 +231,19 @@ exports.getOne = function(id, callback) {
     });
 }
 
-exports.processEvent = function(eventBody, callback) {
+exports.addEvent = function(eventBody, callback) {
     // TODO:  Handle the other actions appropiately
-    if (eventBody.action != "new") {
-        callback();
+    if (eventBody.action !== "new") {
+        callback(null, {});
         return;
     }
     // Run the data processing
     var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, callback);
+    handler(eventBody.via, data, function(err, doc) {
+        var eventObj = {source: "photos", type:eventBody.obj.type, data:doc};
+        return callback(undefined, eventObj);
+    });
 }
 
 exports.addData = function(svcId, type, allData, callback) {

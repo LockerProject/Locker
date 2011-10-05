@@ -125,14 +125,18 @@ app.post('/events', function(req, res) {
         return;
     }
 
-    dataStore.processEvent(req.body, function(error) {
-        if (error) {
-            logger.debug("Error processing: " + error);
+    dataStore.addEvent(req.body, function(err, eventObj) {
+        if (err) {
+            logger.debug("Error processing: " + err);
             res.writeHead(500);
-            res.end(error);
+            res.end(err);
             return;
         }
-
+        
+        if (eventObj) {
+            locker.event("photo", eventObj);
+        }
+        
         res.writeHead(200);
         res.end("Event Handled");
     });
