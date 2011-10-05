@@ -68,15 +68,35 @@ function dequeueGritters() {
     }
 }
 
-function showGritter(name, count) {
-    var prettyName = name;
+function showGritter(name, count, customText) {
     if (name == 'newservice') {
+        var service = count;
+        var svclc = service.toLowerCase();
+        var customText = "Importing ";
+        var img = svclc;
+        if(svclc === 'facebook') {
+            customText += "friends, statuses, and photos.";
+        } else if (svclc === 'twitter') {
+            customText += "friends, statuses, and photos.";
+        } else if(svclc === 'foursquare') {
+            customText += "checkins and photos.";
+        } else if(svclc === 'github') {
+            customText += "friends.";
+        } else if(svclc === 'google contacts') {
+            customText += "contacts.";
+            img += 'gcontacts.png';
+        } else if(svclc === 'flickr') {
+            customText += "friends and photos.";
+        }
+        img = '/img/icons/' + img + '-gritter.png';
       $.gritter.add({
-        title:"Authorized " + count,
-        text:"Beginning to aggregate data from this source.",
+        title:"Connected " + count,
+        text:customText,
+        // image:img,
         time: 5000
       });
     } else {
+      var prettyName = name;
       if(name == 'contact') {
           if(count > 1) prettyName = 'people';
           else prettyName = 'person';

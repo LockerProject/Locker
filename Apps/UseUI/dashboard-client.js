@@ -86,7 +86,7 @@ var isSomeoneListening = 0;
 
 app.post('/new', function(req, res) {
     res.send({});
-    io.sockets.emit('newservice',req.body.obj);
+    io.sockets.emit('newservice', req.body.obj.split(' ')[0]);
 });
 
 app.post('/event', function(req, res) {

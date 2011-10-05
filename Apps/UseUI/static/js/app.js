@@ -313,22 +313,17 @@ var GuidedSetup = (
             var page = 0;
             var text = {};
             t.synced = false;
-            text.header = ['Welcome to your locker!', 'Setting up your locker', 'Exploring your locker'];
-            text.forward = ['NEXT', 'NEXT', 'FINISH'];
+            text.header = ['Welcome!', 'Get Started.', 'Explore...'];
+            text.forward = ['NEXT', 'NEXT', 'DONE'];
             text.body = [];
-            text.body[0] = "<p>Welcome!</p><p>Your locker will act a digital repository for all of the things you're producing on the internet.</p>" +
-                           "<p>It gives you an easy way to view all of the bits of things you're generating across the web.</p>" +
-                           "<p>Click next to begin setting up your locker!</p>";
-            text.body[1] = "<p>To begin, you'll need to authorize your locker to pull down data from a few services.</p>" +
-                           "<p>You don't need to give your locker access to everything, but the more services it has to work with, the more useful you'll find it!</p>" +
-                           "<p>We, Singly, don't have access to any of the bits of information that are stored in your locker.  This is a private, secure, place for you to access your data.</p>" +
-                           "<p>Once you've authorized at least one of these services, click the next button to learn a bit about how to explore the things that we're storing for you!</p>";
-            text.body[2] = "<p>Across the header bar, you'll find a few of the first services we've built to start exploring the things we've aggregated for you.</p>" +
-                           "<p>Each of these are acting as a unified view of that type of information across all of the services you've given us access to.</p>" +
-                           "<p>Photos will give you an easy way to look through all the photos you've been generating across various services</p>" +
-                           "<p>People lets you have access to all of your friends across all of the services you've given us access to." +
-                           "<p>Finally, Links is a unique way to go through all of the web sites that you're friends have been linking to." +
-                           "<p>We hope you enjoy this service as much as we've been enjoying building it!</p>";
+            text.body[0] = "<p>This helps you pull all your stuff together from around the web.</p>" +
+                           "<p></p>";
+            text.body[1] = "<p>To get started, connect some services you use.</p>" +
+                           "<p></p>";
+            text.body[2] = "<p>Now that you've got some services connected, you can got check out the different views!</p>" +
+                           "<p><b>Photos</b> - See all your photos from around the web in one place.</p>" +
+                           "<p><b>People</b> - See everyone you are connected to in one place.</p>" +
+                           "<p><b>Links</b> - Search for and discover all the links people are sharing with you.</p>";
 
 
             t.drawGuidedSetup = function() {
