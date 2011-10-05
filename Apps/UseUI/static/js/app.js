@@ -4,6 +4,7 @@ var app, timeout, appId;
 var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
+var ready = false;
 
 $(document).ready(
     function() {
@@ -146,6 +147,7 @@ var SyncletPoll = (
                 if (!hasProps && !window.guidedSetup) {
                     window.guidedSetup = new GuidedSetup();
                 }
+                if (ready === false && hasProps && $('#services').height() === 0) expandServices();
 
                 if (t.repoll) t.timeout = setTimeout(t.query, retryTime);
             };
@@ -242,13 +244,11 @@ function accountPopup (elem) {
 }
 
 function renderApp() {
-    var ready = false;
-
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
     $.getJSON('apps', function(data) {
-        var ready = false;
+        ready = false;
         if (!data[app]) return;
         appId = data[app].id;
         drawServices();
@@ -262,7 +262,6 @@ function renderApp() {
                     if (manuallyClosed) closeServices();
                 }
                 else {
-                    if ($('#services').height() === 0) expandServices();
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
                     var newLocation = data[app].url + "notready.html";
                     if (currentLocation.toString() !== newLocation)
@@ -355,6 +354,7 @@ var GuidedSetup = (
                     $('.forward').addClass('disabled');
                     $('.forward').attr('title', 'You must authorize a service to continue!');
                     $('.forward-buttton-text').attr('title', 'You must authorize a service to continue!');
+                    expandServices();
                 }
                 if (page === 1 && t.synced === false) {
                     return;
