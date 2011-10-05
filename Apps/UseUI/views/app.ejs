@@ -18,6 +18,7 @@
 <body class="app-page">
 
   <div class="header">
+    <div class="blur"></div>
     <a class="home-logo" href="index.html">
       <img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
     </a>
@@ -64,7 +65,9 @@
   <div class="services-box-container">
     <div class="services-box">SERVICES&nbsp;&#x25BC;</div>
   </div>
+
   <div id="services">
+    <div class="blur"></div>
     <div id="choose-services">
       Choose services to connect
     </div>
@@ -72,7 +75,6 @@
       <div class="service template">
         <a href="#" class="provider-link"><img class="provider-icon" src=""/></a>
         <a href="#" class="provider-link"><p class="provider-name">facebook</p></a>
-        <div class="spinner"></div>
         <img class="checkmark" src="img/checkmark.png"/>
       </div>
     </div>
@@ -80,12 +82,22 @@
   </div>
 
   <div id="iframeWrapper">
+    <div class="blur">
+      <div class="lightbox">
+        <img class="close-box" src="img/close-x.png"/>
+        <div class="contents">
+          <div class="header"><p class="header-text"></p></div>
+          <div class="body"></div>
+          <div class="forward"><p class="forward-button-text"></p></div>
+          <div class="tip"><p class="tip-text">To close this wizard, click the X in the upper right corner.</p></div>
+        </div>
+      </div>
+    </div>
     <iframe id="appFrame"></iframe>
   </div>
 
   <script src="/static/js/jquery-1.6.1.min.js"></script>
   <script type="text/javascript" src="js/app.js"></script>
-  <script src="js/spin.min.js"></script>
   <script type="text/javascript" src='js/jquery.gritter.js'></script>
   <script type="text/javascript" charset="utf-8">
     var is_ssl = ("https:" == document.location.protocol);
@@ -107,7 +119,13 @@
   <script type="text/javascript" charset="utf-8" src='js/client.io.js'></script>
   <script type="text/javascript" src='js/tooltip.min.js'></script>
   <% if (dashboard && dashboard.customHostedEndpoint) { %>
-  <script type='text/javascript' src='js/hosted.js'></script>
-  <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>
+    <script type='text/javascript' src='js/hosted.js'></script>
+    <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>
   <% } %>
+  <% if (closed) { %>
+    <script type='text/javascript'>
+      $(document).ready(function() { manuallyClosed = true; });
+    </script>
+  <% } %>
+
 </html>

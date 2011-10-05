@@ -71,6 +71,9 @@ vows.describe("Synclet Manager").addBatch({
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');
                 },
+                "finishedOnce is not true" : function(topic) {
+                    assert.equal(topic.finishedOnce, undefined);
+                },
                 "next run is about 120 seconds from now" : function(topic) {
                     // when runing as part of the full suite, this test fails because it gets back a time that's been time zoned
                     // i have no idea what's causing that, so this test is commented until that's sorted out
@@ -83,6 +86,9 @@ vows.describe("Synclet Manager").addBatch({
                     // console.dir(new Date());
                     // assert.isTrue(topic.nextRun > new Date() + 110);
                     // assert.isTrue(topic.nextRun < new Date() + 130);
+                },
+                "which will return info about what will be synced" : function(topic) {
+                    assert.equal(topic.info, 'Syncs test data!');
                 }
             },
              "manifest data is properly surfaced in the providers call" : function() {
@@ -215,6 +221,9 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(nsEvents[0].data.random, 'data');
             nsEvents = [];
         }
+    },
+    "and set the finishedOnce property to true" : function(err, status) {
+        assert.equal(syncManager.synclets().installed.testSynclet.finishedOnce, true);
     }
 }).addBatch({
     "Querying the data API returns the data" : {

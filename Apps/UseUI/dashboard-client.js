@@ -16,8 +16,11 @@ var express = require('express'),
     request = require('request');
 var logger = require("logger").logger;
 var lutil = require('lutil');
+var lconfig = require('../../Common/node/lconfig.js');
+lconfig.load('../../Config/config.json');
 
 var externalBase;
+var closed;
 var locker;
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
@@ -38,16 +41,21 @@ app.configure(function() {
     app.use(express.static(__dirname + '/static'));
 });
 
-app.get('/app',
-function(req, res) {
-    var lconfig = require('../../Common/node/lconfig.js');
-    lconfig.load('../../Config/config.json');
-    var rev = fs.readFileSync(path.join(lconfig.lockerDir, '/../', 'gitrev.json'), 'utf8');
+var drawPage = function(req, res) {
+    try {
+         last = JSON.parse(fs.readFileSync('state.json'));
+         closed = last.closed;
+    } catch(err) {
+    }
     res.render('app', {
         dashboard: lconfig.dashboard,
-        revision: rev.substring(1,11)
+        closed: closed
     });
-});
+}
+
+app.get('/app', drawPage);
+app.get('/', drawPage);
+
 
 // dumb defaults
 var options = { logger: {
@@ -76,6 +84,11 @@ var eventInfo = {
 // lame way to track if any browser is actually open right now
 var isSomeoneListening = 0;
 
+app.post('/new', function(req, res) {
+    res.send({});
+    io.sockets.emit('newservice', req.body.obj.split(' ')[0]);
+});
+
 app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
@@ -97,6 +110,10 @@ app.post('/event', function(req, res) {
     }
 });
 
+app.post('/closed', function(req, res) {
+    closed = true;
+    saveState();
+});
 
 // just snapshot to disk every time we push an event so we can compare in the future
 function saveState()
@@ -105,6 +122,7 @@ function saveState()
     for (var key in eventInfo) {
         if (eventInfo.hasOwnProperty(key)) counts[key] = {count:eventInfo[key].count};
     }
+    counts.closed = closed;
     lutil.atomicWriteFileSync("state.json", JSON.stringify(counts));
 }
 
@@ -132,6 +150,7 @@ function bootState()
         // try to load from file passively
         try {
             last = JSON.parse(fs.readFileSync('state.json'));
+            closed = last.closed;
         } catch(err) {
         }
         for(var type in eventInfo) {
@@ -142,6 +161,7 @@ function bootState()
         locker.listen("photo","/event");
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
+        locker.listen('newservice', '/new');
         var counts = {};
         for (var key in eventInfo) {
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
@@ -168,6 +188,7 @@ io.sockets.on('connection', function (socket) {
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("contact/full","/event");
+            locker.deafen('newservice', '/new');
         }
       });
 });

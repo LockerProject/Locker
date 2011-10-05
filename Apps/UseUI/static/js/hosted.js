@@ -1,10 +1,11 @@
 userEmail = "";
 userName = "";
+
 function setUserGlobals(data) {
-	userEmail = data.email;
-	userName = data.name;
-	$(".userEmail").text(userEmail);
-	$(".user-name").text(userName);
+    userEmail = data.email;
+    userName = data.name;
+    $(".userEmail").text(userEmail);
+    $(".user-name").text(userName);
 
     var E = $("#customLogout");
     E.show();
@@ -16,13 +17,12 @@ function setUserGlobals(data) {
 }
 
 $(document).ready(function() {
-	$("#customLogout").hover(
-	    function() {
-	        $("#customLogout").toggleClass("userMenuHover");
-	    }
-	);
-	$("#customLogout").click(function() {
-	    $("#customLogout").toggleClass("userMenu");
-	    $("#userMenu").toggle();
-	});
+    $("#customLogout").hover(function() {
+        $("#customLogout").toggleClass("userMenuHover");
+    });
+
+    $("#customLogout").click(function() {
+        $("#customLogout").toggleClass("userMenu");
+        $("#userMenu").toggle();
+    });
 });

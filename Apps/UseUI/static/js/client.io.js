@@ -1,6 +1,3 @@
-var debug = false;
-var log = function(msg) { if (console && console.log && debug) console.debug(msg); };
-
 /// Format a number with commas
 /*
 * Public domain from http://www.mredkj.com/javascript/nfbasic.html
@@ -71,20 +68,48 @@ function dequeueGritters() {
     }
 }
 
-function showGritter(name, count) {
-    var prettyName = name;
-    if(name == 'contact') {
-        if(count > 1) prettyName = 'people';
-        else prettyName = 'person';
-    } else if(count > 1) {
-        prettyName += 's';
+function showGritter(name, count, customText) {
+    if (name == 'newservice') {
+        var service = count;
+        var svclc = service.toLowerCase();
+        var customText = "Importing ";
+        var img = svclc;
+        if(svclc === 'facebook') {
+            customText += "friends, statuses, and photos.";
+        } else if (svclc === 'twitter') {
+            customText += "friends, statuses, and photos.";
+        } else if(svclc === 'foursquare') {
+            customText += "checkins and photos.";
+        } else if(svclc === 'github') {
+            customText += "friends.";
+        } else if(svclc === 'google contacts') {
+            customText += "contacts.";
+            img += 'gcontacts.png';
+        } else if(svclc === 'flickr') {
+            customText += "friends and photos.";
+        }
+        img = '/img/icons/' + img + '-gritter.png';
+      $.gritter.add({
+        title:"Connected " + count,
+        text:customText,
+        // image:img,
+        time: 5000
+      });
+    } else {
+      var prettyName = name;
+      if(name == 'contact') {
+          if(count > 1) prettyName = 'people';
+          else prettyName = 'person';
+      } else if(count > 1) {
+          prettyName += 's';
+      }
+      $.gritter.add({
+        title:"New " + prettyName,
+        text:"Got " + count + " new " + prettyName,
+        image: "img/" + name + "s.png",
+        time:5000
+      });
     }
-    $.gritter.add({
-      title:"New " + prettyName,
-      text:"Got " + count + " new " + prettyName,
-      image: "img/" + name + "s.png",
-      time:5000
-    });
 }
 
 socket.on('event', function (body) {
@@ -92,6 +117,12 @@ socket.on('event', function (body) {
   updateCounts(body.name, body.count, body.updated);
   queueGritter(body.name, body.new);
 });
+
+socket.on('newservice', function(name) {
+  log('got new service: ', name);
+  queueGritter('newservice', name);
+});
+
 socket.on("counts", function(counts) {
   log("Counts:",counts);
     for (var key in counts) {
