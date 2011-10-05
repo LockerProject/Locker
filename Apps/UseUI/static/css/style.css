@@ -20,7 +20,6 @@ body {
     border: 0;
     height: 45px;
     color: white;
-    overflow: hidden;
     background: rgb(120,180,226); /* Old browsers */
     background: -moz-linear-gradient(top, rgba(120,180,226,1) 0%, rgba(38,97,124,1) 100%); /* FF3.6+ */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(120,180,226,1)), color-stop(100%,rgba(38,97,124,1))); /* Chrome,Safari4+ */
@@ -403,6 +402,10 @@ body {
     border: solid 1px #000;
     background-color: #313131;
     box-shadow: inset 0px 5px 5px black;
+}
+
+.lightbox .header {
+    overflow: hidden;
 }
 
 .lightbox .header-text {

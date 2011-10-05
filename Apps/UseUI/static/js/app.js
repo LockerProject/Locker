@@ -1,4 +1,4 @@
-var debug = true;
+var debug = false;
 var log = function(m) { if (debug && console && console.log) console.log(m); }
 var app, timeout, appId;
 var providers = [];
@@ -33,14 +33,16 @@ $(document).ready(
 
         // close service drawer button
         $('#service-closer').click(function() {
-            manuallyClosed = true;
-            $.post('closed', function(data) { log("success"); });
-            $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-            $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
-                    $('.services-box-container').show();
-                    resizeFrame();
-                }
-            });
+            if ($('.blur:visible').length === 0) {
+                manuallyClosed = true;
+                $.post('closed', function(data) { log("success"); });
+                $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
+                $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+                        $('.services-box-container').show();
+                        resizeFrame();
+                    }
+                });
+            }
         });
 
         // service buttons
