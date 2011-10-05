@@ -119,16 +119,18 @@ var SyncletPoll = (
 
             t.updateState = function(provider, app) {
                 state = app.status;
-                if (app.finishedOnce) {
-                    $('#' + provider + "connect").find('.checkmark').show().removeClass('disabled');
-                    return;
-                }
 
                 var b =  {
                     "lastState": "",
                     "state": state,
                     "$el": $("#"+provider+"connect")
                 };
+
+                if (app.finishedOnce) {
+                    b.$el.find('a').addClass('disabled');
+                    b.$el.find('.checkmark').show();
+                    return;
+                }
 
                 // use the existing object if it exists
                 if (typeof(t.installed[provider]) != "undefined") {
@@ -144,6 +146,7 @@ var SyncletPoll = (
                         b.$el.find('a').addClass("disabled");
                     }
                 } else if (b.state == "waiting") {
+                    b.$el.find('a').addClass('disabled');
                     b.$el.find('.checkmark').show();
                 }
 
