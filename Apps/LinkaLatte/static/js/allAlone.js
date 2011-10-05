@@ -176,11 +176,6 @@ $(function(){
         queryLinksCollection($("#linksQuery").val());
         return false;
     });
-    $("#searchReset").click(function() {
-        $("#linksQuery").val("");
-        queryLinksCollection();
-        return false;
-    });
     findLinksCollection();
     $("#searchLinks").click(function(){
         queryLinksCollection($("#linksQuery").val());
