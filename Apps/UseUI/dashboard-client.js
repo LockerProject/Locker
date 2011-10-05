@@ -145,7 +145,7 @@ function bootState()
         var last = {
             "link":{"count":0},
             "contact/full":{"count":0},
-            "photo":{"count":0},
+            "photo":{"count":0}
         };
         // try to load from file passively
         try {
