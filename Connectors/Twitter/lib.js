@@ -27,9 +27,25 @@ exports.init = function(theAuth) {
 
 exports.getMe = function(arg, cbEach, cbDone) {
     arg.path = '/account/verify_credentials.json';
-    getOne(arg,function(err,me){
-        if(!err) cbEach(me);
-        cbDone(err);
+    fs.readFile('twitter_me.json', function(err, data) {
+        var me;
+        try {
+            if(err) throw "na";
+            me = JSON.parse(data);
+            if(!me || !me.screen_name) throw "bad data";
+        } catch (E) {
+            return getOne(arg,function(err,me){
+                if(!err)
+                {
+                    fs.writeFile('twitter_me.json', JSON.stringify(me));
+                    cbEach(me);
+                }
+                cbDone(err);
+            });
+        }
+        // do these outside the try/catch incase they throw, then there'd be doubling, bad
+        cbEach(me);
+        cbDone();
     });
 }
 
