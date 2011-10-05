@@ -113,8 +113,6 @@ var SyncletPoll = (
             var app = {};
 
             t.updateState = function(provider, app) {
-                state = app.status;
-
                 var b =  {
                     "$el": $("#"+provider+"connect")
                 };
@@ -126,7 +124,7 @@ var SyncletPoll = (
                     b.$el.find('a').addClass("disabled");
                 }
 
-                if (app.finishedOnce || b.state == 'waiting') {
+                if (app.finishedOnce) {
                     b.$el.find('.checkmark').show();
                 }
             };
