@@ -1,6 +1,6 @@
 
 var url = require('url');
-var unshortener = require('./unshortener');
+var longus = require('./longus');
 var sax =  require("sax");
 var readability = require("readabilitySAX");
 var request = require('request');
@@ -9,9 +9,9 @@ var logger = require(__dirname + "/../../Common/node/logger").logger;
 // simply expand a given url
 exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
-    unshortener.expand(arg.url, function(u){
-        if(!u || !u.host) return cbDone(arg.url)
-        cbEach(url.format(u));
+    longus.expand(arg, function(u){
+        if(!u) return cbDone("invalid url")
+        cbEach(u);
         cbDone();
     });
 }
@@ -29,6 +29,7 @@ exports.extractUrls = function(arg, cbEach, cbDone) {
         if(str.substr(0,4).toLowerCase() != "http") str = "http://"+str;
         var u = url.parse(str);
         if(!u.host || u.host.indexOf(".") <= 0 || u.host.length - u.host.indexOf(".") < 3) continue; // TODO: fully normalize
+        if(u.hash === '#') u.hash = ''; // empty hash is nothing, normalize that by a pound
         cbEach(url.format(u));
     }
     cbDone();

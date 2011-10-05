@@ -19,9 +19,6 @@ exports.expand = function (args, callback) {
     if(!args.depth) args.depth = 0;
     if(!args.seen) args.seen = {};
 
-    // if we've recursed in and have a long-ish url already, we've done our job
-    if(args.depth > 0 && args.url.length > 22) return callback(args.url);
-
     // if we've recursed too far, bail
     if(args.depth > 5) return callback(args.url);
 
@@ -109,7 +106,9 @@ var APIs = {
             // process a redirect, re-basing like a browser would, yes sam, this happens
             if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307)
             {
-                var newup = urllib.resolve(args.urlp,urllib.parse(res.headers.location));
+                var newup = urllib.parse(urllib.resolve(args.urlp,urllib.parse(res.headers.location)));
+                // if we're redirected to a login page, bail, kinda lame heuristic here but it works pretty well!
+                if(newup.pathname.indexOf("login") > 0 && newup.pathname.indexOf("login") < 10) return callback(args.url);
                 // really dumb hack to enable cookie-tracking redirectors
                 if(newup.host == args.urlp.host && res.headers['Set-Cookie']) args.cookie = res.headers['Set-Cookie'];
                 args.url = urllib.format(newup);
