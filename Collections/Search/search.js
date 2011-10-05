@@ -121,7 +121,6 @@ exports.handlePostEvents = function(req, callback) {
         // FIXME Hack to handle inconsistencies between photo and contacts collection
         if (req.body.type === 'photo') {
             req.body.type = 'photo/full';
-            req.body.obj.data = req.body.obj;
         }
         // END FIXME
 
