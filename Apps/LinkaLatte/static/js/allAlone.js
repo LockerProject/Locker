@@ -157,13 +157,6 @@ $(function(){
                         },
                         "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
-                        },
-                        "span.origLink@style":function(arg) {
-                            return arg.item.encounters[arg.item.encounters.length - 1].orig == arg.item.link ? "display:none" : "";
-                        },
-                        "span.origLink":function(arg) {
-                            var orig = arg.item.encounters[arg.item.encounters.length - 1].orig;
-                            return orig != arg.item.link ? "(" + orig + ")" : "";
                         }
                     }
                 }
