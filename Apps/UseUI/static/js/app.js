@@ -116,37 +116,22 @@ var SyncletPoll = (
                 state = app.status;
 
                 var b =  {
-                    "lastState": "",
-                    "state": state,
                     "$el": $("#"+provider+"connect")
                 };
 
-                if (app.finishedOnce) {
-                    b.$el.find('a').addClass('disabled');
-                    b.$el.find('.checkmark').show();
-                    return;
-                }
-
-                // use the existing object if it exists
                 if (typeof(t.installed[provider]) != "undefined") {
-                    b.$el.find('a').addClass("disabled");
                     b = t.installed[provider];
-                    b.state = state;
+                } else {
+                    t.installed[provider] = b;
+                    b.$el.find('a').addClass("disabled");
+                    // for some reason this needs to happen next tick when the page is initially loading, or else it doesn't work
+                    window.setTimeout(function() { grayscale( b.$el.find('.provider-icon')[0] ); }, 1);
+                    console.log(b.$el);
                 }
 
-                if (b.lastState == b.state) return;
-
-                if (b.state == "running" || b.state == "processing data") {
-                    if (!(b.$el.find('.checkmark').is(':visible'))) {
-                        b.$el.find('a').addClass("disabled");
-                    }
-                } else if (b.state == "waiting") {
-                    b.$el.find('a').addClass('disabled');
+                if (app.finishedOnce || b.state == 'waiting') {
                     b.$el.find('.checkmark').show();
                 }
-
-                b.lastState = b.state;
-                t.installed[provider] = b;
             };
 
             t.handleResponse = function(data, err, resp) {
