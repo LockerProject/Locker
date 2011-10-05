@@ -124,9 +124,6 @@ var SyncletPoll = (
                 } else {
                     t.installed[provider] = b;
                     b.$el.find('a').addClass("disabled");
-                    // for some reason this needs to happen next tick when the page is initially loading, or else it doesn't work
-                    window.setTimeout(function() { grayscale( b.$el.find('.provider-icon')[0] ); }, 1);
-                    console.log(b.$el);
                 }
 
                 if (app.finishedOnce || b.state == 'waiting') {
@@ -188,15 +185,23 @@ function drawServices() {
         $.getJSON('/synclets', function(synclets) {
             $('.service:not(.template)').remove();
             providers = [];
+            var syncletsToRender = [];
             for (var i in data.uses) {
                 for (var j = 0; j < synclets.available.length; j++) {
                     if (synclets.available[j].provider === data.uses[i]) {
                         if(synclets.available[j].authurl) {
                             providers.push(data.uses[i]);
-                            drawService(synclets.available[j]);
+                            if (typeof(synclets.installed[data.uses[i]]) != "undefined") {
+                                syncletsToRender.push(synclets.available[j]);
+                            } else {
+                                syncletsToRender.unshift(synclets.available[j]);
+                            }
                         }
                     }
                 }
+            }
+            for (var i = 0; i < syncletsToRender.length; i++) {
+                drawService(syncletsToRender[i]);
             }
             if (!window.syncletPoll) {
                 window.syncletPoll = new SyncletPoll(providers);
