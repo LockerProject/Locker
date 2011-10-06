@@ -18,7 +18,7 @@
 .error {
     border:1px dotted #D8000C;
     color: #D8000C;
-    background-color: #FFBABA;    
+    background-color: #FFBABA;
 }
 
 #loading {
@@ -92,6 +92,10 @@ a.expandedLink {
 }
 .linkFrom {
     font-size:80%;
+    color:#666;
+}
+.linkFrom a {
+    text-decoration:none;
     color:#666;
 }
 .shiftDownDesc {

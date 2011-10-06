@@ -9,7 +9,7 @@ function queryLinksCollection (queryString) {
     $(".dateGroup").remove();
     $("#infoMsg").hide();
     var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
-    if (!queryString) url = "/Me/" + collectionHandle + '/getLinksFull?limit=100&fields={"link":1,"title":1,"at":1,"network":1,"from":1,"favicon":1}';
+    if (!queryString) url = "/Me/" + collectionHandle + '/getLinksFull?limit=100&fields={"link":1,"title":1,"at":1,"network":1,"from":1,"fromID":1,"via.user.screen_name":1,"favicon":1}';
     $.ajax({
       "url": url,
       type: "GET",
@@ -153,8 +153,11 @@ $(function(){
                         "a@href":"link.link",
                         "span.linkDescription":"link.title",
                         "span.linkFrom":function(arg) {
-                            return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ") +
-                            " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
+                            return "From: " + arg.item.encounters.map(function(item) {
+                                var base = (item.network == "twitter") ? "http://twitter.com/#" : "http://facebook.com/";
+                                var id = (item.network == "twitter") ? item.via.user.screen_name : item.fromID;
+                                return '<a href="'+base+id+'" target="_blank">'+item.from+'</a>';
+                            }).join(", ") + " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
                         },
                         "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
