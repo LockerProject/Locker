@@ -153,23 +153,36 @@ exports.syncNow = function(serviceId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
-    if(info.config && info.config.nextRun) {
-        synclet.nextRun = new Date(info.config.nextRun);
-    } else {
-        synclet.nextRun = new Date(Date.now() + (parseInt(synclet.frequency) * 1000));
-    }
-
+    var milliFreq = parseInt(synclet.frequency) * 1000;
+    
     function run() {
         executeSynclet(info, synclet);
     }
-
-    var timeout = synclet.nextRun - Date.now();
-    if(timeout < 0) { // now
-        process.nextTick(run)
-    } else { // later
+    if(info.config && info.config.nextRun === -1) {
+        // the synclet is paging and needs to run again immediately
+        synclet.nextRun = new Date();
+        process.nextTick(run);
+    } else {
+        if(info.config && info.config.nextRun > 0)
+            synclet.nextRun = new Date(info.config.nextRun);
+        else
+            synclet.nextRun = new Date(synclet.nextRun);
+        
+        if(!(synclet.nextRun > 0)) //check to make sure it is a valid date
+            synclet.nextRun = new Date();
+        
+        var timeout = (synclet.nextRun.getTime() - Date.now());
+        timeout = timeout % milliFreq;
+        if(timeout <= 0)
+            timeout += milliFreq;
+        
+        // schedule a timeout with +- 5% randomness
+        timeout = timeout + (((Math.random() - 0.5) * 0.1) * milliFreq);
+        synclet.nextRun = new Date(Date.now() + timeout);
+        
         setTimeout(run, timeout);
     }
-};
+}
 
 function localError(base, err)
 {
@@ -188,7 +201,7 @@ function mergeManifest(js) {
             var stats = fs.statSync(fullPath);
             if (RegExp("\\.synclet$").test(fullPath)) {
                 newData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
-                lutil.extend(js, newData);
+                lutil.extend(true, js, newData);
             }
         }
     }

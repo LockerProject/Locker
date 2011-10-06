@@ -37,7 +37,7 @@ levents.fireEvent = function(type, id, action, obj) {
 
 var syncManager = require("lsyncmanager.js");
 var lmongo = require('../Common/node/lmongo');
-
+var start;
 /*
 syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
     events.push(event);
@@ -65,8 +65,8 @@ vows.describe("Synclet Manager").addBatch({
             },
             "and has status" : {
                 topic: syncManager.status('testSynclet'),
-                "frequency is 120s" : function(topic) {
-                    assert.equal(topic.synclets[0].frequency, 120);
+                "frequency is 1200s" : function(topic) {
+                    assert.equal(topic.synclets[0].frequency, 1200);
                 },
                 "status is waiting" : function(topic) {
                     assert.equal(topic.status, 'waiting');
@@ -82,7 +82,7 @@ vows.describe("Synclet Manager").addBatch({
                     // Wed, 03 Aug 2011 00:12:15 GMT
                     //     ✗ next run is about 120 seconds from now
                     //       » expected true, got false // lsyncmanager-test-local.js:47
-                    // console.dir(topic.nextRun);
+                    console.dir('topic' + JSON.stringify(topic));
                     // console.dir(new Date());
                     // assert.isTrue(topic.nextRun > new Date() + 110);
                     // assert.isTrue(topic.nextRun < new Date() + 130);
@@ -153,9 +153,6 @@ vows.describe("Synclet Manager").addBatch({
             console.error(syncManager.synclets().installed.testSynclet.synclets[0]);
             assert.isNull(err);
         },
-        "and can specify a \"nextRun\" time" : function(err, status) {
-            assert.equal(syncManager.synclets().installed.testSynclet.synclets[0].nextRun.getTime(), 2424242424242);
-        },
         "and after running generates data in mongo" : {
             topic: function() {
                 var self = this;
@@ -168,6 +165,23 @@ vows.describe("Synclet Manager").addBatch({
             "successfully" : function(err, count) {
                 assert.equal(allEvents[primaryType].length, 2);
             }
+        }
+    }
+}).addBatch({    
+    "Installed services can be executed immediately rather than waiting for next run" : {
+        topic:function() {
+            start = Date.now() - 1;
+            syncManager.syncNow("testSynclet", this.callback);
+        },
+        "successfully" : function(err, status) {
+            console.error(syncManager.synclets().installed.testSynclet.synclets[0]);
+            assert.isNull(err);
+        },
+        "and services specifying a positive nextRun time in the past get rescheduled at the next interval time" : function(err, status) {
+            //this is a bit racey
+            var synclet = syncManager.synclets().installed.testSynclet.synclets[0];
+            assert.ok(synclet.nextRun.getTime() > (start + ((synclet.frequency*1000)) * 0.95));
+            assert.ok(synclet.nextRun.getTime() < (Date.now() + ((synclet.frequency*1000)) * 1.05));
         }
     }
 }).addBatch({
