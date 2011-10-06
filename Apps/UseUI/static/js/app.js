@@ -63,6 +63,66 @@ $(document).ready(
             return false;
         });
 
+        $('.search').keyup(function(e) {
+            if (e.keyCode == 13) {
+                $('.highlighted').click();
+                $('#search-results').fadeOut();
+                return false;
+            } else if (e.keyCode == 38) {
+                var selected = $('#search-results').children('.highlighted');
+                if (selected.index() > 0) {
+                    selected.removeClass('highlighted');
+                    selected.prev(':not(.template)').addClass('highlighted');
+                }
+                if (selected[0] === undefined) {
+                    $('#search-results').children(':not(.template)').first().addClass('highlighted');
+                }
+                return false;
+            } else if (e.keyCode == 40) {
+                var selected = $('#search-results').children('.highlighted');
+                if (selected.index() != $('#search-results').find('.all-results').index() - 1) {
+                    selected.removeClass('highlighted');
+                    selected.next(':not(.template)').addClass('highlighted');
+                }
+                if (selected[0] === undefined) {
+                    $('#search-results').children(':not(.template)').first().addClass('highlighted');
+                }
+                return false;
+            } else {
+                if ($('.search')[0].value.length == 0) {
+                    $('#search-results').hide();
+                    $('.search').removeClass('populated');
+                } else {
+                    console.log($('.search')[0].value);
+                    $.get('search', {searchterm: ""+$('.search')[0].value+"", type: 'contact%2Ffull*'}, function(data) {
+                        if ($('.search')[0].value.length !== 0) {
+                            console.log(data);
+                            if (data.results['contact/full'] !== undefined) {
+                                cloneHeader('people');
+                            }
+                            $('#search-results').show();
+                            $('.search').addClass('populated');
+                            // populate search results
+                            var resultChildren = $('#search-results').children('.result');
+                            resultChildren.bind('mouseover', function() {
+                                $('.highlighted').removeClass('highlighted');
+                                $(this).addClass('highlighted');
+                            });
+                            resultChildren.bind('mouseleave', function() {
+                                $(this).removeClass('highlighted');
+                            });
+                            resultChildren.bind('click', function(e) {
+                                e.preventDefault();
+                                $('#search-results').hide();
+                                // go to the result
+                            })
+                            resultChildren.first().addClass('highlighted');
+                        }
+                    });
+                }
+            }
+        });
+
         $(".app-link[title]").tooltip({
             position:"bottom center",
             predelay:750,
@@ -99,6 +159,18 @@ $(document).ready(
         resizeFrame();
     }
 );
+
+/*
+ * Search stuff
+ */
+function cloneHeader(name) {
+    var newHeader = $('.search-header-row.template').clone();
+    newHeader.removeClass('template');
+    newHeader.children('.header-title').text(name.charAt(0).toUpperCase() + name.slice(1));
+    newHeader.children('.see-all').text('See all ' + name + ' results');
+    $('#search-results').append(newHeader);
+    console.log(newHeader);
+}
 
 /*
  * SyncletPoll
@@ -293,11 +365,6 @@ function resizeFrame() {
 }
 
 
-function drawGuidedSetup() {
-    if (guidedSetupActive) return;
-    guidedSetupActive = true;
-    $('.blur').show();
-}
 
 function closeServices() {
     $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
@@ -408,3 +475,10 @@ var GuidedSetup = (
         };
 
     })();
+
+function drawGuidedSetup() {
+    if (guidedSetupActive) return;
+    guidedSetupActive = true;
+    $('.blur').show();
+}
+

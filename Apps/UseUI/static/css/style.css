@@ -117,6 +117,16 @@ body {
     color:#444;
 }
 
+#nav-search {
+    clear: right;
+    position: relative;
+    float: left;
+}
+
+#nav-search .template {
+    display: none;
+}
+
 #nav-search input.search {
     font-size: 16px;
     color: #999;
@@ -139,10 +149,33 @@ body {
     -moz-box-shadow:inset 2px 2px 5px #ccc;
     box-shadow:inset 2px 2px 5px #ccc;
     border: 1px solid #888;
+    outline: none;
 }
 
-#nav-search input.submit {
-    display:none;
+#nav-search input.search.populated {
+    -moz-box-shadow:inset 2px 2px 5px #ccc, 2px 2px 2px 0px #888;
+    box-shadow:inset 2px 2px 5px #ccc, 2px 2px 2px 0px #888;
+    padding-bottom: 4px;
+
+}
+
+#search-results {
+    width: 334px;
+    -moz-border-radius: 0px 0px 4px 4px;
+    -webkit-border-radius: 0px 0px 4px 4px;
+    -khtml-border-radius: 0px 0px 4px 4px;
+    border-radius: 0px 0px 4px 4px;
+    border-width: 0px 1px 1px 1px;
+    border-style: solid;
+    border-color: #888;
+    top: 34px;
+    left: 15px;
+    position: absolute;
+    -moz-box-shadow:inset 2px -2px 5px #ccc, 2px 2px 2px 0px #888;
+    box-shadow:inset 2px -2px 5px #ccc, 2px 2px 2px 0px #888;
+    background-color: white;
+    z-index: 10;
+    height: 500px;
 }
 
 .app-page .header {

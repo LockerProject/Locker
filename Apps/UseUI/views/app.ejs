@@ -46,10 +46,17 @@
     </div>
     <img class="divider" src="img/divider.png">
     <div id="nav-search">
-      <form id="nav-search" action="?" method="get">
-        <input placeholder="&nbsp;Search people, links, photos" type="text" class="search" />
-        <input type="submit" class="submit" value="Search" />
-      </form>
+      <input placeholder="&nbsp;Search people, links, photos" type="text" class="search" />
+      <div id="search-results">
+        <div class="search-header-row template">
+          <div class="header-title"></div>
+          <div class="see-all"></div>
+        </div>
+        <div class="search-result-row template">
+          <img class="search-result-icon" src=""/>
+          <div class="search-result"></div>
+        </div>
+      </div>
     </div>
     <% if (dashboard && dashboard.customLogout) { %>
     <div id='customLogout'>

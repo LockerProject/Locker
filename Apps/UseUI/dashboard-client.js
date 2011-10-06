@@ -13,7 +13,9 @@ var express = require('express'),
     async = require('async'),
     fs = require('fs'),
     socketio = require('socket.io'),
-    request = require('request');
+    request = require('request'),
+    search = require('./lib/lockersearch/index.js');
+var DEBUG_SEARCH_OUTPUT = false;
 var logger = require("logger").logger;
 var lutil = require('lutil');
 var lconfig = require('../../Common/node/lconfig.js');
@@ -112,6 +114,51 @@ app.post('/event', function(req, res) {
         }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
     }
 });
+
+app.get('/search', function(req, res) {
+    me = fs.readFileSync('me.json');
+    me = JSON.parse(me);
+
+    var term = lutil.sanitize(req.param('searchterm'));
+    console.error('term: ' + term);
+    var type = lutil.sanitize(req.param('type'));
+    var results = [];
+    var outputResults = {};
+    var error = null;
+
+    search.search(type, term, 0, 10, function(err, results) {
+
+        if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
+            console.error('No results object returned for search');
+            results = {};
+            results.hits = {};
+            results.hits.hits = [];
+            results.took = 1;
+            results.hits.total = 0;
+        } else {
+            console.dir(results.hits.hits);
+            for (var i = 0; i < results.hits.hits.length; i++) {
+                if (outputResults[results.hits.hits[i]._type] === undefined) {
+                    outputResults[results.hits.hits[i]._type] = [];
+                }
+                outputResults[results.hits.hits[i]._type].push(results.hits.hits[i]);
+            }
+        }
+
+        var result = {
+            term: term,
+            homePath: '/Me/' + me.id,
+            searchPath: '/Me/' + me.id + '/search',
+            results: outputResults,
+            took: results.took,
+            total: results.hits.total,
+            raw: DEBUG_SEARCH_OUTPUT?JSON.stringify(results):false,
+            error: err
+        }
+        res.send(result);
+    });
+});
+
 
 app.post('/closed', function(req, res) {
     closed = true;
