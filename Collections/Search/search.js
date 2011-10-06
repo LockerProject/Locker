@@ -126,6 +126,7 @@ exports.handlePostEvents = function(req, callback) {
 
         var source = getSourceForEvent(req.body);
 
+        // https://github.com/LockerProject/Locker/issues/285
         if (!source) {
             error = 'No source found for event: '+JSON.stringify(req.body);
             console.error(error);
