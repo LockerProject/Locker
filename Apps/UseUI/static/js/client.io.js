@@ -102,7 +102,7 @@ function showGritter(name, count, lastId) {
       } else if(count > 1) {
           prettyName += 's';
       }
-      $.gritter.add({
+      var gritterId = $.gritter.add({
         title:"New " + prettyName,
         text:"Got " + count + " new " + prettyName,
         image: "img/" + name + "s.png",

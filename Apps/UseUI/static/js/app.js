@@ -244,7 +244,6 @@ function accountPopup (elem) {
 }
 
 function renderApp(fragment) {
-    var ready = false;
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
