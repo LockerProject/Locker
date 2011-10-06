@@ -36,7 +36,7 @@ suite.next().suite.addBatch({
         "and handles paging": function(err, response) {
             assert.isNull(err);
             assert.equal(response.config.paging.lastPage, 1);
-            assert.ok(response.config.nextRun > 1314800000000);
+            assert.equal(response.config.nextRun, -1);
 
         }
     }
