@@ -243,7 +243,7 @@ function accountPopup (elem) {
     popup.focus();
 }
 
-function renderApp() {
+function renderApp(fragment) {
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
@@ -256,8 +256,14 @@ function renderApp() {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
                 if (ready) {
-                    log('clearing timeout');
-                    $("#appFrame")[0].contentWindow.location.replace(data[app].url);
+                    // log('clearing timeout');
+                    var needReload = false;
+                    if (data[app].url == $("#appFrame")[0].contentWindow.location) needReload = true;
+                    $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("#"+fragment):""));
+                    if (needReload) {
+                        console.log("Needs a reload");
+                        $("#appFrame")[0].contentDocument.location.reload(true);
+                    }
                     clearTimeout(timeout);
                     if (manuallyClosed) closeServices();
                 }

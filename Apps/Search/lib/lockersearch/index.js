@@ -34,7 +34,7 @@ exports.search = function(type, term, offset, limit, callback) {
             }
             
             else if (res.statusCode >= 300) {
-                results.error = 'That\'s an invalid query term, try again!';
+                results.error = 'Search failed: ' + res.statusCode;
                 return callback(results.error, results);
             }
             else {

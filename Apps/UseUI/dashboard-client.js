@@ -76,9 +76,9 @@ app.get('/apps', function(req, res) {
 });
 
 var eventInfo = {
-    "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0},
-    "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0},
-    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0}
+    "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
 };
 
 // lame way to track if any browser is actually open right now
@@ -101,9 +101,11 @@ app.post('/event', function(req, res) {
             // stuff changed, go get the newest total to see if it did
             request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
                 if(!body || !body.count || evInfo.count == body.count) return;
-                io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated});
+                io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
+                console.log("Sent events, setting to ",body);
                 evInfo.count = body.count;
                 evInfo.updated = body.updated;
+                evInfo.lastId = body.lastId;
                 saveState();
             });
         }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
@@ -120,7 +122,7 @@ function saveState()
 {
     var counts = {};
     for (var key in eventInfo) {
-        if (eventInfo.hasOwnProperty(key)) counts[key] = {count:eventInfo[key].count};
+        if (eventInfo.hasOwnProperty(key)) counts[key] = {count:eventInfo[key].count, lastId:eventInfo[key].lastId};
     }
     counts.closed = closed;
     lutil.atomicWriteFileSync("state.json", JSON.stringify(counts));
@@ -139,13 +141,14 @@ function bootState()
             if(coll == 'contacts') var evInfo = eventInfo['contact/full'];
             evInfo.count = (body && body.count && body.count > 0) ? body.count : 0;
             evInfo.updated = (body && body.updated && body.updated > 0) ? body.updated : 0;
+            evInfo.lastId = (body && body.lastId) ? body.lastId : "0";
             callback();
         });
     },function(){
         var last = {
-            "link":{"count":0},
-            "contact/full":{"count":0},
-            "photo":{"count":0}
+            "link":{"count":0, "lastId":0},
+            "contact/full":{"count":0, "lastId":0},
+            "photo":{"count":0, "lastId":0}
         };
         // try to load from file passively
         try {
@@ -155,7 +158,10 @@ function bootState()
         }
         for(var type in eventInfo) {
             // stupd vrbos
-            if(eventInfo[type].count > last[type].count) io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "new":eventInfo[type].count - last[type].count});
+            if(eventInfo[type].count > last[type].count) {
+                console.log("Sent a bootup event",eventInfo[type]);
+                io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
+            }
         }
         saveState(); // now that we possibly pushed events, note it
         locker.listen("photo","/event");

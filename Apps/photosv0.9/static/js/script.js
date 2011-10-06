@@ -22,20 +22,39 @@ $(function() {
             Galleria.get(curGallery).next();
         }
     });
+    if (window.location.hash.substr(0,4) == "#new") {
+      var url = "/Me/photos/since?id=" + window.location.hash.substr(5);
+      $.ajax({
+          "url":url,
+          type:"GET",
+          dataType:"json",
+          success:function(data) {
+              for (var i = 0; i < data.length; i++) cleanupPhoto(data[i]);
+              drawGallery(data);
+          }
+      });
+    }
 });
+
+var cleanupPhoto = function(photo) {
+    var timestamp = new Date(photo.timestamp);
+    photo.year = timestamp.getFullYear();
+    photo.month = timestamp.getMonth();
+    photo.day = timestamp.getDate();
+    photo.thumbUrl = photo.thumbnail || photo.url;
+    photo.date = monthNames[photo.month] + ' ' + photo.day + ', ' + photo.year;
+    return photo;
+}
 
 var processResults = function(photos) {
     var $newElems;
     if (photos.length == 0) return;
 
-
     for (var i = 0; i < photos.length; i++) {
-        var timestamp = new Date(photos[i].timestamp);
-        var year = timestamp.getFullYear();
-        var month = timestamp.getMonth();
-        var day = timestamp.getDate();
-        photos[i].thumbUrl = photos[i].thumbnail || photos[i].url;
-        photos[i].date = monthNames[month] + ' ' + day + ', ' + year;
+        cleanupPhoto(photos[i]);
+        var year = photos[i].year;
+        var month = photos[i].month;
+        var day = photos[i].day;
         if (!yearbuckets[year]) { yearbuckets[year] = []; monthbuckets[year] = []; daybuckets[year] = []; };
         yearbuckets[year].push(photos[i]);
         if (!monthbuckets[year][month]) { monthbuckets[year][month] = []; daybuckets[year][month] = []; };

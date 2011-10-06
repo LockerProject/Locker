@@ -75,6 +75,7 @@ $(function() {
 
         events: {
             'keyup input#search' : 'loadSearch',
+            'click #showAllLink' : 'loadAll',
             'change #sort'       : 'sortChangeHandler',
 
             'hover #contacts li' : 'hoverContactHandler',
@@ -95,6 +96,7 @@ $(function() {
             }
             this.offset = 0;
             this.collection._reset();
+            console.log("Sort change");
             this.load();
             this.render();
         },
@@ -202,24 +204,51 @@ $(function() {
 
             that.collection = new AddressBook();
 
-            that.offset = 0;
-            if(!hack) hack = that;
-            $(window).scroll(function(){
-              if  ($(window).scrollTop() >= ($(document).height() - $(window).height() - 200)){
-                hack.load(function(){});
-              }
-            });
-            // TODO: clean up so the search is a proper view.
-            that.blurSearchHandler();
-            that.load(function() {
-                $("#searchBox").slideDown();
-            });
+            console.log(window.location);
+            if (window.location.hash.substr(0,4) == "#new") {
+                that.loadSince(window.location.hash.substr(5));
+            } else {
+                that.loadAll();
+            }
+            
             $.getJSON('/Me/contacts/state', {}, function(state) {
                 total = state.count;
                 $("#count").html(total);
             });
         },
 
+        loadAll: function loadAll() {
+            $("#newHeader").hide();
+            this.hideDetailsPane();
+
+            this.offset = 0;
+            if(!hack) hack = this;
+            $(window).scroll(function(){
+              if  ($(window).scrollTop() >= ($(document).height() - $(window).height() - 200)){
+                hack.load(function(){});
+              }
+            });
+            // TODO: clean up so the search is a proper view.
+            this.blurSearchHandler();
+
+            this.collection._reset();
+            this.load(function() {
+                $("#searchBox").slideDown();
+            });
+        },
+
+        loadSince: function loadSince(objId) {
+            var self = this;
+            $.getJSON("/Me/contacts/since", {id:objId}, function(contacts) {
+                $("#newCount").text(contacts.length + " New " + (contacts.length == 1 ? "Person" : "People"));
+                $("#newHeader").show();
+                $("#searchBox").hide();
+                for(var i in contacts) {
+                    self.addContact(contacts[i]);
+                }
+                self.render();
+            })
+        },
         /**
          * Load the contacts data (get contacts)
          * @param callback

@@ -19,12 +19,15 @@
 
   <div id="container">
     <header>
-        <div>
+      <div id='searchHeader'>
         <form id="searchForm">
             <input type="text" id="linksQuery" class="search"></input>
             <input value="Search" type="button" id="searchLinks" />
         </form>
-    </div>
+      </div>
+      <div id='newCountHeader'>
+        <span id='newLinkCount'>1 New Links</span>&nbsp;<span class='smallLink'>(<a id='showAllLink' href='#'>show all</a>)</span>
+      </div>
     </header>
     <div id="main" role="main">
         <div id="infoMsg"></div>

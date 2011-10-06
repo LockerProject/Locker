@@ -150,8 +150,8 @@ function linkMagic(origUrl, callback){
                           // *pfew*, callback nausea, sometimes I wonder...
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
-                          dataStore.addLink(link,function(){
-                              locker.event("link",link); // let happen independently
+                          dataStore.addLink(link,function(err, obj){
+                              locker.event("link",obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
                           });
                       });
