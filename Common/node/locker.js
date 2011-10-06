@@ -15,8 +15,6 @@ var request = require('request'),
     lstate = require("lstate"),
     querystring = require("querystring");
 
-var lmongoclient;
-
 var lockerBase;
 var localServiceId;
 var baseServiceUrl;
@@ -30,9 +28,9 @@ exports.initClient = function(instanceInfo) {
     exports.lockerBase = instanceInfo.lockerUrl;
     baseServiceUrl = exports.lockerBase + "/core/" + localServiceId;
     if(instanceInfo.mongo) {
-        lmongoclient = require(__dirname + '/lmongoclient')(instanceInfo.mongo.host, instanceInfo.mongo.port,
+        exports.lmongoclient = require(__dirname + '/lmongoclient')(instanceInfo.mongo.host, instanceInfo.mongo.port,
                                                             localServiceId, instanceInfo.mongo.collections);
-        exports.connectToMongo = lmongoclient.connect;
+        exports.connectToMongo = exports.lmongoclient.connect;
     }
 };
 

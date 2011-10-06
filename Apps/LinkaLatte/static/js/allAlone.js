@@ -4,17 +4,8 @@ function log(m) { if (console && console.log && debug) console.log(m); }
 var collectionHandle = "";
 var resultsTemplate = null;
 
-function queryLinksCollection (queryString) {
-    log("Querying: " + $.param({q:queryString||""}));
-    $(".dateGroup").remove();
-    $("#infoMsg").hide();
-    var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
-    if (!queryString) url = "/Me/" + collectionHandle + '/getLinksFull?limit=100&fields={"link":1,"title":1,"at":1,"network":1,"from":1,"favicon":1}';
-    $.ajax({
-      "url": url,
-      type: "GET",
-      dataType: "json",
-      success: function(data) {
+function displayLinksArray(data) 
+{
         //called when successful
         if (!data || data.length === 0) {
             $("#infoMsg").attr("class", "info");
@@ -77,10 +68,40 @@ function queryLinksCollection (queryString) {
                 //$(this).html("&#9654; View");
             }
         });
-      },
+}
+
+function queryLinksCollection (queryString) {
+    log("Querying: " + $.param({q:queryString||""}));
+    $(".dateGroup").remove();
+    $("#infoMsg").hide();
+    var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
+    if (!queryString) url = "/Me/" + collectionHandle + "/getLinksFull?limit=100";
+    $.ajax({
+      "url": url,
+      type: "GET",
+      dataType: "json",
+      success: displayLinksArray,
       error: function() {
         //called when there is an error
       }
+    });
+} 
+
+function getLinksSince(id)
+{
+    $(".dateGroup").remove();
+    $("#infoMsg").hide();
+    var url = "/Me/" + collectionHandle + "/since?id=" + id;
+    $.ajax({
+        "url":url,
+        type:"GET",
+        dataType:"json",
+        success:function(data) {
+          $("#newLinkCount").text(data.length + " New Links");
+          $("#newCountHeader").show();
+          $("#searchHeader").hide();
+          displayLinksArray(data);
+        }
     });
 }
 
@@ -104,7 +125,12 @@ function findLinksCollection() {
               showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
               return;
           }
-          queryLinksCollection();
+          updateLinkCount();
+          if (window.location.hash.substr(0,4) == "#new") {
+            getLinksSince(window.location.hash.substr(5));
+          } else {
+            queryLinksCollection();
+          }
       },
       error: function() {
           showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
@@ -165,6 +191,12 @@ $(function(){
         }
     });
 
+    $("#showAllLink").click(function() {
+        $("#newCountHeader").hide();
+        $("#searchHeader").show();
+        queryLinksCollection();
+        return false;
+    });
     $("#searchForm").submit(function() {
         queryLinksCollection($("#linksQuery").val());
         return false;

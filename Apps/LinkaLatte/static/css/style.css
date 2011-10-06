@@ -106,3 +106,16 @@ a.expandedLink {
 .viewMore {
     font-size:75%;
 }
+
+#newCountHeader {
+    display:none;
+}
+
+#newLinkCount {
+    font-size:24px;
+    font-weight:bold;
+}
+
+.smallLink {
+    font-size:10px;
+}

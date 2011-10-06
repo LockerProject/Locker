@@ -38,12 +38,17 @@ app.get('/', function(req, res) {
 app.get('/state', function(req, res) {
     dataStore.getTotalCount(function(err, countInfo) {
         if(err) return res.send(err, 500);
-        var updated = new Date().getTime();
-        try {
-            var js = JSON.parse(fs.readFileSync('state.json'));
-            if(js && js.updated) updated = js.updated;
-        } catch(E) {}
-        res.send({ready:1, count:countInfo, updated:updated});
+        dataStore.getLastObjectID(function(err, lastObject) {
+            if(err) return res.send(err, 500);
+            var objId = "000000000000000000000000";
+            if (lastObject) objId = lastObject._id.toHexString();
+            var updated = new Date().getTime();
+            try {
+                var js = JSON.parse(fs.readFileSync('state.json'));
+                if(js && js.updated) updated = js.updated;
+            } catch(E) {}
+            res.send({ready:1, count:countInfo, updated:updated, lastId:objId});
+        });
     });
 });
 
@@ -102,6 +107,19 @@ app.get('/ready', function(req, res) {
             return res.end('true');
         }
     });
+});
+
+app.get("/since", function(req, res) {
+    if (!req.query.id) {
+        return res.send([]);
+    }
+
+    var results = [];
+    dataStore.getSince(req.query.id, function(item) {
+        results.push(item);
+    }, function() {
+        res.send(results);
+   });
 });
 
 app.get('/:id', function(req, res, next) {

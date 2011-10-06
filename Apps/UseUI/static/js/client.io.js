@@ -38,6 +38,7 @@ var once = false;
 var window_focus = true;
 $(window).focus(function() {
     window_focus = true;
+<<<<<<< HEAD
     log('window_focus =', window_focus);
     dequeueGritters();
 }).blur(function() {
@@ -48,13 +49,23 @@ $(window).focus(function() {
 var gritterEvents = {};
 function queueGritter(name, count) {
     log('queueGritter window_focus =', window_focus);
+=======
+    dequeueGritters();
+}).blur(function() {
+    window_focus = false;
+});
+
+var gritterEvents = {};
+function queueGritter(name, count, lastId) {
+    console.log("Queueing " + name + ", " + count + ", " + lastId);
+>>>>>>> growl-click
     if(window_focus) {
-        showGritter(name, count);
+        showGritter(name, count, lastId);
     } else {
         if(gritterEvents[name]) {
-            gritterEvents[name] += count;
+            gritterEvents[name]["count"] += count;
         } else {
-            gritterEvents[name] = count;
+            gritterEvents[name] = {last:lastId, "count":count};
         }
     }
 }
@@ -62,13 +73,14 @@ function queueGritter(name, count) {
 function dequeueGritters() {
     for(var i in gritterEvents) {
         if(gritterEvents[i]) {
-            showGritter(i, gritterEvents[i]);
+            showGritter(i, gritterEvents[i].count, gritterEvents[i].last);
             gritterEvents[i] = 0;
         }
     }
 }
 
-function showGritter(name, count, customText) {
+function showGritter(name, count, lastId) {
+    var prettyName = name;
     if (name == 'newservice') {
         var service = count;
         var svclc = service.toLowerCase();
@@ -107,7 +119,19 @@ function showGritter(name, count, customText) {
         title:"New " + prettyName,
         text:"Got " + count + " new " + prettyName,
         image: "img/" + name + "s.png",
-        time:5000
+        time:5000,
+        after_open:function(e) {
+            var self = this;
+            e.click(function(ce) {
+              if (ce.target && !$(ce.target).hasClass("gritter-close")) {
+                app = name + "s";
+                window.location.hash = app;
+                console.log("showGritter lastId:" + lastId);
+                renderApp("new-" + lastId);
+                $.gritter.remove(gritterId);
+              }
+            })
+        }
       });
     }
 }
@@ -115,7 +139,7 @@ function showGritter(name, count, customText) {
 socket.on('event', function (body) {
   log("got event: ", body);
   updateCounts(body.name, body.count, body.updated);
-  queueGritter(body.name, body.new);
+  queueGritter(body.name, body.new, body.lastId);
 });
 
 socket.on('newservice', function(name) {
