@@ -125,7 +125,6 @@ function findLinksCollection() {
               showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
               return;
           }
-          updateLinkCount();
           if (window.location.hash.substr(0,4) == "#new") {
             getLinksSince(window.location.hash.substr(5));
           } else {
