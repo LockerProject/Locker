@@ -56,18 +56,7 @@ $(document).ready(
         }).delegate(selector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
         }).delegate(selector, 'click', function() {
-            e.preventDefault();
             $('#search-results').hide();
-        });
-
-        // search box
-        $('#nav-search').submit(function() {
-            var inputText = $("#nav-search .search").val();
-            $("#nav-search .search").val("");
-            window.location.hash = "search";
-            $('.selected').removeClass('selected');
-            $("#appFrame")[0].contentWindow.location.replace("/Me/searchapp/search?type=&searchterm="+inputText);
-            return false;
         });
 
         // disable pass through click events when an area is blurred
@@ -105,13 +94,13 @@ $(document).ready(
                     $('#search-results').hide();
                     $('.search').removeClass('populated');
                 } else {
-                    console.log($('.search')[0].value);
-                    $.get('search', {searchterm: ""+$('.search')[0].value+""}, function(data) {
-                        $.get('/Me/links/search', {q: ""+$('.search')[0].value+""}, function(otherData) {
+                    var searchTerm = $('.search')[0].value;
+                    $.get('search', {searchterm: searchTerm}, function(data) {
+                        $.get('/Me/links/search', {q: searchTerm}, function(otherData) {
                             if ($('.search')[0].value.length !== 0) {
-                                processResults('people', data.results['contact/full']);
-                                processResults('photos', data.results['photo/full']);
-                                processResults('links', otherData);
+                                processResults('people', data.results['contact/full'], searchTerm);
+                                processResults('photos', data.results['photo/full'], searchTerm);
+                                processResults('links', otherData, searchTerm);
 
                                 $('#search-results').show();
                                 $('.search').addClass('populated');
@@ -164,15 +153,14 @@ $(document).ready(
  * Search stuff
  */
 
-function processResults(name, results) {
+function processResults(name, results, query) {
     var ids = {};
         console.log(results);
     if (results !== undefined) {
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
-        var bool = results.length > 3;
-        cloneHeader(name, bool);
+        updateHeader(name, query);
         for (var i = 0; i < 3; i++) {
             if (results[i] !== undefined) {
                 var obj = results[i];
@@ -186,19 +174,16 @@ function processResults(name, results) {
             $('#' + i + '.' + name).remove();
         }
     } else {
-        $('.search-header-row.' + name).remove();
+        $('.search-header-row.' + name).hide();
         $('.search-result-row.' + name).remove();
     }
 }
 
-function cloneHeader(name, displaySeeAll) {
-    if ($('.search-header-row.' + name).length > 0) return;
-    var newHeader = $('.search-header-row.template').clone();
-    newHeader.removeClass('template');
-    newHeader.addClass(name);
-    newHeader.children('.header-title').text(name.charAt(0).toUpperCase() + name.slice(1));
-    if (displaySeeAll) newHeader.children('.see-all').text('See all ' + name + ' results');
-    $('#search-results').append(newHeader);
+function updateHeader(name, query) {
+    var header = $('.search-header-row.' + name);
+    header.show();
+    header.unbind('click');
+    header.click(function() { app = $(this).data('app'); renderApp('search-' + query); });
 }
 
 function renderRow(name, obj) {
@@ -207,7 +192,7 @@ function renderRow(name, obj) {
     newResult.addClass(name);
     newResult.attr('id', obj._id);
     newResult = resultModifiers[name](newResult, obj);
-    $('#search-results').append(newResult);
+    $('.search-header-row.' + name).after(newResult);
 }
 
 var resultModifiers = {};
@@ -217,24 +202,23 @@ resultModifiers.people = function(newResult, obj) {
     if (obj.fullobject['photos']) {
         newResult.children('.search-result-icon').attr('src', obj.fullobject.photos[0]);
     } else {
-        newResult.children('.search-result-icon').attr('src', 'http://localhost:8042/Me/contactsviewer/img/silhouette.png');
+        newResult.children('.search-result-icon').attr('src', '/static/img/silhouette.png');
     }
+    newResult.click(function() { app = 'contacts'; renderApp('search-' + obj._id); });
     return newResult;
 }
 
 resultModifiers.photos = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.title);
     newResult.children('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
+    newResult.click(function() { app = 'photos'; renderApp('search-' + obj._id); });
     return newResult;
 }
 
 resultModifiers.links = function(newResult, obj) {
     newResult.children('.search-result').text(obj.title);
     newResult.children('.search-result-icon').attr('src', obj.favicon);
-    newResult.click(function() {
-        console.log('trying to load a webpage, man');
-        top.location.href = obj.link;
-    });
+    newResult.click(function() { top.location.href = obj.link; });
     return newResult;
 }
 

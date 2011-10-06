@@ -48,11 +48,19 @@
     <div id="nav-search">
       <input placeholder="&nbsp;Search people, links, photos" type="text" class="search" />
       <div id="search-results">
-        <div class="search-header-row template">
-          <div class="header-title"></div>
-          <div class="see-all"></div>
+        <div class="search-header-row people" data-app='contacts'>
+          <div class="header-title">People</div>
+          <div class="see-all">See all people results</div>
         </div>
-        <div class="search-result-row template">
+        <div class="search-header-row photos" data-app='photos'>
+          <div class="header-title">Photos</div>
+          <div class="see-all">See all photo results</div>
+        </div>
+         <div class="search-header-row links" data-app='links'>
+          <div class="header-title">Links</div>
+          <div class="see-all">See all web results</div>
+        </div>
+         <div class="search-result-row template">
           <img class="search-result-icon" src=""/>
           <div class="search-result"></div>
         </div>
