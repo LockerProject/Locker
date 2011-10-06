@@ -48,6 +48,18 @@ $(document).ready(
             return false;
         });
 
+        var selector = '.search-header-row:not(.template),.search-result-row:not(.template)';
+
+        $('#search-results').delegate(selector, 'mouseover', function() {
+            $('.hightlighted').removeClass('highlighted');
+            $(this).addClass('highlighted');
+        }).delegate(selector, 'mouseleave', function() {
+            $(this).removeClass('highlighted');
+        }).delegate(selector, 'click', function() {
+            e.preventDefault();
+            $('#search-results').hide();
+        });
+
         // search box
         $('#nav-search').submit(function() {
             var inputText = $("#nav-search .search").val();
@@ -95,33 +107,17 @@ $(document).ready(
                 } else {
                     console.log($('.search')[0].value);
                     $.get('search', {searchterm: ""+$('.search')[0].value+""}, function(data) {
-                        console.log(data);
-                        if ($('.search')[0].value.length !== 0) {
-                            processResults('people', data.results['contact/full']);
-                            processResults('photo', data.results['photo/full']);
+                        $.get('/Me/links/search', {q: ""+$('.search')[0].value+""}, function(otherData) {
+                            if ($('.search')[0].value.length !== 0) {
+                                processResults('people', data.results['contact/full']);
+                                processResults('photos', data.results['photo/full']);
+                                processResults('links', otherData);
 
-
-
-
-
-                            $('#search-results').show();
-                            $('.search').addClass('populated');
-                            var resultChildren = $('#search-results').children(':not(.template)');
-                            if (resultChildren.length > 0) resultChildren.unbind();
-                            resultChildren.bind('mouseover', function() {
-                                $('.highlighted').removeClass('highlighted');
-                                $(this).addClass('highlighted');
-                            });
-                            resultChildren.bind('mouseleave', function() {
-                                $(this).removeClass('highlighted');
-                            });
-                            resultChildren.bind('click', function(e) {
-                                e.preventDefault();
-                                $('#search-results').hide();
-                                // go to the result
-                            })
-                            resultChildren.first('.search-result-row').addClass('highlighted');
-                        }
+                                $('#search-results').show();
+                                $('.search').addClass('populated');
+                                $('#search-results').children(':not(.template)').first('.search-result-row').addClass('highlighted');
+                            }
+                        });
                     });
                 }
             }
@@ -170,17 +166,19 @@ $(document).ready(
 
 function processResults(name, results) {
     var ids = {};
+        console.log(results);
     if (results !== undefined) {
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
-        cloneHeader(name);
+        var bool = results.length > 3;
+        cloneHeader(name, bool);
         for (var i = 0; i < 3; i++) {
             if (results[i] !== undefined) {
                 var obj = results[i];
                 delete ids[obj._id];
                 if ($('#' + obj._id + '.' + name).length === 0) {
-                    cloneRow(name, obj);
+                    renderRow(name, obj);
                 }
             }
         }
@@ -188,32 +186,56 @@ function processResults(name, results) {
             $('#' + i + '.' + name).remove();
         }
     } else {
+        $('.search-header-row.' + name).remove();
         $('.search-result-row.' + name).remove();
     }
 }
 
-function cloneHeader(name) {
+function cloneHeader(name, displaySeeAll) {
     if ($('.search-header-row.' + name).length > 0) return;
     var newHeader = $('.search-header-row.template').clone();
     newHeader.removeClass('template');
     newHeader.addClass(name);
     newHeader.children('.header-title').text(name.charAt(0).toUpperCase() + name.slice(1));
-    newHeader.children('.see-all').text('See all ' + name + ' results');
+    if (displaySeeAll) newHeader.children('.see-all').text('See all ' + name + ' results');
     $('#search-results').append(newHeader);
 }
 
-function cloneRow(name, obj) {
+function renderRow(name, obj) {
     var newResult = $('.search-result-row.template').clone();
     newResult.removeClass('template');
     newResult.addClass(name);
     newResult.attr('id', obj._id);
+    newResult = resultModifiers[name](newResult, obj);
+    $('#search-results').append(newResult);
+}
+
+var resultModifiers = {};
+
+resultModifiers.people = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.name);
     if (obj.fullobject['photos']) {
         newResult.children('.search-result-icon').attr('src', obj.fullobject.photos[0]);
     } else {
         newResult.children('.search-result-icon').attr('src', 'http://localhost:8042/Me/contactsviewer/img/silhouette.png');
     }
-    $('#search-results').append(newResult);
+    return newResult;
+}
+
+resultModifiers.photos = function(newResult, obj) {
+    newResult.children('.search-result').text(obj.fullobject.title);
+    newResult.children('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
+    return newResult;
+}
+
+resultModifiers.links = function(newResult, obj) {
+    newResult.children('.search-result').text(obj.title);
+    newResult.children('.search-result-icon').attr('src', obj.favicon);
+    newResult.click(function() {
+        console.log('trying to load a webpage, man');
+        top.location.href = obj.link;
+    });
+    return newResult;
 }
 
 /*

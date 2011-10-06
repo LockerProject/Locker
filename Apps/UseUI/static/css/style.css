@@ -188,6 +188,7 @@ body {
     height: 36px;
     color: #bbbbbb;
     cursor: pointer;
+    padding: 0px 5px;
 }
 
 #search-results .search-header-row .header-title {
@@ -213,6 +214,11 @@ body {
     float: left;
     height: 36px;
     color: #333;
+    width: 268px;
+    text-overflow: ellipsis;
+    o-text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
     line-height: 36px;
 }
 
