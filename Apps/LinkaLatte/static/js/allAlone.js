@@ -120,6 +120,16 @@ function showError(errorMessage) {
     $("#loading").hide();
 }
 
+Array.prototype.clean = function(deleteValue) {
+  for (var i = 0; i < this.length; i++) {
+    if (this[i] == deleteValue) {
+      this.splice(i, 1);
+      i--;
+    }
+  }
+  return this;
+};
+
 $(function(){
     resultsTemplate = $p("#results").compile({
         "div.templateDateGroup" : {
@@ -151,13 +161,22 @@ $(function(){
                             }
                         },
                         "a@href":"link.link",
-                        "span.linkDescription":"link.title",
+                        "span.linkDescription":function(arg) {
+                            if (arg.item.title && arg.item.title.length > 150) {
+                                return arg.item.title.substring(0, 100) + "...";
+                            } else {
+                                return arg.item.title;
+                            }
+                        },
                         "span.linkFrom":function(arg) {
+                            var dedup = {};
                             return "From: " + arg.item.encounters.map(function(item) {
+                                if(dedup[item.from]) return false;
+                                dedup[item.from] = true;
                                 var base = (item.network == "twitter") ? "http://twitter.com/#" : "http://facebook.com/";
                                 var id = (item.network == "twitter") ? item.via.user.screen_name : item.fromID;
                                 return '<a href="'+base+id+'" target="_blank">'+item.from+'</a>';
-                            }).join(", ") + " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
+                            }).clean(false).join(", ") + " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
                         },
                         "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
@@ -191,11 +210,9 @@ function getSincePrettified(timestamp) {
     } else if (timeDiff < 3600000) {
         var min = Math.floor(timeDiff / 60000);
         tip =  min + ' minute' + (min > 1?'s':'') + ' ago';
-    } else if (timeDiff < 43200000) {
-        tip = 'over an hour ago';
     } else if (timeDiff < 43800000) {
         var hour = Math.floor(timeDiff / 3600000);
-        tip =  hour + ' minute' + (hour > 1?'s':'') + ' ago';
+        tip =  hour + ' hour' + (hour > 1?'s':'') + ' ago';
     } else {
         var d = new Date();
         d.setTime(timestamp);
