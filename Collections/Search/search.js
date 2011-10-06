@@ -126,6 +126,12 @@ exports.handlePostEvents = function(req, callback) {
 
         var source = getSourceForEvent(req.body);
 
+        if (!source) {
+            error = 'No source found for event: '+JSON.stringify(req.body);
+            console.error(error);
+            return callback(error, {});
+        }
+
         if (req.body.action === 'new' || req.body.action === 'update') {
             lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
                 if (err) {
@@ -162,7 +168,7 @@ exports.handlePostIndex = function(req, callback) {
     var error;
 
     if (!req.body.type || !req.body.source || !req.body.data) {
-        error = 'Invalid arguments given for /search/index POST request.';
+        error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
         console.error(error);
         return callback(error, {});
     }
