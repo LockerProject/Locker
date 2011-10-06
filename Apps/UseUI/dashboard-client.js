@@ -93,7 +93,6 @@ app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
-        console.dir(req.body);
         var evInfo = eventInfo[req.body.type];
         if (evInfo.timer) {
             clearTimeout(evInfo.timer);
