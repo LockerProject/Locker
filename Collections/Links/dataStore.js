@@ -9,6 +9,7 @@
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var fs = require('fs');
 var lutil = require('lutil');
+var lmongoutil = require("lmongoutil");
 
 // in the future we'll probably need a visitCollection too
 var linkCollection, encounterCollection, queueCollection;
@@ -78,6 +79,14 @@ exports.getEncounters = function(arg, cbEach, cbDone) {
     delete arg.network;
     delete arg.link;
     findWrap(f,arg,encounterCollection,cbEach,cbDone)
+}
+
+exports.getSince = function(objId, cbEach, cbDone) {
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, linkCollection, cbEach, cbDone);
+}
+
+exports.getLastObjectID = function(cbDone) {
+    linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
 }
 
 function findWrap(a,b,c,cbEach,cbDone){

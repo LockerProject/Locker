@@ -94,6 +94,15 @@ suite.next().suite.addBatch({
             assert.equal(body, 'true');
         }
     }
+}).addBatch({
+    "state" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/links/state"}, this.callback);
+        },
+        "contains lastId":function(topic) {
+            assert.include(topic.body, "lastId");
+        }
+    }
 });
 
 

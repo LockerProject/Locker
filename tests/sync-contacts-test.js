@@ -232,6 +232,16 @@ suite.next().suite.addBatch({
             assert.equal(object.data.accounts.googleContacts[0].data.name, 'Jeremie Miller');
         }
     }
+}).addBatch({
+    "state" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/contacts/state"}, this.callback);
+        },
+        "contains a lastId":function(topic) {
+            var state = JSON.parse(topic.body);
+            assert.include(state, "lastId");
+        }
+    }
 });
 
 suite.export(module);

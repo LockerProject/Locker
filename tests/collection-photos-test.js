@@ -6,6 +6,7 @@ var RESTeasy = require('api-easy');
 var vows = require("vows");
 var suite = RESTeasy.describe("Photos Collection");
 var fs = require('fs');
+var request = require('request');
 var foursquareEvent = JSON.parse(fs.readFileSync('fixtures/events/photos/foursquare.json','utf8'));
 var facebookEvent = JSON.parse(fs.readFileSync('fixtures/events/photos/facebook.json','utf8'));
 
@@ -51,6 +52,15 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(response.data.timestamp, 1303341763000);
             assert.equal(response.data.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
+        }
+    }
+}).addBatch({
+    "state" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/photos/state"}, this.callback);
+        },
+        "contains lastId":function(topic) {
+            assert.include(topic.body, "lastId");
         }
     }
 }).addBatch({

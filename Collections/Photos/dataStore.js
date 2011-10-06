@@ -18,6 +18,8 @@ var crypto = require("crypto");
 var async = require("async");
 var url = require("url");
 var fs = require('fs');
+var lmongoutil = require("lmongoutil");
+
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -265,3 +267,25 @@ function cleanName(name) {
         return name;
     return name.toLowerCase();
 }
+
+exports.getSince = function(objId, cbEach, cbDone) {
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, collection, cbEach, cbDone);
+}
+
+exports.getLastObjectID = function(cbDone) {
+    collection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+}
+
+function findWrap(a,b,c,cbEach,cbDone){
+    var cursor = c.find(a);
+    if (b.sort) cursor.sort(b.sort);
+    if (b.limit) cursor.limit(b.limit);
+    cursor.each(function(err, item) {
+        if (item != null) {
+            cbEach(item);
+        } else {
+            cbDone();
+        }
+    });
+}
+

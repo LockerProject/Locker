@@ -12,6 +12,7 @@ var db;
 var lconfig = require('../../Common/node/lconfig');
 var fs = require('fs');
 var lutil = require('lutil');
+var lmongoutil = require("lmongoutil");
 
 exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
@@ -27,6 +28,19 @@ exports.getAll = function(callback) {
 
 exports.get = function(id, callback) {
     collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
+exports.getSince = function(objId, cbEach, cbDone) {
+    collection.find({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}).each(function(err, item) {
+        if (item != null)
+            cbEach(item);
+        else
+            cbDone();
+    });
+}
+
+exports.getLastObjectID = function(cbDone) {
+    collection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
 }
 
 var writeTimer = false;

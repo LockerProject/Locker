@@ -439,4 +439,17 @@ a.email {
     width:45px;
 }
 
+#newHeader {
+    display:none;
+    position: fixed;
+    top: 0px;
+    height:40px;
+    font-size:24px;
+    font-weight:bold;
+    padding-top:24px;
+    padding-left:30px;
+}
 
+.smallHeaderText {
+    font-size:12px;
+}
