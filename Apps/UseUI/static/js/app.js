@@ -94,16 +94,20 @@ $(document).ready(
                     $('.search').removeClass('populated');
                 } else {
                     console.log($('.search')[0].value);
-                    $.get('search', {searchterm: ""+$('.search')[0].value+"", type: 'contact%2Ffull*'}, function(data) {
+                    $.get('search', {searchterm: ""+$('.search')[0].value+""}, function(data) {
+                        console.log(data);
                         if ($('.search')[0].value.length !== 0) {
-                            console.log(data);
-                            if (data.results['contact/full'] !== undefined) {
-                                cloneHeader('people');
-                            }
+                            processResults('people', data.results['contact/full']);
+                            processResults('photo', data.results['photo/full']);
+
+
+
+
+
                             $('#search-results').show();
                             $('.search').addClass('populated');
-                            // populate search results
-                            var resultChildren = $('#search-results').children('.result');
+                            var resultChildren = $('#search-results').children(':not(.template)');
+                            if (resultChildren.length > 0) resultChildren.unbind();
                             resultChildren.bind('mouseover', function() {
                                 $('.highlighted').removeClass('highlighted');
                                 $(this).addClass('highlighted');
@@ -116,7 +120,7 @@ $(document).ready(
                                 $('#search-results').hide();
                                 // go to the result
                             })
-                            resultChildren.first().addClass('highlighted');
+                            resultChildren.first('.search-result-row').addClass('highlighted');
                         }
                     });
                 }
@@ -163,13 +167,53 @@ $(document).ready(
 /*
  * Search stuff
  */
+
+function processResults(name, results) {
+    var ids = {};
+    if (results !== undefined) {
+        for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
+            ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
+        }
+        cloneHeader(name);
+        for (var i = 0; i < 3; i++) {
+            if (results[i] !== undefined) {
+                var obj = results[i];
+                delete ids[obj._id];
+                if ($('#' + obj._id + '.' + name).length === 0) {
+                    cloneRow(name, obj);
+                }
+            }
+        }
+        for (var i in ids) {
+            $('#' + i + '.' + name).remove();
+        }
+    } else {
+        $('.search-result-row.' + name).remove();
+    }
+}
+
 function cloneHeader(name) {
+    if ($('.search-header-row.' + name).length > 0) return;
     var newHeader = $('.search-header-row.template').clone();
     newHeader.removeClass('template');
+    newHeader.addClass(name);
     newHeader.children('.header-title').text(name.charAt(0).toUpperCase() + name.slice(1));
     newHeader.children('.see-all').text('See all ' + name + ' results');
     $('#search-results').append(newHeader);
-    console.log(newHeader);
+}
+
+function cloneRow(name, obj) {
+    var newResult = $('.search-result-row.template').clone();
+    newResult.removeClass('template');
+    newResult.addClass(name);
+    newResult.attr('id', obj._id);
+    newResult.children('.search-result').text(obj.fullobject.name);
+    if (obj.fullobject['photos']) {
+        newResult.children('.search-result-icon').attr('src', obj.fullobject.photos[0]);
+    } else {
+        newResult.children('.search-result-icon').attr('src', 'http://localhost:8042/Me/contactsviewer/img/silhouette.png');
+    }
+    $('#search-results').append(newResult);
 }
 
 /*

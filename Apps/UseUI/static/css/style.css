@@ -160,7 +160,7 @@ body {
 }
 
 #search-results {
-    width: 334px;
+    width: 314px;
     -moz-border-radius: 0px 0px 4px 4px;
     -webkit-border-radius: 0px 0px 4px 4px;
     -khtml-border-radius: 0px 0px 4px 4px;
@@ -176,6 +176,49 @@ body {
     background-color: white;
     z-index: 10;
     height: 500px;
+    padding: 0px 10px 0px 10px;
+}
+
+#search-results .highlighted {
+    background: rgba(120, 180, 225, .5);
+}
+
+#search-results .search-header-row {
+    margin-top: 10px;
+    height: 36px;
+    color: #bbbbbb;
+    cursor: pointer;
+}
+
+#search-results .search-header-row .header-title {
+    float: left;
+    font-size: 16px;
+    line-height: 36px;
+}
+
+#search-results .search-header-row .see-all {
+    float: right;
+    font-size: 14px;
+    line-height: 36px;
+}
+
+#search-results .search-result-row {
+    margin-top: 1px;
+    height: 36px;
+    cursor: pointer;
+}
+
+#search-results .search-result-row .search-result {
+    margin-left: 5px;
+    float: left;
+    height: 36px;
+    color: #333;
+    line-height: 36px;
+}
+
+#search-results .search-result-row .search-result-icon {
+    float: left;
+    height: 36px;
 }
 
 .app-page .header {
