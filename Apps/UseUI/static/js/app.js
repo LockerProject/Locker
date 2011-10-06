@@ -4,6 +4,7 @@ var app, timeout, appId;
 var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
+var ready = false;
 
 $(document).ready(
     function() {
@@ -127,27 +128,15 @@ var SyncletPoll = (
                 if (app.finishedOnce) {
                     b.$el.find('.checkmark').show();
                 }
-
-                 if (b.state == "running" || b.state == "processing data") {
-                    if (typeof(b.spinner) == "undefined" && !(b.$el.find('.checkmark').is(':visible'))) {
-                        var target = b.$el.find(".spinner")[0];
-                        b.$el.find('a').addClass("disabled");
-                        b.spinner = new Spinner(spinnerOpts).spin(target);
-                    } else if (!(b.$el.find('.checkmark').is(':visible'))) {
-                        b.spinner.spin();
-                    }
-                } else if (b.state == "waiting") {
-                    if (b.spinner) b.spinner.stop();
-                    b.$el.find('.checkmark').show();
-                }
-
-                b.lastState = b.state;
-                t.installed[provider] = b;
             };
 
             t.handleResponse = function(data, err, resp) {
                 if(retryTime < 10000) retryTime += 500;
+                var hasProps = false;
+                globalvar = data.installed;
                 for (app in data.installed) {
+                    hasProps = true;
+                    if (window.guidedSetup) window.guidedSetup.servicesAdded();
                     app = data.installed[app];
 
                     if (providers.indexOf(app.provider) != -1) {
@@ -155,6 +144,10 @@ var SyncletPoll = (
                         t.updateState(app.provider, app);
                     }
                 }
+                if (!hasProps && !window.guidedSetup) {
+                    window.guidedSetup = new GuidedSetup();
+                }
+                if (ready === false && hasProps && $('#services').height() === 0) expandServices();
 
                 if (t.repoll) t.timeout = setTimeout(t.query, retryTime);
             };
@@ -273,16 +266,16 @@ function renderApp(fragment) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
                     clearTimeout(timeout);
+                    if (manuallyClosed) closeServices();
                 }
                 else {
-                    if (!manuallyClosed && $('#services').height() === 0) expandServices();
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
                     var newLocation = data[app].url + "notready.html";
                     if (currentLocation.toString() !== newLocation)
                         currentLocation.replace(newLocation);
                     clearTimeout(timeout);
                     timeout = setTimeout(function() {poll(data);}, 1000);
-                    //log(timeout);
+                    log(timeout);
                 }
             });
         })(data);
@@ -299,3 +292,120 @@ function resizeFrame() {
     $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
     $("#appFrame").width($(window).width());
 }
+
+
+function drawGuidedSetup() {
+    if (guidedSetupActive) return;
+    guidedSetupActive = true;
+    $('.blur').show();
+}
+
+function closeServices() {
+    $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
+        $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+            $('.services-box-container').show();
+            resizeFrame();
+        }
+    });
+}
+
+
+/*
+ * GuidedSetup
+ */
+var GuidedSetup = (
+    function () {
+        var GuidedSetup = function () {
+            var t = this;
+            var page = 0;
+            var text = {};
+            t.synced = false;
+            text.header = ['Welcome!', 'Get Started.', 'Explore...'];
+            text.forward = ['NEXT', 'NEXT', 'DONE'];
+            text.body = [];
+            text.body[0] = "<p>This helps you pull all your stuff together from around the web.</p>" +
+                           "<p></p>";
+            text.body[1] = "<p>To get started, connect some services you use.</p>" +
+                           "<p></p>";
+            text.body[2] = "<p>Now that you've got some services connected, you can got check out the different views!</p>" +
+                           "<p><b>Photos</b> - See all your photos from around the web in one place.</p>" +
+                           "<p><b>People</b> - See everyone you are connected to in one place.</p>" +
+                           "<p><b>Links</b> - Search for and discover all the links people are sharing with you.</p>";
+
+
+            t.drawGuidedSetup = function() {
+                $('.blur').show();
+                $('.close-box').click(function() {
+                    $('.blur').hide();
+                });
+                $('.forward').click(t.moveForward);
+                $(document).keydown(function(e) {
+                    if (e.keyCode === 27) {
+                        $('.blur').hide();
+                    }
+                });
+
+                t.updateText();
+            };
+
+            t.moveForward = function() {
+                log('moving forward!');
+                log(page);
+                log(t.synced);
+                if (page === 0 && t.synced === false) {
+                    $('.forward').addClass('disabled');
+                    $('.forward').attr('title', 'You must authorize a service to continue!');
+                    $('.forward-buttton-text').attr('title', 'You must authorize a service to continue!');
+                    expandServices();
+                }
+                if (page === 1 && t.synced === false) {
+                    return;
+                }
+                if (page === 2) {
+                    return $('.blur').hide();
+                }
+                page++;
+                t.updateBlurs();
+                t.updateText();
+            }
+
+            t.servicesAdded = function() {
+                log('added services!');
+                if (t.synced) return;
+                t.synced = true;
+                $('.forward').removeClass('disabled');
+                $('.forward').attr('title', '');
+                $('.forward-button-text').attr('title', '');
+            }
+
+            t.updateBlurs = function() {
+                $('.blur').show();
+                if (page === 1) {
+                    $('#services .blur').hide();
+                } else if (page === 2) {
+                    $('.header .blur').hide();
+                }
+            }
+
+            t.updateText = function() {
+                $('.header-text').animate({opacity: 0}, {duration: 200, queue: false});
+                $('.forward-button-text').animate({opacity: 0}, {duration: 200, queue: false});
+                $('.lightbox .body').animate({opacity: 0}, {duration: 200, queue: false, complete:function() {
+                    $('.header-text').text(text.header[page]);
+                    $('.forward-button-text').text(text.forward[page]);
+                    $('.lightbox .body').html(text.body[page]);
+                    $('.header-text').animate({opacity: 1}, {duration: 200, queue: false});
+                    $('.forward-button-text').animate({opacity: 1}, {duration: 200, queue: false});
+                    $('.lightbox .body').animate({opacity: 1}, {duration: 200, queue: false});
+                }});
+
+           }
+
+            t.drawGuidedSetup();
+        };
+
+        return function () {
+            return new GuidedSetup();
+        };
+
+    })();
