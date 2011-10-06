@@ -135,7 +135,7 @@ $(function(){
                                 "facebook":"img/facebook.png",
                                 "twitter":"img/twitter.png"
                             };
-                            return images[arg.item.encounters[arg.item.encounters.length - 1].network];
+                            return (arg.item.encounters.length > 0) ? images[arg.item.encounters[arg.item.encounters.length - 1].network] : "img/1x1-pixel.png";
                         },
                         "div.fullInfo@class+":function(arg) {
                             var theClass = arg.pos % 2 === 0 ? " even" : " odd";
@@ -195,8 +195,7 @@ function getSincePrettified(timestamp) {
         tip =  hour + ' minute' + (hour > 1?'s':'') + ' ago';
     } else {
         var d = new Date();
-        d.setTime(allCounts[id].lastUpdate);
-        //log(allCounts);
+        d.setTime(timestamp);
         tip = d.toString();
     }
     return tip;
