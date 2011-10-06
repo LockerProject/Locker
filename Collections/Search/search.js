@@ -286,7 +286,7 @@ function reindexType(url, type, source, callback) {
             req.body = fullBody;
             req.headers = {};
             req.headers['content-type'] = 'application/json';
-            exports.handlePostIndex(req, function() { 
+            exports.handlePostIndex(req, function() {
                 req = null;
                 forEachCb.call();
             });
@@ -347,7 +347,7 @@ function makeEnrichedRequest(url, item, callback) {
             return callback(err);
         }
         if (res.statusCode >= 400) {
-            var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results';
+            var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results from '+url;
             console.error(error);
             return callback(error);
         }
