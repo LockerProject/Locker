@@ -284,7 +284,6 @@ function indexMore(keepGoing) {
         indexing = false;
         return;
     }
-    console.log(indexQueue.length);
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
     exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
