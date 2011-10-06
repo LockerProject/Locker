@@ -162,6 +162,7 @@ $(function(){
                         },
                         "a@href":"link.link",
                         "span.linkDescription":function(arg) {
+                            if(arg.item.title == "Incompatible Browser | Facebook") return undefined;
                             if (arg.item.title && arg.item.title.length > 150) {
                                 return arg.item.title.substring(0, 100) + "...";
                             } else {
