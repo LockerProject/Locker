@@ -16,7 +16,7 @@ function queryLinksCollection (queryString) {
       dataType: "json",
       success: function(data) {
         //called when successful
-        if (!data || data.length == 0) {
+        if (!data || data.length === 0) {
             $("#infoMsg").attr("class", "info");
             $("#infoMsg").text("No results found");
             $("#infoMsg").show();
@@ -104,7 +104,6 @@ function findLinksCollection() {
               showError("Could not find a valid links Collection to display.  Please contact your system administrator.");
               return;
           }
-          updateLinkCount();
           queryLinksCollection();
       },
       error: function() {
@@ -139,7 +138,7 @@ $(function(){
                             return images[arg.item.encounters[arg.item.encounters.length - 1].network];
                         },
                         "div.fullInfo@class+":function(arg) {
-                            var theClass = arg.pos % 2 == 0 ? " even" : " odd";
+                            var theClass = arg.pos % 2 === 0 ? " even" : " odd";
                             if (!arg.item.title && arg.item.link.length < 200) theClass += " shiftDownDesc";
                             return theClass;
                         },
@@ -154,17 +153,11 @@ $(function(){
                         "a@href":"link.link",
                         "span.linkDescription":"link.title",
                         "span.linkFrom":function(arg) {
-                            return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ");
+                            return "From: " + arg.item.encounters.map(function(item) { return item.from; }).join(", ") +
+                            " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
                         },
                         "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
-                        },
-                        "span.origLink@style":function(arg) {
-                            return arg.item.encounters[arg.item.encounters.length - 1].orig == arg.item.link ? "display:none" : "";
-                        },
-                        "span.origLink":function(arg) {
-                            var orig = arg.item.encounters[arg.item.encounters.length - 1].orig;
-                            return orig != arg.item.link ? "(" + orig + ")" : "";
                         }
                     }
                 }
@@ -174,11 +167,6 @@ $(function(){
 
     $("#searchForm").submit(function() {
         queryLinksCollection($("#linksQuery").val());
-        return false;
-    });
-    $("#searchReset").click(function() {
-        $("#linksQuery").val("");
-        queryLinksCollection();
         return false;
     });
     findLinksCollection();
@@ -192,16 +180,24 @@ function hideMe() {
     $(event.srcElement).hide();
 }
 
-function updateLinkCount() {
-      $.ajax({
-        url: "/Me/" + collectionHandle + "/state",
-        type: "GET",
-        dataType: "json",
-        complete:function() {
-            setTimeout(updateLinkCount, 10000);
-        },
-        success: function(data) {
-            $("#linkCounter").text(data.count + " links");
-        }
-      });
+function getSincePrettified(timestamp) {
+    var tip;
+    var timeDiff = Date.now() - timestamp;
+    if (timeDiff < 60000) {
+        tip = 'less than a minute ago';
+    } else if (timeDiff < 3600000) {
+        var min = Math.floor(timeDiff / 60000);
+        tip =  min + ' minute' + (min > 1?'s':'') + ' ago';
+    } else if (timeDiff < 43200000) {
+        tip = 'over an hour ago';
+    } else if (timeDiff < 43800000) {
+        var hour = Math.floor(timeDiff / 3600000);
+        tip =  hour + ' minute' + (hour > 1?'s':'') + ' ago';
+    } else {
+        var d = new Date();
+        d.setTime(allCounts[id].lastUpdate);
+        //log(allCounts);
+        tip = d.toString();
+    }
+    return tip;
 }

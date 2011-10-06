@@ -130,6 +130,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
+    levents.fireEvent('newservice', '', '', serviceInfo.title);
     return serviceInfo;
 }
 
@@ -302,7 +303,8 @@ function compareIDs (originalConfig, newConfig) {
 
 function processResponse(deleteIDs, info, synclet, response, callback) {
     datastore.init(function() {
-        info.status = synclet.status = 'waiting';
+        synclet.status = 'waiting';
+        checkStatus(info);
 
         if (!callback) {
             callback = function() {};
@@ -320,6 +322,17 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
     });
 };
+
+function checkStatus(info) {
+    for (var i = 0; i < info.synclets.length; i++) {
+        if (info.synclets[i].status !== 'waiting') return;
+    }
+    info.status = 'waiting';
+    info.finishedOnce = true;
+    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'),
+                              JSON.stringify(info, null, 4));
+
+}
 
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);

@@ -41,9 +41,6 @@ header input#linksQuery {
     width:250px;
 }
 
-#linkCounter {
-}
-
 /* Group Styles */
 .dateInfo {
     background-color:#83C2EC;
@@ -92,11 +89,6 @@ a.expandedLink {
 .linkDescription {
     padding:2px;
     font-size:95%;
-}
-.origLink {
-    color:#666;
-    font-size:85%;
-    padding-left:4px;
 }
 .linkFrom {
     font-size:80%;
