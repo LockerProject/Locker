@@ -38,18 +38,6 @@ var once = false;
 var window_focus = true;
 $(window).focus(function() {
     window_focus = true;
-<<<<<<< HEAD
-    log('window_focus =', window_focus);
-    dequeueGritters();
-}).blur(function() {
-    window_focus = false;
-    log('window_focus =', window_focus);
-});
-
-var gritterEvents = {};
-function queueGritter(name, count) {
-    log('queueGritter window_focus =', window_focus);
-=======
     dequeueGritters();
 }).blur(function() {
     window_focus = false;
@@ -58,7 +46,6 @@ function queueGritter(name, count) {
 var gritterEvents = {};
 function queueGritter(name, count, lastId) {
     console.log("Queueing " + name + ", " + count + ", " + lastId);
->>>>>>> growl-click
     if(window_focus) {
         showGritter(name, count, lastId);
     } else {
