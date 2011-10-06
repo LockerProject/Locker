@@ -4,7 +4,6 @@ var app, timeout, appId;
 var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
-var ready = false;
 
 $(document).ready(
     function() {
@@ -266,16 +265,16 @@ function renderApp(fragment) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
                     clearTimeout(timeout);
-                    if (manuallyClosed) closeServices();
                 }
                 else {
+                    if (!manuallyClosed && $('#services').height() === 0) expandServices();
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
                     var newLocation = data[app].url + "notready.html";
                     if (currentLocation.toString() !== newLocation)
                         currentLocation.replace(newLocation);
                     clearTimeout(timeout);
                     timeout = setTimeout(function() {poll(data);}, 1000);
-                    log(timeout);
+                    //log(timeout);
                 }
             });
         })(data);
