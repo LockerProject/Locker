@@ -170,15 +170,21 @@ app.get('/getLinksFull', function(req, res) {
     if (req.query.offset) {
         options.offset = parseInt(req.query.offset);
     }
-    dataStore.getLinks(options, function(item) { results.push(item); }, function(err) {
-        async.forEach(results, function(link, callback) {
-            link.encounters = [];
-            dataStore.getEncounters({"link":link.link}, function(encounter) {
-                link.encounters.push(encounter);
-            }, function() {
-                fullResults.push(link);
-                callback();
-            });
+    if (req.query.fields) {
+        try {
+            options.fields = JSON.parse(req.query.fields);
+        } catch(E) {}
+    }
+    var ndx = {};
+    dataStore.getLinks(options, function(item) {
+        item.encounters = [];
+        ndx[item.link] = item;
+        results.push(item);
+    }, function(err) {
+        var arg = {"link":{$in: Object.keys(ndx)}};
+        if(options.fields) arg.fields = options.fields;
+        dataStore.getEncounters(arg, function(encounter) {
+            ndx[encounter.link].encounters.push(encounter);
         }, function() {
             res.send(results);
         });

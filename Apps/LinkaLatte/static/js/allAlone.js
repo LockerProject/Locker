@@ -9,7 +9,7 @@ function queryLinksCollection (queryString) {
     $(".dateGroup").remove();
     $("#infoMsg").hide();
     var url = "/Me/" + collectionHandle + "/search?q=" + queryString;
-    if (!queryString) url = "/Me/" + collectionHandle + "/getLinksFull?limit=100";
+    if (!queryString) url = "/Me/" + collectionHandle + '/getLinksFull?limit=100&fields={"link":1,"title":1,"at":1,"network":1,"from":1,"favicon":1}';
     $.ajax({
       "url": url,
       type: "GET",

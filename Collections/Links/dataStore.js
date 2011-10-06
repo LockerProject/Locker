@@ -81,7 +81,7 @@ exports.getEncounters = function(arg, cbEach, cbDone) {
 }
 
 function findWrap(a,b,c,cbEach,cbDone){
-    var cursor = c.find(a);
+    var cursor = (b.fields) ? c.find(a, b) : c.find(a);
     if (b.sort) cursor.sort(b.sort);
     if (b.limit) cursor.limit(b.limit);
     cursor.each(function(err, item) {
@@ -103,7 +103,7 @@ function updateState()
         try {
             lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
-    }, 5000);    
+    }, 5000);
 }
 
 // insert new (fully normalized) link, ignore or replace if it already exists?
