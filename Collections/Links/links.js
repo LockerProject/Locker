@@ -57,29 +57,25 @@ app.get('/search', function(req, res) {
         return;
     }
     search.search(req.query["q"], function(err,results) {
+        if(err) console.error(err);
         if(err || !results || results.length == 0) return res.send([]);
-        var fullResults = [];
-        async.forEach(results, function(item, callback) {
-            dataStore.getFullLink(item._id, function(link) {
-                if (!link) {
-                    console.error("skipping not found: "+item._id);
-                    return callback();
-                }
-                link.at = item.at;
-                link.encounters = [];
-                dataStore.getEncounters({"link":link.link}, function(encounter) {
-                    link.encounters.push(encounter);
-                }, function() {
-                    fullResults.push(link);
-                    callback();
+        var map = {};
+        var links = [];
+        for(var i=0; i < results.length; i++) links.push(results[i]._id);
+        dataStore.getLinks({"link":{$in: links}}, function(link){
+            link.encounters = [];
+            map[link.link] = link;
+        }, function(err){
+            dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
+                map[encounter.link].encounters.push(encounter);
+            }, function() {
+                var results = [];
+                for(var k in map) results.push(map[k]);
+                results = results.sort(function(lh, rh) {
+                    return rh.at - lh.at;
                 });
+                res.send(results.slice(0,50));
             });
-        }, function() {
-            // Done
-            var sorted = fullResults.sort(function(lh, rh) {
-                return rh.at - lh.at;
-            });
-            res.send(sorted);
         });
     });
 });
