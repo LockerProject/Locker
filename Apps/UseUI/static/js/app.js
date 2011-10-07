@@ -422,9 +422,8 @@ function renderApp(fragment) {
                     // log('clearing timeout');
                     var needReload = false;
                     if (data[app].url == $("#appFrame")[0].contentWindow.location) needReload = true;
-                    $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("#"+fragment):""));
+                    $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
                     if (needReload) {
-                        log("Needs a reload");
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
                     clearTimeout(timeout);
