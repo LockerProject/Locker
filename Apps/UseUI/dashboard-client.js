@@ -181,7 +181,6 @@ function bootState(doneCb)
 
 io.sockets.on('connection', function (socket) {
     logger.debug("++ got new socket.io connection");
-    bootState();
     isSomeoneListening++;
     var counts = {};
     for (var key in eventInfo) {
