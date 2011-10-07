@@ -192,7 +192,7 @@ function renderRow(name, obj) {
     newResult.removeClass('template');
     newResult.addClass(name);
     newResult.attr('id', obj._id);
-    newResult = resultModifiers[name](newResult, obj);
+    resultModifiers[name](newResult, obj);
     $('.search-header-row.' + name).after(newResult);
 }
 
@@ -206,14 +206,12 @@ resultModifiers.people = function(newResult, obj) {
         newResult.children('.search-result-icon').attr('src', '/static/img/silhouette.png');
     }
     newResult.click(function() { app = 'contacts'; renderApp('search-' + obj._id); });
-    return newResult;
 }
 
 resultModifiers.photos = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.title);
     newResult.children('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
     newResult.click(function() { app = 'photos'; renderApp('search-' + obj._id); });
-    return newResult;
 }
 
 resultModifiers.links = function(newResult, obj) {
@@ -221,7 +219,6 @@ resultModifiers.links = function(newResult, obj) {
     newResult.children('.search-result').text(obj.title);
     newResult.children('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { top.location.href = obj.link; });
-    return newResult;
 }
 
 resultModifiers.tweets = function(newResult, obj) {
@@ -229,7 +226,6 @@ resultModifiers.tweets = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.text);
     newResult.children('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
     newResult.click(function() { top.location.href = 'https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str });
-    return newResult;
 }
 
 /*
