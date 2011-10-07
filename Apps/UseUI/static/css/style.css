@@ -198,6 +198,11 @@ body {
     line-height: 36px;
 }
 
+#search-results .search-header-row .count {
+    font-size: 12px;
+    color: #bbbbbb;
+}
+
 #search-results .search-header-row .see-all {
     float: right;
     font-size: 14px;

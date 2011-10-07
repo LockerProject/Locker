@@ -155,12 +155,11 @@ $(document).ready(
 
 function processResults(name, results, query) {
     var ids = {};
-        console.log(results);
-    if (results !== undefined) {
+    if (results !== undefined && results.length > 0) {
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
-        updateHeader(name, query);
+        updateHeader(name, query, results.length);
         for (var i = 0; i < 3; i++) {
             if (results[i] !== undefined) {
                 var obj = results[i];
@@ -179,8 +178,9 @@ function processResults(name, results, query) {
     }
 }
 
-function updateHeader(name, query) {
+function updateHeader(name, query, count) {
     var header = $('.search-header-row.' + name);
+    header.find('span').text('(' + count + ' total)');
     header.show();
     header.unbind('click');
     header.click(function() { app = $(this).data('app'); renderApp('search-' + query); });
@@ -216,8 +216,9 @@ resultModifiers.photos = function(newResult, obj) {
 }
 
 resultModifiers.links = function(newResult, obj) {
+    newResult.attr('title', obj.title);
     newResult.children('.search-result').text(obj.title);
-    newResult.children('.search-result-icon').attr('src', obj.favicon);
+    newResult.children('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { top.location.href = obj.link; });
     return newResult;
 }
