@@ -65,9 +65,8 @@ $(document).ready(
         $('.blur').click(function() {
             return false;
         });
-
         $('.search').keyup(function(e) {
-            if (e.keyCode == 13) {
+/*            if (e.keyCode == 13) {
                 $('.highlighted').click();
                 $('#search-results').fadeOut();
                 return false;
@@ -92,13 +91,13 @@ $(document).ready(
                 }
                 return false;
             } else {
-                if ($('.search')[0].value.length == 0) {
+*/                if ($('.search')[0].value.length == 0) {
                     $('#search-results').hide();
                     $('.search').removeClass('populated');
                 } else {
                     search();
                 }
-            }
+//            }
         });
 
         $(".app-link[title]").tooltip({
@@ -196,7 +195,7 @@ function processResults(name, results, query) {
     if ($('.search-result-row:not(.template)').length > 0) {
         $('#search-results').show();
         $('.search').addClass('populated');
-        $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
+//        $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
     } else {
         $('#search-results').hide();
         $('.search').removeClass('populated');
@@ -254,14 +253,14 @@ resultModifiers.links = function(newResult, obj) {
     newResult.attr('title', obj.title);
     newResult.children('.search-result').text(obj.title);
     newResult.find('.search-result-icon').attr('src', 'img/link.png');
-    newResult.click(function() { top.location.href = obj.link; });
+    newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 
 resultModifiers.tweets = function(newResult, obj) {
     newResult.attr('title', obj.fullobject.text);
     newResult.children('.search-result').text(obj.fullobject.text);
     newResult.find('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
-    newResult.click(function() { top.location.href = 'https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str });
+    newResult.click(function() { window.open('https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str, '_blank'); });
 }
 
 /*
