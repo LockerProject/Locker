@@ -34,6 +34,21 @@ $(function() {
           }
       });
     }
+    if (window.location.hash.substr(0,5) == "#view") {
+        var url = "/Me/photos/" + window.location.hash.substr(6);
+        $.ajax({
+            "url":url,
+            type:"GET",
+            dataType:"json",
+            success:function(data) {
+                if(data)
+                {
+                    cleanupPhoto(data);
+                    drawGallery([data]);
+                }
+            }
+        });
+    }
 });
 
 var cleanupPhoto = function(photo) {

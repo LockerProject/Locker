@@ -4,7 +4,7 @@ function log(m) { if (console && console.log && debug) console.log(m); }
 var collectionHandle = "";
 var resultsTemplate = null;
 
-function displayLinksArray(data) 
+function displayLinksArray(data)
 {
         //called when successful
         if (!data || data.length === 0) {
@@ -85,7 +85,7 @@ function queryLinksCollection (queryString) {
         //called when there is an error
       }
     });
-} 
+}
 
 function getLinksSince(id)
 {
@@ -127,6 +127,9 @@ function findLinksCollection() {
           }
           if (window.location.hash.substr(0,4) == "#new") {
             getLinksSince(window.location.hash.substr(5));
+          } else if (window.location.hash.substr(0,7) == "#search") {
+            $("#linksQuery").val(window.location.hash.substr(8));
+            queryLinksCollection(window.location.hash.substr(8));
           } else {
             queryLinksCollection();
           }
