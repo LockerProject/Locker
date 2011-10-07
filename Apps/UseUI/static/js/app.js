@@ -199,7 +199,8 @@ function processResults(name, results, query) {
 
 function updateHeader(name, query, count) {
     var header = $('.search-header-row.' + name);
-    header.find('span').text('(' + count + ' total)');
+    var msg = (count < 10) ? '(' + count + ' total)' : '(10+ total)';
+    header.find('span').text(msg);
     header.show();
     header.unbind('click');
     header.click(function() { app = $(this).data('app'); renderApp('search-' + query); });

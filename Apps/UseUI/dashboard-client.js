@@ -126,7 +126,7 @@ app.get('/search', function(req, res) {
     var outputResults = {};
     var error = null;
 
-    search.search(type, term, 0, 10, function(err, results) {
+    search.search(type, term, 0, 20, function(err, results) {
 
         if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
             console.error('No results object returned for search');
