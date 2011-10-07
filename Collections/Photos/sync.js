@@ -35,12 +35,13 @@ exports.gatherPhotos = function(cb) {
             locker.providers(['photo','checkin','status'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
+                    console.error("DEBUG: svc", svc);
                     if(svc.handle === 'photos') return;
                     var gathered = false;
                     var lastType = "";
                     
                     // If twitter, go off book and hit tweets
-                    if(svc.handle === 'twitter')
+                    if(svc.provider === 'twitter')
                         gatherFromUrl(svc.id,"/getCurrent/tweets","status/twitter");
                     svc.provides.forEach(function(providedType) {
                         if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 
