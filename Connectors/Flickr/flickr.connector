@@ -1,9 +1,9 @@
 {
-	"title":"Flickr Account",
-	"action":"Connect to a Flickr account",
-	"desc":"Collect and sync my data from my Flickr account using the Flickr API and a Flickr 'app' that I create just for myself.",
-	"run":"node client.js",
-	"status":"unstable",
-	"handle":"flickr",
-	"provides":["photo/flickr","contact/flickr"]
+  "title":"Flickr Account",
+  "action":"Connect to a Flickr account",
+  "desc":"Collect and sync my data from my Flickr account using the Flickr API and a Flickr 'app' that I create just for myself.",
+  "run":"node client.js",
+  "status":"unstable",
+  "handle":"flickrconnector",
+  "provides":["photo/flickr","contact/flickr"]
 }

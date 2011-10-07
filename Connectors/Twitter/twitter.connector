@@ -4,7 +4,7 @@
     "desc":"Collect and sync my data from my Twitter account using the Twitter API and a Twitter 'app' that I create just for myself.",
     "run":"node init.js",
     "status":"stable",
-    "handle":"twitter",
+    "handle":"twitterconnector",
     "mongoCollections": ["friends", "followers", "home_timeline", "user_timeline", "mentions"],
     "processOptions" : {"enableCookies" : true, "id" : "id_str"},
     "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",

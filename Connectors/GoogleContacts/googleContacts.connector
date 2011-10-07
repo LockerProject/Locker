@@ -4,7 +4,7 @@
     "desc":"Collect and sync my data from my Google contacts using the Google Data API",
     "run":"node init.js",
     "status":"stable",
-    "handle":"gcontacts",
+    "handle":"gcontactsconnector",
     "mongoCollections": ["contacts", "groups"],
     "provides":["contact/google"]
 }
