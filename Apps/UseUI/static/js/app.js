@@ -105,7 +105,7 @@ $(document).ready(
 
                                 $('#search-results').show();
                                 $('.search').addClass('populated');
-                                $('#search-results').children(':not(.template)').first('.search-result-row').addClass('highlighted');
+                                $('#search-results').children(selector).first('.search-result-row').addClass('highlighted');
                             }
                         });
                     });
@@ -201,30 +201,30 @@ var resultModifiers = {};
 resultModifiers.people = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.name);
     if (obj.fullobject['photos']) {
-        newResult.children('.search-result-icon').attr('src', obj.fullobject.photos[0]);
+        newResult.find('.search-result-icon').attr('src', obj.fullobject.photos[0]);
     } else {
-        newResult.children('.search-result-icon').attr('src', '/static/img/silhouette.png');
+        newResult.find('.search-result-icon').attr('src', '/static/img/silhouette.png');
     }
     newResult.click(function() { app = 'contacts'; renderApp('search-' + obj._id); });
 }
 
 resultModifiers.photos = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.title);
-    newResult.children('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
+    newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
     newResult.click(function() { app = 'photos'; renderApp('search-' + obj._id); });
 }
 
 resultModifiers.links = function(newResult, obj) {
     newResult.attr('title', obj.title);
     newResult.children('.search-result').text(obj.title);
-    newResult.children('.search-result-icon').attr('src', 'img/link.png');
+    newResult.find('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { top.location.href = obj.link; });
 }
 
 resultModifiers.tweets = function(newResult, obj) {
     newResult.attr('title', obj.fullobject.text);
     newResult.children('.search-result').text(obj.fullobject.text);
-    newResult.children('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
+    newResult.find('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
     newResult.click(function() { top.location.href = 'https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str });
 }
 
