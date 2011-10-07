@@ -34,6 +34,19 @@ $(function() {
           }
       });
     }
+    if (window.location.hash.substr(0,7) == "#search") {
+        var baseURL = '/Me/search/query';
+        var type = 'photo/full*';
+
+        $.getJSON(baseURL, {q: window.location.hash.substr(8) + "*", type: type, limit: 20}, function(results) {
+            var photos = [];
+            for(var i in results.hits) {
+                cleanupPhoto(results.hits[i].fullobject);
+                photos.push(results.hits[i].fullobject);
+            }
+            drawGallery(photos);
+        });
+    }
     if (window.location.hash.substr(0,5) == "#view") {
         var url = "/Me/photos/" + window.location.hash.substr(6);
         $.ajax({
