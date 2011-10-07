@@ -76,16 +76,21 @@ function processShared(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+function getFlickrItem(photoObject, field) {
+    return photoObject[field + '_o'] || photoObject[field + '_l'] || photoObject[field + '_z'] || 
+           photoObject[field + '_m'] || photoObject[field + '_s'] || photoObject[field + '_t'];
+}
+
 function processFlickr(svcId, data, cb) {
-    if (!data.id || !data.url_l) {
+    if (!data.id || !getFlickrItem(data, 'url')) {
         cb("The flickr data was invalid");
         return;
     }
 
     var photoInfo = {};
-    photoInfo.url = data.url_l
-    if (data.height_l) photoInfo.height = data.height_l;
-    if (data.width_l) photoInfo.width = data.width_l;
+    photoInfo.url = getFlickrItem(data, 'url');
+    photoInfo.height = getFlickrItem(data, 'height');
+    photoInfo.width = getFlickrItem(data, 'width');
     if (data.title) photoInfo.title = data.title
     if (data.url_t) photoInfo.thumbnail = data.url_t;
     if (data.owner && data.id) photoInfo.sourceLink = "http://www.flickr.com/photos/" + data.owner + "/" + data.id + "/";

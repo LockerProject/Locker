@@ -30,7 +30,7 @@ var photoGatherers = {
 exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function(){
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function() {
             cb(); // synchro delete, async/background reindex
             locker.providers(['photo','checkin','status'], function(err, services) {
                 if (!services) return;
@@ -83,7 +83,7 @@ function gatherFromUrl(svcId, url, type) {
             if (!arr) throw("No data");
             dataStore.addData(svcId, type, arr);
         } catch (E) {
-            console.error("Error processing photos from " + svcId + ": " + E);
+            console.error("Error processing photos from " + svcId + url + ": " + E);
             console.error('Got back: ' + body);
         }
     });
