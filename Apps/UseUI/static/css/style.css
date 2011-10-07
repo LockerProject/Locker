@@ -197,6 +197,7 @@ body {
     cursor: pointer;
     padding: 0px 5px;
     display: none;
+    clear: both;
 }
 
 #search-results .search-header-row .header-title {
@@ -220,6 +221,7 @@ body {
     margin-top: 1px;
     height: 36px;
     cursor: pointer;
+    clear: both;
 }
 
 #search-results .search-result-row .search-result {
