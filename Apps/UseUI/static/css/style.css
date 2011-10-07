@@ -179,8 +179,8 @@ body {
 }
 
 #search-results .search-divider {
-    width: 300px;
-    margin: 5px 0px -5px 7px;
+    width: 314px;
+    margin: 5px 0px -5px 0px;
     height: 1px;
     background-color: #666;
     border-bottom: solid 1px #ccc;
@@ -192,7 +192,7 @@ body {
 
 #search-results .search-header-row {
     margin-top: 10px;
-    height: 36px;
+    height: 24px;
     color: #bbbbbb;
     cursor: pointer;
     padding: 0px 5px;
@@ -202,7 +202,7 @@ body {
 #search-results .search-header-row .header-title {
     float: left;
     font-size: 16px;
-    line-height: 36px;
+    line-height: 24px;
 }
 
 #search-results .search-header-row .count {
@@ -213,7 +213,7 @@ body {
 #search-results .search-header-row .see-all {
     float: right;
     font-size: 14px;
-    line-height: 36px;
+    line-height: 24px;
 }
 
 #search-results .search-result-row {
