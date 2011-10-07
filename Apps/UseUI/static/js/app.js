@@ -101,6 +101,7 @@ $(document).ready(
                                 processResults('people', data.results['contact/full'], searchTerm);
                                 processResults('photos', data.results['photo/full'], searchTerm);
                                 processResults('links', otherData, searchTerm);
+                                processResults('tweets', data.results['timeline/twitter'], searchTerm);
 
                                 $('#search-results').show();
                                 $('.search').addClass('populated');
@@ -220,6 +221,14 @@ resultModifiers.links = function(newResult, obj) {
     newResult.children('.search-result').text(obj.title);
     newResult.children('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { top.location.href = obj.link; });
+    return newResult;
+}
+
+resultModifiers.tweets = function(newResult, obj) {
+    newResult.attr('title', obj.fullobject.text);
+    newResult.children('.search-result').text(obj.fullobject.text);
+    newResult.children('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
+    newResult.click(function() { top.location.href = 'https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str });
     return newResult;
 }
 
