@@ -14,8 +14,7 @@ $(function() {
         if (e.keyCode === 13) return false;
         // esc key
         if (e.keyCode === 27) {
-            $("input#search").val('');
-            return true;
+            return hack.loadAll();
         }
         if ($('.clicked').length != 0) {
             // down arrow
@@ -67,38 +66,10 @@ $(function() {
     var ListView = Backbone.View.extend({
         el: $('body'), // attaches `this.el` to an existing element.
 
-        _s: {
-            searchIndicator: "Search..."
-        },
-
-        sortType: "firstname",
-
         events: {
-            'keyup input#search' : 'loadSearch',
             'click #showAllLink' : 'loadAll',
-            'change #sort'       : 'sortChangeHandler',
-
             'hover #contacts li' : 'hoverContactHandler',
             'click #contacts li' : 'clickContactHandler',
-            'focus #search'      : 'focusSearchHandler',
-            'blur #search'       : 'blurSearchHandler'
-        },
-
-        sortChangeHandler: function() {
-            var sortVal = $("#sort").val();
-            var q = $("input#search").val();
-            log("change sort to " + sortVal);
-            this.sortType = sortVal;
-            if(q.length > 0 && q != this._s.searchIndicator)
-            {
-                this.render({q: q});
-                return;
-            }
-            this.offset = 0;
-            this.collection._reset();
-            console.log("Sort change");
-            this.load();
-            this.render();
         },
 
         hoverContactHandler: function() {
@@ -136,22 +107,6 @@ $(function() {
                     $('.detail').hide();
                 })
             return $('.clicked').removeClass('clicked');
-        },
-
-        focusSearchHandler: function() {
-            var searchEl = $("#search");
-            if (searchEl.val() == this._s.searchIndicator) {
-                searchEl.val("");
-                searchEl.removeClass("inactive");
-            }
-        },
-
-        blurSearchHandler: function() {
-            var searchEl = $("#search");
-            if (searchEl.val() == "") {
-                searchEl.val(this._s.searchIndicator);
-                searchEl.addClass("inactive");
-            }
         },
 
         addContact: function(contact) {
@@ -199,7 +154,7 @@ $(function() {
         },
 
         initialize: function(){
-            _.bindAll(this, 'sortChangeHandler', 'focusSearchHandler', 'blurSearchHandler', 'load', 'render', 'addContact', 'loadSearch'); // fixes loss of context for 'this' within methods
+            _.bindAll(this, 'load', 'render', 'addContact', 'loadSearch', 'loadSince', 'loadView'); // fixes loss of context for 'this' within methods
             that = this;
 
             that.collection = new AddressBook();
@@ -210,8 +165,7 @@ $(function() {
             } else if (window.location.hash.substr(0,5) == "#view") {
                 that.loadView(window.location.hash.substr(6));
             } else if (window.location.hash.substr(0,7) == "#search") {
-                $("input#search").val(window.location.hash.substr(8));
-                that.loadSearch()
+                that.loadSearch(window.location.hash.substr(8))
             } else {
                 that.loadAll();
             }
@@ -233,21 +187,16 @@ $(function() {
                 hack.load(function(){});
               }
             });
-            // TODO: clean up so the search is a proper view.
-            this.blurSearchHandler();
-
             this.collection._reset();
-            this.load(function() {
-                $("#searchBox").slideDown();
-            });
+            this.load(function() {});
         },
 
         loadSince: function loadSince(objId) {
             var self = this;
+            if(!hack) hack = this;
             $.getJSON("/Me/contacts/since", {id:objId}, function(contacts) {
                 $("#newCount").text(contacts.length + " New " + (contacts.length == 1 ? "Person" : "People"));
                 $("#newHeader").show();
-                $("#searchBox").hide();
                 for(var i in contacts) {
                     self.addContact(contacts[i]);
                 }
@@ -255,12 +204,12 @@ $(function() {
             })
         },
 
-        loadView: function loadSince(objId) {
+        loadView: function loadView(objId) {
             var self = this;
+            if(!hack) hack = this;
             $.getJSON("/Me/contacts/"+objId, function(contact) {
                 $("#newCount").text("Showing 1 Person");
                 $("#newHeader").show();
-                $("#searchBox").hide();
                 self.addContact(contact);
                 self.render();
             })
@@ -272,8 +221,6 @@ $(function() {
          */
         load: function load(callback) {
             var that = this;
-            var q = $("input#search").val();
-            if(q.length > 0 && q != this._s.searchIndicator) return callback();
             log("loading "+that.offset);
             if(!callback) callback = function(){};
             if(that.offset > total) return callback();
@@ -283,8 +230,8 @@ $(function() {
             var fields = "['_id','addresses','emails','name','phoneNumbers','photos','accounts.facebook.data.link'," +
                          "'accounts.foursquare.data.id','accounts.github.data.login','accounts.twitter.data.screen_name'," +
                          "'accounts.flickr.data.username','accounts.flickr.data.nsid']";
-            var sort = '\'{"'+that.sortType+'sort":1}\'';
-            var terms = "["+that.sortType+"sort:\"a\"+]";
+            var sort = '\'{"firstnamesort":1}\'';
+            var terms = "[firstnamesort:\"a\"+]";
 
             $.getJSON(baseURL, {offset:that.offset, limit: 50, fields: fields, sort: sort, terms: terms}, function(contacts) {
                 that.loading = false;
@@ -301,27 +248,17 @@ $(function() {
          * Load the contacts data from a search result
          * @param callback
          */
-        loadSearch: function loadSearch() {
+        loadSearch: function loadSearch(q) {
             var that = this;
-            var q = $("input#search").val();
-            if(that.searching == q) return;
-            that.searching = q;
+            if(!hack) hack = this;
+            $("#newCount").text("Showing Search Results");
+            $("#newHeader").show();
             log("searching "+q);
-            if(q == '')
-            {
-                that.sortChangeHandler();
-                return;
-            }
             that.collection._reset();
             var baseURL = '/Me/search/query';
             var type = 'contact/full*';
 
             $.getJSON(baseURL, {q: q + "*", type: type, limit: 20}, function(results) {
-                if(q != $("input#search").val())
-                {
-                    log("too slow");
-                    return;
-                }
                 for(var i in results.hits) {
                     that.addContact(results.hits[i].fullobject);
                 }
@@ -503,48 +440,13 @@ $(function() {
             // default to empty
             config = config || {};
             log("rendering "+config.q);
-            var filteredCollection,
-                contactsEl, contactTemplate, contactsHTML,
-                searchFilter, addContactToHTML;
+            var contactsEl, contactTemplate, contactsHTML, addContactToHTML;
 
             var that = this;
 
-            filteredCollection = this.collection;
             contactsEl = $("#contacts");
-            countEl = $("#count");
             contactsEl.html('');
             contactsHTML = "";
-
-            /**
-             * Truthy function for filtering down our collection based on config
-             * @param c {Object} Contact object
-             * @returns {Boolean} Pass or fail
-             */
-            searchFilter = function(c) {
-                // test to see if we have a query, otherwise everything passes
-                if (typeof(config.q) == "undefined") return true;
-                else config.q = (config.q+'').toLowerCase();
-
-                // make everything lowercase so search isn't case sensititive
-                var name = c.get('name');
-                if (name) name = name.toLowerCase();
-                var email = c.get('email');
-                if (email) email = email.toLowerCase();
-
-                //search by name
-                if (typeof(name) != "undefined" && name.indexOf(config.q) != -1) return true;
-
-                // search by email
-                if(typeof(email) != "undefined" && email.indexOf(config.q) != -1) return true;
-
-                // search by twitter handle
-                if(typeof(twitterHandle) != "undefined" && twitterHandle.indexOf(config.q) != -1) return true;
-
-                // search by facebook handle
-                if(typeof(facebookHandle) != "undefined" && facebookHandle.indexOf(config.q) != -1) return true;
-
-                return false;
-            };
 
             // I could put this in a script tag on the page,
             // but i kind of like being able to comment lines
@@ -585,25 +487,7 @@ $(function() {
                 }
             };
 
-            var tmp = filteredCollection.filter(searchFilter);
-
-            var sortFn = function(c) {
-                if (c.get(that.sortType)) {
-                    return c.get(that.sortType).toLowerCase();
-                }
-                return "zzz"; // force to the end of the sort
-            };
-
-            tmp = _.sortBy(tmp, sortFn);
-            _.each(tmp, addContactToHTML);
-
-            if(config.q)
-            {
-                countEl.html(tmp.length);
-            }else{
-                countEl.html(total);
-            }
-
+            _.each(that.collection.filter(function(){return true;}), addContactToHTML);
             if ($('.contact').length === 1) {
                 this.drawDetailsPane($('.contact').data('cid'));
                 $('.contact').addClass('clicked');
@@ -617,6 +501,8 @@ $(function() {
             }
         }
     });
+
     var listView = new ListView();
     var sideView = new SideView();
+
 });
