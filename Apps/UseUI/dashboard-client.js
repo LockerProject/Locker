@@ -119,7 +119,7 @@ app.get('/search', function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
 
-    var term = lutil.sanitize(req.param('searchterm'));
+    var term = lutil.sanitize(req.param('searchterm'))+"*";
     console.error('term: ' + term);
     var type = lutil.sanitize(req.param('type') || '');
     var results = [];
