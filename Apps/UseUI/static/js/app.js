@@ -210,13 +210,13 @@ resultModifiers.people = function(newResult, obj) {
     } else {
         newResult.find('.search-result-icon').attr('src', '/static/img/silhouette.png');
     }
-    newResult.click(function() { app = 'contacts'; renderApp('search-' + obj._id); });
+    newResult.click(function() { app = 'contacts'; renderApp('view-' + obj._id); });
 }
 
 resultModifiers.photos = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.title);
     newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
-    newResult.click(function() { app = 'photos'; renderApp('search-' + obj._id); });
+    newResult.click(function() { app = 'photos'; renderApp('view-' + obj._id); });
 }
 
 resultModifiers.links = function(newResult, obj) {
