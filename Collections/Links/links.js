@@ -42,7 +42,7 @@ app.get('/', function(req, res) {
 app.get('/state', function(req, res) {
     dataStore.getTotalLinks(function(err, countInfo) {
         if(err) return res.send(err, 500);
-        dataStore.getLastObjectID(function(err, lastObject) { 
+        dataStore.getLastObjectID(function(err, lastObject) {
             if(err) return res.send(err, 500);
             var objId = "000000000000000000000000";
             if (lastObject) objId = lastObject._id.toHexString();
@@ -91,10 +91,10 @@ app.get("/since", function(req, res) {
     }
 
     var results = [];
-    dataStore.getSince(req.query.id, function(link) { 
+    dataStore.getSince(req.query.id, function(link) {
         results.push(link);
     }, function() {
-        async.forEachSeries(results, function(link, callback) {   
+        async.forEachSeries(results, function(link, callback) {
             if (!link) return;
             link.encounters = [];
             dataStore.getEncounters({"link":link.link}, function(encounter) {
@@ -158,7 +158,7 @@ app.get('/embed', function(req, res) {
             js = JSON.parse(body);
         }catch(E){
             res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end(err);
+            res.end("error: "+E);
             return;
         }
         res.writeHead(200, {'Content-Type': 'application/json'});

@@ -11,7 +11,6 @@ var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
 var lutil = require('../../Common/node/lutil');
-var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
@@ -19,7 +18,7 @@ var async = require("async");
 var url = require("url");
 var fs = require('fs');
 var lmongoutil = require("lmongoutil");
-
+var locker;
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -110,9 +109,8 @@ function processTwitter(svcId, data, cb)
         if(!u || !u.url) return callback();
         var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
         embed.query = {url:u.url};
-        request.get({uri:url.format(embed)},function(err,resp,body){
-            if(err || !body) return callback();
-            var js = JSON.parse(body);
+        request.get({uri:url.format(embed), json:true},function(err,resp,js){
+            if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
 
             var photoInfo = {};
@@ -127,7 +125,23 @@ function processTwitter(svcId, data, cb)
             photoInfo.sources = [{service:svcId, id:data.id, data:data}];
             saveCommonPhoto(photoInfo, callback);
         });
-    },cb);
+    },function(){
+        if(!Array.isArray(data.entities.media)) return cb();
+        async.forEach(data.entities.media,function(m,callback){
+            if(!m || !m.media_url) return callback();
+            var photoInfo = {};
+            photoInfo.url = m.media_url;
+            if (m.sizes.large) {
+                photoInfo.height = m.sizes.large.h;
+                photoInfo.width = m.sizes.large.w;
+            }
+            photoInfo.title = data.text;
+            if (data.created_at) photoInfo.timestamp = new Date(data.created_at).getTime();
+            photoInfo.sourceLink = "http://twitter.com/#!/" + data.user.screen_name + "/status/" + data.id_str;
+            photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+            saveCommonPhoto(photoInfo, callback);
+        },cb);
+    });
 }
 
 // look at all checkins, see if any contain attached photos
@@ -148,7 +162,7 @@ function processFoursquare(svcId, data, cb)
         photoInfo.sourceLink = "http://foursquare.com/user/" + photo.user.id + "/checkin/" + data.id;
 
         photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
-        saveCommonPhoto(photoInfo, callback);
+        saveCommonPhoto(photoInfo, function(err, data) { photoInfo = data; callback(err);});
     }, function(err) { cb(err, photoInfo); });
 }
 
@@ -175,8 +189,11 @@ function saveCommonPhoto(photoInfo, cb) {
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             updateState();
+            var eventObj = {source: "photos", type: "photo", data:doc};
+            locker.event("photo", eventObj);
+            return cb(undefined, eventObj);
         }
-        cb(err, doc);
+        cb(err);
     });
 }
 
@@ -195,16 +212,18 @@ function createId(url, name) {
 
 var dataHandlers = {};
 dataHandlers["status/twitter"] = processTwitter;
+dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 
-exports.init = function(mongoCollection, mongo) {
+exports.init = function(mongoCollection, mongo, l) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     db = mongo.dbClient;
     lconfig.load('../../Config/config.json'); // ugh
+    locker = l;
 }
 
 exports.getTotalCount = function(callback) {
@@ -242,10 +261,7 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, function(err, doc) {
-        var eventObj = {source: "photos", type:eventBody.obj.type, data:doc};
-        return callback(undefined, eventObj);
-    });
+    handler(eventBody.via, data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {

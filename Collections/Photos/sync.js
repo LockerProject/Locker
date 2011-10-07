@@ -15,10 +15,10 @@ var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 var logger = require("../../Common/node/logger.js").logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo) {
+exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
     logger.debug("Photos sync init mongoCollection(" + mongoCollection + ")");
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection, mongo);
+    dataStore.init(mongoCollection, mongo, locker);
     exports.eventEmitter = new EventEmitter();
 }
 
@@ -30,30 +30,32 @@ var photoGatherers = {
 exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
-        cb(); // synchro delete, async/background reindex
-        locker.providers(['photo','checkin','status'], function(err, services) {
-            if (!services) return;
-            services.forEach(function(svc) {
-                var gathered = false;
-                var lastType = "";
-                svc.provides.forEach(function(providedType) {
-                    if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 || providedType.indexOf('checkin/foursquare') === 0 || providedType.indexOf('status/twitter') === 0)) {
-                        logger.debug(providedType);
-                        lastType = providedType;
-                        if (photoGatherers.hasOwnProperty(providedType)) {
-                            gathered = true;
-                            photoGatherers[providedType](svc.id);
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function(){
+            cb(); // synchro delete, async/background reindex
+            locker.providers(['photo','checkin','status'], function(err, services) {
+                if (!services) return;
+                services.forEach(function(svc) {
+                    var gathered = false;
+                    var lastType = "";
+                    svc.provides.forEach(function(providedType) {
+                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 || providedType.indexOf('checkin/foursquare') === 0 || providedType.indexOf('status/twitter') === 0)) {
+                            logger.debug(providedType);
+                            lastType = providedType;
+                            if (photoGatherers.hasOwnProperty(providedType)) {
+                                gathered = true;
+                                photoGatherers[providedType](svc.id);
+                            }
                         }
+                    });
+                    // Try the basic type gatherer
+                    if (!gathered) {
+                        basicPhotoGatherer(svc.id, lastType);
                     }
                 });
-                // Try the basic type gatherer
-                if (!gathered) {
-                    basicPhotoGatherer(svc.id, lastType);
-                }
             });
+            // also try twitter, fails out if none
+            gatherFromUrl("twitter","/getCurrent/tweets","status/twitter");
         });
-        // also try twitter, fails out if none
-        gatherFromUrl("twitter","/getCurrent/tweets","status/twitter");
     });
 }
 

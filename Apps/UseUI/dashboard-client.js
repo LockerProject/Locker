@@ -27,7 +27,9 @@ var locker;
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
-    app.listen(listenPort, callback);
+    bootState(function() {
+        app.listen(listenPort, callback);
+    });
 };
 
 var app = express.createServer();
@@ -177,12 +179,12 @@ function saveState()
 }
 
 // compare last-sent totals to current ones and send differences
-function bootState()
+function bootState(doneCb)
 {
     if(isSomeoneListening > 0) return; // only boot after we've been idle
-    logger.debug("booting state fresh");
+    //logger.debug("booting state fresh");
     async.forEach(['contacts','links','photos'],function(coll,callback){
-        logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
+        //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
@@ -207,7 +209,7 @@ function bootState()
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                console.log("Sent a bootup event",eventInfo[type]);
+                //console.log("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
@@ -221,12 +223,12 @@ function bootState()
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
         }
         io.sockets.emit("counts", counts);
+        doneCb();
     });
 }
 
 io.sockets.on('connection', function (socket) {
     logger.debug("++ got new socket.io connection");
-    bootState();
     isSomeoneListening++;
     var counts = {};
     for (var key in eventInfo) {

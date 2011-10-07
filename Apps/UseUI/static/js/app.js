@@ -409,7 +409,6 @@ function renderApp(fragment) {
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
     $.getJSON('apps', function(data) {
-        ready = false;
         if (!data[app]) return;
         appId = data[app].id;
         drawServices();
