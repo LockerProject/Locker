@@ -142,7 +142,6 @@ $(document).ready(
  * Search stuff
  */
 function search() {
-    console.log(searchWaiting);
     if (searchWaiting) {
         clearInterval(searchInterval);
         searchInterval = window.setTimeout(function() { search(); }, 100);
@@ -180,7 +179,6 @@ function processResults(name, results, query) {
         }
         updateHeader(name, query, results.length);
         for (var i = 0; i < 3; i++) {
-            console.log(i);
             if (results[i] !== undefined) {
                 var obj = results[i];
                 delete ids[obj._id];
@@ -424,7 +422,7 @@ function renderApp(fragment) {
                     if (data[app].url == $("#appFrame")[0].contentWindow.location) needReload = true;
                     $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("#"+fragment):""));
                     if (needReload) {
-                        console.log("Needs a reload");
+                        log("Needs a reload");
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
                     clearTimeout(timeout);
