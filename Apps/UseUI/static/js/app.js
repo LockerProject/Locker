@@ -230,6 +230,13 @@ resultModifiers.people = function(newResult, obj) {
 resultModifiers.photos = function(newResult, obj) {
     newResult.children('.search-result').text(obj.fullobject.title);
     newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
+    var img = newResult.find('.search-result-icon')[0];
+    img.onload = function() {
+        if (this.clientWidth > 36) {
+            var left = (this.clientWidth - 36) / 2;
+            $(this).css('left', left * -1);
+        }
+    }
     newResult.click(function() { app = 'photos'; renderApp('view-' + obj._id); });
 }
 
