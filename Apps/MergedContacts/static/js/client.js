@@ -194,7 +194,7 @@ $(function() {
                     newContact.set({flickr: contact.accounts.flickr[0]});
                 }
             }
-            
+
             this.collection.add(newContact); // add item to collection; view is updated via event 'add'
         },
 
@@ -207,10 +207,15 @@ $(function() {
             console.log(window.location);
             if (window.location.hash.substr(0,4) == "#new") {
                 that.loadSince(window.location.hash.substr(5));
+            } else if (window.location.hash.substr(0,5) == "#view") {
+                that.loadView(window.location.hash.substr(6));
+            } else if (window.location.hash.substr(0,7) == "#search") {
+                $("input#search").val(window.location.hash.substr(8));
+                that.loadSearch()
             } else {
                 that.loadAll();
             }
-            
+
             $.getJSON('/Me/contacts/state', {}, function(state) {
                 total = state.count;
                 $("#count").html(total);
@@ -249,6 +254,18 @@ $(function() {
                 self.render();
             })
         },
+
+        loadView: function loadSince(objId) {
+            var self = this;
+            $.getJSON("/Me/contacts/"+objId, function(contact) {
+                $("#newCount").text("Showing 1 Person");
+                $("#newHeader").show();
+                $("#searchBox").hide();
+                self.addContact(contact);
+                self.render();
+            })
+        },
+
         /**
          * Load the contacts data (get contacts)
          * @param callback
