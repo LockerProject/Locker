@@ -388,13 +388,18 @@ function getSourceForEvent(body) {
        source = splitType[0] + 's';
     } else {
         var via = body.via;
-        if(body.via.indexOf('/'))
-        { // shouldn't need this anymore
-            var splitVia = body.via.split('/');
+        source = via;
+        if(via.indexOf('/') > -1) { // shouldn't need this anymore
+            var splitVia = via.split('/');
             via = splitVia[1];
         }
-        var splitSource = body.obj.source.split('_');
-        source = via + '/' + splitSource[1];
+        if (via.indexOf("_") > -1) {
+            var splitSource = body.obj.source.split('_');
+            source = via + '/' + splitSource[1];
+        }
+        if (via == "twitter" && body.type.indexOf("timeline") > -1) {
+            source = "twitter/timeline";
+        }
     }
     return source;
     // END FIXME
