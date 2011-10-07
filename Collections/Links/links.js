@@ -66,7 +66,8 @@ app.get('/search', function(req, res) {
         if(err || !results || results.length == 0) return res.send([]);
         var map = {};
         var links = [];
-        for(var i=0; i < results.length; i++) links.push(results[i]._id);
+        var len = (req.query["limit"]) ? req.query["limit"] : results.length;
+        for(var i=0; i < len; i++) links.push(results[i]._id);
         dataStore.getLinks({"link":{$in: links}}, function(link){
             link.encounters = [];
             map[link.link] = link;
@@ -117,10 +118,10 @@ app.get("/since", function(req, res) {
     }
 
     var results = [];
-    dataStore.getSince(req.query.id, function(link) { 
+    dataStore.getSince(req.query.id, function(link) {
         results.push(link);
     }, function() {
-        async.forEachSeries(results, function(link, callback) {   
+        async.forEachSeries(results, function(link, callback) {
             if (!link) return;
             link.encounters = [];
             dataStore.getEncounters({"link":link.link}, function(encounter) {

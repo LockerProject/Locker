@@ -141,44 +141,39 @@ $(document).ready(
 /*
  * Search stuff
  */
+var searchTerm;
 function search() {
-    if (searchWaiting) {
-        clearInterval(searchInterval);
-        searchInterval = window.setTimeout(function() { search(); }, 100);
-        return;
-    }
-    searchWaiting = true;
-    var searchTerm = $('.search')[0].value;
-    $.get('search', {searchterm: searchTerm}, function(data) {
-        $.get('/Me/links/search', {q: searchTerm}, function(otherData) {
-            if ($('.search')[0].value.length !== 0) {
-                processResults('people', data.results['contact/full'], searchTerm);
-                processResults('photos', data.results['photo/full'], searchTerm);
-                processResults('links', otherData, searchTerm);
-                processResults('tweets', data.results['timeline/twitter'], searchTerm);
-
-                if ($('.search-result-row:not(.template)').length > 0) {
-                    $('#search-results').show();
-                    $('.search').addClass('populated');
-                    $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
-                } else {
-                    $('#search-results').hide();
-                    $('.search').removeClass('populated');
-                }
-                searchWaiting = false;
-            }
-        });
+    var q = searchTerm = $('.search')[0].value;
+    var baseURL = '/Me/search/query';
+    var star = (q.length < 3 || q.substr(-1) == ' ') ? "" : "*";
+    $.get(baseURL, {q: q + star, type: 'contact/full*', limit: 3}, function(results) {
+        processResults('people', resXform(results), q);
+    });
+    $.get(baseURL, {q: q + star, type: 'photo/full*', limit: 3}, function(results) {
+        processResults('photos', resXform(results), q);
+    });
+    $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {
+        processResults('tweets', resXform(results), q);
+    });
+    $.get('/Me/links/search', {q: q + star, limit: 3}, function(otherData) {
+        processResults('links', otherData, q);
     });
 }
 
+function resXform(res) {
+    if(!res || !res.hits || !res.hits.length) return [];
+    return res.hits;
+}
+
 function processResults(name, results, query) {
+    if(query != searchTerm) return; // bail if search changed!
     var ids = {};
     if (results !== undefined && results.length > 0) {
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
-        updateHeader(name, query, results.length);
-        for (var i = 0; i < 3; i++) {
+        updateHeader(name, query);
+        for (var i = 0; i < results.length; i++) {
             if (results[i] !== undefined) {
                 var obj = results[i];
                 delete ids[obj._id];
@@ -197,12 +192,20 @@ function processResults(name, results, query) {
         $('.search-header-row.' + name).hide();
         $('.search-result-row.' + name).remove();
     }
+
+    if ($('.search-result-row:not(.template)').length > 0) {
+        $('#search-results').show();
+        $('.search').addClass('populated');
+        $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
+    } else {
+        $('#search-results').hide();
+        $('.search').removeClass('populated');
+    }
 }
 
-function updateHeader(name, query, count) {
+function updateHeader(name, query) {
     var header = $('.search-header-row.' + name);
-    var msg = (count < 10) ? '(' + count + ' total)' : '(10+ total)';
-    header.find('span').text(msg);
+    header.find('span').text("");
     header.show();
     header.unbind('click');
     header.click(function() { app = $(this).data('app'); renderApp('search-' + query); });
