@@ -35,11 +35,17 @@ exports.gatherPhotos = function(cb) {
             locker.providers(['photo','checkin','status'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
+                    if(svc.handle === 'photos') return;
                     var gathered = false;
                     var lastType = "";
+                    
+                    // If twitter, go off book and hit tweets
+                    if(svc.handle === 'twitter')
+                        gatherFromUrl(svc.id,"/getCurrent/tweets","status/twitter");
                     svc.provides.forEach(function(providedType) {
-                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 || providedType.indexOf('checkin/foursquare') === 0 || providedType.indexOf('status/twitter') === 0)) {
-                            logger.debug(providedType);
+                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 
+                         || providedType.indexOf('checkin/foursquare') === 0 
+                         || providedType.indexOf('status/twitter') === 0)) {
                             lastType = providedType;
                             if (photoGatherers.hasOwnProperty(providedType)) {
                                 gathered = true;
@@ -53,8 +59,6 @@ exports.gatherPhotos = function(cb) {
                     }
                 });
             });
-            // also try twitter, fails out if none
-            gatherFromUrl("twitter","/getCurrent/tweets","status/twitter");
         });
     });
 }
