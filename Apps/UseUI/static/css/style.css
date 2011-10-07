@@ -246,7 +246,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     display: block;
-    max-width: 36px;
+    width: 36px;
 }
 
 .app-page .header {
