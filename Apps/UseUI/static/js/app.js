@@ -5,6 +5,9 @@ var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
 var ready = false;
+var searchWaiting = false;
+var searchInterval;
+var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.template)';
 
 $(document).ready(
     function() {
@@ -48,14 +51,13 @@ $(document).ready(
             return false;
         });
 
-        var selector = '.search-header-row:not(.template),.search-result-row:not(.template)';
 
-        $('#search-results').delegate(selector, 'mouseover', function() {
+        $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.hightlighted').removeClass('highlighted');
             $(this).addClass('highlighted');
-        }).delegate(selector, 'mouseleave', function() {
+        }).delegate(searchSelector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
-        }).delegate(selector, 'click', function() {
+        }).delegate(searchSelector, 'click', function() {
             $('#search-results').hide();
         });
 
@@ -94,26 +96,7 @@ $(document).ready(
                     $('#search-results').hide();
                     $('.search').removeClass('populated');
                 } else {
-                    var searchTerm = $('.search')[0].value;
-                    $.get('search', {searchterm: searchTerm}, function(data) {
-                        $.get('/Me/links/search', {q: searchTerm}, function(otherData) {
-                            if ($('.search')[0].value.length !== 0) {
-                                processResults('people', data.results['contact/full'], searchTerm);
-                                processResults('photos', data.results['photo/full'], searchTerm);
-                                processResults('links', otherData, searchTerm);
-                                processResults('tweets', data.results['timeline/twitter'], searchTerm);
-
-                                if ($('.search-result-row:not(.template)').length > 0) {
-                                    $('#search-results').show();
-                                    $('.search').addClass('populated');
-                                    $('#search-results').children(selector).first('.search-result-row').addClass('highlighted');
-                                } else {
-                                    $('#search-results').hide();
-                                    $('.search').removeClass('populated');
-                                }
-                            }
-                        });
-                    });
+                    search();
                 }
             }
         });
@@ -158,6 +141,36 @@ $(document).ready(
 /*
  * Search stuff
  */
+function search() {
+    console.log(searchWaiting);
+    if (searchWaiting) {
+        clearInterval(searchInterval);
+        searchInterval = window.setTimeout(function() { search(); }, 100);
+        return;
+    }
+    searchWaiting = true;
+    var searchTerm = $('.search')[0].value;
+    $.get('search', {searchterm: searchTerm}, function(data) {
+        $.get('/Me/links/search', {q: searchTerm}, function(otherData) {
+            if ($('.search')[0].value.length !== 0) {
+                processResults('people', data.results['contact/full'], searchTerm);
+                processResults('photos', data.results['photo/full'], searchTerm);
+                processResults('links', otherData, searchTerm);
+                processResults('tweets', data.results['timeline/twitter'], searchTerm);
+
+                if ($('.search-result-row:not(.template)').length > 0) {
+                    $('#search-results').show();
+                    $('.search').addClass('populated');
+                    $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
+                } else {
+                    $('#search-results').hide();
+                    $('.search').removeClass('populated');
+                }
+                searchWaiting = false;
+            }
+        });
+    });
+}
 
 function processResults(name, results, query) {
     var ids = {};
