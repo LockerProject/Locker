@@ -11,7 +11,6 @@ var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
 var lutil = require('../../Common/node/lutil');
-var locker = require("../../Common/node/locker");
 var logger = require("logger").logger;
 var request = require("request");
 var crypto = require("crypto");
@@ -19,11 +18,7 @@ var async = require("async");
 var url = require("url");
 var fs = require('fs');
 var lmongoutil = require("lmongoutil");
-
 var locker;
-exports.init = function(l){
-    locker = l;
-}
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -114,9 +109,8 @@ function processTwitter(svcId, data, cb)
         if(!u || !u.url) return callback();
         var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
         embed.query = {url:u.url};
-        request.get({uri:url.format(embed)},function(err,resp,body){
-            if(err || !body) return callback();
-            var js = JSON.parse(body);
+        request.get({uri:url.format(embed), json:true},function(err,resp,js){
+            if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
 
             var photoInfo = {};
@@ -168,7 +162,7 @@ function processFoursquare(svcId, data, cb)
         photoInfo.sourceLink = "http://foursquare.com/user/" + photo.user.id + "/checkin/" + data.id;
 
         photoInfo.sources = [{service:svcId, id:photo.id, data:data}];
-        saveCommonPhoto(photoInfo, callback);
+        saveCommonPhoto(photoInfo, function(err, data) { photoInfo = data; callback(err);});
     }, function(err) { cb(err, photoInfo); });
 }
 
@@ -197,8 +191,9 @@ function saveCommonPhoto(photoInfo, cb) {
             updateState();
             var eventObj = {source: "photos", type: "photo", data:doc};
             locker.event("photo", eventObj);
+            return cb(undefined, eventObj);
         }
-        cb(err, doc);
+        cb(err);
     });
 }
 
@@ -223,11 +218,12 @@ dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 
-exports.init = function(mongoCollection, mongo) {
+exports.init = function(mongoCollection, mongo, l) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     db = mongo.dbClient;
     lconfig.load('../../Config/config.json'); // ugh
+    locker = l;
 }
 
 exports.getTotalCount = function(callback) {
