@@ -20,6 +20,10 @@ var url = require("url");
 var fs = require('fs');
 var lmongoutil = require("lmongoutil");
 
+var locker;
+exports.init = function(l){
+    locker = l;
+}
 
 function processTwitPic(svcId, data, cb) {
     if (!data.id) {
@@ -127,7 +131,23 @@ function processTwitter(svcId, data, cb)
             photoInfo.sources = [{service:svcId, id:data.id, data:data}];
             saveCommonPhoto(photoInfo, callback);
         });
-    },cb);
+    },function(){
+        if(!Array.isArray(data.entities.media)) return cb();
+        async.forEach(data.entities.media,function(m,callback){
+            if(!m || !m.media_url) return callback();
+            var photoInfo = {};
+            photoInfo.url = m.media_url;
+            if (m.sizes.large) {
+                photoInfo.height = m.sizes.large.h;
+                photoInfo.width = m.sizes.large.w;
+            }
+            photoInfo.title = data.text;
+            if (data.created_at) photoInfo.timestamp = new Date(data.created_at).getTime();
+            photoInfo.sourceLink = "http://twitter.com/#!/" + data.user.screen_name + "/status/" + data.id_str;
+            photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+            saveCommonPhoto(photoInfo, callback);
+        },cb);
+    });
 }
 
 // look at all checkins, see if any contain attached photos
@@ -175,6 +195,8 @@ function saveCommonPhoto(photoInfo, cb) {
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             updateState();
+            var eventObj = {source: "photos", type: "photo", data:doc};
+            locker.event("photo", eventObj);
         }
         cb(err, doc);
     });
@@ -195,6 +217,7 @@ function createId(url, name) {
 
 var dataHandlers = {};
 dataHandlers["status/twitter"] = processTwitter;
+dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
@@ -242,10 +265,7 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, function(err, doc) {
-        var eventObj = {source: "photos", type:eventBody.obj.type, data:doc};
-        return callback(undefined, eventObj);
-    });
+    handler(eventBody.via, data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {
