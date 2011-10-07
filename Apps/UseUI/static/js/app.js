@@ -103,9 +103,14 @@ $(document).ready(
                                 processResults('links', otherData, searchTerm);
                                 processResults('tweets', data.results['timeline/twitter'], searchTerm);
 
-                                $('#search-results').show();
-                                $('.search').addClass('populated');
-                                $('#search-results').children(selector).first('.search-result-row').addClass('highlighted');
+                                if ($('.search-result-row:not(.template)').length > 0) {
+                                    $('#search-results').show();
+                                    $('.search').addClass('populated');
+                                    $('#search-results').children(selector).first('.search-result-row').addClass('highlighted');
+                                } else {
+                                    $('#search-results').hide();
+                                    $('.search').removeClass('populated');
+                                }
                             }
                         });
                     });
