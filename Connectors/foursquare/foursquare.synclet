@@ -17,6 +17,8 @@
     ],
     "provides": [
         "contact/foursquare",
+        "profile/foursquare",
+        "recents/foursquare",
         "checkin/foursquare"
     ],
     "provider": "foursquare",

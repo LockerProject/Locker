@@ -83,6 +83,15 @@ locker.get("/providers", function(req, res) {
     res.end(JSON.stringify(services));
 });
 
+locker.get("/provides", function(req, res) {
+    var services = serviceManager.serviceMap().installed;
+    var synclets = syncManager.synclets().installed;
+    var ret = {};
+    for(var i in services) ret[i] = services[i].provides;
+    for(var i in synclets) ret[i] = synclets[i].provides;
+    res.send(ret);
+});
+
 locker.get("/available", function(req, res) {
     var handle = req.param('handle');
     if(!handle) {
