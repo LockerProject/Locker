@@ -65,6 +65,11 @@ $(document).ready(
         $('.blur').click(function() {
             return false;
         });
+
+        $('.search').blur(function(){
+            $('#search-results').fadeOut();
+        });
+
         $('.search').keyup(function(e) {
 /*            if (e.keyCode == 13) {
                 $('.highlighted').click();
