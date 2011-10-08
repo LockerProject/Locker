@@ -9,10 +9,11 @@
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 
 // in the future we'll probably need a visitCollection too
-var placeCollection;
+var placeCollection, locker;
 
-exports.init = function(pCollection) {
+exports.init = function(pCollection, l) {
     placeCollection = pCollection;
+    locker = l;
 }
 
 exports.clear = function(callback) {
@@ -70,8 +71,10 @@ exports.addPlace = function(place, callback) {
     var options = {safe:true, upsert:true, new: true};
     placeCollection.findAndModify({"_hash":_hash}, [['_id','asc']], {$set:place}, options, function(err, doc) {
         delete doc["_hash"];
+        var eventObj = {source: "photos", type: "photo", data:doc};
+        locker.event("photo", eventObj);
         callback(err, doc);
     });
 }
 
-    
+
