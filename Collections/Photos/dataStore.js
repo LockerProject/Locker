@@ -77,7 +77,7 @@ function processShared(svcId, data, cb) {
 }
 
 function getFlickrItem(photoObject, field) {
-    return photoObject[field + '_o'] || photoObject[field + '_l'] || photoObject[field + '_z'] || 
+    return photoObject[field + '_o'] || photoObject[field + '_l'] || photoObject[field + '_z'] ||
            photoObject[field + '_m'] || photoObject[field + '_s'] || photoObject[field + '_t'];
 }
 
@@ -119,7 +119,7 @@ function processTwitter(svcId, data, cb)
         request.get({uri:url.format(embed), json:true},function(err,resp,js){
             if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
-            
+
             console.log('found twitter photo! ', u.url);
             var photoInfo = {};
             photoInfo.url = js.url;
@@ -133,7 +133,7 @@ function processTwitter(svcId, data, cb)
             photoInfo.sources = [{service:svcId, id:data.id, data:data}];
             saveCommonPhoto(photoInfo, callback);
         });
-    },function(){
+    },function(){ // example: https://api.twitter.com/1/statuses/show/121716701338402817.json?include_entities=true
         if(!Array.isArray(data.entities.media)) return cb();
         async.forEach(data.entities.media,function(m,callback){
             if(!m || !m.media_url) return callback();
