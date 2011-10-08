@@ -18,6 +18,9 @@ exports.init = function(lCollection, eCollection, qCollection) {
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
     encounterCollection = eCollection;
+    encounterCollection.ensureIndex({"link":1},{background:true},function() {});
+    encounterCollection.ensureIndex({"orig":1},{background:true},function() {});
+    encounterCollection.ensureIndex({"_hash":1},{background:true},function() {});
     queueCollection = qCollection;
 }
 
