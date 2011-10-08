@@ -459,6 +459,7 @@ locker.get('/', function(req, res) {
 });
 
 function proxied(method, svc, ppath, req, res, buffer) {
+    svc.last = new Date().getTime();
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
     console.log("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
@@ -479,6 +480,7 @@ exports.startService = function(port, cb) {
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
     serviceManager.spawn(lconfig.ui, function() {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+        dashboard.instance.isDashboard = true;
         console.log('ui spawned');
     });
     locker.listen(port, function() {

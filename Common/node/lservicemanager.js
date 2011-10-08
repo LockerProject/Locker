@@ -431,7 +431,7 @@ exports.spawn = function(serviceId, callback) {
                 svc.pid = svc.startingPid;
                 delete svc.startingPid;
                 console.log(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
-                svc.starting.forEach(function(cb) {
+                if(svc.starting) svc.starting.forEach(function(cb) {
                     cb.call();
                     // See if it ended whilst running the callbacks
                     if (!svc.hasOwnProperty("pid") && svc.starting.length > 0) {
@@ -474,6 +474,20 @@ exports.spawn = function(serviceId, callback) {
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
+    svc.last = new Date().getTime();
+    setTimeout(function() { quiesce(svc); }, 25000);
+}
+
+function quiesce(svc)
+{
+    if(!svc || !svc.pid || svc.isDashboard) return;
+    var now = new Date().getTime();
+    if(svc.last > 0 && now - svc.last < 20000) return setTimeout(function() { quiesce(svc); }, 25000);
+    try {
+        console.log("Quiescing idle service " + svc.id + " at pid " + svc.pid);
+        process.kill(svc.pid, "SIGINT");
+    } catch(e) {
+    }
 }
 
 /**

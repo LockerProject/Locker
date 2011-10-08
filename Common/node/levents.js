@@ -45,6 +45,8 @@ exports.makeRequest = function(httpOpts, body, callback) {
 
 exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
     logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+    var fromService = serviceManager.metaInfo(fromServiceId);
+    if(fromService) fromService.last = new Date().getTime();
     // Short circuit when no one is listening
     if (!eventListeners.hasOwnProperty(serviceType)) return;
     var newEventInfo = {
