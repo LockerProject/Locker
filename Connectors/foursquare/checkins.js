@@ -36,6 +36,7 @@ var syncCheckins = function (callback) {
     getMe(auth.accessToken, function(err, resp, data) {
         try {
             profile = JSON.parse(data).response.user;
+            if(!profile || !profile.id) throw new Error("no profile id");
         } catch(err) {
             return callback('error attempting to get profile data - ' + data);
         }
