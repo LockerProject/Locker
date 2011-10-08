@@ -103,6 +103,15 @@ suite.next().suite.addBatch({
             assert.include(topic.body, "lastId");
         }
     }
+}).addBatch({
+    "limit" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/links/search?q=singly&limit=100"}, this.callback);
+        },
+        "obeys limit":function(topic) {
+            assert.include(topic.body, "singly");
+        }
+    }
 });
 
 

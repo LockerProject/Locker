@@ -66,7 +66,7 @@ app.get('/search', function(req, res) {
         if(err || !results || results.length == 0) return res.send([]);
         var map = {};
         var links = [];
-        var len = (req.query["limit"]) ? req.query["limit"] : results.length;
+        var len = (req.query["limit"] < results.length) ? req.query["limit"] : results.length;
         for(var i=0; i < len; i++) links.push(results[i]._id);
         dataStore.getLinks({"link":{$in: links}}, function(link){
             link.encounters = [];
