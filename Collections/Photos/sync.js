@@ -30,16 +30,23 @@ var photoGatherers = {
 exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function(){
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function() {
             cb(); // synchro delete, async/background reindex
             locker.providers(['photo','checkin','status'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
+                    console.error("DEBUG: svc", svc);
+                    if(svc.handle === 'photos') return;
                     var gathered = false;
                     var lastType = "";
+                    
+                    // If twitter, go off book and hit tweets
+                    if(svc.provider === 'twitter')
+                        gatherFromUrl(svc.id,"/getCurrent/tweets","status/twitter");
                     svc.provides.forEach(function(providedType) {
-                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 || providedType.indexOf('checkin/foursquare') === 0 || providedType.indexOf('status/twitter') === 0)) {
-                            logger.debug(providedType);
+                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 
+                         || providedType.indexOf('checkin/foursquare') === 0 
+                         || providedType.indexOf('status/twitter') === 0)) {
                             lastType = providedType;
                             if (photoGatherers.hasOwnProperty(providedType)) {
                                 gathered = true;
@@ -53,8 +60,6 @@ exports.gatherPhotos = function(cb) {
                     }
                 });
             });
-            // also try twitter, fails out if none
-            gatherFromUrl("twitter","/getCurrent/tweets","status/twitter");
         });
     });
 }
@@ -83,7 +88,7 @@ function gatherFromUrl(svcId, url, type) {
             if (!arr) throw("No data");
             dataStore.addData(svcId, type, arr);
         } catch (E) {
-            console.error("Error processing photos from " + svcId + ": " + E);
+            console.error("Error processing photos from " + svcId + url + ": " + E);
             console.error('Got back: ' + body);
         }
     });
