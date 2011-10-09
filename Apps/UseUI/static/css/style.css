@@ -363,6 +363,48 @@ body {
     cursor: pointer;
 }
 
+
+#viewers {
+    width:400px;
+    height:550px;
+    z-index:9999;
+    position:absolute;
+    top:70px;
+    left:0px;
+    background-color: #eee;
+    opacity:0.93;
+}
+#viewers-title {
+    margin-top:20px;
+    margin-left:20px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.viewer {
+    font-size:16px;
+    margin-top:20px;
+    margin-left:20px;
+    margin-right:20px;
+}
+
+.viewer-icon {
+    width:28px;
+    height:28px;
+    float:left;
+}
+
+.viewer-author-link {
+    margin-top:6px;
+    float:right;
+}
+
+.viewer-link.name {
+    margin-left:10px;
+    position:relative;
+    top:6px;
+}
+
 .gray {
     color: #555;
 }
