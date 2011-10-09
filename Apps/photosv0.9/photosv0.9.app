@@ -7,5 +7,6 @@
     "handle":"photosv09",
     "uses":["facebook", "twitter", "foursquare", "flickr"],
     "autoInstall":true,
-    "viewer":"photos"
+    "author":"Singly",
+    "viewer": "photos"
 }

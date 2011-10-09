@@ -7,5 +7,6 @@
     "uses":["facebook", "twitter", "foursquare", "gcontacts", "github", "flickr", "tumblr"],
     "autoInstall":true,
     "run":"node contacts.js",
-    "viewer":"contacts"
+    "viewer":"contacts",
+    "author":"Singly"
 }

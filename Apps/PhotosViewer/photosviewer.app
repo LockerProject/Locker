@@ -7,5 +7,6 @@
     "handle":"photosviewer",
     "uses":["facebook", "twitter", "foursquare", "flickr", "gplus"],
     "autoInstall":true,
+    "author":"Singly",
     "viewer":"photos"
 }
