@@ -94,6 +94,8 @@ function showGritter(name, count, lastId) {
         // image:img,
         time: 5000
       });
+    } else if(name === 'repo') {
+        
     } else {
       var prettyName = name;
       if(name == 'contact') {
@@ -132,6 +134,10 @@ socket.on('event', function (body) {
 socket.on('newservice', function(name) {
   log('got new service: ', name);
   queueGritter('newservice', name);
+});
+
+socket.on('repo', function(repo) {
+    console.log('repo', repo);
 });
 
 socket.on("counts", function(counts) {

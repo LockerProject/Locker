@@ -391,7 +391,7 @@ function addData (collection, mongoId, data, info, eventType, callback) {
     var q = async.queue(function(object, cb) {
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + eventType, "missing key: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 cb();
                 return;

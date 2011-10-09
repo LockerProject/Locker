@@ -133,15 +133,9 @@ exports.alive = false;
         gitHead.stdout.on('data', function(data) {
             fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), JSON.stringify(data.toString()));
         });
-
+        
         // look for available things
-        lconfig.scannedDirs.forEach(function(dirToScan) {
-            console.log(dirToScan);
-            var installable = true;
-            if (dirToScan === "Collections") installable = false;
-            serviceManager.scanDirectory(dirToScan, installable);
-        });
-
+        serviceManager.scanDirectories();
         syncManager.scanDirectory("Connectors");
 
         // look for existing things

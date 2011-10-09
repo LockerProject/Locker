@@ -5,6 +5,10 @@
         {
             "frequency": 3600,
             "name": "users"
+        },
+        {
+            "frequency": 3600,
+            "name": "repos"
         }
     ],
     "provides": [

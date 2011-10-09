@@ -1,7 +1,8 @@
 var GitHubApi = require("github").GitHubApi
+  , request = require('request')
   , profile = []
   , repos = []
-  , contactWatchers = []
+  // , contactWatchers = []
   , github = new GitHubApi()
   , auth
   , ids = {}
@@ -15,8 +16,8 @@ exports.sync = function(processInfo, cb) {
             if (err) console.error(err);
             var responseObj = {data : {}, config: {ids: ids}};
             responseObj.data.profile = [{obj: JSON.parse(profile)}];
-            responseObj.data.repos = repos;
-            responseObj.data['contact/watchers'] = contactWatchers;
+            responseObj.data.repo = repos;
+            // responseObj.data['contact/watchers'] = contactWatchers;
             cb(err, responseObj);
         });
     });
@@ -41,12 +42,22 @@ exports.syncRepos = function(callback) {
             ids[js.id] = [];
             syncWatchers(js.id, function(err, watchers) {
                 js.watchers = watchers;
-                repos.push({obj: js, type: 'new', timestamp: new Date()});
-                for(var i in js.watchers) {
-                    contactWatchers.push({obj:{login:js.watchers[i], repo:js.id}});
-                    ids[js.id].push(js.watchers[i]);
-                }
-                parseRepo(data);
+                getTree(js.id, function(err, tree) {
+                    if(!err && tree)
+                        js.tree = tree;
+                    else {
+                        console.error("DEBUG: err", err);
+                        console.error("DEBUG: tree", tree);
+                    }
+                    repos.push({obj: js, type: 'new', timestamp: new Date()});
+                    for(var i in js.watchers) {
+                        // contactWatchers.push({obj:{login:js.watchers[i], repo:js.id}});
+                        ids[js.id].push(js.watchers[i]);
+                    }
+                    syncRaw(js, function() {
+                        parseRepo(data);
+                    });
+                })
             });
         } else {
             return callback();
@@ -69,4 +80,52 @@ function getIDFromUrl(url) {
     if(typeof url !== 'string')
         return url;
     return url.substring(url.lastIndexOf('/', url.lastIndexOf('/') - 1) + 1);
+}
+
+function getTree(repo, callback) {
+    request.get({uri:"https://api.github.com/repos/" + repo + "/git/trees/HEAD", json:true}, 
+    function(err, resp, tree) {
+        callback(err, tree);
+    });
+}
+
+
+// watchout, WIP
+
+function syncRaw(repo, callback) {
+    findApp(repo, function(app) {
+        if(app)
+            clone(repo.name, repo.url + '.git', callback);
+        else
+            callback();
+    });
+}
+
+function findApp(repo, callback, i) {
+    if(!i) i = 0;
+    var treei = repo.tree.tree[i];
+    if(!treei)
+        return callback();
+    var path = treei.path;
+    if(treei.type === 'blob' && path.indexOf('.app') == path.length - 4) {
+        request.get({uri:treei.url, json:true}, function(err, resp, json) {
+            console.error("DEBUG: json", json);
+            try {
+                var app = JSON.parse(new Buffer(json.content, 'base64').toString());
+                if(app.title && app.viewer && app.static && app.uses)
+                    return callback(app);
+            } catch(err) {
+                console.error("DEBUG: err", err);
+            }
+        });
+    } else {
+        findApp(repo, callback, i+1);
+    }
+}
+
+var spawn = require('child_process').spawn;
+
+function clone(name, url, callback) {
+    var clone = spawn('git', ['clone', url, 'repos/' + name]);
+    clone.on('exit', callback);
 }

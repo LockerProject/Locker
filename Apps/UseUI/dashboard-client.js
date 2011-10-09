@@ -83,7 +83,9 @@ app.get('/apps', function(req, res) {
 
 app.get('/viewers', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify(viewers));
+    getViewers(function() {
+        res.end(JSON.stringify(viewers));
+    });
 });
 
 app.post('/setViewer', function(req, res) {
@@ -128,22 +130,28 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         console.dir(req.body);
-        var evInfo = eventInfo[req.body.type];
-        if (evInfo.timer) {
-            clearTimeout(evInfo.timer);
+        
+        if(req.body.type === 'repo/github' || req.body.type === 'repos/github') {
+            console.error("DEBUG: req.body", req.body);
+            io.sockets.emit('repo', req.body);
+        } else {
+            var evInfo = eventInfo[req.body.type];
+            if (evInfo.timer) {
+                clearTimeout(evInfo.timer);
+            }
+            evInfo.timer = function(ev){ evInfo = ev; return setTimeout(function() {
+                // stuff changed, go get the newest total to see if it did
+                request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
+                    if(!body || !body.count || evInfo.count == body.count) return;
+                    io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
+                    console.log("Sent events, setting to ",body);
+                    evInfo.count = body.count;
+                    evInfo.updated = body.updated;
+                    evInfo.lastId = body.lastId;
+                    saveState();
+                });
+            }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
         }
-        evInfo.timer = function(ev){ evInfo = ev; return setTimeout(function() {
-            // stuff changed, go get the newest total to see if it did
-            request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
-                if(!body || !body.count || evInfo.count == body.count) return;
-                io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
-                console.log("Sent events, setting to ",body);
-                evInfo.count = body.count;
-                evInfo.updated = body.updated;
-                evInfo.lastId = body.lastId;
-                saveState();
-            });
-        }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
     }
 });
 
@@ -203,6 +211,7 @@ function bootState(doneCb)
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
         locker.listen('newservice', '/new');
+        locker.listen('repo/github', "/event");
         var counts = {};
         for (var key in eventInfo) {
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
@@ -213,7 +222,7 @@ function bootState(doneCb)
 }
 
 function getViewers(callback) {
-    locker.map(function(err, map) {
+    locker.updateMap(function(err, map) {
         if(err) {
             
         } else {
