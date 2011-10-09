@@ -135,6 +135,19 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
+        
+        var viewersHidden = true;
+        $("#viewers-hide-show").click(function() {
+            if(viewersHidden) {
+                $("#viewers").animate({"left":"0px"});
+                $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+                viewersHidden = false;
+            } else {
+                $("#viewers").animate({"left":"-320px"});
+                $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+                viewersHidden = true;
+            }
+        });
 
         renderApp();
 
