@@ -9,9 +9,10 @@ var logger = require(__dirname + "/../../Common/node/logger").logger;
 // simply expand a given url
 exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
-    longus.expand(arg, function(u){
-        if(!u) return cbDone("invalid url")
-        cbEach(u);
+    longus.expand(arg, function(a){
+        if(!a || !a.url) return cbDone("invalid url")
+        if(a.err) console.error("error unshortening url: "+a.err);
+        cbEach(a.url);
         cbDone();
     });
 }
