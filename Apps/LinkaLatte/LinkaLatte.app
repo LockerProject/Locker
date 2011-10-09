@@ -6,5 +6,6 @@
     "static":"true",
     "uses":["facebook", "twitter", "foursquare", "gcontacts", "github"],
     "autoInstall":true,
-    "handle":"linkalatte"
+    "handle":"linkalatte",
+    "viewer":"links"
 }

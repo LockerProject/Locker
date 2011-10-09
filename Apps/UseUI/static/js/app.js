@@ -8,6 +8,7 @@ var ready = false;
 var searchWaiting = false;
 var searchInterval;
 var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.template)';
+var externalBase = window.location.origin;
 
 $(document).ready(
     function() {
@@ -415,9 +416,10 @@ function renderApp(fragment) {
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
-    $.getJSON('apps', function(data) {
-        if (!data[app]) return;
-        appId = data[app].id;
+    $.getJSON('viewers', function(data) {
+        if (!data.selected[app]) return;
+        appId = data.selected[app];
+        var viewerUrl = externalBase + '/Me/' + appId + '/';
         drawServices();
         (function poll (data) {
             $.getJSON("/Me/" + app + "/state", function(state) {
@@ -425,8 +427,8 @@ function renderApp(fragment) {
                 if (ready) {
                     // log('clearing timeout');
                     var needReload = false;
-                    if (!fragment && data[app].url == $("#appFrame")[0].contentWindow.location) needReload = true;
-                    $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
+                    if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location) needReload = true;
+                    $("#appFrame")[0].contentWindow.location.replace(viewerUrl + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
                     if (needReload) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
@@ -435,7 +437,7 @@ function renderApp(fragment) {
                 }
                 else {
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
-                    var newLocation = data[app].url + "notready.html";
+                    var newLocation = viewerUrl + "notready.html";
                     if (currentLocation.toString() !== newLocation)
                         currentLocation.replace(newLocation);
                     clearTimeout(timeout);
@@ -576,3 +578,6 @@ function drawGuidedSetup() {
     $('.blur').show();
 }
 
+function setViewer(type, handle, callback) {
+    $.post('setViewer', {type:type, handle:handle}, callback);
+}

@@ -22,16 +22,20 @@ lconfig.load('../../Config/config.json');
 var externalBase;
 var closed;
 var locker;
+var viewers = {};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
     bootState(function() {
-        app.listen(listenPort, callback);
+        getViewers(function() {
+            app.listen(listenPort, callback);
+        });
     });
 };
 
 var app = express.createServer();
 app.use(express.cookieParser());
+app.use(express.bodyParser());
 
 app.configure(function() {
     app.set('views', __dirname + '/views');
@@ -75,6 +79,34 @@ app.get('/apps', function(req, res) {
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
                 search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}};
     res.end(JSON.stringify(apps));
+});
+
+app.get('/viewers', function(req, res) {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify(viewers));
+});
+
+app.post('/setViewer', function(req, res) {
+    console.error("DEBUG: req", req);
+    var type = req.body.type;
+    var handle = req.body.handle;
+    if(!type) {
+        
+    } else if(!handle) {
+        
+    } else {
+        if(!(type === 'photos' || type === 'people' || type === 'links')) {
+            
+        } else if(!viewers.available[type][handle]) {
+            
+        } else {
+            // phew!
+            viewers.selected[type] = handle;
+            lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
+        }
+    }
+    res.writeHead(200);
+    res.end("true");
 });
 
 var eventInfo = {
@@ -177,6 +209,33 @@ function bootState(doneCb)
         }
         io.sockets.emit("counts", counts);
         doneCb();
+    });
+}
+
+function getViewers(callback) {
+    locker.map(function(err, map) {
+        if(err) {
+            
+        } else {
+            viewers.available = {};
+            map.available.forEach(function(app) {
+                if(app.viewer) {
+                    if(!viewers.available[app.viewer])
+                        viewers.available[app.viewer] = {};
+                    viewers.available[app.viewer][app.handle] = app;
+                }
+            });
+            try {
+                viewers.selected = JSON.parse(fs.readFileSync('viewers.json'));
+            } catch(err) {
+                viewers.selected = {
+                    photos: "photosv09",
+                    contacts: "contactsviewer",
+                    links: "linkalatte"
+                };
+            }
+        }
+        callback();
     });
 }
 
