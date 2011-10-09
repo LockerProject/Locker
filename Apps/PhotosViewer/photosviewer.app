@@ -6,5 +6,6 @@
     "static":"true",
     "handle":"photosviewer",
     "uses":["facebook", "twitter", "foursquare", "flickr", "gplus"],
-    "autoInstall":true
+    "autoInstall":true,
+    "viewer":"photos"
 }

@@ -6,5 +6,6 @@
     "static":"true",
     "handle":"photosv09",
     "uses":["facebook", "twitter", "foursquare", "flickr"],
-    "autoInstall":true
+    "autoInstall":true,
+    "viewer":"photos"
 }
