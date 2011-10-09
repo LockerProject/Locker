@@ -299,6 +299,7 @@ body {
     width: 244px;
     height: 55px;
     margin-top: 30px;
+    margin-left:20px;
     line-height: 46px;
     color: white;
     padding-left: 10px;
@@ -365,13 +366,13 @@ body {
 
 
 #viewers {
-    width:400px;
+    width:340px;
     height:550px;
     z-index:9999;
     position:absolute;
     top:70px;
-    left:0px;
-    background-color: #eee;
+    left:-320px;
+    background-color: #e7e7e7;
     opacity:0.93;
 }
 #viewers-title {
@@ -403,6 +404,17 @@ body {
     margin-left:10px;
     position:relative;
     top:6px;
+}
+
+#viewers-hide-show {
+    position:absolute;
+    top:0;
+    right:0;
+    height:400px;
+}
+
+.viewer.template {
+    display: none;
 }
 
 .gray {
