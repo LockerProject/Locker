@@ -7,5 +7,6 @@
     "uses":["facebook", "twitter", "foursquare", "gcontacts", "github"],
     "autoInstall":true,
     "handle":"linkalatte",
-    "viewer":"links"
+    "viewer":"links",
+    "author":"Singly"
 }

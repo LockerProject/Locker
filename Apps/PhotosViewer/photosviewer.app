@@ -1,5 +1,5 @@
 {
-    "title":"Photos Viewer",
+    "title":"Masonry",
     "action":"View photos",
     "desc":"A simple way to view your photos.",
     "status":"stable",

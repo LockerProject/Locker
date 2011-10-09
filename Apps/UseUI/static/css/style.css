@@ -299,6 +299,7 @@ body {
     width: 244px;
     height: 55px;
     margin-top: 30px;
+    margin-left:20px;
     line-height: 46px;
     color: white;
     padding-left: 10px;
@@ -361,6 +362,59 @@ body {
     width: 36px;
     background-color: #7b7b7b;
     cursor: pointer;
+}
+
+
+#viewers {
+    width:340px;
+    height:550px;
+    z-index:9999;
+    position:absolute;
+    top:70px;
+    left:-320px;
+    background-color: #e7e7e7;
+    opacity:0.93;
+}
+#viewers-title {
+    margin-top:20px;
+    margin-left:20px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.viewer {
+    font-size:16px;
+    margin-top:20px;
+    margin-left:20px;
+    margin-right:20px;
+}
+
+.viewer-icon {
+    width:28px;
+    height:28px;
+    float:left;
+}
+
+.viewer-author-link {
+    margin-top:6px;
+    float:right;
+}
+
+.viewer-link.name {
+    margin-left:10px;
+    position:relative;
+    top:6px;
+}
+
+#viewers-hide-show {
+    position:absolute;
+    top:0;
+    right:0;
+    height:400px;
+}
+
+.viewer.template {
+    display: none;
 }
 
 .gray {

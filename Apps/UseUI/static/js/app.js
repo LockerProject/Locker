@@ -135,6 +135,19 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
+        
+        var viewersHidden = true;
+        $("#viewers-hide-show").click(function() {
+            if(viewersHidden) {
+                $("#viewers").animate({"left":"0px"});
+                $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+                viewersHidden = false;
+            } else {
+                $("#viewers").animate({"left":"-320px"});
+                $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+                viewersHidden = true;
+            }
+        });
 
         renderApp();
 
@@ -393,6 +406,39 @@ function drawService(synclet) {
     $('#service-selector').append(newService);
 };
 
+function drawViewer(viewer, isSelected) {
+    var newService = $('.viewer.template').clone();
+    var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
+    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
+    if(!isSelected) {
+        newService.find('.viewer-link').click(function() {
+            setViewer(viewer.viewer, viewer.handle, function() {
+                renderApp();
+                drawViewers();
+            });
+        });
+    }
+    newService.find('.viewer-name').text(viewer.title);
+    newService.find('.viewer-author').text("by " + viewer.author);
+    newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
+    newService.removeClass('template');
+    $('#viewers-list').append(newService);
+    
+}
+
+function drawViewers() {
+    console.log('drawViewers');
+    $.getJSON('viewers', function(data) {
+        console.error("DEBUG: data", data);
+        $('.viewer:not(.template)').remove();
+        var viewersToRender = data.available[app];
+        for(var i in viewersToRender) {
+            drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
+        }
+    });
+}
+
 // this needs some cleanup to actually use the proper height + widths
 function accountPopup (elem) {
     var width = 620;
@@ -421,6 +467,7 @@ function renderApp(fragment) {
         appId = data.selected[app];
         var viewerUrl = externalBase + '/Me/' + appId + '/';
         drawServices();
+        drawViewers();
         (function poll (data) {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
