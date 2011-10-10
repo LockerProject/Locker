@@ -127,7 +127,11 @@ exports.addLink = function(link, callback) {
 }
 
 exports.updateLinkAt = function(link, at, callback) {
-    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"at":at}}, {safe:true, upser:false, new:false}, callback);
+    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"at":at}}, {safe:true, upsert:false, new:false}, callback);
+}
+
+exports.updateLinkEmbed = function(link, embed, callback) {
+    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"embed":embed}}, {safe:true, upsert:false, new:false}, callback);
 }
 
 // insert new encounter, replace any existing

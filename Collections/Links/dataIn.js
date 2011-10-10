@@ -145,14 +145,21 @@ function linkMagic(origUrl, callback){
               // new link!!!
               link = {link:linkUrl};
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
+                  // TODO: should we support link rel canonical here and change it?
                   util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text},function(){
                       util.extractFavicon({url:linkUrl,html:link.html},function(fav){link.favicon=fav},function(){
                           // *pfew*, callback nausea, sometimes I wonder...
+                          var html = link.html; // cache for oembed module later
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
                               locker.event("link",obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
+                              // background fetch oembed and save it on the link if found
+                              oembed.fetch({url:link.link, html:html}, function(e){
+                                  if(!e) return;
+                                  dataStore.updateLinkEmbed(link.link, e, function(){});
+                              });
                           });
                       });
                   });
