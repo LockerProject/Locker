@@ -73,7 +73,6 @@ exports.fetch = function (args, callback) {
         var up = url.parse(u, true);
         up.query["url"] = args.url;
         delete up.search;
-        console.error("fetching ",url.format(up));
         request.get({uri:url.format(up), json:true, timeout:args.timeout, followRedirect:true, maxRedirects:3}, function(err,resp,body) {
             if(err || !body || !body.type) console.error(err?err:body);
             if(err || !body || !body.type) return cb(); // continue on to next one
