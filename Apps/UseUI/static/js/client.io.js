@@ -136,8 +136,10 @@ socket.on('newservice', function(name) {
   queueGritter('newservice', name);
 });
 
-socket.on('repo', function(repo) {
-    console.log('repo', repo);
+socket.on('repo', function(evt) {
+    console.log('repo', evt.obj.data);
+    if(evt.obj.data.clonedLocal)
+        drawViewers();
 });
 
 socket.on("counts", function(counts) {

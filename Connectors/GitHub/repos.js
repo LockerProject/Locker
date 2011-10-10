@@ -94,9 +94,10 @@ function getTree(repo, callback) {
 
 function syncRaw(repo, callback) {
     findApp(repo, function(app) {
-        if(app)
+        if(app) {
+            repo.clonedLocal = true;
             clone(repo.name, repo.url + '.git', callback);
-        else
+        } else
             callback();
     });
 }
