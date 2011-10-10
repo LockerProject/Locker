@@ -21,6 +21,7 @@ var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/et
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
 var util = require("./util"); // handy things for anyone and used within dataIn
 var search = require("./search"); // our indexing and query magic
+var oembed = require("./oembed"); // wrapper to do best oembed possible
 
 var lockerInfo;
 var express = require('express'),
@@ -145,25 +146,11 @@ app.get('/update', function(req, res) {
     });
 });
 
-// just add embedly key and return result: http://embed.ly/docs/endpoints/1/oembed
-// TODO: should do smart caching
+// simple oembed util internal api
 app.get('/embed', function(req, res) {
-    // TODO: need to load from apiKeys the right way
-    var embedly = url.parse("http://api.embed.ly/1/oembed");
-    embedly.query = req.query;
-    embedly.query.key = "4f95c324c9dc11e083104040d3dc5c07";
-    request.get({uri:url.format(embedly)},function(err,resp,body){
-        var js;
-        try{
-            if(err) throw err;
-            js = JSON.parse(body);
-        }catch(E){
-            res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end("error: "+E);
-            return;
-        }
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(js));
+    oembed.fetch({url:req.query.url}, function(e) {
+        if(e) return res.send(e);
+        res.send({});
     });
 });
 
