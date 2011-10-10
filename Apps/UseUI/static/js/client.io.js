@@ -137,7 +137,6 @@ socket.on('newservice', function(name) {
 });
 
 socket.on('repo', function(evt) {
-    console.log('repo', evt.obj.data);
     if(evt.obj.data.clonedLocal)
         drawViewers();
 });
