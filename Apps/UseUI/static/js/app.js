@@ -481,10 +481,10 @@ var GuidedSetup = (
             var text = {};
             t.synced = false;
             text.header = ['Welcome!', 'Get Started.', 'Explore...'];
-            text.forward = ['NEXT', 'NEXT', 'DONE'];
+            text.forward = ['Get Started!', 'NEXT', 'DONE'];
             text.body = [];
-            text.body[0] = "<p>This helps you pull all your stuff together from around the web.</p>" +
-                           "<p></p>";
+            text.body[0] = "<p>This helps you pull all your stuff together from around the web and see it in one place.</p>" +
+                           "<p>Once it's all together, you can build on top of it and share what you create!</p>";
             text.body[1] = "<p>To get started, connect some services you use.</p>" +
                            "<p></p>";
             text.body[2] = "<p>Now that you've got some services connected, you can got check out the different views!</p>" +
