@@ -439,6 +439,10 @@ body {
     display: none;
 }
 
+.viewer-hover.template {
+    display: none;
+}
+
 .gray {
     color: #555;
 }

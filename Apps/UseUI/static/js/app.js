@@ -142,12 +142,13 @@ $(document).ready(
                 $("#viewers-hover").hide();
                 $("#viewers-title").show();
                 $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"});
-                $("#viewers-slide-button").attr('src', 'img/slide-in.png');
-                viewersFullDisplay = true;
+                $("#viewers").animate({"left":"0px"}, 300, function() {                   
+                    $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+                    viewersFullDisplay = true;
+                });
             } else {
-                viewersFullDisplay = false;
                 $("#viewers").animate({"left":"-320px"}, 300, function() {
+                    viewersFullDisplay = false;
                     $("#viewers-title").hide();
                     $("#viewers-list").hide();
                     $("#viewers-hover").show();
@@ -433,7 +434,6 @@ function drawService(synclet) {
 function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
     var newServiceHover = $('.viewer-hover.template').clone();
-    newServiceHover.show();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
     newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
@@ -475,7 +475,6 @@ function drawViewers() {
         console.error("DEBUG: data", data);
         $('.viewer:not(.template)').remove();
         $('.viewer-hover:not(.template)').remove();
-        $('.viewer-hover.template').hide();
         var viewersToRender = data.available[app];
         for(var i in viewersToRender) {
             drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
