@@ -136,18 +136,44 @@ $(document).ready(
             }
         });
         
-        var viewersHidden = true;
+        var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
-            if(viewersHidden) {
+            if(!viewersFullDisplay) {
+                $("#viewers-hover").hide();
+                $("#viewers-title").show();
+                $("#viewers-list").show();
                 $("#viewers").animate({"left":"0px"});
                 $("#viewers-slide-button").attr('src', 'img/slide-in.png');
-                viewersHidden = false;
+                viewersFullDisplay = true;
             } else {
-                $("#viewers").animate({"left":"-320px"});
-                $("#viewers-slide-button").attr('src', 'img/slide-out.png');
-                viewersHidden = true;
+                viewersFullDisplay = false;
+                $("#viewers").animate({"left":"-320px"}, 300, function() {
+                    $("#viewers-title").hide();
+                    $("#viewers-list").hide();
+                    $("#viewers-hover").show();
+                    $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+                });
             }
         });
+        
+        $("#viewers").hover(
+            function(e) {
+                if (!viewersFullDisplay) {
+                    $("#viewers").animate({"left":"-260px"}, 300, function() {
+                        $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+                        viewersFullDisplay = false;
+                    });
+                }
+            },
+            function(e) {
+                if (!viewersFullDisplay) {        
+                    $("#viewers").animate({"left":"-320px"}, 300, function() {
+                        $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+                        viewersFullDisplay = false;
+                    });            
+                }
+            }
+        );
 
         renderApp();
 
@@ -408,6 +434,7 @@ function drawService(synclet) {
 
 function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
+    var newServiceHover = $('.viewer-hover.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
     newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
@@ -418,6 +445,8 @@ function drawViewer(viewer, isSelected) {
                 drawViewers();
             });
         });
+    } else {
+        newService.addClass('selected');
     }
     newService.find('.viewer-name').text(viewer.title);
     newService.find('.viewer-author').text("by " + viewer.author);
@@ -425,6 +454,20 @@ function drawViewer(viewer, isSelected) {
     newService.removeClass('template');
     $('#viewers-list').append(newService);
     
+    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
+    if(!isSelected) {
+        newServiceHover.find('.viewer-link').click(function() {
+            setViewer(viewer.viewer, viewer.handle, function() {
+                renderApp();
+                drawViewers();
+            });
+        });
+    } else {
+        newServiceHover.addClass('selected');
+    }
+    newServiceHover.removeClass('template');
+    $('#viewers-hover').append(newServiceHover);
 }
 
 function drawViewers() {
@@ -432,6 +475,7 @@ function drawViewers() {
     $.getJSON('viewers', function(data) {
         console.error("DEBUG: data", data);
         $('.viewer:not(.template)').remove();
+        $('.viewer-hover:not(.template)').remove();
         var viewersToRender = data.available[app];
         for(var i in viewersToRender) {
             drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);

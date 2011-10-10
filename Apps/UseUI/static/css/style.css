@@ -380,13 +380,15 @@ body {
     margin-left:20px;
     font-size:18px;
     font-weight:bold;
+    display: none;
 }
 
 .viewer {
     font-size:16px;
-    margin-top:20px;
+    margin-top:10px;
     margin-left:20px;
     margin-right:20px;
+    padding: 5px;
 }
 
 .viewer-icon {
@@ -406,11 +408,31 @@ body {
     top:6px;
 }
 
+.viewer-hover {
+  float: right;
+  display: block;
+  padding: 10px;
+}
+.viewer-hover.selected,
+.viewer.selected {
+  background: #fff;
+}
 #viewers-hide-show {
     position:absolute;
     top:0;
     right:0;
     height:400px;
+}
+
+#viewers-hover {
+  display: block;
+  width: 70px;
+  height: 500px;
+  margin-left: 250px;
+}
+
+#viewers-list {
+  display: none;
 }
 
 .viewer.template {
