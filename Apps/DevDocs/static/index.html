@@ -31,8 +31,8 @@
 			</ul>
 		</div>
 	</div>
-	<h3>Results</h3>
 	<div class='resultModel'>
+		<h3>Results</h3>
 		<ul class='resultEntry'>
 			<li><span class='paramName'></span> - <span class='paramType'></span> - <span class='paramDescription'></span></li>
 		</ul>
@@ -62,7 +62,10 @@ $(function() {
 					break;
 				case "query":
 					var inputVal = $("input[name$='" + val.name + "']").val();
-					if (inputVal) queryParams += val.name + "=" + inputVal;
+					if (inputVal) {
+						if (queryParams.length > 0) queryParams += "&";
+						queryParams += val.name + "=" + inputVal;
+					}
 					break;
 				default:
 					console.log("Unknown paramType" + val.paramType);
@@ -78,7 +81,7 @@ $(function() {
 			$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
 			prettyPrint();
 		}).error(function(error) {
-			$("code").text(error.responseText);
+			$(".prettyprint code").text(error.responseText);
 			prettyPrint();
 		});
 		return false;
@@ -143,9 +146,9 @@ $(function() {
 					}
 				}
 			});
-			$("ul.resultModel").show();
+			$("div.resultModel").show();
 		} else {
-			$("ul.resultModel").hide();
+			$("div.resultModel").hide();
 		}
 		return false;
 	});
