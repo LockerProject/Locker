@@ -87,8 +87,8 @@ exports.handleGetUpdate = function(callback) {
             return callback(err);
         }
 
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
         locker.providers('status/twitter', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
@@ -254,10 +254,10 @@ exports.handleGetReindexForType = function(type, callback) {
     var items;
 
     if (type == 'contact/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
     }
     else if (type == 'photo/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
     }
     else {
         locker.providers(type, function(err, services) {
@@ -320,7 +320,7 @@ function enrichResultsWithFullObjects(results, callback) {
         function(results, waterfallCb) {
             async.forEachSeries(results,
                 function(item, forEachCb) {
-                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/' + item._id;
+                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/id/' + item._id;
                     makeEnrichedRequest(url, item, forEachCb);
                 },
                 function(err) {

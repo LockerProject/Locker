@@ -26,23 +26,23 @@ function photoApp() {
         // removed for the time being, the query should return time sorted data
         // photos = photos.sort(timeSort);
         for (var i in photos) {
-	    p = photos[i];
-	    title = p.title ? p.title : "Unititled";
-	    photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="/Me/photos/fullPhoto/' + p.id+ '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
-	}
+      p = photos[i];
+      title = p.title ? p.title : "Unititled";
+      photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="/Me/photos/image/' + p.id+ '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
+  }
         return photoHTML;
     };
 
     var getPhotosCB = function(photos) {
         var p, title, photoHTML = "";
 
-	// clear the list
-	$photosList.html('');
+  // clear the list
+  $photosList.html('');
 
-	// populate the list with our photos
-	if (photos.length == 0) $photosList.append("<div>Sorry, no photos found!</div>");
+  // populate the list with our photos
+  if (photos.length == 0) $photosList.append("<div>Sorry, no photos found!</div>");
 
-	$photosList.append(HTMLFromPhotoJSON(photos));
+  $photosList.append(HTMLFromPhotoJSON(photos));
 
         $photosList.imagesLoaded(
             function(){
@@ -58,7 +58,7 @@ function photoApp() {
         var $newElems;
         if (photos.length == 0) return;
 
-	$newElems = $(HTMLFromPhotoJSON(photos));
+  $newElems = $(HTMLFromPhotoJSON(photos));
         $photosList.append($newElems);
 
         // ensure that images load before adding to masonry layout
@@ -73,8 +73,8 @@ function photoApp() {
 
     var loadMorePhotosHandler = function() {
         $.getJSON(
-	    '/query/getPhoto',
-	    {
+      '/query/getPhoto',
+      {
                 'offset':offset,
                 'limit':limit,
                 'sort':sort
@@ -86,13 +86,13 @@ function photoApp() {
 
     // init
     $.getJSON(
-	'/query/getPhoto',
-	{
+  '/query/getPhoto',
+  {
             'offset':offset,
             'limit':limit,
             'sort':sort
     },
-	getPhotosCB
+  getPhotosCB
     );
 
     $("#moarphotos").click( loadMorePhotosHandler );

@@ -167,7 +167,7 @@ vows.describe("Synclet Manager").addBatch({
             }
         }
     }
-}).addBatch({    
+}).addBatch({
     "Installed services can be executed immediately rather than waiting for next run" : {
         topic:function() {
             start = Date.now() - 1;
@@ -255,7 +255,7 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Querying for an ID returns the object": {
         topic: function() {
-            request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/" + _id}, this.callback);
+            request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/id/" + _id}, this.callback);
         },
         "successfully" : function(err, resp, body) {
             var data = JSON.parse(body);

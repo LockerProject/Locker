@@ -49,8 +49,14 @@ exports.getPlaces = function(arg, cbEach, cbDone) {
         offset=parseInt(arg.offset);
         delete arg.offset;
     }
+    var fields = {};
+    if(arg.fields)
+    {
+        fields = arg.fields;
+        delete arg.fields;
+    }
     if(arg.me) arg.me = (arg.me === 'true')?true:false;
-    var cursor = placeCollection.find(arg);
+    var cursor = placeCollection.find(arg, fields);
     if (sort) cursor.sort(sort);
     if (limit) cursor.limit(limit);
     if (offset) cursor.skip(offset);

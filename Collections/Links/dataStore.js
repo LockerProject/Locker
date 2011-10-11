@@ -96,6 +96,7 @@ function findWrap(a,b,c,cbEach,cbDone){
     var cursor = (b.fields) ? c.find(a, b) : c.find(a);
     if (b.sort) cursor.sort(b.sort);
     if (b.limit) cursor.limit(b.limit);
+    if (b.offset) cursor.skip(b.offset);
     cursor.each(function(err, item) {
         if (item != null) {
             cbEach(item);

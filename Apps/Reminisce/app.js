@@ -17,7 +17,7 @@ var request = require('request');
 var nodemailer = require('nodemailer');
 var lcrypto = require('lcrypto');
 var lconfig = require('lconfig');
-//TODO: fix lconfig and remove this! I need it for lcrypto?! 
+//TODO: fix lconfig and remove this! I need it for lcrypto?!
 lconfig.load('../../Config/config.json');
 
 var me;
@@ -101,7 +101,7 @@ function send()
         };
         // try to get the message and send it as an attachment...
         try{
-            var imgurl = processInfo.lockerUrl+"/Me/photos/fullPhoto/" + photos[rand].id;
+            var imgurl = processInfo.lockerUrl+"/Me/photos/image/" + photos[rand].id;
             request.get({uri:imgurl},function(err, res, body){
                 if(err)
                 {
@@ -149,7 +149,7 @@ stdin.on('data', function (chunk) {
         app.listen(processInfo.port,function() {
             var returnedInfo = {};
             console.log(JSON.stringify(returnedInfo));
-        });        
+        });
     });
 });
 

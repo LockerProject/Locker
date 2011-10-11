@@ -237,8 +237,8 @@ exports.init = function(mongoCollection, mongo, l) {
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
-exports.getAll = function(callback) {
-    collection.find({}, callback);
+exports.getAll = function(fields, callback) {
+    collection.find({}, fields, callback);
 }
 
 exports.get = function(id, callback) {

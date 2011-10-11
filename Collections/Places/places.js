@@ -27,13 +27,21 @@ var app = express.createServer(connect.bodyParser());
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    dataStore.getTotalPlaces(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' places</p></html>');
-        res.end();
-    });
+    var options = {};
+    if(!req.query["all"]) options.limit = 20; // default 20 unless all is set
+    if (req.query.limit) {
+        options.limit = parseInt(req.query.limit);
+    }
+    if (req.query.offset) {
+        options.offset = parseInt(req.query.offset);
+    }
+    if (req.query.fields) {
+        try {
+            options.fields = JSON.parse(req.query.fields);
+        } catch(E) {}
+    }
+    var results = [];
+    dataStore.getPlaces(options, function(item) { results.push(item); }, function(err) { res.send(results); });
 });
 
 app.get('/state', function(req, res) {
@@ -69,32 +77,6 @@ app.post('/events', function(req, res) {
     res.writeHead(200);
     res.end('ok');
 });
-
-function genericApi(name,f)
-{
-    app.get(name,function(req,res){
-        var results = [];
-        f(req.query,function(item){results.push(item);},function(err){
-            if(err)
-            {
-                res.writeHead(500, {'Content-Type': 'text/plain'});
-                res.end(err);
-            }else{
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify(results));
-            }
-        });
-    });
-}
-
-
-genericApi('/getPlaces', dataStore.getPlaces);
-// expose all utils
-for(var f in util)
-{
-    if(f == 'init') continue;
-    genericApi('/'+f,util[f]);
-}
 
 // Process the startup JSON object
 process.stdin.resume();

@@ -68,7 +68,7 @@ module.exports = function(app) {
         });
     });
 
-    app.get('/synclets/:syncletId/:type/:id', function(req, res) {
+    app.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
         dataStore.init(function() {
             dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
