@@ -380,13 +380,15 @@ body {
     margin-left:20px;
     font-size:18px;
     font-weight:bold;
+    display: none;
 }
 
 .viewer {
     font-size:16px;
-    margin-top:20px;
+    margin-top:10px;
     margin-left:20px;
     margin-right:20px;
+    padding: 5px;
 }
 
 .viewer-icon {
@@ -406,6 +408,15 @@ body {
     top:6px;
 }
 
+.viewer-hover {
+  float: right;
+  display: block;
+  padding: 10px;
+}
+.viewer-hover.selected,
+.viewer.selected {
+  background: #fff;
+}
 #viewers-hide-show {
     position:absolute;
     top:0;
@@ -413,7 +424,22 @@ body {
     height:400px;
 }
 
+#viewers-hover {
+  display: block;
+  width: 70px;
+  height: 500px;
+  margin-left: 250px;
+}
+
+#viewers-list {
+  display: none;
+}
+
 .viewer.template {
+    display: none;
+}
+
+.viewer-hover.template {
     display: none;
 }
 
@@ -485,6 +511,13 @@ body {
     border:2px solid rgba(120,180,226,1);
     border-bottom:0px;
 }
+
+.settings {
+    height:1em;
+    margin:0.5em;
+    padding:0.5em;
+}
+
 
 .signout-link {
     height:1em;

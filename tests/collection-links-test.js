@@ -35,18 +35,18 @@ suite.next().suite.addBatch({
             var self = this;
             process.chdir("." + mePath);
             lmongo.init("links", thecollections, function(mongo, colls) {
-                dataStore.init(colls.link, colls.encounter, colls.queue);
+                dataStore.init(colls.link, colls.encounter, colls.queue, mongo);
                 search.init(dataStore);
                 dataIn.init(locker, dataStore, search);
 
                 dataStore.clear(function() {
-                    request.get({uri:lconfig.lockerBase + "/Me/links/ready"}, self.callback);
+                    request.get({uri:lconfig.lockerBase + "/Me/links/state", json:true}, self.callback);
                 });
             });
         },
         "when it's not": function(err, resp, body) {
             assert.isNull(err);
-            assert.equal(body, 'false');
+            assert.equal(body.count, 0);
         }
     }
 }).addBatch({
@@ -82,16 +82,6 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.equal(response.length, 2);
-        }
-    }
-}).addBatch({
-    "is now ready" : {
-        topic: function() {
-            request.get({uri:lconfig.lockerBase + "/Me/links/ready"}, this.callback);
-        },
-        "once there's data" : function(err, resp, body) {
-            assert.isNull(err);
-            assert.equal(body, 'true');
         }
     }
 }).addBatch({
