@@ -75,6 +75,9 @@
       <div id='menuExpander'><div class='userEmail'></div><div class='expander'>&#x25BC;</div></div>
       <div id='userMenu'>
         <div class='user-name'></div>
+        <% if(dashboard.customSettings) { %>
+        <div class='settings'><a href='<%= dashboard.customSettings %>'>Settings</a></div>
+        <% } %>
         <div class='signout-link'><a href='<%= dashboard.customLogout %>'>Sign Out</a></div>
       </div>
     </div>

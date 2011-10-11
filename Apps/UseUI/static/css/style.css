@@ -512,6 +512,13 @@ body {
     border-bottom:0px;
 }
 
+.settings {
+    height:1em;
+    margin:0.5em;
+    padding:0.5em;
+}
+
+
 .signout-link {
     height:1em;
     margin:0.5em;
