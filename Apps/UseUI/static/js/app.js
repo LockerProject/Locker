@@ -448,7 +448,7 @@ function drawViewer(viewer, isSelected) {
         newService.addClass('selected');
     }
     newService.find('.viewer-name').text(viewer.title);
-    newService.find('.viewer-author').text("by " + viewer.author);
+    newService.find('.viewer-author').text(viewer.author !== ''?"by " + viewer.author:'');
     newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
     newService.removeClass('template');
     $('#viewers-list').append(newService);
@@ -479,6 +479,13 @@ function drawViewers() {
         for(var i in viewersToRender) {
             drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
         }
+        var addViewerView = {
+            title: 'Create a Viewer',
+            author: '',
+            viewer: 'photos',
+            handle: 'devdocs'
+        };
+        drawViewer(addViewerView, false);
     });
 }
 
