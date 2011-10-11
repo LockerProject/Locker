@@ -192,9 +192,10 @@ function getEncounterFB(post)
 
 function getEncounterTwitter(tweet)
 {
+    var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
     var e = {id:tweet.id
         , network:"twitter"
-        , text: tweet.text + " " + tweet.user.screen_name
+        , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()
