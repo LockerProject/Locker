@@ -30,16 +30,6 @@ var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
 
-app.get('/', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    dataStore.getTotalLinks(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' links</p></html>');
-        res.end();
-    });
-});
-
 app.get('/state', function(req, res) {
     dataStore.getTotalLinks(function(err, countInfo) {
         if(err) return res.send(err, 500);
@@ -113,32 +103,6 @@ app.get("/since", function(req, res) {
    });
 });
 
-app.get("/since", function(req, res) {
-    if (!req.query.id) {
-        return res.send([]);
-    }
-
-    var results = [];
-    dataStore.getSince(req.query.id, function(link) {
-        results.push(link);
-    }, function() {
-        async.forEachSeries(results, function(link, callback) {
-            if (!link) return;
-            link.encounters = [];
-            dataStore.getEncounters({"link":link.link}, function(encounter) {
-                link.encounters.push(encounter);
-            }, function() {
-                callback();
-            });
-        }, function() {
-            var sorted = results.sort(function(lh, rh) {
-                return rh.at - lh.at;
-            });
-            res.send(sorted);
-        });
-   });
-});
-
 app.get('/update', function(req, res) {
     dataIn.reIndex(locker, function(){
         res.writeHead(200);
@@ -168,21 +132,6 @@ app.post('/events', function(req, res) {
     res.end('ok');
 });
 
-app.get('/ready', function(req, res) {
-    dataStore.getTotalLinks(function(err, resp) {
-        if (err) {
-            res.writeHead(500);
-            return res.end(err);
-        }
-        res.writeHead(200);
-        if (resp === 0) {
-            return res.end('false');
-        } else {
-            return res.end('true');
-        }
-    });
-});
-
 function genericApi(name,f)
 {
     app.get(name,function(req,res){
@@ -201,10 +150,11 @@ function genericApi(name,f)
 }
 
 // expose way to get raw links and encounters
-app.get('/getLinksFull', function(req, res) {
+app.get('/', function(req, res) {
     var fullResults = [];
     var results = [];
     var options = {sort:{"at":-1}};
+    if(!req.query["all"]) options.limit = 20; // default 20 unless all is set
     if (req.query.limit) {
         options.limit = parseInt(req.query.limit);
     }
@@ -222,6 +172,9 @@ app.get('/getLinksFull', function(req, res) {
         ndx[item.link] = item;
         results.push(item);
     }, function(err) {
+        if(!req.query.full) {
+            return res.send(results);
+        }
         var arg = {"link":{$in: Object.keys(ndx)}};
         if(options.fields) arg.fields = options.fields;
         dataStore.getEncounters(arg, function(encounter) {
@@ -231,8 +184,20 @@ app.get('/getLinksFull', function(req, res) {
         });
     });
 });
-genericApi('/getLinks', dataStore.getLinks);
-genericApi('/getEncounters',dataStore.getEncounters);
+
+// expose way to get the list of encounters from a link id
+app.get('/encounters/:id', function(req, res) {
+    var encounters = [];
+    dataStore.get(req.param('id'), function(err, doc) {
+        if(err || !doc || !doc.link) return res.send(encounters);
+        dataStore.getEncounters({link: doc.link}, function(e){ encounters.push(e); }, function(err){ res.send(encounters); });
+    });
+});
+
+app.get('/id/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+});
 
 // expose all utils
 for(var f in util)
@@ -261,7 +226,7 @@ process.stdin.on('data', function(data) {
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link,mongo.collections.encounter,mongo.collections.queue);
+        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo);
         search.init(dataStore);
         dataIn.init(locker, dataStore, search);
         app.listen(0, 'localhost', function() {

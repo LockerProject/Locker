@@ -219,7 +219,7 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
-dataHandlers["status/twitter"] = processTwitter;
+dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
@@ -237,8 +237,8 @@ exports.init = function(mongoCollection, mongo, l) {
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
-exports.getAll = function(callback) {
-    collection.find({}, callback);
+exports.getAll = function(fields, callback) {
+    collection.find({}, fields, callback);
 }
 
 exports.get = function(id, callback) {

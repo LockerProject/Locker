@@ -198,7 +198,7 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    at = new Date;
+    var at = new Date;
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
     console.log("scheduled "+ svcId + " " + cb + "  at " + at);
@@ -359,7 +359,7 @@ locker.get("/diary", function(req, res) {
             return;
         }
         var rawLines   = file.toString().trim().split("\n");
-            diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        var diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
         res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
