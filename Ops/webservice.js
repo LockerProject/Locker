@@ -287,7 +287,12 @@ function proxyRequest(method, req, res) {
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
     if (syncManager.isInstalled(id)) {
-        return res.redirect(path.join('synclets', id, ppath));
+        var u = 'http://' + lconfig.lockerHost + ':' + lconfig.lockerPort + '/' + path.join('synclets', id, ppath);
+        return request({method:method, uri:u, headers:req.headers, encoding:'binary'}, function(err, res2, body){
+            res.writeHead(res2.statusCode, res2.headers);
+            res.write(body, "binary");
+            res.end();
+        });
     }
     if(serviceManager.isDisabled(id)) {
         res.writeHead(503);
