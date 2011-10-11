@@ -513,8 +513,19 @@ function renderApp(fragment) {
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
     $.getJSON('viewers', function(data) {
-        if (!data.selected[app]) return;
-        appId = data.selected[app];
+        if (fragment !== undefined &&
+            (fragment.split('-')[0] === 'view' ||
+            fragment.split('-')[0] === 'search' ||
+            fragment.split('-')[0] === 'new')) {
+            if (app === 'photos') appId = 'photosv09';
+            if (app === 'contacts') appId = 'contactsviewer';
+            if (app === 'links') appId = 'linkalatte';
+            data.selected[app] = appId;
+            setViewer(app, appId);
+        } else {
+            if (!data.selected[app]) return;
+            appId = data.selected[app];
+        }
         var viewerUrl = externalBase + '/Me/' + appId + '/';
         drawServices();
         drawViewers();
