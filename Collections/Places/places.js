@@ -40,6 +40,7 @@ app.get('/', function(req, res) {
             options.fields = JSON.parse(req.query.fields);
         } catch(E) {}
     }
+    options.me = req.query.me;
     var results = [];
     dataStore.getPlaces(options, function(item) { results.push(item); }, function(err) { res.send(results); });
 });
