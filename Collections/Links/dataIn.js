@@ -147,7 +147,7 @@ function linkMagic(origUrl, callback){
               link = {link:linkUrl};
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
                   // TODO: should we support link rel canonical here and change it?
-                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text},function(){
+                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
                       util.extractFavicon({url:linkUrl,html:link.html},function(fav){link.favicon=fav},function(){
                           // *pfew*, callback nausea, sometimes I wonder...
                           var html = link.html; // cache for oembed module later
