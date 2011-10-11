@@ -219,7 +219,7 @@ function createId(url, name) {
 
 
 var dataHandlers = {};
-dataHandlers["status/twitter"] = processTwitter;
+dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;

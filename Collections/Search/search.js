@@ -89,10 +89,10 @@ exports.handleGetUpdate = function(callback) {
 
         reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
         reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
-        locker.providers('status/twitter', function(err, services) {
+        locker.providers('timeline/twitter', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
-               if (svc.provides.indexOf('status/twitter') >= 0) {
+               if (svc.provides.indexOf('timeline/twitter') >= 0) {
                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
                 }
             });

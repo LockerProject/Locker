@@ -20,7 +20,7 @@ exports.reIndex = function(locker,cb) {
     search.resetIndex();
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
+        locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -31,7 +31,7 @@ exports.reIndex = function(locker,cb) {
                             });
                         });
                     });
-                } else if(svc.provides.indexOf('status/twitter') >= 0) {
+                } else if(svc.provides.indexOf('timeline/twitter') >= 0) {
                     getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
                             console.error('twitter done!');
