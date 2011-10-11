@@ -79,6 +79,11 @@ app.post('/events', function(req, res) {
     res.end('ok');
 });
 
+app.get('/id/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+});
+
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
@@ -93,7 +98,7 @@ process.stdin.on('data', function(data) {
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.place, locker);
+        dataStore.init(mongo.collections.place, locker, mongo);
         dataIn.init(locker, dataStore);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};

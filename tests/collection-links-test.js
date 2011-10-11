@@ -35,7 +35,7 @@ suite.next().suite.addBatch({
             var self = this;
             process.chdir("." + mePath);
             lmongo.init("links", thecollections, function(mongo, colls) {
-                dataStore.init(colls.link, colls.encounter, colls.queue);
+                dataStore.init(colls.link, colls.encounter, colls.queue, mongo);
                 search.init(dataStore);
                 dataIn.init(locker, dataStore, search);
 

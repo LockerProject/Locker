@@ -12,9 +12,10 @@ var lutil = require('lutil');
 var lmongoutil = require("lmongoutil");
 
 // in the future we'll probably need a visitCollection too
-var linkCollection, encounterCollection, queueCollection;
+var linkCollection, encounterCollection, queueCollection, db;
 
-exports.init = function(lCollection, eCollection, qCollection) {
+exports.init = function(lCollection, eCollection, qCollection, mongo) {
+    db = mongo.dbClient;
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
     encounterCollection = eCollection;
@@ -90,6 +91,10 @@ exports.getSince = function(objId, cbEach, cbDone) {
 
 exports.getLastObjectID = function(cbDone) {
     linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+}
+
+exports.get = function(id, callback) {
+    linkCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
 }
 
 function findWrap(a,b,c,cbEach,cbDone){

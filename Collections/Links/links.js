@@ -188,7 +188,15 @@ app.get('/', function(req, res) {
 // expose way to get the list of encounters from a link id
 app.get('/encounters/:id', function(req, res) {
     var encounters = [];
-    dataStore.getEncounters({link: req.param('id')}, function(e){ encounters.push(e); }, function(err){ res.send(encounters); });
+    dataStore.get(req.param('id'), function(err, doc) {
+        if(err || !doc || !doc.link) return res.send(encounters);
+        dataStore.getEncounters({link: doc.link}, function(e){ encounters.push(e); }, function(err){ res.send(encounters); });
+    });
+});
+
+app.get('/id/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
 });
 
 // expose all utils
@@ -218,7 +226,7 @@ process.stdin.on('data', function(data) {
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link,mongo.collections.encounter,mongo.collections.queue);
+        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo);
         search.init(dataStore);
         dataIn.init(locker, dataStore, search);
         app.listen(0, 'localhost', function() {
