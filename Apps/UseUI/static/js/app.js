@@ -8,6 +8,7 @@ var ready = false;
 var searchWaiting = false;
 var searchInterval;
 var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.template)';
+var externalBase = window.location.origin;
 
 $(document).ready(
     function() {
@@ -53,7 +54,7 @@ $(document).ready(
 
 
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
-            $('.hightlighted').removeClass('highlighted');
+            $('.highlighted').removeClass('highlighted');
             $(this).addClass('highlighted');
         }).delegate(searchSelector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
@@ -71,38 +72,36 @@ $(document).ready(
         });
 
         $('.search').keyup(function(e) {
-/*            if (e.keyCode == 13) {
+            if (e.keyCode == 13) {
                 $('.highlighted').click();
                 $('#search-results').fadeOut();
                 return false;
             } else if (e.keyCode == 38) {
                 var selected = $('#search-results').children('.highlighted');
-                if (selected.index() > 0) {
-                    selected.removeClass('highlighted');
-                    selected.prev(':not(.template)').addClass('highlighted');
-                }
-                if (selected[0] === undefined) {
-                    $('#search-results').children(':not(.template)').first().addClass('highlighted');
+                $('#search-results').children('.highlighted').removeClass('highlighted');
+                if (selected.prevAll(':not(.search-divider):visible').first().length > 0) {
+                    selected.prevAll(':not(.search-divider):visible').first().addClass('highlighted');
+                } else {
+                    $('#search-results').children(':not(.search-divider):visible').last().addClass('highlighted');
                 }
                 return false;
             } else if (e.keyCode == 40) {
                 var selected = $('#search-results').children('.highlighted');
-                if (selected.index() != $('#search-results').find('.all-results').index() - 1) {
-                    selected.removeClass('highlighted');
-                    selected.next(':not(.template)').addClass('highlighted');
-                }
-                if (selected[0] === undefined) {
-                    $('#search-results').children(':not(.template)').first().addClass('highlighted');
+                $('#search-results').children('.highlighted').removeClass('highlighted');
+                if (selected.nextAll(':not(.search-divider):visible').first().length > 0) {
+                    selected.nextAll(':not(.search-divider):visible').first().addClass('highlighted');
+                } else {
+                    $('#search-results').children(':not(.search-divider):visible').first().addClass('highlighted');
                 }
                 return false;
             } else {
-*/                if ($('.search')[0].value.length == 0) {
+                if ($('.search')[0].value.length == 0) {
                     $('#search-results').hide();
                     $('.search').removeClass('populated');
                 } else {
                     search();
                 }
-//            }
+            }
         });
 
         $(".app-link[title]").tooltip({
@@ -134,6 +133,44 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
+        
+        var viewersFullDisplay = false;
+        $("#viewers-hide-show").click(function() {
+            if(!viewersFullDisplay) {
+                $("#viewers-hover").hide();
+                $("#viewers-title").show();
+                $("#viewers-list").show();
+                $("#viewers").animate({"left":"0px"}, 300, function() {                   
+                    $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+                    viewersFullDisplay = true;
+                });
+            } else {
+                $("#viewers").animate({"left":"-320px"}, 300, function() {
+                    viewersFullDisplay = false;
+                    $("#viewers-title").hide();
+                    $("#viewers-list").hide();
+                    $("#viewers-hover").show();
+                    $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+                });
+            }
+        });
+        
+        $("#viewers").hover(
+            function(e) {
+                if (!viewersFullDisplay) {
+                    $("#viewers").stop().animate({"left":"-260px"}, 300, function() {
+                        viewersFullDisplay = false;
+                    });
+                }
+            },
+            function(e) {
+                if (!viewersFullDisplay) {        
+                    $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
+                        viewersFullDisplay = false;
+                    });            
+                }
+            }
+        );
 
         renderApp();
 
@@ -200,7 +237,9 @@ function processResults(name, results, query) {
     if ($('.search-result-row:not(.template)').length > 0) {
         $('#search-results').show();
         $('.search').addClass('populated');
-//        $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
+        if ($('.highlighted').length === 0) {
+            $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
+        }
     } else {
         $('#search-results').hide();
         $('.search').removeClass('populated');
@@ -392,6 +431,64 @@ function drawService(synclet) {
     $('#service-selector').append(newService);
 };
 
+function drawViewer(viewer, isSelected) {
+    var newService = $('.viewer.template').clone();
+    var newServiceHover = $('.viewer-hover.template').clone();
+    var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
+    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
+    if(!isSelected) {
+        newService.find('.viewer-link').click(function() {
+            setViewer(viewer.viewer, viewer.handle, function() {
+                renderApp();
+                drawViewers();
+            });
+        });
+    } else {
+        newService.addClass('selected');
+    }
+    newService.find('.viewer-name').text(viewer.title);
+    newService.find('.viewer-author').text(viewer.author !== ''?"by " + viewer.author:'');
+    newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
+    newService.removeClass('template');
+    $('#viewers-list').append(newService);
+    
+    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
+    if(!isSelected) {
+        newServiceHover.find('.viewer-link').click(function() {
+            setViewer(viewer.viewer, viewer.handle, function() {
+                renderApp();
+                drawViewers();
+            });
+        });
+    } else {
+        newServiceHover.addClass('selected');
+    }
+    newServiceHover.removeClass('template');
+    $('#viewers-hover').append(newServiceHover);
+}
+
+function drawViewers() {
+    console.log('drawViewers');
+    $.getJSON('viewers', function(data) {
+        console.error("DEBUG: data", data);
+        $('.viewer:not(.template)').remove();
+        $('.viewer-hover:not(.template)').remove();
+        var viewersToRender = data.available[app];
+        for(var i in viewersToRender) {
+            drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
+        }
+        var addViewerView = {
+            title: 'Create a Viewer',
+            author: '',
+            viewer: 'photos',
+            handle: 'devdocs'
+        };
+        drawViewer(addViewerView, false);
+    });
+}
+
 // this needs some cleanup to actually use the proper height + widths
 function accountPopup (elem) {
     var width = 620;
@@ -415,18 +512,31 @@ function renderApp(fragment) {
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
-    $.getJSON('apps', function(data) {
-        if (!data[app]) return;
-        appId = data[app].id;
+    $.getJSON('viewers', function(data) {
+        if (fragment !== undefined &&
+            (fragment.split('-')[0] === 'view' ||
+            fragment.split('-')[0] === 'search' ||
+            fragment.split('-')[0] === 'new')) {
+            if (app === 'photos') appId = 'photosv09';
+            if (app === 'contacts') appId = 'contactsviewer';
+            if (app === 'links') appId = 'linkalatte';
+            data.selected[app] = appId;
+            setViewer(app, appId);
+        } else {
+            if (!data.selected[app]) return;
+            appId = data.selected[app];
+        }
+        var viewerUrl = externalBase + '/Me/' + appId + '/';
         drawServices();
+        drawViewers();
         (function poll (data) {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
                 if (ready) {
                     // log('clearing timeout');
                     var needReload = false;
-                    if (!fragment && data[app].url == $("#appFrame")[0].contentWindow.location) needReload = true;
-                    $("#appFrame")[0].contentWindow.location.replace(data[app].url + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
+                    if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location) needReload = true;
+                    $("#appFrame")[0].contentWindow.location.replace(viewerUrl + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
                     if (needReload) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
@@ -435,7 +545,7 @@ function renderApp(fragment) {
                 }
                 else {
                     var currentLocation = $("#appFrame")[0].contentWindow.location;
-                    var newLocation = data[app].url + "notready.html";
+                    var newLocation = viewerUrl + "notready.html";
                     if (currentLocation.toString() !== newLocation)
                         currentLocation.replace(newLocation);
                     clearTimeout(timeout);
@@ -576,3 +686,6 @@ function drawGuidedSetup() {
     $('.blur').show();
 }
 
+function setViewer(type, handle, callback) {
+    $.post('setViewer', {type:type, handle:handle}, callback);
+}

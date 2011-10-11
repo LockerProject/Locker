@@ -90,7 +90,7 @@ $(function() {
             var self = this;
             var model = this.collection.get(cid);
             if(!(model.get('detailedData'))) {
-                $.getJSON('/Me/contacts/' + cid, function(contact) {
+                $.getJSON('/Me/contacts/id/' + cid, function(contact) {
                     model.set({detailedData : contact});
                     self.updateDetails(contact);
                 });
@@ -207,7 +207,7 @@ $(function() {
         loadView: function loadView(objId) {
             var self = this;
             if(!hack) hack = this;
-            $.getJSON("/Me/contacts/"+objId, function(contact) {
+            $.getJSON("/Me/contacts/id/"+objId, function(contact) {
                 $("#newCount").text("Showing 1 Person");
                 $("#newHeader").show();
                 self.addContact(contact);

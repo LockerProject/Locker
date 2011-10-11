@@ -10,18 +10,18 @@
 var fs = require('fs'),
     http = require('http'),
     url = require('url');
-    
+
 var express = require('express'),
     app = express.createServer();
-    
+
 var locker = require('locker'),
     lconfig = require('lconfig'),
     lutil = require('lutil'),
 //  search = require('./lib/elasticsearch/index.js');
 //  search = require('./lib/clucene/index.js');
     search = require('./lib/lockersearch/index.js');
-   
-var DEBUG_SEARCH_OUTPUT = false; 
+
+var DEBUG_SEARCH_OUTPUT = false;
 
 // Config
 app.configure(function(){
@@ -37,11 +37,11 @@ app.configure(function(){
 });
 
 app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 app.configure('production', function(){
-  app.use(express.errorHandler()); 
+  app.use(express.errorHandler());
 });
 
 var me;
@@ -51,7 +51,7 @@ app.get('/',
 function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
-    
+
     res.render('index', {
       error: null,
       homePath: '/Me/' + me.id,
@@ -64,15 +64,15 @@ app.get('/search',
 function(req, res) {
     me = fs.readFileSync('me.json');
     me = JSON.parse(me);
-    
+
     var term = lutil.sanitize(req.param('searchterm'));
     console.error('term: ' + term);
     var type = lutil.sanitize(req.param('type'));
     var results = [];
     var error = null;
-    
+
     search.search(type, term, 0, 10, function(err, results) {
-        
+
       if (!results || !results.hasOwnProperty('hits') || !results.hits.hasOwnProperty('hits')) {
           console.error('No results object returned for search');
           results = {};
@@ -97,7 +97,7 @@ function(req, res) {
 
 app.get('/indexContacts',
 function(req, res) {
-    indexCollectionRecordsOfType('contacts', '/Me/contacts/allContacts', function(err, results) {
+    indexCollectionRecordsOfType('contacts', '/Me/contacts/?all=true', function(err, results) {
       if (err) {
         res.end('Error when attempting to index');
       } else {
@@ -108,7 +108,7 @@ function(req, res) {
 
 app.get('/indexLinks',
 function(req, res) {
-    indexCollectionRecordsOfType('links', '/Me/links/allLinks', function(err, results) {
+    indexCollectionRecordsOfType('links', '/Me/links/?all=true', function(err, results) {
       if (err) {
         res.end('Error when attempting to index');
       } else {
@@ -119,18 +119,13 @@ function(req, res) {
 
 app.get('/indexMessages',
 function(req, res) {
-    indexCollectionRecordsOfType('messages', '/Me/messages/allMessages', function(err, results) {
+    indexCollectionRecordsOfType('messages', '/Me/messages/?all=true', function(err, results) {
       if (err) {
         res.end('Error when attempting to index');
       } else {
         res.end('Indexed ' + results.count + ' messages');
       }
     });
-});
-
-app.get('/ready', function(req, res) {
-    res.writeHead(200);
-    res.end('true');
 });
 
 function indexCollectionRecordsOfType(type, urlPath, callback) {
@@ -148,9 +143,9 @@ function indexCollectionRecordsOfType(type, urlPath, callback) {
 
   var req = http.get(options, function(res) {
     res.setEncoding('utf8');
-    
+
     res.on('data', function (chunk) {
-      data += chunk;    
+      data += chunk;
     });
 
     res.on('end', function() {

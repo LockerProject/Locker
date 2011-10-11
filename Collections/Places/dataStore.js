@@ -9,11 +9,12 @@
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 
 // in the future we'll probably need a visitCollection too
-var placeCollection, locker;
+var placeCollection, locker, db;
 
-exports.init = function(pCollection, l) {
+exports.init = function(pCollection, l, mongo) {
     placeCollection = pCollection;
     locker = l;
+    db = mongo.dbClient;
 }
 
 exports.clear = function(callback) {
@@ -22,6 +23,10 @@ exports.clear = function(callback) {
 
 exports.getTotalPlaces = function(callback) {
     placeCollection.count(callback);
+}
+
+exports.get = function(id, callback) {
+    placeCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
 }
 
 function hashPlace(place)
@@ -49,8 +54,14 @@ exports.getPlaces = function(arg, cbEach, cbDone) {
         offset=parseInt(arg.offset);
         delete arg.offset;
     }
+    var fields = {};
+    if(arg.fields)
+    {
+        fields = arg.fields;
+        delete arg.fields;
+    }
     if(arg.me) arg.me = (arg.me === 'true')?true:false;
-    var cursor = placeCollection.find(arg);
+    var cursor = placeCollection.find(arg, fields);
     if (sort) cursor.sort(sort);
     if (limit) cursor.limit(limit);
     if (offset) cursor.skip(offset);

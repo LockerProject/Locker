@@ -28,6 +28,7 @@ exports.extractUrls = function(arg, cbEach, cbDone) {
         var str = matchArray[0];
         // gotta do sanity cleanup for url.parse, it makes no assumptions I guess :/
         if(str.substr(0,4).toLowerCase() != "http") str = "http://"+str;
+        if(str.indexOf('&quot') == str.length - 5) str = str.substr(0, str.indexOf('&quot')); // stupid twitter escaping
         var u = url.parse(str);
         if(!u.host || u.host.indexOf(".") <= 0 || u.host.length - u.host.indexOf(".") < 3) continue; // TODO: fully normalize
         if(u.hash === '#') u.hash = ''; // empty hash is nothing, normalize that by a pound

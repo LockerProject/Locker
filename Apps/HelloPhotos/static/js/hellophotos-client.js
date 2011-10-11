@@ -9,7 +9,7 @@ var log = function(msg) { if (console && console.log) console.debug(msg); }
  */
 function reload(offset, limit, useJSON) {
     // set the params if not specified
-    var offset = offset || 0; 
+    var offset = offset || 0;
     var limit = limit || 100;
     var useJSON = useJSON || false;
 
@@ -28,34 +28,34 @@ function reload(offset, limit, useJSON) {
         return rhc - lhc;
     });
     console.log(photos);
-	// find the unordered list in our document to append to
+  // find the unordered list in our document to append to
         var photosList = $("#main ul");
 
-	// clear the list
-	photosList.html('');
-	
-	// populate the list with our photos
-	if (photos.length == 0) photosList.append("<li>Sorry, no photos found!</li>");
+  // clear the list
+  photosList.html('');
+
+  // populate the list with our photos
+  if (photos.length == 0) photosList.append("<li>Sorry, no photos found!</li>");
         for (var i in photos) {
-	    photo = photos[i];
-	    
-	    log(photo);
-	    if (useJSON) {
-		
-		photoHTML = "<pre>"+ JSON.stringify(photo, null, 2) +"</pre>";
-	    } else {
-		// get the photo name, but use the first email address if no name exists
-		photoHTML = photo.name || photo.emails[0].value;
-	    }
-	    liHTML = '<li id="' + photo._id + '" class="photo"><img src="/Me/photos/fullPhoto/' + photo.id+ '" style="max-width:300px" /><span class="basic-data">'+photoHTML+'</span></div>';
-	    photosList.append(liHTML);
-	}
+      photo = photos[i];
+
+      log(photo);
+      if (useJSON) {
+
+    photoHTML = "<pre>"+ JSON.stringify(photo, null, 2) +"</pre>";
+      } else {
+    // get the photo name, but use the first email address if no name exists
+    photoHTML = photo.name || photo.emails[0].value;
+      }
+      liHTML = '<li id="' + photo._id + '" class="photo"><img src="/Me/photos/image/' + photo.id+ '" style="max-width:300px" /><span class="basic-data">'+photoHTML+'</span></div>';
+      photosList.append(liHTML);
+  }
     };
 
     $.getJSON(
-	'/query/getPhoto',
-	{'offset':offset, 'limit':limit}, 
-	getPhotosCB
+  '/query/getPhoto',
+  {'offset':offset, 'limit':limit},
+  getPhotosCB
     );
 }
 

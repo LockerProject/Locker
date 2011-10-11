@@ -29,9 +29,5 @@ stdin.on('data', function (chunk) {
         var returnedInfo = {port: app.address().port};
         process.stdout.write(JSON.stringify(returnedInfo));
     });
-    app.get('/ready', function(req, res) {
-        res.writeHead(200);
-        res.end('true');
-    });
 });
 

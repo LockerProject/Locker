@@ -32,21 +32,21 @@ exports.gatherPhotos = function(cb) {
     dataStore.clear(function(err) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function() {
             cb(); // synchro delete, async/background reindex
-            locker.providers(['photo','checkin','status'], function(err, services) {
+            locker.providers(['photo','checkin','tweets'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
                     console.error("DEBUG: svc", svc);
                     if(svc.handle === 'photos') return;
                     var gathered = false;
                     var lastType = "";
-                    
+
                     // If twitter, go off book and hit tweets
                     if(svc.provider === 'twitter')
-                        gatherFromUrl(svc.id,"/getCurrent/tweets","status/twitter");
+                        gatherFromUrl(svc.id,"/getCurrent/tweets","tweets/twitter");
                     svc.provides.forEach(function(providedType) {
-                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0 
-                         || providedType.indexOf('checkin/foursquare') === 0 
-                         || providedType.indexOf('status/twitter') === 0)) {
+                        if (providedType !== 'photo' && (providedType.indexOf('photo') === 0
+                         || providedType.indexOf('checkin/foursquare') === 0
+                         || providedType.indexOf('tweets/twitter') === 0)) {
                             lastType = providedType;
                             if (photoGatherers.hasOwnProperty(providedType)) {
                                 gathered = true;
