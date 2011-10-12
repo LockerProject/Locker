@@ -52,6 +52,7 @@ exports.syncRepos = function(callback) {
                         var js;
                         try {
                             js = JSON.parse(fs.readFileSync(manifest));
+                            if(!js || js.static != "true") throw new Error("invalid manifest");
                             js.handle = repo.id.replace("/", "-");
                             js.author = auth.username;
                             fs.writeFileSync(manifest, JSON.stringify(js));
