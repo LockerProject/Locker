@@ -236,6 +236,12 @@
 						"description":"Which subset of all the links fields to return.",
 						"dataType":"string",
 						"paramType":"query"
+					},
+					{
+						"name":"full",
+						"description":"When 1 or true the complete encounters array is included in the result.",
+						"dataType":"boolean",
+						"paramType":"query"
 					}
 				]
 			}
@@ -269,14 +275,14 @@
 				"httpMethod":"GET",
 				"nickname":"linksGetEncounters",
 				"summary":"Get the link information for a specific link.",
-				"responseClass":"link",
+				"responseClass":"encounter",
 				"notes":"A single link can have many encounters.  Encounters are the information from other sources such as tweets or facebook wall posts.",
 				"parameters":[
 					{
 						"name":"id",
 						"description":"The url of the link.  This is the fully expanded link when possible.",
 						"dataType":"string",
-						"paramType":"query"
+						"paramType":"path"
 					},
 					{
 						"name":"limit",
@@ -335,7 +341,6 @@
 				"httpMethod":"GET",
 				"nickname":"coreProviders",
 				"summary":"Find services that provide the given types.",
-				"responseClass":"service",
 				"parameters":[
 					{
 						"name":"types",
@@ -355,7 +360,6 @@
 				"httpMethod":"GET",
 				"nickname":"coreAvailable",
 				"summary":"Retrieve all of the current data from a synclet.",
-				"responseClass":"service",
 				"parameters":[
 					{
 						"name":"syncletName",
@@ -468,6 +472,58 @@
 		}
 	},
 	{
+		"name":"encounter",
+		"responseClass":{
+			"id":"encounter",
+			"properties":{
+				"_id":{
+					"type":"string",
+					"description":"A unique identifier for this encounter."
+				},
+				"_hash":{
+					"type":"string",
+					"description":"A recreateable, unique identifer based on the data."
+				},
+				"at":{
+					"type":"date",
+					"description":"The time, in milliseconds, that this encounter occured."
+				},
+				"from":{
+					"type":"string",
+					"description":"The name of the contact this encounter came from."
+				},
+				"fromID":{
+					"type":"string",
+					"description":"The id, relative to the source service, of the contact that this encounter was from."
+				},
+				"id":{
+					"type":"string",
+					"description":"An identifier for the encounter."
+				},
+				"link":{
+					"type":"string",
+					"description":"The full expanded URL that this encounter is related to."
+				},
+				"network":{
+					"type":"string",
+					"description":"The remote network that this encounter came from."
+				},
+				"orig":{
+					"type":"string",
+					"description":"The original form that this URL was encounterd.  This could be a shortened URL."
+				},
+				"text":{
+					"type":"string",
+					"description":"The original text where this link was found."
+				},
+				"via":{
+					"type":"object",
+					"description":"A service event that this encounter was found in."
+				}
+			}
+		}
+	},
+	{
 		"name":"link",
 		"responseClass":{
 			"id":"link",
@@ -478,7 +534,27 @@
 				},
 				"link":{
 					"type":"string",
-					"description":"The actual url, usually in a complete expanded form."
+					"description":"The URL of the link"
+				},
+				"at":{
+					"type":"date",
+					"description":"The time, in milliseconds, of the link generation."
+				},
+				"embed":{
+					"type":"object",
+					"description":"An object of oembed related information to create an embedded view of the link."
+				},
+				"favicon":{
+					"type":"string",
+					"description":"The URL of the favicon of the linked site."
+				},
+				"text":{
+					"type":"string",
+					"description":"The readable text of the page that the link goes to."
+				},
+				"title":{
+					"type":"string",
+					"description":"The title of the page that the link goes to."
 				}
 			}
 		}
@@ -491,6 +567,42 @@
 				"_id":{
 					"type":"string",
 					"description":"A unique identifier for this photo."
+				},
+				"height":{
+					"type":"number",
+					"description":"Height of the picture in pixels."
+				},
+				"id":{
+					"type":"string",
+					"description":"An internal reference id"
+				},
+				"sourceLink":{
+					"type":"string",
+					"description":"A URL to where the image was originally linked.  For example a tweet link."
+				},
+				"sources":{
+					"type":"array",
+					"description":"An array of service entries where this image was seen."
+				},
+				"thumbnail":{
+					"type":"string",
+					"description":"A URL to a thumbnail version of the image."
+				},
+				"timestamp":{
+					"type":"Date",
+					"description":"The timestamp, in milliseconds, of when the photo was created."
+				},
+				"title":{
+					"type":"string",
+					"description":"A title that is associated with the image."
+				},
+				"url":{
+					"type":"string",
+					"description":"The URL to the image data."
+				},
+				"width":{
+					"type":"number",
+					"description":"The width of the image in pixels."
 				}
 			}
 		}
@@ -547,18 +659,6 @@
 				"installed":{
 					"type":"string",
 					"description":"An object of the currently installed services and their internal state."
-				}
-			}
-		}
-	},
-	{
-		"name":"service",
-		"responseClass":{
-			"id":"service",
-			"properties":{
-				"available":{
-					"type":"string",
-					"description":"An array of service manifest entries for all of the available locker services."
 				}
 			}
 		}
