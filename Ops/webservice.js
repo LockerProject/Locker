@@ -276,18 +276,12 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
         } else {
             url += req.params[1];
         }
-        if (req.query) {
-            url += "?" + querystring.stringify(req.query);
+        var qs = querystring.stringify(req.query);
+        if (qs.length > 0) {
+            url += "?" + qs
         }
-        if (lconfig.externalHost) {
-            var prefix = lconfig.externalHost;
-            if (lconfig.externalPort) prefix += ":" + lconfig.externalPort;
-            if (lconfig.externalSecure) {
-                url = "https://" + prefix + url;
-            }
-        }
-        console.error('redirecting ' + req.originalUrl + ' to ' + url);
-        res.redirect(url);
+        res.header("Location", url);
+        res.send(302);
     } else {
         console.log("Normal proxy of " + req.originalUrl);
         proxyRequest('GET', req, res);
