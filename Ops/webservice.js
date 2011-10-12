@@ -69,8 +69,13 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
+// return the known map of our world
+locker.get('/map/upsert', function(req, res) {
+    console.log("Upserting " + req.param("manifest"));
+    res.send(serviceManager.mapUpsert(req.param("manifest")));
+});
+
 locker.get("/providers", function(req, res) {
-    console.log("Looking for providers of type " + req.param("types"));
     if (!req.param("types")) {
         res.writeHead(400);
         res.end("[]");
