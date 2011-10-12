@@ -26,11 +26,7 @@ var viewers = {};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
-    bootState(function() {
-        getViewers(function() {
-            app.listen(listenPort, callback);
-        });
-    });
+    app.listen(listenPort, callback);
 };
 
 var app = express.createServer();
@@ -89,7 +85,6 @@ app.get('/viewers', function(req, res) {
 });
 
 app.post('/setViewer', function(req, res) {
-    console.error("DEBUG: req", req);
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
@@ -129,11 +124,8 @@ app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
-        console.dir(req.body);
-
-        if(req.body.type === 'repo/github' || req.body.type === 'repos/github') {
-            console.error("DEBUG: req.body", req.body);
-            io.sockets.emit('repo', req.body);
+        if(req.body.type === 'view/github') {
+            io.sockets.emit('viewer', req.body);
         } else {
             var evInfo = eventInfo[req.body.type];
             if (evInfo.timer) {
@@ -160,29 +152,6 @@ app.post('/closed', function(req, res) {
     saveState();
 });
 
-// WIP
-function findApp(repo, callback, i) {
-    if(!i) i = 0;
-    var treei = repo.tree.tree[i];
-    if(!treei)
-        return callback();
-    var path = treei.path;
-    if(treei.type === 'blob' && path.indexOf('.app') == path.length - 4) {
-        request.get({uri:treei.url, json:true}, function(err, resp, json) {
-            console.error("DEBUG: json", json);
-            try {
-                var app = JSON.parse(new Buffer(json.content, 'base64').toString());
-                if(app.title && app.viewer && app.static && app.uses)
-                    return callback(app);
-            } catch(err) {
-                console.error("DEBUG: err", err);
-            }
-        });
-    } else {
-        findApp(repo, callback, i+1);
-    }
-}
-
 // just snapshot to disk every time we push an event so we can compare in the future
 function saveState()
 {
@@ -197,8 +166,9 @@ function saveState()
 // compare last-sent totals to current ones and send differences
 function bootState(doneCb)
 {
-    if(isSomeoneListening > 0) return; // only boot after we've been idle
-    //logger.debug("booting state fresh");
+    if(isSomeoneListening > 0) return doneCb(); // only boot after we've been idle
+    isSomeoneListening++;
+    logger.debug("booting state fresh");
     async.forEach(['contacts','links','photos'],function(coll,callback){
         //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
@@ -211,6 +181,7 @@ function bootState(doneCb)
             callback();
         });
     },function(){
+        logger.debug("finishing boot");
         var last = {
             "link":{"count":0, "lastId":0},
             "contact/full":{"count":0, "lastId":0},
@@ -234,12 +205,7 @@ function bootState(doneCb)
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
         locker.listen('newservice', '/new');
-        locker.listen('repo/github', "/event");
-        var counts = {};
-        for (var key in eventInfo) {
-            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-        }
-        io.sockets.emit("counts", counts);
+        locker.listen('view/github', "/event");
         doneCb();
     });
 }
@@ -272,13 +238,14 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection");
-    isSomeoneListening++;
-    var counts = {};
-    for (var key in eventInfo) {
-        if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-    }
-    socket.emit("counts", counts);
+    logger.debug("++ got new socket.io connection " +isSomeoneListening);
+    bootState(function(){
+        var counts = {};
+        for (var key in eventInfo) {
+            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
+        }
+        socket.emit("counts", counts);
+    });
     socket.on('disconnect', function () {
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
@@ -288,6 +255,7 @@ io.sockets.on('connection', function (socket) {
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("contact/full","/event");
+            locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }
       });

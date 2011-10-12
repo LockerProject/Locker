@@ -4,12 +4,15 @@ var GitHubApi = require("github").GitHubApi
   , async = require('async')
   , nfs = require('node-fs')
   , fs = require('fs')
+  , lockerUrl
   , auth
   , viewers = []
   ;
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
+    auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
+    lockerUrl = processInfo.lockerUrl;
     github.getUserApi().show(auth.username, function(err, profile) {
         if (err) console.error(err);
         exports.syncRepos(function(err, repos) {
@@ -35,7 +38,7 @@ exports.syncRepos = function(callback) {
             github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
                 repo.watchers = watchers;
                 // get a snapshot of the full repo, is nice too
-                request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", json:true}, function(err, resp, tree) {
+                request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                     if(err || !tree || !tree.tree) return cb(err);
                     repo.tree = tree.tree;
                     // see if there's any viewers!
@@ -43,20 +46,24 @@ exports.syncRepos = function(callback) {
                     for(var i=0; i < repo.tree.length; i++) if(/^\w+\.app$/.test(repo.tree[i].path)) viewer = repo.tree[i].path;
                     if(!viewer) return cb();
                     console.error("found a viewer! "+repo.id);
-                    syncRepo(repo, function(err, ) {
+                    syncRepo(repo, function(err) {
                         // mangle the manifest so it's a unique handle
                         var manifest = repo.id+"/"+viewer;
+                        var js;
                         try {
-                            var js = JSON.parse(fs.readFileSync(manifest));
+                            js = JSON.parse(fs.readFileSync(manifest));
                             js.handle = repo.id.replace("/", "-");
+                            js.author = auth.username;
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
                             // bail, no viewer for you
                             console.error("failed: "+err);
                             return cb();
                         }
-                        viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at});
-                        cb();
+                        viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
+                        request.get({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
+                            cb();
+                        });
                     });
                 });
             });
@@ -93,9 +100,9 @@ function syncRepo(repo, callback)
             if(t.type != "blob") return cb();
             if(existing[t.path] == t.sha) return cb(); // no changes
             setTimeout(function(){
-                request.get({uri:'http://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:{"Connection":"keep-alive"}}, function(err, resp, body) {
-                    if(err) return cb2();
-                    console.error("got "+resp.statusCode+" for "+t.path);
+                request.get({uri:'http://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
+                    console.error(resp.statusCode + " for "+ t.path);
+                    if(err || !resp || resp.statusCode != 200) return cb();
                     fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
                 });
             },500);

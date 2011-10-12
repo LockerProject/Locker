@@ -1,6 +1,6 @@
 var debug = false;
 var log = function(m) { if (debug && console && console.log) console.log(m); }
-var app, timeout, appId;
+var app, timeout, appId, installed;
 var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
@@ -133,14 +133,14 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
-        
+
         var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
             if(!viewersFullDisplay) {
                 $("#viewers-hover").hide();
                 $("#viewers-title").show();
                 $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"}, 300, function() {                   
+                $("#viewers").animate({"left":"0px"}, 300, function() {
                     $("#viewers-slide-button").attr('src', 'img/slide-in.png');
                     viewersFullDisplay = true;
                 });
@@ -154,7 +154,7 @@ $(document).ready(
                 });
             }
         });
-        
+
         $("#viewers").hover(
             function(e) {
                 if (!viewersFullDisplay) {
@@ -164,10 +164,10 @@ $(document).ready(
                 }
             },
             function(e) {
-                if (!viewersFullDisplay) {        
+                if (!viewersFullDisplay) {
                     $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
                         viewersFullDisplay = false;
-                    });            
+                    });
                 }
             }
         );
@@ -340,8 +340,9 @@ var SyncletPoll = (
             t.handleResponse = function(data, err, resp) {
                 if(retryTime < 10000) retryTime += 500;
                 var hasProps = false;
-                globalvar = data.installed;
+                installed = data.installed;
                 for (app in data.installed) {
+                    if(app == "github") drawViewers(); // add it whenever it loads
                     hasProps = true;
                     if (window.guidedSetup) window.guidedSetup.servicesAdded();
                     app = data.installed[app];
@@ -439,6 +440,12 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
+            if(viewer.sync)
+            {
+                console.log("forced background syncing to github");
+                $.get('/synclets/github/run', function(){});
+                return;
+            }
             setViewer(viewer.viewer, viewer.handle, function() {
                 renderApp();
                 drawViewers();
@@ -452,7 +459,8 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
     newService.removeClass('template');
     $('#viewers-list').append(newService);
-    
+
+    if(viewer.author == "") return;
     newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
     newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
@@ -484,6 +492,15 @@ function drawViewers() {
             author: '',
             viewer: 'photos',
             handle: 'devdocs'
+        };
+        drawViewer(addViewerView, false);
+        if(!installed || !installed.github) return;
+        var addViewerView = {
+            title: 'Sync your views from GitHub',
+            author: '',
+            viewer: 'photos',
+            handle: 'devdocs',
+            sync: true
         };
         drawViewer(addViewerView, false);
     });

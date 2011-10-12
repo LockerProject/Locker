@@ -277,6 +277,7 @@ function executeSynclet(info, synclet, callback) {
 
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+    info.lockerUrl = lconfig.lockerBase;
     app.stdin.on('error',function(err){
         localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
@@ -338,7 +339,7 @@ function checkStatus(info) {
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
-//    console.log("processing synclet data from "+key+" of length "+data.length);
+    console.log("processing synclet data from "+key+" of length "+data.length);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
@@ -389,7 +390,8 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
 
 function addData (collection, mongoId, data, info, eventType, callback) {
     var errs = [];
-    var q = async.queue(function(object, cb) {
+    var q = async.queue(function(item, cb) {
+        var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
                 localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
