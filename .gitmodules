@@ -7,3 +7,6 @@
 [submodule "Apps/PhotosViewer"]
 	path = Apps/PhotosViewer
 	url = git@github.com:LockerProject/PhotosViewer.git
+[submodule "Apps/MergedContacts"]
+	path = Apps/MergedContacts
+	url = git@github.com:LockerProject/MergedContacts.git
