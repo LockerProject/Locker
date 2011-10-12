@@ -89,7 +89,6 @@ function syncRepo(repo, callback)
             existing[js.tree[i].path] = js.tree[i].sha;
         }
     } catch(e){};
-    fs.writeFile(repo.id+".json", JSON.stringify(repo));
     async.forEach(repo.tree, function(t, cb){
         if(t.type != "tree") return cb();
         if(existing[t.path] == t.sha) return cb(); // no changes
@@ -100,12 +99,15 @@ function syncRepo(repo, callback)
             if(t.type != "blob") return cb();
             if(existing[t.path] == t.sha) return cb(); // no changes
             setTimeout(function(){
-                request.get({uri:'http://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
+                request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
                     console.error(resp.statusCode + " for "+ t.path);
-                    if(err || !resp || resp.statusCode != 200) return cb();
+                    if(err || !resp || resp.statusCode != 200) {t.sha = ""; return cb(); } // don't save the sha so it gets retried again
                     fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
                 });
             },500);
-        }, callback);
+        }, function(){
+            fs.writeFile(repo.id+".json", JSON.stringify(repo));
+            callback();
+        });
     });
 }
