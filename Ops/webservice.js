@@ -506,8 +506,8 @@ exports.startService = function(port, cb) {
     serviceManager.spawn(lconfig.ui, function() {
         dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
         console.log('ui spawned');
-    });
-    locker.listen(port, function() {
-        cb();
+        locker.listen(port, function() {
+            cb();
+        });
     });
 }
