@@ -23,6 +23,7 @@ var sys = require('sys');
 var path = require('path');
 var fs = require("fs");
 var url = require('url');
+var querystring = require("querystring");
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
@@ -266,12 +267,29 @@ locker.post('/core/:svcId/enable', function(req, res) {
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.get('/Me/*', function(req,res){
+locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
     // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
-    if(req.originalUrl.match(/^\/Me\/[a-z]+$/)) {
-        console.error('redirecting ' + req.originalUrl + ' to ' + req.originalUrl + '/')
-        res.redirect(req.originalUrl + '/');
+    if(!req.params[1]) {
+        var url = "/Me/" + req.params[0];
+        if (!req.params[1]) {
+            url += "/"
+        } else {
+            url += req.params[1];
+        }
+        if (req.query) {
+            url += "?" + querystring.stringify(req.query);
+        }
+        if (lconfig.externalHost) {
+            var prefix = lconfig.externalHost;
+            if (lconfig.externalPort) prefix += ":" + lconfig.externalPort;
+            if (lconfig.externalSecure) {
+                url = "https://" + prefix + url;
+            }
+        }
+        console.error('redirecting ' + req.originalUrl + ' to ' + url);
+        res.redirect(url);
     } else {
+        console.log("Normal proxy of " + req.originalUrl);
         proxyRequest('GET', req, res);
     }
 });
