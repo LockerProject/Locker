@@ -30,8 +30,7 @@ exports.load = function(filepath) {
     exports.scannedDirs = config.scannedDirs || [
         "Apps",
         "Collections",
-        "Connectors",
-        "Me/github/repos"
+        "Connectors"
         ];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",

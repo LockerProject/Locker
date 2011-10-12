@@ -44,7 +44,7 @@ suite.next().suite.addBatch({
             assert.equal(response.config.id.followers[0], 'fourk');
         }
     }
-}).addBatch({
+/*}).addBatch({
     "Can get profile" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
@@ -68,6 +68,6 @@ suite.next().suite.addBatch({
             assert.equal(response.config.ids['ctide/arenarecapslibrary'][0], 'ctide');
         }
     }
-})
+*/})
 
 suite.export(module);

@@ -70,16 +70,7 @@ function mapMetaData(file, type, installable) {
     metaData.srcdir = path.dirname(file);
     metaData.is = type;
     metaData.installable = installable;
-    var found = false;
-    for(var i in serviceMap.available) {
-        if(serviceMap.available[i].handle === metaData.handle) {
-            serviceMap.available[i] = metaData;
-            found = true;
-            break;
-        }
-    }
-    if(!found)
-        serviceMap.available.push(metaData);
+    serviceMap.available.push(metaData);
     if (type === "collection") {
         console.log("***** Should install collection " + metaData.handle);
         if(!metaData.handle) {
@@ -125,16 +116,6 @@ function mapMetaData(file, type, installable) {
 */
 var scannedTypes = ["collection", "connector", "app"];
 
-
-exports.scanDirectories = function() {
-    // look for available things
-    lconfig.scannedDirs.forEach(function(dirToScan) {
-        console.log(dirToScan);
-        var installable = true;
-        if (dirToScan === "Collections") installable = false;
-        exports.scanDirectory(dirToScan, installable);
-    });
-}
 /**
 * Scans a directory for available services
 */
@@ -143,14 +124,7 @@ exports.scanDirectory = function(dir, installable) {
         installable = true;
     }
 
-    var files;
-    try {
-        files = fs.readdirSync(dir);
-    } catch(err) {
-        if(err.code !== 'ENOENT')
-            throw err;
-        else return;
-    }
+    var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
         var stats = fs.statSync(fullPath);

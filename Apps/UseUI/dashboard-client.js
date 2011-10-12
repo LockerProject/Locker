@@ -93,14 +93,14 @@ app.post('/setViewer', function(req, res) {
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
-        
+
     } else if(!handle) {
-        
+
     } else {
         if(!(type === 'photos' || type === 'people' || type === 'links')) {
-            
+
         } else if(!viewers.available[type][handle]) {
-            
+
         } else {
             // phew!
             viewers.selected[type] = handle;
@@ -130,7 +130,7 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         console.dir(req.body);
-        
+
         if(req.body.type === 'repo/github' || req.body.type === 'repos/github') {
             console.error("DEBUG: req.body", req.body);
             io.sockets.emit('repo', req.body);
@@ -222,9 +222,9 @@ function bootState(doneCb)
 }
 
 function getViewers(callback) {
-    locker.updateMap(function(err, map) {
+    locker.map(function(err, map) {
         if(err) {
-            
+
         } else {
             viewers.available = {};
             map.available.forEach(function(app) {

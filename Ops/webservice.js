@@ -69,18 +69,6 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
-
-// return the known map of our world
-locker.get('/updateMap', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript'
-    });
-    serviceManager.scanDirectories();
-    res.end(JSON.stringify(serviceManager.serviceMap()));
-});
-
-
-
 locker.get("/providers", function(req, res) {
     console.log("Looking for providers of type " + req.param("types"));
     if (!req.param("types")) {

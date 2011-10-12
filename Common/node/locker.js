@@ -65,12 +65,6 @@ exports.map = function(callback) {
     });
 };
 
-exports.updateMap = function(callback) {
-    request.get({url:exports.lockerBase + "/updatemap"}, function(error, res, body) {
-        callback(error, body ? JSON.parse(body) : undefined);
-    });
-};
-
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
     request.get({url:exports.lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})},
