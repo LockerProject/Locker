@@ -38,7 +38,10 @@
 		</ul>
 	</div>
 	<hr />
-	<pre class='prettyprint'><code class='language-javascript'></code></pre>
+	<div id='testInfo'>
+		<div id='fullTestURL'></div>
+		<pre class='prettyprint'><code class='language-javascript'></code></pre>
+	</div>
 	<div id='testParameters'>
 		<div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /></div>
 	</div>
@@ -74,9 +77,9 @@ $(function() {
 			});
 			if (queryParams.length > 0) path = path + "?" + queryParams;
 		}
-		console.log("Testing " + path);
 		$(".prettyprint code").text("Loading...");
-		$("pre.prettyprint").show();
+		$("#fullTestURL").text(path);
+		$("#testInfo").show();
 		$.getJSON(path, function(testData) {
 			$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
 			prettyPrint();
@@ -88,7 +91,7 @@ $(function() {
 	});
 
 	$("#curMethod").change(function() {
-		$("pre.prettyprint").hide();
+		$("#testInfo").hide();
 		var data = $(this + "option:selected").data();
 		curAPI = data;
 		$(".prettyprint code").text("Loading...");
