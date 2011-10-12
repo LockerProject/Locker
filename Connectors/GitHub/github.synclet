@@ -12,7 +12,8 @@
         }
     ],
     "provides": [
-        "contact/github"
+        "contact/github",
+        "repo/github"
     ],
     "provider": "github",
     "action": "Connect to a github account",

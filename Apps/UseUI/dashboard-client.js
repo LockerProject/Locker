@@ -160,6 +160,29 @@ app.post('/closed', function(req, res) {
     saveState();
 });
 
+// WIP
+function findApp(repo, callback, i) {
+    if(!i) i = 0;
+    var treei = repo.tree.tree[i];
+    if(!treei)
+        return callback();
+    var path = treei.path;
+    if(treei.type === 'blob' && path.indexOf('.app') == path.length - 4) {
+        request.get({uri:treei.url, json:true}, function(err, resp, json) {
+            console.error("DEBUG: json", json);
+            try {
+                var app = JSON.parse(new Buffer(json.content, 'base64').toString());
+                if(app.title && app.viewer && app.static && app.uses)
+                    return callback(app);
+            } catch(err) {
+                console.error("DEBUG: err", err);
+            }
+        });
+    } else {
+        findApp(repo, callback, i+1);
+    }
+}
+
 // just snapshot to disk every time we push an event so we can compare in the future
 function saveState()
 {
