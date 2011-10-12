@@ -503,11 +503,11 @@ exports.startService = function(port, cb) {
     }
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
-    serviceManager.spawn(lconfig.ui, function() {
-        dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
-        console.log('ui spawned');
-        locker.listen(port, function() {
+    locker.listen(port, function() {
+        serviceManager.spawn(lconfig.ui, function() {
             cb();
+            dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+            console.log('ui spawned');
         });
     });
 }
