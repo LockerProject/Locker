@@ -133,14 +133,14 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
-        
+
         var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
             if(!viewersFullDisplay) {
                 $("#viewers-hover").hide();
                 $("#viewers-title").show();
                 $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"}, 300, function() {                   
+                $("#viewers").animate({"left":"0px"}, 300, function() {
                     $("#viewers-slide-button").attr('src', 'img/slide-in.png');
                     viewersFullDisplay = true;
                 });
@@ -154,7 +154,7 @@ $(document).ready(
                 });
             }
         });
-        
+
         $("#viewers").hover(
             function(e) {
                 if (!viewersFullDisplay) {
@@ -164,10 +164,10 @@ $(document).ready(
                 }
             },
             function(e) {
-                if (!viewersFullDisplay) {        
+                if (!viewersFullDisplay) {
                     $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
                         viewersFullDisplay = false;
-                    });            
+                    });
                 }
             }
         );
@@ -268,7 +268,7 @@ function renderRow(name, obj) {
 var resultModifiers = {};
 
 resultModifiers.people = function(newResult, obj) {
-    newResult.children('.search-result').text(obj.fullobject.name);
+    newResult.children('.search-result').html(obj.fullobject.name);
     if (obj.fullobject['photos']) {
         newResult.find('.search-result-icon').attr('src', obj.fullobject.photos[0]);
     } else {
@@ -278,7 +278,7 @@ resultModifiers.people = function(newResult, obj) {
 }
 
 resultModifiers.photos = function(newResult, obj) {
-    newResult.children('.search-result').text(obj.fullobject.title);
+    newResult.children('.search-result').html(obj.fullobject.title);
     newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
     var img = newResult.find('.search-result-icon')[0];
     img.onload = function() {
@@ -295,14 +295,14 @@ resultModifiers.links = function(newResult, obj) {
         return false;
     }
     newResult.attr('title', obj.title);
-    newResult.children('.search-result').text(obj.title);
+    newResult.children('.search-result').html(obj.title);
     newResult.find('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 
 resultModifiers.tweets = function(newResult, obj) {
     newResult.attr('title', obj.fullobject.text);
-    newResult.children('.search-result').text(obj.fullobject.text);
+    newResult.children('.search-result').html(obj.fullobject.text);
     newResult.find('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
     newResult.click(function() { window.open('https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str, '_blank'); });
 }
@@ -452,7 +452,7 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
     newService.removeClass('template');
     $('#viewers-list').append(newService);
-    
+
     newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
     newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
