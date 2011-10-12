@@ -5,6 +5,7 @@ var GitHubApi = require("github").GitHubApi
   , nfs = require('node-fs')
   , fs = require('fs')
   , auth
+  , viewers = []
   ;
 
 exports.sync = function(processInfo, cb) {
@@ -16,6 +17,8 @@ exports.sync = function(processInfo, cb) {
             var responseObj = {data : {}, config: {}};
             responseObj.data.profile = [{obj: profile}];
             responseObj.data.repo = repos;
+            responseObj.data.view = viewers;
+            console.error(viewers);
             cb(err, responseObj);
         });
     });
@@ -24,30 +27,36 @@ exports.sync = function(processInfo, cb) {
 exports.syncRepos = function(callback) {
     github.getRepoApi().getUserRepos(auth.username, function(err, repos) {
         if(err || !repos || !repos.length) return callback(err, []);
+        // process each one to get richer data
         async.forEachSeries(repos, function(repo, cb){
             repo.id = getIDFromUrl(repo.url);
             // get the watchers, is nice
-            console.error("syncing "+repo.id);
+            console.error("checking "+repo.id);
             github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
                 repo.watchers = watchers;
-                // try syncing the whole thing! prty dmb 4 now
+                // get a snapshot of the full repo, is nice too
                 request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", json:true}, function(err, resp, tree) {
                     if(err || !tree || !tree.tree) return cb(err);
-                    // first the dirs
-                    async.forEach(tree.tree, function(t, cb2){
-                        if(t.type != "tree") return cb2();
-                        nfs.mkdir(repo.id + "/" + t.path, 0777, true, cb2);
-                    }, function(){
-                        // then the blobs
-                        async.forEach(tree.tree, function(t, cb2){
-                            if(t.type != "blob") return cb2();
-                            console.error("FETCHING "+'http://raw.github.com/'+repo.id+'/HEAD/'+t.path);
-                            request.get({uri:'http://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary'}, function(err, resp, body) {
-                                if(err) return cb2();
-                                console.error("got "+resp.statusCode+" for "+t.path);
-                                fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb2);
-                            });
-                        }, cb);
+                    repo.tree = tree.tree;
+                    // see if there's any viewers!
+                    var viewer = false;
+                    for(var i=0; i < repo.tree.length; i++) if(/^\w+\.app$/.test(repo.tree[i].path)) viewer = repo.tree[i].path;
+                    if(!viewer) return cb();
+                    console.error("found a viewer! "+repo.id);
+                    syncRepo(repo, function(err, ) {
+                        // mangle the manifest so it's a unique handle
+                        var manifest = repo.id+"/"+viewer;
+                        try {
+                            var js = JSON.parse(fs.readFileSync(manifest));
+                            js.handle = repo.id.replace("/", "-");
+                            fs.writeFileSync(manifest, JSON.stringify(js));
+                        } catch (err) {
+                            // bail, no viewer for you
+                            console.error("failed: "+err);
+                            return cb();
+                        }
+                        viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at});
+                        cb();
                     });
                 });
             });
@@ -61,4 +70,35 @@ function getIDFromUrl(url) {
     if(typeof url !== 'string')
         return url;
     return url.substring(url.lastIndexOf('/', url.lastIndexOf('/') - 1) + 1);
+}
+
+function syncRepo(repo, callback)
+{
+    var existing = {};
+    try {
+        var js = JSON.parse(fs.readFileSync(repo.id+".json"));
+        for(var i=0; i < js.tree.length; i++)
+        {
+            existing[js.tree[i].path] = js.tree[i].sha;
+        }
+    } catch(e){};
+    fs.writeFile(repo.id+".json", JSON.stringify(repo));
+    async.forEach(repo.tree, function(t, cb){
+        if(t.type != "tree") return cb();
+        if(existing[t.path] == t.sha) return cb(); // no changes
+        nfs.mkdir(repo.id + "/" + t.path, 0777, true, cb);
+    }, function(){
+        // then the blobs
+        async.forEachSeries(repo.tree, function(t, cb){
+            if(t.type != "blob") return cb();
+            if(existing[t.path] == t.sha) return cb(); // no changes
+            setTimeout(function(){
+                request.get({uri:'http://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:{"Connection":"keep-alive"}}, function(err, resp, body) {
+                    if(err) return cb2();
+                    console.error("got "+resp.statusCode+" for "+t.path);
+                    fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
+                });
+            },500);
+        }, callback);
+    });
 }
