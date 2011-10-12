@@ -13,6 +13,29 @@
 .paramType {
 	font-style:italic;
 }
+#fullTestURL {
+	font-weight:bold;
+	font-size:20px;
+	background-color:#cdcdcd;
+	border:1px solid black;
+	margin:8px 0 8px 0;
+	padding:8px;
+}
+#limitedResults {
+	font-style:italic;
+	color:red;
+	font-size:12px;
+}
+.operator {
+	font-weight:bold;
+	display:block;
+	float:left;
+	width:20px;
+}
+.paramDescription ul li {
+	padding-left:20px;
+	list-style-type: none;
+}
 </style>
 </head>
 
@@ -38,14 +61,15 @@
 		</ul>
 	</div>
 	<hr />
-	<div id='testInfo'>
-		<div id='fullTestURL'></div>
-		<pre class='prettyprint'><code class='language-javascript'></code></pre>
-	</div>
 	<div id='testParameters'>
 		<div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /></div>
 	</div>
 	<input id='testButton' type='button' name='testIt' value='Test It' />
+	<div id='testInfo'>
+		<div id='fullTestURL'></div>
+		<div id='limitedResults'></div>
+		<pre class='prettyprint'><code class='language-javascript'></code></pre>
+	</div>
 </div>
 <script type="text/javascript">
 $(function() {
@@ -81,6 +105,14 @@ $(function() {
 		$("#fullTestURL").text(path);
 		$("#testInfo").show();
 		$.getJSON(path, function(testData) {
+			var hasMore = false;
+			if (testData.length && testData.length > 20) {
+				
+				$("#limitedResults").text("Results were limited to 20 entries.  " + (testData.length - 20) + " were hidden.").show();
+				testData = testData.splice(0, 20);
+			} else {
+				$("#limitedResults").hide();
+			}
 			$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
 			prettyPrint();
 		}).error(function(error) {
