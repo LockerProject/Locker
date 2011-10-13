@@ -157,7 +157,7 @@ socket.on('newservice', function(name) {
 });
 
 socket.on('viewer', function(evt) {
-    queueGritter('viewer', evt.obj);
+    queueGritter('viewer', evt.obj.data);
 });
 
 socket.on("counts", function(counts) {
