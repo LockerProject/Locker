@@ -88,16 +88,15 @@ app.post('/setViewer', function(req, res) {
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
-
+        console.error("No type given for viewer");
     } else if(!handle) {
-
+        console.error("No handle given for viewer");
     } else {
-        if(!(type === 'photos' || type === 'people' || type === 'links')) {
-
-        } else if(!viewers.available[type][handle]) {
-
+        if(!(type === 'photos' || type === 'contacts' || type === 'links')) {
+            console.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
+            console.log("Saved the " + type + " viewer as " + handle);
             viewers.selected[type] = handle;
             lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
         }
