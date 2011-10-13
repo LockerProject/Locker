@@ -82,7 +82,6 @@ vows.describe("Synclet Manager").addBatch({
                     // Wed, 03 Aug 2011 00:12:15 GMT
                     //     ✗ next run is about 120 seconds from now
                     //       » expected true, got false // lsyncmanager-test-local.js:47
-                    console.dir('topic' + JSON.stringify(topic));
                     // console.dir(new Date());
                     // assert.isTrue(topic.nextRun > new Date() + 110);
                     // assert.isTrue(topic.nextRun < new Date() + 130);
