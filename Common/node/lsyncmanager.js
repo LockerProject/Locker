@@ -307,9 +307,6 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         synclet.status = 'waiting';
         checkStatus(info);
 
-        if (!callback) {
-            callback = function() {};
-        }
         var dataKeys = [];
         if (typeof(response.data) === 'string') {
             return callback('bad data from synclet');
@@ -319,6 +316,9 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         }
         for (var i in deleteIDs) {
             if (!dataKeys[i]) dataKeys.push(i);
+        }
+        if (dataKeys.length === 0) {
+            return callback();
         }
         async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
     });
@@ -366,7 +366,7 @@ function processData (deleteIDs, info, key, data, callback) {
                 deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
             }
         });
-    } else if (data) {
+    } else if (data.length > 0) {
         addData(collection, mongoId, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
         deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
@@ -394,22 +394,23 @@ function addData (collection, mongoId, data, info, eventType, callback) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
                 localError(info.title + ' ' + eventType, "missing key: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
-                cb();
-                return;
+                return cb();
             }
             var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
             newEvent.fromService = info.id;
             if (object.type === 'delete') {
-                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
                 levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
                     newEvent.obj.data = doc;
                     levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
-                    cb();
+                    return cb();
                 });
             }
+        } else {
+            cb();
         }
     }, 5);
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
