@@ -366,7 +366,7 @@ function processData (deleteIDs, info, key, data, callback) {
                 deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
             }
         });
-    } else if (data.length > 0) {
+    } else if (data && data.length > 0) {
         addData(collection, mongoId, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
         deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
