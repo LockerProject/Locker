@@ -49,7 +49,7 @@
 						"paramType":"query"
 					},
 					{
-						"name":"skip",
+						"name":"offset",
 						"description":"The number to offset into the photos collection and begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
@@ -60,16 +60,17 @@
 	},
 	{
 		"path":"/Me/photos/image/{id}",
-		"description":"Redirect to the actual photo data based on the photo _id.",
+		"description":"Redirect to the actual photo data based on the photo id.",
 		"operations":[
 			{
 				"httpMethod":"GET",
 				"nickname":"photosRedirect",
-				"summary":"Redirect to the actual photo data based on the photo _id.",
+				"summary":"Redirect to the actual photo data based on the photo id.",
+				"responseClass":"[Image]",
 				"parameters":[
 					{
 						"name":"id",
-						"description":"The _id from a photo to redirect to.",
+						"description":"The id from a photo to redirect to.",
 						"dataType":"string",
 						"paramType":"path"
 					}
@@ -148,7 +149,7 @@
 						"paramType":"query"
 					},
 					{
-						"name":"skip",
+						"name":"offset",
 						"description":"The number to offset into the contacts collection and begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
@@ -347,31 +348,6 @@
 						"description":"A single, or comma separated list, of service types that are being searched for.",
 						"dataType":"string",
 						"paramType":"query"
-					}
-				]
-			}
-		]
-	},
-	{
-		"path":"/synclets/{syncletName}/getCurrent/{type}",
-		"description":"Retrieve all of the current data from a synclet.",
-		"operations":[
-			{
-				"httpMethod":"GET",
-				"nickname":"coreAvailable",
-				"summary":"Retrieve all of the current data from a synclet.",
-				"parameters":[
-					{
-						"name":"syncletName",
-						"description":"The name of the synclet to retrieve data from.",
-						"dataType":"string",
-						"paramType":"path"
-					},
-					{
-						"name":"type",
-						"description":"The data type to retrieve from the gieven synclet.",
-						"dataType":"string",
-						"paramType":"path"
 					}
 				]
 			}

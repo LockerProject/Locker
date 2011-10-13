@@ -5,10 +5,16 @@
         {
             "frequency": 3600,
             "name": "users"
+        },
+        {
+            "frequency": 3600,
+            "name": "repos"
         }
     ],
     "provides": [
-        "contact/github"
+        "contact/github",
+        "repo/github",
+        "view/github"
     ],
     "provider": "github",
     "action": "Connect to a github account",

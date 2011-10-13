@@ -277,6 +277,7 @@ function executeSynclet(info, synclet, callback) {
 
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+    info.lockerUrl = lconfig.lockerBase;
     app.stdin.on('error',function(err){
         localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
@@ -307,9 +308,6 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         synclet.status = 'waiting';
         checkStatus(info);
 
-        if (!callback) {
-            callback = function() {};
-        }
         var dataKeys = [];
         if (typeof(response.data) === 'string') {
             return callback('bad data from synclet');
@@ -319,6 +317,9 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         }
         for (var i in deleteIDs) {
             if (!dataKeys[i]) dataKeys.push(i);
+        }
+        if (dataKeys.length === 0) {
+            return callback();
         }
         async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
     });
@@ -338,7 +339,8 @@ function checkStatus(info) {
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
-//    console.log("processing synclet data from "+key+" of length "+data.length);
+    var len = (data)?data.length:0;
+    console.log("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
@@ -366,7 +368,7 @@ function processData (deleteIDs, info, key, data, callback) {
                 deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
             }
         });
-    } else if (data) {
+    } else if (data && data.length > 0) {
         addData(collection, mongoId, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
         deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
@@ -389,27 +391,29 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
 
 function addData (collection, mongoId, data, info, eventType, callback) {
     var errs = [];
-    var q = async.queue(function(object, cb) {
+    var q = async.queue(function(item, cb) {
+        var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + eventType, "missing key: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
-                cb();
-                return;
+                return cb();
             }
             var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
             newEvent.fromService = info.id;
             if (object.type === 'delete') {
-                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
                 levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
                     newEvent.obj.data = doc;
                     levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
-                    cb();
+                    return cb();
                 });
             }
+        } else {
+            cb();
         }
     }, 5);
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
@@ -469,7 +473,7 @@ function addUrls() {
     } else {
         host = "http://";
     }
-    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    host += lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
         try {
             apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
