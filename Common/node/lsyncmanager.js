@@ -467,13 +467,7 @@ function mapMetaData(file) {
 
 function addUrls() {
     var apiKeys;
-    var host;
-    if (lconfig.externalSecure) {
-        host = "https://";
-    } else {
-        host = "http://";
-    }
-    host += lconfig.externalBase + "/";
+    var host += lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
         try {
             apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
