@@ -473,7 +473,7 @@ function addUrls() {
     } else {
         host = "http://";
     }
-    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    host += lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
         try {
             apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
