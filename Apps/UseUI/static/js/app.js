@@ -340,9 +340,8 @@ var SyncletPoll = (
             t.handleResponse = function(data, err, resp) {
                 if(retryTime < 10000) retryTime += 500;
                 var hasProps = false;
-                installed = data.installed;
                 for (app in data.installed) {
-                    if(app == "github") drawViewers(); // add it whenever it loads
+                    if(installed && !installed.github && app == "github") drawViewers(); // add it whenever it loads first time
                     hasProps = true;
                     if (window.guidedSetup) window.guidedSetup.servicesAdded();
                     app = data.installed[app];
@@ -352,6 +351,7 @@ var SyncletPoll = (
                         t.updateState(app.provider, app);
                     }
                 }
+                installed = data.installed;
                 if (!hasProps && !window.guidedSetup) {
                     window.guidedSetup = new GuidedSetup();
                 }
