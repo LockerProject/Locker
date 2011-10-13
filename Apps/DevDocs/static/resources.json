@@ -49,7 +49,7 @@
 						"paramType":"query"
 					},
 					{
-						"name":"skip",
+						"name":"offset",
 						"description":"The number to offset into the photos collection and begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
@@ -149,7 +149,7 @@
 						"paramType":"query"
 					},
 					{
-						"name":"skip",
+						"name":"offset",
 						"description":"The number to offset into the contacts collection and begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
