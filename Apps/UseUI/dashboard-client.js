@@ -22,7 +22,11 @@ lconfig.load('../../Config/config.json');
 var externalBase;
 var closed;
 var locker;
-var viewers = {};
+var viewers = {available:{}, selected:{
+    photos: "photosv09",
+    contacts: "contactsviewer",
+    links: "linkalatte"
+}};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
@@ -96,7 +100,7 @@ app.post('/setViewer', function(req, res) {
             console.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
-            console.log("Saved the " + type + " viewer as " + handle);
+            console.log("Setting the viewer for " + type + " to " + handle);
             viewers.selected[type] = handle;
             lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
         }
@@ -212,7 +216,7 @@ function bootState(doneCb)
 function getViewers(callback) {
     locker.map(function(err, map) {
         if(err) {
-
+            logger.debug("failed to get map "+err);
         } else {
             viewers.available = {};
             map.available.forEach(function(app) {
@@ -225,11 +229,6 @@ function getViewers(callback) {
             try {
                 viewers.selected = JSON.parse(fs.readFileSync('viewers.json'));
             } catch(err) {
-                viewers.selected = {
-                    photos: "photosv09",
-                    contacts: "contactsviewer",
-                    links: "linkalatte"
-                };
             }
         }
         callback();
