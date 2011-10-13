@@ -33,7 +33,7 @@
         "knox": "=0.0.9",
         "unshortener": "=0.0.8",
         "readabilitySAX": "=0.2.2",
-        "mongodb": "=0.9.6-20",
+        "mongodb": "=0.9.6-15",
         "winston": "=0.5.2",
         "clucene": "=0.2.2",
         "socket.io": "=0.8.4",
