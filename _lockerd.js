@@ -139,7 +139,9 @@ exports.alive = false;
             console.log(dirToScan);
             var installable = true;
             if (dirToScan === "Collections") installable = false;
-            serviceManager.scanDirectory(dirToScan, installable);
+            try {
+                serviceManager.scanDirectory(dirToScan, installable);
+            } catch (E) {}
         });
 
         syncManager.scanDirectory("Connectors");
