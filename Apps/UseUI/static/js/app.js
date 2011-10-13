@@ -8,6 +8,7 @@ var ready = false;
 var searchWaiting = false;
 var searchInterval;
 var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.template)';
+if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
 var externalBase = window.location.origin;
 
 $(document).ready(
