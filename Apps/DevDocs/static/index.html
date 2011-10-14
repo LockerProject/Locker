@@ -1,220 +1,64 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<title></title>
-<script type="text/javascript" src='jquery-1.6.2.min.js'></script>
-<script type='text/javascript' src='pure_min.js'></script>
-<link rel="stylesheet" type="text/css" href="prettify/prettify.css" />
-<script type='text/javascript' src='prettify/prettify.js'></script>
-<style type="text/css">
-.paramName {
-	font-weight:bold;
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <title>Developer Documentation</title>
+
+  <style type="text/css">
+body {
+  background-color: white;
+  margin: 40px;
+
 }
-.paramType {
-	font-style:italic;
+ol {
+  font-size: 36px;
 }
-#fullTestURL {
-	font-weight:bold;
-	font-size:20px;
-	background-color:#cdcdcd;
-	border:1px solid black;
-	margin:8px 0 8px 0;
-	padding:8px;
+li {
+  margin: 20px;
 }
-#limitedResults {
-	font-style:italic;
-	color:red;
-	font-size:12px;
+ul li {
+  font-size: 24px;
+  margin: 8px;
 }
-.operator {
-	font-weight:bold;
-	display:block;
-	float:left;
-	width:20px;
-}
-.paramDescription ul li {
-	padding-left:20px;
-	list-style-type: none;
-}
-</style>
+  </style>
+
 </head>
 
 <body>
-<select id='curMethod'>
-</select>
-<div id='methodTemplate'>
-	<h1 class='path'>/api/path</h1>
-	<div class='operationDescription'></div>
-	<div class='description'>
-		<div class='notesBlock'><h3>Notes</h3><div class='notes'></div></div>
-		<div class='parameters'>
-			<h3>Parameters</h3>
-			<ul>
-			  <li><span class='paramName'>param</span> - <span class='paramType'>type</span> - <span class='paramDescription'>some description</span></li>
-			</ul>
-		</div>
-	</div>
-	<div class='resultModel'>
-		<h3>Results</h3>
-		<ul class='resultEntry'>
-			<li><span class='paramName'></span> - <span class='paramType'></span> - <span class='paramDescription'></span></li>
-		</ul>
-	</div>
-	<hr />
-	<div id='testParameters'>
-		<div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /></div>
-	</div>
-	<input id='testButton' type='button' name='testIt' value='Test It' />
-	<div id='testInfo'>
-		<div id='fullTestURL'></div>
-		<div id='limitedResults'></div>
-		<pre class='prettyprint'><code class='language-javascript'></code></pre>
-		<img id='testResultImage' />
-	</div>
-</div>
-<script type="text/javascript">
-$(function() {
-	var apiData;
-	var curAPI;
-	var models = {};
 
-	$("#testButton").click(function(e) {
-		var path = curAPI.path;
-		console.log("Start path " + path);
-		var queryParams = "";
-		if (curAPI.operations[0].parameters) {
-			$.each(curAPI.operations[0].parameters, function(key, val) {
-				switch(val.paramType) {
-				case "path":
-					path = path.replace("{" + val.name + "}", $("input[name$='" + val.name + "']").val());
-					break;
-				case "query":
-					var inputVal = $("input[name$='" + val.name + "']").val();
-					if (inputVal) {
-						if (queryParams.length > 0) queryParams += "&";
-						queryParams += val.name + "=" + inputVal;
-					}
-					break;
-				default:
-					console.log("Unknown paramType" + val.paramType);
-					break;
-				}
-			});
-			if (queryParams.length > 0) path = path + "?" + queryParams;
-		}
-		$(".prettyprint code").text("Loading...");
-		$("#fullTestURL").text(path);
-		$("#testInfo").show();
-		if (curAPI.operations[0].responseClass == "[Image]") {
-			$("#testResultImage").attr("src", path);
-			$("#testResultImage").show();
-			$(".prettyprint").hide();
-		} else {
-			$(".prettyprint").show();
-			$("#testResultImage").hide();
-			$.getJSON(path, function(testData) {
-				console.log("Full length is " + testData.length)
-				var hasMore = false;
-				if (testData.length && testData.length > 20) {
-					
-					$("#limitedResults").text("Results were limited to 20 entries.  " + (testData.length - 20) + " were hidden.").show();
-					testData = testData.splice(0, 20);
-				} else {
-					$("#limitedResults").hide();
-				}
-				$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
-				prettyPrint();
-			}).error(function(error) {
-				console.log("We got an error");
-				$(".prettyprint code").text(error.responseText);
-				prettyPrint();
-			});
-		}
-		return false;
-	});
+<ol>
+  <li> Connect your GitHub account if you haven't yet (under services in upper right corner) </li>
+  <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer">Skeleton Viewer</a> </li>
+  <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings">API Token</a> <br>
+  <input id="token" value="baseUrl = 'https://api.singly.com/<apikey>';" size="100" /></li>
+  <li> Edit and test your viewer!
+  <ul>
+    <li>Loading your index.html locally should work :)</li>
+    <li>Change your .app file to customize your viewer name</li>
+    <li>Push your changes back to github, and check them out from inside your locker</li>
+  </ul>
+  </li>
+  <li> Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with</li>
 
-	$("#curMethod").change(function() {
-		$("#testInfo").hide();
-		var data = $(this + "option:selected").data();
-		curAPI = data;
-		$(".prettyprint code").text("Loading...");
-		$("h1.path").text(data.path);
-		$(".operationDescription").html(data.description);
-		if (data.operations[0].notes) {
-			$("div.notes").html(data.operations[0].notes);
-			$("div.notesBlock").show();
-		} else {
-			$("div.notesBlock").hide();
-		}
-		if (data.operations[0].parameters) {
-			$("div.parameters").show();
-			$("#testParameters").show();
-			$("div.parameters ul").find("li:gt(0)").remove();
-			$("#testParameters").find("div:gt(0)").remove();
-			$("#methodTemplate div.parameters ul").render(data.operations[0], {
-				"li":{
-					"param<-parameters":{
-						"span.paramName":"param.name",
-						"span.paramType":"param.dataType",
-						"span.paramDescription":"param.description"
-					}
-				}
-			});
-			$("div#testParameters ").render(data.operations[0], {
-				"div.testParam":{
-					"param<-parameters":{
-						"span.paramName":"param.name",
-						"input@name":"_#{param.name}"
-					}
-				}
-			});
-		} else {
-			$("div.parameters").hide();
-			$("#testParameters").hide();
-		}
-		if (data.operations[0].responseClass && data.operations[0].responseClass.indexOf("[") == -1) {
-			$("ul.resultEntry").find("li:gt(0)").remove();
-			$("#methodTemplate ul.resultEntry").render(models[data.operations[0].responseClass].responseClass, {
-				"li":{
-					"result<-properties":{
-						"@class":function(arg) {
-							return "liveRow";
-						},
-						"span.paramName":function(arg) {
-							return arg.pos;
-						},
-						"span.paramType":function(arg) {
-							return arg.item.type;
-						},
-						"span.paramDescription":function(arg) {
-							return arg.item.description;
-						}
-					}
-				}
-			});
-			$("div.resultModel").show();
-		} else {
-			$("div.resultModel").hide();
-		}
-		return false;
-	});
+</ol>
 
-	$.getJSON("resources.json", function(data) {
-		apiData = data;
-		data.apis.sort(function(lh, rh) {
-			return lh.path.localeCompare(rh.path);
-		});
-		$.each(data.apis, function(key, value) {
-			var path = data.apis[key].path;
-			$("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"))
-		});
-		$.each(data.models, function(key, value) {
-			models[value.name] = value;
-		});
-		$('#curMethod').change();
-	});
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script>
+$.ajaxSetup({
+    xhrFields: {
+       withCredentials: true
+    },
+    crossDomain: true
+});
+$(document).ready(function() {
+    $.getJSON('https://singly.com/users/me/apiToken', function(token) {
+        if(!token || !token.apiToken) return;
+        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+    });
 });
 </script>
-</body>
-
 </html>
