@@ -35,6 +35,8 @@ NullEngine.prototype.queryType = function(type, q, params, cb) {
 NullEngine.prototype.name = function() {
     return "Null engine";
 };
+NullEngine.prototype.flushAndCloseWriter = function() {
+};
 
 CLEngine = function()
 {
@@ -46,6 +48,15 @@ CLEngine = function()
             "_id":"_id",
             "name":"name",
             "nicknames":[],
+            "accounts":{
+                "twitter":[
+                    {
+                        "data":{
+                            "description":"description"
+                        }
+                    }
+                ]
+            },
             "email":[
                 {
                     "value":"value"
@@ -164,11 +175,11 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
     if (source !== null) {
         doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     }
-    doc.addField('content', contentString, this.engine.Store.STORE_YES|this.engine.Index.INDEX_TOKENIZED);
+    doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
     assert.ok(indexPath);
-    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime, docsReplaced) {
-    callback(err, indexTime, docsReplaced);
+    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime) {
+        callback(err, indexTime);
     });
 };
 CLEngine.prototype.deleteDocument = function(id, callback) {
@@ -181,14 +192,19 @@ CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
+    this.flushAndCloseWriter();
     this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
     assert.ok(indexPath);
+    this.flushAndCloseWriter();
     this.lucene.search(indexPath, "content:(" + query + ")", callback);
 };
 CLEngine.prototype.name = function() {
     return "CLEngine";
+};
+CLEngine.prototype.flushAndCloseWriter = function() {
+    this.lucene.closeWriter();
 };
 
 
@@ -224,6 +240,7 @@ function exportEngineFunction(funcName) {
 }
 exportEngineFunction("queryType");
 exportEngineFunction("queryAll");
+exportEngineFunction("flushAndCloseWriter");
 
 // Indexing Parts Be Here
 var indexQueue = [];
@@ -267,12 +284,13 @@ function indexMore(keepGoing) {
         indexing = false;
         return;
     }
-    
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
     exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
+        delete cur;
+        cur = null;
         //console.log("Setting up for next tick");
         // TODO: review for optimization per ctide comment (per 100 instead of per 1?)
         process.nextTick(function() { indexMore(true); });

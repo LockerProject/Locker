@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <title>Developer Documentation</title>
+
+  <style type="text/css">
+body {
+  background-color: white;
+  margin: 40px;
+
+}
+ol {
+  font-size: 36px;
+}
+li {
+  margin: 20px;
+}
+ul li {
+  font-size: 24px;
+  margin: 8px;
+}
+
+.done {
+    color:#aaa;
+    text-decoration: line-through;
+}
+  </style>
+
+</head>
+
+<body>
+
+<ol>
+  <li id="connect"> <a id="connect-link"> Connect your GitHub account </a></li>
+  <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a> </li>
+  <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings">API Token</a> <br>
+  <input id="token" value="baseUrl = 'https://api.singly.com/<apikey>';" size="100" /></li>
+  <li> Edit and test your viewer!
+  <ul>
+    <li>Open your index.html in a browser</li>
+    <li>Edit your .app file to change your viewer name</li>
+    <li>Push your changes back to GitHub, and check them out from inside your account</li>
+  </ul>
+  </li>
+  <li> Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with</li>
+
+</ol>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script>
+
+
+// this needs some cleanup to actually use the proper height + widths
+function accountPopup(url) {
+    var popup = window.open(url, "account", "width=1000,height=1000,status=no,scrollbars=no,resizable=no");
+    popup.focus();
+}
+
+$.ajaxSetup({
+    xhrFields: {
+       withCredentials: true
+    },
+    crossDomain: true
+});
+
+function hasGithub(callback) {
+    $.getJSON('/synclets', function(synclets) {
+        var installed = synclets.installed;
+        for(var i in installed) {
+            if(installed[i].id === "github") {
+                return callback(true);
+            }
+        }    
+        callback(false, synclets.available);
+    });
+}
+
+function waitForGithub(callback) {
+    hasGithub(function(has) {
+        if(has) return callback();
+        setTimeout(function() {
+            waitForGithub(callback);
+        }, 1000);
+    });
+}
+
+$(document).ready(function() {
+    $.getJSON('https://singly.com/users/me/apiToken', function(token) {
+        if(!token || !token.apiToken) return;
+        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+    });
+    hasGithub(function(isInstalled, available) {
+        if(isInstalled) {
+            $("#connect").addClass('done');
+        } else {
+            for(var i in available) {
+                if(available[i].provider === 'github') {
+                    $("#connect-link").attr('href', "#");
+                    var url = available[i].authurl;
+                    $("#connect-link").click(function() {
+                        accountPopup(url);
+                        waitForGithub(function() {
+                            $("#connect").addClass('done');
+                            $("#connect-link").removeAttr('href');
+                        });
+                    });
+                }
+            }
+        }
+    });
+});
+</script>
+</html>

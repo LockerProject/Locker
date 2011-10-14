@@ -23,7 +23,7 @@ suite.next().suite.addBatch({
             process.chdir(curDir + mePath);
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'http://api.flickr.com:80/services/rest/?api_sig=6094c6b15bb5e02db2d76efe471b2480&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=1&per_page=10',
+                uri : 'http://api.flickr.com:80/services/rest/?api_sig=eb6c6301baa8ce6c94f0c55dd27f987b&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=1&per_page=1000',
                 file : __dirname + '/fixtures/flickr/contacts_1.json' });
             contacts.sync(pinfo, this.callback) },
         "successfully" : function(err, response) {
@@ -36,7 +36,7 @@ suite.next().suite.addBatch({
         "and handles paging": function(err, response) {
             assert.isNull(err);
             assert.equal(response.config.paging.lastPage, 1);
-            assert.ok(response.config.nextRun > 1314800000000);
+            assert.equal(response.config.nextRun, -1);
 
         }
     }

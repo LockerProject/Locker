@@ -8,14 +8,20 @@
 */
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var fs = require('fs');
+var lutil = require('lutil');
+var lmongoutil = require("lmongoutil");
 
 // in the future we'll probably need a visitCollection too
-var linkCollection, encounterCollection, queueCollection;
+var linkCollection, encounterCollection, queueCollection, db;
 
-exports.init = function(lCollection, eCollection, qCollection) {
+exports.init = function(lCollection, eCollection, qCollection, mongo) {
+    db = mongo.dbClient;
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
     encounterCollection = eCollection;
+    encounterCollection.ensureIndex({"link":1},{background:true},function() {});
+    encounterCollection.ensureIndex({"orig":1},{background:true},function() {});
+    encounterCollection.ensureIndex({"_hash":1},{background:true},function() {});
     queueCollection = qCollection;
 }
 
@@ -79,10 +85,23 @@ exports.getEncounters = function(arg, cbEach, cbDone) {
     findWrap(f,arg,encounterCollection,cbEach,cbDone)
 }
 
+exports.getSince = function(objId, cbEach, cbDone) {
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, linkCollection, cbEach, cbDone);
+}
+
+exports.getLastObjectID = function(cbDone) {
+    linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+}
+
+exports.get = function(id, callback) {
+    linkCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
 function findWrap(a,b,c,cbEach,cbDone){
-    var cursor = c.find(a);
+    var cursor = (b.fields) ? c.find(a, b) : c.find(a);
     if (b.sort) cursor.sort(b.sort);
     if (b.limit) cursor.limit(b.limit);
+    if (b.offset) cursor.skip(b.offset);
     cursor.each(function(err, item) {
         if (item != null) {
             cbEach(item);
@@ -100,9 +119,9 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            fs.writeFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
-    }, 5000);    
+    }, 5000);
 }
 
 // insert new (fully normalized) link, ignore or replace if it already exists?
@@ -114,7 +133,11 @@ exports.addLink = function(link, callback) {
 }
 
 exports.updateLinkAt = function(link, at, callback) {
-    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"at":at}}, {safe:true, upser:false, new:false}, callback);
+    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"at":at}}, {safe:true, upsert:false, new:false}, callback);
+}
+
+exports.updateLinkEmbed = function(link, embed, callback) {
+    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"embed":embed}}, {safe:true, upsert:false, new:false}, callback);
 }
 
 // insert new encounter, replace any existing

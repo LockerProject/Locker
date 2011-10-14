@@ -50,7 +50,7 @@ exports.syncFriends = function(callback) {
 
             });
         }
-        request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken}, function(err, resp, body) {
+        request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken + '&limit=500'}, function(err, resp, body) {
             var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
             friendIDs = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
             downloadUsers(friends, function(err) {
@@ -77,41 +77,45 @@ function downloadUsers(users, callback) {
                 requestUrl += "/users/" + friends[i] + ",";
             }
             request.get({uri:requestUrl + "&oauth_token=" + auth.accessToken}, function(err, resp, data) {
-                var response = JSON.parse(data);
-                if(response.meta.code >= 400) {
-                    allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
-                    for (var i = 0; i < friends.length; i++) {
-                        friends.push({'obj' : {'id' : friends[i]},'type' : 'delete'});
+                try {
+                    var response = JSON.parse(data);
+                    if(response.meta.code >= 400) {
+                        allKnownIDs = JSON.parse(fs.readFileSync('allKnownIDs.json'));
+                        for (var i = 0; i < friends.length; i++) {
+                            friends.push({'obj' : {'id' : friends[i]},'type' : 'delete'});
+                        }
+                        if (coll.length == 0) {
+                            return callback();
+                        } else {
+                            downloadUser();
+                        }
                     }
-                    if (coll.length == 0) {
-                        return callback();
-                    } else {
-                        downloadUser();
-                    }
+                    var responses = JSON.parse(data).response.responses;
+                    (function parseUser() {
+                        var friend = responses.splice(0, 1)[0];
+                        if (friend == undefined || friend.response == undefined || friend.response.user == undefined) {
+                            downloadUser();
+                            return;
+                        }
+                        var js = friend.response.user;
+                        js.name = js.firstName + " " + js.lastName;
+                        if (js.photo.indexOf("userpix") > 0) {
+                            // fetch photo
+                            request.get({uri:js.photo, encoding: 'binary'}, function(err, resp, body) {
+                                if (err)
+                                    console.error(err);
+                                else {
+                                    fs.writeFile('photos/' + js.id + '.jpg', body, 'binary');
+                                    photos.push({'obj' : {'photoID' : js.id}});
+                                }
+                            });
+                        }
+                        contacts.push({'obj' : js, timestamp: new Date(), type : 'new'});
+                        parseUser();
+                    })();
+                } catch (E) {
+                    return callback(E);
                 }
-                var responses = JSON.parse(data).response.responses;
-                (function parseUser() {
-                    var friend = responses.splice(0, 1)[0];
-                    if (friend == undefined || friend.response == undefined || friend.response.user == undefined) {
-                        downloadUser();
-                        return;
-                    }
-                    var js = friend.response.user;
-                    js.name = js.firstName + " " + js.lastName;
-                    if (js.photo.indexOf("userpix") > 0) {
-                        // fetch photo
-                        request.get({uri:js.photo, encoding: 'binary'}, function(err, resp, body) {
-                            if (err)
-                                console.error(err);
-                            else {
-                                fs.writeFile('photos/' + js.id + '.jpg', body, 'binary');
-                                photos.push({'obj' : {'photoID' : js.id}});
-                            }
-                        });
-                    }
-                    contacts.push({'obj' : js, timestamp: new Date(), type : 'new'});
-                    parseUser();
-                })();
             });
         } catch (exception) {
             return callback(exception);

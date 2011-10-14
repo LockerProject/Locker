@@ -18,7 +18,7 @@
 .error {
     border:1px dotted #D8000C;
     color: #D8000C;
-    background-color: #FFBABA;    
+    background-color: #FFBABA;
 }
 
 #loading {
@@ -39,9 +39,6 @@ header input#linksQuery {
     background-color:#f6f6f6;
     border:1px solid #dedede;
     width:250px;
-}
-
-#linkCounter {
 }
 
 /* Group Styles */
@@ -65,12 +62,12 @@ header input#linksQuery {
 }
 .providerIcon {
     float:left;
-    height:32px;
-    width:32px;
-    margin-top:4px;
+    height:16px;
+    width:16px;
+    vertical-align:middle;
 }
 .fullInfo {
-    margin-left:36px;
+    margin-left:16px;
     min-height:32px;
     padding:4px 4px 4px 6px;
     word-wrap:break-word;
@@ -79,26 +76,26 @@ header input#linksQuery {
     background-color:#e2e2e2;
 }
 .favicon {
-    width:16px;
+    float:left;
     height:16px;
-    vertical-align:middle;
+    width:16px;
+    margin-top:4px;
 }
 a.expandedLink {
     color:#7f7f7f;
     margin-left: 4px;
-    font-size:95%;
+    font-size:85%;
 }
 .linkDescription {
     padding:2px;
-    font-size:90%;
-}
-.origLink {
-    color:#666;
-    font-size:90%;
-    padding-left:4px;
+    font-size:95%;
 }
 .linkFrom {
     font-size:80%;
+    color:#666;
+}
+.linkFrom a {
+    text-decoration:none;
     color:#666;
 }
 .shiftDownDesc {
@@ -112,4 +109,17 @@ a.expandedLink {
 }
 .viewMore {
     font-size:75%;
+}
+
+#newCountHeader {
+    display:none;
+}
+
+#newLinkCount {
+    font-size:24px;
+    font-weight:bold;
+}
+
+.smallLink {
+    font-size:10px;
 }

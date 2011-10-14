@@ -13,26 +13,39 @@ var fs = require('fs'),
     url = require('url'),
     sys = require('sys');
 
-    
+
 var tw;
 var auth;
-
-// enumeration of all fields on a user for open graph, cuz they're not all default
-var allUserFields = "id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work";
 
 exports.init = function(theAuth) {
     auth = theAuth;
     tw = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
     try {
         fs.mkdirSync('friends', 0755);
-    }catch(e){};
+    } catch(e) {};
 };
 
 exports.getMe = function(arg, cbEach, cbDone) {
     arg.path = '/account/verify_credentials.json';
-    getOne(arg,function(err,me){
-        if(!err) cbEach(me);
-        cbDone(err);
+    fs.readFile('twitter_me.json', function(err, data) {
+        var me;
+        try {
+            if(err) throw "na";
+            me = JSON.parse(data);
+            if(!me || !me.screen_name) throw "bad data";
+        } catch (E) {
+            return getOne(arg,function(err,me){
+                if(!err)
+                {
+                    fs.writeFile('twitter_me.json', JSON.stringify(me));
+                    cbEach(me);
+                }
+                cbDone(err);
+            });
+        }
+        // do these outside the try/catch incase they throw, then there'd be doubling, bad
+        cbEach(me);
+        cbDone();
     });
 }
 
@@ -46,11 +59,20 @@ exports.getMyFriends = function(arg, cbEach, cbDone) {
         getOne(arg,function(err,js){
             if(err || !js.ids || js.ids.length == 0) return cbDone(err);
             me.getUsers(js.ids, function(friend){
-                // background cache pic
-                request.get({uri:friend.profile_image_url, encoding:'binary'}, function(err, resp, body) {
-                    var photoExt = friend.profile_image_url.substring(friend.profile_image_url.lastIndexOf('.'));
-                    fs.writeFile('friends/' + friend.id_str + "." + photoExt, body, 'binary');
-                });
+                if(!friend) return;
+                // load orig if any
+                var orig;
+                try {
+                    orig = JSON.parse(fs.readFileSync('friends/'+friend.id_str+'.json'));
+                }catch(E){}
+                // background cache pic if it's new or changed
+                if(!orig || orig.profile_image_url != friend.profile_image_url)
+                {
+                    request.get({uri:friend.profile_image_url, encoding:'binary'}, function(err, resp, body) {
+                        var photoExt = friend.profile_image_url.substring(friend.profile_image_url.lastIndexOf('.'));
+                        fs.writeFile('friends/' + friend.id_str + photoExt, body, 'binary');
+                    });
+                }
                 // background cache data
                 fs.writeFile('friends/'+friend.id_str+'.json', JSON.stringify(friend));
                 cbEach(friend);
@@ -121,9 +143,9 @@ exports.getMentions = function(arg, cbEach, cbDone) {
 // get replies and retweets for any tweet id
 exports.getRelated = function(arg, cbEach, cbDone) {
     if(!arg.id) return cbDone("missing tweet id");
-    getOnePublic({path:"/related_results/show/"+arg.id+".json"},function(err,related){
+    getOne({path:"/related_results/show/"+arg.id+".json"},function(err,related){
         if(err || !Array.isArray(related)) return cbDone(err);
-        getOnePublic({path:"/statuses/"+arg.id+"/retweeted_by.json"},function(err,retweeted){
+        getOne({path:"/statuses/"+arg.id+"/retweeted_by.json"},function(err,retweeted){
             if(err || !Array.isArray(retweeted)) return cbDone(err);
             if(retweeted.length > 0) related.push({results:retweeted,resultType:"ReTweet"});
             if(related.length > 0) cbEach(related);
@@ -173,8 +195,7 @@ exports.getUsers = function(users, cbEach, cbDone) {
 }
 
 // call the api non-authenticated
-function getOnePublic(arg, cb)
-{
+function getOnePublic(arg, cb) {
     if(!arg.path) return cb("no path");
     var api = url.parse('https://api.twitter.com/1'+arg.path);
     delete arg.path;
@@ -191,8 +212,7 @@ function getOnePublic(arg, cb)
     });
 }
 
-function getOne(arg, cb)
-{
+function getOne(arg, cb) {
     if(!arg.path) return cb("no path");
     arg.token = auth.token;
     arg.include_entities = true;
@@ -202,13 +222,13 @@ function getOne(arg, cb)
     });
 }
 
-function getPages(arg, cbEach, cbDone)
-{
+function getPages(arg, cbEach, cbDone) {
     if(!arg.path) return cb("no path");
+    arg.count = 200;
     arg.token = auth.token;
     arg.include_entities = true;
     if(!arg.page) arg.page = 1;
-    tw.apiCall('GET', arg.path, arg, function(err, js){
+    tw.apiCall('GET', arg.path, arg, function(err, js) {
         // if error.statusCode == 500, retry?
         if(err || !Array.isArray(js) || js.length == 0) return cbDone(err);
         for(var i = 0; i < js.length; i++) cbEach(js[i]);

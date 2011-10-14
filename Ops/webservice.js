@@ -23,6 +23,7 @@ var sys = require('sys');
 var path = require('path');
 var fs = require("fs");
 var url = require('url');
+var querystring = require("querystring");
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
@@ -30,7 +31,7 @@ var lconfig = require("lconfig");
 
 var lcrypto = require("lcrypto");
 
-var proxy = new httpProxy.HttpProxy();
+var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
 
 var dashboard, devdashboard;
@@ -45,7 +46,7 @@ var locker = express.createServer(
                 }
             },
             function(req, res, next) {
-                if (req.url.substring(0, 13) == '/auth/twitter') {
+                if (req.url.substring(0, 13) == '/auth/twitter' || req.url.substring(0, 12) == '/auth/tumblr') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -69,8 +70,13 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
+// return the known map of our world
+locker.get('/map/upsert', function(req, res) {
+    console.log("Upserting " + req.param("manifest"));
+    res.send(serviceManager.mapUpsert(req.param("manifest")));
+});
+
 locker.get("/providers", function(req, res) {
-    console.log("Looking for providers of type " + req.param("types"));
     if (!req.param("types")) {
         res.writeHead(400);
         res.end("[]");
@@ -81,6 +87,15 @@ locker.get("/providers", function(req, res) {
     var synclets = syncManager.providers(req.param('types').split(','));
     lutil.addAll(services, synclets);
     res.end(JSON.stringify(services));
+});
+
+locker.get("/provides", function(req, res) {
+    var services = serviceManager.serviceMap().installed;
+    var synclets = syncManager.synclets().installed;
+    var ret = {};
+    for(var i in services) ret[i] = services[i].provides;
+    for(var i in synclets) ret[i] = synclets[i].provides;
+    res.send(ret);
 });
 
 locker.get("/available", function(req, res) {
@@ -148,6 +163,7 @@ locker.get("/query/:query", function(req, res) {
                 if (query.limit) options.limit = query.limit;
                 if (query.skip) options.skip = query.skip;
                 if (query.fields) options.fields = query.fields;
+                if (query.sort) options.sort = query.sort;
                 collection.find(query.query, options, function(err, foundObjects) {
                     if (err) {
                         res.writeHead(500);
@@ -188,7 +204,7 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    at = new Date;
+    var at = new Date;
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
     console.log("scheduled "+ svcId + " " + cb + "  at " + at);
@@ -254,11 +270,27 @@ locker.post('/core/:svcId/enable', function(req, res) {
     });
 });
 
-
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.get('/Me/*', function(req,res){
-    proxyRequest('GET', req, res);
+locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
+    // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
+    if(!req.params[1]) {
+        var url = "/Me/" + req.params[0];
+        if (!req.params[1]) {
+            url += "/"
+        } else {
+            url += req.params[1];
+        }
+        var qs = querystring.stringify(req.query);
+        if (qs.length > 0) {
+            url += "?" + qs
+        }
+        res.header("Location", url);
+        res.send(302);
+    } else {
+        console.log("Normal proxy of " + req.originalUrl);
+        proxyRequest('GET', req, res);
+    }
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
@@ -272,7 +304,12 @@ function proxyRequest(method, req, res) {
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
     if (syncManager.isInstalled(id)) {
-        return res.redirect(path.join('synclets', id, ppath));
+        var u = 'http://' + lconfig.lockerHost + ':' + lconfig.lockerPort + '/' + path.join('synclets', id, ppath);
+        return request({method:method, uri:u, headers:req.headers, encoding:'binary'}, function(err, res2, body){
+            res.writeHead(res2.statusCode, res2.headers);
+            res.write(body, "binary");
+            res.end();
+        });
     }
     if(serviceManager.isDisabled(id)) {
         res.writeHead(503);
@@ -280,18 +317,53 @@ function proxyRequest(method, req, res) {
         return;
     }
     if(!serviceManager.isInstalled(id)) { // make sure it exists before it can be opened
-        res.writeHead(404);
-        res.end("so sad, couldn't find "+id);
-        return;
+        var map = serviceManager.serviceMap();
+        var match = false;
+        map.available.forEach(function(s){ if(s.handle === id) match = s; });
+        if(!match)
+        {
+            res.writeHead(404);
+            res.end("so sad, couldn't find "+id);
+            return;
+        }
+        console.log("auto-installing "+id);
+        serviceManager.install(match); // magically auto-install!
     }
-    if (!serviceManager.isRunning(id)) {
-        console.log("Having to spawn " + id);
-        var buffer = proxy.buffer(req);
-        serviceManager.spawn(id,function(){
-            proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
+    var info = serviceManager.metaInfo(id);
+    if (info.static === true || info.static === "true") {
+        // This is a static file we'll try and serve it directly
+        console.log("Checking " + req.url);
+        var fileUrl = url.parse(ppath);
+        if(fileUrl.pathname.indexOf("..") >= 0)
+        { // extra sanity check
+            return res.send(404);
+        }
+        
+        fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
+            if (!err && (stats.isFile() || stats.isDirectory())) {
+                res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));
+            } else {
+                fs.stat(path.join(info.srcdir, fileUrl.pathname), function(err, stats) {
+                    if (!err && (stats.isFile() || stats.isDirectory())) {
+                        res.sendfile(path.join(info.srcdir, fileUrl.pathname));
+                    } else {
+                        console.log("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        res.send(404);
+                    }
+                });
+            }
         });
+        console.log("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
     } else {
-        proxied(method, serviceManager.metaInfo(id),ppath,req,res);
+        if (!serviceManager.isRunning(id)) {
+            console.log("Having to spawn " + id);
+            var buffer = httpProxy.buffer(req);
+            serviceManager.spawn(id,function(){
+                proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
+            });
+        } else {
+            proxied(method, serviceManager.metaInfo(id),ppath,req,res);
+        }
     }
     console.log("Proxy complete");
 };
@@ -336,7 +408,7 @@ locker.get("/diary", function(req, res) {
             return;
         }
         var rawLines   = file.toString().trim().split("\n");
-            diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        var diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
         res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
@@ -421,11 +493,8 @@ locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
-    proxied(req.method, dashboard.instance,req.url.substring(11),req,res);
-});
-
-locker.all('/devdashboard*', function(req, res) {
-    proxied(req.method, serviceManager.metaInfo('devdashboard'), req.url.substring(14), req, res);
+    req.url = '/Me/' + dashboard.instance.handle + '/' + req.url.substring(11);
+    proxyRequest(req.method, req, res);
 });
 
 locker.all("/socket.io*", function(req, res) {
@@ -434,10 +503,12 @@ locker.all("/socket.io*", function(req, res) {
 // proxy websockets
 locker.on('upgrade', function(req, socket, head) {
     // TODO be selective about who they're routing too?
-    console.log("websocket proxying to dashboard");
-  proxy.proxyWebSocketRequest(req, socket, head, {
-      host: url.parse(dashboard.instance.uriLocal).hostname,
-      port: url.parse(dashboard.instance.uriLocal).port,
+    console.log("** websocket proxying to dashboard");
+    var buffer = httpProxy.buffer(socket);
+    proxy.proxyWebSocketRequest(req, socket, head, {
+        host: url.parse(dashboard.instance.uriLocal).hostname,
+        port: url.parse(dashboard.instance.uriLocal).port,
+        buffer: buffer
   });
 });
 
@@ -464,14 +535,11 @@ exports.startService = function(port, cb) {
     }
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
-    serviceManager.spawn(lconfig.ui, function() {
-        dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
-        console.log('ui spawned');
-    });
-    serviceManager.spawn('devdashboard', function() {
-        devdashboard = {instance: serviceManager.metaInfo('devdashboard')};
-    });
     locker.listen(port, function() {
-        cb();
+        serviceManager.spawn(lconfig.ui, function() {
+            cb();
+            dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+            console.log('ui spawned');
+        });
     });
 }

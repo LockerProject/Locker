@@ -1,52 +1,95 @@
 <!DOCTYPE html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>
-  <% if (dashboard && dashboard.customTitle) { %>
-    <%= dashboard.customTitle %>
-  <% } else {%>
-    the locker project
-  <% } %></title>
+    <% if (dashboard && dashboard.customTitle) { %>
+      <%= dashboard.customTitle %>
+    <% } else {%>
+      the locker project
+    <% } %>
+  </title>
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="/static/css/global.css" />
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css">
+  <link rel="stylesheet" type="text/css" href="css/jquery.gritter.css"/>
 </head>
 
 <body class="app-page">
 
   <div class="header">
-    <a class="home-logo" href="index.html">
+    <div class="blur"></div>
+    <a class="home-logo" href="#">
       <img src="<% if(dashboard && dashboard.customLogo) { %><%= dashboard.customLogo %><% } else {%>img/tlp_logo.png<% } %>">
     </a>
     <div class="app-links">
-      <a class="app-link" id="photos" href="#photos" title='Loading photo count...'>PHOTOS</a>
-      <a class="app-link" id="contacts" href="#contacts" title='Loading contacts count...'>CONTACTS</a>
-      <a class="app-link" id="links" href="#links" title='Loading links count...'>LINKS</a>
-<!--       <a class="app-link" id="search" href="#search">search</a> -->
-      <img class="divider" src="img/divider.png">
-    </div>
-    <div id='counters'>
       <ul>
-        <li class='contactsTotalCount'>0 contacts</li>
-        <li class='linksTotalCount'>0 links</li>
-        <li class='photosTotalCount'>0 photos</li>
+      <li class='app-link' id="photos">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#photos">PHOTOS</a>
+          <div class='photosTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
+      <li class="app-link" id="contacts">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#contacts">PEOPLE</a>
+          <div class='contactsTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
+      <li class="app-link" id="links">
+        <div class='app-link-floater'></div><div class='app-link-centerer'>
+          <a href="#links">LINKS</a>
+          <div class='linksTotalCount buttonCounter'>0</div>
+        </div>
+      </li>
       </ul>
     </div>
-    <div class="services-box-container">
-      <div class="services-box">SERVICES
-        <span class="gray">\/</span></div>
+    <img class="divider" src="img/divider.png">
+    <div id="nav-search">
+      <input placeholder="&nbsp;Search people, links, photos" type="text" class="search" />
+      <div id="search-results">
+        <div class="search-divider"></div>
+        <div class="search-header-row people" data-app='contacts'>
+          <div class="header-title">People <span class="count"></span></div>
+          <div class="see-all">See all people results</div>
+        </div>
+        <div class="search-header-row photos" data-app='photos'>
+          <div class="header-title">Photos <span class="count"></span></div>
+          <div class="see-all">See all photo results</div>
+        </div>
+        <div class="search-header-row links" data-app='links'>
+          <div class="header-title">Links <span class="count"></span></div>
+          <div class="see-all">See all web results</div>
+        </div>
+        <div class="search-header-row tweets">
+          <div class="header-title">Tweets</div>
+        </div>
+         <div class="search-result-row template">
+          <div class="icon-box"><img class="search-result-icon" src=""/></div>
+          <div class="search-result"></div>
+        </div>
       </div>
-          <div id="nav-search">
-<form id="nav-search" action="?" method="get">
-<input placeholder="&nbsp;Search your contacts, links, photos" type="text" class="search" />
-<input type="submit" class="submit" value="Search" />
-</form>
-</div>
     </div>
+    <% if (dashboard && dashboard.customLogout) { %>
+    <div id='customLogout'>
+      <div id='menuExpander'><div class='userEmail'></div><div class='expander'>&#x25BC;</div></div>
+      <div id='userMenu'>
+        <div class='user-name'></div>
+        <% if(dashboard.customSettings) { %>
+        <div class='settings'><a href='<%= dashboard.customSettings %>'>Settings</a></div>
+        <% } %>
+        <div class='signout-link'><a href='<%= dashboard.customLogout %>'>Sign Out</a></div>
+      </div>
+    </div>
+    <% } %>
+
   </div>
+  <div class="services-box-container">
+    <div class="services-box">SERVICES&nbsp;&#x25BC;</div>
+  </div>
+
   <div id="services">
+    <div class="blur"></div>
     <div id="choose-services">
       Choose services to connect
     </div>
@@ -54,46 +97,81 @@
       <div class="service template">
         <a href="#" class="provider-link"><img class="provider-icon" src=""/></a>
         <a href="#" class="provider-link"><p class="provider-name">facebook</p></a>
-        <div class="spinner"></div>
-        <img class="checkmark" src="img/checkmark.png">
+        <img class="checkmark" src="img/checkmark.png"/>
       </div>
     </div>
     <div id="service-closer"></div>
   </div>
 
+  <div id="viewers">
+    <div id="viewers-title">
+        SELECT A VIEWER
+    </div>
+    <div id="viewers-list">
+      <div class="viewer template">
+        <a href="https://github.com/Singly" target="_blank" class="viewer-author-link">
+          <span class="viewer-author">by Singly</span>
+        </a>
+        <a href="" class="viewer-link"><img class="viewer-icon" src="img/viewer-icon.png"/></a>
+        <a href="" class="viewer-link name"><span class="viewer-name">Default Viewer</span></a>
+        <br style="clear: both;" />
+      </div>
+    </div>
+    <div id="viewers-hover">
+      <div class="viewer-hover template">
+        <a href="" class="viewer-link"><img class="viewer-icon" src="img/viewer-icon.png"/></a>
+      </div>
+    </div>
+    <div id="viewers-hide-show">
+        <img id="viewers-slide-button" src="img/slide-out.png"/>
+    </div>
+  </div>
+
   <div id="iframeWrapper">
+    <div class="blur">
+      <div class="lightbox">
+        <img class="close-box" src="img/close-x.png"/>
+        <div class="contents">
+          <div class="header"><p class="header-text"></p></div>
+          <div class="body"></div>
+          <div class="forward"><p class="forward-button-text"></p></div>
+          <div class="tip"><p class="tip-text">To close this wizard, click the X in the upper right corner.</p></div>
+        </div>
+      </div>
+    </div>
     <iframe id="appFrame"></iframe>
   </div>
 
-<footer class="useui">
-  <% if (customFooter) { %>
-    <%- customFooter %>
-  <% } else { %>
-    <a href="http://lockerproject.org/#about" target="_blank">About the Locker Project</a> |  <a href="http://github.com/LockerProject/Locker/" target="_blank">Contribute</a> | <a href="https://github.com/LockerProject/Locker/commit/<%= revision %>">ver: <%= revision %></a>
+  <script src="/static/js/jquery-1.6.2.min.js"></script>
+  <script type="text/javascript" src="js/app.js"></script>
+  <script type="text/javascript" src='js/jquery.gritter.js'></script>
+  <script type="text/javascript" charset="utf-8">
+    var is_ssl = ("https:" == document.location.protocol);
+    var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
+    document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
+  </script>
+
+  <script type="text/javascript" charset="UTF-8">
+    var feedback_widget_options = {};
+    feedback_widget_options.display = "overlay";
+    feedback_widget_options.company = "singly";
+    feedback_widget_options.placement = "bottom";
+    feedback_widget_options.color = "#222";
+    feedback_widget_options.style = "question";
+    var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
+  </script>
+
+  <script src="socket.io/socket.io.js"></script>
+  <script type="text/javascript" charset="utf-8" src='js/client.io.js'></script>
+  <script type="text/javascript" src='js/tooltip.min.js'></script>
+  <% if (dashboard && dashboard.customHostedEndpoint) { %>
+    <script type='text/javascript' src='js/hosted.js'></script>
+    <script type="text/javascript" src='<%= dashboard.customHostedEndpoint %>'></script>
   <% } %>
-</footer>
+  <% if (closed) { %>
+    <script type='text/javascript'>
+      $(document).ready(function() { manuallyClosed = true; });
+    </script>
+  <% } %>
 
-<script src="/static/js/jquery-1.6.1.min.js"></script>
-<script type="text/javascript" src="js/app.js"></script>
-<script src="js/spin.min.js"></script>
-<script type="text/javascript" src='js/jquery.gritter.js'></script>
-<script type="text/javascript" charset="utf-8">
-  var is_ssl = ("https:" == document.location.protocol);
-  var asset_host = is_ssl ? "https://s3.amazonaws.com/getsatisfaction.com/" : "http://s3.amazonaws.com/getsatisfaction.com/";
-  document.write(unescape("%3Cscript src='" + asset_host + "javascripts/feedback-v2.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-
-<script type="text/javascript" charset="UTF-8">
- var feedback_widget_options = {};
-  feedback_widget_options.display = "overlay";
-  feedback_widget_options.company = "locker_project";
-  feedback_widget_options.placement = "bottom";
-  feedback_widget_options.color = "#222";
-  feedback_widget_options.style = "question";
-  var feedback_widget = new GSFN.feedback_widget(feedback_widget_options);
-</script>
-
-<script src="socket.io/socket.io.js"></script>
-<script type="text/javascript" charset="utf-8" src='js/client.io.js'></script>
-<script type="text/javascript" src='js/tooltip.min.js'></script>
 </html>

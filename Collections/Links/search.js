@@ -6,6 +6,8 @@ var async = require("async");
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var wrench = require("wrench");
 
+var MAX_FLUSH_AND_CLOSE_TIME = 10000;
+
 // constants, graciously lifted from lsearch
 var EStore = {
   STORE_YES: 1,
@@ -42,6 +44,7 @@ exports.resetIndex = function()
 
 // basically just raw full lucene results
 exports.search = function(q, callback){
+    lucene.closeWriter();
     lucene.search(indexPath, "content:("+q+")",function(err, res, time){
         if(err) return callback(err);
         callback(null, res);
@@ -82,15 +85,18 @@ exports.index = function(linkUrl, callback){
     );
 }
 
+var flushAndCloseTimeout = null;
 var indexQueue = async.queue(function(task, callback) {
 //    logger.debug("NDX "+task.url+" at "+task.at+" of "+task.txt);
     var doc = new clucene.Document();
     doc.addField("at", task.at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', task.txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
     console.log("Going to add " + task.url);
-    lucene.addDocument(task.url, doc, indexPath, function(err, indexTime, docsReplaced) {
+    lucene.addDocument(task.url, doc, indexPath, function(err, indexTime) {
         if (err) console.error(err);
         console.log("Added " + task.url);
+        if (flushAndCloseTimeout) clearTimeout(flushAndCloseTimeout);
+        flushAndCloseTimeout = setTimeout(function() { lucene.closeWriter(); }, MAX_FLUSH_AND_CLOSE_TIME);
         callback(err);
     });
     
@@ -109,9 +115,9 @@ function ndx(id,at,txt,cb)
     var doc = new clucene.Document();
     doc.addField("at", at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
-    lucene.addDocument(id, doc, indexPath, function(err, indexTime, docsReplaced) {
+    lucene.addDocument(id, doc, indexPath, function(err, indexTime) {
         console.log("NDX DONE");
-        cb(err, indexTime, docsReplaced);
+        cb(err, indexTime);
     });
 }    
 

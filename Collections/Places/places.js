@@ -14,7 +14,7 @@ var fs = require('fs'),
     request = require('request'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
-    
+
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw places
 var util = require("./util"); // handy things for anyone and used within place processing
@@ -27,13 +27,22 @@ var app = express.createServer(connect.bodyParser());
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    dataStore.getTotalPlaces(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' places</p></html>');
-        res.end();
-    });
+    var options = {};
+    if(!req.query["all"]) options.limit = 20; // default 20 unless all is set
+    if (req.query.limit) {
+        options.limit = parseInt(req.query.limit);
+    }
+    if (req.query.offset) {
+        options.offset = parseInt(req.query.offset);
+    }
+    if (req.query.fields) {
+        try {
+            options.fields = JSON.parse(req.query.fields);
+        } catch(E) {}
+    }
+    options.me = req.query.me;
+    var results = [];
+    dataStore.getPlaces(options, function(item) { results.push(item); }, function(err) { res.send(results); });
 });
 
 app.get('/state', function(req, res) {
@@ -52,7 +61,7 @@ app.get('/state', function(req, res) {
 app.get('/update', function(req, res) {
     dataIn.reIndex(locker,function(){
         res.writeHead(200);
-        res.end('Making cookies for temas!');        
+        res.end('Making cookies for temas!');
     });
 });
 
@@ -70,31 +79,10 @@ app.post('/events', function(req, res) {
     res.end('ok');
 });
 
-function genericApi(name,f)
-{
-    app.get(name,function(req,res){
-        var results = [];
-        f(req.query,function(item){results.push(item);},function(err){
-            if(err)
-            {
-                res.writeHead(500, {'Content-Type': 'text/plain'});
-                res.end(err);
-            }else{
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.end(JSON.stringify(results));
-            }
-        });
-    });   
-}
-
-
-genericApi('/getPlaces', dataStore.getPlaces);
-// expose all utils
-for(var f in util)
-{
-    if(f == 'init') continue;
-    genericApi('/'+f,util[f]);
-}
+app.get('/id/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+});
 
 // Process the startup JSON object
 process.stdin.resume();
@@ -107,13 +95,14 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.place);
+        dataStore.init(mongo.collections.place, locker, mongo);
         dataIn.init(locker, dataStore);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        app.listen(0, function() {
+            var returnedInfo = {port: app.address().port};
+            process.stdout.write(JSON.stringify(returnedInfo));
         });
     });
 });

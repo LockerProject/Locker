@@ -3,14 +3,21 @@
     "title": "Github Account",
     "synclets": [
         {
-            "frequency": 120,
+            "frequency": 3600,
             "name": "users"
+        },
+        {
+            "frequency": 3600,
+            "name": "repos"
         }
     ],
     "provides": [
-        "contact/github"
+        "contact/github",
+        "repo/github",
+        "view/github"
     ],
     "provider": "github",
     "action": "Connect to a github account",
-    "desc": "Collect and sync my data from my github account using the github API and a github 'app' that I create just for myself."
+    "desc": "Collect and sync my data from my github account using the github API and a github 'app' that I create just for myself.",
+    "info":"Syncs information about your github contacts, and your github repos."
 }

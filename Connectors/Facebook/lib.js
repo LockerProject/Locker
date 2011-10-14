@@ -113,42 +113,39 @@ exports.getPhoto = function(arg, cbEach, cbDone) {
 // recurse getting all the posts for a person and type (wall or newsfeed) {id:'me',type:'home',since:123456789}
 exports.getPosts = function (arg, cbEach, cbDone) {
     var since = (arg.since)?"&since="+arg.since:"";
-    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since;
+    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since + '&limit=100';
     // possible facebook bug here when using since, sometimes the paging.next doesn't contain the since and it'll end up re-walking the whole list
     getDatas(uri, cbEach, cbDone);
 }
 
-function getOne(uri, cb)
-{
+function getOne(uri, cb) {
     if(!uri) return cb("no uri");
-    request.get({uri:uri}, function(err, resp, body){
+    request.get({uri:uri}, function(err, resp, body) {
         var js;
-        try{
+        try {
             if(err) throw err;
             js = JSON.parse(body);
-        }catch(e){
+        } catch(e) {
             return cb(e);
         }
         cb(null,js);
     });
 }
 
-function getDatas(uri, cbEach, cbDone)
-{
+function getDatas(uri, cbEach, cbDone) {
     if(!uri) return cbDone("no uri");
-    request.get({uri:uri}, function(err, resp, body){
+    request.get({uri:uri}, function(err, resp, body) {
         var js;
-        try{
+        try {
             if(err) throw err;
             js = JSON.parse(body);
-        }catch(e){
+        } catch(e) {
             return cbDone(e);
         }
         for(var i = 0; js.data && i < js.data.length; i++) cbEach(js.data[i]);
-        if(js.paging && js.paging.next)
-        {
+        if(js.paging && js.paging.next) {
             getDatas(js.paging.next,cbEach,cbDone);
-        }else{
+        } else {
             cbDone();
         }
     });
