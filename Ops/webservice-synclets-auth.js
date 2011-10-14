@@ -133,6 +133,8 @@ function handleTwitter (req, res) {
     try {
         require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.twitter.appKey;
                 auth.consumerSecret = apiKeys.twitter.appSecret;
@@ -149,6 +151,8 @@ function handleTumblr (req, res) {
     try {
         require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.tumblr.appKey;
                 auth.consumerSecret = apiKeys.tumblr.appSecret;
