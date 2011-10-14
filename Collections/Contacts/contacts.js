@@ -25,16 +25,6 @@ var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
 
-app.get('/', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    dataStore.getTotalCount(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' contacts</p><a href="update">refresh from connectors</a></html>');
-        res.end();
-    });
-});
-
 app.get('/state', function(req, res) {
     dataStore.getTotalCount(function(err, countInfo) {
         if(err) return res.send(err, 500);
@@ -53,13 +43,19 @@ app.get('/state', function(req, res) {
 });
 
 
-app.get('/allContacts', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type':'application/json'
-    });
-    dataStore.getAll(function(err, cursor) {
+app.get('/', function(req, res) {
+    var fields = {};
+    if (req.query.fields) {
+        try {
+            fields = JSON.parse(req.query.fields);
+        } catch(E) {}
+    }
+    dataStore.getAll(fields, function(err, cursor) {
+        if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
+        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
+        if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
         cursor.toArray(function(err, items) {
-            res.end(JSON.stringify(items));
+            res.send(items);
         });
     });
 });
@@ -94,21 +90,6 @@ app.post('/events', function(req, res) {
     });
 });
 
-app.get('/ready', function(req, res) {
-    dataStore.getTotalCount(function(err, resp) {
-        if (err) {
-            res.writeHead(500);
-            return res.end(err);
-        }
-        res.writeHead(200);
-        if (resp === 0) {
-            return res.end('false');
-        } else {
-            return res.end('true');
-        }
-    });
-});
-
 app.get("/since", function(req, res) {
     if (!req.query.id) {
         return res.send([]);
@@ -122,7 +103,7 @@ app.get("/since", function(req, res) {
    });
 });
 
-app.get('/:id', function(req, res, next) {
+app.get('/id/:id', function(req, res, next) {
     if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
         res.writeHead(200, {'Content-Type': 'application/json'});

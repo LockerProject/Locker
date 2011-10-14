@@ -2,7 +2,7 @@
     "title":"Twitter Account",
     "status":"stable",
     "provider":"twitter",
-    "provides":["status/twitter", "contact/twitter"],
+    "provides":["contact/twitter", "mentions/twitter", "related/twitter", "timeline/twitter", "tweets/twitter"],
     "synclets":[{"name": "related", "frequency": 1800},
                 {"name": "friends", "frequency": 3600},
                 {"name": "timeline", "frequency": 120},

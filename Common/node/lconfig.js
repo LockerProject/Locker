@@ -22,7 +22,12 @@ exports.load = function(filepath) {
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerPort = config.lockerPort || 8042;
-    exports.externalPort = config.externalPort || exports.lockerPort;
+    if(config.externalPort)
+        exports.externalPort = config.externalPort;
+    else if(config.externalSecure)
+        exports.externalPort = 443;
+    else
+        exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
@@ -30,6 +35,7 @@ exports.load = function(filepath) {
     exports.scannedDirs = config.scannedDirs || [
         "Apps",
         "Collections",
+        "Me/github",
         "Connectors"
         ];
     exports.mongo = config.mongo || {

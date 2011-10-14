@@ -13,25 +13,25 @@ var map = {
 var timeout = 5000;
 
 exports.expand = function (args, callback) {
-    if(!args.url || typeof(args.url) != 'string') return callback();
+    if(!args || !args.url || typeof(args.url) != 'string') return callback(args);
 
     // set up defaults
     if(!args.depth) args.depth = 0;
     if(!args.seen) args.seen = {};
 
     // if we've recursed too far, bail
-    if(args.depth > 5) return callback(args.url);
+    if(args.depth > 5) return callback(args);
 
     // if we've seen this url already, loop bail!
-    if(args.seen[args.url]) return callback(args.url);
+    if(args.seen[args.url]) return callback(args);
     args.seen[args.url] = true;
 
     // does it parse?
     args.urlp = urllib.parse(args.url);
-    if(!args.urlp) return callback(args.url);
+    if(!args.urlp) return callback(args);
 
     // only process http stuff, are there any https shorteners?
-    if(args.urlp.protocol != 'http:') return callback(args.url);
+    if(args.urlp.protocol != 'http:') return callback(args);
 
     // ok, now process a url!
     args.depth++;
@@ -45,7 +45,8 @@ exports.expand = function (args, callback) {
         // none, fall back to generic HEAD request
         return APIs.generic(args, callback);
     } catch(E) {
-        return callback(args.url);
+        args.err = E;
+        return callback(args);
     }
 }
 
@@ -100,22 +101,23 @@ var APIs = {
 
     generic: function (args, callback) {
         var headers = (args.urlp.host === "t.co")?{}:{'User-Agent': 'AppleWebKit/525.13 (KHTML, like Gecko) Safari/525.13.'}; // t.co returns meta refresh if browser!
-        if(args.cookie) headers['Cookie'] = args.cookie;
+        if(args.headers && args.headers['set-cookie']) headers['Cookie'] = args.headers['set-cookie']; // really dumb hack to enable cookie-tracking redirectors
         request.head({url:args.url, headers:headers, followRedirect:false}, function(err, res){
-            if(err) return callback(args.url);
-            // process a redirect, re-basing like a browser would, yes sam, this happens
+            if(err) { args.err = err; return callback(args); }
+            // process a redirect
             if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307)
             {
+                // re-basing like a browser would, yes sam, this happens
                 var newup = urllib.parse(urllib.resolve(args.urlp,urllib.parse(res.headers.location)));
                 // if we're redirected to a login page, bail, kinda lame heuristic here but it works pretty well!
-                if(newup.pathname.indexOf("login") > 0 && newup.pathname.indexOf("login") < 10) return callback(args.url);
-                // really dumb hack to enable cookie-tracking redirectors
-                if(newup.host == args.urlp.host && res.headers['Set-Cookie']) args.cookie = res.headers['Set-Cookie'];
+                if(newup.pathname.indexOf("login") > 0 && newup.pathname.indexOf("login") < 10) return callback(args);
                 args.url = urllib.format(newup);
+                args.headers = res.headers; // convenience for callback
                 return exports.expand(args, callback);
             }
+            args.headers = res.headers; // convenience for callback
             // everything else, we're done done!
-            return callback(args.url);
+            return callback(args);
         });
     }
 };

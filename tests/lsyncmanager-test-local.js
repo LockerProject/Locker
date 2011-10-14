@@ -82,7 +82,6 @@ vows.describe("Synclet Manager").addBatch({
                     // Wed, 03 Aug 2011 00:12:15 GMT
                     //     ✗ next run is about 120 seconds from now
                     //       » expected true, got false // lsyncmanager-test-local.js:47
-                    console.dir('topic' + JSON.stringify(topic));
                     // console.dir(new Date());
                     // assert.isTrue(topic.nextRun > new Date() + 110);
                     // assert.isTrue(topic.nextRun < new Date() + 130);
@@ -167,7 +166,7 @@ vows.describe("Synclet Manager").addBatch({
             }
         }
     }
-}).addBatch({    
+}).addBatch({
     "Installed services can be executed immediately rather than waiting for next run" : {
         topic:function() {
             start = Date.now() - 1;
@@ -255,7 +254,7 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Querying for an ID returns the object": {
         topic: function() {
-            request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/" + _id}, this.callback);
+            request.get({uri : "http://localhost:8043/synclets/testSynclet/testSync/id/" + _id}, this.callback);
         },
         "successfully" : function(err, resp, body) {
             var data = JSON.parse(body);

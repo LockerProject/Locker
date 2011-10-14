@@ -22,8 +22,8 @@ exports.init = function(mongoCollection, mongo) {
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
-exports.getAll = function(callback) {
-    collection.find({}, callback);
+exports.getAll = function(fields, callback) {
+    collection.find({}, fields, callback);
 }
 
 exports.get = function(id, callback) {
@@ -53,7 +53,7 @@ function updateState()
         try {
             lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
-    }, 5000);    
+    }, 5000);
 }
 
 exports.addEvent = function(eventBody, callback) {

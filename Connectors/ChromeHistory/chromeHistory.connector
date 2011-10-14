@@ -1,8 +1,0 @@
-{
-	"title":"Chrome History",
-	"action":"Sync your browser history from Chrome",
-	"desc":"Collect and sync my browser history from Chrome.",
-	"run":"node client.js",
-	"status":"unstable",
-	"provides":["link/chrome"]
-}

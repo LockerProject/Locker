@@ -1,7 +1,7 @@
 {
     "title":"Facebook Account",
     "status":"stable",
-    "provides":["contact/facebook", "photo/facebook", "link/facebook"],
+    "provides":["contact/facebook", "photo/facebook", "link/facebook", "home/facebook"],
     "provider":"facebook",
     "synclets":[{"name": "home", "frequency": 120},{"name": "home_update", "frequency": 7000},{"name": "friends", "frequency": 3600},{"name": "photos", "frequency": 86400}],
     "info":"Syncs status updates from you and your friends, your friends data, and photos you've posted."

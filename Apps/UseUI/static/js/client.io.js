@@ -66,10 +66,10 @@ function dequeueGritters() {
     }
 }
 
-function showGritter(name, count, lastId) {
+function showGritter(name, arg, lastId) {
     var prettyName = name;
     if (name == 'newservice') {
-        var service = count;
+        var service = arg;
         var svclc = service.toLowerCase();
         var customText = "Importing ";
         var img = svclc;
@@ -89,22 +89,45 @@ function showGritter(name, count, lastId) {
         }
         img = '/img/icons/' + img + '-gritter.png';
       $.gritter.add({
-        title:"Connected " + count,
+        title:"Connected " + arg,
         text:customText,
         // image:img,
         time: 5000
       });
+    } else if(name === 'viewer') {
+        drawServices();
+        var gritterId = $.gritter.add({
+          title:"New "+arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
+          text:arg.id,
+          image: "img/Collections.png",
+          time:10000,
+          after_open:function(e) {
+              var self = this;
+              e.click(function(ce) {
+                if (ce.target && !$(ce.target).hasClass("gritter-close")) {
+                    app = arg.viewer;
+                    window.location.hash = app;
+                    var appId = arg.id.replace("/", "-");
+                    setViewer(app, appId, function(){
+                        renderApp();
+                    });
+                    $("#viewers-hide-show").click();
+                    $.gritter.remove(gritterId);
+                }
+              })
+          }
+        });
     } else {
       var prettyName = name;
       if(name == 'contact') {
-          if(count > 1) prettyName = 'people';
+          if(arg > 1) prettyName = 'people';
           else prettyName = 'person';
-      } else if(count > 1) {
+      } else if(arg > 1) {
           prettyName += 's';
       }
       var gritterId = $.gritter.add({
         title:"New " + prettyName,
-        text:"Got " + count + " new " + prettyName,
+        text:"Got " + arg + " new " + prettyName,
         image: "img/" + name + "s.png",
         time:5000,
         after_open:function(e) {
@@ -132,6 +155,10 @@ socket.on('event', function (body) {
 socket.on('newservice', function(name) {
   log('got new service: ', name);
   queueGritter('newservice', name);
+});
+
+socket.on('viewer', function(evt) {
+    queueGritter('viewer', evt.obj.data);
 });
 
 socket.on("counts", function(counts) {

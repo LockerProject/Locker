@@ -4,6 +4,7 @@ var async = require('async');
 var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
+var oembed = require('./oembed');
 var debug = false;
 
 var dataStore, locker, search;
@@ -19,7 +20,7 @@ exports.reIndex = function(locker,cb) {
     search.resetIndex();
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
+        locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -30,7 +31,7 @@ exports.reIndex = function(locker,cb) {
                             });
                         });
                     });
-                } else if(svc.provides.indexOf('status/twitter') >= 0) {
+                } else if(svc.provides.indexOf('timeline/twitter') >= 0) {
                     getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
                             console.error('twitter done!');
@@ -145,14 +146,21 @@ function linkMagic(origUrl, callback){
               // new link!!!
               link = {link:linkUrl};
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
-                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text},function(){
+                  // TODO: should we support link rel canonical here and change it?
+                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
                       util.extractFavicon({url:linkUrl,html:link.html},function(fav){link.favicon=fav},function(){
                           // *pfew*, callback nausea, sometimes I wonder...
+                          var html = link.html; // cache for oembed module later
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
                               locker.event("link",obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
+                              // background fetch oembed and save it on the link if found
+                              oembed.fetch({url:link.link, html:html}, function(e){
+                                  if(!e) return;
+                                  dataStore.updateLinkEmbed(link.link, e, function(){});
+                              });
                           });
                       });
                   });
@@ -184,9 +192,10 @@ function getEncounterFB(post)
 
 function getEncounterTwitter(tweet)
 {
+    var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
     var e = {id:tweet.id
         , network:"twitter"
-        , text: tweet.text + " " + tweet.user.screen_name
+        , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()

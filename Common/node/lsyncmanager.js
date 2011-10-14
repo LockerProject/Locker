@@ -154,7 +154,7 @@ exports.syncNow = function(serviceId, callback) {
 */
 function scheduleRun(info, synclet) {
     var milliFreq = parseInt(synclet.frequency) * 1000;
-    
+
     function run() {
         executeSynclet(info, synclet);
     }
@@ -167,19 +167,19 @@ function scheduleRun(info, synclet) {
             synclet.nextRun = new Date(info.config.nextRun);
         else
             synclet.nextRun = new Date(synclet.nextRun);
-        
+
         if(!(synclet.nextRun > 0)) //check to make sure it is a valid date
             synclet.nextRun = new Date();
-        
+
         var timeout = (synclet.nextRun.getTime() - Date.now());
         timeout = timeout % milliFreq;
         if(timeout <= 0)
             timeout += milliFreq;
-        
+
         // schedule a timeout with +- 5% randomness
         timeout = timeout + (((Math.random() - 0.5) * 0.1) * milliFreq);
         synclet.nextRun = new Date(Date.now() + timeout);
-        
+
         setTimeout(run, timeout);
     }
 }
@@ -231,6 +231,7 @@ function executeSynclet(info, synclet, callback) {
     }
     console.log("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
+    var run;
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else {
@@ -239,7 +240,7 @@ function executeSynclet(info, synclet, callback) {
 
     var dataResponse = '';
 
-    app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
+    var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
     app.stderr.on('data', function (data) {
         localError(info.title+" "+synclet.name, "STDERR: "+data.toString());
@@ -262,7 +263,7 @@ function executeSynclet(info, synclet, callback) {
         console.log("Synclet "+synclet.name+" finished for "+info.id);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
-        tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
+        var tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
         info.auth = lutil.extend(true, tempInfo.auth, response.auth);
         info.config = lutil.extend(true, tempInfo.config, response.config);
         scheduleRun(info, synclet);
@@ -276,6 +277,7 @@ function executeSynclet(info, synclet, callback) {
 
     info.syncletToRun = synclet;
     info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+    info.lockerUrl = lconfig.lockerBase;
     app.stdin.on('error',function(err){
         localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
@@ -290,7 +292,7 @@ function compareIDs (originalConfig, newConfig) {
             if (!originalConfig.ids[i]) break;
             var newSet = newConfig.ids[i];
             var oldSet = originalConfig.ids[i];
-            seenIDs = {};
+            var seenIDs = {};
             resp[i] = [];
             for (var j = 0; j < newSet.length; j++) seenIDs[newSet[j]] = true;
             for (var j = 0; j < oldSet.length; j++) {
@@ -306,9 +308,6 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         synclet.status = 'waiting';
         checkStatus(info);
 
-        if (!callback) {
-            callback = function() {};
-        }
         var dataKeys = [];
         if (typeof(response.data) === 'string') {
             return callback('bad data from synclet');
@@ -318,6 +317,9 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         }
         for (var i in deleteIDs) {
             if (!dataKeys[i]) dataKeys.push(i);
+        }
+        if (dataKeys.length === 0) {
+            return callback();
         }
         async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
     });
@@ -337,7 +339,8 @@ function checkStatus(info) {
 function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
-//    console.log("processing synclet data from "+key+" of length "+data.length);
+    var len = (data)?data.length:0;
+    console.log("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
@@ -365,7 +368,7 @@ function processData (deleteIDs, info, key, data, callback) {
                 deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
             }
         });
-    } else if (data) {
+    } else if (data && data.length > 0) {
         addData(collection, mongoId, data, info, eventType, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
         deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
@@ -388,27 +391,29 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
 
 function addData (collection, mongoId, data, info, eventType, callback) {
     var errs = [];
-    var q = async.queue(function(object, cb) {
+    var q = async.queue(function(item, cb) {
+        var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + eventType, "missing key: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
-                cb();
-                return;
+                return cb();
             }
             var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
             newEvent.fromService = info.id;
             if (object.type === 'delete') {
-                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
                 levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
                     newEvent.obj.data = doc;
                     levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
-                    cb();
+                    return cb();
                 });
             }
+        } else {
+            cb();
         }
     }, 5);
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
@@ -462,13 +467,7 @@ function mapMetaData(file) {
 
 function addUrls() {
     var apiKeys;
-    var host;
-    if (lconfig.externalSecure) {
-        host = "https://";
-    } else {
-        host = "http://";
-    }
-    host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+    var host = lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
         try {
             apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
@@ -476,7 +475,7 @@ function addUrls() {
             return console.log('Error reading apikeys.json file - ' + e);
         }
         for (var i = 0; i < synclets.available.length; i++) {
-            synclet = synclets.available[i];
+            var synclet = synclets.available[i];
             if (synclet.provider === 'facebook') {
                 if (apiKeys.facebook)
                     synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +

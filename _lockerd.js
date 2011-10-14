@@ -54,6 +54,7 @@ exports.alive = false;
     var thservice = require(__dirname + "/Ops/thservice.js");
     var lmongo = require('lmongo');
 
+    if(process.argv.indexOf("offline") >= 0) syncManager.synclets().executeable = false;
 
     if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
         console.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
@@ -139,7 +140,9 @@ exports.alive = false;
             console.log(dirToScan);
             var installable = true;
             if (dirToScan === "Collections") installable = false;
-            serviceManager.scanDirectory(dirToScan, installable);
+            try {
+                serviceManager.scanDirectory(dirToScan, installable);
+            } catch (E) {}
         });
 
         syncManager.scanDirectory("Connectors");
@@ -196,7 +199,7 @@ exports.alive = false;
         // if there's any migrations, load synclets and do them but don't let synclets run till done
         if(serviceManager.serviceMap().migrations.length > 0)
         {
-            syncManager.synclets().executable = false;
+            syncManager.synclets().executeable = false;
             syncManager.findInstalled();
             async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
                 console.log('running migration followup for '+call);
@@ -211,6 +214,7 @@ exports.alive = false;
                 });
             },function(){
                 serviceManager.serviceMap().migrations = [];
+                syncManager.synclets().executeable = true;
                 postStartup();
             });
         }else{
