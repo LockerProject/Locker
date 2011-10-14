@@ -45,8 +45,8 @@ vows.describe("Service Manager").addBatch({
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
-                "setting a version number" : function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.version, undefined);
+                "setting a version number equivalent to the highest migration" : function(svcMetaInfo) {
+                    assert.equal(svcMetaInfo.version, 1309052824000);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
@@ -123,7 +123,7 @@ vows.describe("Service Manager").addBatch({
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
             "can be looked up by handle from the available sections of the service map": function() {
-                assert.equal(serviceManager.getFromAvailable("facebook").handle, "facebook");
+                assert.equal(serviceManager.getFromAvailable("facebookconnector").handle, "facebookconnector");
             },
             "and can be installed" : {
                 topic:serviceManager.install({srcdir:"Connectors/Twitter"}),

@@ -33,7 +33,7 @@ exports.getPage = function(processInfo, endpoint, type, perPage, params, callbac
                 config.nextRun = 0;
             } else { // still paging
                 config.paging.lastPage = page;
-                config.nextRun = Date.now();
+                config.nextRun = -1;
             }
             callback(config, json[type_s][type]);
         }

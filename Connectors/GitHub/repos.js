@@ -1,67 +1,76 @@
 var GitHubApi = require("github").GitHubApi
-  , profile = []
-  , repos = []
-  , contactWatchers = []
+  , request = require('request')
   , github = new GitHubApi()
+  , async = require('async')
+  , nfs = require('node-fs')
+  , fs = require('fs')
+  , lockerUrl
   , auth
-  , ids = {}
+  , viewers = []
   ;
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
-    exports.syncProfile(function(err) {
+    auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
+    lockerUrl = processInfo.lockerUrl;
+    github.getUserApi().show(auth.username, function(err, profile) {
         if (err) console.error(err);
-        exports.syncRepos(function(err) {
+        exports.syncRepos(function(err, repos) {
             if (err) console.error(err);
-            var responseObj = {data : {}, config: {ids: ids}};
-            responseObj.data.profile = [{obj: JSON.parse(profile)}];
-            responseObj.data.repos = repos;
-            responseObj.data['contact/watchers'] = contactWatchers;
+            var responseObj = {data : {}, config: {}};
+            responseObj.data.profile = [{obj: profile}];
+            responseObj.data.repo = repos;
+            responseObj.data.view = viewers;
+            console.error(viewers);
             cb(err, responseObj);
         });
     });
 };
 
-
-exports.syncProfile = function(callback) {
-    github.getUserApi().show(auth.username, function(err, user) {
-        profile = JSON.stringify(user);
-        callback(err);
-    })
-}
-
-
 exports.syncRepos = function(callback) {
-    var parseRepo = function(data) {
-        if (data && data.length) {
-            js = data.splice(0, 1)[0];
-            // this super sucks, but github doesn't give us an id for repos.  URL is the only thing unique
-            //
-            js.id = getIDFromUrl(js.url);
-            ids[js.id] = [];
-            syncWatchers(js.id, function(err, watchers) {
-                js.watchers = watchers;
-                repos.push({obj: js, type: 'new', timestamp: new Date()});
-                for(var i in js.watchers) {
-                    contactWatchers.push({obj:{login:js.watchers[i], repo:js.id}});
-                    ids[js.id].push(js.watchers[i]);
-                }
-                parseRepo(data);
-            });
-        } else {
-            return callback();
-        }
-    };
-
-    function syncWatchers(repoName, callback) {
-        github.getRepoApi().getRepoWatchers(auth.username, repoName.substring(repoName.indexOf('/') + 1), callback);
-    }
-
     github.getRepoApi().getUserRepos(auth.username, function(err, repos) {
-        if(!err)
-            parseRepo(repos);
-        else
-            callback();
+        if(err || !repos || !repos.length) return callback(err, []);
+        // process each one to get richer data
+        async.forEachSeries(repos, function(repo, cb){
+            repo.id = getIDFromUrl(repo.url);
+            // get the watchers, is nice
+            console.error("checking "+repo.id);
+            github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
+                repo.watchers = watchers;
+                // get a snapshot of the full repo, is nice too
+                request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
+                    if(err || !tree || !tree.tree) return cb(err);
+                    repo.tree = tree.tree;
+                    // see if there's any viewers!
+                    var viewer = false;
+                    for(var i=0; i < repo.tree.length; i++) if(/^\w+\.app$/.test(repo.tree[i].path)) viewer = repo.tree[i].path;
+                    if(!viewer) return cb();
+                    console.error("found a viewer! "+repo.id);
+                    syncRepo(repo, function(err) {
+                        // mangle the manifest so it's a unique handle
+                        var manifest = repo.id+"/"+viewer;
+                        var js;
+                        try {
+                            js = JSON.parse(fs.readFileSync(manifest));
+                            if(!js || js.static != "true") throw new Error("invalid manifest");
+                            js.handle = repo.id.replace("/", "-");
+                            js.author = auth.username;
+                            fs.writeFileSync(manifest, JSON.stringify(js));
+                        } catch (err) {
+                            // bail, no viewer for you
+                            console.error("failed: "+err);
+                            return cb();
+                        }
+                        viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
+                        request.get({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
+                            cb();
+                        });
+                    });
+                });
+            });
+        }, function(err){
+            callback(err, repos);
+        });
     });
 }
 
@@ -69,4 +78,37 @@ function getIDFromUrl(url) {
     if(typeof url !== 'string')
         return url;
     return url.substring(url.lastIndexOf('/', url.lastIndexOf('/') - 1) + 1);
+}
+
+function syncRepo(repo, callback)
+{
+    var existing = {};
+    try {
+        var js = JSON.parse(fs.readFileSync(repo.id+".json"));
+        for(var i=0; i < js.tree.length; i++)
+        {
+            existing[js.tree[i].path] = js.tree[i].sha;
+        }
+    } catch(e){};
+    async.forEach(repo.tree, function(t, cb){
+        if(t.type != "tree") return cb();
+        if(existing[t.path] == t.sha) return cb(); // no changes
+        nfs.mkdir(repo.id + "/" + t.path, 0777, true, cb);
+    }, function(){
+        // then the blobs
+        async.forEachSeries(repo.tree, function(t, cb){
+            if(t.type != "blob") return cb();
+            if(existing[t.path] == t.sha) return cb(); // no changes
+            setTimeout(function(){
+                request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
+                    console.error(resp.statusCode + " for "+ t.path);
+                    if(err || !resp || resp.statusCode != 200) {t.sha = ""; return cb(); } // don't save the sha so it gets retried again
+                    fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
+                });
+            },500);
+        }, function(){
+            fs.writeFile(repo.id+".json", JSON.stringify(repo));
+            callback();
+        });
+    });
 }

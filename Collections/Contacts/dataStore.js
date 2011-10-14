@@ -12,6 +12,7 @@ var db;
 var lconfig = require('../../Common/node/lconfig');
 var fs = require('fs');
 var lutil = require('lutil');
+var lmongoutil = require("lmongoutil");
 
 exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
@@ -21,12 +22,25 @@ exports.init = function(mongoCollection, mongo) {
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 }
-exports.getAll = function(callback) {
-    collection.find({}, callback);
+exports.getAll = function(fields, callback) {
+    collection.find({}, fields, callback);
 }
 
 exports.get = function(id, callback) {
     collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+}
+
+exports.getSince = function(objId, cbEach, cbDone) {
+    collection.find({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}).each(function(err, item) {
+        if (item != null)
+            cbEach(item);
+        else
+            cbDone();
+    });
+}
+
+exports.getLastObjectID = function(cbDone) {
+    collection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
 }
 
 var writeTimer = false;
@@ -39,7 +53,7 @@ function updateState()
         try {
             lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
         } catch (E) {}
-    }, 5000);    
+    }, 5000);
 }
 
 exports.addEvent = function(eventBody, callback) {

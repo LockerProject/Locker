@@ -7,5 +7,6 @@
         "contacts":"nsid"
     },
     "synclets":[{"name":"contacts", "frequency":3600},
-                {"name":"photos", "frequency": 3600}]
+                {"name":"photos", "frequency": 3600}],
+    "info":"Syncs photos you've posted, and your contacts."
 }

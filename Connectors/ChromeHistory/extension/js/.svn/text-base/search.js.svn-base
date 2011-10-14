@@ -1,6 +1,0 @@
-function search(queryString, callback) {
-	alert(globalHost_secure);
-	$.get(globalHost_secure + 'searchresults.jsp?' + queryString, {}, function(html) {
-		callback(html);
-	});
-}

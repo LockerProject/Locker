@@ -6,6 +6,8 @@ var async = require("async");
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var wrench = require("wrench");
 
+var MAX_FLUSH_AND_CLOSE_TIME = 10000;
+
 // constants, graciously lifted from lsearch
 var EStore = {
   STORE_YES: 1,
@@ -42,6 +44,7 @@ exports.resetIndex = function()
 
 // basically just raw full lucene results
 exports.search = function(q, callback){
+    lucene.closeWriter();
     lucene.search(indexPath, "content:("+q+")",function(err, res, time){
         if(err) return callback(err);
         callback(null, res);
@@ -82,6 +85,7 @@ exports.index = function(linkUrl, callback){
     );
 }
 
+var flushAndCloseTimeout = null;
 var indexQueue = async.queue(function(task, callback) {
 //    logger.debug("NDX "+task.url+" at "+task.at+" of "+task.txt);
     var doc = new clucene.Document();
@@ -91,6 +95,8 @@ var indexQueue = async.queue(function(task, callback) {
     lucene.addDocument(task.url, doc, indexPath, function(err, indexTime) {
         if (err) console.error(err);
         console.log("Added " + task.url);
+        if (flushAndCloseTimeout) clearTimeout(flushAndCloseTimeout);
+        flushAndCloseTimeout = setTimeout(function() { lucene.closeWriter(); }, MAX_FLUSH_AND_CLOSE_TIME);
         callback(err);
     });
     

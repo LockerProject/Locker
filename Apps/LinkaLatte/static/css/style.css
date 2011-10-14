@@ -18,7 +18,7 @@
 .error {
     border:1px dotted #D8000C;
     color: #D8000C;
-    background-color: #FFBABA;    
+    background-color: #FFBABA;
 }
 
 #loading {
@@ -39,9 +39,6 @@ header input#linksQuery {
     background-color:#f6f6f6;
     border:1px solid #dedede;
     width:250px;
-}
-
-#linkCounter {
 }
 
 /* Group Styles */
@@ -93,13 +90,12 @@ a.expandedLink {
     padding:2px;
     font-size:95%;
 }
-.origLink {
-    color:#666;
-    font-size:85%;
-    padding-left:4px;
-}
 .linkFrom {
     font-size:80%;
+    color:#666;
+}
+.linkFrom a {
+    text-decoration:none;
     color:#666;
 }
 .shiftDownDesc {
@@ -113,4 +109,17 @@ a.expandedLink {
 }
 .viewMore {
     font-size:75%;
+}
+
+#newCountHeader {
+    display:none;
+}
+
+#newLinkCount {
+    font-size:24px;
+    font-weight:bold;
+}
+
+.smallLink {
+    font-size:10px;
 }

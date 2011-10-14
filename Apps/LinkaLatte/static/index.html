@@ -19,14 +19,14 @@
 
   <div id="container">
     <header>
-        <div>
+      <div id='searchHeader'>
         <form id="searchForm">
-            <input type="text" id="linksQuery" class="search"></input>
-            <input value="Search" type="button" id="searchLinks" />
-            <input value="Reset" type="button" id="searchReset" />
-            <span id="linkCounter" class="count"></span>
+            <input placeholder="&nbsp;search link author, title, contents" type="text" id="linksQuery" class="search" style="width:400px"></input>
         </form>
-    </div>
+      </div>
+      <div id='newCountHeader'>
+        <span id='newLinkCount'>1 New Links</span>&nbsp;<span class='smallLink'>(<a id='showAllLink' href='#'>show all</a>)</span>
+      </div>
     </header>
     <div id="main" role="main">
         <div id="infoMsg"></div>
@@ -37,7 +37,7 @@
                         <img onerror="hideMe()" class="favicon" />
                         <div class="fullInfo">
                         <a href="" target="_blank" href=""><span class="linkDescription">This is the link description</span></a>
-                        <div class="linkLine"><a target="_blank" href="" class="expandedLink">http://example.com</a><span class="origLink"></span></div>
+                        <div class="linkLine"><a target="_blank" href="" class="expandedLink">http://example.com</a></div>
                         <div><img class="providerIcon"/><span class="linkFrom"/></div>
                         <div class="viewMore">&#9654; View</div>
                     </div>
@@ -52,7 +52,7 @@
     </footer>
   </div> <!--! end of #container -->
 
- <script src="/static/js/jquery-1.6.1.min.js"></script>
+ <script src="/static/js/jquery-1.6.2.min.js"></script>
   <script src="/static/js/extensions/string.js"></script>
   <script src="/static/js/extensions/date.js"></script>
   <script src="js/pure_min.js"></script>
