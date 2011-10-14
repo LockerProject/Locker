@@ -143,6 +143,7 @@ function handleTwitter (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -161,6 +162,7 @@ function handleTumblr (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
