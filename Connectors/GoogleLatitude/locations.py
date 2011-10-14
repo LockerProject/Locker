@@ -16,8 +16,8 @@ def sync(process_info):
     auth = process_info['auth']
     credentials = oauth2client.client.OAuth2Credentials(
             auth['token']['access_token'],
-            auth['appKey'],
-            auth['appSecret'],
+            auth['clientID'],
+            auth['clientSecret'],
             auth['token'].get('refresh_token', None),
             None,
             'https://accounts.google.com/o/oauth2/token',
