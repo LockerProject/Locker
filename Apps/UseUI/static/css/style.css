@@ -409,14 +409,27 @@ nav#application-navigation > ul > li
   width: 340px;
   z-index: 9999;
   position: absolute;
-  top: 84px;
-  bottom: 20px;
+  top: 86px;
+  bottom: 24px;
   left: -320px;
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
-  background-color: white;
+  background-color: #e7e7e8;
   opacity: 0.93;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid transparent;
+  -webkit-transition: border-color 0.5s, -webkit-box-shadow 0.5s;
+}
+
+#viewers:hover
+{
+  border-color: rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+}
+
+#viewers-slide-button
+{
+  margin-top: 3px;
+  margin-right: 2px;
 }
 
 #viewers-title
