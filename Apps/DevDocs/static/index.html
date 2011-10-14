@@ -23,6 +23,11 @@ ul li {
   font-size: 24px;
   margin: 8px;
 }
+
+.done {
+    color:#aaa;
+    text-decoration: line-through;
+}
   </style>
 
 </head>
@@ -30,15 +35,15 @@ ul li {
 <body>
 
 <ol>
-  <li> Connect your GitHub account if you haven't yet (under services in upper right corner) </li>
-  <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer">Skeleton Viewer</a> </li>
+  <li id="connect"> <a id="connect-link"> Connect your GitHub account </a></li>
+  <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a> </li>
   <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings">API Token</a> <br>
   <input id="token" value="baseUrl = 'https://api.singly.com/<apikey>';" size="100" /></li>
   <li> Edit and test your viewer!
   <ul>
-    <li>Loading your index.html locally should work :)</li>
-    <li>Change your .app file to customize your viewer name</li>
-    <li>Push your changes back to github, and check them out from inside your locker</li>
+    <li>Open your index.html in a browser</li>
+    <li>Edit your .app file to change your viewer name</li>
+    <li>Push your changes back to GitHub, and check them out from inside your account</li>
   </ul>
   </li>
   <li> Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with</li>
@@ -58,6 +63,24 @@ $(document).ready(function() {
     $.getJSON('https://singly.com/users/me/apiToken', function(token) {
         if(!token || !token.apiToken) return;
         $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+    });
+    $.getJSON('/synclets', function(synclets) {
+        var installed = synclets.installed;
+        var isInstalled = false;
+        for(var i in installed) {
+            if(installed[i].id === "github") {
+                $("#connect").addClass('done');
+                isInstalled = true;
+                break;
+            }
+        }
+        if(!isInstalled) {
+            for(var i in synclets.available) {
+                if(synclets.available[i].provider === 'github') {
+                    $("#connect-link").attr('href', synclets.available[i].authurl);
+                }
+            }
+        }
     });
 });
 </script>
