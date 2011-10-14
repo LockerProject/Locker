@@ -52,11 +52,29 @@
       <div id="loading"></div>
     </div>
 
-    <script src="/static/js/jquery-1.6.1.min.js"></script>
+    <script src="/static/js/jquery-1.6.2.min.js"></script>
     <script src="/static/js/extensions/string.js"></script>
     <script src="/static/js/extensions/date.js"></script>
     <script src="js/pure_min.js"></script>
     <script defer src="js/allAlone.js"></script>
+
+
+    <script>
+      $("#main").scroll(function(event) {
+        var element = $(event.target);
+
+        var currentSection = element.find(".dateGroup").map(function(index, group) {
+          // console.log($(group))
+          console.log("Group Offset: ", $(group).offset().top, ", Scroll Top: ", $(event.target).scrollTop())
+        })
+        console.log(currentSection)
+        // .(function(group) {
+        //           console.log(group)
+        //           return true;
+        //         })
+        // console.log("scrolling")
+      })
+    </script>
 
   </body>
 </html>
