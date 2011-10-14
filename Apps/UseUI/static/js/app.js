@@ -151,6 +151,7 @@ $(document).ready(
                     $("#viewers-title").hide();
                     $("#viewers-list").hide();
                     $("#viewers-hover").show();
+                    $("#appFrame")[0].contentWindow.focus();
                     $("#viewers-slide-button").attr('src', 'img/slide-out.png');
                 });
             }
@@ -430,7 +431,7 @@ function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
     var newServiceHover = $('.viewer-hover.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
-    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
@@ -455,7 +456,7 @@ function drawViewer(viewer, isSelected) {
     $('#viewers-list').append(newService);
 
     if(viewer.author == "") return;
-    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newServiceHover.find('.viewer-link').click(function() {
@@ -551,6 +552,7 @@ function renderApp(fragment) {
                     if (needReload) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
+                    $("#appFrame")[0].contentWindow.focus();
                     clearTimeout(timeout);
                     if (manuallyClosed) closeServices();
                 }
