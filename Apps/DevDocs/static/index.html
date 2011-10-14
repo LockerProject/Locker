@@ -28,6 +28,15 @@ ul li {
     color:#aaa;
     text-decoration: line-through;
 }
+
+li pre {
+    display:inline-block;
+    background-color:#F8F8F8;
+    padding:10px;
+    border: 1px solid #CCC;
+    border-radius:3px;
+    font-size:0.8em;
+}
   </style>
 
 </head>
@@ -37,14 +46,17 @@ ul li {
 <ol>
   <li id="connect"> <a id="connect-link"> Connect your GitHub account </a></li>
   <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a> </li>
-  <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings">API Token</a> <br>
-  <input id="token" value="baseUrl = 'https://api.singly.com/<apikey>';" size="100" /></li>
+  <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings" target="_blank">API Token</a> :<br>
+        <pre id="token">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
+  </li>
   <li> Edit and test your viewer!
   <ul>
-    <li>Open your index.html in a browser</li>
+    <li>Open your index.html in a browser (it works!)</li>
     <li>Edit your .app file to change your viewer name</li>
-    <li>Push your changes back to GitHub, and check them out from inside your account</li>
-  </ul>
+  </ul>  
+  <li>Push your changes back to GitHub:<br>
+      <pre>git push origin master</pre>
+  </li>
   </li>
   <li> Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with</li>
 
