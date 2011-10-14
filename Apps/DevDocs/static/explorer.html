@@ -10,6 +10,13 @@
 .paramName {
   font-weight:bold;
 }
+
+#testParameters .paramName {
+    display:block;
+    float:left;
+    min-width:100px;
+    text-align:right;
+}
 .paramType {
   font-style:italic;
 }
@@ -39,6 +46,15 @@
 body {
   margin:40px;
 }
+
+input[type=text]{
+    margin-left:10px;
+    width:300px;
+}
+span.testExample {
+    margin-left:10px;
+    color:#aaa;
+}
 </style>
 </head>
 
@@ -66,7 +82,7 @@ Choose an endpoint: <select id='curMethod'>
   </div>
   <hr />
   <div id='testParameters'>
-    <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /></div>
+    <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /><span class='testExample'></span></div>
   </div>
   <input id='testButton' type='button' name='testIt' value='Test It' />
   <div id='testInfo'>
@@ -106,7 +122,8 @@ $(function() {
       });
       if (queryParams.length > 0) path = path + "?" + queryParams;
     }
-    $(".prettyprint code").text("Loading...");
+    $("input[type=button]").attr('disabled', true);
+    // $(".prettyprint code").text("Loading...");
     $("#fullTestURL").text(path);
     $("#testInfo").show();
     if (curAPI.operations[0].responseClass == "[Image]") {
@@ -128,10 +145,12 @@ $(function() {
         }
         $(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
         prettyPrint();
+        $("input[type=button]").attr('disabled', false);
       }).error(function(error) {
         console.log("We got an error");
         $(".prettyprint code").text(error.responseText);
         prettyPrint();
+        $("input[type=button]").attr('disabled', false);
       });
     }
     return false;
@@ -168,7 +187,8 @@ $(function() {
         "div.testParam":{
           "param<-parameters":{
             "span.paramName":"param.name",
-            "input@name":"_#{param.name}"
+            "input@name":"_#{param.name}",
+            "span.testExample":"param.example"
           }
         }
       });
