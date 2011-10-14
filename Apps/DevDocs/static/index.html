@@ -53,31 +53,62 @@ ul li {
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script>
+
+
+// this needs some cleanup to actually use the proper height + widths
+function accountPopup(url) {
+    var popup = window.open(url, "account", "width=1000,height=1000,status=no,scrollbars=no,resizable=no");
+    popup.focus();
+}
+
 $.ajaxSetup({
     xhrFields: {
        withCredentials: true
     },
     crossDomain: true
 });
+
+function hasGithub(callback) {
+    $.getJSON('/synclets', function(synclets) {
+        var installed = synclets.installed;
+        for(var i in installed) {
+            if(installed[i].id === "github") {
+                return callback(true);
+            }
+        }    
+        callback(false, synclets.available);
+    });
+}
+
+function waitForGithub(callback) {
+    hasGithub(function(has) {
+        if(has) return callback();
+        setTimeout(function() {
+            waitForGithub(callback);
+        }, 1000);
+    });
+}
+
 $(document).ready(function() {
     $.getJSON('https://singly.com/users/me/apiToken', function(token) {
         if(!token || !token.apiToken) return;
         $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
     });
-    $.getJSON('/synclets', function(synclets) {
-        var installed = synclets.installed;
-        var isInstalled = false;
-        for(var i in installed) {
-            if(installed[i].id === "github") {
-                $("#connect").addClass('done');
-                isInstalled = true;
-                break;
-            }
-        }
-        if(!isInstalled) {
-            for(var i in synclets.available) {
-                if(synclets.available[i].provider === 'github') {
-                    $("#connect-link").attr('href', synclets.available[i].authurl);
+    hasGithub(function(isInstalled, available) {
+        if(isInstalled) {
+            $("#connect").addClass('done');
+        } else {
+            for(var i in available) {
+                if(available[i].provider === 'github') {
+                    $("#connect-link").attr('href', "#");
+                    var url = available[i].authurl;
+                    $("#connect-link").click(function() {
+                        accountPopup(url);
+                        waitForGithub(function() {
+                            $("#connect").addClass('done');
+                            $("#connect-link").removeAttr('href');
+                        });
+                    });
                 }
             }
         }
