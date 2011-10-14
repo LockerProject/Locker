@@ -329,14 +329,41 @@ function proxyRequest(method, req, res) {
         console.log("auto-installing "+id);
         serviceManager.install(match); // magically auto-install!
     }
-    if (!serviceManager.isRunning(id)) {
-        console.log("Having to spawn " + id);
-        var buffer = httpProxy.buffer(req);
-        serviceManager.spawn(id,function(){
-            proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
+    var info = serviceManager.metaInfo(id);
+    if (info.static === true || info.static === "true") {
+        // This is a static file we'll try and serve it directly
+        console.log("Checking " + req.url);
+        var fileUrl = url.parse(ppath);
+        if(fileUrl.pathname.indexOf("..") >= 0)
+        { // extra sanity check
+            return res.send(404);
+        }
+        
+        fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
+            if (!err && (stats.isFile() || stats.isDirectory())) {
+                res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));
+            } else {
+                fs.stat(path.join(info.srcdir, fileUrl.pathname), function(err, stats) {
+                    if (!err && (stats.isFile() || stats.isDirectory())) {
+                        res.sendfile(path.join(info.srcdir, fileUrl.pathname));
+                    } else {
+                        console.log("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        res.send(404);
+                    }
+                });
+            }
         });
+        console.log("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
     } else {
-        proxied(method, serviceManager.metaInfo(id),ppath,req,res);
+        if (!serviceManager.isRunning(id)) {
+            console.log("Having to spawn " + id);
+            var buffer = httpProxy.buffer(req);
+            serviceManager.spawn(id,function(){
+                proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
+            });
+        } else {
+            proxied(method, serviceManager.metaInfo(id),ppath,req,res);
+        }
     }
     console.log("Proxy complete");
 };
