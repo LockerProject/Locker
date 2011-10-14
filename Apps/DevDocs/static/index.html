@@ -13,6 +13,29 @@
 .paramType {
 	font-style:italic;
 }
+#fullTestURL {
+	font-weight:bold;
+	font-size:20px;
+	background-color:#cdcdcd;
+	border:1px solid black;
+	margin:8px 0 8px 0;
+	padding:8px;
+}
+#limitedResults {
+	font-style:italic;
+	color:red;
+	font-size:12px;
+}
+.operator {
+	font-weight:bold;
+	display:block;
+	float:left;
+	width:20px;
+}
+.paramDescription ul li {
+	padding-left:20px;
+	list-style-type: none;
+}
 </style>
 </head>
 
@@ -38,11 +61,16 @@
 		</ul>
 	</div>
 	<hr />
-	<pre class='prettyprint'><code class='language-javascript'></code></pre>
 	<div id='testParameters'>
 		<div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /></div>
 	</div>
 	<input id='testButton' type='button' name='testIt' value='Test It' />
+	<div id='testInfo'>
+		<div id='fullTestURL'></div>
+		<div id='limitedResults'></div>
+		<pre class='prettyprint'><code class='language-javascript'></code></pre>
+		<img id='testResultImage' />
+	</div>
 </div>
 <script type="text/javascript">
 $(function() {
@@ -74,21 +102,39 @@ $(function() {
 			});
 			if (queryParams.length > 0) path = path + "?" + queryParams;
 		}
-		console.log("Testing " + path);
 		$(".prettyprint code").text("Loading...");
-		$("pre.prettyprint").show();
-		$.getJSON(path, function(testData) {
-			$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
-			prettyPrint();
-		}).error(function(error) {
-			$(".prettyprint code").text(error.responseText);
-			prettyPrint();
-		});
+		$("#fullTestURL").text(path);
+		$("#testInfo").show();
+		if (curAPI.operations[0].responseClass == "[Image]") {
+			$("#testResultImage").attr("src", path);
+			$("#testResultImage").show();
+			$(".prettyprint").hide();
+		} else {
+			$(".prettyprint").show();
+			$("#testResultImage").hide();
+			$.getJSON(path, function(testData) {
+				console.log("Full length is " + testData.length)
+				var hasMore = false;
+				if (testData.length && testData.length > 20) {
+					
+					$("#limitedResults").text("Results were limited to 20 entries.  " + (testData.length - 20) + " were hidden.").show();
+					testData = testData.splice(0, 20);
+				} else {
+					$("#limitedResults").hide();
+				}
+				$(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
+				prettyPrint();
+			}).error(function(error) {
+				console.log("We got an error");
+				$(".prettyprint code").text(error.responseText);
+				prettyPrint();
+			});
+		}
 		return false;
 	});
 
 	$("#curMethod").change(function() {
-		$("pre.prettyprint").hide();
+		$("#testInfo").hide();
 		var data = $(this + "option:selected").data();
 		curAPI = data;
 		$(".prettyprint code").text("Loading...");
@@ -126,7 +172,7 @@ $(function() {
 			$("div.parameters").hide();
 			$("#testParameters").hide();
 		}
-		if (data.operations[0].responseClass) {
+		if (data.operations[0].responseClass && data.operations[0].responseClass.indexOf("[") == -1) {
 			$("ul.resultEntry").find("li:gt(0)").remove();
 			$("#methodTemplate ul.resultEntry").render(models[data.operations[0].responseClass].responseClass, {
 				"li":{

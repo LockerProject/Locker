@@ -1,6 +1,6 @@
 var debug = false;
 var log = function(m) { if (debug && console && console.log) console.log(m); }
-var app, timeout, appId;
+var app, timeout, appId, installed;
 var providers = [];
 var manuallyClosed = false;
 var retryTime = 1000;
@@ -8,6 +8,7 @@ var ready = false;
 var searchWaiting = false;
 var searchInterval;
 var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.template)';
+if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
 var externalBase = window.location.origin;
 
 $(document).ready(
@@ -133,14 +134,14 @@ $(document).ready(
                 this.getTip().html('<div>' + tip + '</div>');
             }
         });
-        
+
         var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
             if(!viewersFullDisplay) {
                 $("#viewers-hover").hide();
                 $("#viewers-title").show();
                 $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"}, 300, function() {                   
+                $("#viewers").animate({"left":"0px"}, 300, function() {
                     $("#viewers-slide-button").attr('src', 'img/slide-in.png');
                     viewersFullDisplay = true;
                 });
@@ -154,7 +155,7 @@ $(document).ready(
                 });
             }
         });
-        
+
         $("#viewers").hover(
             function(e) {
                 if (!viewersFullDisplay) {
@@ -164,10 +165,10 @@ $(document).ready(
                 }
             },
             function(e) {
-                if (!viewersFullDisplay) {        
+                if (!viewersFullDisplay) {
                     $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
                         viewersFullDisplay = false;
-                    });            
+                    });
                 }
             }
         );
@@ -268,7 +269,7 @@ function renderRow(name, obj) {
 var resultModifiers = {};
 
 resultModifiers.people = function(newResult, obj) {
-    newResult.children('.search-result').text(obj.fullobject.name);
+    newResult.children('.search-result').html(obj.fullobject.name);
     if (obj.fullobject['photos']) {
         newResult.find('.search-result-icon').attr('src', obj.fullobject.photos[0]);
     } else {
@@ -278,7 +279,7 @@ resultModifiers.people = function(newResult, obj) {
 }
 
 resultModifiers.photos = function(newResult, obj) {
-    newResult.children('.search-result').text(obj.fullobject.title);
+    newResult.children('.search-result').html(obj.fullobject.title);
     newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
     var img = newResult.find('.search-result-icon')[0];
     img.onload = function() {
@@ -295,14 +296,14 @@ resultModifiers.links = function(newResult, obj) {
         return false;
     }
     newResult.attr('title', obj.title);
-    newResult.children('.search-result').text(obj.title);
+    newResult.children('.search-result').html(obj.title);
     newResult.find('.search-result-icon').attr('src', 'img/link.png');
     newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 
 resultModifiers.tweets = function(newResult, obj) {
     newResult.attr('title', obj.fullobject.text);
-    newResult.children('.search-result').text(obj.fullobject.text);
+    newResult.children('.search-result').html(obj.fullobject.text);
     newResult.find('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
     newResult.click(function() { window.open('https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str, '_blank'); });
 }
@@ -340,7 +341,6 @@ var SyncletPoll = (
             t.handleResponse = function(data, err, resp) {
                 if(retryTime < 10000) retryTime += 500;
                 var hasProps = false;
-                globalvar = data.installed;
                 for (app in data.installed) {
                     hasProps = true;
                     if (window.guidedSetup) window.guidedSetup.servicesAdded();
@@ -351,6 +351,8 @@ var SyncletPoll = (
                         t.updateState(app.provider, app);
                     }
                 }
+                if(!installed || (!installed.github && data.installed.github)) drawViewers(); // add it whenever it loads first time
+                installed = data.installed;
                 if (!hasProps && !window.guidedSetup) {
                     window.guidedSetup = new GuidedSetup();
                 }
@@ -410,13 +412,6 @@ function drawServices() {
             for (var i = 0; i < syncletsToRender.length; i++) {
                 drawService(syncletsToRender[i]);
             }
-            if (!window.syncletPoll) {
-                window.syncletPoll = new SyncletPoll(providers);
-            } else {
-                window.syncletPoll.halt();
-                delete window.syncletPoll;
-                window.syncletPoll = new SyncletPoll(providers);
-            }
         });
     });
 }
@@ -439,6 +434,12 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
+            if(viewer.sync)
+            {
+                console.log("forced background syncing to github");
+                $.get('/synclets/github/run', function(){});
+                return;
+            }
             setViewer(viewer.viewer, viewer.handle, function() {
                 renderApp();
                 drawViewers();
@@ -452,7 +453,8 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
     newService.removeClass('template');
     $('#viewers-list').append(newService);
-    
+
+    if(viewer.author == "") return;
     newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
     newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
@@ -484,6 +486,15 @@ function drawViewers() {
             author: '',
             viewer: 'photos',
             handle: 'devdocs'
+        };
+        drawViewer(addViewerView, false);
+        if(!installed || !installed.github) return;
+        var addViewerView = {
+            title: 'Sync your views from GitHub',
+            author: '',
+            viewer: 'photos',
+            handle: 'devdocs',
+            sync: true
         };
         drawViewer(addViewerView, false);
     });
@@ -535,7 +546,7 @@ function renderApp(fragment) {
                 if (ready) {
                     // log('clearing timeout');
                     var needReload = false;
-                    if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location) needReload = true;
+                    if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location.toString()) needReload = true;
                     $("#appFrame")[0].contentWindow.location.replace(viewerUrl + (fragment?("?"+fragment+"#"+fragment):"")); // HACK WTF OMG IrAGEuBroSER!
                     if (needReload) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
@@ -561,6 +572,9 @@ function expandServices() {
     $('.services-box-container').hide();
     $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
     $('#services').animate({height: "110px"}, {duration: 200});
+    if (!window.syncletPoll) {
+        window.syncletPoll = new SyncletPoll();
+    }
 }
 
 function resizeFrame() {
@@ -575,6 +589,10 @@ function closeServices() {
         $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
             $('.services-box-container').show();
             resizeFrame();
+            if (window.syncletPoll) {
+                window.syncletPoll.halt();
+                delete window.syncletPoll;
+            }
         }
     });
 }
@@ -591,10 +609,10 @@ var GuidedSetup = (
             var text = {};
             t.synced = false;
             text.header = ['Welcome!', 'Get Started.', 'Explore...'];
-            text.forward = ['NEXT', 'NEXT', 'DONE'];
+            text.forward = ['Get Started!', 'NEXT', 'DONE'];
             text.body = [];
-            text.body[0] = "<p>This helps you pull all your stuff together from around the web.</p>" +
-                           "<p></p>";
+            text.body[0] = "<p>This helps you pull all your stuff together from around the web and see it in one place.</p>" +
+                           "<p>Once it's all together, you can build on top of it and share what you create!</p>";
             text.body[1] = "<p>To get started, connect some services you use.</p>" +
                            "<p></p>";
             text.body[2] = "<p>Now that you've got some services connected, you can got check out the different views!</p>" +

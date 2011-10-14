@@ -22,15 +22,15 @@ lconfig.load('../../Config/config.json');
 var externalBase;
 var closed;
 var locker;
-var viewers = {};
+var viewers = {available:{}, selected:{
+    photos: "photosv09",
+    contacts: "contactsviewer",
+    links: "linkalatte"
+}};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
     externalBase = passedExternalBase;
-    bootState(function() {
-        getViewers(function() {
-            app.listen(listenPort, callback);
-        });
-    });
+    app.listen(listenPort, callback);
 };
 
 var app = express.createServer();
@@ -83,24 +83,24 @@ app.get('/apps', function(req, res) {
 
 app.get('/viewers', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify(viewers));
+    getViewers(function() {
+        res.end(JSON.stringify(viewers));
+    });
 });
 
 app.post('/setViewer', function(req, res) {
-    console.error("DEBUG: req", req);
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
-        
+        console.error("No type given for viewer");
     } else if(!handle) {
-        
+        console.error("No handle given for viewer");
     } else {
-        if(!(type === 'photos' || type === 'people' || type === 'links')) {
-            
-        } else if(!viewers.available[type][handle]) {
-            
+        if(!(type === 'photos' || type === 'contacts' || type === 'links')) {
+            console.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
+            console.log("Setting the viewer for " + type + " to " + handle);
             viewers.selected[type] = handle;
             lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
         }
@@ -127,23 +127,26 @@ app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
-        console.dir(req.body);
-        var evInfo = eventInfo[req.body.type];
-        if (evInfo.timer) {
-            clearTimeout(evInfo.timer);
+        if(req.body.type === 'view/github') {
+            io.sockets.emit('viewer', req.body);
+        } else {
+            var evInfo = eventInfo[req.body.type];
+            if (evInfo.timer) {
+                clearTimeout(evInfo.timer);
+            }
+            evInfo.timer = function(ev){ evInfo = ev; return setTimeout(function() {
+                // stuff changed, go get the newest total to see if it did
+                request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
+                    if(!body || !body.count || evInfo.count == body.count) return;
+                    io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
+                    console.log("Sent events, setting to ",body);
+                    evInfo.count = body.count;
+                    evInfo.updated = body.updated;
+                    evInfo.lastId = body.lastId;
+                    saveState();
+                });
+            }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
         }
-        evInfo.timer = function(ev){ evInfo = ev; return setTimeout(function() {
-            // stuff changed, go get the newest total to see if it did
-            request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
-                if(!body || !body.count || evInfo.count == body.count) return;
-                io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
-                console.log("Sent events, setting to ",body);
-                evInfo.count = body.count;
-                evInfo.updated = body.updated;
-                evInfo.lastId = body.lastId;
-                saveState();
-            });
-        }, 2000)}(evInfo); // wrap for a new stack w/ evInfo isolated
     }
 });
 
@@ -166,8 +169,9 @@ function saveState()
 // compare last-sent totals to current ones and send differences
 function bootState(doneCb)
 {
-    if(isSomeoneListening > 0) return; // only boot after we've been idle
-    //logger.debug("booting state fresh");
+    if(isSomeoneListening > 0) return doneCb(); // only boot after we've been idle
+    isSomeoneListening++;
+    logger.debug("booting state fresh");
     async.forEach(['contacts','links','photos'],function(coll,callback){
         //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
@@ -180,6 +184,7 @@ function bootState(doneCb)
             callback();
         });
     },function(){
+        logger.debug("finishing boot");
         var last = {
             "link":{"count":0, "lastId":0},
             "contact/full":{"count":0, "lastId":0},
@@ -203,11 +208,7 @@ function bootState(doneCb)
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
         locker.listen('newservice', '/new');
-        var counts = {};
-        for (var key in eventInfo) {
-            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-        }
-        io.sockets.emit("counts", counts);
+        locker.listen('view/github', "/event");
         doneCb();
     });
 }
@@ -215,7 +216,7 @@ function bootState(doneCb)
 function getViewers(callback) {
     locker.map(function(err, map) {
         if(err) {
-            
+            logger.debug("failed to get map "+err);
         } else {
             viewers.available = {};
             map.available.forEach(function(app) {
@@ -228,11 +229,6 @@ function getViewers(callback) {
             try {
                 viewers.selected = JSON.parse(fs.readFileSync('viewers.json'));
             } catch(err) {
-                viewers.selected = {
-                    photos: "photosv09",
-                    contacts: "contactsviewer",
-                    links: "linkalatte"
-                };
             }
         }
         callback();
@@ -240,13 +236,14 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection");
-    isSomeoneListening++;
-    var counts = {};
-    for (var key in eventInfo) {
-        if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-    }
-    socket.emit("counts", counts);
+    logger.debug("++ got new socket.io connection " +isSomeoneListening);
+    bootState(function(){
+        var counts = {};
+        for (var key in eventInfo) {
+            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
+        }
+        socket.emit("counts", counts);
+    });
     socket.on('disconnect', function () {
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
@@ -256,6 +253,7 @@ io.sockets.on('connection', function (socket) {
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("contact/full","/event");
+            locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }
       });

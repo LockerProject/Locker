@@ -23,6 +23,7 @@ var sys = require('sys');
 var path = require('path');
 var fs = require("fs");
 var url = require('url');
+var querystring = require("querystring");
 var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
@@ -69,8 +70,13 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
+// return the known map of our world
+locker.get('/map/upsert', function(req, res) {
+    console.log("Upserting " + req.param("manifest"));
+    res.send(serviceManager.mapUpsert(req.param("manifest")));
+});
+
 locker.get("/providers", function(req, res) {
-    console.log("Looking for providers of type " + req.param("types"));
     if (!req.param("types")) {
         res.writeHead(400);
         res.end("[]");
@@ -266,12 +272,23 @@ locker.post('/core/:svcId/enable', function(req, res) {
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.get('/Me/*', function(req,res){
+locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
     // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
-    if(req.originalUrl.match(/^\/Me\/[a-z]+$/)) {
-        console.error('redirecting ' + req.originalUrl + ' to ' + req.originalUrl + '/')
-        res.redirect(req.originalUrl + '/');
+    if(!req.params[1]) {
+        var url = "/Me/" + req.params[0];
+        if (!req.params[1]) {
+            url += "/"
+        } else {
+            url += req.params[1];
+        }
+        var qs = querystring.stringify(req.query);
+        if (qs.length > 0) {
+            url += "?" + qs
+        }
+        res.header("Location", url);
+        res.send(302);
     } else {
+        console.log("Normal proxy of " + req.originalUrl);
         proxyRequest('GET', req, res);
     }
 });
@@ -491,11 +508,11 @@ exports.startService = function(port, cb) {
     }
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
-    serviceManager.spawn(lconfig.ui, function() {
-        dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
-        console.log('ui spawned');
-    });
     locker.listen(port, function() {
-        cb();
+        serviceManager.spawn(lconfig.ui, function() {
+            cb();
+            dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
+            console.log('ui spawned');
+        });
     });
 }
