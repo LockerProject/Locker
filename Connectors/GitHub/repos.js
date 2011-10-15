@@ -12,12 +12,16 @@ var GitHubApi = require("github").GitHubApi
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
+    var cached = {};
+    if (processInfo.config && processInfo.config.cached) {
+        cached = processInfo.config.cached;
+    }
     lockerUrl = processInfo.lockerUrl;
     github.getUserApi().show(auth.username, function(err, profile) {
         if (err) console.error(err);
-        exports.syncRepos(function(err, repos) {
+        exports.syncRepos(cached, function(err, repos) {
             if (err) console.error(err);
-            var responseObj = {data : {}, config: {}};
+            var responseObj = {data : {}, config: { cached: cached }};
             responseObj.data.profile = [{obj: profile}];
             responseObj.data.repo = repos;
             responseObj.data.view = viewers;
@@ -27,12 +31,16 @@ exports.sync = function(processInfo, cb) {
     });
 };
 
-exports.syncRepos = function(callback) {
+exports.syncRepos = function(cached, callback) {
     github.getRepoApi().getUserRepos(auth.username, function(err, repos) {
         if(err || !repos || !repos.length) return callback(err, []);
         // process each one to get richer data
-        async.forEachSeries(repos, function(repo, cb){
+        async.forEach(repos, function(repo, cb){
             repo.id = getIDFromUrl(repo.url);
+            // nothing changed
+            var ckey = repo.pushed_at + repo.watchers;
+            if(cached[repo.id] == ckey) return cb();
+            cached[repo.id] = ckey;
             // get the watchers, is nice
             console.error("checking "+repo.id);
             github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
