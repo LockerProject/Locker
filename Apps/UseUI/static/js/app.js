@@ -72,6 +72,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
+        $('.search').focus(function(){
+            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
+            window.setTimeout(function(){$('.search')[0].select();},100);
+        });
+
         $('.search').keyup(function(e) {
             if (e.keyCode == 13) {
                 $('.highlighted').click();
@@ -156,23 +161,6 @@ $(document).ready(
                 });
             }
         });
-
-        $("#viewers").hover(
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-260px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            },
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            }
-        );
 
         renderApp();
 
@@ -445,7 +433,7 @@ function drawViewer(viewer, isSelected) {
             if(viewer.sync)
             {
                 console.log("forced background syncing to github");
-                $.get('/synclets/github/run', function(){});
+                $.get('/synclets/github/run?id=repos', function(){});
                 return;
             }
             setViewer(viewer.viewer, viewer.handle, function() {
