@@ -34,12 +34,7 @@ try{
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
 }catch(e){}
 
-if (lconfig.externalSecure) {
-    host = "https://";
-} else {
-    host = "http://";
-}
-host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+host = lconfig.externalBase + "/";
 
 module.exports = function(locker) {
     locker.get('/auth/foursquare/auth', function(req, res) {
@@ -125,6 +120,7 @@ function handleOAuth2Post (code, options, res) {
         });
 
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
