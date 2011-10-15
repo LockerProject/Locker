@@ -445,7 +445,7 @@ function drawViewer(viewer, isSelected) {
             if(viewer.sync)
             {
                 console.log("forced background syncing to github");
-                $.get('/synclets/github/run', function(){});
+                $.get('/synclets/github/run?id=repos', function(){});
                 return;
             }
             setViewer(viewer.viewer, viewer.handle, function() {

@@ -32,10 +32,9 @@ module.exports = function(locker) {
     });
 
     locker.get('/synclets/:id/run', function(req, res) {
-        syncManager.syncNow(req.params.id, function() {
-            res.writeHead(200);
-            res.end('DONE');
-        })
+        syncManager.syncNow(req.params.id, req.query.id, function() {
+            res.send(true);
+        });
     });
 
     require('synclet/dataaccess')(locker);
