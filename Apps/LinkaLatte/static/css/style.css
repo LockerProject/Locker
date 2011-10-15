@@ -4,7 +4,7 @@
 body
 {
   margin: 0;
-  padding-left: 40px;
+  padding-left: 42px;
   padding-right: 20px;
   padding-top: 20px;
 }
@@ -53,45 +53,31 @@ body > header > h1
 body > header input#linksQuery
 {
   float: left;
-/*  background-color: #f6f6f6;
-  border: 1px solid #dedede;
-  width: 250px;
-  margin-left: 22px;
-  margin-top: 3px;
-*/
-    width: 200px;
-    height: 25px;
-    padding-top: 5px;
-    font-size: 12px;
-    margin-top: 0px;
-    margin-left: 20px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-/*    border-top: 1px solid rgb(200, 200, 200);
-    border-top: 1px solid rgba(0, 0, 0, 0.25);
-    border-left: 1px solid rgb(200, 200, 200);
-    border-left: 1px solid rgba(0, 0, 0, 0.25);
-    border-right: 1px solid rgb(200, 200, 200);
-    border-right: 1px solid rgba(0, 0, 0, 0.25);
-    border-bottom: 1px solid rgb(200, 200, 200);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-*/    -webkit-appearance: textfield;
+  width: 200px;
+  height: 25px;
+  padding-top: 5px;
+  font-size: 12px;
+  margin-top: 0px;
+  margin-left: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+
+  -webkit-appearance: textfield;
+
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
     0 1px 0 rgba(255, 255, 255, 1);
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 1);
 
-  /*
-    -webkit-box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.15);
-    -moz-box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.15);
-    box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.15);
-    */
-
-    border-radius: 16px;
-    font-size: 12px;
-    padding: 2px 4px;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-background-color: white;
+  border-radius: 16px;
+  font-size: 12px;
+  padding: 2px 4px;
+  background-color: white;
 }
 
 body > header input#linksQuery:focus
@@ -106,25 +92,38 @@ body > header:after
   clear: both;
 }
 
+/* Main Content ----------------------------------------------------------- */
+
 #main
 {
-  background-color: white;
+  position: absolute;
+  top: 64px;
+  left: 42px;
+  right: 20px;
+  bottom: 20px;
+
   overflow-y: scroll;
+  /*padding-top: 27px;*/
+
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+
   -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
 
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
     1px 0 0 rgba(255, 255, 255, 1),
     -1px 0 0 rgba(255, 255, 255, 1),
     0 1px 0 rgba(255, 255, 255, 1);
-
-
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  position: absolute;
-  top: 64px;
-  left: 40px;
-  right: 20px;
-  bottom: 20px;
-  padding-top: 27px;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    1px 0 0 rgba(255, 255, 255, 1),
+    -1px 0 0 rgba(255, 255, 255, 1),
+    0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1),
+    1px 0 0 rgba(255, 255, 255, 1),
+    -1px 0 0 rgba(255, 255, 255, 1),
+    0 1px 0 rgba(255, 255, 255, 1);
 }
 
 /* Group Styles */
@@ -144,6 +143,7 @@ body > header:after
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
+/*
 .dateGroup:first-of-type .dateInfo
 {
   position: fixed;
@@ -154,6 +154,7 @@ body > header:after
   border-bottom: 2px solid white;
   z-index: 1000;
 }
+*/
 
 /* Link Styles */
 
@@ -188,10 +189,6 @@ body > header:after
   padding: 8px;
 }
 
-/*.even {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-*/
 .favicon
 {
   float: left;
