@@ -154,18 +154,22 @@ nav#application-navigation > ul > li
   color: #444;
 }
 
-#nav-search {
-  position: absolute;
-  right: 160px;
-  top: 0;
-  bottom: 0;
+/* Global Search ---------------------------------------------------------- */
+
+#nav-search
+{
+  position: relative;
+  float: right;
+  margin-right: 20px;
 }
 
-#nav-search .template {
+#nav-search .template
+{
   display: none;
 }
 
-#nav-search input.search {
+#nav-search input.search
+{
   font-size: 16px;
   color: #999;
   padding: 4px;
@@ -190,13 +194,15 @@ nav#application-navigation > ul > li
   outline: none;
 }
 
-#nav-search input.search.populated {
+#nav-search input.search.populated
+{
   -moz-box-shadow: inset 2px 2px 5px #ccc, 2px 2px 2px 0px #888;
   box-shadow: inset 2px 2px 5px #ccc, 2px 2px 2px 0px #888;
   padding-bottom: 4px;
 }
 
-#search-results {
+#search-results
+{
   display: none;
   width: 314px;
   -moz-border-radius: 0px 0px 4px 4px;
@@ -216,7 +222,8 @@ nav#application-navigation > ul > li
   padding: 0px 10px 10px 10px;
 }
 
-#search-results .search-divider {
+#search-results .search-divider
+{
   width: 314px;
   margin: 5px 0px -5px 0px;
   height: 1px;
@@ -224,11 +231,13 @@ nav#application-navigation > ul > li
   border-bottom: solid 1px #ccc;
 }
 
-#search-results .highlighted {
+#search-results .highlighted
+{
   background: rgba(120, 180, 225, .5);
 }
 
-#search-results .search-header-row {
+#search-results .search-header-row
+{
   margin-top: 10px;
   height: 24px;
   color: #bbbbbb;
@@ -238,31 +247,36 @@ nav#application-navigation > ul > li
   clear: both;
 }
 
-#search-results .search-header-row .header-title {
+#search-results .search-header-row .header-title
+{
   float: left;
   font-size: 16px;
   line-height: 24px;
 }
 
-#search-results .search-header-row .count {
+#search-results .search-header-row .count
+{
   font-size: 12px;
   color: #bbbbbb;
 }
 
-#search-results .search-header-row .see-all {
+#search-results .search-header-row .see-all
+{
   float: right;
   font-size: 14px;
   line-height: 24px;
 }
 
-#search-results .search-result-row {
+#search-results .search-result-row
+{
   margin-top: 1px;
   height: 36px;
   cursor: pointer;
   clear: both;
 }
 
-#search-results .search-result-row .search-result {
+#search-results .search-result-row .search-result
+{
   margin-left: 5px;
   float: left;
   height: 36px;
@@ -275,7 +289,8 @@ nav#application-navigation > ul > li
   line-height: 36px;
 }
 
-#search-results .search-result-row .icon-box {
+#search-results .search-result-row .icon-box
+{
   float: left;
   position: relative;
   height: 36px;
@@ -283,7 +298,8 @@ nav#application-navigation > ul > li
   overflow: hidden;
 }
 
-#search-results .search-result-row img {
+#search-results .search-result-row img
+{
   position: absolute;
   height: 36px;
   margin-left: auto;
@@ -291,10 +307,11 @@ nav#application-navigation > ul > li
   display: block;
 }
 
-
+/* Global Actions --------------------------------------------------------- */
 
 #global-navigation
 {
+  display: none;
   position: absolute;
   right: 20px;
   top: 0;
@@ -312,6 +329,8 @@ nav#application-navigation > ul > li
   opacity: 0.35;
   margin: 11px;
 }
+
+/* Services Popover ------------------------------------------------------- */
 
 .services-box-container
 {
@@ -400,6 +419,173 @@ nav#application-navigation > ul > li
   width: 36px;
   background-color: #7b7b7b;
   cursor: pointer;
+}
+
+/* Custom Logout / User Menu ---------------------------------------------- */
+
+#customLogout
+{
+  display: none;
+  position: relative;
+  top: 50%;
+
+  float: right;
+
+  height: 24px;
+  line-height: 24px;
+
+  margin-top: -13px;
+  margin-right: 20px;
+  padding-right: 24px;
+
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+
+  background-color: rgba(0, 0, 0, 0.15);
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
+
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.8),
+    inset -1px 0 0 rgba(255, 255, 255, 0.8);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.8),
+    inset -1px 0 0 rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.8),
+    inset -1px 0 0 rgba(255, 255, 255, 0.8);
+
+  font-size: 80%;
+  color: rgb(100, 100, 100);
+  cursor: default;
+
+  z-index: 100;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+
+  -webkit-transition: 0.5s color;
+  -moz-transition: 0.5s color;
+  -ms-transition: 0.5s color;
+  -o-transition: 0.5s color;
+  transition: 0.5s color;
+}
+
+#customLogout:hover
+{
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  color: rgb(50, 50, 50);
+}
+
+#customLogout:active
+{
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+}
+
+.userMenuHover
+{
+}
+
+.userMenuActive
+{
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
+  -webkit-border-bottom-left-radius: 0 !important;
+  -moz-border-bottom-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  color: rgb(50, 50, 50) !important;
+}
+
+.userEmail
+{
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: bold;
+  padding-left: 10px;
+  padding-right: 10px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* User Menu */
+
+#userMenu
+{
+  display: none;
+  margin-left: -1px;
+  margin-right: -1px;
+  margin-top: 1px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-top: none;
+  z-index: 9999;
+  font-size: 11px;
+
+  -webkit-border-bottom-left-radius: 3px;
+  -webkit-border-bottom-right-radius: 3px;
+  -moz-border-bottom-right-radius: 3px;
+  -moz-border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+#userMenu ul
+{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#userMenu ul li
+{
+  line-height: 24px;
+  font-weight: bold;
+  margin: 1px;
+}
+
+#userMenu ul li a
+{
+  padding-left: 10px;
+  color: rgb(50, 50, 50);
+  display: block;
+}
+
+#userMenu ul li a:hover
+{
+  background-color: #eee;
+}
+
+#menuExpander .expander
+{
+  font-size: 80%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+#menuExpander .expander:before
+{
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(0, 0, 0, 0.15);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+#userMenu .user-name
+{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-bottom: 4px;
+  padding-top: 4px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Viewers ---------------------------------------------------------------- */
@@ -505,112 +691,7 @@ nav#application-navigation > ul > li
   color: #555;
 }
 
-#appFrame
-{
-  width: 100%;
-  height: 100%;
-}
-
-#counters {
-  position: absolute;
-  right: 20px;
-  top: 6px;
-  font-size: 10px;
-}
-
-.tooltip {
-  display: none;
-  background: transparent url(../img/white_arrow.png) no-repeat;
-  font-size: 80%;
-  height: 122px;
-  width: 209px;
-}
-
-.tooltip div {
-  margin: 12px;
-  margin-top: 45px;
-  word-wrap: break-word;
-  color: #000;
-  text-align: center;
-  font-weight: bold;
-}
-
-.tooltip .lastUpdated {
-  font-size: 10px;
-  margin-top: 10px;
-  font-weight: normal;
-}
-
-#customLogout {
-  right: 0;
-  top: 0;
-  height: 45px;
-  font-size: 80%;
-  position: absolute;
-  z-index: 9999;
-  display: none;
-}
-
-.userMenuHover {
-  background-color: rgba(120,180,226,0.5);
-}
-
-#menuExpander {
-  top: 50%;
-  height: 1em;
-  margin-left: 5px;
-  margin-top: -0.5em;
-  position: absolute;
-}
-
-.userMenu {
-  background-color: white;
-  color: black;
-  right: 0px;
-  border: 2px solid rgba(120,180,226,1);
-  border-bottom: 0px;
-}
-
-.settings {
-  height: 1em;
-  margin: 0.5em;
-  padding: 0.5em;
-}
-
-
-.signout-link {
-  height: 1em;
-  margin: 0.5em;
-  padding: 0.5em;
-}
-
-.signout-link:hover {
-  background-color: #CCC;
-}
-
-#userMenu {
-  display: none;
-  margin-top: 45px;
-  background-color: white;
-  border: 2px solid rgba(120,180,226,1);
-  border-top: 1px solid rgba(38,97,124,1);
-  border-top: 0;
-  margin-left: -2px;
-  margin-right: 2px;
-  z-index: 9999;
-}
-
-#menuExpander .expander {
-  font-size: 50%;
-  position: absolute;
-  right: 10px;
-  top: 2px;
-}
-
-#userMenu .user-name {
-  font-weight: bold;
-  padding-left: 5px;
-}
+/* App Frame -------------------------------------------------------------- */
 
 #iframeWrapper /* TODO rename */
 {
@@ -622,7 +703,48 @@ nav#application-navigation > ul > li
   overflow: hidden;
 }
 
-/*guided setup stuff*/
+#appFrame
+{
+  width: 100%;
+  height: 100%;
+}
+
+#counters
+{
+  position: absolute;
+  right: 20px;
+  top: 6px;
+  font-size: 10px;
+}
+
+.tooltip
+{
+  display: none;
+  background: transparent url(../img/white_arrow.png) no-repeat;
+  font-size: 80%;
+  height: 122px;
+  width: 209px;
+}
+
+.tooltip div
+{
+  margin: 12px;
+  margin-top: 45px;
+  word-wrap: break-word;
+  color: #000;
+  text-align: center;
+  font-weight: bold;
+}
+
+.tooltip .lastUpdated
+{
+  font-size: 10px;
+  margin-top: 10px;
+  font-weight: normal;
+}
+
+/* Guided Setup / Lightbox ------------------------------------------------ */
+
 .blur {
   position: absolute;
   display: none;
@@ -735,6 +857,7 @@ nav#application-navigation > ul > li
   margin: 20px;
 }
 
+/* GetSatisfaction Feedback Widget ---------------------------------------- */
 
 #fdbk_screen {
   height: 100% !important;

@@ -42,6 +42,24 @@
         </ul>
       </nav>
 
+      <% if (dashboard && dashboard.customLogout) { %>
+        <div id="customLogout">
+          <div id="menuExpander">
+            <div class="userEmail"></div>
+            <div class="expander">&#x25BC;</div>
+          </div>
+          <div id="userMenu">
+            <ul>
+              <li class="user-name"></li>
+              <% if (dashboard.customSettings) { %>
+                <li class="settings"><a href="<%= dashboard.customSettings %>">Account Settings</a></li>
+              <% } %>
+              <li class="signout-link"><a href="<%= dashboard.customLogout %>">Sign Out</a></li>
+            </ul>
+          </div>
+        </div>
+      <% } %>
+
       <nav id="global-navigation">
         <ul>
           <li>
@@ -78,18 +96,7 @@
           </div>
         </div>
       </div>
-      <% if (dashboard && dashboard.customLogout) { %>
-        <div id='customLogout'>
-          <div id='menuExpander'><div class='userEmail'></div><div class='expander'>&#x25BC;</div></div>
-          <div id='userMenu'>
-            <div class='user-name'></div>
-            <% if(dashboard.customSettings) { %>
-            <div class='settings'><a href='<%= dashboard.customSettings %>'>Settings</a></div>
-            <% } %>
-            <div class='signout-link'><a href='<%= dashboard.customLogout %>'>Sign Out</a></div>
-          </div>
-        </div>
-      <% } %>
+
     </header>
 
 
