@@ -162,23 +162,6 @@ $(document).ready(
             }
         });
 
-        $("#viewers").hover(
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-260px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            },
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            }
-        );
-
         renderApp();
 
         $(window).resize(resizeFrame);
