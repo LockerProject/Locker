@@ -72,6 +72,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
+        $('.search').focus(function(){
+            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
+            window.setTimeout(function(){$('.search')[0].select();},100);
+        });
+
         $('.search').keyup(function(e) {
             if (e.keyCode == 13) {
                 $('.highlighted').click();
