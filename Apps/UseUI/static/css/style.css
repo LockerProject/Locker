@@ -164,6 +164,7 @@ nav#application-navigation > ul > li
 
 .search-box-container
 {
+  display: none;
   position: relative;
   float: right;
   margin-right: 20px;
@@ -187,7 +188,6 @@ nav#application-navigation > ul > li
 
 #nav-search
 {
-  display: none;
   position: relative;
   float: right;
   margin-right: 20px;
