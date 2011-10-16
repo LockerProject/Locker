@@ -356,7 +356,8 @@ nav#application-navigation > ul > li
   -moz-user-select: none;
 }
 
-.services-box-container:hover
+.services-box-container:hover,
+.services-box-container.active
 {
   opacity: 0.8;
 }
