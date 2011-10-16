@@ -40,23 +40,6 @@ $(document).ready(
             expandServices();
         });
 
-        // close service drawer button
-        $('#service-closer').click(function() {
-            if ($('.blur:visible').length === 0) {
-                manuallyClosed = true;
-                $.post('closed', function(data) { log("success"); });
-                closeServices();
-            }
-        });
-
-        // service buttons
-        $('#service-selector').delegate('.provider-link', 'click', function() {
-            if ($(this).hasClass('disabled')) return false;
-            accountPopup($(this));
-            return false;
-        });
-
-
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.highlighted').removeClass('highlighted');
             $(this).addClass('highlighted');

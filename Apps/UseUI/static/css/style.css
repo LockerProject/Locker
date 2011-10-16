@@ -366,10 +366,6 @@ nav#application-navigation > ul > li
 {
 }
 
-.services-top-spacer {
-  height: 0.8em;
-}
-
 #services
 {
   display: none;
@@ -406,9 +402,9 @@ nav#application-navigation > ul > li
 #choose-services
 {
   background-image: url('../img/arrow.png');
-  background-position: -84px 50%;
+  background-position: -192px 50%;
   background-repeat: no-repeat;
-  width: 270px;
+  width: 160px;
   height: 96px;
   line-height: 96px;
   color: white;
@@ -462,20 +458,6 @@ nav#application-navigation > ul > li
 {
   cursor: auto;
   opacity: .5;
-}
-
-#service-closer /* TODO Remove this */
-{
-  display: none;
-  background-image: url('../img/uparrows.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-top: 90px;
-  float: right;
-  height: 20px;
-  width: 36px;
-  background-color: #7b7b7b;
-  cursor: pointer;
 }
 
 /* Custom Logout / User Menu ---------------------------------------------- */
