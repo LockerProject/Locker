@@ -34,6 +34,9 @@ $(document).ready(
 
         // open service drawer button
         $('.services-box').click(function() {
+          if ($("#services:visible").length > 0)
+            closeServices();
+          else
             expandServices();
         });
 
@@ -568,13 +571,34 @@ function renderApp(fragment) {
     });
 };
 
-function expandServices() {
-    $('.services-box-container').hide();
-    $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
-    $('#services').animate({height: "110px"}, {duration: 200});
-    if (!window.syncletPoll) {
-        window.syncletPoll = new SyncletPoll();
-    }
+function expandServices()
+{
+  $('.services-box').addClass("active");
+
+  // Hide child elements of the services container...
+  $('#services #choose-services').hide();
+  $('#services #service-selector').hide();
+
+  $("#services").css({ height: "0px" }).show();
+
+  // Push the viewers slider down...
+  $("#viewers").animate({ top: "183px" }, { duration: 200 });
+
+  // Push the main content area down...
+  $("#iframeWrapper").animate({ top: "161px" }, { duration: 200 });
+
+  // TODO The above should both be handled by resizing their container, not each individually...
+
+  // Expand the Services area to size...
+  $('#services').animate({ height: "96px" }, { duration: 200, complete: function() {
+    $('#services #choose-services').fadeIn();
+    $('#services #service-selector').fadeIn();
+  }});
+
+  if (!window.syncletPoll)
+  {
+    window.syncletPoll = new SyncletPoll();
+  }
 }
 
 function resizeFrame() {
@@ -584,17 +608,31 @@ function resizeFrame() {
 
 
 
-function closeServices() {
-    $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-        $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
-            $('.services-box-container').show();
-            resizeFrame();
-            if (window.syncletPoll) {
-                window.syncletPoll.halt();
-                delete window.syncletPoll;
-            }
-        }
-    });
+function closeServices()
+{
+
+  $('.services-box').removeClass("active");
+
+  // Restore the main content area...
+  $("#iframeWrapper").animate({
+    top: "64px"
+  }, {
+      duration: 200, queue: false
+  });
+
+  // Restore the viewers slider...
+  $("#viewers").animate({ top: "86px" }, { duration: 200 });
+
+  $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+      // $('.services-box-container').show();
+      $('#services').hide();
+      resizeFrame();
+      if (window.syncletPoll) {
+          window.syncletPoll.halt();
+          delete window.syncletPoll;
+      }
+  }});
+
 }
 
 

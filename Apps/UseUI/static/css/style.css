@@ -5,6 +5,7 @@ body
 {
   background: rgba(0, 0, 0, 0.025);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  overflow: hidden;
 }
 
 a
@@ -25,8 +26,12 @@ body > header
   background-color: white;
 
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
+/*
 body > header:after
 {
   content: "";
@@ -39,6 +44,7 @@ body > header:after
   overflow: hidden;
   border-top: 1px solid white;
 }
+*/
 
 body > header > h1
 {
@@ -156,8 +162,32 @@ nav#application-navigation > ul > li
 
 /* Global Search ---------------------------------------------------------- */
 
+.search-box-container
+{
+  position: relative;
+  float: right;
+  margin-right: 20px;
+  margin-top: 20px;
+  opacity: 0.5;
+  -webkit-transition: opacity 0.25s;
+  -moz-transition: opacity 0.25s;
+  -ms-transition: opacity 0.25s;
+  -o-transition: opacity 0.25s;
+  transition: opacity 0.25s;
+  cursor: pointer;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.search-box-container:hover
+{
+  opacity: 0.8;
+}
+
 #nav-search
 {
+  display: none;
   position: relative;
   float: right;
   margin-right: 20px;
@@ -307,33 +337,28 @@ nav#application-navigation > ul > li
   display: block;
 }
 
-/* Global Actions --------------------------------------------------------- */
-
-#global-navigation
-{
-  display: none;
-  position: absolute;
-  right: 20px;
-  top: 0;
-  bottom: 0;
-}
-
-#global-navigation ul
-{
-  float: left;
-}
-
-#global-navigation li
-{
-  float: left;
-  opacity: 0.35;
-  margin: 11px;
-}
-
-/* Services Popover ------------------------------------------------------- */
+/* Services Drawer -------------------------------------------------------- */
 
 .services-box-container
 {
+  position: relative;
+  float: right;
+  margin-right: 20px;
+  margin-top: 20px;
+  opacity: 0.5;
+  -webkit-transition: opacity 0.25s;
+  -moz-transition: opacity 0.25s;
+  -ms-transition: opacity 0.25s;
+  -o-transition: opacity 0.25s;
+  transition: opacity 0.25s;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.services-box-container:hover
+{
+  opacity: 0.8;
 }
 
 .services-box
@@ -344,72 +369,103 @@ nav#application-navigation > ul > li
   height: 0.8em;
 }
 
-#services {
-  position: relative;
-  background-color: #313131;
+#services
+{
+  display: none;
+  z-index: 100;
+  position: absolute;
+  top: 64px;
+  left: -48px;
+  right: -48px;
   height: 0px;
-  box-shadow: inset 0px 5px 5px black;
-  overflow: hidden;
+  padding-left: 48px;
+  padding-right: 48px;
+  background-color: #313131;
+  background-image: url('../img/services-background.png');
+  box-shadow: inset 0px 0px 32px black;
+  overflow: scroll-x;
+  border-bottom: 1px solid black;
+  border-top: 1px solid black;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
-#choose-services {
+#services:before
+{
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+#choose-services
+{
   background-image: url('../img/arrow.png');
-  width: 244px;
-  height: 55px;
-  margin-top: 30px;
-  margin-left: 20px;
-  line-height: 46px;
+  background-position: -84px 50%;
+  background-repeat: no-repeat;
+  width: 270px;
+  height: 96px;
+  line-height: 96px;
   color: white;
-  padding-left: 10px;
+  padding-left: 20px;
   font-weight: bold;
   float: left;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
-#service-selector {
-  background-color: #535353;
+#service-selector
+{
   float: left;
-  margin-top: 15px;
-  margin-left: 10px;
-  padding: 0px 15px;
-  height: 80px;
-  box-shadow: 0px 8px 5px rgba(0, 0, 0, .1);
+  height: 96px;
 }
 
-.service {
-  width: 76px;
+.service
+{
+  margin-top: 22px;
+  width: 96px;
   float: left;
-  margin-top: 13px;
+  text-align: center;
 }
 
-.service.template {
+.service.template
+{
   display: none;
 }
 
-.service .checkmark {
+.service .checkmark
+{
   position: relative;
   display: none;
-  top: -61px;
-  left: 43px;
+  top: -65px;
+  left: 20px;
 }
 
-.service .provider-icon {
-  margin-left: 20px;
+.service .provider-icon
+{
 }
 
-.service .provider-name {
-  margin-top: 4px;
-  text-align: center;
+.service .provider-name
+{
+  margin-top: 6px;
   font-size: 11px;
-  color: #bfbfbf;
+  color: #eee;
   font-weight: bold;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.8);
 }
 
-.service .provider-link.disabled {
+.service .provider-link.disabled
+{
   cursor: auto;
   opacity: .5;
 }
 
-#service-closer {
+#service-closer /* TODO Remove this */
+{
+  display: none;
   background-image: url('../img/uparrows.png');
   background-repeat: no-repeat;
   background-position: center;
@@ -435,6 +491,7 @@ nav#application-navigation > ul > li
   line-height: 24px;
 
   margin-top: -13px;
+  margin-left: 21px;
   margin-right: 20px;
   padding-right: 24px;
 
@@ -481,6 +538,17 @@ nav#application-navigation > ul > li
 #customLogout:active
 {
   background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+}
+
+#customLogout:before
+{
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: -22px;
+  bottom: -20px;
+  width: 1px;
+  background-image: -webkit-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
 }
 
 .userMenuHover
@@ -551,7 +619,7 @@ nav#application-navigation > ul > li
 
 #userMenu ul li a:hover
 {
-  background-color: #eee;
+  background-color: #8ADAEC;
 }
 
 #menuExpander .expander
@@ -696,11 +764,24 @@ nav#application-navigation > ul > li
 #iframeWrapper /* TODO rename */
 {
   position: absolute;
-  top: 66px;
+  top: 64px;
   left: 0;
   right: 0;
   bottom: 0;
   overflow: hidden;
+}
+
+#iframeWrapper:before
+{
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background-image: -webkit-radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.15), transparent 75%);
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 #appFrame

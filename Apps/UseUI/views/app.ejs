@@ -14,8 +14,8 @@
     <link rel="stylesheet" href="css/jquery.gritter.css" />
 
     <script src="/static/js/jquery-1.6.2.min.js"></script>
+    <script src="js/jquery.gritter.js"></script>
     <script src="js/app.js"></script>
-    <script src='js/jquery.gritter.js'></script>
   </head>
   <body class="app-page">
 
@@ -60,16 +60,19 @@
         </div>
       <% } %>
 
-      <nav id="global-navigation">
-        <ul>
-          <li>
-            <div class="services-box-container">
-              <div class="services-box"><img src="img/basic2-299.png" /></div>
-            </div>
-          </li>
-          <li><img src="img/basic2-101.png" /></li>
-        </ul>
-      </nav>
+      <div id="global-actions">
+
+        <!-- Services -->
+        <div class="services-box-container">
+          <div id="services-box" class="services-box"><img src="img/265.png" width="24" height="24" alt="Connected Sites" /></div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box-container">
+          <div class="search-box"><img src="img/63.png" width="24" height="24" alt="Search" /></div>
+        </div>
+
+      </div>
 
       <div id="nav-search">
         <input placeholder="&nbsp;Search people, links, photos" type="text" class="search" />
@@ -99,22 +102,18 @@
 
     </header>
 
-
-
-
     <div id="services">
       <div class="blur"></div>
       <div id="choose-services">
         Choose services to connect
       </div>
-      <div id="service-selector">
-        <div class="service template">
+      <ul id="service-selector">
+        <li class="service template">
           <a href="#" class="provider-link"><img class="provider-icon" src=""/></a>
-          <a href="#" class="provider-link"><p class="provider-name">facebook</p></a>
-          <img class="checkmark" src="img/checkmark.png"/>
-        </div>
-      </div>
-      <div id="service-closer"></div>
+          <a href="#" class="provider-link"><p class="provider-name"></p></a>
+          <img class="checkmark" src="img/checkmark.png" />
+        </li>
+      </ul>
     </div>
 
     <div id="viewers">
@@ -142,7 +141,6 @@
     </div>
 
     <div id="iframeWrapper">
-      <!--
       <div class="blur">
         <div class="lightbox">
           <img class="close-box" src="img/close-x.png"/>
@@ -154,7 +152,6 @@
           </div>
         </div>
       </div>
-      -->
       <iframe id="appFrame"></iframe>
     </div>
 
