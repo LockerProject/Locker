@@ -95,6 +95,7 @@ function showGritter(name, arg, lastId) {
         time: 5000
       });
     } else if(name === 'viewer') {
+        drawServices();
         var gritterId = $.gritter.add({
           title:"New "+arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
           text:arg.id,

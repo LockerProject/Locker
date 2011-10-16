@@ -146,11 +146,12 @@
 						"name":"limit",
 						"description":"The maximum number of contacts to return",
 						"dataType":"number",
-						"paramType":"query"
+						"paramType":"query",
+						"example":"ex. 1"
 					},
 					{
 						"name":"offset",
-						"description":"The number to offset into the contacts collection and begin the returned data from.",
+						"description":"The offset into the contacts collection to begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
 					}
@@ -165,12 +166,12 @@
 			{
 				"httpMethod":"GET",
 				"nickname":"contactsGet",
-				"summary":"Get the collected informat about a single contact.",
+				"summary":"Get the collected information about a single contact.",
 				"responseClass":"contact",
 				"parameters":[
 					{
 						"name":"id",
-						"description":"The _id from a contact to retrieve.",
+						"description":"The _id of the contact.",
 						"dataType":"string",
 						"paramType":"path"
 					}
@@ -228,13 +229,13 @@
 					},
 					{
 						"name":"offset",
-						"description":"The number to offset into the links collection and begin the returned data from.",
+						"description":"The offset into the links collection to begin the returned data from.",
 						"dataType":"number",
 						"paramType":"query"
 					},
 					{
 						"name":"fields",
-						"description":"Which subset of all the links fields to return.",
+						"description":"The subset of fields to return.",
 						"dataType":"string",
 						"paramType":"query"
 					},
@@ -385,7 +386,8 @@
 						"name":"dataSet",
 						"description":"The data type to query.  Currently supported are Photo, Contact, and Link.",
 						"dataType":"string",
-						"paramType":"path"
+						"paramType":"path",
+						"validValues":["Photo","Contact","Link"]
 					},
 					{
 						"name":"terms",

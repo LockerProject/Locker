@@ -34,12 +34,7 @@ try{
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
 }catch(e){}
 
-if (lconfig.externalSecure) {
-    host = "https://";
-} else {
-    host = "http://";
-}
-host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+host = lconfig.externalBase + "/";
 
 module.exports = function(locker) {
     locker.get('/auth/foursquare/auth', function(req, res) {
@@ -121,10 +116,11 @@ function handleOAuth2Post (code, options, res) {
             }
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            res.end("<script type='text/javascript'> window.close(); </script>");
         });
 
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -133,6 +129,8 @@ function handleTwitter (req, res) {
     try {
         require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.twitter.appKey;
                 auth.consumerSecret = apiKeys.twitter.appSecret;
@@ -141,6 +139,7 @@ function handleTwitter (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -149,6 +148,8 @@ function handleTumblr (req, res) {
     try {
         require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.tumblr.appKey;
                 auth.consumerSecret = apiKeys.tumblr.appSecret;
@@ -157,6 +158,7 @@ function handleTumblr (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }

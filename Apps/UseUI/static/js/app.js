@@ -58,6 +58,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
+        $('.search').focus(function(){
+            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
+            window.setTimeout(function(){$('.search')[0].select();},100);
+        });
+
         $('.search').keyup(function(e) {
             if (e.keyCode == 13) {
                 $('.highlighted').click();
@@ -137,27 +142,11 @@ $(document).ready(
                     $("#viewers-title").hide();
                     $("#viewers-list").hide();
                     $("#viewers-hover").show();
+                    $("#appFrame")[0].contentWindow.focus();
                     $("#viewers-slide-button").attr('src', 'img/slide-out.png');
                 });
             }
         });
-
-        $("#viewers").hover(
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-260px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            },
-            function(e) {
-                if (!viewersFullDisplay) {
-                    $("#viewers").stop().animate({"left":"-320px"}, 300, function() {
-                        viewersFullDisplay = false;
-                    });
-                }
-            }
-        );
 
         renderApp();
 
@@ -395,6 +384,13 @@ function drawServices() {
                     }
                 }
             }
+            if (!window.syncletPoll) {
+                window.syncletPoll = new SyncletPoll(providers);
+            } else {
+                window.syncletPoll.halt();
+                delete window.syncletPoll;
+                window.syncletPoll = new SyncletPoll(providers);
+            }
             for (var i = 0; i < syncletsToRender.length; i++) {
                 drawService(syncletsToRender[i]);
             }
@@ -416,14 +412,14 @@ function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
     var newServiceHover = $('.viewer-hover.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
-    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
             if(viewer.sync)
             {
                 console.log("forced background syncing to github");
-                $.get('/synclets/github/run', function(){});
+                $.get('/synclets/github/run?id=repos', function(){});
                 return;
             }
             setViewer(viewer.viewer, viewer.handle, function() {
@@ -441,7 +437,7 @@ function drawViewer(viewer, isSelected) {
     $('#viewers-list').append(newService);
 
     if(viewer.author == "") return;
-    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png');
+    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newServiceHover.find('.viewer-link').click(function() {
@@ -537,6 +533,7 @@ function renderApp(fragment) {
                     if (needReload) {
                         $("#appFrame")[0].contentDocument.location.reload(true);
                     }
+                    $("#appFrame")[0].contentWindow.focus();
                     clearTimeout(timeout);
                     if (manuallyClosed) closeServices();
                 }
@@ -577,11 +574,6 @@ function expandServices()
     $('#services #choose-services').fadeIn();
     $('#services #service-selector').fadeIn();
   }});
-
-  if (!window.syncletPoll)
-  {
-    window.syncletPoll = new SyncletPoll();
-  }
 }
 
 function resizeFrame() {
@@ -610,10 +602,6 @@ function closeServices()
       // $('.services-box-container').show();
       $('#services').hide();
       resizeFrame();
-      if (window.syncletPoll) {
-          window.syncletPoll.halt();
-          delete window.syncletPoll;
-      }
   }});
 
 }
