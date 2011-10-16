@@ -369,7 +369,7 @@ nav#application-navigation > ul > li
 #services
 {
   display: none;
-  z-index: 100;
+  z-index: 99;
   position: absolute;
   top: 64px;
   left: -48px;
