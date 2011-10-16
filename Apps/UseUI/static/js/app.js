@@ -573,7 +573,7 @@ function renderApp(fragment) {
 
 function expandServices()
 {
-  $('.services-box').addClass("active");
+  $('.services-box-container').addClass("active");
 
   // Hide child elements of the services container...
   $('#services #choose-services').hide();
@@ -611,7 +611,7 @@ function resizeFrame() {
 function closeServices()
 {
 
-  $('.services-box').removeClass("active");
+  $('.services-box-container').removeClass("active");
 
   // Restore the main content area...
   $("#iframeWrapper").animate({
