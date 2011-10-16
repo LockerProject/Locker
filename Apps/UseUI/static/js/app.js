@@ -46,7 +46,7 @@ $(document).ready(
         }).delegate(searchSelector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
         }).delegate(searchSelector, 'click', function() {
-            $('#search-results').hide();
+            $('#search-results').fadeOut();
         });
 
         // disable pass through click events when an area is blurred
@@ -58,9 +58,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
-        $('.search').focus(function(){
-            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
-            window.setTimeout(function(){$('.search')[0].select();},100);
+        $('.search').focus(function() {
+            if ($('.search')[0].value.length > 0) $('#search-results').fadeIn();
+            window.setTimeout(function() {
+              $('.search')[0].select();
+            }, 100);
         });
 
         $('.search').keyup(function(e) {
@@ -88,7 +90,7 @@ $(document).ready(
                 return false;
             } else {
                 if ($('.search')[0].value.length == 0) {
-                    $('#search-results').hide();
+                    $('#search-results').fadeOut();
                     $('.search').removeClass('populated');
                 } else {
                     search();
@@ -210,15 +212,18 @@ function processResults(name, results, query) {
         $('.search-result-row.' + name).remove();
     }
 
+    $('#search-results').fadeIn();
+
     if ($('.search-result-row:not(.template)').length > 0) {
-        $('#search-results').show();
+      $('#search-results').removeClass("no-results");
         $('.search').addClass('populated');
         if ($('.highlighted').length === 0) {
             $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
         }
     } else {
-        $('#search-results').hide();
-        $('.search').removeClass('populated');
+        // $('#search-results').fadeOut();
+      $('.search').removeClass('populated');
+      $('#search-results').addClass("no-results");
     }
 }
 
