@@ -24,5 +24,6 @@ $(document).ready(function() {
     $("#customLogout").click(function() {
         $("#customLogout").toggleClass("userMenu");
         $("#userMenu").toggle();
+        $("#customLogout").toggleClass("userMenuActive");
     });
 });

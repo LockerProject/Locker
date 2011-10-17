@@ -199,13 +199,13 @@ $(function(){
                         },
                         "span.linkFrom":function(arg) {
                             var dedup = {};
-                            return "From: " + arg.item.encounters.map(function(item) {
+                            return "Shared <em>" + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at) + "</em> by " + arg.item.encounters.map(function(item) {
                                 if(dedup[item.from]) return false;
                                 dedup[item.from] = true;
                                 var base = (item.network == "twitter") ? "http://twitter.com/#" : "http://facebook.com/";
                                 var id = (item.network == "twitter") ? item.via.user.screen_name : item.fromID;
                                 return '<a href="'+base+id+'" target="_blank">'+item.from+'</a>';
-                            }).clean(false).join(", ") + " - " + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at);
+                            }).clean(false).join(", ");
                         },
                         "span.linkFrom@style":function(arg) {
                             return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
