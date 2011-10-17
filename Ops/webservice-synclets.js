@@ -8,7 +8,10 @@ module.exports = function(locker) {
             "Access-Control-Allow-Origin" : "*"
         });
         var synclets = JSON.parse(JSON.stringify(syncManager.synclets()));
-        for(var s in synclets.installed) delete synclets.installed[s].config;
+        for(var s in synclets.installed) {
+            delete synclets.installed[s].config;
+            delete synclets.installed[s].auth;
+        }
         res.end(JSON.stringify(synclets));
     });
 
