@@ -277,7 +277,7 @@ resultModifiers.links = function(newResult, obj) {
     }
     newResult.attr('title', obj.title);
     newResult.children('.search-result').html(obj.title);
-    newResult.find('.search-result-icon').attr('src', 'img/link.png');
+    newResult.find('.search-result-icon').attr('src', obj.favicon || 'img/link.png').addClass("favicon");
     newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 

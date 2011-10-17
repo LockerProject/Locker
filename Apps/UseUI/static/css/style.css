@@ -388,7 +388,7 @@ nav#application-navigation > ul > li
 {
   position: relative;
   margin-top: 1px;
-  height: 28px;
+  height: 36px;
   cursor: pointer;
   clear: both;
   overflow: hidden;
@@ -400,16 +400,17 @@ nav#application-navigation > ul > li
 {
   position: absolute;
   top: 0;
-  left: 0;
+  left: 34px;
   right: 0;
   bottom: 0;
 
   padding-left: 6px;
   padding-right: 6px;
 
-  height: 28px;
-  line-height: 28px;
+  height: 36px;
+  line-height: 36px;
 
+  font-size: 12px;
   color: #333;
 
   white-space: nowrap;
@@ -419,21 +420,37 @@ nav#application-navigation > ul > li
 
 #search-results .search-result-row .icon-box
 {
-  display: none;
-  float: left;
-  position: relative;
-  height: 36px;
-  width: 36px;
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  height: 32px;
+  width: 32px;
   overflow: hidden;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
 }
 
-#search-results .search-result-row img
+#search-results .search-result-row .icon-box img
 {
   position: absolute;
-  height: 36px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
+  height: 32px;
+  width: 32px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+
+#search-results .search-result-row .icon-box img.favicon
+{
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  margin-top: 8px;
+  margin-left: 8px;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
 }
 
 /* Services Drawer -------------------------------------------------------- */
