@@ -32,20 +32,6 @@ $(document).ready(
             return false;
         });
 
-        // open service drawer button
-        $('.services-box').click(function() {
-            expandServices();
-        });
-
-        // close service drawer button
-        $('#service-closer').click(function() {
-            if ($('.blur:visible').length === 0) {
-                manuallyClosed = true;
-                $.post('closed', function(data) { log("success"); });
-                closeServices();
-            }
-        });
-
         // service buttons
         $('#service-selector').delegate('.provider-link', 'click', function() {
             if ($(this).hasClass('disabled')) return false;
@@ -53,6 +39,13 @@ $(document).ready(
             return false;
         });
 
+        // open service drawer button
+        $('.services-box').click(function() {
+          if ($("#services:visible").length > 0)
+            closeServices();
+          else
+            expandServices();
+        });
 
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.highlighted').removeClass('highlighted');
@@ -60,7 +53,7 @@ $(document).ready(
         }).delegate(searchSelector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
         }).delegate(searchSelector, 'click', function() {
-            $('#search-results').hide();
+            $('#search-results').fadeOut();
         });
 
         // disable pass through click events when an area is blurred
@@ -72,9 +65,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
-        $('.search').focus(function(){
-            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
-            window.setTimeout(function(){$('.search')[0].select();},100);
+        $('.search').focus(function() {
+            if ($('.search')[0].value.length > 0) $('#search-results').fadeIn();
+            window.setTimeout(function() {
+              $('.search')[0].select();
+            }, 100);
         });
 
         $('.search').keyup(function(e) {
@@ -102,7 +97,7 @@ $(document).ready(
                 return false;
             } else {
                 if ($('.search')[0].value.length == 0) {
-                    $('#search-results').hide();
+                    $('#search-results').fadeOut();
                     $('.search').removeClass('populated');
                 } else {
                     search();
@@ -224,15 +219,18 @@ function processResults(name, results, query) {
         $('.search-result-row.' + name).remove();
     }
 
+    $('#search-results').fadeIn();
+
     if ($('.search-result-row:not(.template)').length > 0) {
-        $('#search-results').show();
+      $('#search-results').removeClass("no-results");
         $('.search').addClass('populated');
         if ($('.highlighted').length === 0) {
             $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
         }
     } else {
-        $('#search-results').hide();
-        $('.search').removeClass('populated');
+        // $('#search-results').fadeOut();
+      $('.search').removeClass('populated');
+      $('#search-results').addClass("no-results");
     }
 }
 
@@ -286,7 +284,7 @@ resultModifiers.links = function(newResult, obj) {
     }
     newResult.attr('title', obj.title);
     newResult.children('.search-result').html(obj.title);
-    newResult.find('.search-result-icon').attr('src', 'img/link.png');
+    newResult.find('.search-result-icon').attr('src', obj.favicon || 'img/link.png').addClass("favicon");
     newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 
@@ -564,10 +562,29 @@ function renderApp(fragment) {
     });
 };
 
-function expandServices() {
-    $('.services-box-container').hide();
-    $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
-    $('#services').animate({height: "110px"}, {duration: 200});
+function expandServices()
+{
+  $('.services-box-container').addClass("active");
+
+  // Hide child elements of the services container...
+  $('#services #choose-services').hide();
+  $('#services #service-selector').hide();
+
+  $("#services").css({ height: "0px" }).show();
+
+  // Push the viewers slider down...
+  $("#viewers").animate({ top: "183px" }, { duration: 200 });
+
+  // Push the main content area down...
+  $("#iframeWrapper").animate({ top: "161px" }, { duration: 200 });
+
+  // TODO The above should both be handled by resizing their container, not each individually...
+
+  // Expand the Services area to size...
+  $('#services').animate({ height: "96px" }, { duration: 200, complete: function() {
+    $('#services #choose-services').fadeIn();
+    $('#services #service-selector').fadeIn();
+  }});
 }
 
 function resizeFrame() {
@@ -577,13 +594,27 @@ function resizeFrame() {
 
 
 
-function closeServices() {
-    $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-        $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
-            $('.services-box-container').show();
-            resizeFrame();
-        }
-    });
+function closeServices()
+{
+
+  $('.services-box-container').removeClass("active");
+
+  // Restore the main content area...
+  $("#iframeWrapper").animate({
+    top: "64px"
+  }, {
+      duration: 200, queue: false
+  });
+
+  // Restore the viewers slider...
+  $("#viewers").animate({ top: "86px" }, { duration: 200 });
+
+  $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+      // $('.services-box-container').show();
+      $('#services').hide();
+      resizeFrame();
+  }});
+
 }
 
 
