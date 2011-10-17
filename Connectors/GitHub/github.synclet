@@ -9,6 +9,10 @@
         {
             "frequency": 3600,
             "name": "repos"
+        },
+        {
+            "frequency": 3600,
+            "name": "profile"
         }
     ],
     "provides": [

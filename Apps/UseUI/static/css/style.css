@@ -555,7 +555,7 @@ nav#application-navigation > ul > li
 
 .service .provider-link.disabled
 {
-  cursor: auto;
+  cursor: default;
   opacity: .5;
 }
 
