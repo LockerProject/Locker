@@ -137,23 +137,10 @@ $(document).ready(
 
         var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
-            if(!viewersFullDisplay) {
-                $("#viewers-hover").hide();
-                $("#viewers-title").show();
-                $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"}, 300, function() {
-                    $("#viewers-slide-button").attr('src', 'img/slide-in.png');
-                    viewersFullDisplay = true;
-                });
+            if ($('#viewers-title').is(':visible')) {
+                hideViewers();
             } else {
-                $("#viewers").animate({"left":"-320px"}, 300, function() {
-                    viewersFullDisplay = false;
-                    $("#viewers-title").hide();
-                    $("#viewers-list").hide();
-                    $("#viewers-hover").show();
-                    $("#appFrame")[0].contentWindow.focus();
-                    $("#viewers-slide-button").attr('src', 'img/slide-out.png');
-                });
+                openViewers();
             }
         });
 
@@ -420,24 +407,46 @@ function drawService(synclet) {
     $('#service-selector').append(newService);
 };
 
+function hideViewers() {
+    $("#viewers").animate({"left":"-320px"}, 300, function() {
+        $("#viewers-title").hide();
+        $("#viewers-list").hide();
+        $("#appFrame")[0].contentWindow.focus();
+        $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+    });
+};
+
+function openViewers() {
+    $("#viewers-title").show();
+    $("#viewers-list").show();
+    $("#viewers").animate({"left":"0px"}, 300, function() {
+        $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+    });
+}
+
 function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
-    var newServiceHover = $('.viewer-hover.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
     newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
-            if(viewer.sync)
+            hideViewers();
+            if(viewer.set)
             {
-                console.log("forced background syncing to github");
+                log("forced background syncing to github");
                 $.get('/synclets/github/run?id=repos', function(){});
                 return;
             }
-            setViewer(viewer.viewer, viewer.handle, function() {
-                renderApp();
+            if (viewer.handle === 'devdocs') {
+                $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/"); // HACK WTF OMG IrAGEuBroSER!
                 drawViewers();
-            });
+            } else {
+                setViewer(viewer.viewer, viewer.handle, function() {
+                    renderApp();
+                    drawViewers();
+                });
+            }
         });
     } else {
         newService.addClass('selected');
@@ -449,28 +458,13 @@ function drawViewer(viewer, isSelected) {
     $('#viewers-list').append(newService);
 
     if(viewer.author == "") return;
-    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
-    newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
-    if(!isSelected) {
-        newServiceHover.find('.viewer-link').click(function() {
-            setViewer(viewer.viewer, viewer.handle, function() {
-                renderApp();
-                drawViewers();
-            });
-        });
-    } else {
-        newServiceHover.addClass('selected');
-    }
-    newServiceHover.removeClass('template');
-    $('#viewers-hover').append(newServiceHover);
 }
 
 function drawViewers() {
-    console.log('drawViewers');
+    log('drawViewers');
     $.getJSON('viewers', function(data) {
         console.error("DEBUG: data", data);
         $('.viewer:not(.template)').remove();
-        $('.viewer-hover:not(.template)').remove();
         var viewersToRender = data.available[app];
         for(var i in viewersToRender) {
             drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
