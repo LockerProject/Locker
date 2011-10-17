@@ -25,5 +25,12 @@ $(document).ready(function() {
         $("#customLogout").toggleClass("userMenu");
         $("#userMenu").toggle();
         $("#customLogout").toggleClass("userMenuActive");
+        return false;
+    });
+
+    $('.header').click(function() {
+        $('#userMenu').hide();
+        $('#customLogout').removeClass('userMenu');
+        $('#customLogout').removeClass('userMenuActive');
     });
 });

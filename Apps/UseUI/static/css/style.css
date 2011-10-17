@@ -754,6 +754,11 @@ nav#application-navigation > ul > li
   background-color: #8ADAEC;
 }
 
+#menuExpander
+{
+    cursor: pointer;
+}
+
 #menuExpander .expander
 {
   font-size: 80%;
