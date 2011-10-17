@@ -528,7 +528,6 @@ function renderApp(fragment) {
             if (app === 'contacts') appId = 'contactsviewer';
             if (app === 'links') appId = 'linkalatte';
             data.selected[app] = appId;
-            setViewer(app, appId);
         } else {
             if (!data.selected[app]) return;
             appId = data.selected[app];
