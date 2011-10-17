@@ -62,6 +62,10 @@ body > header > h1:after
   bottom: 0;
   width: 1px;
   background-image: -webkit-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -moz-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -ms-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -o-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
 }
 
 /* Application Links ------------------------------------------------------ */
@@ -154,6 +158,14 @@ nav#application-navigation > ul > li
     inset 1px 0 0 rgba(255, 255, 255, 0.5),
     inset -1px 0 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .app-link.selected a {
@@ -200,33 +212,8 @@ nav#application-navigation > ul > li
 
 #nav-search input.search
 {
-/*  font-size: 16px;
-  color: #999;
-  padding: 4px;
-  padding-left: 30px;
-  width: 300px;
-  margin: 18px 0 0 15px;
-  -moz-border-radius: 4px;
-  -webkit-border-radius: 4px;
-  -khtml-border-radius: 4px;
-  border-radius: 4px;
-  background: rgb(255,255,255) url('../img/search_glass.png') left center no-repeat;
-  background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(229,229,229,1))) url('../img/search_glass.png') left center no-repeat;
-  background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%) url('../img/search_glass.png') left center no-repeat;
-  background: -o-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-  background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 );
-  background: linear-gradient(top, rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%) url('../img/search_glass.png') left center no-repeat;
-  -moz-box-shadow:inset 2px 2px 5px #ccc;
-  box-shadow: inset 2px 2px 5px #ccc;
-  border: 1px solid #888;
-  outline: none;
-  */
-
   position: relative;
 
-  /*float: right;*/
   width: 256px;
   height: 24px;
   padding-top: 5px;
@@ -305,6 +292,16 @@ nav#application-navigation > ul > li
   color: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 0 6px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 0 6px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75),
     inset 1px 0 0 rgba(255, 255, 255, 0.5),
     inset -1px 0 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 0 rgba(255, 255, 255, 0.35),
@@ -587,6 +584,10 @@ nav#application-navigation > ul > li
 
   background-color: rgba(0, 0, 0, 0.15);
   background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
+  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
+  background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
+  background-image: -o-linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
+  background-image: linear-gradient(top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.25));
 
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
     inset 1px 0 0 rgba(255, 255, 255, 0.8),
@@ -617,12 +618,20 @@ nav#application-navigation > ul > li
 #customLogout:hover
 {
   background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: -o-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
   color: rgb(50, 50, 50);
 }
 
 #customLogout:active
 {
   background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+  background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+  background-image: -o-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
+  background-image: linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1));
 }
 
 #customLogout:before
@@ -634,6 +643,10 @@ nav#application-navigation > ul > li
   bottom: -20px;
   width: 1px;
   background-image: -webkit-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -moz-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -ms-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: -o-radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
+  background-image: radial-gradient(50% 50%, rgba(0, 0, 0, 0.15), transparent 50%);
 }
 
 .userMenuHover
@@ -643,6 +656,10 @@ nav#application-navigation > ul > li
 .userMenuActive
 {
   background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
+  background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
+  background-image: -ms-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
+  background-image: -o-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
+  background-image: linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 1)) !important;
   -webkit-border-bottom-left-radius: 0 !important;
   -moz-border-bottom-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
@@ -757,12 +774,19 @@ nav#application-navigation > ul > li
   opacity: 0.93;
   border: 1px solid transparent;
   -webkit-transition: border-color 0.5s, -webkit-box-shadow 0.5s;
+  -moz-transition: border-color 0.5s, -moz-box-shadow 0.5s;
+  -ms-transition: border-color 0.5s, box-shadow 0.5s;
+  -o-transition: border-color 0.5s, -o-box-shadow 0.5s;
+  transition: border-color 0.5s, box-shadow 0.5s;
 }
 
 #viewers:hover
 {
   border-color: rgba(0, 0, 0, 0.15);
   -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  -o-box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
 }
 
 #viewers-slide-button
@@ -863,10 +887,15 @@ nav#application-navigation > ul > li
   top: 1px;
   left: 0;
   right: 0;
-  height: 65px;
-  background-image: -webkit-radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.15), transparent 75%);
-  overflow: hidden;
+  /*height: 65px;*/
+  bottom: 0;
+  background-image: -webkit-radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.1), transparent 75%);
+  background-image: -moz-radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.1), transparent 75%);
+  background-image: -ms-radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.1), transparent 75%);
+  background-image: radial-gradient(50% 0%, ellipse, rgba(0, 0, 0, 0.1), transparent 75%);
+  /* overflow: hidden; */
   border-top: 1px solid rgba(255, 255, 255, 0.8);
+  z-index: -1;
 }
 
 #appFrame
@@ -966,8 +995,8 @@ nav#application-navigation > ul > li
 .lightbox .forward {
   background: #ebebeb;
   color: #444;
-  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
   -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
   box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
   font-size: 12px;
   border-radius: 3px;
@@ -988,8 +1017,8 @@ nav#application-navigation > ul > li
   background: #555 !important;
   cursor: auto;
   color: #222 !important;
-  -moz-box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
   -webkit-box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
   box-shadow: 0 0px 0px 0px rgba(0, 0, 0, 0.4);
 }
 
