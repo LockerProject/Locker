@@ -114,36 +114,6 @@ nav#application-navigation > ul > li
   border: 1px solid transparent;
 }
 
-/*
-.app-link-floater {
-  float: left;
-  height: 50%;
-  margin-bottom: -0.5em;
-}
-*/
-
-/*
-.app-link-centerer {
-  clear: both;
-  height: 1em;
-  position: relative;
-}
-*/
-
-.buttonCounter
-{
-  font-size: 10px;
-  display: none;
-}
-
-/*
-.app-links {
-  float: left;
-  margin-left: 0px;
-  height: 40px;
-}
-*/
-
 .app-link:hover
 {
   background-color: rgba(0, 0, 0, 0.025);
@@ -170,6 +140,49 @@ nav#application-navigation > ul > li
 
 .app-link.selected a {
   color: #444;
+}
+
+.app-link .label
+{
+  float: left;
+}
+
+.app-link .buttonCounter
+{
+  float: right;
+  font-weight: bold;
+  font-size: 10px;
+  line-height: inherit;
+  background-color: rgba(0, 0, 0, 0.025);
+  padding: 2px 4px;
+  margin-left: 2px;
+  display: inline-block;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  line-height: 12px;
+  margin-top: 5px;
+  margin-left: 6px;
+  color: rgb(175, 175, 175);
+}
+
+.app-link.selected .buttonCounter
+{
+  background-color: white;
+  border-color: transparent;
+  -webkit-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  color: rgb(125, 125, 125);
 }
 
 /* Global Search ---------------------------------------------------------- */
@@ -340,7 +353,7 @@ nav#application-navigation > ul > li
   -moz-border-radius: 3px;
   border-radius: 3px;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 #search-results.no-results .search-results-wrapper
