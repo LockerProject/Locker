@@ -581,6 +581,7 @@ function expandServices()
   $('#services').animate({ height: "96px" }, { duration: 200, complete: function() {
     $('#services #choose-services').fadeIn();
     $('#services #service-selector').fadeIn();
+    resizeFrame();
   }});
 }
 
