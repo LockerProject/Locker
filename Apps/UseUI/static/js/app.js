@@ -399,13 +399,16 @@ function drawServices() {
 }
 
 function drawService(synclet) {
-    var newService = $('.service.template').clone();
+    var newService = $("#" + synclet.provider + "connect");
+    if (newService.length == 0) {
+        newService = $('.service.template').clone();
+        newService.attr('id', synclet.provider + 'connect');
+        $('#service-selector').append(newService);
+    }
     newService.find('.provider-icon').attr('src', 'img/icons/' + synclet.provider + '.png').attr('title', synclet.info);
     newService.find('.provider-link').attr('href', synclet.authurl).data('provider', synclet.provider);
     newService.find('.provider-name').text(synclet.provider);
     newService.removeClass('template');
-    newService.attr('id', synclet.provider + 'connect');
-    $('#service-selector').append(newService);
 };
 
 function hideViewers() {
@@ -637,7 +640,21 @@ var GuidedSetup = (
 
 
             t.drawGuidedSetup = function() {
-                $("#firstRun").load("html/firstRun.html");
+                $("#firstRun").load("html/firstRun.html", function() {
+                    drawServices();
+                    $("#moreFirstOptions").click(function() {
+                        $("#firstRun .lightbox").remove();
+                        drawServices();
+                        $("#services").css("z-index", 10001);
+                        expandServices();
+                        return false;
+                    })
+                    $('.firstChoice').delegate('.provider-link', 'click', function() {
+                        if ($(this).hasClass('disabled')) return false;
+                        accountPopup($(this));
+                        return false;
+                    });
+                });
                 /*
                 $('.blur').show();
                 $('.close-box').click(function() {
