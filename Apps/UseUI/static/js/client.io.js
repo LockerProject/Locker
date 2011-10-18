@@ -68,7 +68,13 @@ function dequeueGritters() {
 
 function showGritter(name, arg, lastId) {
     var prettyName = name;
-    if (name == 'newservice') {
+    if (name == 'syncgithub') {
+        $.gritter.add({
+            title:"Syncing viewers",
+            text:"We're syncing viewers from your github account, should be available shortly!",
+            time: 5000
+        });
+    } else if (name == 'newservice') {
         var service = arg;
         var svclc = service.toLowerCase();
         var customText = "Importing ";
