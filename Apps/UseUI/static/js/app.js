@@ -481,7 +481,7 @@ function drawViewers() {
             title: 'Sync your views from GitHub',
             author: '',
             viewer: 'photos',
-            handle: 'devdocs',
+            handle: 'useui',
             sync: true
         };
         drawViewer(addViewerView, false);
