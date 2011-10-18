@@ -983,6 +983,7 @@ nav#application-navigation > ul > li
   height:100%;
   z-index:10000;
   background-color: rgba(0, 0, 0, .5);
+  display:none;
 }
 
 #firstRun .welcomeContent {
@@ -1042,6 +1043,43 @@ nav#application-navigation > ul > li
   font-size:12px;
   color:#666;
 }
+
+.popup {
+  border:2px solid rgba(38, 126, 175, 1.0);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding:10px;
+  position:relative;
+  top:180px;
+  left:200px;
+  display:block;
+  float:left;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
+  border-radius:8px;
+}
+
+#doMorePopup {
+  padding-right:30px;
+  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+}
+
+.popup img.point {
+  position:absolute;
+  top:-20px;
+  left:20px;
+}
+
+.popup a.close {
+  display:block;
+  position:absolute;
+  width:20px;
+  height:20px;
+  right:5px;
+  top:7px;
+}
+
 .blur {
   position: absolute;
   display: none;
