@@ -637,6 +637,8 @@ var GuidedSetup = (
 
 
             t.drawGuidedSetup = function() {
+                $("#firstRun").load("html/firstRun.html");
+                /*
                 $('.blur').show();
                 $('.close-box').click(function() {
                     $('.blur').hide();
@@ -649,6 +651,7 @@ var GuidedSetup = (
                 });
 
                 t.updateText();
+                */
             };
 
             t.moveForward = function() {
