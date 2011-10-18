@@ -27,6 +27,7 @@ $(document).ready(
 
         $('.app-link').click(function() {
             app = $(this).attr('id');
+            if ($("#services:visible").length > 0) closeServices(0);
             window.location.hash = app;
             renderApp();
             return false;
@@ -588,22 +589,22 @@ function resizeFrame() {
 
 
 
-function closeServices()
+function closeServices(duration)
 {
-
+  dur = duration == undefined ? 200 : duration;
   $('.services-box-container').removeClass("active");
 
   // Restore the main content area...
   $("#iframeWrapper").animate({
     top: "64px"
   }, {
-      duration: 200, queue: false
+      duration: dur, queue: false
   });
 
   // Restore the viewers slider...
-  $("#viewers").animate({ top: "86px" }, { duration: 200 });
+  $("#viewers").animate({ top: "86px" }, { duration: dur });
 
-  $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
+  $('#services').animate({height: "0px"}, {duration: dur, queue: false, complete:function() {
       // $('.services-box-container').show();
       $('#services').hide();
       resizeFrame();
