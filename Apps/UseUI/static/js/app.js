@@ -51,6 +51,12 @@ $(document).ready(
             expandServices();
         });
 
+        $('.devdocs-box').click(function() {
+            $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
+            $('.devdocs-box-container').addClass('active');
+            $('.app-link.selected').removeClass('selected');
+        });
+
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.highlighted').removeClass('highlighted');
             $(this).addClass('highlighted');
@@ -447,7 +453,7 @@ function drawViewer(viewer, isSelected) {
                     }
                 } catch(err) {
                     console.error(err);
-                }             
+                }
                 return;
             }
             if (viewer.handle === 'devdocs') {
@@ -487,7 +493,7 @@ function drawViewers() {
                } catch(err) {
                    console.error(err);
                }
-               
+
             }
         }
         var addViewerView = {

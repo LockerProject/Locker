@@ -13,7 +13,6 @@ function setUserGlobals(data) {
     $(".userEmail").text(userEmail);
     $(".user-name").text(userName);
 
-    console.log('globals');
     var E = $("#customLogout");
     E.show();
     var width = $("#menuExpander .userEmail").width() + $("#menuExpander .expander").width() + 10;
@@ -56,10 +55,6 @@ $(document).ready(function() {
             openUserMenu();
         }
         return false;
-    });
-
-    $('.header').click(function() {
-        closeUserMenu();
     });
 
     $('.header').click(function() {
