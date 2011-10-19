@@ -581,10 +581,11 @@ function expandServices()
     $('#services #choose-services').fadeIn();
     $('#services #service-selector').fadeIn();
   }});
+  $('#appFrame').animate({ height: $(window).height() - 96 - $('.header').height() }, { duration: 200 });
 }
 
 function resizeFrame() {
-    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
+    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height());
     $("#appFrame").width($(window).width());
 }
 
