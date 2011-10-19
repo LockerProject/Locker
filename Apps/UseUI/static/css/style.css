@@ -1294,7 +1294,7 @@ nav#application-navigation > ul > li
 .popup
 {
   position: relative;
-  top: 183px;
+  top: 180px;
   left: 200px;
 
   background-color: rgba(255, 255, 255, 0.5);
@@ -1374,11 +1374,12 @@ nav#application-navigation > ul > li
 }
 */
 
-#doMorePopup {
-  padding-right:30px;
-  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
-  -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+#doMorePopup
+{
+  padding-right: 40px;
+  -webkit-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
 }
 
 .popup img.point {
@@ -1387,13 +1388,20 @@ nav#application-navigation > ul > li
   left:20px;
 }
 
-.popup a.close {
-  display:block;
-  position:absolute;
-  width:20px;
-  height:20px;
-  right:5px;
-  top:7px;
+.popup a.close
+{
+  display: block;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: 13px;
+  top: 13px;
+  opacity: 0.5;
+}
+
+.popup a.close:hover
+{
+  opacity: 0.8;
 }
 
 .blur {
