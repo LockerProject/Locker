@@ -11,7 +11,7 @@ var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.
 if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
 var externalBase = window.location.origin;
 
-var _gaq = _gaq || [];
+var _gaq = [['_setAccount', 'UA-22812443-1'], ['_trackPageview']];;
 
 $(document).ready(
     function() {

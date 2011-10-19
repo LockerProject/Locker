@@ -1,4 +1,3 @@
-_gaq = [['_setAccount', 'UA-22812443-1'], ['_trackPageview']];
 (function(d, t) {
  var g = d.createElement(t),
      s = d.getElementsByTagName(t)[0];
