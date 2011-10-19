@@ -1,13 +1,19 @@
 userEmail = "";
 userName = "";
+userOptin = '';
+externalHost = '';
 var clicked = false;
 
 function setUserGlobals(data) {
     userEmail = data.email;
     userName = data.name;
+    userOptin = data.optin;
+    externalHost = data.externalHost;
+
     $(".userEmail").text(userEmail);
     $(".user-name").text(userName);
 
+    console.log('globals');
     var E = $("#customLogout");
     E.show();
     var width = $("#menuExpander .userEmail").width() + $("#menuExpander .expander").width() + 10;
@@ -55,4 +61,12 @@ $(document).ready(function() {
     $('.header').click(function() {
         closeUserMenu();
     });
+
+    $('.header').click(function() {
+        closeUserMenu();
+    });
+
+    if (userOptin === "true") {
+        $(".app-page").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
+    }
 });

@@ -1,4 +1,5 @@
 var GitHubApi = require("github").GitHubApi
+  , lconfig = require('../../Common/node/lconfig')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')
@@ -8,6 +9,8 @@ var GitHubApi = require("github").GitHubApi
   , auth
   , viewers = []
   ;
+
+lconfig.load('../../Config/config.json');
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
@@ -65,9 +68,6 @@ exports.syncRepos = function(cached, callback) {
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
-                        request.get({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
-                            cb();
-                        });
                     });
                 });
             });
