@@ -495,6 +495,29 @@ nav#application-navigation > ul > li
 {
 }
 
+.devdocs-box-container
+{
+  position: relative;
+  float: right;
+  margin-right: 20px;
+  margin-top: 20px;
+  opacity: 0.5;
+  -webkit-transition: opacity 0.25s;
+  -moz-transition: opacity 0.25s;
+  -ms-transition: opacity 0.25s;
+  -o-transition: opacity 0.25s;
+  transition: opacity 0.25s;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.devdocs-box-container:hover,
+.devdocs-box-container.active
+{
+  opacity: 0.8;
+}
+
 #services
 {
   display: none;
