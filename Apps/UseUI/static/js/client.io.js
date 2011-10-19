@@ -161,6 +161,7 @@ socket.on('event', function (body) {
 socket.on('newservice', function(name) {
   log('got new service: ', name);
   queueGritter('newservice', name);
+  if (window.guidedSetup) window.guidedSetup.serviceConnected();
 });
 
 socket.on('viewer', function(evt) {

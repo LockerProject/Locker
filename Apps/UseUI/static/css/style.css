@@ -935,6 +935,9 @@ nav#application-navigation > ul > li
 
 #appFrame
 {
+  position:relative;
+  top:0;
+  bottom:0;
   width: 100%;
   height: 100%;
 }
@@ -975,6 +978,111 @@ nav#application-navigation > ul > li
 
 /* Guided Setup / Lightbox ------------------------------------------------ */
 
+#firstRun {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:10000;
+  background-color: rgba(0, 0, 0, .5);
+  display:none;
+}
+
+#firstRun .welcomeContent {
+  float:left;
+  border-right:1px solid #ccc;
+  width:50%;
+  height:100%;
+}
+
+.welcomeContent .innerWelcome {
+  margin-top:10px;
+}
+
+.welcomeContent ul {
+  margin-left:20px;
+  list-style-type:disc;
+  font-size:14px;
+}
+
+.welcomeContent ul li {
+  margin-top:5px;
+  margin-bottom:5px;
+}
+
+#firstRun .firstChoice {
+  margin-left:50%;
+  margin-top:10px;
+  padding:10px;
+}
+
+.firstChoice ul {
+  list-style:none;
+  margin-left:40px;
+  margin-bottom:10px;
+}
+
+.firstChoice ul li {
+  display:inline;
+  margin-right:20px;
+}
+
+#firstRun h3 {
+  font-size:20px;
+  text-align:center;
+  font-weight:bold;
+}
+.firstChoice p {
+  font-size:12px;
+  margin-bottom:20px;
+}
+
+#moreFirstOptions {
+  display:block;
+  position:relative;
+  right:0;
+  text-align:right;
+  font-size:12px;
+  color:#666;
+}
+
+.popup {
+  border:2px solid rgba(38, 126, 175, 1.0);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding:10px;
+  position:relative;
+  top:180px;
+  left:200px;
+  display:block;
+  float:left;
+  -webkit-border-radius:8px;
+  -moz-border-radius:8px;
+  border-radius:8px;
+}
+
+#doMorePopup {
+  padding-right:30px;
+  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+}
+
+.popup img.point {
+  position:absolute;
+  top:-20px;
+  left:20px;
+}
+
+.popup a.close {
+  display:block;
+  position:absolute;
+  width:20px;
+  height:20px;
+  right:5px;
+  top:7px;
+}
+
 .blur {
   position: absolute;
   display: none;
@@ -989,13 +1097,14 @@ nav#application-navigation > ul > li
 .lightbox {
   position: relative;
   background-color: white;
-  border: solid 1px #000;
-  width: 700px;
-  height: 400px;
-  margin: 100px auto;
+  border: solid 2px black;
+  width: 400px;
+  height: 200px;
+  margin: 150px auto;
   -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
   -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
   box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  padding:10px;
 }
 
 .lightbox .close-box {

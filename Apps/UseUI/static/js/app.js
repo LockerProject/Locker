@@ -318,7 +318,6 @@ var SyncletPoll = (
                 var hasProps = false;
                 for (app in data.installed) {
                     hasProps = true;
-                    if (window.guidedSetup) window.guidedSetup.servicesAdded();
                     app = data.installed[app];
 
                     if (providers.indexOf(app.provider) != -1) {
@@ -399,13 +398,16 @@ function drawServices() {
 }
 
 function drawService(synclet) {
-    var newService = $('.service.template').clone();
+    var newService = $("#" + synclet.provider + "connect");
+    if (newService.length == 0) {
+        newService = $('.service.template').clone();
+        newService.attr('id', synclet.provider + 'connect');
+        $('#service-selector').append(newService);
+    }
     newService.find('.provider-icon').attr('src', 'img/icons/' + synclet.provider + '.png').attr('title', synclet.info);
     newService.find('.provider-link').attr('href', synclet.authurl).data('provider', synclet.provider);
     newService.find('.provider-name').text(synclet.provider);
     newService.removeClass('template');
-    newService.attr('id', synclet.provider + 'connect');
-    $('#service-selector').append(newService);
 };
 
 function hideViewers() {
@@ -580,6 +582,7 @@ function expandServices()
   $('#services').animate({ height: "96px" }, { duration: 200, complete: function() {
     $('#services #choose-services').fadeIn();
     $('#services #service-selector').fadeIn();
+    resizeFrame();
   }});
 }
 
@@ -611,6 +614,8 @@ function closeServices(duration)
       resizeFrame();
   }});
 
+  $("#doMorePopup:visible").hide();
+
 }
 
 
@@ -621,89 +626,49 @@ var GuidedSetup = (
     function () {
         var GuidedSetup = function () {
             var t = this;
-            var page = 0;
-            var text = {};
-            t.synced = false;
-            text.header = ['Welcome!', 'Get Started.', 'Explore...'];
-            text.forward = ['Get Started!', 'NEXT', 'DONE'];
-            text.body = [];
-            text.body[0] = "<p>This helps you pull all your stuff together from around the web and see it in one place.</p>" +
-                           "<p>Once it's all together, you can build on top of it and share what you create!</p>";
-            text.body[1] = "<p>To get started, connect some services you use.</p>" +
-                           "<p></p>";
-            text.body[2] = "<p>Now that you've got some services connected, you can got check out the different views!</p>" +
-                           "<p><b>Photos</b> - See all your photos from around the web in one place.</p>" +
-                           "<p><b>People</b> - See everyone you are connected to in one place.</p>" +
-                           "<p><b>Links</b> - Search for and discover all the links people are sharing with you.</p>";
-
+            t.totalDone = 0;
 
             t.drawGuidedSetup = function() {
-                $('.blur').show();
-                $('.close-box').click(function() {
-                    $('.blur').hide();
+                var that = this;
+                $("#firstRun").show();
+                $("#firstRun").load("html/firstRun.html", function() {
+                    drawServices();
+                    $("#moreFirstOptions").click(function() {
+                        $("#firstRun .lightbox").remove();
+                        drawServices();
+                        $("#services").css("z-index", 10001);
+                        expandServices();
+                        $("#needOnePopup").fadeIn({duration:250});
+                        return false;
+                    });
+                    $('.firstChoice').delegate('.provider-link', 'click', function() {
+                        if ($(this).hasClass('disabled')) return false;
+                        accountPopup($(this));
+                        return false;
+                    });
+                    $("a.close").click(function() {
+                       $("#doMorePopup").hide(); 
+                    });
                 });
-                $('.forward').click(t.moveForward);
-                $(document).keydown(function(e) {
-                    if (e.keyCode === 27) {
-                        $('.blur').hide();
-                    }
-                });
-
-                t.updateText();
             };
 
-            t.moveForward = function() {
-                log('moving forward!');
-                log(page);
-                log(t.synced);
-                if (page === 0 && t.synced === false) {
-                    $('.forward').addClass('disabled');
-                    $('.forward').attr('title', 'You must authorize a service to continue!');
-                    $('.forward-buttton-text').attr('title', 'You must authorize a service to continue!');
+            t.serviceConnected = function() {
+                t.totalDone++;
+                if ($("#firstRun:visible").length > 0) {
+                    $("#firstRun .lightbox").remove();
+                    drawServices();
+                    $("#firstRun").hide();
                     expandServices();
-                }
-                if (page === 1 && t.synced === false) {
-                    return;
-                }
-                if (page === 2) {
-                    return $('.blur').hide();
-                }
-                page++;
-                t.updateBlurs();
-                t.updateText();
-            }
-
-            t.servicesAdded = function() {
-                log('added services!');
-                if (t.synced) return;
-                t.synced = true;
-                $('.forward').removeClass('disabled');
-                $('.forward').attr('title', '');
-                $('.forward-button-text').attr('title', '');
-            }
-
-            t.updateBlurs = function() {
-                $('.blur').show();
-                if (page === 1) {
-                    $('#services .blur').hide();
-                } else if (page === 2) {
-                    $('.header .blur').hide();
+                    $("#doMorePopup").appendTo($("body")).show();
+                } else {
+                    // Subtract 1 for the template
+                    if (t.totalDone >= ($("#services .service").length - 1)) {
+                        $("#doMorePopup").remove();
+                    } else {
+                        $("#doMorePopup span:visible").hide().next().show();
+                    }
                 }
             }
-
-            t.updateText = function() {
-                $('.header-text').animate({opacity: 0}, {duration: 200, queue: false});
-                $('.forward-button-text').animate({opacity: 0}, {duration: 200, queue: false});
-                $('.lightbox .body').animate({opacity: 0}, {duration: 200, queue: false, complete:function() {
-                    $('.header-text').text(text.header[page]);
-                    $('.forward-button-text').text(text.forward[page]);
-                    $('.lightbox .body').html(text.body[page]);
-                    $('.header-text').animate({opacity: 1}, {duration: 200, queue: false});
-                    $('.forward-button-text').animate({opacity: 1}, {duration: 200, queue: false});
-                    $('.lightbox .body').animate({opacity: 1}, {duration: 200, queue: false});
-                }});
-
-           }
 
             t.drawGuidedSetup();
         };
@@ -717,7 +682,6 @@ var GuidedSetup = (
 function drawGuidedSetup() {
     if (guidedSetupActive) return;
     guidedSetupActive = true;
-    $('.blur').show();
 }
 
 function setViewer(type, handle, callback) {
