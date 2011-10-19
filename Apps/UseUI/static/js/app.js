@@ -156,7 +156,6 @@ $(document).ready(
 
         renderApp();
 
-        $(window).resize(resizeFrame);
         resizeFrame();
     }
 );
