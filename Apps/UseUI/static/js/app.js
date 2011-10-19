@@ -435,10 +435,11 @@ function drawViewer(viewer, isSelected) {
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
             hideViewers();
-            if(viewer.set)
+            if(viewer.sync)
             {
                 log("forced background syncing to github");
                 $.get('/synclets/github/run?id=repos', function(){});
+                showGritter('syncgithub');
                 return;
             }
             if (viewer.handle === 'devdocs') {
@@ -637,7 +638,7 @@ var GuidedSetup = (
                         drawServices();
                         $("#services").css("z-index", 10001);
                         expandServices();
-                        $("#needOnePopup").fadeIn({duration:250});
+                        $("#needOnePopup").delay(200).fadeIn({duration:250});
                         return false;
                     });
                     $('.firstChoice').delegate('.provider-link', 'click', function() {
@@ -646,7 +647,7 @@ var GuidedSetup = (
                         return false;
                     });
                     $("a.close").click(function() {
-                       $("#doMorePopup").hide(); 
+                       $("#doMorePopup").hide();
                     });
                 });
             };
