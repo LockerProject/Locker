@@ -169,8 +169,7 @@ function saveState()
 // compare last-sent totals to current ones and send differences
 function bootState(doneCb)
 {
-    if(isSomeoneListening > 0) return doneCb(); // only boot after we've been idle
-    isSomeoneListening++;
+    if(isSomeoneListening > 1) return doneCb(); // only boot after we've been idle
     logger.debug("booting state fresh");
     async.forEach(['contacts','links','photos'],function(coll,callback){
         //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
@@ -199,7 +198,7 @@ function bootState(doneCb)
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                //console.log("Sent a bootup event",eventInfo[type]);
+                console.log("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
@@ -236,15 +235,10 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection " +isSomeoneListening);
-    bootState(function(){
-        var counts = {};
-        for (var key in eventInfo) {
-            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-        }
-        socket.emit("counts", counts);
-    });
+    logger.debug("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
+    socket.emit("heartbeat", true);
     socket.on('disconnect', function () {
+        logger.debug("Socket " + socket.id + " is disconnected");
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
         if(isSomeoneListening == 0)
@@ -256,5 +250,16 @@ io.sockets.on('connection', function (socket) {
             locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }
-      });
+    });
+    isSomeoneListening++;
+    bootState(function(){
+        var counts = {};
+        for (var key in eventInfo) {
+            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
+        }
+        console.log("Sending counts");
+        console.dir(socket);
+        socket.emit("counts", counts);
+    });
+    
 });
