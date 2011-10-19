@@ -43,7 +43,7 @@ $(document).ready(function() {
         $("#customLogout").toggleClass("userMenuHover");
     });
 
-    $("#customLogout").click(function() {
+    $("#menuExpander").click(function() {
         if ($('customLogout').hasClass('userMenuActive')) {
             closeUserMenu();
         } else {
