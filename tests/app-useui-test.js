@@ -23,7 +23,7 @@ suite.next().use(lconfig.lockerHost, lconfig.lockerPort)
     .discuss("Socket.IO")
     .path("/socket.io/?t=test")
         .get()
-        .expect(201)
+        .expect(200)
         .expect("returns it is ready", function(err, res, body) {
             assert.isNull(err);
             assert.equal(body, "Welcome to socket.io.");
