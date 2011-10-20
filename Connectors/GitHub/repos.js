@@ -98,6 +98,8 @@ function syncRepo(repo, callback)
             existing[js.tree[i].path] = js.tree[i].sha;
         }
     } catch(e){};
+    // make sure there's at least one tree entry for the repo dir itself
+    repo.tree.push({path:".",sha:"na",type:"tree"});
     async.forEach(repo.tree, function(t, cb){
         if(t.type != "tree") return cb();
         if(existing[t.path] == t.sha) return cb(); // no changes
