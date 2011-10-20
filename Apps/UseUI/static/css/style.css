@@ -1458,6 +1458,7 @@ nav#application-navigation > ul > li
 
 /* App menu for views */
 .appMenu {
+  cursor:default;
   min-width:150px;
   font-size:12px;
   display:none;
