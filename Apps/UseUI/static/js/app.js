@@ -37,6 +37,9 @@ $(document).ready(
         });
 
         $(".buttonCounter").mouseenter(function() {
+            $("div.appMenu").not(".hoveredViews .appMenu").hide();
+            $(".buttonCounter").removeClass("hoveredViews");
+
             var that = this;
             var E = $(this).next("div.appMenu");
             E.mouseleave(function() {
