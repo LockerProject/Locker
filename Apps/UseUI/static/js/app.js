@@ -36,6 +36,19 @@ $(document).ready(
             return false;
         });
 
+        $(".buttonCounter").mouseenter(function() {
+            var that = this;
+            var E = $(this).next("div.appMenu");
+            E.mouseleave(function() {
+                $(that).removeClass("hoveredViews");
+                E.hide();
+            })
+            E.css("left", $(this).position().left + 5 - E.width());
+            E.css("top", $(this).parent().offset().top + $(this).parent().height())
+            $(this).addClass("hoveredViews");
+            E.slideDown();
+        });
+
         // service buttons
         $('#service-selector').delegate('.provider-link', 'click', function() {
             if ($(this).hasClass('disabled')) return false;
@@ -55,6 +68,7 @@ $(document).ready(
             $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
             $('.devdocs-box-container').addClass('active');
             $('.app-link.selected').removeClass('selected');
+            return false;
         });
 
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
@@ -435,7 +449,7 @@ function openViewers() {
     });
 }
 
-function drawViewer(viewer, isSelected) {
+function drawViewer(viewer, isSelected, appType) {
     var newService = $('.viewer.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
     newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
@@ -472,7 +486,7 @@ function drawViewer(viewer, isSelected) {
     newService.find('.viewer-author').text(viewer.author !== ''?"by " + viewer.author:'');
     newService.find('.viewer-author-link').attr('href', "https://github.com/" + viewer.author);
     newService.removeClass('template');
-    $('#viewers-list').append(newService);
+    $('.' + appType + 'Views').append(newService);
 
     if(viewer.author == "") return;
 }
@@ -481,18 +495,22 @@ function drawViewers() {
     log('drawViewers');
     $.getJSON('viewers', function(data) {
         $('.viewer:not(.template)').remove();
-        var viewersToRender = data.available[app];
-        for(var i in viewersToRender) {
-            drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
-            if (viewersToRender[i].author !== 'Singly') {
-               try {
-                   _gaq.push(['_trackPageview', '/track/installedviewers']);
-               } catch(err) {
-                   console.error(err);
-               }
+        var apps = ["links", "contacts", "photos"];
+        for (var j = 0; j < 3; ++j) {
+            var viewersToRender = data.available[apps[j]];
+            for(var i in viewersToRender) {
+                drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle, apps[j]);
+                if (viewersToRender[i].author !== 'Singly') {
+                   try {
+                       _gaq.push(['_trackPageview', '/track/installedviewers']);
+                   } catch(err) {
+                       console.error(err);
+                   }
 
+                }
             }
         }
+        /*
         var addViewerView = {
             title: 'Create a Viewer',
             author: '',
@@ -509,6 +527,7 @@ function drawViewers() {
             sync: true
         };
         drawViewer(addViewerView, false);
+        */
     });
 }
 
