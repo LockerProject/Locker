@@ -11,6 +11,8 @@ var searchSelector = '.search-header-row:not(.template),.search-result-row:not(.
 if ( ! window.location.origin) window.location.origin = window.location.protocol+"//"+window.location.host;
 var externalBase = window.location.origin;
 
+var _gaq = [['_setAccount', 'UA-22812443-1'], ['_trackPageview']];;
+
 $(document).ready(
     function() {
         // any mouse activity resets it
@@ -27,23 +29,11 @@ $(document).ready(
 
         $('.app-link').click(function() {
             app = $(this).attr('id');
+            if ($("#services:visible").length > 0) closeServices(0);
             window.location.hash = app;
+            $('.devdocs-box-container.active').removeClass('active');
             renderApp();
             return false;
-        });
-
-        // open service drawer button
-        $('.services-box').click(function() {
-            expandServices();
-        });
-
-        // close service drawer button
-        $('#service-closer').click(function() {
-            if ($('.blur:visible').length === 0) {
-                manuallyClosed = true;
-                $.post('closed', function(data) { log("success"); });
-                closeServices();
-            }
         });
 
         // service buttons
@@ -53,6 +43,19 @@ $(document).ready(
             return false;
         });
 
+        // open service drawer button
+        $('.services-box').click(function() {
+          if ($("#services:visible").length > 0)
+            closeServices();
+          else
+            expandServices();
+        });
+
+        $('.devdocs-box').click(function() {
+            $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
+            $('.devdocs-box-container').addClass('active');
+            $('.app-link.selected').removeClass('selected');
+        });
 
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.highlighted').removeClass('highlighted');
@@ -60,7 +63,7 @@ $(document).ready(
         }).delegate(searchSelector, 'mouseleave', function() {
             $(this).removeClass('highlighted');
         }).delegate(searchSelector, 'click', function() {
-            $('#search-results').hide();
+            $('#search-results').fadeOut();
         });
 
         // disable pass through click events when an area is blurred
@@ -72,9 +75,11 @@ $(document).ready(
             $('#search-results').fadeOut();
         });
 
-        $('.search').focus(function(){
-            if($('.search')[0].value.length > 0)$('#search-results').fadeIn();
-            window.setTimeout(function(){$('.search')[0].select();},100);
+        $('.search').focus(function() {
+            if ($('.search')[0].value.length > 0) $('#search-results').fadeIn();
+            window.setTimeout(function() {
+              $('.search')[0].select();
+            }, 100);
         });
 
         $('.search').keyup(function(e) {
@@ -102,7 +107,7 @@ $(document).ready(
                 return false;
             } else {
                 if ($('.search')[0].value.length == 0) {
-                    $('#search-results').hide();
+                    $('#search-results').fadeOut();
                     $('.search').removeClass('populated');
                 } else {
                     search();
@@ -142,29 +147,15 @@ $(document).ready(
 
         var viewersFullDisplay = false;
         $("#viewers-hide-show").click(function() {
-            if(!viewersFullDisplay) {
-                $("#viewers-hover").hide();
-                $("#viewers-title").show();
-                $("#viewers-list").show();
-                $("#viewers").animate({"left":"0px"}, 300, function() {
-                    $("#viewers-slide-button").attr('src', 'img/slide-in.png');
-                    viewersFullDisplay = true;
-                });
+            if ($('#viewers-title').is(':visible')) {
+                hideViewers();
             } else {
-                $("#viewers").animate({"left":"-320px"}, 300, function() {
-                    viewersFullDisplay = false;
-                    $("#viewers-title").hide();
-                    $("#viewers-list").hide();
-                    $("#viewers-hover").show();
-                    $("#appFrame")[0].contentWindow.focus();
-                    $("#viewers-slide-button").attr('src', 'img/slide-out.png');
-                });
+                openViewers();
             }
         });
 
         renderApp();
 
-        $(window).resize(resizeFrame);
         resizeFrame();
     }
 );
@@ -224,15 +215,18 @@ function processResults(name, results, query) {
         $('.search-result-row.' + name).remove();
     }
 
+    $('#search-results').fadeIn();
+
     if ($('.search-result-row:not(.template)').length > 0) {
-        $('#search-results').show();
+      $('#search-results').removeClass("no-results");
         $('.search').addClass('populated');
         if ($('.highlighted').length === 0) {
             $('#search-results').find('.search-result-row:not(.template)').first().addClass('highlighted');
         }
     } else {
-        $('#search-results').hide();
-        $('.search').removeClass('populated');
+        // $('#search-results').fadeOut();
+      $('.search').removeClass('populated');
+      $('#search-results').addClass("no-results");
     }
 }
 
@@ -286,7 +280,7 @@ resultModifiers.links = function(newResult, obj) {
     }
     newResult.attr('title', obj.title);
     newResult.children('.search-result').html(obj.title);
-    newResult.find('.search-result-icon').attr('src', 'img/link.png');
+    newResult.find('.search-result-icon').attr('src', obj.favicon || 'img/link.png').addClass("favicon");
     newResult.click(function() { window.open(obj.link,'_blank'); });
 }
 
@@ -422,24 +416,52 @@ function drawService(synclet) {
     $('#service-selector').append(newService);
 };
 
+function hideViewers() {
+    $("#viewers").animate({"left":"-320px"}, 300, function() {
+        $("#viewers-title").hide();
+        $("#viewers-list").hide();
+        $("#appFrame")[0].contentWindow.focus();
+        $("#viewers-slide-button").attr('src', 'img/slide-out.png');
+    });
+};
+
+function openViewers() {
+    $("#viewers-title").show();
+    $("#viewers-list").show();
+    $("#viewers").animate({"left":"0px"}, 300, function() {
+        $("#viewers-slide-button").attr('src', 'img/slide-in.png');
+    });
+}
+
 function drawViewer(viewer, isSelected) {
     var newService = $('.viewer.template').clone();
-    var newServiceHover = $('.viewer-hover.template').clone();
     var viewerUrl = externalBase + '/Me/' + viewer.handle + '/';
     newService.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
     newService.find('.viewer-link').attr('href', '#' + viewer.viewer);
     if(!isSelected) {
         newService.find('.viewer-link').click(function() {
+            hideViewers();
             if(viewer.sync)
             {
-                console.log("forced background syncing to github");
+                log("forced background syncing to github");
                 $.get('/synclets/github/run?id=repos', function(){});
+                showGritter('syncgithub');
+                try {
+                     _gaq.push(['_trackPageview', '/track/syncviewers']);
+                } catch(err) {
+                    console.error(err);
+                }
                 return;
             }
-            setViewer(viewer.viewer, viewer.handle, function() {
-                renderApp();
+            if (viewer.handle === 'devdocs') {
+                $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
                 drawViewers();
-            });
+            } else {
+                setViewer(viewer.viewer, viewer.handle, function() {
+                    renderApp();
+                    drawViewers();
+                });
+            }
         });
     } else {
         newService.addClass('selected');
@@ -451,31 +473,23 @@ function drawViewer(viewer, isSelected) {
     $('#viewers-list').append(newService);
 
     if(viewer.author == "") return;
-    newServiceHover.find('.viewer-icon').attr('src', viewerUrl + 'img/viewer-icon.png').attr('onError', 'this.src=\'img/viewer-icon.png\'');
-    newServiceHover.find('.viewer-link').attr('href', '#' + viewer.viewer);
-    if(!isSelected) {
-        newServiceHover.find('.viewer-link').click(function() {
-            setViewer(viewer.viewer, viewer.handle, function() {
-                renderApp();
-                drawViewers();
-            });
-        });
-    } else {
-        newServiceHover.addClass('selected');
-    }
-    newServiceHover.removeClass('template');
-    $('#viewers-hover').append(newServiceHover);
 }
 
 function drawViewers() {
-    console.log('drawViewers');
+    log('drawViewers');
     $.getJSON('viewers', function(data) {
-        console.error("DEBUG: data", data);
         $('.viewer:not(.template)').remove();
-        $('.viewer-hover:not(.template)').remove();
         var viewersToRender = data.available[app];
         for(var i in viewersToRender) {
             drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle);
+            if (viewersToRender[i].author !== 'Singly') {
+               try {
+                   _gaq.push(['_trackPageview', '/track/installedviewers']);
+               } catch(err) {
+                   console.error(err);
+               }
+
+            }
         }
         var addViewerView = {
             title: 'Create a Viewer',
@@ -489,7 +503,7 @@ function drawViewers() {
             title: 'Sync your views from GitHub',
             author: '',
             viewer: 'photos',
-            handle: 'devdocs',
+            handle: 'useui',
             sync: true
         };
         drawViewer(addViewerView, false);
@@ -528,7 +542,6 @@ function renderApp(fragment) {
             if (app === 'contacts') appId = 'contactsviewer';
             if (app === 'links') appId = 'linkalatte';
             data.selected[app] = appId;
-            setViewer(app, appId);
         } else {
             if (!data.selected[app]) return;
             appId = data.selected[app];
@@ -565,26 +578,60 @@ function renderApp(fragment) {
     });
 };
 
-function expandServices() {
-    $('.services-box-container').hide();
-    $('#appFrame').animate({height: $('#appFrame').height() - 110}, {duration: 200, queue: false});
-    $('#services').animate({height: "110px"}, {duration: 200});
+function expandServices()
+{
+  $('.services-box-container').addClass("active");
+
+  // Hide child elements of the services container...
+  $('#services #choose-services').hide();
+  $('#services #service-selector').hide();
+
+  $("#services").css({ height: "0px" }).show();
+
+  // Push the viewers slider down...
+  $("#viewers").animate({ top: "183px" }, { duration: 200 });
+
+  // Push the main content area down...
+  $("#iframeWrapper").animate({ top: "161px" }, { duration: 200 });
+
+  // TODO The above should both be handled by resizing their container, not each individually...
+
+  // Expand the Services area to size...
+  $('#services').animate({ height: "96px" }, { duration: 200, complete: function() {
+    $('#services #choose-services').fadeIn();
+    $('#services #service-selector').fadeIn();
+  }});
+  $('#appFrame').animate({ height: $(window).height() - 96 - $('.header').height() }, { duration: 200 });
 }
 
 function resizeFrame() {
-    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height() - 6);
+    $('#appFrame').height($(window).height() - $('#services').height() - $('.header').height());
     $("#appFrame").width($(window).width());
 }
 
 
 
-function closeServices() {
-    $('#appFrame').animate({height: $('#appFrame').height() + 110}, {duration: 200, queue: false});
-        $('#services').animate({height: "0px"}, {duration: 200, queue: false, complete:function() {
-            $('.services-box-container').show();
-            resizeFrame();
-        }
-    });
+function closeServices(duration)
+{
+  dur = duration == undefined ? 200 : duration;
+  $('.services-box-container').removeClass("active");
+
+  // Restore the main content area...
+  $("#iframeWrapper").animate({
+    top: "64px"
+  }, {
+      duration: dur, queue: false
+  });
+
+  // Restore the viewers slider...
+  $("#viewers").animate({ top: "86px" }, { duration: dur });
+
+  $('#services').animate({height: "0px"}, {duration: dur, queue: false, complete:function() {
+      // $('.services-box-container').show();
+      $('#services').hide();
+      resizeFrame();
+  }});
+
 }
 
 

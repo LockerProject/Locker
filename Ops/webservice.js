@@ -508,7 +508,8 @@ locker.on('upgrade', function(req, socket, head) {
     proxy.proxyWebSocketRequest(req, socket, head, {
         host: url.parse(dashboard.instance.uriLocal).hostname,
         port: url.parse(dashboard.instance.uriLocal).port,
-        buffer: buffer
+        buffer: buffer,
+        https:false
   });
 });
 

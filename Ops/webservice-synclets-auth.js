@@ -116,7 +116,7 @@ function handleOAuth2Post (code, options, res) {
             }
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            res.end("<script type='text/javascript'> window.close(); </script>");
         });
 
     } catch (E) {
