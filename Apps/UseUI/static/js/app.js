@@ -36,6 +36,10 @@ $(document).ready(
             return false;
         });
 
+        $(".app-menu").click(function() {
+            return false;
+        });
+
         $(".buttonCounter").mouseenter(function() {
             $("div.appMenu").not(".hoveredViews .appMenu").hide();
             $(".buttonCounter").removeClass("hoveredViews");
@@ -45,7 +49,20 @@ $(document).ready(
             E.mouseleave(function() {
                 $(that).removeClass("hoveredViews");
                 E.hide();
+                return false;
             })
+            $(this).mouseleave(function() {
+                var leaveCloser = setTimeout(function() {
+                    $(that).removeClass("hoveredViews");
+                    console.log("Hiding")
+                    E.hide();
+                }, 100);
+                E.mouseenter(function() {
+                    clearTimeout(leaveCloser);
+                    return false;
+                });
+                return false;
+            });
             E.css("left", $(this).position().left + 5 - E.width());
             E.css("top", $(this).parent().offset().top + $(this).parent().height())
             $(this).addClass("hoveredViews");
