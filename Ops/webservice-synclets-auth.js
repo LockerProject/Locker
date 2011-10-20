@@ -27,6 +27,10 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gplus/auth",
       "grantType" : "authorization_code"}
+  , glatitude = {"provider" : "glatitude",
+      "endPoint" : "https://accounts.google.com/o/oauth2/token",
+      "redirectURI" : "auth/glatitude/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
@@ -51,6 +55,9 @@ module.exports = function(locker) {
     });
     locker.get('/auth/gplus/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gplus, res);
+    });
+    locker.get('/auth/glatitude/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), glatitude, res);
     });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
@@ -110,10 +117,8 @@ function handleOAuth2Post (code, options, res) {
                   redirect_uri:host + options.redirectURI};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
             auth = {};
-            if (options.provider === 'gcontacts') {
-                auth.clientID = apiKeys[options.provider].appKey;
-                auth.clientSecret = apiKeys[options.provider].appSecret;
-            }
+            auth.clientID = apiKeys[options.provider].appKey;
+            auth.clientSecret = apiKeys[options.provider].appSecret;
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
             res.end("<script type='text/javascript'> window.close(); </script>");

@@ -15,7 +15,7 @@ exports.init = function(l, dStore){
 exports.reIndex = function(locker,cb) {
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['checkin/foursquare', 'timeline/twitter'], function(err, services) {
+        locker.providers(['checkin/foursquare', 'timeline/twitter', 'location/glatitude'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('checkin/foursquare') >= 0) {
@@ -32,6 +32,10 @@ exports.reIndex = function(locker,cb) {
                                 console.error('twitter done!');
                             });
                         });
+                    });
+                } else if(svc.provides.indexOf('location/glatitude') >= 0) {
+                    getCurrently(doLatitude, true, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/location', function() {
+                        console.error('latitude done!');
                     });
                 }
             });
@@ -74,6 +78,10 @@ exports.processEvent = function(event, callback)
     {
         var me = (event.type.indexOf("tweets") >= 0) ? true : false;
         processPlace(doTwitter(item, me),callback);
+    }
+    if(event.type.indexOf("glatitude") > 0)
+    {
+        processPlace(doLatitude(item),callback);
     }
 }
 
@@ -136,6 +144,22 @@ function doTwitter(tweet, me)
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()
         , via: tweet
+        };
+    return e;
+}
+
+function doLatitude(location, me)
+{
+    if(!location.latitude || !location.longitude) return null;
+    var timestamp = parseInt(location.timestampMs, 10);
+    if(isNaN(timestamp)) return null;
+    var e = {id:location.timestampMs
+        , me:me
+        , network:"glatitude"
+        , lat: location.latitude
+        , lng: location.longitude
+        , at: timestamp
+        , via: location
         };
     return e;
 }
