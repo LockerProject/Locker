@@ -71,6 +71,7 @@ var options = { logger: {
    debug: new Function()
  }};
 var io = socketio.listen(app,options);
+io.set("transports", ["jsonp-polling", "xhr-polling", "htmlfile"]);
 
 app.get('/apps', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
