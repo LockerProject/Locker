@@ -16,6 +16,7 @@ function addCommas(nStr)
 }
 
 allCounts = {};
+var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined}};
 
 function updateCounts(name, count, updated) {
   updated = updated || 0;
@@ -33,20 +34,31 @@ function updateCounts(name, count, updated) {
 var socket = io.connect();
 var once = false;
 
-
-// detect window focus changes
-var window_focus = true;
-$(window).focus(function() {
-    window_focus = true;
-    dequeueGritters();
-}).blur(function() {
+var frame_focus = false;
+var window_focus = false;
+$(document).ready(function() {
+  // detect window focus changes
+  $(window).focus(function() {
+      window_focus = true;
+      dequeueGritters();
+  }).blur(function() {
     window_focus = false;
+  });
+
+  $("#appFrame").load(function() {
+    $(window.frames["appFrame"].window).focus(function() {
+      frame_focus = true;
+      dequeueGritters();
+    }).blur(function() {
+      frame_focus = false;
+    })
+  });
 });
 
 var gritterEvents = {};
 function queueGritter(name, count, lastId) {
     console.log("Queueing " + name + ", " + count + ", " + lastId);
-    if(window_focus) {
+    if(window_focus || frame_focus) {
         showGritter(name, count, lastId);
     } else {
         if(gritterEvents[name]) {
@@ -64,6 +76,11 @@ function dequeueGritters() {
             gritterEvents[i] = 0;
         }
     }
+}
+
+function clearUnseen(app) {
+  unseenCount[app].count = 0;
+  unseenCount[app].lastId = undefined;
 }
 
 function showGritter(name, arg, lastId) {
@@ -126,14 +143,14 @@ function showGritter(name, arg, lastId) {
     } else {
       var prettyName = name;
       if(name == 'contact') {
-          if(arg > 1) prettyName = 'people';
+          if(unseenCount[name + "s"].count > 1) prettyName = 'people';
           else prettyName = 'person';
-      } else if(arg > 1) {
+      } else if(unseenCount[name + "s"].count > 1) {
           prettyName += 's';
       }
       var gritterId = $.gritter.add({
         title:"New " + prettyName,
-        text:"Got " + arg + " new " + prettyName,
+        text:"Got " + unseenCount[name + "s"].count + " new " + prettyName,
         image: "img/" + name + "s.png",
         time:5000,
         after_open:function(e) {
@@ -143,7 +160,7 @@ function showGritter(name, arg, lastId) {
                 app = name + "s";
                 window.location.hash = app;
                 console.log("showGritter lastId:" + lastId);
-                renderApp("new-" + lastId);
+                renderApp("new-" + unseenCount[name + "s"].lastId);
                 $.gritter.remove(gritterId);
               }
             })
@@ -155,6 +172,8 @@ function showGritter(name, arg, lastId) {
 socket.on('event', function (body) {
   log("got event: ", body);
   updateCounts(body.name, body.count, body.updated);
+  unseenCount[body.name + "s"].count += body.new;
+  if (unseenCount[body.name + "s"].lastId === undefined) unseenCount[body.name + "s"].lastId = body.lastId;
   queueGritter(body.name, body.new, body.lastId);
 });
 

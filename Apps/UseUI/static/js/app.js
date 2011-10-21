@@ -54,7 +54,6 @@ $(document).ready(
             $(this).mouseleave(function() {
                 var leaveCloser = setTimeout(function() {
                     $(that).removeClass("hoveredViews");
-                    console.log("Hiding")
                     E.hide();
                 }, 100);
                 E.mouseenter(function() {
@@ -571,6 +570,7 @@ function accountPopup (elem) {
 }
 
 function renderApp(fragment) {
+    clearUnseen(app);
     if (timeout) clearTimeout(timeout);
     $('.selected').removeClass('selected');
     $("#" + app).addClass('selected');
