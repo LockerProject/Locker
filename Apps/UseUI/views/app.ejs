@@ -30,20 +30,52 @@
           <li class="app-link" id="photos">
             <a href="#photos">
               <span class="label">Photos</span>
-              <span class="photosTotalCount buttonCounter">0</span>
             </a>
+            <span class="buttonCounter">&#9660;</span>
+            <div class='appMenu'>
+              <span><span class='photosTotalCount'>-</span> Photos</span>
+              <hr />
+              <div class='photosViews'>
+                <div class="viewer template">
+                  <a href="" class="viewer-link"><img class="viewer-icon" src="img/viewer-icon.png"/></a>
+                  <div class='viewer-details'>
+                    <a href="" class="viewer-link name"><span class="viewer-name">Default Viewer</span></a>
+                    <a href="https://github.com/Singly" target="_blank" class="viewer-author-link">
+                      <span class="viewer-author">by Singly</span>
+                    </a>
+                  </div>
+                  <br style="clear: both;" />
+                </div>
+              </div>
+              <hr />
+              <a class='devdocs-box' href='#'>Create a new view...</a>
+            </div>
           </li>
           <li class="app-link" id="contacts">
             <a href="#contacts">
               <span class="label">People</span>
-              <span class="contactsTotalCount buttonCounter">0</span>
             </a>
+            <span class="buttonCounter">&#9660;</span>
+            <div class='appMenu'>
+              <span><span class='contactsTotalCount'>-</span> People</span>
+              <hr />
+              <div class='contactsViews'></div>
+              <hr />
+              <a href='#'>Create a new view...</a>
+            </div>
           </li>
           <li class="app-link" id="links">
             <a href="#links">
               <span class="label">Links</span>
-              <span class="linksTotalCount buttonCounter">0</span>
             </a>
+            <span class="buttonCounter">&#9660;</span>
+            <div class='appMenu'>
+              <span><span class='linksTotalCount'>-</span> Links</span>
+              <hr />
+              <div class='linksViews'></div>
+              <hr />
+              <a href='#'>Create a new view...</a>
+            </div>
           </li>
         </ul>
       </nav>
@@ -131,19 +163,13 @@
       </ul>
     </div>
 
+<!--
     <div id="viewers">
       <div id="viewers-title">
         SELECT A VIEWER
       </div>
       <div id="viewers-list">
-        <div class="viewer template">
-          <a href="https://github.com/Singly" target="_blank" class="viewer-author-link">
-            <span class="viewer-author">by Singly</span>
-          </a>
-          <a href="" class="viewer-link"><img class="viewer-icon" src="img/viewer-icon.png"/></a>
-          <a href="" class="viewer-link name"><span class="viewer-name">Default Viewer</span></a>
-          <br style="clear: both;" />
-        </div>
+        
       </div>
       <div id="viewers-hover">
         <div class="viewer-hover template">
@@ -154,8 +180,14 @@
         <img id="viewers-slide-button" src="img/slide-out.png"/>
       </div>
     </div>
+    -->
+
+    <div id='firstRun'>
+    </div>
 
     <div id="iframeWrapper">
+      <iframe id="appFrame"></iframe>
+    <!--
       <div class="blur">
         <div class="lightbox">
           <img class="close-box" src="img/close-x.png"/>
@@ -163,13 +195,12 @@
             <div class="header"><p class="header-text"></p></div>
             <div class="body"></div>
             <div class="forward"><p class="forward-button-text"></p></div>
-            <div class="tip"><p class="tip-text">To close this wizard, click the X in the upper right corner.</p></div>
           </div>
         </div>
       </div>
-      <iframe id="appFrame"></iframe>
+      -->
     </div>
-
+    
     <!-- Get Satisfaction -->
     <!--
     <script>
