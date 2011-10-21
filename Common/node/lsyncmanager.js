@@ -142,9 +142,15 @@ exports.status = function(serviceId) {
     return synclets.installed[serviceId];
 };
 
-exports.syncNow = function(serviceId, callback) {
+exports.syncNow = function(serviceId, syncletId, callback) {
+    if(typeof syncletId == "function")
+    {
+        callback = syncletId;
+        syncletId = false;
+    }
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
     async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) {
+        if(syncletId && synclet.name != syncletId) return cb();
         executeSynclet(synclets.installed[serviceId], synclet, cb);
     }, callback);
 };

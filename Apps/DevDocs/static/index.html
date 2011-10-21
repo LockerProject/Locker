@@ -46,6 +46,9 @@ li pre {
 <ol>
   <li id="connect"> <a id="connect-link"> Connect your GitHub account </a></li>
   <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a> </li>
+  <li> Make a local copy of your new repo :<br>
+      <pre>git clone &lt;link_to_your_fork&gt;</pre>
+  </li>
   <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings" target="_blank">API Token</a> :<br>
         <pre id="token">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
   </li>
@@ -53,7 +56,7 @@ li pre {
   <ul>
     <li>Open your index.html in a browser (it works!)</li>
     <li>Edit your .app file to change your viewer name</li>
-  </ul>  
+  </ul>
   <li>Push your changes back to GitHub:<br>
       <pre>git push origin master</pre>
   </li>
@@ -87,7 +90,7 @@ function hasGithub(callback) {
             if(installed[i].id === "github") {
                 return callback(true);
             }
-        }    
+        }
         callback(false, synclets.available);
     });
 }

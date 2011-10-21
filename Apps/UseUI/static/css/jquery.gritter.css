@@ -25,7 +25,7 @@
 .gritter-item-wrapper {
 	position:relative;
 	margin:0 0 10px 0;
-	background:url('../img/ie-spacer.gif'); /* ie7/8 fix */ 
+	background:url('../img/ie-spacer.gif'); /* ie7/8 fix */
 }
 .gritter-top {
 	background:url(../img/gritter.png) no-repeat left -30px;
