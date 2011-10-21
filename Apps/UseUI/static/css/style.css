@@ -531,6 +531,9 @@ nav#application-navigation > ul > li
   padding-right: 48px;
   background-color: #313131;
   background-image: url('../img/services-background.png');
+
+  -webkit-box-shadow: inset 0px 0px 32px black;
+  -moz-box-shadow: inset 0px 0px 32px black;
   box-shadow: inset 0px 0px 32px black;
   overflow: scroll-x;
   border-bottom: 1px solid black;
@@ -864,27 +867,45 @@ nav#application-navigation > ul > li
 
 .viewer {
   font-size: 16px;
-  margin-top: 10px;
-  margin-left: 20px;
-  margin-right: 20px;
+  margin-top: 5px;
   padding: 5px;
+  clear:both;
+  vertical-align:top;
+  height:35px;
 }
 
 .viewer-icon {
   width: 28px;
   height: 28px;
   float: left;
+  margin-top:2px;
+}
+
+.viewer-icon img {
+  vertical-align:top;
+}
+
+.viewer-details {
+  margin-left:32px;
+  line-height:100%;
+}
+.appMenu span.viewer-author {
+  color:rgba(0, 0, 0, 0.3);
+  font-size:12px;
+  padding:0;
+  margin:0;
 }
 
 .viewer-author-link {
-  margin-top: 6px;
-  float: right;
+  display:block;
+  color:rgba(0, 0, 0, 0.3);
+  font-size:12px;
 }
 
 .viewer-link.name {
-  margin-left: 10px;
-  position: relative;
-  top: 6px;
+  display:block;
+  padding:0;
+  margin:0;
 }
 
 .viewer-hover {
@@ -958,6 +979,9 @@ nav#application-navigation > ul > li
 
 #appFrame
 {
+  position:relative;
+  top:0;
+  bottom:0;
   width: 100%;
   height: 100%;
 }
@@ -998,30 +1022,29 @@ nav#application-navigation > ul > li
 
 /* Guided Setup / Lightbox ------------------------------------------------ */
 
-.blur {
+.lightbox
+{
   position: absolute;
-  display: none;
-  top: 0;
-  left: 0;
-  background-color: rgba(0, 0, 0, .5);
-  z-index: 10000;
-  width: 100%;
-  height: 100%;
-}
-
-.lightbox {
-  position: relative;
   background-color: white;
-  border: solid 1px #000;
-  width: 700px;
-  height: 400px;
-  margin: 100px auto;
-  -moz-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
-  -webkit-box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.4);
+  border: solid 3px black;
+  width: 600px;
+  height: 280px;
+  top: 50%;
+  left: 50%;
+  margin-top: -140px;
+  margin-left: -300px;
+  -webkit-box-shadow: 0 0 24px black;
+  -moz-box-shadow: 0 0 24px black;
+  box-shadow: 0 0 24px black;
+  padding: 20px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
-.lightbox .close-box {
+.lightbox .close-box
+{
   position: absolute;
   top: -13px;
   right: -14px;
@@ -1110,6 +1133,419 @@ nav#application-navigation > ul > li
   margin: 20px;
 }
 
+#firstRun
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  background-color: rgba(0, 0, 0, .8);
+  display: none;
+}
+
+#firstRun .welcomeContent
+{
+  float: left;
+  border-right: 1px solid #ccc;
+  width: 50%;
+  height: 100%;
+}
+
+.welcomeContent ul
+{
+  margin-left: 20px;
+  list-style-type: disc;
+  font-size: 14px;
+}
+
+.welcomeContent ul li
+{
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.lightbox h3
+{
+  font-size: 120%;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
+  text-align: center;
+}
+
+.lightbox p
+{
+  line-height: 140%;
+}
+
+.lightbox ul.services
+{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  padding-left: 10px;
+
+
+/*
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: -moz-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: -ms-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: -o-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+*/
+}
+
+.lightbox .services-selection
+{
+  overflow: hidden;
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  height: 116px;
+  border-top: 1px solid rgba(0, 0, 0, 0.5);
+
+  background-image: url('../img/services-background.png');
+  -webkit-box-shadow: inset 0px 0px 32px black;
+  -moz-box-shadow: inset 0px 0px 32px black;
+  box-shadow: inset 0px 0px 32px black;
+}
+
+.lightbox .services-selection p.label
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-image: url("../img/arrow.png");
+  background-repeat: no-repeat;
+  background-position: 100% 50%;
+  height: 96px;
+  line-height: 96px;
+  width: 160px;
+  padding-left: 40px;
+  color: white;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.lightbox ul.services li
+{
+  position: relative;
+  float: left;
+  text-align: center;
+  margin: 10px;
+  margin-top: 18px;
+  width: 64px;
+  color: white;
+  font-size: 12px;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.lightbox ul.services li:first-of-type
+{
+  padding-left: 192px;
+  margin-left: -10px;
+}
+
+.lightbox ul.services li img
+{
+  margin-bottom: 6px;
+}
+/*
+#firstRun .firstChoice
+{
+  margin-left:50%;
+  margin-top:10px;
+  padding:10px;
+}
+
+#firstRun h3
+{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  line-height: 48px;
+  border-bottom: 1px solid red;
+  font-size: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.firstChoice ul {
+  list-style:none;
+  margin-left:40px;
+  margin-bottom:10px;
+}
+
+.firstChoice ul li {
+  display:inline;
+  margin-right:20px;
+}
+
+.firstChoice p {
+  font-size:12px;
+  margin-bottom:20px;
+}
+*/
+
+#moreFirstOptions
+{
+  position: absolute;
+  bottom: 32px;
+  right: 20px;
+  border: 1px solid black;
+
+  height: 32px;
+  line-height: 32px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background-color: white;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
+  -webkit-box-shadow: 0 0 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+/*  -moz-box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+*/
+  font-size: 12px;
+  font-weight: bold;
+
+  background-color: black;
+  background-image: -webkit-linear-gradient(top, #333, #000);
+
+  color: rgb(225, 225, 225);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 1);
+
+/*  display: block;
+  text-align:right;
+  font-size:12px;
+  color:#666;
+*/}
+
+.popup
+{
+  position: relative;
+  top: 180px;
+  left: 200px;
+
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 12px;
+  display: inline-block;
+
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+  background-image: -moz-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: -ms-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: -o-linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+  background-image: linear-gradient(top, rgba(55, 55, 55, 1), rgba(55, 55, 55, 0.5));
+
+  -webkit-box-shadow: 0 0 16px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5);
+  -moz-box-shadow: 0 0 16px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5);
+}
+
+.popup:before
+{
+  content: "";
+  position: absolute;
+  display: block;
+
+  width: 0px;
+  margin-left: 6px;
+
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid transparent;
+}
+
+.popup:before
+{
+
+}
+.popup:before /* .bottom */
+{
+  top: -20px;
+  border-bottom: 10px solid white;
+}
+
+/*
+.popup:before.top
+{
+  bottom: -30px;
+  border-top: 15px solid rgb(50, 50, 50);
+}
+
+.popover > .triangle.left
+{
+  right: -30px;
+  border-left: 15px solid rgb(50, 50, 50);
+}
+
+.popover > .triangle.right
+{
+  left: -30px;
+  border-right: 15px solid rgb(50, 50, 50);
+}
+*/
+
+#doMorePopup
+{
+  padding-right: 40px;
+  -webkit-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+}
+
+.popup img.point {
+  position:absolute;
+  top:-20px;
+  left:20px;
+}
+
+.popup a.close
+{
+  display: block;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: 13px;
+  top: 13px;
+  opacity: 0.5;
+}
+
+.popup a.close:hover
+{
+  opacity: 0.8;
+}
+
+.blur {
+  position: absolute;
+  display: none;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, .5);
+  z-index: 10000;
+  width: 100%;
+  height: 100%;
+}
+
+/* App menu for views */
+.appMenu {
+  cursor:default;
+  min-width:150px;
+  font-size:12px;
+  display:none;
+  position:absolute;
+  padding:10px;
+  background-color: white;
+  border-color: transparent;
+  -webkit-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  color: rgb(125, 125, 125);
+  z-index:10000;
+  -webkit-border-bottom-left-radius: 5px;
+  -webkit-border-bottom-right-radius: 5px;
+  -moz-border-bottom-left-radius: 5px;
+  -moz-border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  -webkit-box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  -o-box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+}
+
+.appMenu span {
+  font-size:14px;
+}
+
+.app-link .hoveredViews
+{
+  position:relative;
+  border-bottom:0;
+  height:20px;
+  -webkit-border-bottom-left-radius: 0px;
+  -moz-border-bottom-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  -webkit-border-bottom-right-radius: 0px;
+  -moz-border-bottom-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  background-color: white;
+  border-color: transparent;
+  -webkit-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+  color: rgb(125, 125, 125);
+  z-index:10001;
+}
+.app-link.selected .hoveredViews {
+  -webkit-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(0, 0, 0, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05),
+    inset 0 0px 0 rgba(0, 0, 0, 0.05);
+}
+
+.app-link hr {
+  border:0;
+  height:1px;
+  color:#ccc;
+  background-color:#cdcdcd;
+  clear:both;
+}
 /* GetSatisfaction Feedback Widget ---------------------------------------- */
 
 #fdbk_screen {
