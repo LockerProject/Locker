@@ -2,132 +2,41 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-
   <title>Developer Documentation</title>
-
-  <style type="text/css">
-body {
-  background-color: white;
-  margin: 40px;
-
-}
-ol {
-  font-size: 36px;
-}
-li {
-  margin: 20px;
-}
-ul li {
-  font-size: 24px;
-  margin: 8px;
-}
-
-.done {
-    color:#aaa;
-    text-decoration: line-through;
-}
-
-li pre {
-    display:inline-block;
-    background-color:#F8F8F8;
-    padding:10px;
-    border: 1px solid #CCC;
-    border-radius:3px;
-    font-size:0.8em;
-}
-  </style>
-
+  <link rel="stylesheet" type="text/css" href="css/common.css">
 </head>
 
 <body>
-
-<ol>
-  <li id="connect"> <a id="connect-link"> Connect your GitHub account </a></li>
-  <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a> </li>
-  <li> Make a local copy of your new repo :<br>
-      <pre>git clone &lt;link_to_your_fork&gt;</pre>
-  </li>
-  <li> Add a js/config.js file to include your <a href="https://singly.com/users/me/settings" target="_blank">API Token</a> :<br>
-        <pre id="token">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
-  </li>
-  <li> Edit and test your viewer!
-  <ul>
-    <li>Open your index.html in a browser (it works!)</li>
-    <li>Edit your .app file to change your viewer name</li>
-  </ul>
-  <li>Push your changes back to GitHub:<br>
-      <pre>git push origin master</pre>
-  </li>
-  </li>
-  <li> Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with</li>
-
-</ol>
-
+    <h3>Make your own viewer!</h3>
+    <ol>
+        <li id="connect"> <a id="connect-link"> Connect your GitHub account. </a></li>
+        <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a>. </li>
+        <li> Edit the <a id="edit-link"  target="_blank">index.html file on GitHub</a>. After line 11 of index.html add:<br>
+            <pre>background-color: black;</pre>
+        </li>
+        <li> Manually <a id="sync-link" href="#">sync your viewer</a> back into your Singly account. </li>
+    </ol>
+    <p id="synced">
+        Great! Your viewer will now appear in the Photos drop down menu!<br>
+        <br>
+        Next, learn how to <a href="local.html">edit your viewer on your local machine</a>.
+    </p>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
 <script>
-
-
-// this needs some cleanup to actually use the proper height + widths
-function accountPopup(url) {
-    var popup = window.open(url, "account", "width=1000,height=1000,status=no,scrollbars=no,resizable=no");
-    popup.focus();
-}
-
-$.ajaxSetup({
-    xhrFields: {
-       withCredentials: true
-    },
-    crossDomain: true
-});
-
-function hasGithub(callback) {
-    $.getJSON('/synclets', function(synclets) {
-        var installed = synclets.installed;
-        for(var i in installed) {
-            if(installed[i].id === "github") {
-                return callback(true);
-            }
-        }
-        callback(false, synclets.available);
-    });
-}
-
-function waitForGithub(callback) {
-    hasGithub(function(has) {
-        if(has) return callback();
-        setTimeout(function() {
-            waitForGithub(callback);
-        }, 1000);
-    });
-}
-
 $(document).ready(function() {
-    $.getJSON('https://singly.com/users/me/apiToken', function(token) {
+    checkForToken(function(token) {
         if(!token || !token.apiToken) return;
         $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
     });
-    hasGithub(function(isInstalled, available) {
-        if(isInstalled) {
-            $("#connect").addClass('done');
-        } else {
-            for(var i in available) {
-                if(available[i].provider === 'github') {
-                    $("#connect-link").attr('href', "#");
-                    var url = available[i].authurl;
-                    $("#connect-link").click(function() {
-                        accountPopup(url);
-                        waitForGithub(function() {
-                            $("#connect").addClass('done');
-                            $("#connect-link").removeAttr('href');
-                        });
-                    });
-                }
-            }
-        }
+    waitForGitHubConnected(function() {
+        pollForGitHubProfile(function() {
+            $("#edit-link").attr('href', "https://github.com/" + profile.login + "/Skeleton-Viewer/edit/master/index.html");
+        });
     });
+    $("#sync-link").click(syncViewers);
 });
 </script>
 </html>
