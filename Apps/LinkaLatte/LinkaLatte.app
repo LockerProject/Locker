@@ -4,7 +4,7 @@
     "desc":"View all the links your locker has collected.",
     "status":"unstable",
     "static":"true",
-    "uses":["facebook", "twitter", "foursquare", "gcontacts", "github"],
+    "uses":["facebook", "twitter"],
     "autoInstall":true,
     "handle":"linkalatte",
     "viewer":"links",
