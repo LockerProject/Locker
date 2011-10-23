@@ -21,6 +21,7 @@
   font-style:italic;
 }
 #fullTestURL {
+  display:block;
   font-weight:bold;
   font-size:20px;
   background-color:#cdcdcd;
@@ -86,7 +87,7 @@ Choose an endpoint: <select id='curMethod'>
   </div>
   <input id='testButton' type='button' name='testIt' value='Test It' />
   <div id='testInfo'>
-    <div id='fullTestURL'></div>
+    <a id='fullTestURL' target='_blank'></a>
     <div id='limitedResults'></div>
     <pre class='prettyprint'><code class='language-javascript'></code></pre>
     <img id='testResultImage' />
@@ -124,7 +125,8 @@ $(function() {
     }
     $("input[type=button]").attr('disabled', true);
     // $(".prettyprint code").text("Loading...");
-    $("#fullTestURL").text(path);
+    $("#fullTestURL").text(callBase+path);
+    $("#fullTestURL").attr("href",callBase+path);
     $("#testInfo").show();
     if (curAPI.operations[0].responseClass == "[Image]") {
       $("#testResultImage").attr("src", path);
@@ -188,6 +190,7 @@ $(function() {
           "param<-parameters":{
             "span.paramName":"param.name",
             "input@name":"_#{param.name}",
+            "input@value":"param.default",
             "span.testExample":"param.example"
           }
         }
@@ -238,6 +241,13 @@ $(function() {
     $('#curMethod').change();
   });
 });
+
+var callBase = window.location.protocol+"//"+window.location.host;
+$.getJSON('https://singly.com/users/me/apiToken', function(token){
+  if(!token || !token.apiToken) return;
+    callBase = 'https://api.singly.com/'+token.apiToken;
+});
+
 </script>
 </body>
 

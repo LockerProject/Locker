@@ -46,6 +46,7 @@
                 "name": "limit",
                 "description": "The maximum number of photos to return",
                 "dataType": "number",
+                "default": 10,
                 "paramType": "query"
             },
             {
@@ -147,7 +148,8 @@
                 "description": "The maximum number of contacts to return",
                 "dataType": "number",
                 "paramType": "query",
-                "example": "ex. 1"
+                "default": 10,
+                "example": "ex. 100"
             },
             {
                 "name": "offset",
@@ -225,6 +227,7 @@
                 "name": "limit",
                 "description": "The maximum number of links to return",
                 "dataType": "number",
+                "default": 10,
                 "paramType": "query"
             },
             {
@@ -237,13 +240,15 @@
                 "name": "fields",
                 "description": "The subset of fields to return.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "{\"embed.type\":1}"
             },
             {
                 "name": "full",
                 "description": "When 1 or true the complete encounters array is included in the result.",
                 "dataType": "boolean",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "true or false"
             }
             ]
         }
