@@ -75,6 +75,7 @@ $(document).ready(
         });
 
         $('.devdocs-box').click(function() {
+            app = 'devdocs';
             $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
             $('.devdocs-box-container').addClass('active');
             $('.app-link.selected').removeClass('selected');
@@ -584,7 +585,7 @@ function renderApp(fragment) {
         (function poll (data) {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
-                if (ready) {
+                if (ready || app === 'devdocs') {
                     // log('clearing timeout');
                     var needReload = false;
                     if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location.toString()) needReload = true;
