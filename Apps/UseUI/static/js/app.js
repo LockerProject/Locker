@@ -41,27 +41,18 @@ $(document).ready(
         });
 
         $(".buttonCounter").mouseenter(function() {
+            if ($(this).hasClass('hoveredViews')) return;
             $("div.appMenu").not(".hoveredViews .appMenu").hide();
             $(".buttonCounter").removeClass("hoveredViews");
 
             var that = this;
+            var parent = $(this).parent();
             var E = $(this).next("div.appMenu");
-            E.mouseleave(function() {
+            parent.mouseleave(function() {
                 $(that).removeClass("hoveredViews");
                 E.hide();
                 return false;
             })
-            $(this).mouseleave(function() {
-                var leaveCloser = setTimeout(function() {
-                    $(that).removeClass("hoveredViews");
-                    E.hide();
-                }, 100);
-                E.mouseenter(function() {
-                    clearTimeout(leaveCloser);
-                    return false;
-                });
-                return false;
-            });
             E.css("left", $(this).position().left + 5 - E.width());
             E.css("top", $(this).parent().offset().top + $(this).parent().height())
             $(this).addClass("hoveredViews");
@@ -84,6 +75,7 @@ $(document).ready(
         });
 
         $('.devdocs-box').click(function() {
+            app = 'devdocs';
             $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
             $('.devdocs-box-container').addClass('active');
             $('.app-link.selected').removeClass('selected');
@@ -593,7 +585,7 @@ function renderApp(fragment) {
         (function poll (data) {
             $.getJSON("/Me/" + app + "/state", function(state) {
                 ready = state.count > 0;
-                if (ready) {
+                if (ready || app === 'devdocs') {
                     // log('clearing timeout');
                     var needReload = false;
                     if (!fragment && viewerUrl == $("#appFrame")[0].contentWindow.location.toString()) needReload = true;
