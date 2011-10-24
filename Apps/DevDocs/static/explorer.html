@@ -242,6 +242,13 @@ $(function() {
   });
 });
 
+
+$.ajaxSetup({
+    xhrFields: {
+       withCredentials: true
+    },
+    crossDomain: true
+});
 var callBase = window.location.protocol+"//"+window.location.host;
 $.getJSON('https://singly.com/users/me/apiToken', function(token){
   if(!token || !token.apiToken) return;
