@@ -13,7 +13,7 @@
         <li id="connect"> <a id="connect-link"> Connect your GitHub account. </a></li>
         <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a>. </li>
         <li> Edit the <a id="edit-link"  target="_blank">index.html file on GitHub</a>. After line 11 of index.html add:<br>
-            <pre>background-color: black;</pre>
+            <pre>body { background-color:black; }</pre>
         </li>
         <li> Manually <a id="sync-link" href="#">sync your viewer</a> back into your Singly account. </li>
     </ol>
@@ -23,7 +23,7 @@
         Next, learn how to <a href="local.html">edit your viewer on your local machine</a>.
     </p>
   <h3>Play with the <a href="explorer.html">API Explorer</a></h3>
-  <h3>Try some of the <a href="https://github.com/LockerProject/Locker/wiki/Viewers">other viewers</a> and share your own :)</h3>
+  <h3>Try some of the <a href="https://github.com/LockerProject/Locker/wiki/Viewers" target="_blank">other viewers</a> and share your own :)</h3>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script type="text/javascript" src="js/common.js"></script>
@@ -34,7 +34,7 @@ $(document).ready(function() {
         $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
     });
     waitForGitHubConnected(function() {
-        pollForGitHubProfile(function() {
+        pollForGitHubProfile(function(profile) {
             $("#edit-link").attr('href', "https://github.com/" + profile.login + "/Skeleton-Viewer/edit/master/index.html");
         });
     });
