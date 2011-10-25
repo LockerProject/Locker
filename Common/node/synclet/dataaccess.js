@@ -12,8 +12,8 @@ module.exports = function(app) {
         dataStore.init(function() {
             var type = req.params.type;
             var options = {};
-            if(req.query['limit']) options.limit = req.query['limit'];
-            if(req.query['skip']) options.skip = req.query['skip'];
+            if(req.query['limit']) options.limit = parseInt(req.query['limit']);
+            if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
             dataStore.getAllCurrent(req.params.syncletId + "_" + req.params.type, function(err, objects) {
                 if (err) {
@@ -68,7 +68,7 @@ module.exports = function(app) {
         });
     });
 
-    app.get('/synclets/:syncletId/:type/:id', function(req, res) {
+    app.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
         dataStore.init(function() {
             dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {

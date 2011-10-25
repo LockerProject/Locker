@@ -1,10 +1,10 @@
 {
-	"title":"Foursquare Account",
-	"action":"Connect to a Foursquare account",
-	"desc":"Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
-	"run":"node init.js",
-	"status":"stable",
-	"handle":"foursquare",
-	"mongoCollections": ["friends", "places", "recent"],
-	"provides":["contact/foursquare", "checkin/foursquare"]
+  "title":"Foursquare Account",
+  "action":"Connect to a Foursquare account",
+  "desc":"Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
+  "run":"node init.js",
+  "status":"stable",
+  "handle":"foursquareconnector",
+  "mongoCollections": ["friends", "places", "recent"],
+  "provides":["contact/foursquare", "checkin/foursquare"]
 }

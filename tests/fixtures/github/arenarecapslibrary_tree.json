@@ -1,0 +1,124 @@
+{
+  "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/trees/HEAD",
+  "sha": "HEAD",
+  "tree": [
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "path": "README",
+      "mode": "100644"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/2f3c408f43992d9b78b390780bbb623610ea0763",
+      "size": 929,
+      "sha": "2f3c408f43992d9b78b390780bbb623610ea0763",
+      "path": "RecapsLibrary.sln",
+      "mode": "100755"
+    },
+    {
+      "type": "tree",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/trees/3bcab1fdf0ef5d015accd8a113affa6ce93ca7ca",
+      "sha": "3bcab1fdf0ef5d015accd8a113affa6ce93ca7ca",
+      "path": "RecapsLibrary",
+      "mode": "040000"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/2ce94cce272dbf1de2618703287e8a710cfbd9a2",
+      "size": 16002,
+      "sha": "2ce94cce272dbf1de2618703287e8a710cfbd9a2",
+      "path": "RecapsLibrary/CombatLog.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/9083dc2b42080a81db3f252771ca669b2f4fac4c",
+      "size": 213,
+      "sha": "9083dc2b42080a81db3f252771ca669b2f4fac4c",
+      "path": "RecapsLibrary/EventResult.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/b3a7f9788df9a0df108524560ce9106b9f10a05d",
+      "size": 3037,
+      "sha": "b3a7f9788df9a0df108524560ce9106b9f10a05d",
+      "path": "RecapsLibrary/HelperFunctions.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/58b9c9a64fe07b323f048e9b498ffd3260910f5c",
+      "size": 14454,
+      "sha": "58b9c9a64fe07b323f048e9b498ffd3260910f5c",
+      "path": "RecapsLibrary/Match.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/e93db340dcd3177b47ec7c91c98fdc4563d2fddd",
+      "size": 5959,
+      "sha": "e93db340dcd3177b47ec7c91c98fdc4563d2fddd",
+      "path": "RecapsLibrary/ParseFiles.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/50997c8074cb396c436dd1a52c29df277a0067d7",
+      "size": 4746,
+      "sha": "50997c8074cb396c436dd1a52c29df277a0067d7",
+      "path": "RecapsLibrary/Player.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "tree",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/trees/c538913e819bf8c7dba02fada26917e60e6a691b",
+      "sha": "c538913e819bf8c7dba02fada26917e60e6a691b",
+      "path": "RecapsLibrary/Properties",
+      "mode": "040000"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/ba53f204db3d93278823bf6e9bf914b8c97c5970",
+      "size": 1438,
+      "sha": "ba53f204db3d93278823bf6e9bf914b8c97c5970",
+      "path": "RecapsLibrary/Properties/AssemblyInfo.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/cede8afb87f28e2960da18d28ab00f1234d0130d",
+      "size": 2819,
+      "sha": "cede8afb87f28e2960da18d28ab00f1234d0130d",
+      "path": "RecapsLibrary/RecapsLibrary.csproj",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/bf1191558c411bb200dcc684d2820cf2c2effd6a",
+      "size": 5882,
+      "sha": "bf1191558c411bb200dcc684d2820cf2c2effd6a",
+      "path": "RecapsLibrary/Spell.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/188ecd6490b359ea105b02b7a9890bd8bc16dc0e",
+      "size": 1144806,
+      "sha": "188ecd6490b359ea105b02b7a9890bd8bc16dc0e",
+      "path": "RecapsLibrary/SpellIcons.cs",
+      "mode": "100755"
+    },
+    {
+      "type": "blob",
+      "url": "https://api.github.com/repos/ctide/arenarecapslibrary/git/blobs/91762067ffef6e338a3043678711a6c6d85dae0f",
+      "size": 1938,
+      "sha": "91762067ffef6e338a3043678711a6c6d85dae0f",
+      "path": "RecapsLibrary/Team.cs",
+      "mode": "100755"
+    }
+  ]
+}

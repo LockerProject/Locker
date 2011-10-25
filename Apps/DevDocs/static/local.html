@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <title>Developer Documentation</title>
+  <link rel="stylesheet" type="text/css" href="css/common.css">
+
+</head>
+
+<body>
+    <h3>Edit your viewer locally!</h3>
+<ol>
+  <li id="connect"> <a id="connect-link"> Connect your GitHub account.</a></li>
+  <li> Make a local copy of your new repo :<br>
+      <pre>git clone git@github.com:<span id="username">&lt;your-github-username&gt;</span>/&lt;your-repo-name&gt;.git</pre>
+  </li>
+  <li> Add a static/js/config.js file to include your <a href="https://singly.com/users/me/settings" target="_blank">API Token</a> :<br>
+        <pre id="token">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
+  </li>
+  <li> Open index.html in a browser (it works!)</li>
+  <li> Make your changes. (Use the <a href="explorer.html">API Explorer</a> to discover lots of your data to work with!)</li>
+  <li> Push your changes back to GitHub:<br>
+      <pre>git push origin master</pre>
+  </li>
+  <li> Add your viewer to the <a href="https://github.com/LockerProject/Locker/wiki/Viewers" target="_blank">wiki page</a>!</li>
+
+</ol>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script>
+$(document).ready(function() {
+    checkForToken(function(token) {
+        if(!token || !token.apiToken) return;
+        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+    });
+    
+    waitForGitHubConnected(function() {
+        pollForGitHubProfile(function(profile) {
+            $("#username").text(profile.login);
+        });
+    });
+    $("#sync-link").click(syncViewers);
+});
+</script>
+</html>

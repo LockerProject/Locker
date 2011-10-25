@@ -1,6 +1,7 @@
 var fakeweb = require('node-fakeweb');
 var users = require('../Connectors/GitHub/users');
 var repos = require('../Connectors/GitHub/repos');
+var profile = require('../Connectors/GitHub/profile');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -44,8 +45,9 @@ suite.next().suite.addBatch({
             assert.equal(response.config.id.followers[0], 'fourk');
         }
     }
-}).addBatch({
-    "Can get profile" : {
+})
+.addBatch({
+    "Can get repos" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
@@ -60,12 +62,27 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://github.com/api/v2/json/user/show/ctide',
                 file : __dirname + '/fixtures/github/ctide.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.github.com/repos/ctide/arenarecapslibrary/git/trees/HEAD?recursive=1',
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/github/arenarecapslibrary_tree.json')) });
+            fakeweb.registerUri({
+                uri : 'https://api.github.com/repos/ctide/WoWCombatLogParser/git/trees/HEAD?recursive=1',
+                contentType:"application/json",
+                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/github/arenarecapslibrary_tree.json')) });
             repos.sync(pinfo, this.callback) },
         "successfully" : function(err, response) {
+            assert.equal(response.data.repo[0].name, 'arenarecapslibrary');
+            assert.equal(response.data.repo[0].watchers[0], 'ctide');
+            assert.equal(response.data.repo[0].tree[0].path, 'README');
+        }
+    }
+}).addBatch({
+    "Can get profile" : {
+        topic: function() {
+            profile.sync(pinfo, this.callback) },
+        "successfully" : function(err, response) {
             assert.equal(response.data.profile[0].obj.login, 'ctide');
-            assert.equal(response.data.repos[0].obj.name, 'arenarecapslibrary');
-            assert.equal(response.data['contact/watchers'][0].obj.login, 'ctide');
-            assert.equal(response.config.ids['ctide/arenarecapslibrary'][0], 'ctide');
         }
     }
 })

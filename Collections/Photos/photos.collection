@@ -2,13 +2,13 @@
     "title":"Photos",
     "desc":"A collection of photos both created and received from many sources.",
     "run":"node photos.js",
-	"status":"stable",
-	"handle":"photos",
+    "status":"stable",
+    "handle":"photos",
     "provides":["photo"],
     "mongoCollections":["photos"],
     "events":[
-    	["status/twitter", "/events"],
-    	["checkin/foursquare", "/events"],
+        ["tweets/twitter", "/events"],
+        ["checkin/foursquare", "/events"],
         ["photo/facebook", "/events"],
         ["photo/twitpic", "/events"],
         ["photo/flickr", "/events"]

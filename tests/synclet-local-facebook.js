@@ -41,7 +41,7 @@ suite.next().suite.addBatch({
     "Can get newsfeed" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/home?access_token=foo&date_format=U',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/home?access_token=foo&date_format=U&limit=100',
                 file : __dirname + '/fixtures/facebook/home.json' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
                 body :'{"data":[]}' });

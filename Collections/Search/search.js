@@ -87,12 +87,12 @@ exports.handleGetUpdate = function(callback) {
             return callback(err);
         }
 
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
-        locker.providers('status/twitter', function(err, services) {
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
+        locker.providers('timeline/twitter', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
-               if (svc.provides.indexOf('status/twitter') >= 0) {
+               if (svc.provides.indexOf('timeline/twitter') >= 0) {
                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
                 }
             });
@@ -121,11 +121,17 @@ exports.handlePostEvents = function(req, callback) {
         // FIXME Hack to handle inconsistencies between photo and contacts collection
         if (req.body.type === 'photo') {
             req.body.type = 'photo/full';
-            req.body.obj.data = req.body.obj;
         }
         // END FIXME
 
         var source = getSourceForEvent(req.body);
+
+        // https://github.com/LockerProject/Locker/issues/285
+        if (!source) {
+            error = 'No source found for event: '+JSON.stringify(req.body);
+            console.error(error);
+            return callback(error, {});
+        }
 
         if (req.body.action === 'new' || req.body.action === 'update') {
             lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
@@ -163,7 +169,7 @@ exports.handlePostIndex = function(req, callback) {
     var error;
 
     if (!req.body.type || !req.body.source || !req.body.data) {
-        error = 'Invalid arguments given for /search/index POST request.';
+        error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
         console.error(error);
         return callback(error, {});
     }
@@ -248,10 +254,10 @@ exports.handleGetReindexForType = function(type, callback) {
     var items;
 
     if (type == 'contact/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/allContacts', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
     }
     else if (type == 'photo/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/allPhotos', 'photo/full', 'photos', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
     }
     else {
         locker.providers(type, function(err, services) {
@@ -287,7 +293,7 @@ function reindexType(url, type, source, callback) {
             req.body = fullBody;
             req.headers = {};
             req.headers['content-type'] = 'application/json';
-            exports.handlePostIndex(req, function() { 
+            exports.handlePostIndex(req, function() {
                 req = null;
                 forEachCb.call();
             });
@@ -314,7 +320,7 @@ function enrichResultsWithFullObjects(results, callback) {
         function(results, waterfallCb) {
             async.forEachSeries(results,
                 function(item, forEachCb) {
-                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/' + item._id;
+                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/id/' + item._id;
                     makeEnrichedRequest(url, item, forEachCb);
                 },
                 function(err) {
@@ -348,7 +354,7 @@ function makeEnrichedRequest(url, item, callback) {
             return callback(err);
         }
         if (res.statusCode >= 400) {
-            var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results';
+            var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results from '+url;
             console.error(error);
             return callback(error);
         }
@@ -382,13 +388,18 @@ function getSourceForEvent(body) {
        source = splitType[0] + 's';
     } else {
         var via = body.via;
-        if(body.via.indexOf('/'))
-        { // shouldn't need this anymore
-            var splitVia = body.via.split('/');
+        source = via;
+        if(via.indexOf('/') > -1) { // shouldn't need this anymore
+            var splitVia = via.split('/');
             via = splitVia[1];
         }
-        var splitSource = body.obj.source.split('_');
-        source = via + '/' + splitSource[1];
+        if (via.indexOf("_") > -1) {
+            var splitSource = body.obj.source.split('_');
+            source = via + '/' + splitSource[1];
+        }
+        if (via == "twitter" && body.type.indexOf("timeline") > -1) {
+            source = "twitter/timeline";
+        }
     }
     return source;
     // END FIXME

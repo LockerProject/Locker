@@ -45,7 +45,7 @@ Date.prototype.yyyymmdd = function() {
   };
 
 function loadPlaces(cb){
-    request.get({uri:locker.lockerBase+"/Me/places/getPlaces?me=true",json:true},function(err,res,body){
+    request.get({uri:locker.lockerBase+"/Me/places/?all=true&me=true",json:true},function(err,res,body){
         if(err || !body || body.length == 0) return cb();
         var places = [];
         body.forEach(function(p){places.push({at:p.at, c:long2num(p.lng)})});

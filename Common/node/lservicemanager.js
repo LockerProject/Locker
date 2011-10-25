@@ -161,6 +161,34 @@ function mergedManifest(dir)
     }
 }
 
+// update any existing map references to this manifest
+exports.mapUpsert = function (file, type) {
+    var metaData;
+    try {
+        metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if(!metaData || !metaData.handle) throw new Error("no handle");
+    } catch (E) {
+        console.error("failed to upsert "+file+" due to "+E);
+        return;
+    }
+    metaData.manifest = file;
+    metaData.srcdir = path.dirname(file);
+    metaData.is = type;
+    metaData.installable = true;
+    // replace references in available array (legacy)
+    var found = false;
+    serviceMap.available.some(function(svcInfo) {
+        if (svcInfo.srcdir == metaData.srcdir) {
+            found = true;
+            for(var a in metaData){svcInfo[a]=metaData[a];}
+        }
+    });
+    if(!found) serviceMap.available.push(metaData);
+    // update any "installed"
+    if(serviceMap.installed[metaData.handle]) return serviceMap.installed[metaData.handle] = lutil.extend(serviceMap.installed[metaData.handle], metaData);
+    return metaData;
+}
+
 /**
 * Scans the Me directory for instaled services
 */
@@ -388,7 +416,7 @@ exports.spawn = function(serviceId, callback) {
     }
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
-    app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
+    var app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;

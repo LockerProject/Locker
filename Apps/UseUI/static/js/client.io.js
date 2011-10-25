@@ -1,6 +1,3 @@
-var debug = false;
-var log = function(msg) { if (console && console.log && debug) console.debug(msg); };
-
 /// Format a number with commas
 /*
 * Public domain from http://www.mredkj.com/javascript/nfbasic.html
@@ -19,11 +16,12 @@ function addCommas(nStr)
 }
 
 allCounts = {};
+var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined}};
 
 function updateCounts(name, count, updated) {
   updated = updated || 0;
   if (!allCounts.hasOwnProperty(name)) allCounts[name] = {};
-  allCounts[name].lastUpdate = updated
+  allCounts[name].lastUpdate = updated;
   allCounts[name].count= count;
   var msg = addCommas(count);
   $("." + name + "sTotalCount").text(msg);
@@ -36,28 +34,37 @@ function updateCounts(name, count, updated) {
 var socket = io.connect();
 var once = false;
 
-
-// detect window focus changes
-var window_focus = true;
-$(window).focus(function() {
-    window_focus = true;
-    log('window_focus =', window_focus);
-    dequeueGritters();
-}).blur(function() {
+var frame_focus = false;
+var window_focus = false;
+$(document).ready(function() {
+  // detect window focus changes
+  $(window).focus(function() {
+      window_focus = true;
+      dequeueGritters();
+  }).blur(function() {
     window_focus = false;
-    log('window_focus =', window_focus);
+  });
+
+  $("#appFrame").load(function() {
+    $(window.frames["appFrame"].window).focus(function() {
+      frame_focus = true;
+      dequeueGritters();
+    }).blur(function() {
+      frame_focus = false;
+    })
+  });
 });
 
 var gritterEvents = {};
-function queueGritter(name, count) {
-    log('queueGritter window_focus =', window_focus);
-    if(window_focus) {
-        showGritter(name, count);
+function queueGritter(name, count, lastId) {
+    console.log("Queueing " + name + ", " + count + ", " + lastId);
+    if(window_focus || frame_focus) {
+        showGritter(name, count, lastId);
     } else {
         if(gritterEvents[name]) {
-            gritterEvents[name] += count;
+            gritterEvents[name]["count"] += count;
         } else {
-            gritterEvents[name] = count;
+            gritterEvents[name] = {last:lastId, "count":count};
         }
     }
 }
@@ -65,31 +72,124 @@ function queueGritter(name, count) {
 function dequeueGritters() {
     for(var i in gritterEvents) {
         if(gritterEvents[i]) {
-            showGritter(i, gritterEvents[i]);
+            showGritter(i, gritterEvents[i].count, gritterEvents[i].last);
             gritterEvents[i] = 0;
         }
     }
 }
 
-function showGritter(name, count) {
+function clearUnseen(app) {
+  unseenCount[app].count = 0;
+  unseenCount[app].lastId = undefined;
+}
+
+function showGritter(name, arg, lastId) {
     var prettyName = name;
-    if(count > 1) prettyName += 's';
-    $.gritter.add({
-      title:"New " + prettyName,
-      text:"Got " + count + " new " + prettyName,
-      image: "img/" + name + "s.png",
-      time:5000
-    });
+    if (name == 'syncgithub') {
+        $.gritter.add({
+            title:"Syncing viewers",
+            text:"We're syncing viewers from your github account, should be available shortly!",
+            time: 5000
+        });
+    } else if (name == 'newservice') {
+        var service = arg;
+        var svclc = service.toLowerCase();
+        var customText = "Importing ";
+        var img = svclc;
+        if(svclc === 'facebook') {
+            customText += "friends, statuses, and photos.";
+        } else if (svclc === 'twitter') {
+            customText += "friends, statuses, and photos.";
+        } else if(svclc === 'foursquare') {
+            customText += "checkins and photos.";
+        } else if(svclc === 'github') {
+            customText += "friends.";
+        } else if(svclc === 'google contacts') {
+            customText += "contacts.";
+            img += 'gcontacts.png';
+        } else if(svclc === 'flickr') {
+            customText += "friends and photos.";
+        }
+        img = '/img/icons/' + img + '-gritter.png';
+      $.gritter.add({
+        title:"Connected " + arg,
+        text:customText,
+        // image:img,
+        time: 5000
+      });
+    } else if(name === 'viewer') {
+        drawServices();
+        var gritterId = $.gritter.add({
+          title:"New "+arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
+          text:arg.id,
+          image: "img/Collections.png",
+          time:10000,
+          after_open:function(e) {
+              var self = this;
+              e.click(function(ce) {
+                if (ce.target && !$(ce.target).hasClass("gritter-close")) {
+                    app = arg.viewer;
+                    window.location.hash = app;
+                    var appId = arg.id.replace("/", "-");
+                    setViewer(app, appId, function(){
+                        renderApp();
+                    });
+                    $("#viewers-hide-show").click();
+                    $.gritter.remove(gritterId);
+                }
+              })
+          }
+        });
+    } else {
+      var prettyName = name;
+      if(name == 'contact') {
+          if(unseenCount[name + "s"].count > 1) prettyName = 'people';
+          else prettyName = 'person';
+      } else if(unseenCount[name + "s"].count > 1) {
+          prettyName += 's';
+      }
+      var gritterId = $.gritter.add({
+        title:"New " + prettyName,
+        text:"Got " + unseenCount[name + "s"].count + " new " + prettyName,
+        image: "img/" + name + "s.png",
+        time:5000,
+        after_open:function(e) {
+            var self = this;
+            e.click(function(ce) {
+              if (ce.target && !$(ce.target).hasClass("gritter-close")) {
+                app = name + "s";
+                window.location.hash = app;
+                console.log("showGritter lastId:" + lastId);
+                renderApp("new-" + unseenCount[name + "s"].lastId);
+                $.gritter.remove(gritterId);
+              }
+            })
+        }
+      });
+    }
 }
 
 socket.on('event', function (body) {
   log("got event: ", body);
   updateCounts(body.name, body.count, body.updated);
-  queueGritter(body.name, body.new);
+  unseenCount[body.name + "s"].count += body.new;
+  if (unseenCount[body.name + "s"].lastId === undefined) unseenCount[body.name + "s"].lastId = body.lastId;
+  queueGritter(body.name, body.new, body.lastId);
 });
+
+socket.on('newservice', function(name) {
+  log('got new service: ', name);
+  queueGritter('newservice', name);
+  if (window.guidedSetup) window.guidedSetup.serviceConnected();
+});
+
+socket.on('viewer', function(evt) {
+    queueGritter('viewer', evt.obj.data);
+});
+
 socket.on("counts", function(counts) {
   log("Counts:",counts);
-    for (key in counts) {
+    for (var key in counts) {
         if (counts.hasOwnProperty(key)) {
             updateCounts(key, counts[key].count, counts[key].updated);
         }

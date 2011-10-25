@@ -18,9 +18,9 @@ var contactAddEvent2 = JSON.parse(fs.readFileSync('fixtures/events/contacts/cont
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/timeline_twitter/twitter_tweet_1.json','ascii'));
 
 fakeweb.allowNetConnect = false;
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/twitter/timeline/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/4e5e9731e4884f5600595b29', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/twitter/timeline/id/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b29', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
 
 var req = {};
 req.headers = {};

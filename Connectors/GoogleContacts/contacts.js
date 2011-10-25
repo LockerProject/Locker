@@ -6,53 +6,49 @@ exports.sync = function(processInfo, callback) {
     syncContacts(callback);
 }
 
+var MAX_RESULTS = 3000;
+
 function syncContacts(callback) {
     var params = {'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
-                  'max-results':3000
+                  'max-results':MAX_RESULTS
                  };
-    if(config.lastUpdate)
-        params['updated-min'] = getISODateString(new Date(config.lastUpdate));
-    var now = new Date().getTime();
-    getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
-        function(err, result) {
-            if(result && !(err && result.error)) {
-                var count = 0;
-                if(result.feed) {
-                    config.lastUpdate = now;
-                    var responseObj = {data : {}, config : {}};
-                    if(result.feed.entry) {
-                        count = result.feed.entry.length;
-                        processFeed(result.feed.entry, function(processedContacts) {
-                            responseObj.data.contact = processedContacts;
-                            responseObj.config.lastUpdate = now;
-                            responseObj.auth = auth;
-                            callback(null, responseObj);
-                        });
-                    } else {
-                        responseObj.config.lastUpdate = now;
-                        responseObj.auth = auth;
-                        callback(null, responseObj);
-                    }
-                } else {
-                    console.error('DEBUG: BARF! result=', result);
-                }
-            } else {
-                console.error('DEBUG: BARF2! err=', err, ', result=', result);
-                callback();
-            }
-        });
+    if(!config.lastUpdate)
+        config.lastUpdate = 1;
+    params['updated-min'] = getISODateString(new Date(config.lastUpdate));
+    if(!config.startIndex)
+        config.startIndex = 1;
+    params['start-index'] = config.startIndex;
+    var now = Date.now();
+    getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params, function(err, result) {
+        if(!(result && result.feed) || err || result.error) {
+            console.error('google contacts BARF! err=', err, ', result=', result);
+            return callback();
+        }
+        var responseObj = {data:{}, config:{startIndex: config.startIndex, lastUpdate:now}, auth:auth};
+        var entries = result.feed.entry;
+        if(entries && entries.length > 0) {
+            responseObj.config.lastUpdate = config.lastUpdate;
+            responseObj.config.startIndex += entries.length;
+            responseObj.config.nextRun = -1;
+            responseObj.data.contact = processFeed(entries);
+        } else {    
+            responseObj.config.startIndex = 1;
+            responseObj.config.nextRun = 0;
+        }
+        callback(null, responseObj);
+    });
 }
 
 
-function processFeed(entries, callback) {
+function processFeed(entries) {
     var result = [];
     for(var i in entries) {
         var obj = convertEntry(entries[i]);
         result.push({obj:obj, timestamp:obj.updated, type:'new'});
     }
-    callback(result);
+    return result;
 }
 
 function convertEntry(entry) {

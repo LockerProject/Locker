@@ -123,7 +123,7 @@ vows.describe("Service Manager").addBatch({
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
             "can be looked up by handle from the available sections of the service map": function() {
-                assert.equal(serviceManager.getFromAvailable("facebook").handle, "facebook");
+                assert.equal(serviceManager.getFromAvailable("facebookconnector").handle, "facebookconnector");
             },
             "and can be installed" : {
                 topic:serviceManager.install({srcdir:"Connectors/Twitter"}),

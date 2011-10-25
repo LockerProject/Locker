@@ -1,6 +1,6 @@
 
 var url = require('url');
-var unshortener = require('./unshortener');
+var longus = require('./longus');
 var sax =  require("sax");
 var readability = require("readabilitySAX");
 var request = require('request');
@@ -9,9 +9,10 @@ var logger = require(__dirname + "/../../Common/node/logger").logger;
 // simply expand a given url
 exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
-    unshortener.expand(arg.url, function(u){
-        if(!u || !u.host) return cbDone(arg.url)
-        cbEach(url.format(u));
+    longus.expand(arg, function(a){
+        if(!a || !a.url) return cbDone("invalid url")
+        if(a.err) console.error("error unshortening url: "+a.err);
+        cbEach(a.url);
         cbDone();
     });
 }
@@ -27,8 +28,10 @@ exports.extractUrls = function(arg, cbEach, cbDone) {
         var str = matchArray[0];
         // gotta do sanity cleanup for url.parse, it makes no assumptions I guess :/
         if(str.substr(0,4).toLowerCase() != "http") str = "http://"+str;
+        if(str.indexOf('&quot') == str.length - 5) str = str.substr(0, str.indexOf('&quot')); // stupid twitter escaping
         var u = url.parse(str);
         if(!u.host || u.host.indexOf(".") <= 0 || u.host.length - u.host.indexOf(".") < 3) continue; // TODO: fully normalize
+        if(u.hash === '#') u.hash = ''; // empty hash is nothing, normalize that by a pound
         cbEach(url.format(u));
     }
     cbDone();
