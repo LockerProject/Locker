@@ -35,7 +35,7 @@
         "readabilitySAX": "=0.2.2",
         "mongodb": "=0.9.6-15",
         "winston": "=0.5.2",
-        "clucene": "=0.2.2",
+        "clucene": "=0.2.3",
         "socket.io": "=0.8.5",
         "socket.io-client": "=0.8.4",
         "jade": "= 0.15.4",
