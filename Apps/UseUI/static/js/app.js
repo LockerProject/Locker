@@ -402,7 +402,8 @@ function drawServices() {
             $('.service:not(.template)').remove();
             providers = [];
             var syncletsToRender = [];
-            for (var i in data.uses) {
+            for (var i = data.uses.length - 1; i >= 0; i--) {
+            // for (var i in data.uses) {
                 for (var j = 0; j < synclets.available.length; j++) {
                     if (synclets.available[j].provider === data.uses[i]) {
                         if(synclets.available[j].authurl) {
