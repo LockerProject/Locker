@@ -12,6 +12,7 @@ if ( ! window.location.origin) window.location.origin = window.location.protocol
 var externalBase = window.location.origin;
 
 var _gaq = [['_setAccount', 'UA-22812443-1'], ['_trackPageview']];;
+var _kmq = _kmq || [];
 
 $(document).ready(
     function() {
@@ -475,7 +476,7 @@ function drawViewer(viewer, isSelected, appType) {
                 $.get('/synclets/github/run?id=repos', function(){});
                 showGritter('syncgithub');
                 try {
-                     _gaq.push(['_trackPageview', '/track/syncviewers']);
+                     _kmq.push(['record', 'synced viewers']);
                 } catch(err) {
                     console.error(err);
                 }
@@ -514,11 +515,10 @@ function drawViewers() {
                 drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle, apps[j]);
                 if (viewersToRender[i].author !== 'Singly') {
                    try {
-                       _gaq.push(['_trackPageview', '/track/installedviewers']);
+                       _kmq.push(['record', 'installed viewer']);
                    } catch(err) {
                        console.error(err);
                    }
-
                 }
             }
         }
