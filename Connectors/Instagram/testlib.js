@@ -9,7 +9,7 @@ ig.getSelf({},function(js){  console.log("ME\t"+JSON.stringify(js)); me=js}, fun
 //ig.getFeed({},function(js){  console.log("FEED\t"+JSON.stringify(js));}, function(err){ if(err) console.log("error: "+err);});
 
 
-var posts = require("./self.js");
+var posts = require("./updated.js");
 posts.sync({auth:me.auth,config:{feedSince:"290747080_10726078"}},function(e,js){
     console.error("got e:"+e);
     console.error("got js:"+JSON.stringify(js));
