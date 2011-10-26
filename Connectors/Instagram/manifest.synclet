@@ -1,0 +1,9 @@
+{
+    "title":"Instagram Account",
+    "status":"stable",
+    "provider":"instagram",
+    "provides":["profile/instagram","photo/instagram","contact/instagram","feed/instagram"],
+    "synclets":[
+        {"name": "self", "frequency": 3600}
+    ]
+}

@@ -27,6 +27,10 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gplus/auth",
       "grantType" : "authorization_code"}
+  , instagram = {"provider" : "instagram",
+      "endPoint" : "https://api.instagram.com/oauth/access_token",
+      "redirectURI" : "auth/instagram/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
@@ -51,6 +55,9 @@ module.exports = function(locker) {
     });
     locker.get('/auth/gplus/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gplus, res);
+    });
+    locker.get('/auth/instagram/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), instagram, res);
     });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);

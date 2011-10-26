@@ -507,6 +507,10 @@ function addUrls() {
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
                                                     "&redirect_uri=" + host + "auth/gplus/auth" +
                                                     "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
+            } else if (synclet.provider === 'instagram') {
+                if (apiKeys.instagram)
+                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
+                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
             } else if (synclet.provider === 'github') {
                 if (apiKeys.github)
                     synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
