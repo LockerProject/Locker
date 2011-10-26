@@ -79,6 +79,9 @@ exports.addEvent = function(eventBody, callback) {
         case 'contact/flickr':
             target = exports.addFlickrData;
             break;
+        case 'contact/instagram':
+            target = exports.addInstagramData;
+            break;
     }
     if(!target) {
         callback('event received could not be processed by the contacts collection');
@@ -115,6 +118,8 @@ exports.addData = function(type, endpoint, data, callback) {
         exports.addGoogleContactsData(data, callback);
     } else if (type == 'flickr') {
         exports.addFlickrData(data, callback);
+    } else if (type == 'instagram') {
+        exports.addInstagramData(data, callback);
     } else if (type == 'github') {
         exports.addGithubData(endpoint, data, callback);
     }
@@ -423,6 +428,43 @@ exports.addFlickrData = function(flickrData, callback) {
             var set = {};
             setName(set, data.realname);
             collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.flickr':baseObj},
+                                         $addToSet:addToSet,
+                                         $set:set},
+                        {safe:true, upsert:true, new: true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+}
+
+exports.addInstagramData = function(iData, callback) {
+    var data = iData.data;
+    var cleanedName = cleanName(data.full_name);
+    var query = {'accounts.instagram.data.id':data.id};
+    var set = {};
+    var baseObj = {data:data, lastUpdated:Date.now()};
+    set['accounts.instagram.$'] = baseObj;
+    //name
+    setName(set, data.full_name);
+
+    var addToSet = {};
+    if(cleanedName)
+        addToSet['_matching.cleanedNames'] = cleanedName;
+    //photos
+    if(data.profile_picture)
+        addToSet.photos = data.profile_picture;
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
+                        {safe:true, new: true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise
+            var or = [{'accounts.instagram.data.contact.id':data.id}];
+            // var or = [];
+            if(cleanedName)
+                or.push({'_matching.cleanedNames':cleanedName});
+
+            var set = {};
+            setName(set, data.full_name);
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.instagram':baseObj},
                                          $addToSet:addToSet,
                                          $set:set},
                         {safe:true, upsert:true, new: true}, callback);

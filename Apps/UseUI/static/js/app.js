@@ -552,6 +552,7 @@ function accountPopup (elem) {
                  twitter: {width: 630, height: 500},
                  tumblr: {width: 630, height: 500},
                  facebook: {width: 980, height: 705},
+                 instagram: {width: 630, height: 500},
                  flickr: {width: 1000, height: 877}
                 };
     if (oauthPopupSizes[elem.data('provider')]) {

@@ -317,7 +317,6 @@ exports.install = function(metaData, installOverride) {
     meInfo.version = 1;
     if (path.existsSync(path.join(lconfig.lockerDir, serviceInfo.srcdir, 'migrations'))) {
         var files = fs.readdirSync(path.join(lconfig.lockerDir, serviceInfo.srcdir, 'migrations'));
-        console.error(files.sort());
         var maxMigration = files.sort()[files.length - 1];
         meInfo.version = maxMigration.substring(0, 13);
     }

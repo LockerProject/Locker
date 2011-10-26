@@ -4,6 +4,9 @@
     "provider":"instagram",
     "provides":["profile/instagram","photo/instagram","contact/instagram","feed/instagram"],
     "synclets":[
-        {"name": "self", "frequency": 3600}
+        {"name": "self", "frequency": 3600},
+        {"name": "feed", "frequency": 600},
+        {"name": "follows", "frequency": 3600},
+        {"name": "media", "frequency": 1200}
     ]
 }
