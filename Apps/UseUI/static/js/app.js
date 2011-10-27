@@ -110,6 +110,7 @@ $(document).ready(
 
         $('.search').keyup(function(e) {
             if (e.keyCode == 13) {
+                if ($('.highlighted').length === 0) return true;
                 $('.highlighted').click();
                 $('#search-results').fadeOut();
                 return false;
