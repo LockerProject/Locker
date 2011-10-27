@@ -70,6 +70,7 @@ function processInstagram(svcId, data, cb) {
     photoInfo.url = data.images.standard_resolution.url;
     photoInfo.width = data.images.standard_resolution.width;
     photoInfo.height = data.images.standard_resolution.height;
+    if (data.images.thumbnail) photoInfo.thumbnail = data.images.thumbnail.url;
     if (data.created_time) photoInfo.timestamp = data.created_time*1000;
     if (data.caption) photoInfo.title = data.caption.text;
     if (data.link) photoInfo.sourceLink = data.link;
