@@ -113,7 +113,6 @@ function convertEntry(entry, callback) {
                 obj.photo = true;
                 callback(obj);
             });
-            // queuePhoto(obj.id, entry.link[i].href);
             return;
         }
     }
@@ -122,42 +121,13 @@ function convertEntry(entry, callback) {
 }
 
 
-
 function getID(entry) {
     return entry.id.$t.substring(entry.id.$t.lastIndexOf('/') + 1);
 }
 
-var photosQueue = [];
-var gettingPhotos = false;
-
-function queuePhoto(id, href) {
-    photosQueue.push({id:id, href:href});
-    if(!gettingPhotos) {
-        gettingPhotos = true;
-        getPhotos();
-    }
-}
-
-function getPhotos() {
-    console.error('photosQueue', photosQueue.length);
-    if(!photosQueue.length) {
-        gettingPhotos = false;
-        return;
-    }
-    var photo = photosQueue.shift();
-    getPhoto(photo, function(err) {
-        // console.error('wrote cont!');
-        getPhotos();
-        // var stat = fs.statSync('photos/' + photo.id + '.jpg');
-        // console.error('stat', stat);
-        if(err) {
-            console.error('error downloading photo for id', id, 'and href', href, '\nerror:', err);
-        }
-    });
-}
-
-
 function getPhoto(photo, callback) {
+    console.error("DEBUG: photo.href", photo.href);
+    console.error("DEBUG: photo.id", photo.id);
     photo.href += '?oauth_token=' + auth.token.access_token;
     mkdirp('photos', 0755, function(err) {
         if(err) {throw err;}
