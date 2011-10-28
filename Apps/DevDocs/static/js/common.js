@@ -1,4 +1,4 @@
-
+var _kmq = _kmq || [];
 
 // this needs some cleanup to actually use the proper height + widths
 function accountPopup(url) {
@@ -59,6 +59,7 @@ function syncViewers() {
     syncingViewers = true;
     $("#sync-link").removeAttr("href");
     $.getJSON("/synclets/github/run?id=repos", function(success) {
+        _kmq.push(['record', 'synced viewers']);
         if(success) {
             $("#sync-link").attr("href", "#");
             syncingViewers = false;
@@ -98,7 +99,11 @@ $(document).ready(function() {
         $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
     });
     waitForGitHubConnected(function() {
-        pollForGitHubProfile()
+        pollForGitHubProfile();
     });
     $("#sync-link").click(syncViewers);
+    
+    if ($.cookie('optin') === "true") {
+        $("body").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
+    }
 });
