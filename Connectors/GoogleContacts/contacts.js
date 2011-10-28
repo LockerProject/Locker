@@ -1,4 +1,6 @@
 var config, auth, gdataClient;
+var lfs = require(__dirname + '/../../Common/node/lfs');
+var mkdirp = require('mkdirp');
 
 exports.sync = function(processInfo, callback) {
     config = processInfo.config;
@@ -6,7 +8,7 @@ exports.sync = function(processInfo, callback) {
     syncContacts(callback);
 }
 
-var MAX_RESULTS = 3000;
+var MAX_RESULTS = 100;
 
 function syncContacts(callback) {
     var params = {'showdeleted':'true',
@@ -24,7 +26,7 @@ function syncContacts(callback) {
     getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params, function(err, result) {
         if(!(result && result.feed) || err || result.error) {
             console.error('google contacts BARF! err=', err, ', result=', result);
-            return callback();
+            return callback(err);
         }
         var responseObj = {data:{}, config:{startIndex: config.startIndex, lastUpdate:now}, auth:auth};
         var entries = result.feed.entry;
@@ -34,12 +36,12 @@ function syncContacts(callback) {
             responseObj.config.nextRun = -1;
             processFeed(entries, function(result) {
                 responseObj.data.contact = result;
-                callback(null, responseObj);
+                return callback(null, responseObj);
             });
         } else {
             responseObj.config.startIndex = 1;
             responseObj.config.nextRun = 0;
-            callback(null, responseObj);
+            return callback(null, responseObj);
         }
     });
 }
@@ -48,10 +50,10 @@ function syncContacts(callback) {
 function processFeed(entries, callback, result, i) {
     if(!result) result = [];
     if(!i) i = 0;
-    else if(i >== entries.length) return callback(result);
-    var obj = convertEntry(entries[i], function() {            
+    else if(i >= entries.length) return callback(result);
+    convertEntry(entries[i], function(obj) {            
         result.push({obj:obj, timestamp:obj.updated, type:'new'});    
-        processFeed(entries, callback, result, i);
+        processFeed(entries, callback, result, i+1);
     });
 }
 
@@ -109,14 +111,14 @@ function convertEntry(entry, callback) {
            entry.link[i].rel.lastIndexOf('#photo') === entry.link[i].rel.length - 6) {
             getPhoto({id:obj.id, href:entry.link[i].href}, function() {
                 obj.photo = true;
-                callback();
+                callback(obj);
             });
             // queuePhoto(obj.id, entry.link[i].href);
             return;
         }
     }
     // didn't find a photo
-    return callback();
+    return callback(obj);
 }
 
 
@@ -157,7 +159,10 @@ function getPhotos() {
 
 function getPhoto(photo, callback) {
     photo.href += '?oauth_token=' + auth.token.access_token;
-    lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', callback);
+    mkdirp('photos', 0755, function(err) {
+        if(err) {throw err;}
+        lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', callback);
+    });
 }
 
 function getClient() {

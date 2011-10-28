@@ -340,8 +340,8 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     if(cleanedName)
         addToSet['_matching.cleanedNames'] = cleanedName;
     //photos
-    // if(data.id && data.photo)
-    //     addToSet.photos = '/' + lconfig.me + '/gcontacts/photo/' + data.id;
+    if(data.id && data.photo)
+        addToSet.photos = '/synclets/gcontacts/getPhoto/' + data.id;
     //addresses
     if(data.address) {
         var addresses = [];
