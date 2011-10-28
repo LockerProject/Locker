@@ -126,11 +126,10 @@ function getID(entry) {
 }
 
 function getPhoto(photo, callback) {
-    console.error("DEBUG: photo.href", photo.href);
-    console.error("DEBUG: photo.id", photo.id);
     photo.href += '?oauth_token=' + auth.token.access_token;
     mkdirp('photos', 0755, function(err) {
         if(err) {throw err;}
+        // TODO: this might hit and need to handle a 401 (token refresh)
         lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', callback);
     });
 }
