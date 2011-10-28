@@ -7,6 +7,7 @@
         {"name": "self", "frequency": 3600},
         {"name": "feed", "frequency": 600},
         {"name": "follows", "frequency": 3600},
+        {"name": "updated", "frequency": 4200},
         {"name": "media", "frequency": 1200}
     ]
 }

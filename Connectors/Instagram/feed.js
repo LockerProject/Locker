@@ -20,7 +20,7 @@ exports.sync = function(processInfo, cb) {
     }
     instagram.getFeed({min_id:since}, function(post){
         posts.push({'obj' : post, timestamp: new Date(), type : 'new'});
-        if(post.id > since) since = post.id;
+        if(parseInt(post.id) > parseInt(since)) since = post.id;
     }, function(err) {
             if (err) console.error(err);
             responseObj.data.feed = posts;

@@ -43,6 +43,16 @@ exports.getFeed = function(arg, cbEach, cbDone) {
     getPages(arg, cbEach, cbDone);
 }
 
+// just get one block of recent ones
+exports.getMediaRecent = function(arg, cb) {
+    arg.path = '/users/self/media/recent';
+    getOne(arg, cb);
+}
+exports.getFeedRecent = function(arg, cb) {
+    arg.path = '/users/self/feed';
+    getOne(arg, cb);
+}
+
 function getOne(arg, cb) {
     if(!arg || !arg.path) return cb("no path");
     var api = url.parse(base+arg.path);

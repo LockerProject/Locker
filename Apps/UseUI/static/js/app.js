@@ -110,6 +110,7 @@ $(document).ready(
 
         $('.search').keyup(function(e) {
             if (e.keyCode == 13) {
+                if ($('.highlighted').length === 0) return true;
                 $('.highlighted').click();
                 $('#search-results').fadeOut();
                 return false;
@@ -552,7 +553,7 @@ function accountPopup (elem) {
                  twitter: {width: 630, height: 500},
                  tumblr: {width: 630, height: 500},
                  facebook: {width: 980, height: 705},
-                 instagram: {width: 630, height: 500},
+                 instagram: {width: 800, height: 500},
                  flickr: {width: 1000, height: 877}
                 };
     if (oauthPopupSizes[elem.data('provider')]) {

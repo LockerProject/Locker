@@ -61,6 +61,7 @@ span.testExample {
 
 <body>
   <h1>API Explorer</h1>
+<form onsubmit='$("#testButton").click(); return false;'>
 Choose an endpoint: <select id='curMethod'>
 </select>
 <div id='methodTemplate'>
@@ -85,7 +86,7 @@ Choose an endpoint: <select id='curMethod'>
   <div id='testParameters'>
     <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /><span class='testExample'></span></div>
   </div>
-  <input id='testButton' type='button' name='testIt' value='Test It' />
+  <input id='testButton' type='submit' name='testIt' value='Test It' />
   <div id='testInfo'>
     <a id='fullTestURL' target='_blank'></a>
     <div id='limitedResults'></div>
@@ -93,6 +94,7 @@ Choose an endpoint: <select id='curMethod'>
     <img id='testResultImage' />
   </div>
 </div>
+</form>
 <script type="text/javascript">
 $(function() {
   var apiData;
