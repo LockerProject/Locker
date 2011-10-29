@@ -8,63 +8,51 @@
 */
 
 
-var fs = require('fs'),http = require('http');
+var fs = require('fs');
 var express = require('express'),connect = require('connect');
 var app = express.createServer(connect.bodyParser(), connect.cookieParser());
 var locker = require('locker');
 var lfs = require('lfs');
 var request = require('request');
-var nodemailer = require('nodemailer');
-var lcrypto = require('lcrypto');
-var lconfig = require('lconfig');
-//TODO: fix lconfig and remove this! I need it for lcrypto?!
-lconfig.load('../../Config/config.json');
 
 var me;
-var auth=false;
 var processInfo;
 
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end(fs.readFileSync(__dirname + '/ui/index.html'));
+    request.get({url:locker.lockerBase+'/Me/smtp/state', json:true}, function(err, r, body){
+        if(err || !body || !body.ready == 1) return res.end("you need to set up <a href='../smtp/'>sending email</a> first");
+        res.end(fs.readFileSync(__dirname + '/ui/index.html'));
+    });
 });
 
 app.get('/enable', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    if(!auth)
-    {
-        res.end("missing mail server auth, set up imap connector plz");
-        return;
-    }
-    me.enabled = true;
+    me.enabled = req.param("to");
     lfs.syncMeData(me);
     res.end("Enabled");
     send();
 });
 
 app.get('/disable', function(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
     me.enabled = false;
     lfs.syncMeData(me);
-    res.writeHead(200, {'Content-Type': 'text/html'});
     res.end("Disabled");
 });
 
 app.get('/send', function (req, res) {
-    if(!auth)
-    {
-        res.end("u.fail");
-        return;
-    }
     res.end("sent");
     send();
 });
 
 function send()
 {
+    if(!me.enabled) return;
     locker.at('/send',86395);
-    request.get({uri:processInfo.lockerUrl+"/Me/photos/allPhotos"},function(err, res, body){
+    request.get({uri:processInfo.lockerUrl+"/Me/photos/?limit=1000"},function(err, res, body){
         if(err)
         {
             console.log("failed to get photos: "+err);
@@ -73,55 +61,15 @@ function send()
         var photos = JSON.parse(body);
         // ideally this is a lot smarter, about weighting history, tracking to not do dups, etc
         var rand = Math.floor(Math.random() * photos.length);
-        console.log("for "+auth.username+" we picked random photo: "+JSON.stringify(photos[rand]));
-        // hard coded to gmail for testing (ver -0.1)
-        nodemailer.SMTP = {
-            host: 'smtp.gmail.com',
-            port: 587,
-            ssl: false,
-            use_authentication: true,
-            user: auth.username,
-            pass: auth.password
-        };
         // Message object
-        var cid = Date.now() + '.image.png';
         var message = {
             sender: 'Reminisce <42@awesome.com>',
-            to: auth.username,
-            subject: 'something fun and random  ✔',
+            to: me.enabled,
+            subject: 'something fun and random',
             body: 'Hello to myself!',
-            html:'<p><b>reminiscing...</b> <img src="cid:"' + cid + '"/></p>',
-            debug: true,
-            attachments:[
-                {
-                    filename: 'image.png',
-                    cid: cid
-                }
-            ]
+            html:'<p><b>reminiscing...</b> <img src="' + photos[rand].url + '"/></p>'
         };
-        // try to get the message and send it as an attachment...
-        try{
-            var imgurl = processInfo.lockerUrl+"/Me/photos/image/" + photos[rand].id;
-            request.get({uri:imgurl},function(err, res, body){
-                if(err)
-                {
-                    console.error("failed to get photo "+imgurl);
-                    return;
-                }
-                // this doesn't work, garbles the image somehow, dunno what buffer magic is needed :(
-                message.attachments[0].contents = body;
-                mail = nodemailer.send_mail(message, function(err, ok){
-                    if(err){
-                        console.error('Error occured: '+err);
-                    }
-                    if(ok){
-                        console.error('Message sent successfully!');
-                    }
-                });
-            });
-        }catch(e) {
-            console.error('Caught Exception',e);
-        }
+        request.post({uri:locker.lockerBase+'/Me/smtp/send', json:message});
     });
 };
 
@@ -132,24 +80,9 @@ stdin.on('data', function (chunk) {
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
     me = lfs.loadMeData();
-    // try stealing imap's auth to get going
-    lcrypto.loadKeys(function(){
-        try {
-            var authData = JSON.parse(fs.readFileSync('../imap/auth.json', 'utf8'));
-            if(authData && authData.hasOwnProperty('username') && authData.hasOwnProperty('password') && authData.hasOwnProperty('host') && authData.hasOwnProperty('port'))
-            {
-                    authData.username = lcrypto.decrypt(authData.username);
-                    if(authData.username.indexOf("@") == -1) authData.username += "@gmail.com"; // meh! HACK!
-                    authData.password = lcrypto.decrypt(authData.password);
-                    auth = authData;
-            }
-        }catch(e){
-            console.error("failed to hack into imap auth: "+e);
-        };
-        app.listen(processInfo.port,function() {
-            var returnedInfo = {};
-            console.log(JSON.stringify(returnedInfo));
-        });
+    app.listen(processInfo.port,function() {
+        var returnedInfo = {};
+        console.log(JSON.stringify(returnedInfo));
     });
 });
 
