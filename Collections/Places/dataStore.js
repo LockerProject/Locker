@@ -82,7 +82,7 @@ exports.addPlace = function(place, callback) {
     var options = {safe:true, upsert:true, new: true};
     placeCollection.findAndModify({"_hash":_hash}, [['_id','asc']], {$set:place}, options, function(err, doc) {
         delete doc["_hash"];
-        var eventObj = {source: "photos", type: "photo", data:doc};
+        var eventObj = {source: "places", type: "place", data:doc};
         locker.event("photo", eventObj);
         callback(err, doc);
     });
