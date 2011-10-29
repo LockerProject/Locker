@@ -39,7 +39,7 @@ app.get('/', function(req, res) {
 app.post('/save', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
     if(!req.body || !req.body.host || !req.body.port) return res.end("missing minimum required host/port :(");
-    nodemailer.SMTP = auth = {host:req.body.host, port:req.body.port};
+    nodemailer.SMTP = auth = {host:req.body.host, port:req.body.port, ssl:false};
     if(req.body.ssl) auth.ssl = true;
     if(req.body.user && req.body.pass)
     {
