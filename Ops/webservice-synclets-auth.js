@@ -29,7 +29,7 @@ var syncManager = require('lsyncmanager')
       "grantType" : "authorization_code"}
   , instagram = {"provider" : "instagram",
       "endPoint" : "https://api.instagram.com/oauth/access_token",
-      "redirectURI" : "auth/instagram/auth",
+      "redirectURI" : "auth/instagram/auth"}
   , glatitude = {"provider" : "glatitude",
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/glatitude/auth",
@@ -61,6 +61,7 @@ module.exports = function(locker) {
     });
     locker.get('/auth/instagram/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), instagram, res);
+    });
     locker.get('/auth/glatitude/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), glatitude, res);
     });
