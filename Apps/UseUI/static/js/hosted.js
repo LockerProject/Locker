@@ -10,6 +10,8 @@ function setUserGlobals(data) {
     userOptin = data.optin;
     externalHost = data.externalHost;
 
+    $.cookie('optin', userOptin, {path: '/'});
+    
     $(".userEmail").text(userEmail);
     $(".user-name").text(userName);
 

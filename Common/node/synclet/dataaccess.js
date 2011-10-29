@@ -35,12 +35,14 @@ module.exports = function(app) {
     });
 
     app.get('/synclets/:syncletId/getPhoto/:id', function(req, res) {
+        var id = req.param('id');
         dataStore.init(function() {
             fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
                 var file;
                 for (var i = 0; i < files.length; i++) {
-                    if (files[i].match(req.param('id'))) {
+                    if (files[i].match('^' + id + '\\.[a-zA-Z0-9]+')) {
                         file = files[i];
+                        break;
                     }
                 }
                 if (file) {
