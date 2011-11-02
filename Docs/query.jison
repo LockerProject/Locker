@@ -18,7 +18,7 @@ var grammar = {
       ["\\[", "return '['"],
       ["\\]", "return ']'"],
       ["(?:[a-eg-su-zA-Z]|t(?!rue)|f(?!alse))[a-zA-Z]*", "return 'KEY';"],
-      ["true|false", "return 'BOOLEAN';"],
+      ["(?:true|false)", "return 'BOOLEAN';"],
       ["\\?", "return '?';" ],
       ["=", "return '=';" ],
       [",", "return ',';" ],
