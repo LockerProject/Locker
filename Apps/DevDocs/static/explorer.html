@@ -21,6 +21,7 @@
   font-style:italic;
 }
 #fullTestURL {
+  display:block;
   font-weight:bold;
   font-size:20px;
   background-color:#cdcdcd;
@@ -60,6 +61,7 @@ span.testExample {
 
 <body>
   <h1>API Explorer</h1>
+<form onsubmit='$("#testButton").click(); return false;'>
 Choose an endpoint: <select id='curMethod'>
 </select>
 <div id='methodTemplate'>
@@ -84,14 +86,15 @@ Choose an endpoint: <select id='curMethod'>
   <div id='testParameters'>
     <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /><span class='testExample'></span></div>
   </div>
-  <input id='testButton' type='button' name='testIt' value='Test It' />
+  <input id='testButton' type='submit' name='testIt' value='Test It' />
   <div id='testInfo'>
-    <div id='fullTestURL'></div>
+    <a id='fullTestURL' target='_blank'></a>
     <div id='limitedResults'></div>
     <pre class='prettyprint'><code class='language-javascript'></code></pre>
     <img id='testResultImage' />
   </div>
 </div>
+</form>
 <script type="text/javascript">
 $(function() {
   var apiData;
@@ -124,7 +127,8 @@ $(function() {
     }
     $("input[type=button]").attr('disabled', true);
     // $(".prettyprint code").text("Loading...");
-    $("#fullTestURL").text(path);
+    $("#fullTestURL").text(callBase+path);
+    $("#fullTestURL").attr("href",callBase+path);
     $("#testInfo").show();
     if (curAPI.operations[0].responseClass == "[Image]") {
       $("#testResultImage").attr("src", path);
@@ -188,6 +192,7 @@ $(function() {
           "param<-parameters":{
             "span.paramName":"param.name",
             "input@name":"_#{param.name}",
+            "input@value":"param.default",
             "span.testExample":"param.example"
           }
         }
@@ -238,6 +243,20 @@ $(function() {
     $('#curMethod').change();
   });
 });
+
+
+$.ajaxSetup({
+    xhrFields: {
+       withCredentials: true
+    },
+    crossDomain: true
+});
+var callBase = window.location.protocol+"//"+window.location.host;
+$.getJSON('https://singly.com/users/me/apiToken', function(token){
+  if(!token || !token.apiToken) return;
+    callBase = 'https://api.singly.com/'+token.apiToken;
+});
+
 </script>
 </body>
 

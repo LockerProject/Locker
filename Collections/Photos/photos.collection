@@ -11,6 +11,7 @@
         ["checkin/foursquare", "/events"],
         ["photo/facebook", "/events"],
         ["photo/twitpic", "/events"],
+        ["photo/instagram", "/events"],
         ["photo/flickr", "/events"]
     ]
 }

@@ -10,3 +10,6 @@
 [submodule "Apps/MergedContacts"]
 	path = Apps/MergedContacts
 	url = git://github.com/LockerProject/MergedContacts.git
+[submodule "Apps/LinkaLatte"]
+	path = Apps/LinkaLatte
+	url = git://github.com/LockerProject/Linkalatte.git

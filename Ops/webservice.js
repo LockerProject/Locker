@@ -86,6 +86,9 @@ locker.get("/providers", function(req, res) {
     var services = serviceManager.providers(req.param('types').split(','));
     var synclets = syncManager.providers(req.param('types').split(','));
     lutil.addAll(services, synclets);
+    for (var i = 0; i < services.length; i++) {
+        delete services[i].auth;
+    }
     res.end(JSON.stringify(services));
 });
 
@@ -338,7 +341,7 @@ function proxyRequest(method, req, res) {
         { // extra sanity check
             return res.send(404);
         }
-        
+
         fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
             if (!err && (stats.isFile() || stats.isDirectory())) {
                 res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));

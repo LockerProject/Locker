@@ -10,5 +10,6 @@
     ,["recents/foursquare","/events"]
     ,["tweets/twitter","/events"]
     ,["timeline/twitter","/events"]
+    ,["location/glatitude","/events"]
     ]
 }
