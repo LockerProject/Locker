@@ -39,12 +39,13 @@ vows.describe("Query System").addBatch({
         }
     },
     "Parsing a query with non-string fields" : {
-        topic:lpquery.parse("/getPhotos?terms=[anumber:7, aboolean:false]"),
+        topic:lpquery.parse("/getPhotos?terms=[anumber:7, aboolean:false, bboolean:true]"),
         "generates a valid parse tree":function(topic) {
             assert.deepEqual(topic, [ 'Photos',
               { terms:
                  [ [ 'keyValue', 'anumber', 7 ],
-                   [ 'keyValue', 'aboolean', false ] ] } ]);
+                   [ 'keyValue', 'aboolean', false ],
+                   [ 'keyValue', 'bboolean', true ] ] } ]);
         },
         "can be turned into a mongoDB query":function(topic) {
             var mongoQuery = lpquery.buildMongoQuery(topic);
@@ -52,7 +53,8 @@ vows.describe("Query System").addBatch({
                 collection: "photos",
                 query: {
                     anumber: 7,
-                    aboolean: false
+                    aboolean: false,
+                    bboolean: true
                 }
             });
         }
