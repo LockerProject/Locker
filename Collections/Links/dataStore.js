@@ -58,7 +58,7 @@ exports.checkUrl = function(origUrl, callback) {
         if(err) return callback();
         cursor.nextObject(function(err, item){
             if(err || !item || !item.link) return callback();
-            callback(item.link);
+            callback(item);
         });
     });
 }
@@ -70,7 +70,7 @@ exports.getLinks = function(arg, cbEach, cbDone) {
     findWrap(f,arg,linkCollection,cbEach,cbDone);
 }
 
-exports.getFullLink = function(id, cbDone) {
+exports.getLink = function(id, cbDone) {
     var link = null;
     exports.getLinks({link:id}, function(l) { link = l; }, function() { cbDone(link); });
 }

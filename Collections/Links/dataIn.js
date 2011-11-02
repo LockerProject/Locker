@@ -133,9 +133,10 @@ exports.loadQueue = function() {
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
     // check if the orig url is in any encounter already (that has a full link url)
-    dataStore.checkUrl(origUrl,function(linkUrl){
-        if(linkUrl) return callback(linkUrl); // short circuit!
+    dataStore.checkUrl(origUrl,function(link){
+        if(link) return callback(link); // short circuit!
         // new one, expand it to a full one
+        var linkUrl;
         util.expandUrl({url:origUrl},function(u2){linkUrl=u2},function(){
            // fallback use orig if errrrr
            if(!linkUrl) {
@@ -145,7 +146,7 @@ function linkMagic(origUrl, callback){
            // does this full one already have a link stored?
            dataStore.getLinks({link:linkUrl,limit:1},function(l){link=l},function(err){
               if(link) {
-                  return callback(link.link); // yeah short circuit dos!
+                  return callback(link); // yeah short circuit dos!
               }
               // new link!!!
               link = {link:linkUrl};
@@ -158,7 +159,7 @@ function linkMagic(origUrl, callback){
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
-                              callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
+                              callback(link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){
                                   if(!e) return;
