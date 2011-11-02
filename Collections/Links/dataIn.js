@@ -103,9 +103,12 @@ var encounterQueue = async.queue(function(e, callback) {
         async.forEach(urls,function(u,cb){
             linkMagic(u,function(link){
                 // make sure to pass in a new object, asyncutu
-                dataStore.addEncounter(lutil.extend(true,{orig:u,link:link},e), function(err,doc){
+                dataStore.addEncounter(lutil.extend(true,{orig:u,link:link.link},e), function(err,doc){
                     if(err) return cb(err);
                     dataStore.updateLinkAt(doc.link, doc.at, function() {
+                        // event includes this encounter!
+                        link.encounters = [doc];
+                        locker.event("link",link); // let happen independently
                         search.index(doc.link, function() {
                             cb()
                         });
@@ -155,7 +158,6 @@ function linkMagic(origUrl, callback){
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
-                              locker.event("link",obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){
@@ -194,7 +196,7 @@ function getEncounterFB(post)
 function getEncounterTwitter(tweet)
 {
     var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
-    var e = {id:tweet.id
+    var e = {id:tweet.id_str
         , network:"twitter"
         , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""
