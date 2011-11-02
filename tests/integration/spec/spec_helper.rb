@@ -15,6 +15,8 @@ Capybara.app_host = "http://localhost:8043"
 
 require 'selenium-webdriver'
 Capybara.default_driver = :selenium
+Capybara.ignore_hidden_elements = true
+
 
 # the following enables you to use chrome because firefox suxxxx
 # need to install : http://code.google.com/p/chromium/downloads/list for this to work properly
