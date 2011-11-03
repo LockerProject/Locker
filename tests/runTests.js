@@ -6,6 +6,8 @@ var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
 var lconsole = require("lconsole");
 var wrench = require("wrench");
+var runIntegration = true;
+var integrationOnly = false;
 
 var runFiles = [];
 var runGroups = [];
@@ -53,6 +55,8 @@ if (process.argv.length > 2) {
         process.stdout.write("  -s  Suppress the output from test running\n");
         process.stdout.write("  -d  Use the dot matrix style reporter\n");
         process.stdout.write("  -nc Disable colors\n");
+        process.stdout.write("  -u  Only run the unit tests, skip the front end tests\n");
+        process.stdout.write("  -c  Only run the front end tests, skip the unit tests\n");
         process.stdout.write("  -l  List all of the available groups when no group is given or\n");
         process.stdout.write("      all of the files ran in a group.\n");
         process.stdout.write("  -f  The remaining arguments are treated as files to run\n");
@@ -151,6 +155,12 @@ var runTests = function() {
     } else {
         vowsArgument.push("--spec");
     }
+    if (process.argv.indexOf("-u") > 0) {
+        runIntegration = false
+    }
+    if (process.argv.indexOf("-c") > 0) {
+        return runRake();
+    }
     if (process.argv.indexOf("-s") > 0) {
         vowsArgument.push("--supress-stdout");
     }
@@ -174,12 +184,32 @@ var runTests = function() {
             output = output.replace(/^\s+|\s+$/g, '');
             fs.writeFileSync('output.xml', output);
         }
-        if (code != null) {
-            console.log("All tests done");
-            lockerd.shutdown(code);
+        if (runIntegration) {
+            runRake();
         } else {
-            console.dir("vows process exited abnormally (code="+code+", signal="+signal+")");
-            lockerd.shutdown(1);
+            finished(code, signal);
         }
     });
+}
+
+var runRake = function() {
+    var rakeProcess = require("child_process").spawn("rake", [], { cwd: __dirname + "/integration"});
+    rakeProcess.stdout.on("data", function(data) {
+        process.stdout.write(data);
+    });
+    rakeProcess.stderr.on("data", function(data) {
+        process.stderr.write(data);
+    });
+    rakeProcess.on("exit", function(code) {
+        finished();
+    });
+}
+
+var finished = function(exitCode, signal) {
+    if (exitCode == 0) {
+        console.log('All tests done');
+    } else {
+        console.dir("vows process exited abnormally (code="+code+", signal="+signal+")");
+    }
+    server.shutdown(code);
 }

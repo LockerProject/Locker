@@ -1,0 +1,10 @@
+source 'http://rubygems.org'
+
+gem 'rspec'
+gem 'rspec-core'
+gem 'rspec-expectations'
+gem 'rspec-mocks'
+gem 'shoulda'
+gem 'capybara'
+gem 'selenium-client'
+gem 'selenium-webdriver'
