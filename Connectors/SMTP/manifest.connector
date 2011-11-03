@@ -1,0 +1,7 @@
+{
+    "title":"SMTP Emailer",
+    "desc":"Utility to send emails",
+    "run":"node smtp.js",
+    "status":"unstable",
+    "handle":"smtp"
+}
