@@ -38,6 +38,27 @@ vows.describe("Query System").addBatch({
             }
         }
     },
+    "Parsing a query with non-string fields" : {
+        topic:lpquery.parse("/getPhotos?terms=[anumber:7, aboolean:false, bboolean:true]"),
+        "generates a valid parse tree":function(topic) {
+            assert.deepEqual(topic, [ 'Photos',
+              { terms:
+                 [ [ 'keyValue', 'anumber', 7 ],
+                   [ 'keyValue', 'aboolean', false ],
+                   [ 'keyValue', 'bboolean', true ] ] } ]);
+        },
+        "can be turned into a mongoDB query":function(topic) {
+            var mongoQuery = lpquery.buildMongoQuery(topic);
+            assert.deepEqual(mongoQuery, {
+                collection: "photos",
+                query: {
+                    anumber: 7,
+                    aboolean: false,
+                    bboolean: true
+                }
+            });
+        }
+    },
     "Defining fields in the query" : {
         topic: lpquery.parse("/getPhotos?fields=['_id','title']&offset=0"),
         "generates a proper mongo query" : function(topic) {
