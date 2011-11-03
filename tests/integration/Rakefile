@@ -1,5 +1,6 @@
 Bundler.require(:default, Rails.env) if defined?(Bundler)
 require 'rake'
+require 'rubygems'
 require 'rspec'
 require 'rspec/core/rake_task'
 
