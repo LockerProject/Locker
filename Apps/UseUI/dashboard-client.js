@@ -25,7 +25,8 @@ var locker;
 var viewers = {available:{}, selected:{
     photos: "photosv09",
     contacts: "contactsviewer",
-    links: "linkalatte"
+    links: "linkalatte",
+    places: "helloplaces"
 }};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
@@ -57,7 +58,7 @@ var drawPage = function(req, res) {
         dashboard: lconfig.dashboard,
         closed: closed
     });
-}
+};
 
 app.get('/app', drawPage);
 app.get('/', drawPage);
@@ -78,6 +79,7 @@ app.get('/apps', function(req, res) {
     var apps = {contacts: {url : externalBase + '/Me/contactsviewer/', id : 'contactsviewer'},
                 photos: {url : externalBase + '/Me/photosv09/', id : 'photosv09'},
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
+                places: {url : extrernalBase + '/Me/helloplaces/', id : 'helloplaces'},
                 search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}};
     res.end(JSON.stringify(apps));
 });
@@ -178,6 +180,7 @@ function bootState(doneCb)
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
             if(coll == 'contacts') var evInfo = eventInfo['contact/full'];
+            if(coll == 'places') var evInfo = eventInfo['place'];
             evInfo.count = (body && body.count && body.count > 0) ? body.count : 0;
             evInfo.updated = (body && body.updated && body.updated > 0) ? body.updated : 0;
             evInfo.lastId = (body && body.lastId) ? body.lastId : "0";
@@ -188,7 +191,8 @@ function bootState(doneCb)
         var last = {
             "link":{"count":0, "lastId":0},
             "contact/full":{"count":0, "lastId":0},
-            "photo":{"count":0, "lastId":0}
+            "photo":{"count":0, "lastId":0},
+            "place":{"count":0, "lastId":0}
         };
         // try to load from file passively
         try {
@@ -207,6 +211,7 @@ function bootState(doneCb)
         locker.listen("photo","/event");
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
+        locker.listen("place", "/event");
         locker.listen('newservice', '/new');
         locker.listen('view/github', "/event");
         doneCb();
@@ -247,6 +252,7 @@ io.sockets.on('connection', function (socket) {
             logger.debug("everybody left, quiesce");
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
+            locker.deafen("place","/event");
             locker.deafen("contact/full","/event");
             locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');

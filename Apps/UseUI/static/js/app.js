@@ -504,8 +504,8 @@ function drawViewers() {
     log('drawViewers');
     $.getJSON('viewers', function(data) {
         $('.viewer:not(.template)').remove();
-        var apps = ["links", "contacts", "photos"];
-        for (var j = 0; j < 3; ++j) {
+        var apps = ["links", "contacts", "photos", "places"];
+        for (var j = 0; j < 4; ++j) {
             var viewersToRender = data.available[apps[j]];
             for(var i in viewersToRender) {
                 drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle, apps[j]);
@@ -568,6 +568,7 @@ function renderApp(fragment) {
             if (app === 'photos') appId = 'photosv09';
             if (app === 'contacts') appId = 'contactsviewer';
             if (app === 'links') appId = 'linkalatte';
+            if (app === 'places') appId = 'helloplaces';
             data.selected[app] = appId;
         } else {
             if (!data.selected[app]) return;
