@@ -201,7 +201,7 @@ var runRake = function() {
         process.stderr.write(data);
     });
     rakeProcess.on("exit", function(code) {
-        finished();
+        finished(code);
     });
 }
 
