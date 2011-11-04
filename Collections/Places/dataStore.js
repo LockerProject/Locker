@@ -28,12 +28,13 @@ function processFoursquare(svcId, data, cb) {
     
     var me = data.me;
     delete data.me;
+    console.log('4SQ! ');
     
     var placeInfo = {
             id:data.id,
             me:me,
             network:"foursquare",
-            place: data.venue.name,
+            title: data.venue.name,
             stream: false,
             lat: data.venue.location.lat,
             lng: data.venue.location.lng,

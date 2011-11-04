@@ -106,6 +106,9 @@ exports.handleGetUpdate = function(callback) {
 exports.handlePostEvents = function(req, callback) {
     var error;
 
+    console.log('SEARCHER!');
+    console.log(req.body);
+    
     if (req.headers['content-type'] !== 'application/json') {
         error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
         console.error(error);
@@ -118,6 +121,8 @@ exports.handlePostEvents = function(req, callback) {
         return callback(error, {});
     }
 
+    
+    
     if (req.body.hasOwnProperty('type')) {
         // FIXME Hack to handle inconsistencies between photo and contacts collection
         if (req.body.type === 'photo') {
@@ -254,11 +259,14 @@ exports.handleGetReindexForType = function(type, callback) {
 
     var items;
 
-    if (type == 'contact/full') {
+    if (type === 'contact/full') {
         reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
     }
-    else if (type == 'photo/full') {
+    else if (type === 'photo/full') {
         reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
+    }
+    else if (type === 'place/full') {
+        reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place/full', 'places', function(err) {});
     }
     else {
         locker.providers(type, function(err, services) {
@@ -384,7 +392,7 @@ function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
     var source;
 
-    if (body.type == 'contact/full' || body.type == 'photo/full') {
+    if (body.type == 'contact/full' || body.type == 'photo/full' || body.type == 'place/full') {
        var splitType = body.type.split('/');
        source = splitType[0] + 's';
     } else {
