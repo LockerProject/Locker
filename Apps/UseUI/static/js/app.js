@@ -203,6 +203,9 @@ function search() {
     $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {
         processResults('tweets', resXform(results), q);
     });
+    $.get(baseURL, {q: q + star, type: 'place/full*', limit: 3}, function(results) {
+        processResults('places', resXform(results), q);
+    });
     $.get('/Me/links/search', {q: q + star, limit: 3}, function(otherData) {
         processResults('links', otherData, q);
     });
@@ -308,6 +311,24 @@ resultModifiers.links = function(newResult, obj) {
     newResult.children('.search-result').html(obj.title);
     newResult.find('.search-result-icon').attr('src', obj.favicon || 'img/link.png').addClass("favicon");
     newResult.click(function() { window.open(obj.link,'_blank'); });
+}
+
+resultModifiers.places = function(newResult, obj) {
+    newResult.children('.search-result').html(obj.fullobject.title);
+    switch (obj.fullobject.network) {
+        case 'foursquare':
+            newResult.find('.search-result-icon').attr('src', '/dashboard/img/icons/foursquare.png');
+            break;
+        case 'twitter':
+            newResult.find('.search-result-icon').attr('src', '/dashboard/img/icons/twitter.png');
+            break;
+        case 'latitude':
+            newResult.find('.search-result-icon').attr('src', '/dashboard/img/icons/gplus.png');
+            break;
+        default:
+            newResult.find('.search-result-icon').attr('src', 'silhouette.png');
+    }
+    newResult.click(function() { app = 'places'; renderApp('view-' + obj._id); });
 }
 
 resultModifiers.tweets = function(newResult, obj) {
