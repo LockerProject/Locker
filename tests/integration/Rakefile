@@ -1,0 +1,16 @@
+Bundler.require(:default, Rails.env) if defined?(Bundler)
+require 'rake'
+require 'rubygems'
+require 'rspec'
+require 'rspec/core/rake_task'
+
+
+# RSpec 2.0
+RSpec::Core::RakeTask.new(:core) do |spec|
+  spec.pattern = 'spec/integration/*_spec.rb'
+  spec.rspec_opts = ['--backtrace']
+end
+
+RSpec::Core::RakeTask.new(:spec)
+
+task :default => :spec
