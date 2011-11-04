@@ -206,10 +206,9 @@ var runRake = function() {
 }
 
 var finished = function(exitCode, signal) {
-    if (exitCode == 0) {
-        console.log('All tests done');
-    } else {
-        console.dir("vows process exited abnormally (code="+code+", signal="+signal+")");
+    console.log('All tests done');
+    if (exitCode > 0) {
+        console.dir("vows process exited abnormally (code="+exitCode+", signal="+signal+")");
     }
-    server.shutdown(code);
+    server.shutdown(exitCode);
 }
