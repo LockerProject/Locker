@@ -200,8 +200,8 @@ var runRake = function() {
     rakeProcess.stderr.on("data", function(data) {
         process.stderr.write(data);
     });
-    rakeProcess.on("exit", function(code) {
-        finished(code);
+    rakeProcess.on("exit", function(code, signal) {
+        finished(code, signal);
     });
 }
 
@@ -210,5 +210,6 @@ var finished = function(exitCode, signal) {
     if (exitCode > 0) {
         console.dir("vows process exited abnormally (code="+exitCode+", signal="+signal+")");
     }
-    server.shutdown(exitCode);
+    lockerd.shutdown(exitCode);
+    process.exit(exitCode);
 }
