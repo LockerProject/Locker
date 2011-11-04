@@ -6,67 +6,244 @@
 * Please see the LICENSE file for more information.
 *
 */
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var collection;
+var db;
+var locker;
+var lconfig = require('../../Common/node/lconfig');
+var lutil = require('../../Common/node/lutil');
+var logger = require("logger").logger;
+var request = require("request");
+var crypto = require("crypto");
+var async = require("async");
+var url = require("url");
+var fs = require('fs');
+var lmongoutil = require("lmongoutil");
 
-// in the future we'll probably need a visitCollection too
-var placeCollection, locker, db;
+function processFoursquare(svcId, data, cb) {
+    // Gotta have lat/lng/at at minimum
+    if (!data.venue || !data.venue.location || !data.venue.location.lat || !data.venue.location.lng || !data.createdAt) {
+        cb("The 4sq data did not have lat/lng or at");
+        return;
+    }
+    
+    var me = data.me;
+    delete data.me;
+    
+    var placeInfo = {
+            id:data.id,
+            me:me,
+            network:"foursquare",
+            place: data.venue.name,
+            stream: false,
+            lat: data.venue.location.lat,
+            lng: data.venue.location.lng,
+            at: data.createdAt * 1000,
+            via: data
+        };
+    // "checkins" are from yourself, kinda problematic to deal with here?
+    if (data.user) {
+        placeInfo.fromID = data.user.id;
+        placeInfo.from = data.user.firstName + " " + data.user.lastName;
+    }
+    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
+    saveCommonPlace(placeInfo, cb);
+}
 
-exports.init = function(pCollection, l, mongo) {
-    placeCollection = pCollection;
-    locker = l;
+function processTwitter(svcId, data, cb) {
+    // Gotta have geo/at at minimum    
+    if (!data.created_at) {
+        cb("The Twitter data did not have created_at");
+        return;
+    }
+    
+    var ll = firstLL(data.geo);
+    if (!ll) {
+        ll = firstLL(data.place, true);
+    }
+    if (!ll) {
+        ll = firstLL(data.coordinates, true);
+    }
+    if (!ll) {
+        // quietly return, as lots of tweets aren't geotagged, so let's just bail
+        cb(); 
+        return;
+    }
+    
+    var me = data.me;
+    delete data.me;
+    
+    var placeInfo = {
+            id:data.id,
+            me:me,
+            lat: ll[0],
+            lng: ll[1],
+            stream: false,
+            network:"twitter",
+            text: data.text,
+            from: (data.user)?data.user.name:"",
+            fromID: (data.user)?data.user.id:"",
+            at: new Date(data.created_at).getTime(),
+            via: data
+        };
+
+    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
+    saveCommonPlace(placeInfo, cb);
+}
+
+function processGLatitude(svcId, data, cb) {
+    // Gotta have lat/lng/at at minimum
+    if (!data.latitude || !data.longitude) {
+        cb("The Latitude data did not have latitude or longitude");
+        return;
+    }
+    
+    var timestamp = parseInt(data.timestampMs, 10);
+    if (isNaN(timestamp)) {
+        cb("The Latitude data did not have a valid timestamp");
+        return; 
+    }
+    
+    var me = data.me;
+    delete data.me;
+    
+    var placeInfo = {
+            id:data.timestampMs,
+            me:me,
+            network:"glatitude",
+            stream: true,
+            lat: data.latitude,
+            lng: data.longitude,
+            at: timestamp,
+            via: data
+        };
+        
+    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
+    saveCommonPlace(placeInfo, cb);
+}
+
+var writeTimer = false;
+function updateState() {
+    if (writeTimer) {
+        clearTimeout(writeTimer);
+    }
+    writeTimer = setTimeout(function() {
+        try {
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+        } catch (E) {}
+    }, 5000);
+}
+
+function saveCommonPlace(placeInfo, cb) {
+    var hash = createId(placeInfo.lat+':'+placeInfo.lng+':'+placeInfo.at);
+    var query = [{id:hash}];
+    
+    if (!placeInfo.id) {
+        placeInfo.id = hash;
+    }
+    collection.findAndModify({$or:query}, [['_id','asc']], {$set:placeInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
+        if (!err) {
+            updateState();
+            var eventObj = {source: "places", type: "place", data:doc};
+            locker.event("place", eventObj);
+            return cb(undefined, eventObj);
+        }
+        cb(err);
+    });
+}
+
+var dataHandlers = {};
+dataHandlers["checkin/foursquare"] = processFoursquare;
+dataHandlers["recents/foursquare"] = processFoursquare;
+dataHandlers["tweets/twitter"] = processTwitter;
+dataHandlers["timeline/twitter"] = processTwitter;
+dataHandlers["location/glatitude"] = processGLatitude;
+
+exports.init = function(mongoCollection, mongo, l) {
+    logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
+    collection = mongoCollection;
     db = mongo.dbClient;
-}
+    lconfig.load('../../Config/config.json'); // ugh
+    locker = l;
+};
 
-exports.clear = function(callback) {
-    placeCollection.drop(callback);
-}
+exports.getTotalCount = function(callback) {
+    collection.count(callback);
+};
 
-exports.getTotalPlaces = function(callback) {
-    placeCollection.count(callback);
-}
+exports.getAll = function(fields, callback) {
+    collection.find({}, fields, callback);
+};
 
 exports.get = function(id, callback) {
-    placeCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+};
+
+exports.getOne = function(id, callback) {
+    collection.find({"id":id}, function(error, cursor) {
+        if (error) {
+            callback(error, null);
+        } else {
+            cursor.nextObject(function(err, doc) {
+                if (err)
+                    callback(err);
+                else
+                    callback(err, doc);
+            });
+        }
+    });
+};
+
+exports.addEvent = function(eventBody, callback) {
+    if (eventBody.action !== "new") {
+        callback(null, {});
+        return;
+    }
+    // Run the data processing
+    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
+    var handler = dataHandlers[eventBody.type] || processShared;
+    handler(eventBody.via, data, callback);
+};
+
+exports.addData = function(svcId, type, allData, callback) {
+    if (callback === undefined) {
+        callback = function() {};
+    }
+    var handler = dataHandlers[type] || processShared;
+    async.forEachSeries(allData, function(data, cb) {
+        handler(svcId, data, cb);
+    },callback);
+};
+
+exports.clear = function(callback) {
+    collection.drop(callback);
+};
+
+exports.getSince = function(objId, cbEach, cbDone) {
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, collection, cbEach, cbDone);
+};
+
+exports.getLastObjectID = function(cbDone) {
+    collection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+};
+
+function cleanName(name) {
+    if(!name || typeof name !== 'string')
+        return name;
+    return name.toLowerCase();
 }
 
-function hashPlace(place)
-{
-    return place.lat + ":" + place.lng + ":" + place.at;
+function createId(hash) {
+    var sha1 = crypto.createHash("sha1");
+    sha1.update(hash);
+    return sha1.digest("hex");
 }
 
-// either gets a single link arg:{url:...} or can paginate all arg:{start:10,limit:10}
-exports.getPlaces = function(arg, cbEach, cbDone) {
-    var f = (arg.id)?{link:arg.link}:{};
-    delete arg.id;
-    var sort, limit, offset;
-    if(arg.sort)
-    {
-        sort=arg.sort;
-        delete arg.sort;
-    }
-    if(arg.limit)
-    {
-        limit=parseInt(arg.limit);
-        delete arg.limit;
-    }
-    if(arg.offset)
-    {
-        offset=parseInt(arg.offset);
-        delete arg.offset;
-    }
-    var fields = {};
-    if(arg.fields)
-    {
-        fields = arg.fields;
-        delete arg.fields;
-    }
-    if(arg.me) arg.me = (arg.me === 'true')?true:false;
-    var cursor = placeCollection.find(arg, fields);
-    if (sort) cursor.sort(sort);
-    if (limit) cursor.limit(limit);
-    if (offset) cursor.skip(offset);
+function findWrap(a,b,c,cbEach,cbDone) {
+    var cursor = c.find(a);
+    if (b.sort) cursor.sort(b.sort);
+    if (b.limit) cursor.limit(b.limit);
     cursor.each(function(err, item) {
-        if (item != null) {
+        if (item !== null) {
             cbEach(item);
         } else {
             cbDone();
@@ -74,18 +251,18 @@ exports.getPlaces = function(arg, cbEach, cbDone) {
     });
 }
 
-// insert new place, replace any existing based on hash
-exports.addPlace = function(place, callback) {
-//    logger.debug("addPlace: "+JSON.stringify(place));
-    var _hash = hashPlace(place);
-    place["_hash"] = _hash;
-    var options = {safe:true, upsert:true, new: true};
-    placeCollection.findAndModify({"_hash":_hash}, [['_id','asc']], {$set:place}, options, function(err, doc) {
-        delete doc["_hash"];
-        var eventObj = {source: "places", type: "place", data:doc};
-        locker.event("place", eventObj);
-        callback(err, doc);
-    });
+// hack to inspect until we find any [123,456]
+function firstLL(o,reversed) {
+    if (Array.isArray(o) && o.length == 2 && 
+        typeof o[0] == 'number' && typeof o[1] == 'number') {
+        return (reversed) ? [o[1],o[0]] : o; // reverse them optionally
+    }
+    if (typeof o != 'object') {
+        return null;
+    }
+    for (var i in o) {
+        var ret = firstLL(o[i]);
+        if(ret) return ret;
+    }
+    return null;
 }
-
-

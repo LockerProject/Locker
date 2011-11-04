@@ -89,6 +89,7 @@ exports.handleGetUpdate = function(callback) {
 
         reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
         reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place/full', 'places', function(err) {});
         locker.providers('timeline/twitter', function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
