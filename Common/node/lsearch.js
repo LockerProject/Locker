@@ -93,7 +93,13 @@ CLEngine = function()
             "from":{
                 "name":"name"
             }
-        }
+        },
+        "place/full" : {
+            "_id":"_id",
+            "title":"title",
+            "lat":"lat",
+            "lng":"lng"
+        },
     };
 
     this.engine.Store = {
