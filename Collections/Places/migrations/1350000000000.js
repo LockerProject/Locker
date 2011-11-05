@@ -1,7 +1,7 @@
 module.exports = function(dir) {
     var path = require('path');
     var fs = require('fs');
-    var lutil = require(__dirname + '/../../../Common/Node/lutil');
+    var lutil = require(__dirname + '/../../../Common/node/lutil');
 
     var state = JSON.parse(fs.readFileSync(__dirname + '/../../../Me/useui/state.json'));
     state.place = {};
