@@ -14,4 +14,4 @@ module.exports = function(dir) {
     lutil.atomicWriteFileSync(__dirname + '/../../../Me/useui/viewers.json', JSON.stringify(viewers, null, 4));
     
     return true;
-};
+}; 
