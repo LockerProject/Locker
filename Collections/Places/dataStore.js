@@ -76,7 +76,7 @@ function processTwitter(svcId, type, data, cb) {
     }
     
     var placeInfo = {
-            id:data.id,
+            id:data.id_str,
             me:me,
             lat: ll[0],
             lng: ll[1],
@@ -202,7 +202,7 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, type, data, callback);
+    handler(eventBody.via, eventBody.type, data, callback);
 };
 
 exports.addData = function(svcId, type, allData, callback) {
