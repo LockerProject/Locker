@@ -100,7 +100,7 @@ app.get("/image/:placeId", function(req, res) {
 
 app.get('/update', function(req, res) {
     sync.gatherPlaces(function(){
-        res.send('Updating');
+        res.send('Making cookies for temas!');
     });
 });
 
@@ -128,8 +128,7 @@ app.post('/events', function(req, res) {
 app.get('/id/:id', function(req, res, next) {
     if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
+        res.send(doc);
     })
 });
 
