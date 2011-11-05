@@ -42,7 +42,7 @@ exports.gatherPlaces = function(cb) {
                         gatherFromUrl(svc.id, false, "/getCurrent/recents", "recents/foursquare");
                         gatherFromUrl(svc.id, true, "/getCurrent/checkin", "checkin/foursquare");
                         gatherFromUrl(svc.id, true, "/getCurrent/checkins", "checkin/foursquare");
-                    } else if (svc.provider === 'latitude') {
+                    } else if (svc.provider === 'glatitude') {
                         gatherFromUrl(svc.id, true, "/getCurrent/location", "location/glatitude");
                     }
                 });

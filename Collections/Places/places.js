@@ -70,34 +70,6 @@ app.get("/since", function(req, res) {
     });
 });
 
-app.get("/image/:placeId", function(req, res) {
-    if (!req.params.placeId) {
-        res.writeHead(500);
-        res.end("No place id supplied");
-        return;
-    }
-    dataStore.getOne(req.params.placeId, function(error, data) {
-        if (error || !data || !data.url) {
-            res.writeHead(500);
-            res.end(error);
-        } else {
-            res.writeHead(302, {"location":data.url});
-            res.end("");
-            /*
-            request.get({url:data.url}, function(error, resp, body) {
-                if (error) {
-                    res.writeHead(500);
-                    res.end(error);
-                } else {
-                    res.writeHead(200, resp.headers);
-                    res.end(body);
-                }
-            });
-            */
-        }
-    })
-});
-
 app.get('/update', function(req, res) {
     sync.gatherPlaces(function(){
         res.send('Making cookies for temas!');

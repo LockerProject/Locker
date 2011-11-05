@@ -27,7 +27,6 @@ function reload(offset, limit, useJSON) {
         if (lhc > (Date.now() / 1000)) lhc = lhc / 1000;
         return rhc - lhc;
     });
-    console.log(places);
   // find the unordered list in our document to append to
         var placesList = $("#main ul");
 
@@ -39,7 +38,6 @@ function reload(offset, limit, useJSON) {
         for (var i in places) {
       place = places[i];
 
-      log(place);
       if (useJSON) {
 
     placeHTML = "<pre>"+ JSON.stringify(place, null, 2) +"</pre>";
