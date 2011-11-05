@@ -284,7 +284,8 @@ function itemTwitter(item, tweet)
     if(item.text)
     {
         var hash = crypto.createHash('md5');
-        hash.update(item.text.substr(0,130)); // ignore trimming variations
+        var txt = item.text.replace(/ http\:\/\/\S+$/,""); // cut off appendege links
+        hash.update(txt.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
     // if it's tracking a reply, key it too
@@ -351,6 +352,7 @@ function itemFoursquare(item, checkin)
         item.from.id = 'contact://foursquare/#'+checkin.user.id;
         item.from.name = checkin.user.firstName + " " + checkin.user.lastName;
         item.from.icon = checkin.user.photo;
+        item.froms[item.from.id] = item.ref;
     }
     if(checkin.comments && checkin.comments.items)
     {
@@ -394,6 +396,14 @@ function itemInstagram(item, pic)
         item.from.id = 'contact://instagram/#'+pic.user.id;
         item.from.name = pic.user.full_name;
         item.from.icon = pic.user.profile_picture;
+        item.froms[item.from.id] = item.ref;
+    }
+
+    if(item.text)
+    {
+        var hash = crypto.createHash('md5');
+        hash.update(item.text.substr(0,130)); // ignore trimming variations
+        item.keys['text:'+hash.digest('hex')] = item.ref;
     }
 
     // process responses!
