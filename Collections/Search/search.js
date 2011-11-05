@@ -118,6 +118,8 @@ exports.handlePostEvents = function(req, callback) {
         return callback(error, {});
     }
 
+    
+    
     if (req.body.hasOwnProperty('type')) {
         // FIXME Hack to handle inconsistencies between photo and contacts collection
         if (req.body.type === 'photo') {
