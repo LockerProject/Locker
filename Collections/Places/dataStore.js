@@ -212,7 +212,7 @@ exports.addData = function(svcId, type, allData, callback) {
     var handler = dataHandlers[type] || processShared;
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, cb);
-    },callback);
+    }, callback);
 };
 
 exports.clear = function(callback) {

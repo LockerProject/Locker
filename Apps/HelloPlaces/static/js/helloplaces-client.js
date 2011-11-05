@@ -17,12 +17,6 @@ function reload(offset, limit, useJSON) {
     places = places.sort(function(lh, rh) {
         var rhc = parseInt(rh.timestamp);
         var lhc = parseInt(lh.timestamp);
-        console.log(rhc);
-        console.log(lhc);
-        if (isNaN(rhc) || isNaN(lhc)) {
-            console.dir(rh);
-            console.dir(lh);
-        }
         if (rhc > (Date.now() / 1000)) rhc = rhc / 1000;
         if (lhc > (Date.now() / 1000)) lhc = lhc / 1000;
         return rhc - lhc;

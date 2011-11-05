@@ -128,7 +128,7 @@ CLEngine = function()
 
 CLEngine.prototype.indexType = function(type, source, value, callback) {
     var doc = new this.cl.Document();
-    
+
     if (!this.mappings.hasOwnProperty(type)) {
         callback("No valid mapping for the type: " + type);
         return;
