@@ -284,8 +284,10 @@ function itemTwitter(item, tweet)
     if(item.text)
     {
         var hash = crypto.createHash('md5');
-        var txt = item.text.replace(/ http\:\/\/\S+$/,""); // cut off appendege links
-        hash.update(txt.substr(0,130)); // ignore trimming variations
+        hash.update(item.text.substr(0,130)); // ignore trimming variations
+        item.keys['text:'+hash.digest('hex')] = item.ref;
+        var hash = crypto.createHash('md5');
+        hash.update(item.text.replace(/ http\:\/\/\S+$/,"")); // cut off appendege links that some apps add (like instagram)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
     // if it's tracking a reply, key it too
