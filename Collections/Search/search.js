@@ -105,9 +105,6 @@ exports.handleGetUpdate = function(callback) {
 
 exports.handlePostEvents = function(req, callback) {
     var error;
-
-    console.log('SEARCHER!');
-    console.log(req.body);
     
     if (req.headers['content-type'] !== 'application/json') {
         error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
@@ -121,8 +118,6 @@ exports.handlePostEvents = function(req, callback) {
         return callback(error, {});
     }
 
-    
-    
     if (req.body.hasOwnProperty('type')) {
         // FIXME Hack to handle inconsistencies between photo and contacts collection
         if (req.body.type === 'photo') {

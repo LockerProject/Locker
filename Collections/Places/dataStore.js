@@ -28,7 +28,6 @@ function processFoursquare(svcId, data, cb) {
     
     var me = data.me;
     delete data.me;
-    console.log('4SQ! ');
     
     var placeInfo = {
             id:data.id,
