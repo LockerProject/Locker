@@ -18,7 +18,7 @@ exports.init = function(l, dStore){
 exports.update = function(locker, callback) {
     dataStore.clear(function(){
         callback();
-        locker.providers(['link/facebook', 'status/twitter', 'checkin/foursquare'], function(err, services) {
+        locker.providers(['link/facebook', 'status/twitter', 'checkin/foursquare', 'photo/instagram'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -30,6 +30,9 @@ exports.update = function(locker, callback) {
                 } else if(svc.provides.indexOf('checkin/foursquare') >= 0) {
                     getData("recents/foursquare", svc.id);
                     getData("checkin/foursquare", svc.id);
+                } else if(svc.provides.indexOf('photo/instagram') >= 0) {
+                    getData("photo/instagram", svc.id);
+                    getData("feed/instagram", svc.id);
                 }
             });
         });
@@ -90,6 +93,11 @@ function idrHost(r, data)
         r.hash = data.id;
         r.protocol = 'checkin';
     }
+    if(r.host === 'instagram')
+    {
+        r.hash = data.id;
+        r.protocol = 'photo';
+    }
 }
 
 // take an idr and turn it into a generic network-global key
@@ -119,6 +127,7 @@ exports.processEvent = function(event, callback)
     if(event.type == 'link') return processLink(event, callback);
 
     var idr = getIdr(event.type, event.via, event.obj.data);
+    if(!idr.protocol) return callback("don't understand this data");
     masterMaster(idr, event.obj.data, callback);
 }
 
@@ -126,6 +135,7 @@ function isItMe(idr)
 {
     if(idr.protocol == 'tweet:' && idr.pathname == '/tweets') return true;
     if(idr.protocol == 'checkin:' && idr.pathname == '/checkin') return true;
+    if(idr.protocol == 'photo:' && idr.pathname == '/photo') return true;
     return false;
 }
 
@@ -146,12 +156,13 @@ function masterMaster(idr, data, callback)
     }
     if(idr.protocol == 'post:') itemFacebook(item, data);
     if(idr.protocol == 'checkin:') itemFoursquare(item, data);
+    if(idr.host == 'instagram') itemInstagram(item, data);
     var dup;
     // we're only looking for the first match, if there's more, that's a very odd situation but could be handled here
     async.forEach(Object.keys(item.keys), function(key, cb) {
         dataStore.getItemByKey(key,function(err, doc){
-            dup = doc;
-            cb(true);
+            if(!err && doc) dup = doc;
+            cb();
         });
     }, function (err) {
         if(dup) item = itemMerge(dup, item);
@@ -371,3 +382,42 @@ function itemTwitterRelated(item, relateds)
         });
     });
 }
+
+// extract info from an instagram pic
+function itemInstagram(item, pic)
+{
+    item.pri = 4; // the source
+    item.first = item.last = pic.created_time * 1000;
+    if(pic.caption) item.text = pic.caption.text;
+    if(pic.user)
+    {
+        item.from.id = 'contact://instagram/#'+pic.user.id;
+        item.from.name = pic.user.full_name;
+        item.from.icon = pic.user.profile_picture;
+    }
+
+    // process responses!
+    if(pic.comments && pic.comments.data)
+    {
+        pic.comments.data.forEach(function(comment){
+            var resp = newResponse(item, "comment");
+            resp.at = comment.created_time * 1000;
+            resp.text = comment.text;
+            resp.from.id = 'contact://instagram/#'+comment.from.id;
+            resp.from.name = comment.from.full_name;
+            resp.from.icon = comment.from.profile_picture;
+            item.responses.push(resp);
+        });
+    }
+    if(pic.likes && pic.likes.data)
+    {
+        pic.likes.data.forEach(function(like){
+            var resp = newResponse(item, "up");
+            resp.from.id = 'contact://instagram/#'+like.id;
+            resp.from.name = like.full_name;
+            resp.from.icon = like.profile_picture;
+            item.responses.push(resp);
+        });
+    }
+}
+
