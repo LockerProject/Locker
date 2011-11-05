@@ -19,15 +19,17 @@ var url = require("url");
 var fs = require('fs');
 var lmongoutil = require("lmongoutil");
 
-function processFoursquare(svcId, data, cb) {
+function processFoursquare(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
     if (!data.venue || !data.venue.location || !data.venue.location.lat || !data.venue.location.lng || !data.createdAt) {
         cb("The 4sq data did not have lat/lng or at");
         return;
     }
     
-    var me = data.me;
-    delete data.me;
+    var me = false;
+    if (type === 'checkin/foursquare') {
+        me = true;
+    }
     
     var placeInfo = {
             id:data.id,
@@ -45,11 +47,10 @@ function processFoursquare(svcId, data, cb) {
         placeInfo.fromID = data.user.id;
         placeInfo.from = data.user.firstName + " " + data.user.lastName;
     }
-    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
     saveCommonPlace(placeInfo, cb);
 }
 
-function processTwitter(svcId, data, cb) {
+function processTwitter(svcId, type, data, cb) {
     // Gotta have geo/at at minimum    
     if (!data.created_at) {
         cb("The Twitter data did not have created_at");
@@ -69,8 +70,10 @@ function processTwitter(svcId, data, cb) {
         return;
     }
     
-    var me = data.me;
-    delete data.me;
+    var me = false;
+    if (type === 'tweets/twitter') {
+        me = true;
+    }
     
     var placeInfo = {
             id:data.id,
@@ -85,12 +88,10 @@ function processTwitter(svcId, data, cb) {
             at: new Date(data.created_at).getTime(),
             via: data
         };
-
-    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
     saveCommonPlace(placeInfo, cb);
 }
 
-function processGLatitude(svcId, data, cb) {
+function processGLatitude(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
     if (!data.latitude || !data.longitude) {
         cb("The Latitude data did not have latitude or longitude");
@@ -103,8 +104,10 @@ function processGLatitude(svcId, data, cb) {
         return; 
     }
     
-    var me = data.me;
-    delete data.me;
+    var me = false;
+    if (type === 'location/glatitude') {
+        me = true;
+    }
     
     var placeInfo = {
             id:data.timestampMs,
@@ -116,8 +119,6 @@ function processGLatitude(svcId, data, cb) {
             at: timestamp,
             via: data
         };
-        
-    placeInfo.sources = [{service:svcId, id:data.id, data:data}];
     saveCommonPlace(placeInfo, cb);
 }
 
@@ -201,7 +202,7 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
     var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, callback);
+    handler(eventBody.via, type, data, callback);
 };
 
 exports.addData = function(svcId, type, allData, callback) {
@@ -210,7 +211,7 @@ exports.addData = function(svcId, type, allData, callback) {
     }
     var handler = dataHandlers[type] || processShared;
     async.forEachSeries(allData, function(data, cb) {
-        handler(svcId, data, cb);
+        handler(svcId, type, data, cb);
     },callback);
 };
 

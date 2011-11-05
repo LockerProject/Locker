@@ -33,17 +33,17 @@ exports.gatherPlaces = function(cb) {
                 services.forEach(function(svc) {
                     if(svc.handle === 'places') return;
                     if (svc.provider === 'twitter') {
-                        gatherFromUrl(svc.id, false, "/getCurrent/home_timeline", "timeline/twitter");
-                        gatherFromUrl(svc.id, false, "/getCurrent/timeline", "timeline/twitter");
-                        gatherFromUrl(svc.id, true, "/getCurrent/tweets", "tweets/twitter");
+                        gatherFromUrl(svc.id, "/getCurrent/home_timeline", "timeline/twitter");
+                        gatherFromUrl(svc.id, "/getCurrent/timeline", "timeline/twitter");
+                        gatherFromUrl(svc.id, "/getCurrent/tweets", "tweets/twitter");
                     } else if (svc.provider === 'foursquare') {
-                        gatherFromUrl(svc.id, true, "/getCurrent/places", "checkin/foursquare");
-                        gatherFromUrl(svc.id, false, "/getCurrent/recent", "recents/foursquare");
-                        gatherFromUrl(svc.id, false, "/getCurrent/recents", "recents/foursquare");
-                        gatherFromUrl(svc.id, true, "/getCurrent/checkin", "checkin/foursquare");
-                        gatherFromUrl(svc.id, true, "/getCurrent/checkins", "checkin/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/places", "checkin/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/recent", "recents/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/recents", "recents/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/checkin", "checkin/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/checkins", "checkin/foursquare");
                     } else if (svc.provider === 'glatitude') {
-                        gatherFromUrl(svc.id, true, "/getCurrent/location", "location/glatitude");
+                        gatherFromUrl(svc.id, "/getCurrent/location", "location/glatitude");
                     }
                 });
             });
@@ -51,7 +51,7 @@ exports.gatherPlaces = function(cb) {
     });
 };
 
-function gatherFromUrl(svcId, isThisMe, url, type) {
+function gatherFromUrl(svcId, url, type) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcId + url}, function(err, resp, body) {
         if (err) {
             logger.debug("Error getting basic places from " + svcId);
@@ -60,14 +60,7 @@ function gatherFromUrl(svcId, isThisMe, url, type) {
         try {
             var arr = JSON.parse(body);
             if (!arr) throw("No data");
-            
-            async.forEach(arr, function(i, forEachCb) {
-                i.me = isThisMe;
-                forEachCb();
-            },
-            function(e) {
-                dataStore.addData(svcId, type, arr);
-            });        
+            dataStore.addData(svcId, type, arr);      
         } catch (E) {
             console.error("Error processing places from " + svcId + url + ": " + E);
             console.error('Got back: ' + body);

@@ -115,7 +115,8 @@ app.post('/setViewer', function(req, res) {
 var eventInfo = {
     "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
-    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
+    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "place":{"name":"place", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
 };
 
 // lame way to track if any browser is actually open right now
