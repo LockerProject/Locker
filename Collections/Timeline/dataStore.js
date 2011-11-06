@@ -39,7 +39,7 @@ exports.getAll = function(fields, callback) {
 }
 
 exports.getLastObjectID = function(cbDone) {
-    linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+    itemCol.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
 }
 
 exports.getItemByKey = function(key, callback) {
@@ -111,8 +111,8 @@ exports.addItem = function(item, callback) {
     delete item.responses; // store responses in their own table
     delete item._id; // mongo is miss pissypants
     itemCol.findAndModify({"id":item.id}, [['_id','asc']], {$set:item}, {safe:true, upsert:true, new: true}, function(err, doc){
-        if(err) return callback(err);
-        if(responses) async.forEach(responses, exports.addResponse, function(err){callback(err, doc);}); // orig caller wants saved item back
+        if(err || !responses) return callback(err);
+        async.forEach(responses, exports.addResponse, function(err){callback(err, doc);}); // orig caller wants saved item back
     });
 }
 
@@ -121,7 +121,6 @@ exports.addResponse = function(response, callback) {
     var hash = crypto.createHash('md5');
     hash.update(JSON.stringify(response));
     response.id = hash.digest('hex');
-    logger.debug("addResponse: "+JSON.stringify(response));
     delete response._id; // mongo is miss pissypants
     respCol.findAndModify({"id":response.id}, [['_id','asc']], {$set:response}, {safe:true, upsert:true, new: true}, callback);
 }

@@ -18,20 +18,22 @@ exports.init = function(l, dStore){
 exports.update = function(locker, type, callback) {
     dataStore.clear(function(){
         callback();
-        var types = (type) ? [type] : ['link/facebook', 'status/twitter', 'checkin/foursquare', 'photo/instagram'];
+        var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'recents/foursquare', 'feed/instagram'];
         locker.providers(types, function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
-                if(svc.provides.indexOf('link/facebook') >= 0) {
+                logger.debug("processing "+svc.id);
+                if(svc.provides.indexOf('home/facebook') >= 0) {
                     getData("home/facebook", svc.id);
                 } else if(svc.provides.indexOf('status/twitter') >= 0) {
                     getData("tweets/twitter", svc.id);
                     getData("timeline/twitter", svc.id);
                     getData("mentions/twitter", svc.id);
+                    getData("related/twitter", svc.id);
                 } else if(svc.provides.indexOf('checkin/foursquare') >= 0) {
                     getData("recents/foursquare", svc.id);
                     getData("checkin/foursquare", svc.id);
-                } else if(svc.provides.indexOf('photo/instagram') >= 0) {
+                } else if(svc.provides.indexOf('feed/instagram') >= 0) {
                     getData("photo/instagram", svc.id);
                     getData("feed/instagram", svc.id);
                 }
@@ -110,7 +112,7 @@ function idr2key(idr, data)
     return url.parse(url.format(idr));
 }
 
-// useful to get key from raw data directly directly (like from a via, not from an event)
+// useful to get key from raw data directly (like from a via, not from an event)
 function getKey(network, data)
 {
     var r = {slashes:true};
@@ -170,7 +172,8 @@ function masterMaster(idr, data, callback)
         dataStore.addItem(item, function(err, item){
             if(err) return callback(err);
             // all done processing, very useful to pull out some summary stats now!
-            // feels inefficient to re-query and double-write here, possible optimization, but should be logically safe this way
+            // feels inefficient to re-query and double-write here, but should be logically safe this way
+            // TODO: can optimize and special case the first time!
             item.comments = item.ups = 0;
             dataStore.getResponses({item:item.id}, function(r){
                 if(r.type == "comment") item.comments++;
@@ -180,6 +183,17 @@ function masterMaster(idr, data, callback)
             });
         });
     });
+}
+
+// save a reference
+function itemRef(item, ref, callback)
+{
+    var refs = {};
+    for(var i = 0; i < item.refs.length; i++) refs[item.refs[i]] = true;
+    if(refs[ref]) return callback(undefined, item);
+    refs[ref] = true;
+    item.refs = Object.keys(refs);
+    dataStore.addItem(item, callback);
 }
 
 // intelligently merge two items together and return
@@ -227,35 +241,32 @@ function itemMergeHard(a, b, cb)
 // when a processed link event comes in, check to see if it's a long url that could help us de-dup
 function processLink(event, callback)
 {
-    var encounter;
-    try {
-        encounter = event.obj.data.encounters[0];
-    }catch(E){
-        return callback(E);
-    }
-    // first, look up event via/orig key and see if we've processed it yet, if not (for some reason) ignore
-    var key = url.format(getKey(encounter.network, encounter.via));
-    dataStore.getItemByKey(key,function(err, item){
-        if(err || !item) return callback(err);
-        var u = url.parse(encounter.link);
-        // if foursquare checkin and from a tweet, generate foursquare key and look for it
-        if(u.host == 'foursquare.com' && u.pathname.indexOf('/checkin/') > 0)
-        {
-            var id = path.basename(u.pathname);
-            var k2 = 'checkin://foursquare/#'+id;
-            dataStore.getItemByKey(k2,function(err, item2){
-                if(err || !item2) return callback();
-                // found a dup!
-                itemMergeHard(item, item2);
-            })
-
-        }
-        // if from instagram, generate instagram key and look for it
-    });
-
-    // by here should have the item with the link, and the item for which the link is a target that is a duplicate
-    // merge them, merge any responses, delete the lesser item and it's responses
-    callback();
+    if(!event || !event.obj || !event.obj.data || !event.obj.data.encounters) return callback("no encounter");
+    // process each encounter if there's multiple
+    async.forEach(event.obj.data.encounters, function(encounter, cb){
+        // first, look up event via/orig key and see if we've processed it yet, if not (for some reason) ignore
+        var key = url.format(getKey(encounter.network, encounter.via));
+        dataStore.getItemByKey(key,function(err, item){
+            if(err || !item) return cb(err);
+            // we tag this item with a ref to the link, super handy for cross-collection mashups
+            itemRef(item, "link://links/#"+event.obj.data._id, function(err, item){
+                if(err || !item) return cb(err);
+                var u = url.parse(encounter.link);
+                // if foursquare checkin and from a tweet, generate foursquare key and look for it
+                if(u.host == 'foursquare.com' && u.pathname.indexOf('/checkin/') > 0)
+                {
+                    var id = path.basename(u.pathname);
+                    var k2 = 'checkin://foursquare/#'+id;
+                    dataStore.getItemByKey(k2,function(err, item2){
+                        if(err || !item2) return cb();
+                        // found a dup!
+                        itemMergeHard(item, item2, cb);
+                    });
+                }
+                // instagram uses the same caption everywhere so link-based dedup isn't needed
+            });
+        });
+    }, callback);
 }
 
 // give a bunch of sane defaults
@@ -271,6 +282,18 @@ function newResponse(item, type)
 // extract info from a tweet
 function itemTwitter(item, tweet)
 {
+    // since RTs contain the original, add the response first then process the original!
+    if(tweet.retweeted_status)
+    {
+        var resp = newResponse(item, "up");
+        resp.from.id = "contact://twitter/#"+tweet.user.screen_name;
+        resp.from.name = tweet.user.name;
+        resp.from.icon = tweet.user.profile_image_url;
+        item.responses.push(resp);
+        tweet = tweet.retweeted_status;
+        item.keys['tweet://twitter/#'+tweet.id_str] = item.ref; // tag with the original too
+    }
+
     item.pri = 1; // tweets are the lowest priority?
     if(tweet.created_at) item.first = item.last = new Date(tweet.created_at).getTime();
     if(tweet.text) item.text = tweet.text;
@@ -291,8 +314,21 @@ function itemTwitter(item, tweet)
         hash.update(item.text.replace(/ http\:\/\/\S+$/,"")); // cut off appendege links that some apps add (like instagram)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
-    // if it's tracking a reply, key it too
-    if(tweet.in_reply_to_status_id_str) item.keys['tweet://twitter/#'+tweet.in_reply_to_status_id_str] = item.ref;
+
+    // if this is also a reply
+    if(tweet.in_reply_to_status_id_str)
+    {
+        item.pri = 0; // demoted
+        item.keys['tweet://twitter/#'+tweet.in_reply_to_status_id_str] = item.ref; // hopefully this merges with original if it exists
+        var resp = newResponse(item, "comment");
+        // duplicate stuff into response too
+        resp.text = item.text;
+        resp.at = item.first;
+        resp.from.id = item.from.id;
+        resp.from.name = item.from.name;
+        resp.from.icon = item.from.icon;
+        item.responses.push(resp);
+    }
 }
 
 // extract info from a facebook post

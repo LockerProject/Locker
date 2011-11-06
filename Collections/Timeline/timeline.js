@@ -78,7 +78,6 @@ app.get('/responses/:id', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.getItem(req.param('id'), function(err, doc) { res.send(doc); });
 });
 
