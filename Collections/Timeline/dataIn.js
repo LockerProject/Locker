@@ -15,10 +15,11 @@ exports.init = function(l, dStore){
 }
 
 // manually walk and reindex all possible link sources
-exports.update = function(locker, callback) {
+exports.update = function(locker, type, callback) {
     dataStore.clear(function(){
         callback();
-        locker.providers(['link/facebook', 'status/twitter', 'checkin/foursquare', 'photo/instagram'], function(err, services) {
+        var types = (type) ? [type] : ['link/facebook', 'status/twitter', 'checkin/foursquare', 'photo/instagram'];
+        locker.providers(types, function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {

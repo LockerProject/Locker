@@ -9,6 +9,8 @@
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var crypto = require("crypto");
 var async = require('async');
+var lmongoutil = require("lmongoutil");
+
 
 // in the future we'll probably need a visitCollection too
 var itemCol, respCol;
@@ -32,6 +34,14 @@ exports.getTotalResponses = function(callback) {
     respColl.count(callback);
 }
 
+exports.getAll = function(fields, callback) {
+    itemCol.find({}, fields, callback);
+}
+
+exports.getLastObjectID = function(cbDone) {
+    linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
+}
+
 exports.getItemByKey = function(key, callback) {
     var item;
     var kname = "keys."+key;
@@ -49,16 +59,25 @@ exports.getItem = function(id, callback) {
 exports.getResponses = function(arg, cbEach, cbDone) {
     var f = (arg.item)?{item:arg.item}:{};
     delete arg.item;
+    if(arg.from) f["from.id"] = arg.from;
     findWrap(f,arg,respCol,cbEach,cbDone);
+}
+
+exports.getSince = function(arg, cbEach, cbDone) {
+    if(!arg || !arg.id) return cbDone("no id given");
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(arg.id)}}, {sort:{_id:-1}}, linkCollection, cbEach, cbDone);
 }
 
 // arg takes sort/limit/offset/find
 exports.getItems = function(arg, cbEach, cbDone) {
     var f = {};
     try {
-        f = JSON.parse(arg.find); // optional, can bomb out
-    }catch(E){}
+        if(arg.find) f = JSON.parse(arg.find); // optional, can bomb out
+    }catch(E){
+        return cbDone("couldn't parse find");
+    }
     delete arg.find;
+    if(arg.from) f["froms."+arg.from] = {$exists:true};
     findWrap(f,arg,itemCol,cbEach,cbDone);
 }
 

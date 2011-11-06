@@ -14,7 +14,7 @@ var fs = require('fs'),
     request = require('request'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
-    
+
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw items and responses
 
@@ -26,32 +26,66 @@ var app = express.createServer(connect.bodyParser());
 app.set('views', __dirname);
 
 app.get('/', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/html'
-    });
-    dataStore.getTotalItems(function(err, countInfo) {
-        res.write('<html><p>Found '+ countInfo +' items</p></html>');
-        res.end();
+    var fields = {};
+    if (req.query.fields) {
+        try {
+            fields = JSON.parse(req.query.fields);
+        } catch(E) {}
+    }
+    dataStore.getAll(fields, function(err, cursor) {
+        if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
+        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
+        if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
+        var ndx = {};
+        cursor.toArray(function(err, items) {
+            if(req.query["all"] || !req.query.full) return res.send(items); // default not include responses, forced if all
+            items.forEach(function(item){ ndx[item.id] = item; item.responses = []; }); // build index
+            var arg = {"item":{$in: Object.keys(ndx)}};
+            arg.fields = fields;
+            dataStore.getResponses(arg, function(response) {
+                ndx[response.item].responses.push(response);
+            }, function() {
+                res.send(items);
+            });
+        });
     });
 });
 
 app.get('/state', function(req, res) {
     dataStore.getTotalItems(function(err, countInfo) {
         if(err) return res.send(err, 500);
-        var updated = new Date().getTime();
-        try {
-            var js = JSON.parse(fs.readFileSync('state.json'));
-            if(js && js.updated) updated = js.updated;
-        } catch(E) {}
-        res.send({ready:1, count:countInfo, updated:updated});
+        dataStore.getLastObjectID(function(err, lastObject) {
+            if(err) return res.send(err, 500);
+            var objId = "000000000000000000000000";
+            if (lastObject) objId = lastObject._id.toHexString();
+            var updated = new Date().getTime();
+            try {
+                var js = JSON.parse(fs.readFileSync('state.json'));
+                if(js && js.updated) updated = js.updated;
+            } catch(E) {}
+            res.send({ready:1, count:countInfo, updated:updated, lastId:objId});
+        });
     });
 });
 
+// expose way to get the list of responses from an item id
+app.get('/responses/:id', function(req, res) {
+    var results = [];
+    dataStore.getResponses({item:req.param('id')}, function(item){results.push(item);},function(err){
+        if(err) return res.send(err,500);
+        res.send(results);
+    });
+});
+
+app.get('/id/:id', function(req, res, next) {
+    if (req.param('id').length != 24) return next(req, res, next);
+    dataStore.getItem(req.param('id'), function(err, doc) { res.send(doc); });
+});
 
 app.get('/update', function(req, res) {
-    dataIn.update(locker, function(){
+    dataIn.update(locker, req.query.type, function(){
         res.writeHead(200);
-        res.end('Extra mince!');        
+        res.end('Extra mince!');
     });
 });
 
@@ -77,38 +111,12 @@ function genericApi(name,f)
             if(err) return res.send(err,500);
             res.send(results);
         });
-    });   
+    });
 }
 
-// expose way to get items and responses in one
-app.get('/getItemsFull', function(req, res) {
-    var fullResults = [];
-    var results = [];
-    var options = {sort:{"at":-1}};
-    if (req.query.limit) {
-        options.limit = parseInt(req.query.limit);
-    }else{
-        options.limit = 100;
-    }
-    if (req.query.offset) {
-        options.offset = parseInt(req.query.offset);
-    }
-    dataStore.getItems(options, function(item) { results.push(item); }, function(err) { 
-        async.forEach(results, function(item, callback) {
-            item.responses = [];
-            dataStore.getResponses({"item":item.idr}, function(response) {
-                item.responses.push(response);
-            }, function() {
-                fullResults.push(item);
-                callback();
-            });
-        }, function() {
-            res.send(results);
-        });
-    });
-});
 genericApi('/getItems', dataStore.getItems);
-genericApi('/getResponses',dataStore.getResponses);
+genericApi('/getResponses', dataStore.getResponses);
+genericApi('/getSince', dataStore.getSince);
 
 // Process the startup JSON object
 process.stdin.resume();
@@ -121,7 +129,7 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
+
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
         dataStore.init(mongo.collections.item,mongo.collections.response);
