@@ -396,7 +396,7 @@
             },
             {
                 "name": "terms",
-                "description": "The actual query to be performed.<h3>Syntax</h3>The syntax uses a JSON like notation that always begins as an array.  The fields can be checked by writing them in a json notation of field:value.  The field name can use dot notation to access objects that are deeper than the top level.  The value can be a quoted string, a number, or "true"/"false" (without quotes).  Strings may be quoted with either &quot; or &apos;.  Multiple terms can be checked by separating them with a comma just like a JSON array:  <code>[field:value, field2:value2]</code>.  Multiple terms are treated as an AND statement, in order to preform an OR search the terms that will be ORed are put in parenthesis and separated by OR statements.  For example:  <code>[(field:value OR field2:value)]</code>.  AND is also available when necessary, following the same rules as the OR operator.The value can also contain comparison operators.  Currently supported operators are:<ul><li><span class='operator'>+</span> greater than</li><li><span class='operator'>+.</span> greater than or equal</li><li><span class='operator'>-</span> less than</li><li><span class='operator'>-.</span> less than or equal</li><li><span class='operator'>!=</span> not equal</li></ul>For example: <code>[field:10+.]</code> This searches for fields with a value of 10 or greater.",
+                "description": "The actual query to be performed.<h3>Syntax</h3>The syntax uses a JSON like notation that always begins as an array.  The fields can be checked by writing them in a json notation of field:value.  The field name can use dot notation to access objects that are deeper than the top level.  The value can be a quoted string, a number, or 'true'/'false' (without quotes).  Strings may be quoted with either &quot; or &apos;.  Multiple terms can be checked by separating them with a comma just like a JSON array:  <code>[field:value, field2:value2]</code>.  Multiple terms are treated as an AND statement, in order to preform an OR search the terms that will be ORed are put in parenthesis and separated by OR statements.  For example:  <code>[(field:value OR field2:value)]</code>.  AND is also available when necessary, following the same rules as the OR operator.The value can also contain comparison operators.  Currently supported operators are:<ul><li><span class='operator'>+</span> greater than</li><li><span class='operator'>+.</span> greater than or equal</li><li><span class='operator'>-</span> less than</li><li><span class='operator'>-.</span> less than or equal</li><li><span class='operator'>!=</span> not equal</li></ul>For example: <code>[field:10+.]</code> This searches for fields with a value of 10 or greater.",
                 "dataType": "string",
                 "paramType": "query"
             },
@@ -414,7 +414,7 @@
             },
             {
                 "name": "sort",
-                "description": "The field to sort the results on.  Uses a mongo style syntax of <code>'{"sortField":1}'</code>.  Note that it must be quoted.",
+                "description": "The field to sort the results on.  Uses a mongo style syntax of <code>'{&quot;sortField&quot;:1}'</code>.  Note that it must be quoted.",
                 "dataType": "string",
                 "paramType": "query"
             },
