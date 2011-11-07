@@ -142,13 +142,13 @@ function saveCommonPlace(placeInfo, cb) {
         placeInfo.id = hash;
     }
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:placeInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
-        if (!err) {
-            updateState();
-            var eventObj = {source: "places", type: "place", data:doc};
-            locker.event("place", eventObj);
-            return cb(undefined, eventObj);
+        if (err) {
+            return cb(err);
         }
-        cb(err);
+        updateState();
+        var eventObj = {source: "places", type: "place", data:doc};
+        locker.event("place", eventObj);
+        return cb(undefined, eventObj);
     });
 }
 
