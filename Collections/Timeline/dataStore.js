@@ -18,6 +18,7 @@ var itemCol, respCol;
 exports.init = function(iCollection, rCollection) {
     itemCol = iCollection;
     itemCol.ensureIndex({"id":1},{unique:true, background:true},function() {});
+    itemCol.ensureIndex({"keys":1},{background:true},function() {});
     respCol = rCollection;
     respCol.ensureIndex({"id":1},{unique:true, background:true},function() {});
     respCol.ensureIndex({"item":1},{background:true},function() {});

@@ -29,32 +29,38 @@ exports.update = function(locker, type, callback) {
         var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'recents/foursquare', 'feed/instagram'];
         locker.providers(types, function(err, services) {
             if (!services) return;
-            services.forEach(function(svc) {
+            async.forEachSeries(services, function(svc, cb) {
                 logger.debug("processing "+svc.id);
                 if(svc.provides.indexOf('home/facebook') >= 0) {
-                    getData("home/facebook", svc.id);
+                    getData("home/facebook", svc.id, cb);
                 } else if(svc.provides.indexOf('tweets/twitter') >= 0) {
-                    getData("tweets/twitter", svc.id);
-                    getData("timeline/twitter", svc.id);
-                    getData("mentions/twitter", svc.id);
-                    getData("related/twitter", svc.id);
+                    async.forEachSeries(["tweets/twitter", "timeline/twitter", "mentions/twitter", "related/twitter"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
                 } else if(svc.provides.indexOf('checkin/foursquare') >= 0) {
-                    getData("recents/foursquare", svc.id);
-                    getData("checkin/foursquare", svc.id);
+                    async.forEachSeries(["recents/foursquare", "checkin/foursquare"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
                 } else if(svc.provides.indexOf('feed/instagram') >= 0) {
-                    getData("photo/instagram", svc.id);
-                    getData("feed/instagram", svc.id);
+                    async.forEachSeries(["photo/instagram", "feed/instagram"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
                 }
+            }, function(err){
+                // process links too
+                request.get({uri:locker.lockerBase+'/Me/links/?full=true&limit=100', json:true}, function(err, resp, links){
+                    if(err || !links) return;
+                    async.forEachSeries(links, function(link, cb){
+                        var evt = {obj:{data:link}};
+                        processLink(evt, cb);
+                    }, function(){
+                        logger.debug("done with update");
+                    });
+                })
             });
         });
     });
 }
 
 // go fetch data from sources to bulk process
-function getData(type, svcId)
+function getData(type, svcId, callback)
 {
     var subtype = type.substr(0, type.indexOf('/'));
-    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype;
+    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100";
     request.get({uri:lurl, json:true}, function(err, resp, arr) {
         if(err || !arr) return;
         async.forEachSeries(arr,function(a,cb){
@@ -62,6 +68,7 @@ function getData(type, svcId)
             masterMaster(idr, a, cb);
         },function(err){
             logger.debug("processed "+arr.length+" items from "+lurl+" err("+err+")");
+            callback(err);
         });
     });
 }
@@ -177,6 +184,7 @@ function masterMaster(idr, data, callback)
             cb();
         });
     }, function (err) {
+        if(!item.pri && !dup) return callback(); // some new items, like twitter related, are only for merging, shouldn't happen but if it does we may need to queue/stash or something
         if(dup) item = itemMerge(dup, item);
         dataStore.addItem(item, function(err, item){
             if(err) return callback(err);
@@ -291,6 +299,8 @@ function newResponse(item, type)
 // extract info from a tweet
 function itemTwitter(item, tweet)
 {
+    item.pri = 1; // tweets are the lowest priority?
+
     // since RTs contain the original, add the response first then process the original!
     if(tweet.retweeted_status)
     {
@@ -303,7 +313,6 @@ function itemTwitter(item, tweet)
         item.keys['tweet://twitter/#'+tweet.id_str] = item.ref; // tag with the original too
     }
 
-    item.pri = 1; // tweets are the lowest priority?
     if(tweet.created_at) item.first = item.last = new Date(tweet.created_at).getTime();
     if(tweet.text) item.text = tweet.text;
     if(tweet.user)
@@ -396,7 +405,13 @@ function itemFoursquare(item, checkin)
     item.pri = 3; // ideally a checkin should source here as the best
     item.first = item.last = checkin.createdAt * 1000;
     if(checkin.venue) item.text = "Checked in at " + checkin.venue.name;
-    if(checkin.shout) item.text = checkin.shout;
+    if(checkin.shout)
+    {
+        item.text = checkin.shout;
+        var hash = crypto.createHash('md5');
+        hash.update(item.text.substr(0,130)); // ignore trimming variations
+        item.keys['text:'+hash.digest('hex')] = item.ref;
+    }
     var profile = (checkin.user) ? checkin.user : profiles["foursquare"];
     item.from.id = 'contact://foursquare/#'+profile.id;
     item.from.name = profile.firstName + " " + profile.lastName;
