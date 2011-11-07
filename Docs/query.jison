@@ -17,8 +17,7 @@ var grammar = {
       ["[0-9]+", "return 'NUMBER';"],
       ["\\[", "return '['"],
       ["\\]", "return ']'"],
-      ["(?:[a-eg-su-zA-Z]|t(?!rue)|f(?!alse))[a-zA-Z]*", "return 'KEY';"],
-      ["(?:true|false)", "return 'BOOLEAN';"],
+      ["[a-zA-z]+", "return 'KEY';" ],
       ["\\?", "return '?';" ],
       ["=", "return '=';" ],
       [",", "return ',';" ],
@@ -53,7 +52,6 @@ var grammar = {
     "literal" : [
         ["NUMBER", "$$ = Number(yytext);"],
         ["STRING", "$$ = $1;"],
-        ["BOOLEAN", "$$ = (yytext == 'true');"],
         ["literal literal_op", "$$ = [$2, $1];"]
     ],
     "member" : [

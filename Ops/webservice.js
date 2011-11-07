@@ -85,11 +85,22 @@ locker.get("/providers", function(req, res) {
     res.writeHead(200, {"Content-Type":"application/json"});
     var services = serviceManager.providers(req.param('types').split(','));
     var synclets = syncManager.providers(req.param('types').split(','));
+    var allServices = [];
+    var copyServiceInfo = function(service) {
+        var svcCopy = {};
+        lutil.extend(svcCopy, service);
+        delete svcCopy.auth;
+        allServices.push(svcCopy);
+    };
+    services.forEach(copyServiceInfo);
+    synclets.forEach(copyServiceInfo);
+    /*
     lutil.addAll(services, synclets);
     for (var i = 0; i < services.length; i++) {
         delete services[i].auth;
     }
-    res.end(JSON.stringify(services));
+    */
+    res.end(JSON.stringify(allServices));
 });
 
 locker.get("/provides", function(req, res) {

@@ -211,5 +211,4 @@ var finished = function(exitCode, signal) {
         console.dir("vows process exited abnormally (code="+exitCode+", signal="+signal+")");
     }
     lockerd.shutdown(exitCode);
-    process.exit(exitCode);
 }
