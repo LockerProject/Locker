@@ -15,9 +15,12 @@ var IJOD = require('../ijod').IJOD
   , colls
   , mongoIDs = {}
   ;
+var syncManager = require('lsyncmanager');
+var synclets;
 
 exports.init = function(callback) {
     if (mongo) return callback();
+    synclets = syncManager.synclets();
     lmongo.init('synclets', [], function(_mongo) {
         mongo = _mongo;
         colls = mongo.collections.synclets;
@@ -98,8 +101,16 @@ exports.getAllCurrent = function(type, callback, options) {
 exports.getCurrent = function(type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
     var m = getMongo(type, callback);
-    var query = {_id: mongo.db.bson_serializer.ObjectID(id)};
-    m.findOne(query, callback);
+    var or = [{_id: mongo.db.bson_serializer.ObjectID(id)}];
+    var parts = type.split("_");
+    var idname = "id";
+    // this is some crazy shit, serious refactoring needed someday
+    if(parts.length == 2 && synclets && synclets[parts[0]] && synclets[parts[0]].mongoId && synclets[parts[0]].mongoId[parts[1]+'s']) idname = synclets[parts[0]].mongoId[parts[1]+'s'];
+    var id2 = {};
+    id2[idname] = id;
+    or.push(id2);
+    console.error("querying "+JSON.stringify(or));
+    m.findOne({$or: or}, callback);
 }
 
 function setCurrent(type, object, callback) {
