@@ -23,7 +23,8 @@ exports.init = function(iCollection, rCollection) {
     respCol.ensureIndex({"item":1},{background:true},function() {});
 }
 
-exports.clear = function(callback) {
+exports.clear = function(flag, callback) {
+    if(flag) return callback();
     itemCol.drop(function(){respCol.drop(callback)});
 }
 
@@ -91,7 +92,7 @@ function findWrap(a,b,c,cbEach,cbDone){
         if (item != null) {
             cbEach(item);
         } else {
-            cbDone();
+            cbDone(err);
         }
     });
 }

@@ -14,6 +14,7 @@ var fs = require('fs'),
     request = require('request'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
+var url = require("url");
 
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw items and responses
@@ -80,8 +81,18 @@ app.get('/responses/:id', function(req, res) {
     });
 });
 
-app.get('/id/:id', function(req, res, next) {
-    dataStore.getItem(req.param('id'), function(err, doc) { res.send(doc); });
+app.get('/id/:id', function(req, res) {
+    dataStore.getItem(req.param('id'), function(err, doc) { return (err != null || !doc) ? res.send(err, 500) : res.send(doc); });
+});
+
+app.get('/ref', function(req, res) {
+    var idr = url.parse(req.query.id);
+    if(!idr || !idr.hash) return res.send("missing or invalid id",500);
+    var lurl = locker.lockerBase + '/Me/' + idr.host + idr.pathname + '/id/' + idr.hash.substr(1);
+    request.get({url:lurl, json:true}, function(err, res2, body){
+        if(err || !body) return res.send(err, 500);
+        res.send(body);
+    });
 });
 
 app.get('/update', function(req, res) {

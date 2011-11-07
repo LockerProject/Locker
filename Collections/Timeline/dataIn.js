@@ -16,7 +16,7 @@ exports.init = function(l, dStore, callback){
     async.forEach(["foursquare", "instagram"], function(svc, cb){
         var lurl = locker.lockerBase + '/Me/' + svc + '/getCurrent/profile';
         request.get({uri:lurl, json:true}, function(err, resp, arr){
-            if(arr && arr.length > 0) profiles[svc] = arr[1];
+            if(arr && arr.length > 0) profiles[svc] = arr[0];
             return cb();
         });
     }, callback);
@@ -24,7 +24,7 @@ exports.init = function(l, dStore, callback){
 
 // manually walk and reindex all possible link sources
 exports.update = function(locker, type, callback) {
-    dataStore.clear(function(){
+    dataStore.clear(type, function(){
         callback();
         var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'recents/foursquare', 'feed/instagram'];
         locker.providers(types, function(err, services) {
@@ -33,7 +33,7 @@ exports.update = function(locker, type, callback) {
                 logger.debug("processing "+svc.id);
                 if(svc.provides.indexOf('home/facebook') >= 0) {
                     getData("home/facebook", svc.id);
-                } else if(svc.provides.indexOf('status/twitter') >= 0) {
+                } else if(svc.provides.indexOf('tweets/twitter') >= 0) {
                     getData("tweets/twitter", svc.id);
                     getData("timeline/twitter", svc.id);
                     getData("mentions/twitter", svc.id);
@@ -56,11 +56,12 @@ function getData(type, svcId)
     var subtype = type.substr(0, type.indexOf('/'));
     var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype;
     request.get({uri:lurl, json:true}, function(err, resp, arr) {
+        if(err || !arr) return;
         async.forEachSeries(arr,function(a,cb){
             var idr = getIdr(type, svcId, a);
             masterMaster(idr, a, cb);
         },function(err){
-            logger.debug("processed "+arr.length+" items from "+lurl+" "+(err)?err:"");
+            logger.debug("processed "+arr.length+" items from "+lurl+" err("+err+")");
         });
     });
 }
@@ -207,7 +208,7 @@ function itemRef(item, ref, callback)
 // intelligently merge two items together and return
 function itemMerge(older, newer)
 {
-    logger.debug("MERGE\t"+JSON.stringify(older)+'\t'+JSON.stringify(newer));
+//    logger.debug("MERGE\t"+JSON.stringify(older)+'\t'+JSON.stringify(newer));
     if(newer.pri > older.pri)
     { // replace top level summary stuff if newer is deemed better
         older.ref = newer.ref;
@@ -450,6 +451,8 @@ function itemInstagram(item, pic)
         var hash = crypto.createHash('md5');
         hash.update(item.text.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
+    }else{
+        item.text = "New Picture";
     }
 
     // process responses!
