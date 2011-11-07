@@ -396,6 +396,7 @@ function itemFoursquare(item, checkin)
     item.pri = 3; // ideally a checkin should source here as the best
     item.first = item.last = checkin.createdAt * 1000;
     if(checkin.venue) item.text = "Checked in at " + checkin.venue.name;
+    if(checkin.shout) item.text = checkin.shout;
     var profile = (checkin.user) ? checkin.user : profiles["foursquare"];
     item.from.id = 'contact://foursquare/#'+profile.id;
     item.from.name = profile.firstName + " " + profile.lastName;
