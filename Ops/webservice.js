@@ -85,10 +85,11 @@ locker.get("/providers", function(req, res) {
     res.writeHead(200, {"Content-Type":"application/json"});
     var services = serviceManager.providers(req.param('types').split(','));
     var synclets = syncManager.providers(req.param('types').split(','));
-    allServices = [];
+    var allServices = [];
     var copyServiceInfo = function(service) {
         var svcCopy = {};
         lutil.extend(svcCopy, service);
+        delete svcCopy.auth;
         allServices.push(svcCopy);
     };
     services.forEach(copyServiceInfo);
