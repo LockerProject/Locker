@@ -60,7 +60,7 @@ function gatherFromUrl(svcId, url, type) {
         try {
             var arr = JSON.parse(body);
             if (!arr) throw("No data");
-            dataStore.addData(svcId, type, arr);      
+            dataStore.addData(svcId, type, arr);
         } catch (E) {
             console.error("Error processing places from " + svcId + url + ": " + E);
             console.error('Got back: ' + body);

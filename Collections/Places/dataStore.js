@@ -25,12 +25,12 @@ function processFoursquare(svcId, type, data, cb) {
         cb("The 4sq data did not have lat/lng or at");
         return;
     }
-    
+
     var me = false;
     if (type === 'checkin/foursquare') {
         me = true;
     }
-    
+
     var placeInfo = {
             id:data.id,
             me:me,
@@ -39,7 +39,8 @@ function processFoursquare(svcId, type, data, cb) {
             stream: false,
             lat: data.venue.location.lat,
             lng: data.venue.location.lng,
-            at: data.createdAt * 1000
+            at: data.createdAt * 1000,
+            via: '/Me/foursquare/' + data.type + '/id/'+data.id
         };
     // "checkins" are from yourself, kinda problematic to deal with here?
     if (data.user) {
@@ -50,12 +51,12 @@ function processFoursquare(svcId, type, data, cb) {
 }
 
 function processTwitter(svcId, type, data, cb) {
-    // Gotta have geo/at at minimum    
+    // Gotta have geo/at at minimum
     if (!data.created_at) {
         cb("The Twitter data did not have created_at");
         return;
     }
-    
+
     var ll = firstLL(data.geo);
     if (!ll) {
         ll = firstLL(data.place, true);
@@ -65,15 +66,15 @@ function processTwitter(svcId, type, data, cb) {
     }
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
-        cb(); 
+        cb();
         return;
     }
-    
+
     var me = false;
     if (type === 'tweets/twitter') {
         me = true;
     }
-    
+
     var placeInfo = {
             id:data.id_str,
             me:me,
@@ -84,7 +85,8 @@ function processTwitter(svcId, type, data, cb) {
             text: data.text,
             from: (data.user)?data.user.name:"",
             fromID: (data.user)?data.user.id:"",
-            at: new Date(data.created_at).getTime()
+            at: new Date(data.created_at).getTime(),
+            via: '/Me/twitter/' + data.type + '/id/'+data.id
         };
     saveCommonPlace(placeInfo, cb);
 }
@@ -95,18 +97,18 @@ function processGLatitude(svcId, type, data, cb) {
         cb("The Latitude data did not have latitude or longitude");
         return;
     }
-    
+
     var timestamp = parseInt(data.timestampMs, 10);
     if (isNaN(timestamp)) {
         cb("The Latitude data did not have a valid timestamp");
-        return; 
+        return;
     }
-    
+
     var me = false;
     if (type === 'location/glatitude') {
         me = true;
     }
-    
+
     var placeInfo = {
             id:data.timestampMs,
             me:me,
@@ -114,7 +116,8 @@ function processGLatitude(svcId, type, data, cb) {
             stream: true,
             lat: data.latitude,
             lng: data.longitude,
-            at: timestamp
+            at: timestamp,
+            via: '/Me/twitter/' + data.type + '/id/'+data.id
         };
     saveCommonPlace(placeInfo, cb);
 }
@@ -134,7 +137,7 @@ function updateState() {
 function saveCommonPlace(placeInfo, cb) {
     var hash = createId(placeInfo.lat+':'+placeInfo.lng+':'+placeInfo.at);
     var query = [{id:hash}];
-    
+
     if (!placeInfo.id) {
         placeInfo.id = hash;
     }
@@ -251,7 +254,7 @@ function findWrap(a,b,c,cbEach,cbDone) {
 
 // hack to inspect until we find any [123,456]
 function firstLL(o,reversed) {
-    if (Array.isArray(o) && o.length == 2 && 
+    if (Array.isArray(o) && o.length == 2 &&
         typeof o[0] == 'number' && typeof o[1] == 'number') {
         return (reversed) ? [o[1],o[0]] : o; // reverse them optionally
     }
