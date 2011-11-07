@@ -309,6 +309,12 @@ function proxyRequest(method, req, res) {
     if (syncManager.isInstalled(id)) {
         var u = 'http://' + lconfig.lockerHost + ':' + lconfig.lockerPort + '/' + path.join('synclets', id, ppath);
         return request({method:method, uri:u, headers:req.headers, encoding:'binary'}, function(err, res2, body){
+            if(err)
+            {
+                res.writeHead(500);
+                res.end("failed to get "+id+" "+ppath);
+                return;
+            }
             res.writeHead(res2.statusCode, res2.headers);
             res.write(body, "binary");
             res.end();
