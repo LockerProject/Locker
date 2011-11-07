@@ -40,7 +40,7 @@ function processFoursquare(svcId, type, data, cb) {
             lat: data.venue.location.lat,
             lng: data.venue.location.lng,
             at: data.createdAt * 1000,
-            via: '/Me/foursquare/' + data.type + '/id/'+data.id
+            via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
         };
     // "checkins" are from yourself, kinda problematic to deal with here?
     if (data.user) {
@@ -86,7 +86,7 @@ function processTwitter(svcId, type, data, cb) {
             from: (data.user)?data.user.name:"",
             fromID: (data.user)?data.user.id:"",
             at: new Date(data.created_at).getTime(),
-            via: '/Me/twitter/' + data.type + '/id/'+data.id
+            via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
         };
     saveCommonPlace(placeInfo, cb);
 }
@@ -117,7 +117,7 @@ function processGLatitude(svcId, type, data, cb) {
             lat: data.latitude,
             lng: data.longitude,
             at: timestamp,
-            via: '/Me/twitter/' + data.type + '/id/'+data.id
+            via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
         };
     saveCommonPlace(placeInfo, cb);
 }
