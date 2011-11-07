@@ -66,6 +66,18 @@ vows.describe("Query System").addBatch({
             assert.deepEqual(mongoQuery, {collection:"photos", fields:{'_id' : 1, 'title' : 1}, skip: 0, query: {}});
         }
     },
+    "Key may have _" : {
+        topic:lpquery.parse("/getPhotos?terms=[term_key:'test']"),
+        "generates a valid parse tree":function(topic) {
+            assert.equal(topic[0], "Photos");
+            assert.isObject(topic[1]);
+            assert.isArray(topic[1]["terms"]);
+            assert.isArray(topic[1]["terms"][0]);
+            assert.equal(topic[1]["terms"][0][0], "keyValue");
+            assert.equal(topic[1]["terms"][0][1], "term_key");
+            assert.equal(topic[1]["terms"][0][2], "test");
+        }
+    },
     "Advanced query operators" : {
         topic:lpquery.parse("/getPhotos?terms=[gt:21+, gte:22+., lt:20-, lte:19-., (key:1 OR key:2)]&limit=10"),
         "generate a valid parse tree":function(topic) {
