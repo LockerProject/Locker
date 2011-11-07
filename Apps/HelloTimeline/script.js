@@ -21,7 +21,7 @@ function loadPhotos(){
         for(var i in data)
         {
             var p = data[i];
-            html += "<span title='"+JSON.stringify(p,null,'\t')+"'>" + p.text + '</span><hr>';
+            html += "("+p.refs.length+":"+p.comments+":"+p.ups+") <i>"+p.from.name+"</i>: <span title='"+JSON.stringify(p,null,'\t')+"'>" + p.text + '</span> <a href="'+baseUrl+'/Me/timeline/ref?id='+escape(p.ref)+'">.js</a><hr>';
         }
         $("#test").append(html);
     });
