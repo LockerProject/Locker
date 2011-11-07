@@ -203,7 +203,7 @@ function search() {
     $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {
         processResults('tweets', resXform(results), q);
     });
-    $.get(baseURL, {q: q + star, type: 'place/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'place*', limit: 3}, function(results) {
         processResults('places', resXform(results), q);
     });
     $.get('/Me/links/search', {q: q + star, limit: 3}, function(otherData) {

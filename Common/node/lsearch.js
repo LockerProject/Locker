@@ -94,11 +94,9 @@ CLEngine = function()
                 "name":"name"
             }
         },
-        "place/full" : {
+        "place" : {
             "_id":"_id",
-            "title":"title",
-            "lat":"lat",
-            "lng":"lng"
+            "title":"title"
         },
     };
 

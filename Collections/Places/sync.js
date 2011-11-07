@@ -26,6 +26,7 @@ exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
 exports.gatherPlaces = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
+        cb(); // synchro delete, async/background reindex
         locker.providers(['place','checkin','tweets'], function(err, services) {
             if (!services) return;
             async.forEach(services, function(svc, forEachCb) {
@@ -45,8 +46,7 @@ exports.gatherPlaces = function(cb) {
                 }
             },
             function(err) {
-                request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place/full'}, function() {});
-                cb(); // synchro delete and gather, async/background reindex
+                request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, function() {});
             });
         });
     });

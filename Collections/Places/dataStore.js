@@ -39,8 +39,7 @@ function processFoursquare(svcId, type, data, cb) {
             stream: false,
             lat: data.venue.location.lat,
             lng: data.venue.location.lng,
-            at: data.createdAt * 1000,
-            via: data
+            at: data.createdAt * 1000
         };
     // "checkins" are from yourself, kinda problematic to deal with here?
     if (data.user) {
@@ -85,8 +84,7 @@ function processTwitter(svcId, type, data, cb) {
             text: data.text,
             from: (data.user)?data.user.name:"",
             fromID: (data.user)?data.user.id:"",
-            at: new Date(data.created_at).getTime(),
-            via: data
+            at: new Date(data.created_at).getTime()
         };
     saveCommonPlace(placeInfo, cb);
 }
@@ -116,8 +114,7 @@ function processGLatitude(svcId, type, data, cb) {
             stream: true,
             lat: data.latitude,
             lng: data.longitude,
-            at: timestamp,
-            via: data
+            at: timestamp
         };
     saveCommonPlace(placeInfo, cb);
 }
