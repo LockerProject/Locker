@@ -95,13 +95,16 @@ exports.queryCurrent = function(type, query, options, callback) {
 exports.getAllCurrent = function(type, callback, options) {
     options = options || {};
     var m = getMongo(type, callback);
-    m.find({}, options).toArray(callback);
+    m.find({}, options).sort({_id:-1}).toArray(callback);
 }
 
 exports.getCurrent = function(type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
     var m = getMongo(type, callback);
-    var or = [{_id: mongo.db.bson_serializer.ObjectID(id)}];
+    var or = [];
+    try {
+        or.push({_id: mongo.db.bson_serializer.ObjectID(id)});
+    }catch(E){}
     var parts = type.split("_");
     var idname = "id";
     // this is some crazy shit, serious refactoring needed someday

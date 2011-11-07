@@ -81,7 +81,7 @@ module.exports = function(app) {
                     res.end(JSON.stringify(doc));
                 } else {
                     res.writeHead(404);
-                    res.end();
+                    res.end("not found");
                 }
             });
         });
