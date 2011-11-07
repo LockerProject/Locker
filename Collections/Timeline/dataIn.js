@@ -6,12 +6,20 @@ var url = require('url');
 var crypto = require("crypto");
 var path = require('path');
 
-var dataStore, locker;
+var dataStore, locker, profiles = {};
 
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore){
+exports.init = function(l, dStore, callback){
     dataStore = dStore;
     locker = l;
+    // load our known profiles, require for foursquare checkins, and to tell "me" flag on everything
+    async.forEach(["foursquare", "instagram"], function(svc, cb){
+        var lurl = locker.lockerBase + '/Me/' + svc + '/getCurrent/profile';
+        request.get({uri:lurl, json:true}, function(err, resp, arr){
+            if(arr && arr.length > 0) profiles[svc] = arr[1];
+            return cb();
+        });
+    }, callback);
 }
 
 // manually walk and reindex all possible link sources
@@ -359,6 +367,7 @@ function itemFacebook(item, post)
     if(post.comments && post.comments.data)
     {
         post.comments.data.forEach(function(comment){
+            if(!comment.from) return; // anonymous comments skipped
             var resp = newResponse(item, "comment");
             resp.at = comment.created_time * 1000;
             resp.text = comment.message;
@@ -386,13 +395,11 @@ function itemFoursquare(item, checkin)
     item.pri = 3; // ideally a checkin should source here as the best
     item.first = item.last = checkin.createdAt * 1000;
     if(checkin.venue) item.text = "Checked in at " + checkin.venue.name;
-    if(checkin.user)
-    {
-        item.from.id = 'contact://foursquare/#'+checkin.user.id;
-        item.from.name = checkin.user.firstName + " " + checkin.user.lastName;
-        item.from.icon = checkin.user.photo;
-        item.froms[item.from.id] = item.ref;
-    }
+    var profile = (checkin.user) ? checkin.user : profiles["foursquare"];
+    item.from.id = 'contact://foursquare/#'+profile.id;
+    item.from.name = profile.firstName + " " + profile.lastName;
+    item.from.icon = profile.photo;
+    item.froms[item.from.id] = item.ref;
     if(checkin.comments && checkin.comments.items)
     {
         checkin.comments.items.forEach(function(comment){

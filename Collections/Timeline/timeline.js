@@ -27,15 +27,18 @@ app.set('views', __dirname);
 
 app.get('/', function(req, res) {
     var fields = {};
+    var sort = {"first":-1};
     if (req.query.fields) {
-        try {
-            fields = JSON.parse(req.query.fields);
-        } catch(E) {}
+        try { fields = JSON.parse(req.query.fields); } catch(E) {}
+    }
+    if (req.query.sort) {
+        try { sort = JSON.parse(req.query.sort); } catch(E) {}
     }
     dataStore.getAll(fields, function(err, cursor) {
         if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
         if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
+        cursor.sort(sort);
         var ndx = {};
         cursor.toArray(function(err, items) {
             if(req.query["all"] || !req.query.full) return res.send(items); // default not include responses, forced if all
@@ -132,9 +135,10 @@ process.stdin.on('data', function(data) {
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
         dataStore.init(mongo.collections.item,mongo.collections.response);
-        dataIn.init(locker, dataStore);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        dataIn.init(locker, dataStore, function(){
+            app.listen(lockerInfo.port, 'localhost', function() {
+                process.stdout.write(data);
+            });
         });
     });
 });

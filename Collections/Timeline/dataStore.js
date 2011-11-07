@@ -118,10 +118,14 @@ exports.addItem = function(item, callback) {
 
 // responses are unique by their contents
 exports.addResponse = function(response, callback) {
+    delete response.id;
+    delete response._id; // mongo is miss pissypants
+    var item = response.item;
+    delete response.item;
     var hash = crypto.createHash('md5');
     hash.update(JSON.stringify(response));
+    response.item = item;
     response.id = hash.digest('hex');
-    delete response._id; // mongo is miss pissypants
     respCol.findAndModify({"id":response.id}, [['_id','asc']], {$set:response}, {safe:true, upsert:true, new: true}, callback);
 }
 
