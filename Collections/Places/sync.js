@@ -26,27 +26,26 @@ exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
 exports.gatherPlaces = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
-        cb(); // synchro delete, async/background reindex
-        locker.providers(['place','checkin','tweets'], function(err, services) {
-            if (!services) return;
-            async.forEach(services, function(svc, forEachCb) {
-                if(svc.type === 'collection') return;
-                if (svc.provider === 'twitter') {
-                    gatherFromUrl(svc.id, "/getCurrent/home_timeline", "timeline/twitter");
-                    gatherFromUrl(svc.id, "/getCurrent/timeline", "timeline/twitter");
-                    gatherFromUrl(svc.id, "/getCurrent/tweets", "tweets/twitter");
-                } else if (svc.provider === 'foursquare') {
-                    gatherFromUrl(svc.id, "/getCurrent/places", "checkin/foursquare");
-                    gatherFromUrl(svc.id, "/getCurrent/recent", "recents/foursquare");
-                    gatherFromUrl(svc.id, "/getCurrent/recents", "recents/foursquare");
-                    gatherFromUrl(svc.id, "/getCurrent/checkin", "checkin/foursquare");
-                    gatherFromUrl(svc.id, "/getCurrent/checkins", "checkin/foursquare");
-                } else if (svc.provider === 'glatitude') {
-                    gatherFromUrl(svc.id, "/getCurrent/location", "location/glatitude");
-                }
-            },
-            function(err) {
-                request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, function() {});
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, function() {
+            cb(); // synchro delete, async/background reindex
+            locker.providers(['place','checkin','tweets'], function(err, services) {
+                if (!services) return;
+                services.forEach(function(svc) {
+                    if(svc.type === 'collection') return;
+                    if (svc.provider === 'twitter') {
+                        gatherFromUrl(svc.id, "/getCurrent/home_timeline", "timeline/twitter");
+                        gatherFromUrl(svc.id, "/getCurrent/timeline", "timeline/twitter");
+                        gatherFromUrl(svc.id, "/getCurrent/tweets", "tweets/twitter");
+                    } else if (svc.provider === 'foursquare') {
+                        gatherFromUrl(svc.id, "/getCurrent/places", "checkin/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/recent", "recents/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/recents", "recents/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/checkin", "checkin/foursquare");
+                        gatherFromUrl(svc.id, "/getCurrent/checkins", "checkin/foursquare");
+                    } else if (svc.provider === 'glatitude') {
+                        gatherFromUrl(svc.id, "/getCurrent/location", "location/glatitude");
+                    }
+                });
             });
         });
     });

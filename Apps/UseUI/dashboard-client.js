@@ -99,7 +99,7 @@ app.post('/setViewer', function(req, res) {
     } else if(!handle) {
         console.error("No handle given for viewer");
     } else {
-        if(!(type === 'photos' || type === 'contacts' || type === 'links')) {
+        if(!(type === 'photos' || type === 'contacts' || type === 'links' || type === 'places')) {
             console.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
