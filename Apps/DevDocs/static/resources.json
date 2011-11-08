@@ -329,6 +329,87 @@
     },
 
     {
+        "path": "/Me/places/state",
+        "description": "State of the Places collection",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesState",
+            "summary": "Get the state of the Places collection",
+            "responseClass": "state"
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/since",
+        "description": "Get the places that have been added to the collection since a specific place.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesSince",
+            "summary": "Get the places that have been added to the collection since a specific place.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of the place that was last seen.  Result array is all places after this one.",
+                "dataType": "string",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/",
+        "description": "Paginate through all collected places.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesPaginate",
+            "summary": "Paginate through all collected places.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of places to return",
+                "dataType": "number",
+                "paramType": "query",
+                "default": 10,
+                "example": "ex. 100"
+            },
+            {
+                "name": "offset",
+                "description": "The offset into the places collection to begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/id/{id}",
+        "description": "Get the collected information about a single place.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesGet",
+            "summary": "Get the collected information about a single place.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of the place.",
+                "dataType": "string",
+                "paramType": "path"
+            }
+            ]
+        }
+        ]
+    },
+
+    {
         "path": "/map",
         "description": "Retrieve information about the available and installed locker services",
         "operations": [
@@ -626,6 +707,54 @@
                 "photos": {
                     "type": "array",
                     "description": "An array of all of the photos associated with this contact."
+                }
+            }
+        }
+    },
+    {
+        "name": "place",
+        "responseClass": {
+            "id": "place",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "A unique identifier for this place."
+                },
+                "at": {
+                    "type": "string",
+                    "description": "The date that this place was created."
+                },
+                "id": {
+                    "type": "string",
+                    "description": "The original source's unique identifier for this place."
+                },
+                "lat": {
+                    "type": "float",
+                    "description": "The latitude given for this place."
+                },
+                "lng": {
+                    "type": "float",
+                    "description": "The longitude given for this place."
+                },
+                "me": {
+                    "type": "boolean",
+                    "description": "Marked true if this place is something created by/for you, not your friends."
+                },
+                "network": {
+                    "type": "string",
+                    "description": "The name of the network or source where this place record came from."
+                },
+                "stream": {
+                    "type": "boolean",
+                    "description": "Marked true if this place record is part of a stream of places, such as a GPS breadcrumb path.  For example, Google Latitude is a stream, Foursquare is not."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "If given, the name of the location for this place."
+                },
+                "via": {
+                    "type": "string",
+                    "description": "The locker source where you can get the full record."
                 }
             }
         }
