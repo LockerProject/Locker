@@ -380,7 +380,7 @@
     },
     {
         "path": "/query/get{dataSet}",
-        "description": "Query data.  This endpoint should not be used for trying to just all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.",
+        "description": "Query data.  This endpoint should not be used for trying to just get all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.",
         "operations": [
         {
             "httpMethod": "GET",
