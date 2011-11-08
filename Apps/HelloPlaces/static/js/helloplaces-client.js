@@ -39,7 +39,7 @@ function reload(offset, limit, useJSON) {
     // get the place name, but use the first email address if no name exists
     placeHTML = place.name || place.emails[0].value;
       }
-      liHTML = '<li id="' + place._id + '" class="place"><img src="/Me/places/image/' + place.id+ '" style="max-width:300px" /><span class="basic-data">'+placeHTML+'</span></div>';
+      liHTML = '<li id="' + place._id + '" class="place"><span class="basic-data">'+placeHTML+'</span></div>';
       placesList.append(liHTML);
   }
     };
