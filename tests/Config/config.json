@@ -27,6 +27,7 @@
                       "synclet-local-googleContacts.js"],
         "collections" : ["sync-contacts-test.js",
                          "collection-photos-test.js",
+                         "collection-places-test.js",
                          "collection-links-test.js"],
         "apps" : ["app-useui-test.js"],
         "issues" : ["locker-issues-test.js"]
