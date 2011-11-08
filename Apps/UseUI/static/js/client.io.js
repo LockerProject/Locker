@@ -16,7 +16,7 @@ function addCommas(nStr)
 }
 
 allCounts = {};
-var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined}};
+var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined},"places":{count:0,lastId:undefined}};
 
 function updateCounts(name, count, updated) {
   updated = updated || 0;
