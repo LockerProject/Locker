@@ -7,7 +7,7 @@
 *
 */
 
-// merge contacts from connectors
+// merge places from connectors
 
 var locker = require('../../Common/node/locker.js');
 
