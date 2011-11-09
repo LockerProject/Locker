@@ -132,6 +132,7 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         if(req.body.type === 'view/github') {
+            console.error("DEBUG: req.body", req.body);
             io.sockets.emit('viewer', req.body);
         } else {
             var evInfo = eventInfo[req.body.type];

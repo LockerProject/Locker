@@ -122,8 +122,10 @@ function showGritter(name, arg, lastId) {
     } else if(name === 'viewer') {
         drawServices();
         drawViewers();
+        var action = (arg.action === 'update'? 'Updated' : 'New');
+        var arg = arg.obj.data
         var gritterId = $.gritter.add({
-          title:"New "+arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
+          title: action + " " + arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
           text:arg.id,
           image: "img/Collections.png",
           time:10000,
@@ -187,7 +189,7 @@ socket.on('newservice', function(service) {
 });
 
 socket.on('viewer', function(evt) {
-    queueGritter('viewer', evt.obj.data);
+    queueGritter('viewer', evt);
 });
 
 socket.on("counts", function(counts) {
