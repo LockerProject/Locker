@@ -1,5 +1,5 @@
 {
-    "title":"Twitter Account",
+    "title":"Twitter",
     "status":"stable",
     "provider":"twitter",
     "provides":["contact/twitter", "mentions/twitter", "related/twitter", "timeline/twitter", "tweets/twitter"],

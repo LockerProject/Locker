@@ -30,7 +30,6 @@ describe 'dashboard' do
     visit '/'
     sleep 1
     page.execute_script("$('#devdocs-box').click()")
-    sleep 1
     within_frame 'appFrame' do
       page.should have_content('Make your own viewer!')
       click_on 'API Explorer'
@@ -46,5 +45,21 @@ describe 'dashboard' do
     within_frame 'appFrame' do
       page.should have_content('Make your own viewer!')
     end
+  end
+
+  it 'should show a Gritter notification if a new service is connected' do
+    visit '/'
+    page.execute_script("socket.$events.newservice({provider:'gcontacts', title:'Google Contacts'})")
+    page.execute_script("$(window).trigger('focus')")
+    page.should have_content('Connected Google Contacts')
+  end
+
+  it 'should show a Gritter notification should show a close button when hovering over it' do
+    visit '/'
+    page.execute_script("socket.$events.newservice({provider:'gcontacts', title:'Google Contacts'})")
+    page.execute_script("$(window).trigger('focus')")
+    sleep 0.1
+    page.execute_script("$('.gritter-item').trigger('mouseover')")
+    page.should have_css('.gritter-close')
   end
 end

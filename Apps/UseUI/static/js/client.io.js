@@ -93,7 +93,7 @@ function showGritter(name, arg, lastId) {
         });
     } else if (name == 'newservice') {
         var service = arg;
-        var svclc = service.toLowerCase();
+        var svclc = service.provider.toLowerCase();
         var customText = "Importing ";
         var img = svclc;
         if(svclc === 'facebook') {
@@ -103,8 +103,10 @@ function showGritter(name, arg, lastId) {
         } else if(svclc === 'foursquare') {
             customText += "checkins and photos.";
         } else if(svclc === 'github') {
-            customText += "friends.";
-        } else if(svclc === 'google contacts') {
+            customText += "friends and viewers.";
+        } else if(svclc === 'instagram') {
+            customText += "friends and photos.";
+        } else if(svclc === 'gcontacts') {
             customText += "contacts.";
             img += 'gcontacts.png';
         } else if(svclc === 'flickr') {
@@ -112,7 +114,7 @@ function showGritter(name, arg, lastId) {
         }
         img = '/img/icons/' + img + '-gritter.png';
       $.gritter.add({
-        title:"Connected " + arg,
+        title:"Connected " + service.title,
         text:customText,
         // image:img,
         time: 5000
@@ -178,9 +180,9 @@ socket.on('event', function (body) {
   queueGritter(body.name, body.new, body.lastId);
 });
 
-socket.on('newservice', function(name) {
-  log('got new service: ', name);
-  queueGritter('newservice', name);
+socket.on('newservice', function(service) {
+  log('got new service: ', service);
+  queueGritter('newservice', service);
   if (window.guidedSetup) window.guidedSetup.serviceConnected();
 });
 

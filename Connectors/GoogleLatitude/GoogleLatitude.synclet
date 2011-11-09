@@ -1,6 +1,6 @@
 {
     "status":"unstable",
-    "title":"Google Latitude Account",
+    "title":"Google Latitude",
     "synclets": [
         {
             "name": "locations",

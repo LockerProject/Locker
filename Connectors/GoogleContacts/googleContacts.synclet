@@ -1,5 +1,5 @@
 {
-    "title":"Google Contacts Account",
+    "title":"Google Contacts",
     "status":"stable",
     "provides":["contact/gcontacts"],
     "provider":"gcontacts",

@@ -130,7 +130,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', serviceInfo.title);
+    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
