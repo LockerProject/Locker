@@ -193,7 +193,7 @@ var runTests = function() {
 }
 
 var runRake = function() {
-    var rakeProcess = require("child_process").spawn("rake", [], { cwd: __dirname + "/integration"});
+    var rakeProcess = require("child_process").spawn("rake", ["ci:setup:rspec","default"], { cwd: __dirname + "/integration"});
     rakeProcess.stdout.on("data", function(data) {
         process.stdout.write(data);
     });

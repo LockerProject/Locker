@@ -29,6 +29,7 @@ describe 'dashboard' do
   it 'should allow access to api explorer' do
     visit '/'
     page.execute_script("$('#devdocs-box').click()")
+    sleep 1
     within_frame 'appFrame' do
       page.should have_content('Make your own viewer!')
       click_on 'API Explorer'

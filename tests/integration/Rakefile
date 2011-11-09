@@ -3,6 +3,7 @@ require 'rake'
 require 'rubygems'
 require 'rspec'
 require 'rspec/core/rake_task'
+require 'ci/reporter/rake/rspec'
 
 
 # RSpec 2.0
