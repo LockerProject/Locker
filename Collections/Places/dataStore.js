@@ -21,8 +21,9 @@ var lmongoutil = require("lmongoutil");
 
 function processFoursquare(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
-    if (!data.venue || !data.venue.location || !data.venue.location.lat || !data.venue.location.lng || !data.createdAt) {
-        cb("The 4sq data did not have lat/lng or at");
+    var loc = (data.venue) ? data.venue.location : data.location; // venueless happens
+    if (!loc || !loc.lat || !loc.lng || !data.createdAt) {
+        cb("The 4sq data did not have lat/lng or at: "+JSON.stringify(data));
         return;
     }
 
@@ -35,13 +36,13 @@ function processFoursquare(svcId, type, data, cb) {
             id:data.id,
             me:me,
             network:"foursquare",
-            title: data.venue.name,
             stream: false,
-            lat: data.venue.location.lat,
-            lng: data.venue.location.lng,
+            lat: loc.lat,
+            lng: loc.lng,
             at: data.createdAt * 1000,
             via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
         };
+    placeInfo.title = (data.venue) ? data.venue.name : data.location.name;
     // "checkins" are from yourself, kinda problematic to deal with here?
     if (data.user) {
         placeInfo.fromID = data.user.id;
@@ -211,7 +212,10 @@ exports.addData = function(svcId, type, allData, callback) {
     }
     var handler = dataHandlers[type] || processShared;
     async.forEachSeries(allData, function(data, cb) {
-        handler(svcId, type, data, cb);
+        handler(svcId, type, data, function(e){
+            if(e) console.error("error processing: "+e);
+            cb();
+        });
     }, callback);
 };
 
