@@ -175,7 +175,7 @@ function bootState(doneCb)
 {
     if(isSomeoneListening > 1) return doneCb(); // only boot after we've been idle
     logger.debug("booting state fresh");
-    async.forEach(['contacts','links','photos'],function(coll,callback){
+    async.forEach(['contacts','links','photos','places'],function(coll,callback){
         //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
