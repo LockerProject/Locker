@@ -28,7 +28,7 @@ exports.gatherPlaces = function(cb) {
     dataStore.clear(function(err) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, function() {
             cb(); // synchro delete, async/background reindex
-            locker.providers(['place','checkin','tweets'], function(err, services) {
+            locker.providers(['place','checkin','tweets','location'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
                     if(svc.type === 'collection') return;
