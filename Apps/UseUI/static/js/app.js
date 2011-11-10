@@ -734,7 +734,12 @@ var GuidedSetup = (
                     if (t.totalDone >= ($("#services .service").length - 1)) {
                         $("#doMorePopup").remove();
                     } else {
-                        $("#doMorePopup span:visible").hide().next().show();
+                        if ($('#doMorePopup span:visible').length === 0) {
+                            $('#doMorePopup span:visible').hide();
+                            $('#doMorePopup span').first().show();
+                        } else {
+                            $("#doMorePopup span:visible").hide().next().show();
+                        }
                     }
                 }
             }
