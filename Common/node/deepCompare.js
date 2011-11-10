@@ -33,7 +33,7 @@ module.exports = function Equals(obj1, obj2) {
         if (typeof(obj1[p]) == 'undefined') {
             return false;
         } else {
-            if (typeof obj2[p] == 'object') {
+            if (typeof obj2[p] == 'object' && obj2[p] !== null) {
                 if (!Equals(obj2[p], obj1[p])){
                     return false;
                 }
