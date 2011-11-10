@@ -46,7 +46,7 @@ vows.describe("Service Manager").addBatch({
                     assert.include(svcMetaInfo, "id");
                 },
                 "setting a version number equivalent to the highest migration" : function(svcMetaInfo) {
-                    assert.equal(svcMetaInfo.version, 1330889652916);
+                    assert.equal(svcMetaInfo.version, 1340889652916);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
