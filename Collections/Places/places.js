@@ -51,6 +51,15 @@ app.get('/', function(req, res) {
         if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
         if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
+        if(req.query["sort"]) {
+            var sorter = {}
+            if(req.query["order"]) {
+                sorter[req.query["sort"]] = +req.query["order"];
+            } else {
+                sorter[req.query["sort"]] = 1;
+            }
+            cursor.sort(sorter);
+        }
         cursor.toArray(function(err, items) {
             res.send(items);
         });

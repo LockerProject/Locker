@@ -744,9 +744,9 @@
                     "type": "string",
                     "description": "The name of the network or source where this place record came from."
                 },
-                "stream": {
+                "path": {
                     "type": "boolean",
-                    "description": "Marked true if this place record is part of a stream of places, such as a GPS breadcrumb path.  For example, Google Latitude is a stream, Foursquare is not."
+                    "description": "Marked true if this place record is part of a path of places, such as a GPS breadcrumb path.  For example, Google Latitude is a path, Foursquare is not."
                 },
                 "title": {
                     "type": "string",
