@@ -44,6 +44,10 @@
   padding-left:20px;
   list-style-type: none;
 }
+.paramExample label{
+    margin-left:100px;
+    font-weight:bold;
+}
 body {
   margin:40px;
 }
@@ -79,7 +83,7 @@ Choose an endpoint: <select id='curMethod'>
   <div class='resultModel'>
     <h3>Results</h3>
     <ul class='resultEntry'>
-      <li><span class='paramName'></span> - <span class='paramType'></span> - <span class='paramDescription'></span></li>
+      <li><span class='paramName'></span> - <span class='paramType'></span> - <span class='paramDescription'></span><div class='paramExample'>some example</div></li>
     </ul>
   </div>
   <hr />
@@ -217,6 +221,9 @@ $(function() {
             },
             "span.paramDescription":function(arg) {
               return arg.item.description;
+            },
+            "div.paramExample":function(arg) {
+              return arg.item.example? ('<label>Example:</label> ' + arg.item.example) : arg.item.example;
             }
           }
         }

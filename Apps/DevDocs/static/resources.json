@@ -155,7 +155,8 @@
                 "name": "offset",
                 "description": "The offset into the contacts collection to begin the returned data from.",
                 "dataType": "number",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "ex. 0, 100, 200"
             }
             ]
         }
@@ -678,27 +679,30 @@
             "properties": {
                 "_id": {
                     "type": "string",
-                    "description": "A unique identifier for this contact."
+                    "description": "An auto-generated unique identifier for this contact.",
+                    "example": "\"4ebb7a122450a4ac44a72c3c\""
                 },
                 "accounts": {
                     "type": "object",
-                    "description": "An object of all the specific accounts that were collected together for this contact."
+                    "description": "An object of all the raw accounts that were collected together for this contact (Twitter, Facebook, etc)."
                 },
                 "addresses": {
                     "type": "array",
-                    "description": "An array of the addresses this contact has stored."
+                    "description": "An array of the street addresses this contact has stored."
                 },
                 "firstnamesort": {
                     "type": "string",
-                    "description": "A helper field to guess at best first name sorting."
+                    "description": "A helper field to support first name sorting.",
+                    "example": "\"jeremie miller\""
                 },
                 "lastnamesort": {
                     "type": "string",
-                    "description": "A helper field to guess at best last name sorting."
+                    "description": "A helper field to support last name sorting.",
+                    "example": "\"miller\""
                 },
                 "name": {
                     "type": "string",
-                    "description": "The name of this contact."
+                    "description": "The full name of this contact."
                 },
                 "nicknames": {
                     "type": "array",
@@ -706,7 +710,7 @@
                 },
                 "photos": {
                     "type": "array",
-                    "description": "An array of all of the photos associated with this contact."
+                    "description": "An array of all of the profile photos associated with this contact."
                 }
             }
         }
