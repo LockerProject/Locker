@@ -108,7 +108,6 @@ $(document).ready(
         });
 
         $('.search').keyup(function(e) {
-            console.log(e.keyCode);
             if (e.keyCode == 13) {
                 if ($('.highlighted').length === 0) return true;
                 $('.highlighted').click();
@@ -139,6 +138,13 @@ $(document).ready(
                 } else {
                     search();
                 }
+            }
+        });
+
+        $('.search').bind('search', function() {
+            if ($('.search')[0].value.length == 0) {
+                $('#search-results').fadeOut();
+                $('.search').removeClass('populated');
             }
         });
 
