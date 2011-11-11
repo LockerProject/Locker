@@ -108,27 +108,28 @@ $(document).ready(
         });
 
         $('.search').keyup(function(e) {
+            console.log(e.keyCode);
             if (e.keyCode == 13) {
                 if ($('.highlighted').length === 0) return true;
                 $('.highlighted').click();
                 $('#search-results').fadeOut();
                 return false;
             } else if (e.keyCode == 38) {
-                var selected = $('#search-results').children('.highlighted');
-                $('#search-results').children('.highlighted').removeClass('highlighted');
-                if (selected.prevAll(':not(.search-divider):visible').first().length > 0) {
-                    selected.prevAll(':not(.search-divider):visible').first().addClass('highlighted');
+                var selected = $('.search-results-wrapper').children('.highlighted');
+                $('.search-results-wrapper').children('.highlighted').removeClass('highlighted');
+                if (selected.prevAll(':not(.search-header-row):visible').first().length > 0) {
+                    selected.prevAll(':not(.search-header-row):visible').first().addClass('highlighted');
                 } else {
-                    $('#search-results').children(':not(.search-divider):visible').last().addClass('highlighted');
+                    $('.search-results-wrapper').children(':not(.search-header-row):visible').last().addClass('highlighted');
                 }
                 return false;
             } else if (e.keyCode == 40) {
-                var selected = $('#search-results').children('.highlighted');
-                $('#search-results').children('.highlighted').removeClass('highlighted');
-                if (selected.nextAll(':not(.search-divider):visible').first().length > 0) {
-                    selected.nextAll(':not(.search-divider):visible').first().addClass('highlighted');
+                var selected = $('.search-results-wrapper').children('.highlighted');
+                $('.search-results-wrapper').children('.highlighted').removeClass('highlighted');
+                if (selected.nextAll(':not(.search-header-row):visible').first().length > 0) {
+                    selected.nextAll(':not(.search-header-row):visible').first().addClass('highlighted');
                 } else {
-                    $('#search-results').children(':not(.search-divider):visible').first().addClass('highlighted');
+                    $('.search-results-wrapper').children(':not(.search-header-row):visible').first().addClass('highlighted');
                 }
                 return false;
             } else {
