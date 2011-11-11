@@ -2,7 +2,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
 describe 'dashboard' do
-  it 'allows people to switch between 3 views' do
+  it 'allows people to switch between 4 views' do
     visit '/'
     page.should have_css('#contacts.selected')
     within_frame 'appFrame' do
@@ -17,6 +17,11 @@ describe 'dashboard' do
     page.should have_css('#links.selected')
     within_frame 'appFrame' do
       page.should have_content('Links')
+    end
+    page.execute_script("$('#places').click()")
+    page.should have_css('#places.selected')
+    within_frame 'appFrame' do
+      #page.should have_content('Places')
     end
   end
 

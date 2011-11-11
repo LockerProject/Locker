@@ -243,6 +243,7 @@ $(document).ready(
                              window.photoCountPoll = new CountPoll("photos");
                              window.linkCountPoll = new CountPoll("links");
                              window.contactCountPoll = new CountPoll("contacts");
+                             window.placeCountPoll = new CountPoll("places");
                              
                              // synclets
                              window.syncletPoll = new SyncletPoll();
