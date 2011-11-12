@@ -74,10 +74,10 @@ function processTwitter(svcId, type, data, cb) {
 
     var ll = firstLL(data.geo);
     if (!ll) {
-        ll = firstLL(data.place, true);
-    }
-    if (!ll) {
         ll = firstLL(data.coordinates, true);
+    }
+    if (!ll) { // bounding box.  Compute the center
+        ll = computedLL(data.place.bounding_box.coordinates[0]);
     }
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
@@ -285,4 +285,19 @@ function firstLL(o, reversed) {
         if(ret) return ret;
     }
     return null;
+}
+
+// Find center of bounding boxed LL array
+function computedLL(box) {
+    var allLat = 0;
+    var allLng = 0;
+
+    for (var i=0; i<box.length; ++i) {
+        allLat += box[i][1];
+        allLng += box[i][0];
+    }
+    var lat = +(allLat / 4).toFixed(5);
+    var lng = +(allLng / 4).toFixed(5);
+
+    return [lat, lng];
 }
