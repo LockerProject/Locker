@@ -33,7 +33,6 @@ function processFoursquare(svcId, type, data, cb) {
     }
 
     var placeInfo = {
-            id:data.id,
             me:me,
             network:"foursquare",
             path: false,
@@ -44,7 +43,7 @@ function processFoursquare(svcId, type, data, cb) {
             at: data.createdAt * 1000,
             via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/' + data._id
         };
-        
+
     // "checkins" are from yourself, kinda problematic to deal with here?
     if (data.user) {
         placeInfo.fromID = data.user.id;
@@ -67,12 +66,12 @@ function processTwitter(svcId, type, data, cb) {
         cb("The Twitter data did not have created_at");
         return;
     }
-    
+
     var title = '';
     if (data !== null && data.hasOwnProperty('place') && data.place !== null && data.place.hasOwnProperty('full_name')) {
         title = data.place.full_name.replace(/\n/g,'').replace(/\s+/g, ' ').replace(/^\w/, function($0) { return $0.toUpperCase(); });
     }
-    
+
     var ll = firstLL(data.geo);
     if (!ll) {
         ll = firstLL(data.place, true);
@@ -92,7 +91,6 @@ function processTwitter(svcId, type, data, cb) {
     }
 
     var placeInfo = {
-            id:data.id_str,
             me:me,
             lat: ll[0],
             lng: ll[1],
@@ -127,7 +125,6 @@ function processGLatitude(svcId, type, data, cb) {
     }
 
     var placeInfo = {
-            id:data.timestampMs,
             me:me,
             network:"glatitude",
             path: true,
@@ -154,12 +151,11 @@ function updateState() {
 }
 
 function saveCommonPlace(placeInfo, cb) {
+    placeInfo.lat = +(placeInfo.lat.toFixed(5));
+    placeInfo.lng = +(placeInfo.lng.toFixed(5));
     var hash = createId(placeInfo.lat+':'+placeInfo.lng+':'+placeInfo.at);
     var query = [{id:hash}];
-
-    if (!placeInfo.id) {
-        placeInfo.id = hash;
-    }
+    placeInfo.id = hash;
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:placeInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (err) {
             return cb(err);
@@ -181,6 +177,7 @@ dataHandlers["location/glatitude"] = processGLatitude;
 exports.init = function(mongoCollection, mongo, l) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
+    collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
     lconfig.load('../../Config/config.json'); // ugh
     locker = l;
