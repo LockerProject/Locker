@@ -87,8 +87,8 @@ function showGritter(name, arg, lastId) {
     var prettyName = name;
     if (name == 'syncgithub') {
         $.gritter.add({
-            title:"Syncing viewers",
-            text:"We're syncing viewers from your github account, should be available shortly!",
+            title:"Syncing Viewers",
+            text:"Viewers from your github account should be available shortly!",
             time: 5000
         });
     } else if (name == 'newservice') {
