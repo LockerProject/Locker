@@ -1,6 +1,6 @@
 {
     "status": "stable",
-    "title": "Foursquare Account",
+    "title": "Foursquare",
     "synclets": [
         {
             "frequency": 120,

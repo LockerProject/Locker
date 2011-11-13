@@ -1,5 +1,5 @@
 {
-    "title":"Facebook Account",
+    "title":"Facebook",
     "status":"stable",
     "provides":["contact/facebook", "photo/facebook", "link/facebook", "home/facebook"],
     "provider":"facebook",

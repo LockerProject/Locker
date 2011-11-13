@@ -130,7 +130,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', serviceInfo.title);
+    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
@@ -449,8 +449,13 @@ exports.migrate = function(installedDir, metaData) {
                 try {
                     var cwd = process.cwd();
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
+                    console.log("running synclet migration : " + migrations[i] + " for service " + metaData.title);
                     if (migrate(installedDir)) {
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'), 'utf8'));
+                        lutil.extend(true, metaData, curMe);
                         metaData.version = migrations[i].substring(0, 13);
+                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'),
+                                                  JSON.stringify(metaData, null, 4));
                     }
                     process.chdir(cwd);
                 } catch (E) {

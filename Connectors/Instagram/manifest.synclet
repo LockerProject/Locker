@@ -1,5 +1,5 @@
 {
-    "title":"Instagram Account",
+    "title":"Instagram",
     "status":"stable",
     "provider":"instagram",
     "provides":["profile/instagram","photo/instagram","contact/instagram","feed/instagram"],

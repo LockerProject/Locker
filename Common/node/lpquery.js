@@ -351,7 +351,7 @@ next:function () {
         if (this._input === "") {
             return this.EOF;
         } else {
-            this.parseError('Lexical error on line '+(this.yylineno+1)+'. Unrecognized text.\n'+this.showPosition(),
+            this.parseError('Lexical error on line '+(this.yylineno+1)+'. Unrecognized text.\n'+this.showPosition(), 
                     {text: "", token: null, line: this.yylineno});
         }
     },
@@ -428,7 +428,7 @@ case 24:return 6;
 break;
 }
 };
-lexer.rules = [/^\s+/,/^OR/,/^AND/,/^&/,/^\./,/^'[^']+'/,/^"[^"]+"/,/^[0-9]+/,/^\[/,/^\]/,/^(?:[a-eg-su-zA-Z]|t(?!rue)|f(?!alse))[a-zA-Z]*/,/^(?:true|false)/,/^\?/,/^=/,/^,/,/^\(/,/^\)/,/^:/,/^\+\./,/^\+/,/^\-\./,/^\-/,/^\!=/,/^\/get.+\?/,/^$/];
+lexer.rules = [/^\s+/,/^OR/,/^AND/,/^&/,/^\./,/^'[^']+'/,/^"[^"]+"/,/^[0-9]+/,/^\[/,/^\]/,/^(?:[a-eg-su-zA-Z_]|t(?!rue)|f(?!alse))[a-zA-Z_]*/,/^(?:true|false)/,/^\?/,/^=/,/^,/,/^\(/,/^\)/,/^:/,/^\+\./,/^\+/,/^\-\./,/^\-/,/^\!=/,/^\/get.+\?/,/^$/];
 lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],"inclusive":true}};return lexer;})()
 parser.lexer = lexer;
 return parser;

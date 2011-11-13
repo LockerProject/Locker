@@ -4,7 +4,7 @@ module.exports = function Equals(obj1, obj2) {
     }
 
     for (var p in obj1) {
-        if (typeof(obj2[p]) == 'undefined') {
+        if (!obj2.hasOwnProperty(p) || (obj2[p] === undefined && obj2[p] !== obj1[p])) {
             return false;
         }
     }
@@ -18,7 +18,7 @@ module.exports = function Equals(obj1, obj2) {
                     }
                     break;
                 default:
-                    if (obj1[p] != obj2[p]) {
+                    if (obj1[p] !== obj2[p]) {
                         return false;
                     }
             }
@@ -30,10 +30,10 @@ module.exports = function Equals(obj1, obj2) {
     }
 
     for (var p in obj2) {
-        if (typeof(obj1[p]) == 'undefined') {
+        if (!obj1.hasOwnProperty(p) || (obj1[p] === undefined && obj1[p] !== obj2[p])) {
             return false;
         } else {
-            if (typeof obj2[p] == 'object') {
+            if (obj2[p] !== null && typeof obj2[p] === 'object') {
                 if (!Equals(obj2[p], obj1[p])){
                     return false;
                 }

@@ -17,7 +17,7 @@ var grammar = {
       ["[0-9]+", "return 'NUMBER';"],
       ["\\[", "return '['"],
       ["\\]", "return ']'"],
-      ["(?:[a-eg-su-zA-Z]|t(?!rue)|f(?!alse))[a-zA-Z]*", "return 'KEY';"],
+      ["(?:[a-eg-su-zA-Z_]|t(?!rue)|f(?!alse))[a-zA-Z_]*", "return 'KEY';"],
       ["(?:true|false)", "return 'BOOLEAN';"],
       ["\\?", "return '?';" ],
       ["=", "return '=';" ],

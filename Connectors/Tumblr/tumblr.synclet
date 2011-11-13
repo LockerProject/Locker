@@ -1,5 +1,5 @@
 {
-    "title":"Tumblr Account",
+    "title":"Tumblr",
     "status":"stable",
     "provider":"tumblr",
     "provides":["dashboard/tumblr","post/tumblr","contact/tumblr"],
