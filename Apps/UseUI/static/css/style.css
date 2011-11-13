@@ -70,7 +70,7 @@ body > header > h1:after
 
 /* Application Links ------------------------------------------------------ */
 
-nav#application-navigation
+nav.app-links
 {
   position: relative;
   float: left;
@@ -81,12 +81,22 @@ nav#application-navigation
   margin-left: 20px;
 }
 
-nav#application-navigation a
+nav#develop-navigation {
+    float:right;
+    margin-right:10px;
+    margin-left:0;
+}
+
+nav#develop-navigation.app-link {
+      cursor: none;
+}
+
+nav.app-links a
 {
   color: rgba(0, 0, 0, 0.5);
 }
 
-nav#application-navigation > ul
+nav.app-links > ul
 {
   position: relative;
 }
@@ -99,10 +109,10 @@ nav#application-navigation > ul:before
   color: rgba(0, 0, 0, 0.25);
 }
 
-nav#application-navigation > ul > li
+nav.app-links > ul > li
 {
   float: left;
-  margin-left: 14px;
+  margin-left: 4px;
   height: 26px;
   line-height: 26px;
   padding-left: 6px;
@@ -214,7 +224,7 @@ nav#application-navigation > ul > li
 #nav-search
 {
   position: relative;
-  float: right;
+  float: left;
   margin-right: 20px;
 }
 
@@ -227,7 +237,7 @@ nav#application-navigation > ul > li
 {
   position: relative;
 
-  width: 256px;
+  width: 206px;
   height: 24px;
   padding-top: 5px;
   font-size: 12px;
