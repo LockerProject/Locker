@@ -28,6 +28,7 @@ $(document).ready(
         });
 
         $('.app-link').click(function() {
+            if(!$(this).attr('id')) return;
             app = $(this).attr('id');
             if ($("#services:visible").length > 0) closeServices(0);
             window.location.hash = app;
@@ -40,23 +41,29 @@ $(document).ready(
             return false;
         });
 
-        $(".buttonCounter").mouseenter(function() {
-            if ($(this).hasClass('hoveredViews')) return;
+        function showViewersMenu(thiz) {
+            if ($(thiz).hasClass('hoveredViews')) return;
             $("div.appMenu").not(".hoveredViews .appMenu").hide();
             $(".buttonCounter").removeClass("hoveredViews");
 
-            var that = this;
-            var parent = $(this).parent();
-            var E = $(this).next("div.appMenu");
+            var that = thiz;
+            var parent = $(thiz).parent();
+            var E = $(thiz).next("div.appMenu");
             parent.mouseleave(function() {
                 $(that).removeClass("hoveredViews");
                 E.hide();
                 return false;
             })
-            E.css("left", $(this).position().left + 5 - E.width());
-            E.css("top", $(this).parent().offset().top + $(this).parent().height())
-            $(this).addClass("hoveredViews");
+            E.css("left", $(thiz).position().left + 5 - E.width());
+            E.css("top", $(thiz).parent().offset().top + $(thiz).parent().height())
+            $(thiz).addClass("hoveredViews");
             E.slideDown();
+        }
+        $("li.develop").mouseenter(function() {
+            showViewersMenu($(this).find('.buttonCounter'));
+        });
+        $(".buttonCounter").mouseenter(function() {
+            showViewersMenu(this);
         });
 
         // service buttons
@@ -73,15 +80,37 @@ $(document).ready(
           else
             expandServices();
         });
-
-        $('.devdocs-box').click(function() {
+        
+        function showDevDocsPage(page) {
+            if(typeof page !== 'string' || page == undefined) page = "";
             app = 'devdocs';
-            $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/");
+            $("#appFrame")[0].contentWindow.location.replace("/Me/devdocs/" + page);
             $('.devdocs-box-container').addClass('active');
             $('.app-link.selected').removeClass('selected');
             return false;
+        }
+        $('.devdocs-box').click(showDevDocsPage);
+        $('li.develop span.label').click(showDevDocsPage);
+        
+        $('.devdocs-explorer').click(function() {
+            showDevDocsPage('explorer.html');
         });
-
+        
+        $('.devdocs-local').click(function() {
+            showDevDocsPage('local.html');
+        });
+        
+        $('.syncviewers').click(function() {
+            showGritter('syncgithub');
+            $.getJSON("/synclets/github/run?id=repos", function(success) {
+                // _kmq.push(['record', 'synced viewers']);
+                // if(success) {
+                //     $("#sync-link").attr("href", "#");
+                //     syncingViewers = false;
+                //     $("#synced").css({"display":"block"});
+                // }
+            });
+        });
         $('#search-results').delegate(searchSelector, 'mouseover', function() {
             $('.highlighted').removeClass('highlighted');
             $(this).addClass('highlighted');
@@ -114,21 +143,21 @@ $(document).ready(
                 $('#search-results').fadeOut();
                 return false;
             } else if (e.keyCode == 38) {
-                var selected = $('#search-results').children('.highlighted');
-                $('#search-results').children('.highlighted').removeClass('highlighted');
-                if (selected.prevAll(':not(.search-divider):visible').first().length > 0) {
-                    selected.prevAll(':not(.search-divider):visible').first().addClass('highlighted');
+                var selected = $('.search-results-wrapper').children('.highlighted');
+                $('.search-results-wrapper').children('.highlighted').removeClass('highlighted');
+                if (selected.prevAll(':not(.search-header-row):visible').first().length > 0) {
+                    selected.prevAll(':not(.search-header-row):visible').first().addClass('highlighted');
                 } else {
-                    $('#search-results').children(':not(.search-divider):visible').last().addClass('highlighted');
+                    $('.search-results-wrapper').children(':not(.search-header-row):visible').last().addClass('highlighted');
                 }
                 return false;
             } else if (e.keyCode == 40) {
-                var selected = $('#search-results').children('.highlighted');
-                $('#search-results').children('.highlighted').removeClass('highlighted');
-                if (selected.nextAll(':not(.search-divider):visible').first().length > 0) {
-                    selected.nextAll(':not(.search-divider):visible').first().addClass('highlighted');
+                var selected = $('.search-results-wrapper').children('.highlighted');
+                $('.search-results-wrapper').children('.highlighted').removeClass('highlighted');
+                if (selected.nextAll(':not(.search-header-row):visible').first().length > 0) {
+                    selected.nextAll(':not(.search-header-row):visible').first().addClass('highlighted');
                 } else {
-                    $('#search-results').children(':not(.search-divider):visible').first().addClass('highlighted');
+                    $('.search-results-wrapper').children(':not(.search-header-row):visible').first().addClass('highlighted');
                 }
                 return false;
             } else {
@@ -138,6 +167,13 @@ $(document).ready(
                 } else {
                     search();
                 }
+            }
+        });
+
+        $('.search').bind('search', function() {
+            if ($('.search')[0].value.length == 0) {
+                $('#search-results').fadeOut();
+                $('.search').removeClass('populated');
             }
         });
 
@@ -527,7 +563,7 @@ function drawViewers() {
     $.getJSON('viewers', function(data) {
         $('.viewer:not(.template)').remove();
         var apps = ["links", "contacts", "photos", "places"];
-        for (var j = 0; j < 4; ++j) {
+        for (var j in apps) {
             var viewersToRender = data.available[apps[j]];
             for(var i in viewersToRender) {
                 drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle, apps[j]);

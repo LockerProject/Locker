@@ -2,7 +2,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
 describe 'dashboard' do
-  it 'allows people to switch between 3 views' do
+  it 'allows people to switch between 4 views' do
     visit '/'
     page.should have_css('#contacts.selected')
     within_frame 'appFrame' do
@@ -18,6 +18,11 @@ describe 'dashboard' do
     within_frame 'appFrame' do
       page.should have_content('Links')
     end
+    page.execute_script("$('#places').click()")
+    page.should have_css('#places.selected')
+    within_frame 'appFrame' do
+      #page.should have_content('Places')
+    end
   end
 
   it 'allows people to open the section to connect to services' do
@@ -29,7 +34,7 @@ describe 'dashboard' do
   it 'should allow access to api explorer' do
     visit '/'
     sleep 1
-    page.execute_script("$('#devdocs-box').click()")
+    page.execute_script("$('.devdocs-box').click()")
     within_frame 'appFrame' do
       page.should have_content('Make your own viewer!')
       click_on 'API Explorer'

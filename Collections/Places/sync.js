@@ -52,6 +52,7 @@ exports.gatherPlaces = function(cb) {
 };
 
 function gatherFromUrl(svcId, url, type) {
+    console.log(lconfig.lockerBase + '/Me/' + svcId + url);
     request.get({uri:lconfig.lockerBase + '/Me/' + svcId + url}, function(err, resp, body) {
         if (err) {
             logger.debug("Error getting basic places from " + svcId);
@@ -63,7 +64,6 @@ function gatherFromUrl(svcId, url, type) {
             dataStore.addData(svcId, type, arr);
         } catch (E) {
             console.error("Error processing places from " + svcId + url + ": " + E);
-            console.error('Got back: ' + body);
         }
     });
 }

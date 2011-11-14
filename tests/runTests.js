@@ -22,26 +22,29 @@ console.warn = writeLogLine;
 console.error = writeLogLine;
 
 
-// Cleanup the old runs Me dir and then copy the stub in
-try {
-    wrench.rmdirSyncRecursive(lconfig.me);
-} catch (E) {
-    if (E.code != "ENOENT") {
-        process.stderr.write("Error: " + E + "\n");
-        process.exit(1);
+if (process.argv.indexOf("-c") === -1) {
+    try {
+        wrench.rmdirSyncRecursive(lconfig.me);
+    } catch (E) {
+        if (E.code != "ENOENT") {
+            process.stderr.write("Error: " + E + "\n");
+            process.exit(1);
+        }
     }
-}
-wrench.copyDirSyncRecursive(lconfig.me + ".tests", lconfig.me);
+    wrench.copyDirSyncRecursive(lconfig.me + ".tests", lconfig.me);
 
-// Cleanup the old runs ijodtest dir
-try {
-    wrench.rmdirSyncRecursive("ijodtest");
-} catch (E) {
-    if (E.code != "ENOENT") {
-        process.stderr.write("Error: " + E + "\n");
-        process.exit(1);
+    // Cleanup the old runs ijodtest dir
+    try {
+        wrench.rmdirSyncRecursive("ijodtest");
+    } catch (E) {
+        if (E.code != "ENOENT") {
+            process.stderr.write("Error: " + E + "\n");
+            process.exit(1);
+        }
     }
 }
+
+// Cleanup the old runs Me dir and then copy the stub in
 
 // Ladies and gentlemen, get your logs ready
 var logFd = fs.openSync("locker.log", "w+");
