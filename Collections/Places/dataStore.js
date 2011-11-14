@@ -72,7 +72,8 @@ function processTwitter(svcId, type, data, cb) {
         title = data.place.full_name.replace(/\n/g,'').replace(/\s+/g, ' ').replace(/^\w/, function($0) { return $0.toUpperCase(); });
     }
 
-    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) || computedLL(data.place.bounding_box.coordinates[0]);
+    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) || 
+        (data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
         return cb();
