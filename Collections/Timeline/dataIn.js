@@ -258,15 +258,17 @@ function itemMergeHard(a, b, cb)
 // when a processed link event comes in, check to see if it's a long url that could help us de-dup
 function processLink(event, callback)
 {
-    if(!event || !event.obj || !event.obj.data || !event.obj.data.encounters) return callback("no encounter");
+    if(!event || !event.obj || !event.obj.encounters) return callback("no encounter");
     // process each encounter if there's multiple
-    async.forEach(event.obj.data.encounters, function(encounter, cb){
+    async.forEach(event.obj.encounters, function(encounter, cb){
         // first, look up event via/orig key and see if we've processed it yet, if not (for some reason) ignore
         var key = url.format(getKey(encounter.network, encounter.via));
         dataStore.getItemByKey(key,function(err, item){
             if(err || !item) return cb(err);
             // we tag this item with a ref to the link, super handy for cross-collection mashups
-            itemRef(item, "link://links/#"+event.obj.data._id, function(err, item){
+            var hash = crypto.createHash('md5');
+            hash.update(encounter.link); // turn link into hash as an id
+            itemRef(item, "link://links/#"+hash.digest('hex'), function(err, item){
                 if(err || !item) return cb(err);
                 var u = url.parse(encounter.link);
                 // if foursquare checkin and from a tweet, generate foursquare key and look for it

@@ -103,7 +103,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj || !req.body.obj.data){
+    if (!req.body.type || !req.body.obj){
         console.log('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
@@ -111,9 +111,10 @@ app.post('/events', function(req, res) {
     }
 
     // handle asyncadilly
-    dataIn.processEvent(req.body);
-    res.writeHead(200);
-    res.end('ok');
+    dataIn.processEvent(req.body, function(err){
+        if(err) return res.send(err, 500);
+        res.send('ok');
+    });
 });
 
 function genericApi(name,f)

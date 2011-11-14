@@ -4,9 +4,6 @@
     "timestamp": 1315976215195,
     "action": "new",
     "obj": {
-        "type": "new",
-        "data": {
-        "_id": "4eb0f60f8cc09f2507e66440",
         "at": 1320220061000,
         "favicon": "http://t.co/favicon.ico",
         "link": "http://t.co/QgLsBzHy",
@@ -100,6 +97,5 @@
             "created_at": "Wed Sep 14 04:22:18 +0000 2011"
             }
         }]
-    }
     }
 }
