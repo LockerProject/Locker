@@ -1,13 +1,12 @@
 body {
-  background-color: white;
-  margin: 40px;
-  font-size: 1.8em;
+    background-color: white;
+    margin: 40px;
+    font-size: 1.8em;
 
 }
-ol {
-}
+
 li {
-  margin: 0.8em;
+    margin: 0.8em;
 }
 
 .done {
