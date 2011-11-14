@@ -73,7 +73,7 @@ function processTwitter(svcId, type, data, cb) {
     }
 
     var ll = firstLL(data.geo) || firstLL(data.coordinates, true) || 
-        (data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
+        (data.place !== null && data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
         return cb();
