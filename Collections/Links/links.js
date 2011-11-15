@@ -51,11 +51,20 @@ app.get('/search', function(req, res) {
     if (!req.query.q) {
         res.send([]);
         return;
+    }    
+    var map = {};
+    function send() {
+        var results = [];
+        for(var k in map) results.push(map[k]);
+        results = results.sort(function(lh, rh) {
+            return rh.at - lh.at;
+        });
+        res.send(results.slice(0,50));
     }
+
     search.search(req.query["q"], function(err,results) {
         if(err) console.error(err);
         if(err || !results || results.length == 0) return res.send([]);
-        var map = {};
         var links = [];
         var len = (req.query["limit"] < results.length) ? req.query["limit"] : results.length;
         for(var i=0; i < len; i++) links.push(results[i]._id);
@@ -63,16 +72,13 @@ app.get('/search', function(req, res) {
             link.encounters = [];
             map[link.link] = link;
         }, function(err){
-            dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
-                map[encounter.link].encounters.push(encounter);
-            }, function() {
-                var results = [];
-                for(var k in map) results.push(map[k]);
-                results = results.sort(function(lh, rh) {
-                    return rh.at - lh.at;
-                });
-                res.send(results.slice(0,50));
-            });
+            if(isFull(req.query.full)) {
+                dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
+                    map[encounter.link].encounters.push(encounter);
+                }, send);
+            } else {
+                send();
+            }
         });
     });
 });
@@ -151,7 +157,7 @@ function genericApi(name,f)
 
 // expose way to get raw links and encounters
 app.get('/', function(req, res) {
-    var full = (req.query.full === true || req.query.full === "true" || req.query.full == 1);
+    var full = isFull(req.query.full);
     var fullResults = [];
     var results = [];
     var options = {sort:{"at":-1}};
@@ -231,6 +237,10 @@ for(var f in util)
 {
     if(f == 'init') continue;
     genericApi('/'+f,util[f]);
+}
+
+function isFull(full) {
+    return (full === true || full === "true" || full == 1);
 }
 
 // catch exceptions, links are very garbagey
