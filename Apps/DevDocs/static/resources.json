@@ -26,7 +26,8 @@
                 "name": "id",
                 "description": "The exclusive lower bound _id. Result array is all photos added after that one.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
             }
             ]
         }
@@ -73,7 +74,8 @@
                 "name": "id",
                 "description": "The _id of a photo object to redirect to.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
             }
             ]
         }
@@ -93,7 +95,8 @@
                 "name": "id",
                 "description": "The _id from a photo to retrieve.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
             }
             ]
         }
@@ -323,7 +326,8 @@
                 "name": "id",
                 "description": "The exclusive lower bound _id. Result array is all links added after that one.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
             }
             ]
         }
@@ -356,7 +360,8 @@
                 "name": "id",
                 "description": "The exclusive lower bound _id. Result array is all places added after that one.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "found in a place object returned from the /Me/places/ endpoint"
             }
             ]
         }
@@ -403,7 +408,8 @@
                 "name": "id",
                 "description": "The _id of the place.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a place object returned from the /Me/places/ endpoint"
             }
             ]
         }
