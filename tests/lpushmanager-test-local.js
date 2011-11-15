@@ -22,18 +22,20 @@ var vows = require("vows")
   , eventCount = 0
   , events = []
   , dataSets = []
-  , dataSets[0] = {"config" : { "ids" : { [1, 500]}},
-                   "data": [ { "obj" : {"id" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 },
-                             {"obj" : {"id" : 1, "someData":"datas"}, "type" : "new", "timestamp" : 1312325283582 }]}
-  , dataSets[1] = {"config" : {}, "data" : {}};
-  , dataSets[2] = {"config" : "ids" : {[1]}};
-  , dataSets[3] = {"data": [ { "obj" : {"notId" : 1}, "timestamp" : 1312325283583 } ]};
   ;
+
+dataSets[0] = {"config" : { "ids" : [1, 500] },
+               "data": [ { "obj" : {"id" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 },
+                         {"obj" : {"id" : 1, "someData":"datas"}, "type" : "new", "timestamp" : 1312325283582 }]}
+dataSets[1] = {"config" : {}, "data" : {}};
+dataSets[2] = {"config" : { "ids" : [1] } };
+dataSets[3] = {"data": [ { "obj" : {"notId" : 1}, "timestamp" : 1312325283583 } ]};
+
 
 lconfig.load("Config/config.json");
 
-var pushManager = require("lpushmanager.js");
-var lmongo = require('../Common/node/lmongo');
+var pushManager = require(__dirname + "/../Common/node/lpushmanager.js");
+var lmongo = require(__dirname + '/../Common/node/lmongo');
 
 pushManager.eventEmitter.on('push/testing', function(event) {
     events.push(event);
@@ -79,7 +81,7 @@ vows.describe("Push Manager").addBatch({
                 }
             },
             "and writes out IJOD stuff" : {
-                topic; function() {
+                topic: function() {
                     fs.readFile(lconfig.me + "/push/testing.json", this.callback);
                 },
                 "successfully" : function(err, data) {
@@ -154,6 +156,15 @@ vows.describe("Push Manager").addBatch({
         },
         "to query the map" : function(err, status, data) {
             assert.equal(data, ["testing"]);
+        }
+    }
+}).addBatch({
+    "can use the query API" : {
+        topic: function() {
+            request.get({uri : "http://localhost:8043/query/getPush?dataset=testing&limit=1"}, this.callback);
+        },
+        "to get at the data" : function(err, status, data) {
+            assert.equal(data.length, 1);
         }
     }
 }).export(module);
