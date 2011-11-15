@@ -441,7 +441,8 @@
                 "name": "types",
                 "description": "A single, or comma separated list, of service types that are being searched for.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "default": "contact"
             }
             ]
         }
@@ -460,7 +461,8 @@
                 "name": "handle",
                 "description": "The handle of the available service to retrieve",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "default": "contacts"
             }
             ]
         }
