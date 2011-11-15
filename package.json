@@ -45,6 +45,7 @@
         "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
         "node-fs": "=0.1.0",
+        "semver": "=1.0.10",
 
 
         "hashish": "=0.0.4",
