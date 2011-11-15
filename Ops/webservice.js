@@ -39,7 +39,7 @@ var dashboard, devdashboard;
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" ) {
+                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -56,6 +56,7 @@ var locker = express.createServer(
             connect.session({key:'locker.project.id', secret : "locker"})
         );
 
+var push = require('./webservice-push')(locker);
 var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);
 

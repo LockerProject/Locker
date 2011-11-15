@@ -18,7 +18,7 @@ var vows = require("vows")
   , fs = require('fs')
   , mongo
   , request = require('request')
-  , events = {}
+  , events = []
   , _id
   , eventCount = 0
   , events = []
@@ -38,26 +38,26 @@ lconfig.load("Config/config.json");
 var pushManager = require(__dirname + "/../Common/node/lpushmanager.js");
 var lmongo = require(__dirname + '/../Common/node/lmongo');
 
-pushManager.eventEmitter.on('push/testing', function(event) {
-    events.push(event);
+var levents = require("levents");
+var realFireEvent = levents.fireEvent;
+levents.fireEvent = function(type, id, action, obj) {
     eventCount++;
-});
+    events.push(obj);
+}
 
 vows.describe("Push Manager").addBatch({
     "has a map of the data sets" : function() {
         assert.include(pushManager, "datasets");
-        assert.equal(pushManager, []);
+        assert.deepEqual(pushManager.datasets, {});
     },
 }).addBatch({
     "Data sets can be created by pushing arbitrary data in" : {
         topic:function() {
-            events = {};
-            request.post({uri : "http://localhost:8043/push/testing", json: dataSets[0]}, this.callback);
+            events = [];
+            pushManager.acceptData('testing', dataSets[0], this.callback);
         },
-        "which adds that set to the map" : function(err, status) {
-            assert.isNull(err);
-            assert.include(pushManager, "datasets");
-            assert.include(pushManager.datasets, "testing");
+        "which adds that set to the map" : function() {
+            assert.equal(pushManager.datasets.testing, true);
         },
         "and also" : {
             "generates events" : function() {
@@ -72,14 +72,14 @@ vows.describe("Push Manager").addBatch({
             "and generates mongo data" : {
                 topic: function() {
                     var self = this;
-                    lmongo.init('push', ['testing'], function(theMongo, theColls) {
+                    lmongo.init('push', ['push_testing'], function(theMongo, theColls) {
                         mongo = theMongo;
                         colls = theColls;
-                        colls.testing.count(self.callback);
+                        colls.push_testing.count(self.callback);
                     });
                 },
                 "successfully" : function(err, count) {
-                    assert.equal(count, 1);
+                    assert.equal(count, 2);
                 }
             },
             "and writes out IJOD stuff" : {
@@ -119,10 +119,9 @@ vows.describe("Push Manager").addBatch({
     "Pushing to that same API again" : {
         topic: function() {
             events = [];
-            request.post({uri : "http://localhost:8043/push/testing", json: dataSets[1]}, this.callback);
+            pushManager.acceptData('testing', dataSets[1], this.callback);
         },
         "with no data will leave everything intact" : function(err, resp, data) {
-            assert.equal(resp.status, 200);
             assert.equal(events.length, 0);
             assert.equal(events[0], undefined);
         }
@@ -132,9 +131,12 @@ vows.describe("Push Manager").addBatch({
         topic: function() {
             var self = this;
             events = [];
-            request.post({uri : "http://localhost:8043/push/testing", json: dataSets[2]}, function() {
-                 colls.testing.count(self.callback);
+            pushManager.acceptData('testing', dataSets[2], function() {
+                colls.push_testing.count(self.callback);
             });
+            //request.post({uri : "http://localhost:8043/push/testing", json: dataSets[2]}, function() {
+                 //colls.push_testing.count(self.callback);
+            //});
         },
         "it will generate a delete event and remove the row from mongo" : function(err, count) {
             assert.equal(count, 1);
@@ -146,29 +148,33 @@ vows.describe("Push Manager").addBatch({
 }).addBatch({
     "Pushing invalid data" : {
         topic: function() {
-            request.post({uri : "http://localhost:8043/push/testing", json: dataSets[3]}, this.callback);
+            pushManager.acceptData('testing', dataSets[3], this.callback);
         },
         "with no value for 'id' errors" : function(err, status, data) {
-            assert.equal(err.message, 'no value for primary key');
+            assert.equal(err[0].message, 'no value for primary key');
         }
     }
 }).addBatch({
     "an endpoint is available" : {
         topic: function() {
-            request.get({uri : "http://localhost:8043/pushMap"}, this.callback);
+            request.get({uri: "http://localhost:8043/push"}, this.callback);
         },
-        "to query the map" : function(err, status, data) {
-            assert.equal(data, ["testing"]);
+        "to query the map" : function(err, resp, data) {
+            assert.deepEqual(JSON.parse(data), {});
         }
     }
 }).addBatch({
-    "can use the query API" : {
-        topic: function() {
-            request.get({uri : "http://localhost:8043/query/getPush?dataset=testing&limit=1"}, this.callback);
-        },
-        "to get at the data" : function(err, status, data) {
-            assert.equal(data.length, 1);
-        }
+    //"can use the query API" : {
+        //topic: function() {
+            //request.get({uri : "http://localhost:8043/query/getPush?dataset=testing&limit=1"}, this.callback);
+        //},
+        //"to get at the data" : function(err, status, data) {
+            //console.dir(data);
+            //assert.equal(data.length, 1);
+        //}
+    //},
+    teardown : function() {
+        levents.fireEvent = realFireEvent;
     }
 }).export(module);
 
