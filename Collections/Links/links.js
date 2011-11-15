@@ -172,16 +172,17 @@ app.get('/', function(req, res) {
         ndx[item.link] = item;
         results.push(item);
     }, function(err) {
-        if(req.query.full != true) {
+        if(req.query.full === true || req.query.full === "true" || req.query.full == 1) {
+            var arg = {"link":{$in: Object.keys(ndx)}};
+            if(options.fields) arg.fields = options.fields;
+            dataStore.getEncounters(arg, function(encounter) {
+                ndx[encounter.link].encounters.push(encounter);
+            }, function() {
+                res.send(results);
+            });
+        } else {
             return res.send(results);
         }
-        var arg = {"link":{$in: Object.keys(ndx)}};
-        if(options.fields) arg.fields = options.fields;
-        dataStore.getEncounters(arg, function(encounter) {
-            ndx[encounter.link].encounters.push(encounter);
-        }, function() {
-            res.send(results);
-        });
     });
 });
 
