@@ -79,7 +79,7 @@ vows.describe("Query System").addBatch({
         }
     },
     "Advanced query operators" : {
-        topic:lpquery.parse("/getPhotos?terms=[gt:21+, gte:22+., lt:20-, lte:19-., (key:1 OR key:2)]&limit=10"),
+        topic:lpquery.parse("/getPhotos?terms=[gt:21+, gte:22+., lt:20-, lte:19-., range:2-4, range_eq:5-.7, eq_range:8.-11, eq_range_eq:12.-.17, (key:1 OR key:2)]&limit=10"),
         "generate a valid parse tree":function(topic) {
             assert.deepEqual(topic, [ 'Photos',
               { terms:
@@ -87,6 +87,10 @@ vows.describe("Query System").addBatch({
                    [ 'keyValue', 'gte', [ '+.', 22 ] ],
                    [ 'keyValue', 'lt', [ '-', 20 ] ],
                    [ 'keyValue', 'lte', [ '-.', 19 ] ],
+                   [ 'keyValue', 'range', [ 'range', 2, 4 ] ],
+                   [ 'keyValue', 'range_eq', [ 'range_eq', 5, 7 ] ],
+                   [ 'keyValue', 'eq_range', [ 'eq_range', 8, 11 ] ],
+                   [ 'keyValue', 'eq_range_eq', [ 'eq_range_eq', 12, 17 ] ],
                    [ 'subset',
                      [ [ 'OR',
                          [ [ 'keyValue', 'key', 1 ], [ 'keyValue', 'key', 2 ] ] ] ] ] ],
@@ -100,6 +104,10 @@ vows.describe("Query System").addBatch({
                     gte: { $gte: 22 },
                     lt: { $lt: 20 },
                     lte: { $lte: 19 },
+                    range: { $gt: 2, $lt: 4 },
+                    range_eq: { $gt: 5, $lte: 7 },
+                    eq_range: { $gte: 8, $lt: 11 },
+                    eq_range_eq: { $gte: 12, $lte: 17 },
                     $or: [
                         { key: 1 },
                         { key: 2 }
