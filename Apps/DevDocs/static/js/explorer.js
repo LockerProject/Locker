@@ -12,10 +12,21 @@ $(function() {
       $.each(curAPI.operations[0].parameters, function(key, val) {
         switch(val.paramType) {
         case "path":
-          path = path.replace("{" + val.name + "}", $("input[name$='" + val.name + "']").val());
+          var inputVal;
+          if(val.options && val.options.length > 0) {
+            inputVal = $("select[name$='" + val.name + "'] option:selected").val();
+          } else {
+            inputVal =  $("input[name$='" + val.name + "']").val();
+          }
+          path = path.replace("{" + val.name + "}", inputVal);
           break;
         case "query":
-          var inputVal = $("input[name$='" + val.name + "']").val();
+          var inputVal;
+          if(val.options && val.options.length > 0) {
+            inputVal = $("select[name$='" + val.name + "'] option:selected").val();
+          } else {
+            inputVal = $("input[name$='" + val.name + "']").val();
+          }
           if (inputVal) {
             if (queryParams.length > 0) queryParams += "&";
             queryParams += val.name + "=" + inputVal;
@@ -79,8 +90,10 @@ $(function() {
     if (data.operations[0].parameters) {
       $("div.parameters").show();
       $("#testParameters").show();
+      $("#testParametersSelect").show();
       $("div.parameters ul").find("li:gt(0)").remove();
       $("#testParameters").find("div:gt(0)").remove();
+      $("#testParametersSelect").find("div:gt(0)").remove();
       $("#methodTemplate div.parameters ul").render(data.operations[0], {
         "li":{
           "param<-parameters":{
@@ -90,22 +103,58 @@ $(function() {
           }
         }
       });
-      $("div#testParameters ").render(data.operations[0], {
-        "div.testParam":{
-          "param<-parameters":{
-            "span.paramName":"param.name",
-            "input@name":"_#{param.name}",
-            "input@value":"param.default",
-            "span.testExample": "param.example"
-          }
+      
+      var selectCount = 0;
+      for(var i in data.operations[0].parameters) {
+        if(data.operations[0].parameters[i].options && data.operations[0].parameters[i].options.length > 0)
+          selectCount++;
+      }
+      console.error("DEBUG: selectCount", selectCount);
+      if(selectCount > 0) {
+        $("div#testParametersSelect ").render(data.operations[0], {
+            "div.testParam":{
+              "param<-parameters":{
+                "span.paramName":"param.name",
+                "select@name":"_#{param.name}",
+                "select": function(a) {
+                    var text = "";
+                    var options = a.item.options;
+                    for(var i in options)
+                        text += "<option>" + options[i] + "</option>";
+                    return text;
+                }
+              },
+              filter: function(a) {
+                  return typeof a.item.options == 'object' && a.item.options.length > 0;
+              }
+            }
+          });
+        } else {
+          $("#testParametersSelect").hide();
         }
-      });
+        if(selectCount < data.operations[0].parameters.length) {
+          $("div#testParameters ").render(data.operations[0], {
+            "div.testParam":{
+              "param<-parameters":{
+                "span.paramName":"param.name",
+                "input@name":"_#{param.name}",
+                "input@value":"param.default",
+                "span.testExample": "param.example"
+              },
+              filter: function(a) {
+                  return !a.item.options;
+              }
+            }
+          });
+        }
     } else {
       $("div.parameters").hide();
       $("#testParameters").hide();
+      $("#testParametersSelect").hide();
     }
     if (data.operations[0].responseClass && data.operations[0].responseClass.indexOf("[") == -1) {
       $("ul.resultEntry").find("li:gt(0)").remove();
+      console.error("DEBUG: models[data.operations[0].responseClass].responseClass", models[data.operations[0].responseClass].responseClass);
       $("#methodTemplate ul.resultEntry").render(models[data.operations[0].responseClass].responseClass, {
         "li":{
           "result<-properties":{

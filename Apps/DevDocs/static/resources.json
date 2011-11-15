@@ -249,7 +249,7 @@
                 "description": "When 1 or true the complete encounters array is included in the result.",
                 "dataType": "boolean",
                 "paramType": "query",
-                "example": "true or false"
+                "options": [true, false]
             }
             ]
         }
@@ -474,7 +474,7 @@
                 "description": "The data type to query.  Currently supported are Photo, Contact, Place, and Link.",
                 "dataType": "string",
                 "paramType": "path",
-                "validValues": ["Photo", "Contact", "Link", "Place"]
+                "options": ["Photo", "Contact", "Link", "Place"]
             },
             {
                 "name": "terms",

@@ -17,6 +17,12 @@ pre.prettyprint {
     text-align:right;
 }
 
+#testParametersSelect .paramName {
+    display:block;
+    float:left;
+    min-width:100px;
+    text-align:right;
+}
 .paramType {
     font-style:italic;
 }
@@ -56,6 +62,9 @@ body {
 input[type=text]{
     margin-left:10px;
     width:300px;
+}
+select {
+    margin-left:10px;
 }
 span.testExample {
     margin-left:10px;
