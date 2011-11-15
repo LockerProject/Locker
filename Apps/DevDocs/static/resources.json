@@ -462,7 +462,7 @@
     },
     {
         "path": "/query/get{dataSet}",
-        "description": "Query data.  This endpoint should not be used for trying to just get all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.",
+        "description": "Query data.  This endpoint should not be used for trying to just get all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.<br><h3>Examples</h3>Get all contact data for a person with a certain Facebook ID:<br><br><code><a href='/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]' target='_blank'>/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]</a></code><br><br>Get 5 photos with a height greater than 480 pixels, sorted by created date, newest to oldest:<br><br><code><a href=\"/query/getPhoto?terms=[width:480+]&limit=5&sort='{&quot;timestamp&quot;:-1}'\" target='_blank'>/query/getPhoto?terms=[width:480+]&limit=5&sort='{\"timestamp\":-1}'</a></code><br><br>Get only the url, thumb url, title and twitter username (if present) fields from the Photos collection (and return only the first 5):<br><br><code><a href=\"/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]\" target='_blank'>/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]</a></code><br><br>",
         "operations": [
         {
             "httpMethod": "GET",
@@ -478,7 +478,7 @@
             },
             {
                 "name": "terms",
-                "description": "The actual query to be performed.<h3>Syntax</h3>The syntax uses a JSON like notation that always begins as an array.  The fields can be checked by writing them in a json notation of field:value.  The field name can use dot notation to access objects that are deeper than the top level.  The value can be a quoted string, a number, or 'true'/'false' (without quotes).  Strings may be quoted with either &quot; or &apos;.  Multiple terms can be checked by separating them with a comma just like a JSON array:  <code>[field:value, field2:value2]</code>.  Multiple terms are treated as an AND statement, in order to preform an OR search the terms that will be ORed are put in parenthesis and separated by OR statements.  For example:  <code>[(field:value OR field2:value)]</code>.  AND is also available when necessary, following the same rules as the OR operator.The value can also contain comparison operators.  Currently supported operators are:<ul><li><span class='operator'>+</span> greater than</li><li><span class='operator'>+.</span> greater than or equal</li><li><span class='operator'>-</span> less than</li><li><span class='operator'>-.</span> less than or equal</li><li><span class='operator'>!=</span> not equal</li></ul>For example: <code>[field:10+.]</code> This searches for fields with a value of 10 or greater.",
+                "description": "The actual query to be performed.<h3>Syntax</h3>The syntax uses a JSON like notation that always begins as an array.  The fields can be checked by writing them in a json notation of field:value.  The field name can use dot notation to access nested objects. The value can be a quoted string, a number, or a boolean true/false.Strings may be quoted with either &quot; or &apos;. Multiple terms can be checked by separating them with a comma just like a JSON array:<br><br> <code>terms=[field:&quot;value&quot;, field2:11, field3:false]</code><br><br>  Multiple terms are treated as an AND statement - in order to preform an OR search the terms that will be ORed are put in parenthesis and separated by OR statements. For example:<br><br>  <code>terms=[(field:value OR field2:value)]</code><br><br>  AND is also available when necessary, following the same rules as the OR operator. The value can also contain comparison operators.  Currently supported operators are:<ul><li><span class='operator'>+</span> greater than</li><li><span class='operator'>+.</span> greater than or equal</li><li><span class='operator'>-</span> less than</li><li><span class='operator'>-.</span> less than or equal</li><li><span class='operator'>!=</span> not equal</li></ul>For example: <br><br><code>terms=[field:10+.]</code><br><br> searches for fields with a value of 10 or greater.",
                 "dataType": "string",
                 "paramType": "query"
             },
@@ -502,7 +502,7 @@
             },
             {
                 "name": "fields",
-                "description": "The fields to return.  This is an array of field names with a 1 to include them.  The field name can use dot notation to access objects that are deeper than the top level.  Exclusion is currently not possible, if a fields set is given that is all that will be returned. <code>[field:1]</code>",
+                "description": "The fields to return as an array of <code>fieldName:1</code> to include themThe field name can use dot notation to access nested objects, e.g. <code>[sources.data.user:1]</code>. Exclusion is not currently possible. Useful for speeding up queries and reducing payload.",
                 "dataType": "string",
                 "paramType": "query"
             }
