@@ -109,7 +109,6 @@ $(function() {
         if(data.operations[0].parameters[i].options && data.operations[0].parameters[i].options.length > 0)
           selectCount++;
       }
-      console.error("DEBUG: selectCount", selectCount);
       if(selectCount > 0) {
         $("div#testParametersSelect ").render(data.operations[0], {
             "div.testParam":{
@@ -154,7 +153,6 @@ $(function() {
     }
     if (data.operations[0].responseClass && data.operations[0].responseClass.indexOf("[") == -1) {
       $("ul.resultEntry").find("li:gt(0)").remove();
-      console.error("DEBUG: models[data.operations[0].responseClass].responseClass", models[data.operations[0].responseClass].responseClass);
       $("#methodTemplate ul.resultEntry").render(models[data.operations[0].responseClass].responseClass, {
         "li":{
           "result<-properties":{
