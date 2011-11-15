@@ -5,9 +5,10 @@ lconfig.load('Config/config.json');
 
 reg.init(lconfig, function(installed){
     console.log("installed: "+Object.keys(installed).join(","));
-   reg.install({name:"linkvid@0.0.1"}, function(err){
+    console.log(reg.getViewers());
+/*   reg.install({name:"linkvid@0.0.1"}, function(err){
        reg.update({name:"linkvid"}, function(err){
            console.log("installed: "+err);
-       }); 
-   }); 
+       });
+   }); */
 });

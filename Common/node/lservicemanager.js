@@ -175,7 +175,9 @@ exports.mapUpsert = function (file, type) {
     var metaData;
     try {
         metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
-        if(!metaData || !metaData.handle) throw new Error("no handle");
+        if(!metaData) throw new Error("no data");
+        if(!metaData.handle && metaData.repository) metaData = metaData.repository; // in package.json files our manifest data is in 'repository'
+        if(!metaData.handle) throw new Error("no handle");
     } catch (E) {
         console.error("failed to upsert "+file+" due to "+E);
         return;
