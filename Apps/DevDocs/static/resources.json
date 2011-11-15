@@ -294,7 +294,8 @@
                 "name": "id",
                 "description": "The url of the link.  This is the fully expanded url when possible.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
             },
             {
                 "name": "limit",
