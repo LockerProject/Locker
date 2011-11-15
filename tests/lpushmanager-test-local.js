@@ -41,13 +41,13 @@ var lmongo = require(__dirname + '/../Common/node/lmongo');
 
 var levents = require("levents");
 var realFireEvent = levents.fireEvent;
-levents.fireEvent = function(type, id, action, obj) {
-    eventCount++;
-    events.push(obj);
-}
 
 vows.describe("Push Manager").addBatch({
     "has a map of the data sets" : function() {
+        levents.fireEvent = function(type, id, action, obj) {
+            eventCount++;
+            events.push(obj);
+        }
         pushManager.init();
         assert.include(pushManager, "datasets");
         assert.deepEqual(pushManager.datasets, {});
