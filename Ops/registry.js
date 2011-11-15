@@ -178,8 +178,9 @@ function checkPackage(pjs, arg, gh, callback)
               "type":
               "repository": {
                 "title": arg.title || "blank";
-                "handle": gh.login + "-" + pkg,
+                "handle": "reg-" + gh.login + "-" + pkg,
                 "type": "viewer",
+                "author": gh.name,
                 "viewer": arg.viewer,
                 "static": true
                 "url": "http://github.com/"+gh.login+"/"+pkg

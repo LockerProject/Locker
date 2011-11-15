@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>Registry Tester</title>
+  <script type="text/javascript" src='jquery-1.6.2.min.js'></script>
+</head>
+<body>
+<h2>Registry Tester</h2>
+<h3>Viewer List</h3>
+<ul id="viewers">
+</ul>
+<h3>Available to Publish from your GitHub</h3>
+<ul id="repos">
+</ul>
+
+<script>
+$.getJSON('/registry/viewers', {}, function(viewers) {
+    console.log(viewers);
+    if(!viewers || !viewers.length) return;
+  $.getJSON('/registry/installed', {}, function(installed) {
+      console.log(installed);
+      if(!installed) return;
+
+  });
+});
+
+$.getJSON('/Me/github/getCurrent/repos', {}, function(repos) {
+    console.log(repos);
+    if(!repos || !repos.length) return;
+})
+
+</script>
+</body>
+</html>
