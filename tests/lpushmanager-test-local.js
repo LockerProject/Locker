@@ -17,6 +17,7 @@ var vows = require("vows")
   , lconfig = require("lconfig")
   , fs = require('fs')
   , mongo
+  , path = require('path')
   , request = require('request')
   , events = []
   , _id
@@ -47,9 +48,10 @@ levents.fireEvent = function(type, id, action, obj) {
 
 vows.describe("Push Manager").addBatch({
     "has a map of the data sets" : function() {
+        pushManager.init();
         assert.include(pushManager, "datasets");
         assert.deepEqual(pushManager.datasets, {});
-    },
+    }
 }).addBatch({
     "Data sets can be created by pushing arbitrary data in" : {
         topic:function() {
@@ -164,15 +166,16 @@ vows.describe("Push Manager").addBatch({
         }
     }
 }).addBatch({
-    //"can use the query API" : {
-        //topic: function() {
-            //request.get({uri : "http://localhost:8043/query/getPush?dataset=testing&limit=1"}, this.callback);
-        //},
-        //"to get at the data" : function(err, status, data) {
-            //console.dir(data);
-            //assert.equal(data.length, 1);
-        //}
-    //},
+    "the config file is saved to disk" : {
+        topic: function() {
+            fs.readFile(path.join(lconfig.me, "push", "push_config.json"), 'ascii', this.callback);
+        },
+        "properly" : function(err, data) {
+            var resp = JSON.parse(data);
+            assert.equal(resp.datasets.testing, true);
+            assert.deepEqual(resp.testing.ids, [1, 500]);
+        }
+    },
     teardown : function() {
         levents.fireEvent = realFireEvent;
     }

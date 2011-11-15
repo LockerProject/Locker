@@ -5,15 +5,20 @@ var fs = require('fs')
   , async = require('async')
   , datasets = {}
   , levents = require('levents')
-  , EventEmitter = require('events').EventEmitter
-  , ee
   , lutil = require('lutil')
   , config = {}
   ;
 
+config.datasets = {};
+module.exports.datasets = config.datasets;
 
-module.exports.datasets = datasets;
-module.exports.eventEmitter = ee = new EventEmitter();
+module.exports.init = function () {
+    var dir = path.join(lconfig.me, "push");
+    if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
+    if (!path.existsSync(dir)) fs.mkdirSync(path.join(lconfig.me, "push"), 0755);
+    if (!path.existsSync(path.join(dir, "push_config.json"))) return;
+    config = JSON.parse(path.join(dir, "push_config.json"));
+}
 
 module.exports.acceptData = function(dataset, response, callback) {
     datastore.init('push', function() {
@@ -25,8 +30,9 @@ module.exports.acceptData = function(dataset, response, callback) {
                 config[dataset] = {};
             }
             lutil.extend(true, config[dataset], response.config);
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
+                              JSON.stringify(config, null, 4));
         }
-        //var deleteIDs = compareIDs(info.config, response.config);
         if (typeof(response.data) === 'string') {
             return callback('data is in a wacked out format');
         }
@@ -35,7 +41,6 @@ module.exports.acceptData = function(dataset, response, callback) {
         }
         processData(deletedIDs, response.data, dataset, callback);
     });
-
 }
 
 // copy copy copy
@@ -56,7 +61,11 @@ function compareIDs (originalConfig, newConfig) {
 
 //dataset is the name of the dataset
 function processData (deleteIDs, data, dataset, callback) {
-    module.exports.datasets[dataset] = true;
+    if (!module.exports.datasets[dataset]) {
+        module.exports.datasets[dataset] = true;
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
+                              JSON.stringify(config, null, 4));
+    }
     datastore.addCollection(dataset, 'push', 'id');
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
