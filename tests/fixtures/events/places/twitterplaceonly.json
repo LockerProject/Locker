@@ -121,26 +121,10 @@
         "in_reply_to_user_id":null,
         "source":"<a href=\"http://stone.com/Twittelator\" rel=\"nofollow\">Twittelator</a>",
         "contributors":null,
-        "geo":
-        {
-            "type":"Point",
-            "coordinates":
-            [
-                37.916476,
-                -122.553927
-            ]
-        },
+        "geo": null,
         "id":122435457991720960,
         "id_str":"122435457991720960",
-        "coordinates":
-        {
-            "type":"Point",
-            "coordinates":
-            [
-                -122.553927,
-                37.916476
-            ]
-        },
+        "coordinates":null,
         "text":"Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus",
         "created_at":"Fri Oct 07 22:17:42 +0000 2011"
     }

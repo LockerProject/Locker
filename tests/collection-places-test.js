@@ -9,6 +9,7 @@ var fs = require('fs');
 var request = require('request');
 var foursquareEvent = JSON.parse(fs.readFileSync('fixtures/events/places/foursquare.json','utf8'));
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/places/twitter.json','utf8'));
+var twitterBBEvent = JSON.parse(fs.readFileSync('fixtures/events/places/twitterplaceonly.json','utf8'));
 
 process.setMaxListeners(0);
 process.on('uncaughtException',function(error){
@@ -40,7 +41,7 @@ suite.next().suite.addBatch({
         "successfully" : function(err, response) {
             assert.isNull(err);
             assert.equal(response.data.text, 'Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus');
-            assert.equal(response.data.id, 122435457991720960);
+            assert.equal(response.data.id, '32ccd529146dfc30f2a318034c734ae01f1c0687');
         }
     }
 }).addBatch({
@@ -52,6 +53,32 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(response.data.at, 1303341763000);
             assert.equal(response.data.title, 'Singly Is Awesome');
+        }
+    }
+}).addBatch({
+    "Can handle Twitter bounding box for geo" : {
+        topic: function() {
+            var self = this;
+            lmongo.init("place", thecollections, function(mongo, colls) {
+                dataStore.init(colls.places, mongo, locker);
+                dataStore.addEvent(twitterBBEvent, self.callback);
+            });
+        },
+        "successfully" : function(err, response) {
+            var box = twitterBBEvent.obj.data.place.bounding_box.coordinates[0];
+            var allLat = 0;
+            var allLng = 0;
+            
+            for (var i=0; i<box.length; ++i) {
+                allLat += box[i][1];
+                allLng += box[i][0];
+            }
+            var lat = +(allLat / 4).toFixed(5);
+            var lng = +(allLng / 4).toFixed(5);
+            
+            assert.isNull(err);
+            assert.equal(response.data.lat, lat);
+            assert.equal(response.data.lng, lng);
         }
     }
 }).addBatch({
