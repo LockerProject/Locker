@@ -158,7 +158,7 @@ locker.get("/query/:query", function(req, res) {
         var providers = serviceManager.serviceMap().installed;
         var provider = undefined;
         for (var key in providers) {
-            if (providers.hasOwnProperty(key) && providers[key].provides && providers[key].provides.indexOf(query.collection) >= 0 )
+            if (providers.hasOwnProperty(key) && ((providers[key].provides && providers[key].provides.indexOf(query.collection) >= 0) || (providers[key].mongoCollections && providers[key].mongoCollections.indexOf(query.collection) >= 0) ) )
                 provider = providers[key];
         }
 
@@ -171,7 +171,7 @@ locker.get("/query/:query", function(req, res) {
         var mongo = require("lmongo");
         mongo.init(provider.id, provider.mongoCollections, function(mongo, colls) {
             try {
-                var collection = colls[provider.mongoCollections[0]];
+                var collection = colls[query.collection] || colls[provider.mongoCollections[0]];
                 console.log("Querying " + JSON.stringify(query));
                 var options = {};
                 if (query.limit) options.limit = query.limit;
