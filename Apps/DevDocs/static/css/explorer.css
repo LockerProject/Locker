@@ -1,0 +1,49 @@
+.paramName {
+  font-weight:bold;
+}
+
+#testParameters .paramName {
+    display:block;
+    float:left;
+    min-width:100px;
+    text-align:right;
+}
+.paramType {
+  font-style:italic;
+}
+#fullTestURL {
+  display:block;
+  font-weight:bold;
+  font-size:20px;
+  background-color:#cdcdcd;
+  border:1px solid black;
+  margin:8px 0 8px 0;
+  padding:8px;
+}
+#limitedResults {
+  font-style:italic;
+  color:red;
+  font-size:12px;
+}
+.operator {
+  font-weight:bold;
+  display:block;
+  float:left;
+  width:20px;
+}
+.paramDescription ul li {
+  padding-left:20px;
+  list-style-type: none;
+}
+body {
+  margin:40px;
+}
+
+input[type=text]{
+    margin-left:10px;
+    width:300px;
+}
+span.testExample {
+    margin-left:10px;
+    color:#aaa;
+}

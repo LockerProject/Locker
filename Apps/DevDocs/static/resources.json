@@ -2,29 +2,29 @@
     "apis": [
     {
         "path": "/Me/photos/state",
-        "description": "State of the Photos collection",
+        "description": "Meta info about the current state of the Photos collection",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "photosState",
-            "summary": "Get the state of the Photos collection",
+            "summary": "Meta info about the current state of the Photos collection",
             "responseClass": "state"
         }
         ]
     },
     {
         "path": "/Me/photos/since",
-        "description": "Get the photos that have been added to the collection since a specific photo.",
+        "description": "Get the photos that have been added to the collection after a specific photo.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "photosSince",
-            "summary": "Get the photo that have been added to the collection since a specific photo.",
+            "summary": "Get the photo that have been added to the collection after a specific photo.",
             "responseClass": "photo",
             "parameters": [
             {
                 "name": "id",
-                "description": "The _id of the photo that was last seen.  Result array is all photos after this one.",
+                "description": "The exclusive lower bound _id. Result array is all photos added after that one.",
                 "dataType": "string",
                 "paramType": "query"
             }
@@ -44,7 +44,7 @@
             "parameters": [
             {
                 "name": "limit",
-                "description": "The maximum number of photos to return",
+                "description": "The maximum number of photos to return.",
                 "dataType": "number",
                 "default": 10,
                 "paramType": "query"
@@ -61,17 +61,17 @@
     },
     {
         "path": "/Me/photos/image/{id}",
-        "description": "Redirect to the actual photo data based on the photo id.",
+        "description": "Redirect to the actual photo data based on a photo's _id. Useful for downloading the photo itself or presenting it in the UI.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "photosRedirect",
-            "summary": "Redirect to the actual photo data based on the photo id.",
+            "summary": "Redirect to the actual photo data based on a photo's _id. Useful for downloading the photo itself or presenting it in the UI.",
             "responseClass": "[Image]",
             "parameters": [
             {
                 "name": "id",
-                "description": "The id from a photo to redirect to.",
+                "description": "The _id of a photo object to redirect to.",
                 "dataType": "string",
                 "paramType": "path"
             }
@@ -103,31 +103,32 @@
 
     {
         "path": "/Me/contacts/state",
-        "description": "State of the Contacts collection",
+        "description": "Meta info about the current state of the Contacts collection.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "contactsState",
-            "summary": "Get the state of the Contacts collection",
+            "summary": "Meta info about the current state of the Contacts collection.",
             "responseClass": "state"
         }
         ]
     },
     {
         "path": "/Me/contacts/since",
-        "description": "Get the contacts that have been added to the collection since a specific contact.",
+        "description": "Get the contacts that have been added to the collection after a specific contact.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "contactsSince",
-            "summary": "Get the contacts that have been added to the collection since a specific contact.",
+            "summary": "Get the contacts that have been added to the collection after a specific contact.",
             "responseClass": "contact",
             "parameters": [
             {
                 "name": "id",
-                "description": "The _id of the contact that was last seen.  Result array is all contacts after this one.",
+                "description": "The exclusive lower bound _id. Result array is all contacts added after that one.",
                 "dataType": "string",
-                "paramType": "query"
+                "paramType": "query",
+                "example": "found in a contact object return from the /Me/contacts/ endpoint"
             }
             ]
         }
@@ -148,15 +149,13 @@
                 "description": "The maximum number of contacts to return",
                 "dataType": "number",
                 "paramType": "query",
-                "default": 10,
-                "example": "ex. 100"
+                "default": 10
             },
             {
                 "name": "offset",
                 "description": "The offset into the contacts collection to begin the returned data from.",
                 "dataType": "number",
-                "paramType": "query",
-                "example": "ex. 0, 100, 200"
+                "paramType": "query"
             }
             ]
         }
@@ -164,7 +163,7 @@
     },
     {
         "path": "/Me/contacts/id/{id}",
-        "description": "Get the collected information about a single contact.",
+        "description": "Get the collected information about a single contact, by _id.",
         "operations": [
         {
             "httpMethod": "GET",
@@ -176,7 +175,8 @@
                 "name": "id",
                 "description": "The _id of the contact.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a contact object returned from the /Me/contacts/ endpoint"
             }
             ]
         }
@@ -184,18 +184,18 @@
     },
     {
         "path": "/Me/links/state",
-        "description": "State of the Links collection",
+        "description": "Meta info about the current state of the Links collection",
         "operations": [
         {
             "httpMethod": "GET",
-            "summary": "Get the state of the Links collection",
+            "summary": "Meta info about the current state of the Links collection",
             "responseClass": "state"
         }
         ]
     },
     {
         "path": "/Me/links/search",
-        "description": "Search all links",
+        "description": "Full-text search of all links",
         "operations": [
         {
             "parameters": [
@@ -226,7 +226,7 @@
             "parameters": [
             {
                 "name": "limit",
-                "description": "The maximum number of links to return",
+                "description": "The maximum number of links to return.",
                 "dataType": "number",
                 "default": 10,
                 "paramType": "query"
@@ -269,7 +269,8 @@
                 "name": "id",
                 "description": "The _id of the link object to return.",
                 "dataType": "string",
-                "paramType": "path"
+                "paramType": "path",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
             }
             ]
         }
@@ -277,18 +278,18 @@
     },
     {
         "path": "/Me/links/encounters/{id}",
-        "description": "Get the information on where a link was originally seen.",
+        "description": "Get information about where a link was originally extracted from (a tweet, a Facebook wall post, etc).",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "linksGetEncounters",
             "summary": "Get the link information for a specific link.",
             "responseClass": "encounter",
-            "notes": "A single link can have many encounters.  Encounters are the information from other sources such as tweets or facebook wall posts.",
+            "notes": "A single link can have many encounters.  Encounters contain the information from the original sources such as tweets or Facebook wall posts.",
             "parameters": [
             {
                 "name": "id",
-                "description": "The url of the link.  This is the fully expanded link when possible.",
+                "description": "The url of the link.  This is the fully expanded url when possible.",
                 "dataType": "string",
                 "paramType": "path"
             },
@@ -310,17 +311,17 @@
     },
     {
         "path": "/Me/links/since",
-        "description": "Get the links that have been added to the collection since a specific link.",
+        "description": "Get the links that have been added to the collection after a specific link.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "linksSince",
-            "summary": "Get the links that have been added to the collection since a specific link.",
+            "summary": "Get the links that have been added to the collection after a specific link.",
             "responseClass": "link",
             "parameters": [
             {
                 "name": "id",
-                "description": "The _id of the link that was last seen.  Result array is all links after this one.",
+                "description": "The exclusive lower bound _id. Result array is all links added after that one.",
                 "dataType": "string",
                 "paramType": "query"
             }
@@ -331,29 +332,29 @@
 
     {
         "path": "/Me/places/state",
-        "description": "State of the Places collection",
+        "description": "Meta info about the current state of the Places collection",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "placesState",
-            "summary": "Get the state of the Places collection",
+            "summary": "Meta info about the current state of the Places collection",
             "responseClass": "state"
         }
         ]
     },
     {
         "path": "/Me/places/since",
-        "description": "Get the places that have been added to the collection since a specific place.",
+        "description": "Get the places that have been added to the collection after a specific place.",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "placesSince",
-            "summary": "Get the places that have been added to the collection since a specific place.",
+            "summary": "Get the places that have been added to the collection after a specific place.",
             "responseClass": "place",
             "parameters": [
             {
                 "name": "id",
-                "description": "The _id of the place that was last seen.  Result array is all places after this one.",
+                "description": "The exclusive lower bound _id. Result array is all places added after that one.",
                 "dataType": "string",
                 "paramType": "query"
             }
@@ -376,8 +377,7 @@
                 "description": "The maximum number of places to return",
                 "dataType": "number",
                 "paramType": "query",
-                "default": 10,
-                "example": "ex. 100"
+                "default": 10
             },
             {
                 "name": "offset",
@@ -412,12 +412,12 @@
 
     {
         "path": "/map",
-        "description": "Retrieve information about the available and installed locker services",
+        "description": "Retrieve information about the available and installed services",
         "operations": [
         {
             "httpMethod": "GET",
             "nickname": "coreMap",
-            "summary": "Retrieve information about the available and installed locker services",
+            "summary": "Retrieve information about the available and installed services",
             "responseClass": "serviceMap"
         }
         ]
@@ -452,7 +452,7 @@
             "parameters": [
             {
                 "name": "handle",
-                "description": "The handle of the avaiable service to retrieve",
+                "description": "The handle of the available service to retrieve",
                 "dataType": "string",
                 "paramType": "query"
             }
@@ -471,10 +471,10 @@
             "parameters": [
             {
                 "name": "dataSet",
-                "description": "The data type to query.  Currently supported are Photo, Contact, and Link.",
+                "description": "The data type to query.  Currently supported are Photo, Contact, Place, and Link.",
                 "dataType": "string",
                 "paramType": "path",
-                "validValues": ["Photo", "Contact", "Link"]
+                "validValues": ["Photo", "Contact", "Link", "Place"]
             },
             {
                 "name": "terms",
@@ -519,19 +519,19 @@
             "properties": {
                 "ready": {
                     "type": "boolean",
-                    "description": "true when the collection is ready to be interacted with."
+                    "description": "true or 1 when the collection is ready to be interacted with (has data)."
                 },
                 "count": {
                     "type": "number",
-                    "description": "The count of all of the available items in the collection."
+                    "description": "The number of items in the collection."
                 },
                 "updated": {
-                    "type": "long",
-                    "description": "The time, in milliseconds, that the collection was last updated."
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, that the collection was last updated."
                 },
                 "lastId": {
                     "type": "string",
-                    "description": "The object id of the last stored entry in the collection.  This is useful in conjunction with the /since endpoint."
+                    "description": "The _id of the object last added to the collection. This is useful in conjunction with the /since endpoint."
                 }
             }
         }
@@ -547,11 +547,11 @@
                 },
                 "_hash": {
                     "type": "string",
-                    "description": "A recreateable, unique identifer based on the data."
+                    "description": "A recreate-able, unique identifier based on the data."
                 },
                 "at": {
-                    "type": "date",
-                    "description": "The time, in milliseconds, that this encounter occured."
+                    "type": "number",
+                    "description": "The time, in milliseconds, that this encounter occurred."
                 },
                 "from": {
                     "type": "string",
@@ -595,15 +595,15 @@
             "properties": {
                 "_id": {
                     "type": "string",
-                    "description": "A unique identifier for this link."
+                    "description": "An auto-generated unique identifier for this link."
                 },
                 "link": {
                     "type": "string",
                     "description": "The URL of the link"
                 },
                 "at": {
-                    "type": "date",
-                    "description": "The time, in milliseconds, of the link generation."
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, that the first encounter of this link was created."
                 },
                 "embed": {
                     "type": "object",
@@ -615,11 +615,15 @@
                 },
                 "text": {
                     "type": "string",
-                    "description": "The readable text of the page that the link goes to."
+                    "description": "The text of the page behind the link."
                 },
                 "title": {
                     "type": "string",
-                    "description": "The title of the page that the link goes to."
+                    "description": "The title of the page behind the link."
+                },
+                "encounters": {
+                    "type": "array",
+                    "description": "An array of different \"encounters\" the person has had with a link - e.g. via a tweet and a Facebook post. Only returned if full == true."
                 }
             }
         }
@@ -631,43 +635,43 @@
             "properties": {
                 "_id": {
                     "type": "string",
-                    "description": "A unique identifier for this photo."
+                    "description": "An auto-generated unique identifier for this photo."
                 },
                 "height": {
                     "type": "number",
-                    "description": "Height of the picture in pixels."
+                    "description": "Height of the photo in pixels."
                 },
                 "id": {
                     "type": "string",
-                    "description": "An internal reference id"
+                    "description": "An internal reference id."
                 },
                 "sourceLink": {
                     "type": "string",
-                    "description": "A URL to where the image was originally linked.  For example a tweet link."
+                    "description": "A URL of an entity in which a link to the photo was originally encountered, e.g. a link to a tweet or a Facebook post that contained a link to the photo."
                 },
                 "sources": {
                     "type": "array",
-                    "description": "An array of service entries where this image was seen."
+                    "description": "An array of the services where this photo was encountered, e.g. a Facebook post or a tweet."
                 },
                 "thumbnail": {
                     "type": "string",
-                    "description": "A URL to a thumbnail version of the image."
+                    "description": "A URL to a thumbnail version of the photo."
                 },
                 "timestamp": {
-                    "type": "Date",
-                    "description": "The timestamp, in milliseconds, of when the photo was created."
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, of when the photo was created."
                 },
                 "title": {
                     "type": "string",
-                    "description": "A title that is associated with the image."
+                    "description": "The title of the photo."
                 },
                 "url": {
                     "type": "string",
-                    "description": "The URL to the image data."
+                    "description": "The URL to the raw photo data."
                 },
                 "width": {
                     "type": "number",
-                    "description": "The width of the image in pixels."
+                    "description": "The width of the photo in pixels."
                 }
             }
         }
@@ -679,8 +683,7 @@
             "properties": {
                 "_id": {
                     "type": "string",
-                    "description": "An auto-generated unique identifier for this contact.",
-                    "example": "\"4ebb7a122450a4ac44a72c3c\""
+                    "description": "An auto-generated unique identifier for this contact."
                 },
                 "accounts": {
                     "type": "object",
@@ -692,13 +695,11 @@
                 },
                 "firstnamesort": {
                     "type": "string",
-                    "description": "A helper field to support first name sorting.",
-                    "example": "\"jeremie miller\""
+                    "description": "A helper field to support first name sorting."
                 },
                 "lastnamesort": {
                     "type": "string",
-                    "description": "A helper field to support last name sorting.",
-                    "example": "\"miller\""
+                    "description": "A helper field to support last name sorting."
                 },
                 "name": {
                     "type": "string",
@@ -722,7 +723,7 @@
             "properties": {
                 "_id": {
                     "type": "string",
-                    "description": "A unique identifier for this place."
+                    "description": "An auto-generated unique identifier for this place."
                 },
                 "at": {
                     "type": "string",
@@ -730,23 +731,23 @@
                 },
                 "id": {
                     "type": "string",
-                    "description": "The original source's unique identifier for this place."
+                    "description": "The unique identifier for this place from the original source, e.g. Foursquare's id value."
                 },
                 "lat": {
-                    "type": "float",
-                    "description": "The latitude given for this place."
+                    "type": "number",
+                    "description": "The latitude."
                 },
                 "lng": {
-                    "type": "float",
-                    "description": "The longitude given for this place."
+                    "type": "number",
+                    "description": "The longitude."
                 },
                 "me": {
                     "type": "boolean",
-                    "description": "Marked true if this place is something created by/for you, not your friends."
+                    "description": "Marked true if this place is something created by you, as opposed to your friends - i.e. is this my checkin or a friend's?."
                 },
                 "network": {
                     "type": "string",
-                    "description": "The name of the network or source where this place record came from."
+                    "description": "The name of the network or source where this place record came from, e.g. foursquare."
                 },
                 "path": {
                     "type": "boolean",
@@ -754,11 +755,11 @@
                 },
                 "title": {
                     "type": "string",
-                    "description": "If given, the name of the location for this place."
+                    "description": "The name of the location for this place (if available)."
                 },
                 "via": {
                     "type": "string",
-                    "description": "The locker source where you can get the full record."
+                    "description": "The relative URL for retrieving original object."
                 }
             }
         }
@@ -770,7 +771,7 @@
             "properties": {
                 "available": {
                     "type": "string",
-                    "description": "An array of service manifest entries for all of the available locker services."
+                    "description": "An array of service manifest entries for all of the available services."
                 },
                 "installed": {
                     "type": "string",
