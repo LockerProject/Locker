@@ -172,7 +172,7 @@ app.get('/', function(req, res) {
         ndx[item.link] = item;
         results.push(item);
     }, function(err) {
-        if(!req.query.full) {
+        if(req.query.full != true) {
             return res.send(results);
         }
         var arg = {"link":{$in: Object.keys(ndx)}};

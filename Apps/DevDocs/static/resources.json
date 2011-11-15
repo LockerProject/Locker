@@ -246,7 +246,7 @@
             },
             {
                 "name": "full",
-                "description": "When 1 or true the complete encounters array is included in the result.",
+                "description": "When true the complete encounters array is included in the result.",
                 "dataType": "boolean",
                 "paramType": "query",
                 "options": [true, false]
