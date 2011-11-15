@@ -19,6 +19,7 @@ var vows = require("vows")
   , mongo
   , request = require('request')
   , events = {}
+  , _id
   , eventCount = 0
   , events = []
   , dataSets = []
@@ -55,6 +56,7 @@ vows.describe("Push Manager").addBatch({
         },
         "which adds that set to the map" : function(err, status) {
             assert.isNull(err);
+            assert.include(pushManager, "datasets");
             assert.include(pushManager.datasets, "testing");
         },
         "and also" : {
@@ -119,7 +121,8 @@ vows.describe("Push Manager").addBatch({
             events = [];
             request.post({uri : "http://localhost:8043/push/testing", json: dataSets[1]}, this.callback);
         },
-        "with no data will leave everything intact" : function(topic) {
+        "with no data will leave everything intact" : function(err, resp, data) {
+            assert.equal(resp.status, 200);
             assert.equal(events.length, 0);
             assert.equal(events[0], undefined);
         }
