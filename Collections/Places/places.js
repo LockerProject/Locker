@@ -80,7 +80,7 @@ app.get("/since", function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherPlaces(function(){
+    sync.gatherPlaces(req.query.type, function(){
         res.send('Making cookies for temas!');
     });
 });
