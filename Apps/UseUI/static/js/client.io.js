@@ -16,7 +16,7 @@ function addCommas(nStr)
 }
 
 allCounts = {};
-var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined}};
+var unseenCount = {"links":{count:0, lastId:undefined}, "contacts":{count:0, lastId:undefined}, "photos":{count:0, lastId:undefined},"places":{count:0,lastId:undefined}};
 
 function updateCounts(name, count, updated) {
   updated = updated || 0;
@@ -87,13 +87,13 @@ function showGritter(name, arg, lastId) {
     var prettyName = name;
     if (name == 'syncgithub') {
         $.gritter.add({
-            title:"Syncing viewers",
-            text:"We're syncing viewers from your github account, should be available shortly!",
+            title:"Syncing Viewers",
+            text:"Viewers from your github account should be available shortly!",
             time: 5000
         });
     } else if (name == 'newservice') {
         var service = arg;
-        var svclc = service.toLowerCase();
+        var svclc = service.provider.toLowerCase();
         var customText = "Importing ";
         var img = svclc;
         if(svclc === 'facebook') {
@@ -103,8 +103,10 @@ function showGritter(name, arg, lastId) {
         } else if(svclc === 'foursquare') {
             customText += "checkins and photos.";
         } else if(svclc === 'github') {
-            customText += "friends.";
-        } else if(svclc === 'google contacts') {
+            customText += "friends and viewers.";
+        } else if(svclc === 'instagram') {
+            customText += "friends and photos.";
+        } else if(svclc === 'gcontacts') {
             customText += "contacts.";
             img += 'gcontacts.png';
         } else if(svclc === 'flickr') {
@@ -112,15 +114,18 @@ function showGritter(name, arg, lastId) {
         }
         img = '/img/icons/' + img + '-gritter.png';
       $.gritter.add({
-        title:"Connected " + arg,
+        title:"Connected " + service.title,
         text:customText,
         // image:img,
         time: 5000
       });
     } else if(name === 'viewer') {
         drawServices();
+        drawViewers();
+        var action = (arg.action === 'update'? 'Updated' : 'New');
+        var arg = arg.obj.data
         var gritterId = $.gritter.add({
-          title:"New "+arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
+          title: action + " " + arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
           text:arg.id,
           image: "img/Collections.png",
           time:10000,
@@ -177,14 +182,14 @@ socket.on('event', function (body) {
   queueGritter(body.name, body.new, body.lastId);
 });
 
-socket.on('newservice', function(name) {
-  log('got new service: ', name);
-  queueGritter('newservice', name);
+socket.on('newservice', function(service) {
+  log('got new service: ', service);
+  queueGritter('newservice', service);
   if (window.guidedSetup) window.guidedSetup.serviceConnected();
 });
 
 socket.on('viewer', function(evt) {
-    queueGritter('viewer', evt.obj.data);
+    queueGritter('viewer', evt);
 });
 
 socket.on("counts", function(counts) {

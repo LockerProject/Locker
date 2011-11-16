@@ -29,8 +29,17 @@ var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 console.log('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 exports.serviceMap = function() {
-    // XXX Sterilize?
-    return serviceMap;
+    var sterilized = lutil.extend(true, {}, serviceMap);
+    if (sterilized.installed) {
+        for (var i in sterilized.installed) {
+            delete sterilized.installed[i].port;
+            delete sterilized.installed[i].uriLocal;
+            delete sterilized.installed[i].pid;
+            delete sterilized.installed[i].startingPid;
+        }
+    }
+    return sterilized;
+    //return serviceMap;
 }
 
 exports.providers = function(types) {

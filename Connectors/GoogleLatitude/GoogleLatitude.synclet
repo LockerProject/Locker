@@ -1,0 +1,24 @@
+{
+    "status":"unstable",
+    "title":"Google Latitude",
+    "synclets": [
+        {
+            "name": "locations",
+            "run": "locations.py",
+            "frequency": 600
+        }
+    ],
+    "provides": [
+        "location/glatitude"
+    ],
+    "mongoId" : {
+        "locations": "timestampMs"
+    },
+    "provider": "glatitude",
+    "provider_args": {
+        "scope": "https://www.googleapis.com/auth/latitude.all.best"
+    },
+    "action": "Connect to a Google Latitude account",
+    "desc": "Collect location history from my Google Latitude account using the Latitude API and a Google 'app' that I create just for myself."
+}
+

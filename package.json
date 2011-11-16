@@ -2,7 +2,7 @@
     "name": "locker",
     "description": "A personal data locker",
     "version": "0.0.0",
-    "homepage": "https://github.com/quartzjer/Locker",
+    "homepage": "https://github.com/LockerProject/Locker",
     "directories": {
         "lib": "./Common/node"
     },

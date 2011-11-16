@@ -1,0 +1,148 @@
+{"type": "timeline/twitter",
+  "via": "twitter",
+  "timestamp": 1320449999158,
+  "action": "new",
+  "obj": 
+   { "source": "twitter_timeline",
+     "type": "new",
+     "data":
+     {
+        "_id":"32ccd529146dfc30f2a318034c734ae01f1c0687",
+        "favorited":false,
+        "in_reply_to_status_id":null,
+        "entities":
+        {
+            "urls":
+            [
+                {
+                    "display_url":"j.mp/nRjvMT",
+                    "indices":
+                    [
+                        68,
+                        88
+                    ],
+                    "url":"http://t.co/VGfUmXfN",
+                    "expanded_url":"http://j.mp/nRjvMT"
+                }
+            ],
+            "hashtags":
+            [
+            ],
+            "user_mentions":
+            [
+            ]
+        },
+        "retweet_count":0,
+        "in_reply_to_screen_name":null,
+        "place":
+        {
+            "name":"Mill Valley",
+            "attributes":
+            {
+            },
+            "full_name":"Mill Valley, CA",
+            "bounding_box":
+            {
+                "type":"Polygon",
+                "coordinates":
+                [
+                    [
+                        [
+                            -122.577022,
+                            37.884154
+                        ],
+                        [
+                            -122.514249,
+                            37.884154
+                        ],
+                        [
+                            -122.514249,
+                            37.929383
+                        ],
+                        [
+                            -122.577022,
+                            37.929383
+                        ]
+                    ]
+                ]
+            },
+            "url":"http://api.twitter.com/1/geo/id/77fcb96a24077038.json",
+            "place_type":"city",
+            "country_code":"US",
+            "id":"77fcb96a24077038",
+            "country":"United States"
+        },
+        "truncated":false,
+        "user":
+        {
+            "profile_background_tile":false,
+            "protected":false,
+            "show_all_inline_media":true,
+            "listed_count":2086,
+            "contributors_enabled":false,
+            "profile_sidebar_fill_color":"4F8DE6",
+            "name":"John Perry Barlow",
+            "default_profile":false,
+            "verified":false,
+            "lang":"en",
+            "notifications":false,
+            "time_zone":"Pacific Time (US & Canada)",
+            "utc_offset":-28800,
+            "profile_sidebar_border_color":"2157A3",
+            "description":"I co-founded EFF, wrote songs for the Dead, ranched in Wyoming for 17 years.  A weird father, a good friend, and an excellent ex.",
+            "location":"Mill Valley, CA 94941",
+            "default_profile_image":false,
+            "statuses_count":8552,
+            "geo_enabled":true,
+            "profile_use_background_image":true,
+            "profile_background_image_url_https":"https://si0.twimg.com/profile_background_images/52593187/Fremont_Peak.JPG",
+            "profile_image_url":"http://a2.twimg.com/profile_images/1382424026/mge91_normal.jpg",
+            "profile_text_color":"000000",
+            "url":"http://www.facebook.com/profile.php?id=26767&ref=name",
+            "screen_name":"JPBarlow",
+            "is_translator":false,
+            "profile_background_image_url":"http://a2.twimg.com/profile_background_images/52593187/Fremont_Peak.JPG",
+            "follow_request_sent":false,
+            "following":false,
+            "friends_count":1060,
+            "profile_link_color":"000000",
+            "profile_image_url_https":"https://si0.twimg.com/profile_images/1382424026/mge91_normal.jpg",
+            "favourites_count":3,
+            "followers_count":28114,
+            "id":14274132,
+            "id_str":"14274132",
+            "created_at":"Tue Apr 01 12:01:59 +0000 2008",
+            "profile_background_color":"9ae4e8"
+        },
+        "retweeted":false,
+        "possibly_sensitive":false,
+        "in_reply_to_status_id_str":null,
+        "in_reply_to_user_id_str":null,
+        "in_reply_to_user_id":null,
+        "source":"<a href=\"http://stone.com/Twittelator\" rel=\"nofollow\">Twittelator</a>",
+        "contributors":null,
+        "geo":
+        {
+            "type":"Point",
+            "coordinates":
+            [
+                37.916476,
+                -122.553927
+            ]
+        },
+        "id":122435457991720960,
+        "id_str":"122435457991720960",
+        "coordinates":
+        {
+            "type":"Point",
+            "coordinates":
+            [
+                -122.553927,
+                37.916476
+            ]
+        },
+        "text":"Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus",
+        "created_at":"Fri Oct 07 22:17:42 +0000 2011"
+    }
+  }
+}
