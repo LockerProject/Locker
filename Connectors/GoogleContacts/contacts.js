@@ -11,6 +11,7 @@ exports.sync = function(processInfo, callback) {
 var MAX_RESULTS = 100;
 
 function syncContacts(callback) {
+    if(!config) config = {};
     var params = {'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
