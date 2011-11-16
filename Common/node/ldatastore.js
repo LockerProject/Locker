@@ -102,6 +102,14 @@ exports.getCurrent = function(owner, type, id, callback) {
     m.findOne(query, callback);
 }
 
+exports.getCurrentId = function(owner, type, id, callback) {
+    if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
+    var m = getMongo(owner, type, callback);
+    var query = {"id":parseInt(id)};
+    m.findOne(query, callback);
+}
+
+
 function setCurrent(owner, type, object, callback) {
     if (type && object && callback && object[mongoIDs[type]]) {
         var m = getMongo(owner, type, callback);

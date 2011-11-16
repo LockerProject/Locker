@@ -20,7 +20,6 @@ var vows = require("vows")
   , path = require('path')
   , request = require('request')
   , events = []
-  , _id
   , eventCount = 0
   , events = []
   , dataSets = []
@@ -102,7 +101,6 @@ vows.describe("Push Manager").addBatch({
         },
         "from testSync" : function(err, resp, body) {
             var data = JSON.parse(body);
-            _id = data[0]._id;
             obj = data[0];
             assert.equal(data[0].id, 500);
             assert.equal(data[0].someData, 'BAM');
@@ -111,9 +109,10 @@ vows.describe("Push Manager").addBatch({
 }).addBatch({
     "Querying for an ID returns the object": {
         topic: function() {
-            request.get({uri : "http://localhost:8043/push/testing/" + _id}, this.callback);
+            request.get({uri : "http://localhost:8043/push/testing/500"}, this.callback);
         },
         "successfully" : function(err, resp, body) {
+            console.dir(body);
             var data = JSON.parse(body);
             assert.deepEqual(obj, data);
         }

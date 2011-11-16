@@ -41,7 +41,7 @@ module.exports = function(locker) {
 
     locker.get('/push/:dataset/:id', function(req, res) {
         dataStore.init("push", function() {
-            dataStore.getCurrent("push", "push_" + req.params.dataset, req.params.id, function(err, doc) {
+            dataStore.getCurrentId("push", "push_" + req.params.dataset, req.params.id, function(err, doc) {
                 if (err) {
                     console.error(err);
                     res.end();
