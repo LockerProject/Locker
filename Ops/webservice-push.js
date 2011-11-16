@@ -27,7 +27,7 @@ module.exports = function(locker) {
             if(req.query['limit']) options.limit = parseInt(req.query['limit']);
             if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
-            dataStore.getAllCurrent("push_" + req.params.dataset, function(err, objects) {
+            dataStore.getAllCurrent("push", "push_" + req.params.dataset, function(err, objects) {
                 if (err) {
                     res.writeHead(500, {'content-type' : 'application/json'});
                     res.end('{error : ' + err + '}')
@@ -41,7 +41,7 @@ module.exports = function(locker) {
 
     locker.get('/push/:dataset/:id', function(req, res) {
         dataStore.init("push", function() {
-            dataStore.getCurrent("push_" + req.params.dataset, req.params.id, function(err, doc) {
+            dataStore.getCurrent("push", "push_" + req.params.dataset, req.params.id, function(err, doc) {
                 if (err) {
                     console.error(err);
                     res.end();

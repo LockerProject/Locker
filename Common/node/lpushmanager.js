@@ -1,13 +1,36 @@
 var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
-  , datastore = require('ldatastore')
+  , ldatastore = require('ldatastore')
+  , datastore = {}
   , async = require('async')
   , datasets = {}
   , levents = require('levents')
   , lutil = require('lutil')
   , config = {}
   ;
+
+
+// this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
+datastore.init = function(callback) {
+    ldatastore.init('push', callback);
+}
+
+datastore.addCollection = function(dataset) {
+    ldatastore.addCollection('push', dataset, 'push', 'id');
+}
+
+datastore.removeObject = function(dataset, id, ts, callback) {
+    if (typeof(ts) === 'function') {
+        ldatastore.removeObject('push', 'push_' + dataset, id, {timeStamp: Date.now()}, ts);
+    } else {
+        ldatastore.removeObject('push', 'push_' + dataset, id, ts, callback);
+    }
+}
+
+datastore.addObject = function(dataset, obj, ts, callback) {
+    ldatastore.addObject('push', 'push_' + dataset, obj, ts, callback);
+}
 
 config.datasets = {};
 module.exports.datasets = config.datasets;
@@ -21,7 +44,7 @@ module.exports.init = function () {
 }
 
 module.exports.acceptData = function(dataset, response, callback) {
-    datastore.init('push', function() {
+    datastore.init(function() {
         var deletedIDs = {};
         if (response.config) {
             if (config[dataset]) {
@@ -66,7 +89,7 @@ function processData (deleteIDs, data, dataset, callback) {
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
                               JSON.stringify(config, null, 4));
     }
-    datastore.addCollection(dataset, 'push', 'id');
+    datastore.addCollection(dataset);
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
         addData(dataset, data, function(err) {
@@ -91,7 +114,7 @@ function deleteData (dataset, deleteIds, callback) {
         newEvent.obj.data['id'] = id;
         newEvent.fromService = dataset;
         levents.fireEvent('push/' + dataset, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-        datastore.removeObject('push_' + dataset, id, {timeStamp: Date.now()}, cb);
+        datastore.removeObject(dataset, id, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
@@ -110,9 +133,9 @@ function addData (dataset, data, callback) {
             newEvent.fromService = dataset;
             if (object.type === 'delete') {
                 levents.fireEvent('push/' + dataset, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-                datastore.removeObject('push_' + dataset, object.obj["id"], {timeStamp: object.timestamp}, cb);
+                datastore.removeObject(dataset, object.obj["id"], {timeStamp: object.timestamp}, cb);
             } else {
-                datastore.addObject('push_' + dataset, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
+                datastore.addObject(dataset, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
                     newEvent.obj.data = doc;
                     levents.fireEvent('push/' + dataset, newEvent.fromService, type, newEvent.obj);
