@@ -391,7 +391,7 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
         newEvent.obj.data[mongoId] = id;
         newEvent.fromService = info.id;
         levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-        datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
+        datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;

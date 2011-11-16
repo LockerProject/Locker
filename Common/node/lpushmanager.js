@@ -91,7 +91,7 @@ function deleteData (dataset, deleteIds, callback) {
         newEvent.obj.data['id'] = id;
         newEvent.fromService = dataset;
         levents.fireEvent('push/' + dataset, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-        datastore.removeObject('push_' + dataset, id, {timeStampe: Date.now()}, cb);
+        datastore.removeObject('push_' + dataset, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
