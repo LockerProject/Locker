@@ -542,6 +542,67 @@
             ]
         }
         ]
+    },
+    {
+        "path": "/push/{dataSet}/{id}",
+        "description": "Query for a specific item in your dataset.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "corePushQuery",
+            "summary": "Query back one of the records that you've inserted into the system.",
+            "parameters": [
+            {
+                "name": "dataSet",
+                "description": "The dataSet you'd like to query.",
+                "dataType": "string",
+                "paramType": "path"
+            },
+            {
+                "name": "id",
+                "description": "The id of the object you've added to the system.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a {dataSet} object returned from the /Me/{dataSet}/getCurrent endpoint"
+            }
+            ]
+
+        }
+        ]
+    },
+    {
+        "path": "/push/{dataSet}/getCurrent",
+        "description": "Query for the set of items in your dataset.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "corePushQuery",
+            "summary": "Grab records back out of your dataset.",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of objects to return.",
+                "dataType": "number",
+                "default": 10,
+                "paramType": "query"
+            },
+            {
+                "name": "offset",
+                "description": "The number to offset into your dataset and begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            },
+            {
+                "name": "dataSet",
+                "description": "The dataSet you'd like to query.",
+                "dataType": "string",
+                "paramType": "path"
+            }
+            ]
+
+        }
+        ]
+
     }
     ],
     "models": [
