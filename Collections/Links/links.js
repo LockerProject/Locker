@@ -51,11 +51,20 @@ app.get('/search', function(req, res) {
     if (!req.query.q) {
         res.send([]);
         return;
+    }    
+    var map = {};
+    function send() {
+        var results = [];
+        for(var k in map) results.push(map[k]);
+        results = results.sort(function(lh, rh) {
+            return rh.at - lh.at;
+        });
+        res.send(results.slice(0,50));
     }
+
     search.search(req.query["q"], function(err,results) {
         if(err) console.error(err);
         if(err || !results || results.length == 0) return res.send([]);
-        var map = {};
         var links = [];
         var len = (req.query["limit"] < results.length) ? req.query["limit"] : results.length;
         for(var i=0; i < len; i++) links.push(results[i]._id);
@@ -63,16 +72,13 @@ app.get('/search', function(req, res) {
             link.encounters = [];
             map[link.link] = link;
         }, function(err){
-            dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
-                map[encounter.link].encounters.push(encounter);
-            }, function() {
-                var results = [];
-                for(var k in map) results.push(map[k]);
-                results = results.sort(function(lh, rh) {
-                    return rh.at - lh.at;
-                });
-                res.send(results.slice(0,50));
-            });
+            if(isFull(req.query.full)) {
+                dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
+                    map[encounter.link].encounters.push(encounter);
+                }, send);
+            } else {
+                send();
+            }
         });
     });
 });
@@ -151,6 +157,7 @@ function genericApi(name,f)
 
 // expose way to get raw links and encounters
 app.get('/', function(req, res) {
+    var full = isFull(req.query.full);
     var fullResults = [];
     var results = [];
     var options = {sort:{"at":-1}};
@@ -161,22 +168,47 @@ app.get('/', function(req, res) {
     if (req.query.offset) {
         options.offset = parseInt(req.query.offset);
     }
+    var deleteLink = false;
     if (req.query.fields) {
         try {
             options.fields = JSON.parse(req.query.fields);
+            // we need the link field for merging encounters and links objects
+            // so get it, but flag it for deletion if not requested
+            if(!options.fields.hasOwnProperty('link') || options.fields.link == 0) {
+                options.fields.link = 1;
+                deleteLink = true;
+            }
         } catch(E) {}
     }
     var ndx = {};
     dataStore.getLinks(options, function(item) {
-        item.encounters = [];
+        if(full)
+            item.encounters = [];
         ndx[item.link] = item;
+        if(deleteLink) // delete the link field if it wasn't requested
+            delete item.link;
         results.push(item);
     }, function(err) {
-        if(req.query.full === true || req.query.full === "true" || req.query.full == 1) {
+        if(full) {
             var arg = {"link":{$in: Object.keys(ndx)}};
-            if(options.fields) arg.fields = options.fields;
+            if(options.fields) {
+                arg.fields = {};
+                // extract only encounter.* fields
+                for(var i in options.fields) {
+                    if(i.length > 11 && i.substring(0,11) === 'encounters.')
+                        arg.fields[i.substring(11)] = options.fields[i];
+                }
+                // we need the link field for merging encounters and links objects
+                // so get it, but flag it for deletion if not requested
+                if(!arg.fields.hasOwnProperty('link') || arg.fields.link == 0) {
+                    arg.fields.link = 1;
+                    deleteLink = true;
+                }
+            }
             dataStore.getEncounters(arg, function(encounter) {
                 ndx[encounter.link].encounters.push(encounter);
+                if(deleteLink) // delete the link field if it wasn't requested
+                    delete encounter.link;
             }, function() {
                 res.send(results);
             });
@@ -205,6 +237,10 @@ for(var f in util)
 {
     if(f == 'init') continue;
     genericApi('/'+f,util[f]);
+}
+
+function isFull(full) {
+    return (full === true || full === "true" || full == 1);
 }
 
 // catch exceptions, links are very garbagey
