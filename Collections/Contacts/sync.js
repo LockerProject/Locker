@@ -27,8 +27,8 @@ exports.gatherContacts = function(cb) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact/full'}, function(){
             cb(); // synchro delete, async/background reindex
             // This should really be timered, triggered, something else
-            locker.providers(['contact/facebook', 'contact/twitter', 'contact/flickr', 
-                              'contact/gcontacts', 'contact/foursquare', 
+            locker.providers(['contact/facebook', 'contact/twitter', 'contact/flickr',
+                              'contact/gcontacts', 'contact/foursquare', 'contact/instagram',
                               'contact/github'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
@@ -53,13 +53,17 @@ exports.gatherContacts = function(cb) {
                         exports.getContacts('foursquare', "contact", svc.id, function() {
                             console.error('foursquare done!');
                         });
+                    } else if(svc.provides.indexOf('contact/instagram') >= 0) {
+                        exports.getContacts('instagram', "contact", svc.id, function() {
+                            console.error('instagram done!');
+                        });
                     } else if(svc.provides.indexOf('contact/github') >= 0) {
                         exports.getContacts('github', 'following', svc.id, function() {
                             console.error('github done!');
                         })
                     }
                 });
-            });            
+            });
         });
     });
 }

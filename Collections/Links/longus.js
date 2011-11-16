@@ -109,6 +109,8 @@ var APIs = {
             {
                 // re-basing like a browser would, yes sam, this happens
                 var newup = urllib.parse(urllib.resolve(args.urlp,urllib.parse(res.headers.location)));
+                // if the url is unparseable, bail out
+                if (!newup || !newup.pathname) return callback(args);
                 // if we're redirected to a login page, bail, kinda lame heuristic here but it works pretty well!
                 if(newup.pathname.indexOf("login") > 0 && newup.pathname.indexOf("login") < 10) return callback(args);
                 args.url = urllib.format(newup);

@@ -130,6 +130,7 @@ exports.getTimelinePage = function(arg, cbEach, cbDone) {
 exports.getTweets = function(arg, cbEach, cbDone) {
     if(!arg.screen_name) return cbDone("missing screen_name");
     arg.path = '/statuses/user_timeline.json';
+    arg.include_rts = true;
     getPages(arg,cbEach,cbDone);
 }
 

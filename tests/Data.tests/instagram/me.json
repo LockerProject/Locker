@@ -1,0 +1,34 @@
+{
+    "title": "Instagram Account",
+    "status": "stable",
+    "provider": "instagram",
+    "provides": [
+        "profile/instagram",
+        "photo/instagram",
+        "contact/instagram",
+        "feed/instagram"
+    ],
+    "synclets": [
+        {
+            "name": "self",
+            "frequency": 3600
+        }
+    ],
+    "srcdir": "Connectors/Instagram",
+    "authurl": "https://api.instagram.com/oauth/authorize/?client_id=7caa1b79465d48dfa375edbbe391ce82&redirect_uri=http://localhost:8042/auth/instagram/auth&response_type=code",
+    "auth": {
+        "token": {
+            "access_token": "DUMMY",
+            "user": {
+                "username": "quartzjer",
+                "bio": "",
+                "website": "",
+                "profile_picture": "http://images.instagram.com/profiles/anonymousUser.jpg",
+                "full_name": "",
+                "id": "10726078"
+            }
+        }
+    },
+    "id": "instagram",
+    "version": 1319637741123
+}

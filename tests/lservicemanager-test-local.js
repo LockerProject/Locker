@@ -46,7 +46,7 @@ vows.describe("Service Manager").addBatch({
                     assert.include(svcMetaInfo, "id");
                 },
                 "setting a version number equivalent to the highest migration" : function(svcMetaInfo) {
-                    assert.equal(svcMetaInfo.version, 1309052824000);
+                    assert.equal(svcMetaInfo.version, 1340889652916);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
@@ -187,7 +187,18 @@ vows.describe("Service Manager").addBatch({
         "passes the externalBase with the process info": function(err, resp, body) {
             var json = JSON.parse(body);
             assert.equal(json.externalBase, lconfig.externalBase + '/Me/echo-config/');
+        },
+        "doesn't include things like pid, uriLocal, and port in the serviceMap" : function(err, resp, body) {
+
         }
+    }
+}).addBatch({
+    "Running services don't include data like uriLocal, port, and pid in the map call" : function() {
+        assert.include(serviceManager.serviceMap().installed, 'search');
+        assert.equal(serviceManager.serviceMap().installed['search'].uriLocal, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].port, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].startingPid, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].pid, undefined);
     }
 }).addBatch({
     "Disabling services " : {

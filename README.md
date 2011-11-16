@@ -20,7 +20,7 @@ If you just want to get a locker up and running, there are [semi-regularly refre
 
 Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get all the high-level dependencies installed at once. It will make a single directory called lockerbox and get everything set up inside of there.
 
-    curl https://raw.github.com/othiym23/lockerbox/master/lockerbox.sh > lockerbox.sh
+    curl https://raw.github.com/LockerProject/lockerbox/master/lockerbox.sh > lockerbox.sh
     chmod 0755 lockerbox.sh
     ./lockerbox.sh
 
