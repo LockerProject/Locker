@@ -15,9 +15,10 @@ var path = require('path');
 var async = require('async');
 var request = require('request');
 var semver = require('semver');
+var crypto = require("crypto");
 var lutil = require('lutil');
-var lcrypto = require('lcrypto');
 var lconfig;
+var lcrypto;
 var installed = {};
 var regIndex = {};
 var syncInterval = 3600000;
@@ -25,14 +26,18 @@ var syncTimer;
 var regBase = 'http://registry.singly.com/';
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
-exports.init = function(config, callback) {
+exports.init = function(config, crypto, callback) {
     lconfig = config;
+    lcrypto = crypto;
     try {
         fs.mkdirSync(path.join(lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
     process.chdir(lconfig.me);
-    loadInstalled(function(){
-        npm.load({registry:regBase+'npm'}, function(err) {
+    loadInstalled(function(err){
+        if(err) console.error(err);
+        var config = {registry:regBase+'npm'};
+//        config.userconfig = ".npmrc"; shouldn't need
+        npm.load(config, function(err) {
             if(err) console.error(err);
             fs.readFile('registry.json', 'utf8', function(err, reg){
                 try {
@@ -65,7 +70,7 @@ function loadInstalled(callback)
 // load an individual package
 function loadPackage(name, callback)
 {
-    fs.readFile(path.join(lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
+    fs.readFile(path.join('node_modules', name, 'package.json'), 'utf8', function(err, data){
         if(err || !data) return callback(err);
         try{
             var js = JSON.parse(data);
@@ -80,7 +85,7 @@ function loadPackage(name, callback)
 }
 
 // background sync process to fetch/maintain the full package list
-exports.sync = function()
+exports.sync = function(callback)
 {
     var startkey = 0;
     // get the newest
@@ -95,16 +100,18 @@ exports.sync = function()
         if(err || !body || Object.keys(body).length === 0) return;
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
+            console.log("new "+k);
             regIndex[k] = body[k];
             // if installed and autoupdated and newer, do it!
-            if(installed[k] && body[k].update == 'auto' && semver.lt(installed[k].dist-tags.latest, body[k].dist-tags.latest))
+            if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
             {
-                console.log("auto-updating "+k+" to "+body[k].dist-tags.latest);
+                console.log("auto-updating "+k+" to "+body[k]["dist-tags"].latest);
                 exports.update({name:k}, function(){}); // lazy
             }
         });
         // cache to disk lazily
         lutil.atomicWriteFileSync(path.join(lconfig.me, 'registry.json'), JSON.stringify(regIndex));
+        if(callback) callback();
     });
 };
 
@@ -120,14 +127,15 @@ exports.getPackage = function(name) {
 }
 exports.getViewers = function() {
     var viewers = [];
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].type === 'viewer') viewers.push(regIndex[k]); });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'viewer') viewers.push(regIndex[k]); });
     return viewers;
 }
 
 // npm wrappers
 exports.install = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
-    npm.commands.install([arg.name], function(){
+    npm.commands.install([arg.name], function(err){
+        if(err) console.log(err);
         loadPackage(arg.name, callback); // once installed, load
     });
 };
@@ -142,20 +150,28 @@ exports.update = function(arg, callback) {
 exports.publish = function(arg, callback) {
     if(!arg || !arg.dir) return callback("missing base dir");
     var pjs = path.join(arg.dir, "package.json");
+    console.log("publishing "+pjs);
     // first, required github
     github(function(gh){
         if(!gh) return callback("github account is required");
         // next, required registry auth
         regUser(gh, function(err, auth){
             if(err ||!auth || !auth._auth) return callback(err);
-            npm.config.set("_auth", auth._auth); // saves for publish
+            // saves for publish auth and maintainer
+            npm.config.set("username", gh.login);
+            npm.config.set("email", gh.email);
+            npm.config.set("_auth", auth._auth);
             // make sure there's a package.json
             checkPackage(pjs, arg, gh, function(){
                 // bump version
-                npm.commands.version(["patch"], function(){
+                process.chdir(arg.dir); // this must be run in the package dir, grr
+                npm.commands.version(["patch"], function(err){
+                    console.log(err);
+                    process.chdir(lconfig.lockerDir); // restore
                     // finally !!!
                     npm.commands.publish([arg.dir], function(){
-                        calback();
+                        // force resync now too
+                        exports.sync(callback);
                     })
                 });
             });
@@ -170,23 +186,25 @@ function checkPackage(pjs, arg, gh, callback)
         if(err || !stat || !stat.isFile())
         {
             var pkg = path.basename(path.dirname(pjs));
+            var handle = ("app-" + gh.login + "-" + pkg).toLowerCase();
             var js = {
-              "author": gh.name,
-              "name": gh.login + "-" + pkg,
+              "author": { "name": gh.name },
+              "name": handle,
               "description": arg.description || "auto generated",
               "version": "0.0.0",
-              "type":
               "repository": {
-                "title": arg.title || "blank";
-                "handle": "reg-" + gh.login + "-" + pkg,
+                "title": arg.title || "blank",
+                "handle": handle,
                 "type": "viewer",
                 "author": gh.name,
-                "viewer": arg.viewer,
-                "static": true
+                "viewer": arg.viewer || "links",
+                "static": "true",
+                "update": "auto",
                 "url": "http://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
-              "devDependencies": {}
+              "devDependencies": {},
+              "engines": {"node": "*"}
             };
             lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         }
@@ -205,7 +223,9 @@ function regUser(gh, callback)
         // try creating this user on the registry
         adduser(gh.login, pw, gh.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
-            js = {_auth:base64.encode(gh.login+":"+pw), username:gh.login};
+            console.error(err);
+            console.error(resp);
+            js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
             lutil.atomicWriteFileSync(path.join(lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
         });
@@ -218,8 +238,8 @@ function github(callback)
 {
     if(ghprofile) return callback(ghprofile);
     request.get({uri:lconfig.lockerBase+'/Me/github/getCurrent/profile', json:true}, function(err, resp, body){
-        if(err || !body || !body.login) return callback();
-        ghprofile = body;
+        if(err || !body || body.length != 1 || !body[0].login) return callback();
+        ghprofile = body[0];
         callback(ghprofile);
     });
 }
@@ -229,15 +249,17 @@ function adduser (username, password, email, cb) {
   if (password.indexOf(":") !== -1) return cb(new Error(
     "Sorry, ':' chars are not allowed in passwords.\n"+
     "See <https://issues.apache.org/jira/browse/COUCHDB-969> for why."))
-  var salt = ""
+  var salt = "na"
     , userobj =
       { name : username
       , salt : salt
-      , password_sha : sha(password + salt)
+      , password_sha : crypto.createHash("sha1").update(password+salt).digest("hex")
       , email : email
       , _id : 'org.couchdb.user:'+username
       , type : "user"
       , roles : []
+      , date: new Date().toISOString()
       }
-  request.PUT({uri:regBase+'npm/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
+      console.log("adding user "+JSON.stringify(userobj));
+  request.put({uri:regBase+'npm/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
 }
