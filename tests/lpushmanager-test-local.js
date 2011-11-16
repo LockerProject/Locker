@@ -32,6 +32,7 @@ dataSets[0] = {"config" : { "ids" : [1, 500] },
 dataSets[1] = {"config" : {}, "data" : {}};
 dataSets[2] = {"config" : { "ids" : [1] } };
 dataSets[3] = {"data": [ { "obj" : {"notId" : 1}, "timestamp" : 1312325283583 } ]};
+dataSets[4] = {"data": [ { "obj" : {"id" : 1}, "type" : "delete" } ]};
 
 
 lconfig.load("Config/config.json");
@@ -163,6 +164,18 @@ vows.describe("Push Manager").addBatch({
         },
         "to query the map" : function(err, resp, data) {
             assert.deepEqual(JSON.parse(data), {});
+        }
+    }
+}).addBatch({
+    "rows can be deleted by posting delete commands" : {
+        topic: function() {
+            var self = this;
+            pushManager.acceptData('testing', dataSets[4], function() {
+                colls.push_testing.count(self.callback);
+            });
+        },
+        "as well" : function(err, count) {
+            assert.equal(count, 0);
         }
     }
 }).addBatch({
