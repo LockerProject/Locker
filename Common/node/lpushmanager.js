@@ -40,7 +40,7 @@ module.exports.init = function () {
     if (!path.existsSync(lconfig.me)) fs.mkdirSync(lconfig.me, 0755);
     if (!path.existsSync(dir)) fs.mkdirSync(path.join(lconfig.me, "push"), 0755);
     if (!path.existsSync(path.join(dir, "push_config.json"))) return;
-    config = JSON.parse(path.join(dir, "push_config.json"));
+    config = JSON.parse(fs.readFileSync(path.join(dir, "push_config.json")));
 }
 
 module.exports.acceptData = function(dataset, response, callback) {
