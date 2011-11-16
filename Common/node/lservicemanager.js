@@ -176,7 +176,12 @@ exports.mapUpsert = function (file, type) {
     try {
         metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
         if(!metaData) throw new Error("no data");
-        if(!metaData.handle && metaData.repository) metaData = metaData.repository; // in package.json files our manifest data is in 'repository'
+        // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
+        if(!metaData.handle && metaData.repository) {
+            var version = metaData.version;
+            metaData = metaData.repository;
+            metaData.version = version; // at least preserve native package version
+        }
         if(!metaData.handle) throw new Error("no handle");
     } catch (E) {
         console.error("failed to upsert "+file+" due to "+E);

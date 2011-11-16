@@ -30,9 +30,9 @@ exports.init = function(config, crypto, callback) {
     lconfig = config;
     lcrypto = crypto;
     try {
-        fs.mkdirSync(path.join(lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
+        fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
-    process.chdir(lconfig.me);
+    process.chdir(path.join(lconfig.lockerDir, lconfig.me));
     loadInstalled(function(err){
         if(err) console.error(err);
         var config = {registry:regBase+'npm'};
@@ -54,15 +54,56 @@ exports.init = function(config, crypto, callback) {
     });
 };
 
+// init web endpoints
+exports.app = function(app)
+{
+    app.get('/registry/added', function(req, res) {
+        res.send(exports.getInstalled());
+    });
+    app.get('/registry/add/:id', function(req, res) {
+        if(!regIndex[req.params.id]) return res.send("not found", 404);
+        exports.install({name:req.parms.id}, function(){ res.send(true); });
+    });
+    app.get('/registry/apps', function(req, res) {
+        res.send(exports.getApps());
+    });
+    app.get('/registry/app/:id', function(req, res) {
+        var id = req.params.id;
+        if(!regIndex[id]) return res.send("not found", 404);
+        var copy = JSON.parse(JSON.stringify(regIndex[id]));
+        copy.installed = installed[id];
+        res.send(copy);
+    });
+    app.get('/registry/sync', function(req, res) {
+        exports.sync(function(){res.send(true)});
+    });
+    // takes the local github id format, user-repo
+    app.get('/registry/publish/:id', function(req, res) {
+        var id = req.params.id;
+        if(id.indexOf("-") <= 0) return res.send("not found", 404);
+        id.replace("-","/");
+        var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
+        fs.stat(dir, function(err, stat){
+            if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
+            var args = req.query || {};
+            args.dir = dir;
+            exports.publish(args, function(err){
+                if(err) res.send(err, 500);
+                res.send(JSON.parse(fs.readFileSync(path.join(dir,"package.json"))));
+            });
+        });
+    });
+}
+
 // just load up any installed packages in node_modules
 function loadInstalled(callback)
 {
-    var files = fs.readdirSync("node_modules");
+    var files = fs.readdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"));
     async.forEach(files, function(item, cb){
-        var ppath = path.join('./node_modules/', item, 'package.json');
+        var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, cb);
+            loadPackage(item, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
@@ -70,17 +111,19 @@ function loadInstalled(callback)
 // load an individual package
 function loadPackage(name, callback)
 {
-    fs.readFile(path.join('node_modules', name, 'package.json'), 'utf8', function(err, data){
+    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
         if(err || !data) return callback(err);
         try{
             var js = JSON.parse(data);
-            if(!js.name) throw new Error("invalid package");
+            if(js.name != name) throw new Error("invalid package");
             installed[js.name] = js;
         }catch(E){
             console.error("couldn't parse "+name+"'s package.json: "+E);
-            return callback();
+            return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest=Me/node_modules/'+name+'/package.json'}, callback);
+        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join(lconfig.lockerDir,'Me/node_modules',name,'package.json')}, function(){
+             callback(null, installed[name]);
+        });
     });
 }
 
@@ -94,23 +137,24 @@ exports.sync = function(callback)
         if(mod > startkey) startkey = mod;
     });
     // look for updated packages newer than the last we've seen
+    startkey++;
     var u = regBase+'npm/-/all/since?stale=update_after&startkey='+startkey;
     console.log("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
         if(err || !body || Object.keys(body).length === 0) return;
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
-            console.log("new "+k);
+            console.log("new "+k+" "+body[k]["dist-tags"].latest);
             regIndex[k] = body[k];
             // if installed and autoupdated and newer, do it!
             if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
             {
-                console.log("auto-updating "+k+" to "+body[k]["dist-tags"].latest);
+                console.log("auto-updating "+k);
                 exports.update({name:k}, function(){}); // lazy
             }
         });
         // cache to disk lazily
-        lutil.atomicWriteFileSync(path.join(lconfig.me, 'registry.json'), JSON.stringify(regIndex));
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
         if(callback) callback();
     });
 };
@@ -125,23 +169,24 @@ exports.getRegistry = function() {
 exports.getPackage = function(name) {
     return regIndex[name];
 }
-exports.getViewers = function() {
-    var viewers = [];
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'viewer') viewers.push(regIndex[k]); });
-    return viewers;
+exports.getApps = function() {
+    var apps = [];
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps.push(regIndex[k]); });
+    return apps;
 }
 
 // npm wrappers
 exports.install = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
-        if(err) console.log(err);
+        if(err) console.error(err);
         loadPackage(arg.name, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
-    npm.commands.update([arg.name], function(){
+    npm.commands.update([arg.name], function(err){
+        if(err) console.error(err);
         loadPackage(arg.name, callback); // once updated, re-load
     });
 };
@@ -166,12 +211,13 @@ exports.publish = function(arg, callback) {
                 // bump version
                 process.chdir(arg.dir); // this must be run in the package dir, grr
                 npm.commands.version(["patch"], function(err){
-                    console.log(err);
                     process.chdir(lconfig.lockerDir); // restore
+                    if(err) return callback(err);
                     // finally !!!
-                    npm.commands.publish([arg.dir], function(){
-                        // force resync now too
-                        exports.sync(callback);
+                    npm.commands.publish([arg.dir], function(err){
+                        if(err) return callback(err);
+                        setTimeout(exports.sync, 10000); // trigger re-sync soon, takes a bit for couch to process the publish
+                        callback();
                     })
                 });
             });
@@ -195,9 +241,8 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || "blank",
                 "handle": handle,
-                "type": "viewer",
+                "type": "app",
                 "author": gh.name,
-                "viewer": arg.viewer || "links",
                 "static": "true",
                 "update": "auto",
                 "url": "http://github.com/"+gh.login+"/"+pkg
@@ -215,7 +260,7 @@ function checkPackage(pjs, arg, gh, callback)
 // return authenticated user, or create/init them
 function regUser(gh, callback)
 {
-    fs.readFile(path.join(lconfig.me, 'registry_auth.json'), 'utf8', function(err, auth){
+    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), 'utf8', function(err, auth){
         var js;
         try { js = JSON.parse(auth); }catch(E){}
         if(js) return callback(false, js);
@@ -226,7 +271,7 @@ function regUser(gh, callback)
             console.error(err);
             console.error(resp);
             js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
-            lutil.atomicWriteFileSync(path.join(lconfig.me, 'registry_auth.json'), JSON.stringify(js));
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
         });
     });

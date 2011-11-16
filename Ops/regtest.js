@@ -7,7 +7,7 @@ lcrypto.loadKeys();
 
 reg.init(lconfig, lcrypto, function(installed){
     console.log("installed list: "+Object.keys(installed).join(","));
-//    console.log(reg.getViewers());
+//    console.log(reg.getApps());
 /*   reg.install({name:"linkvid@0.0.1"}, function(err){
        reg.update({name:"linkvid"}, function(err){
            console.log("installed err("+err+")");
