@@ -16,11 +16,11 @@ var IJOD = require('ijod').IJOD
   , mongoIDs = {}
   ;
 
-exports.init = function(type, callback) {
-    if (mongo[type]) return callback();
-    lmongo.init(type, [], function(_mongo) {
-        mongo[type] = _mongo;
-        colls[type] = mongo[type].collections[type];
+exports.init = function(owner, callback) {
+    if (mongo[owner]) return callback();
+    lmongo.init(owner, [], function(_mongo) {
+        mongo[owner] = _mongo;
+        colls[owner] = mongo[owner].collections[owner];
         callback();
     });
 }
