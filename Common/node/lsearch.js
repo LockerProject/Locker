@@ -73,7 +73,7 @@ CLEngine = function()
                 }
             ]
         },
-        "photo/full" : {
+        "photo" : {
             "_id":"_id",
             "caption":"caption",
             "title":"title"

@@ -88,7 +88,7 @@ exports.handleGetUpdate = function(callback) {
         }
 
         reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact', 'contacts', function(err) {});
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo', 'photos', function(err) {});
         reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place', 'places', function(err) {});
         locker.providers('timeline/twitter', function(err, services) {
             if (!services) return;
@@ -119,12 +119,6 @@ exports.handlePostEvents = function(req, callback) {
     }
 
     if (req.body.hasOwnProperty('type')) {
-        // FIXME Hack to handle inconsistencies between photo and contacts collection
-        if (req.body.type === 'photo') {
-            req.body.type = 'photo/full';
-        }
-        // END FIXME
-
         var source = getSourceForEvent(req.body);
 
         // https://github.com/LockerProject/Locker/issues/285
@@ -147,8 +141,8 @@ exports.handlePostEvents = function(req, callback) {
                 }, MAX_CLOSE_TIMEOUT);
                 return callback(err, {timeToIndex: time});
             });
-        } else if (req.body.action === 'delete') {
-            lsearch.deleteDocument(req.body.obj.data._id, function(err, time) {
+        } else if (req.body.action === 'place') {
+            lsearch.placeDocument(req.body.obj.data._id, function(err, time) {
                 if (err) {
                     handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
                     return callback(err, {});
@@ -246,9 +240,9 @@ exports.handleGetQuery = function(req, callback) {
 };
 
 exports.handleGetReindexForType = function(type, callback) {
-    // this handleGetReindex method can happen async, but deleteDocumentsByType MUST happen first before the callback.
+    // this handleGetReindex method can happen async, but placeDocumentsByType MUST happen first before the callback.
     // That's why we call it here
-    lsearch.deleteDocumentsByType(type, function(err, indexTime) {
+    lsearch.placeDocumentsByType(type, function(err, indexTime) {
         callback(err, {indexTime: indexTime});
     });
 
@@ -257,8 +251,8 @@ exports.handleGetReindexForType = function(type, callback) {
     if (type === 'contact') {
         reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact', 'contacts', function(err) {});
     }
-    else if (type === 'photo/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
+    else if (type === 'photo') {
+        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo', 'photos', function(err) {});
     }
     else if (type === 'place') {
         reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place', 'places', function(err) {});
@@ -386,24 +380,19 @@ function makeEnrichedRequest(url, item, callback) {
 function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
     var source;
-
-    if (body.type == 'contact' || body.type == 'photo/full') {
-       var splitType = body.type.split('/');
-       source = splitType[0] + 's';
-    } else {
-        var via = body.via;
-        source = via;
-        if(via.indexOf('/') > -1) { // shouldn't need this anymore
-            var splitVia = via.split('/');
-            via = splitVia[1];
-        }
-        if (via.indexOf("_") > -1) {
-            var splitSource = body.obj.source.split('_');
-            source = via + '/' + splitSource[1];
-        }
-        if (via == "twitter" && body.type.indexOf("timeline") > -1) {
-            source = "twitter/timeline";
-        }
+ 
+    var via = body.via;
+    source = via;
+    if(via.indexOf('/') > -1) { // shouldn't need this anymore
+        var splitVia = via.split('/');
+        via = splitVia[1];
+    }
+    if (via.indexOf("_") > -1) {
+        var splitSource = body.obj.source.split('_');
+        source = via + '/' + splitSource[1];
+    }
+    if (via == "twitter" && body.type.indexOf("timeline") > -1) {
+        source = "twitter/timeline";
     }
     return source;
     // END FIXME
@@ -422,8 +411,8 @@ function handleLog(type, action, id, time) {
         case 'update':
             actionWord = 'updated';
             break;
-        case 'delete':
-            actionWord = 'deleted';
+        case 'place':
+            actionWord = 'placed';
             break;
     }
     console.log('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');

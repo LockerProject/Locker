@@ -234,7 +234,7 @@ function search() {
     $.get(baseURL, {q: q + star, type: 'contact*', limit: 3}, function(results) {
         processResults('people', resXform(results), q);
     });
-    $.get(baseURL, {q: q + star, type: 'photo/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'photo*', limit: 3}, function(results) {
         processResults('photos', resXform(results), q);
     });
     $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {
