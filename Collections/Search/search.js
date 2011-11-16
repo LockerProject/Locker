@@ -87,7 +87,7 @@ exports.handleGetUpdate = function(callback) {
             return callback(err);
         }
 
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact', 'contacts', function(err) {});
         reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
         reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place', 'places', function(err) {});
         locker.providers('timeline/twitter', function(err, services) {
@@ -254,8 +254,8 @@ exports.handleGetReindexForType = function(type, callback) {
 
     var items;
 
-    if (type === 'contact/full') {
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact/full', 'contacts', function(err) {});
+    if (type === 'contact') {
+        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact', 'contacts', function(err) {});
     }
     else if (type === 'photo/full') {
         reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo/full', 'photos', function(err) {});
@@ -387,7 +387,7 @@ function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
     var source;
 
-    if (body.type == 'contact/full' || body.type == 'photo/full') {
+    if (body.type == 'contact' || body.type == 'photo/full') {
        var splitType = body.type.split('/');
        source = splitType[0] + 's';
     } else {

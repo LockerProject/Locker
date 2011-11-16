@@ -48,7 +48,7 @@ suite.next().suite.addBatch({
                     contacts.init("", mongoCollections, mongo);
                     dataStore.init(mongoCollections, mongo);
                     dataStore.clear();
-                    contacts.eventEmitter.on('contact/full', function(obj) {
+                    contacts.eventEmitter.on('contact', function(obj) {
                         events++;
                     });
                     contacts.getContacts('foursquare', 'friends', 'foursquare', function() {

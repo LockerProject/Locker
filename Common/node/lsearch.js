@@ -44,7 +44,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact/full" : {
+        "contact" : {
             "_id":"_id",
             "name":"name",
             "nicknames":[],
