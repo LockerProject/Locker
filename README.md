@@ -7,6 +7,8 @@ This is an open source project that helps me collect all of my personal data, fr
 
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress, and come hang out with us on freenode IRC in [#lockerproject](http://webchat.freenode.net/?channels=lockerproject).
 
+We also have a [mailing list](http://bit.ly/singly-dev-list) setup.  Join and say hello!
+
 
 ## Getting Started
 
@@ -18,7 +20,7 @@ If you just want to get a locker up and running, there are [semi-regularly refre
 
 Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get all the high-level dependencies installed at once. It will make a single directory called lockerbox and get everything set up inside of there.
 
-    curl https://raw.github.com/othiym23/lockerbox/master/lockerbox.sh > lockerbox.sh
+    curl https://raw.github.com/LockerProject/lockerbox/master/lockerbox.sh > lockerbox.sh
     chmod 0755 lockerbox.sh
     ./lockerbox.sh
 

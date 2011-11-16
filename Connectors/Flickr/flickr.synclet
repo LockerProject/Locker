@@ -1,5 +1,5 @@
 {
-    "title":"Flickr Account",
+    "title":"Flickr",
     "status":"unstable",
     "provides":["contact/flickr", "photo/flickr"],
     "provider":"flickr",

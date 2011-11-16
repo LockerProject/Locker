@@ -89,7 +89,6 @@ function gatherFromUrl(svcId, url, type) {
             dataStore.addData(svcId, type, arr);
         } catch (E) {
             console.error("Error processing photos from " + svcId + url + ": " + E);
-            console.error('Got back: ' + body);
         }
     });
 }

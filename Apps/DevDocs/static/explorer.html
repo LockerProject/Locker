@@ -6,60 +6,12 @@
 <script type='text/javascript' src='pure_min.js'></script>
 <link rel="stylesheet" type="text/css" href="prettify/prettify.css" />
 <script type='text/javascript' src='prettify/prettify.js'></script>
-<style type="text/css">
-.paramName {
-  font-weight:bold;
-}
-
-#testParameters .paramName {
-    display:block;
-    float:left;
-    min-width:100px;
-    text-align:right;
-}
-.paramType {
-  font-style:italic;
-}
-#fullTestURL {
-  font-weight:bold;
-  font-size:20px;
-  background-color:#cdcdcd;
-  border:1px solid black;
-  margin:8px 0 8px 0;
-  padding:8px;
-}
-#limitedResults {
-  font-style:italic;
-  color:red;
-  font-size:12px;
-}
-.operator {
-  font-weight:bold;
-  display:block;
-  float:left;
-  width:20px;
-}
-.paramDescription ul li {
-  padding-left:20px;
-  list-style-type: none;
-}
-body {
-  margin:40px;
-}
-
-input[type=text]{
-    margin-left:10px;
-    width:300px;
-}
-span.testExample {
-    margin-left:10px;
-    color:#aaa;
-}
-</style>
+<link rel='stylesheet' type='text/css' href='css/pre.css' />
 </head>
 
 <body>
   <h1>API Explorer</h1>
+<form onsubmit='$("#testButton").click(); return false;'>
 Choose an endpoint: <select id='curMethod'>
 </select>
 <div id='methodTemplate'>
@@ -84,161 +36,19 @@ Choose an endpoint: <select id='curMethod'>
   <div id='testParameters'>
     <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /><span class='testExample'></span></div>
   </div>
-  <input id='testButton' type='button' name='testIt' value='Test It' />
+  <div id='testParametersSelect'>
+    <div class='testParam'><span class='paramName'>test</span><select></select></div>
+  </div>
+  <input id='testButton' type='submit' name='testIt' value='Test It' />
   <div id='testInfo'>
-    <div id='fullTestURL'></div>
+    <a id='fullTestURL' target='_blank'></a>
     <div id='limitedResults'></div>
     <pre class='prettyprint'><code class='language-javascript'></code></pre>
     <img id='testResultImage' />
   </div>
 </div>
-<script type="text/javascript">
-$(function() {
-  var apiData;
-  var curAPI;
-  var models = {};
-
-  $("#testButton").click(function(e) {
-    var path = curAPI.path;
-    console.log("Start path " + path);
-    var queryParams = "";
-    if (curAPI.operations[0].parameters) {
-      $.each(curAPI.operations[0].parameters, function(key, val) {
-        switch(val.paramType) {
-        case "path":
-          path = path.replace("{" + val.name + "}", $("input[name$='" + val.name + "']").val());
-          break;
-        case "query":
-          var inputVal = $("input[name$='" + val.name + "']").val();
-          if (inputVal) {
-            if (queryParams.length > 0) queryParams += "&";
-            queryParams += val.name + "=" + inputVal;
-          }
-          break;
-        default:
-          console.log("Unknown paramType" + val.paramType);
-          break;
-        }
-      });
-      if (queryParams.length > 0) path = path + "?" + queryParams;
-    }
-    $("input[type=button]").attr('disabled', true);
-    // $(".prettyprint code").text("Loading...");
-    $("#fullTestURL").text(path);
-    $("#testInfo").show();
-    if (curAPI.operations[0].responseClass == "[Image]") {
-      $("#testResultImage").attr("src", path);
-      $("#testResultImage").show();
-      $(".prettyprint").hide();
-    } else {
-      $(".prettyprint").show();
-      $("#testResultImage").hide();
-      $.getJSON(path, function(testData) {
-        console.log("Full length is " + testData.length)
-        var hasMore = false;
-        if (testData.length && testData.length > 20) {
-
-          $("#limitedResults").text("Results were limited to 20 entries.  " + (testData.length - 20) + " were hidden.").show();
-          testData = testData.splice(0, 20);
-        } else {
-          $("#limitedResults").hide();
-        }
-        $(".prettyprint code").text(JSON.stringify(testData, undefined, 2));
-        prettyPrint();
-        $("input[type=button]").attr('disabled', false);
-      }).error(function(error) {
-        console.log("We got an error");
-        $(".prettyprint code").text(error.responseText);
-        prettyPrint();
-        $("input[type=button]").attr('disabled', false);
-      });
-    }
-    return false;
-  });
-
-  $("#curMethod").change(function() {
-    $("#testInfo").hide();
-    var data = $(this + "option:selected").data();
-    curAPI = data;
-    $(".prettyprint code").text("Loading...");
-    $("h1.path").text(data.path);
-    $(".operationDescription").html(data.description);
-    if (data.operations[0].notes) {
-      $("div.notes").html(data.operations[0].notes);
-      $("div.notesBlock").show();
-    } else {
-      $("div.notesBlock").hide();
-    }
-    if (data.operations[0].parameters) {
-      $("div.parameters").show();
-      $("#testParameters").show();
-      $("div.parameters ul").find("li:gt(0)").remove();
-      $("#testParameters").find("div:gt(0)").remove();
-      $("#methodTemplate div.parameters ul").render(data.operations[0], {
-        "li":{
-          "param<-parameters":{
-            "span.paramName":"param.name",
-            "span.paramType":"param.dataType",
-            "span.paramDescription":"param.description"
-          }
-        }
-      });
-      $("div#testParameters ").render(data.operations[0], {
-        "div.testParam":{
-          "param<-parameters":{
-            "span.paramName":"param.name",
-            "input@name":"_#{param.name}",
-            "span.testExample":"param.example"
-          }
-        }
-      });
-    } else {
-      $("div.parameters").hide();
-      $("#testParameters").hide();
-    }
-    if (data.operations[0].responseClass && data.operations[0].responseClass.indexOf("[") == -1) {
-      $("ul.resultEntry").find("li:gt(0)").remove();
-      $("#methodTemplate ul.resultEntry").render(models[data.operations[0].responseClass].responseClass, {
-        "li":{
-          "result<-properties":{
-            "@class":function(arg) {
-              return "liveRow";
-            },
-            "span.paramName":function(arg) {
-              return arg.pos;
-            },
-            "span.paramType":function(arg) {
-              return arg.item.type;
-            },
-            "span.paramDescription":function(arg) {
-              return arg.item.description;
-            }
-          }
-        }
-      });
-      $("div.resultModel").show();
-    } else {
-      $("div.resultModel").hide();
-    }
-    return false;
-  });
-
-  $.getJSON("resources.json", function(data) {
-    apiData = data;
-    data.apis.sort(function(lh, rh) {
-      return lh.path.localeCompare(rh.path);
-    });
-    $.each(data.apis, function(key, value) {
-      var path = data.apis[key].path;
-      $("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"))
-    });
-    $.each(data.models, function(key, value) {
-      models[value.name] = value;
-    });
-    $('#curMethod').change();
-  });
-});
-</script>
+</form>
+<script type="text/javascript" src="js/explorer.js"></script>
 </body>
 
 </html>

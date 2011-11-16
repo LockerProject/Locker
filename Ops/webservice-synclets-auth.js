@@ -27,6 +27,13 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gplus/auth",
       "grantType" : "authorization_code"}
+  , instagram = {"provider" : "instagram",
+      "endPoint" : "https://api.instagram.com/oauth/access_token",
+      "redirectURI" : "auth/instagram/auth"}
+  , glatitude = {"provider" : "glatitude",
+      "endPoint" : "https://accounts.google.com/o/oauth2/token",
+      "redirectURI" : "auth/glatitude/auth",
+      "grantType" : "authorization_code"}
   , apiKeys = {}
   ;
 
@@ -34,12 +41,7 @@ try{
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
 }catch(e){}
 
-if (lconfig.externalSecure) {
-    host = "https://";
-} else {
-    host = "http://";
-}
-host += lconfig.externalHost + ":" + lconfig.externalPort + "/";
+host = lconfig.externalBase + "/";
 
 module.exports = function(locker) {
     locker.get('/auth/foursquare/auth', function(req, res) {
@@ -56,6 +58,12 @@ module.exports = function(locker) {
     });
     locker.get('/auth/gplus/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gplus, res);
+    });
+    locker.get('/auth/instagram/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), instagram, res);
+    });
+    locker.get('/auth/glatitude/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), glatitude, res);
     });
     locker.get('/auth/twitter/auth', function(req, res) {
         handleTwitter(req, res);
@@ -115,16 +123,15 @@ function handleOAuth2Post (code, options, res) {
                   redirect_uri:host + options.redirectURI};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
             auth = {};
-            if (options.provider === 'gcontacts') {
-                auth.clientID = apiKeys[options.provider].appKey;
-                auth.clientSecret = apiKeys[options.provider].appSecret;
-            }
+            auth.clientID = apiKeys[options.provider].appKey;
+            auth.clientSecret = apiKeys[options.provider].appSecret;
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'>if (window.opener) { window.opener.location.reload(true); } window.close(); </script>");
+            res.end("<script type='text/javascript'> window.close(); </script>");
         });
 
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -133,6 +140,8 @@ function handleTwitter (req, res) {
     try {
         require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.twitter.appKey;
                 auth.consumerSecret = apiKeys.twitter.appSecret;
@@ -141,6 +150,7 @@ function handleTwitter (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -149,6 +159,8 @@ function handleTumblr (req, res) {
     try {
         require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
             .getAccessToken(req, res, function(err, newToken) {
+                if(err) throw new Error(err);
+                if(!newToken) throw new Error("token missing");
                 var auth = {};
                 auth.consumerKey = apiKeys.tumblr.appKey;
                 auth.consumerSecret = apiKeys.tumblr.appSecret;
@@ -157,6 +169,7 @@ function handleTumblr (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
+        console.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }

@@ -1,9 +1,17 @@
 userEmail = "";
 userName = "";
+userOptin = '';
+externalHost = '';
+var clicked = false;
 
 function setUserGlobals(data) {
     userEmail = data.email;
     userName = data.name;
+    userOptin = data.optin;
+    externalHost = data.externalHost;
+
+    $.cookie('optin', userOptin, {path: '/'});
+    
     $(".userEmail").text(userEmail);
     $(".user-name").text(userName);
 
@@ -16,13 +24,46 @@ function setUserGlobals(data) {
     $("#userMenu").width(width);
 }
 
+function closeUserMenu() {
+    $('#userMenu').hide();
+    $('#customLogout').removeClass('userMenu');
+    $('#customLogout').removeClass('userMenuActive');
+}
+
+function checkClick() {
+    if (document.activeElement && document.activeElement === document.getElementById('appFrame')) {
+        closeUserMenu();
+    } else {
+        window.setTimeout(checkClick, 200);
+    }
+}
+
+function openUserMenu() {
+    $('#userMenu').show();
+    $('#customLogout').addClass('userMenu');
+    $('#customLogout').addClass('userMenuActive');
+    checkClick();
+}
+
 $(document).ready(function() {
     $("#customLogout").hover(function() {
         $("#customLogout").toggleClass("userMenuHover");
     });
 
-    $("#customLogout").click(function() {
-        $("#customLogout").toggleClass("userMenu");
-        $("#userMenu").toggle();
+    $("#menuExpander").click(function() {
+        if ($('customLogout').hasClass('userMenuActive')) {
+            closeUserMenu();
+        } else {
+            openUserMenu();
+        }
+        return false;
     });
+
+    $('.header').click(function() {
+        closeUserMenu();
+    });
+
+    if (userOptin === "true") {
+        $(".app-page").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
+    }
 });

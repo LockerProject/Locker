@@ -130,7 +130,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', serviceInfo.title);
+    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
@@ -142,9 +142,15 @@ exports.status = function(serviceId) {
     return synclets.installed[serviceId];
 };
 
-exports.syncNow = function(serviceId, callback) {
+exports.syncNow = function(serviceId, syncletId, callback) {
+    if(typeof syncletId == "function")
+    {
+        callback = syncletId;
+        syncletId = false;
+    }
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
     async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) {
+        if(syncletId && synclet.name != syncletId) return cb();
         executeSynclet(synclets.installed[serviceId], synclet, cb);
     }, callback);
 };
@@ -234,6 +240,8 @@ function executeSynclet(info, synclet, callback) {
     var run;
     if (!synclet.run) {
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
+    } else if (synclet.run.substr(-3) == ".py") {
+        run = ["python", lconfig.lockerDir + "/Common/python/synclet/client.py"];
     } else {
         run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
@@ -441,8 +449,13 @@ exports.migrate = function(installedDir, metaData) {
                 try {
                     var cwd = process.cwd();
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
+                    console.log("running synclet migration : " + migrations[i] + " for service " + metaData.title);
                     if (migrate(installedDir)) {
+                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'), 'utf8'));
+                        lutil.extend(true, metaData, curMe);
                         metaData.version = migrations[i].substring(0, 13);
+                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'),
+                                                  JSON.stringify(metaData, null, 4));
                     }
                     process.chdir(cwd);
                 } catch (E) {
@@ -501,6 +514,16 @@ function addUrls() {
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
                                                     "&redirect_uri=" + host + "auth/gplus/auth" +
                                                     "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
+            } else if (synclet.provider === 'instagram') {
+                if (apiKeys.instagram)
+                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
+                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
+            } else if (synclet.provider === 'glatitude') {
+                if (apiKeys.glatitude)
+                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
+                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
+                                                    "&scope=" + synclet.provider_args.scope +
+                                                    "&response_type=code";
             } else if (synclet.provider === 'github') {
                 if (apiKeys.github)
                     synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +

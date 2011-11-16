@@ -25,7 +25,8 @@ var locker;
 var viewers = {available:{}, selected:{
     photos: "photosv09",
     contacts: "contactsviewer",
-    links: "linkalatte"
+    links: "linkalatte",
+    places: "helloplaces"
 }};
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     locker = passedLocker;
@@ -57,7 +58,7 @@ var drawPage = function(req, res) {
         dashboard: lconfig.dashboard,
         closed: closed
     });
-}
+};
 
 app.get('/app', drawPage);
 app.get('/', drawPage);
@@ -71,12 +72,14 @@ var options = { logger: {
    debug: new Function()
  }};
 var io = socketio.listen(app,options);
+io.set("transports", ["jsonp-polling", "xhr-polling", "htmlfile"]);
 
 app.get('/apps', function(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
     var apps = {contacts: {url : externalBase + '/Me/contactsviewer/', id : 'contactsviewer'},
                 photos: {url : externalBase + '/Me/photosv09/', id : 'photosv09'},
                 links: {url : externalBase + '/Me/linkalatte/', id : 'linkalatte'},
+                places: {url : extrernalBase + '/Me/helloplaces/', id : 'helloplaces'},
                 search: {url : externalBase + '/Me/searchapp/', id : 'searchapp'}};
     res.end(JSON.stringify(apps));
 });
@@ -96,7 +99,7 @@ app.post('/setViewer', function(req, res) {
     } else if(!handle) {
         console.error("No handle given for viewer");
     } else {
-        if(!(type === 'photos' || type === 'contacts' || type === 'links')) {
+        if(!(type === 'photos' || type === 'contacts' || type === 'links' || type === 'places')) {
             console.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
@@ -112,7 +115,8 @@ app.post('/setViewer', function(req, res) {
 var eventInfo = {
     "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
-    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
+    "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "place":{"name":"place", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
 };
 
 // lame way to track if any browser is actually open right now
@@ -120,7 +124,7 @@ var isSomeoneListening = 0;
 
 app.post('/new', function(req, res) {
     res.send({});
-    io.sockets.emit('newservice', req.body.obj.split(' ')[0]);
+    io.sockets.emit('newservice', req.body.obj);
 });
 
 app.post('/event', function(req, res) {
@@ -128,6 +132,7 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         if(req.body.type === 'view/github') {
+            console.error("DEBUG: req.body", req.body);
             io.sockets.emit('viewer', req.body);
         } else {
             var evInfo = eventInfo[req.body.type];
@@ -169,15 +174,15 @@ function saveState()
 // compare last-sent totals to current ones and send differences
 function bootState(doneCb)
 {
-    if(isSomeoneListening > 0) return doneCb(); // only boot after we've been idle
-    isSomeoneListening++;
+    if(isSomeoneListening > 1) return doneCb(); // only boot after we've been idle
     logger.debug("booting state fresh");
-    async.forEach(['contacts','links','photos'],function(coll,callback){
+    async.forEach(['contacts','links','photos','places'],function(coll,callback){
         //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
             if(coll == 'contacts') var evInfo = eventInfo['contact/full'];
+            if(coll == 'places') var evInfo = eventInfo['place'];
             evInfo.count = (body && body.count && body.count > 0) ? body.count : 0;
             evInfo.updated = (body && body.updated && body.updated > 0) ? body.updated : 0;
             evInfo.lastId = (body && body.lastId) ? body.lastId : "0";
@@ -188,7 +193,8 @@ function bootState(doneCb)
         var last = {
             "link":{"count":0, "lastId":0},
             "contact/full":{"count":0, "lastId":0},
-            "photo":{"count":0, "lastId":0}
+            "photo":{"count":0, "lastId":0},
+            "place":{"count":0, "lastId":0}
         };
         // try to load from file passively
         try {
@@ -199,7 +205,7 @@ function bootState(doneCb)
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                //console.log("Sent a bootup event",eventInfo[type]);
+                console.log("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
@@ -207,6 +213,7 @@ function bootState(doneCb)
         locker.listen("photo","/event");
         locker.listen("link","/event");
         locker.listen("contact/full","/event");
+        locker.listen("place", "/event");
         locker.listen('newservice', '/new');
         locker.listen('view/github', "/event");
         doneCb();
@@ -236,15 +243,10 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection " +isSomeoneListening);
-    bootState(function(){
-        var counts = {};
-        for (var key in eventInfo) {
-            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
-        }
-        socket.emit("counts", counts);
-    });
+    logger.debug("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
+    socket.emit("heartbeat", true);
     socket.on('disconnect', function () {
+        logger.debug("Socket " + socket.id + " is disconnected");
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
         if(isSomeoneListening == 0)
@@ -252,9 +254,21 @@ io.sockets.on('connection', function (socket) {
             logger.debug("everybody left, quiesce");
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
+            locker.deafen("place","/event");
             locker.deafen("contact/full","/event");
             locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }
-      });
+    });
+    isSomeoneListening++;
+    bootState(function(){
+        var counts = {};
+        for (var key in eventInfo) {
+            if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
+        }
+        console.log("Sending counts");
+        console.dir(socket);
+        socket.emit("counts", counts);
+    });
+    
 });

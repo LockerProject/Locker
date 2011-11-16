@@ -16,16 +16,59 @@ var lfs = require('../../Common/node/lfs.js');
 var lconfig = require('../../Common/node/lconfig.js');
 var async = require('async');
 var request = require('request');
+var url = require('url');
 
 app.set('views', __dirname);
 
-var photos = [];
+var photos = {};
+var posts = {};
 var lockerBase;
 var flickr;
 
 app.get('/', function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});
-    res.end(fs.readFileSync(__dirname + '/ui/index.html'));
+    request.get({uri:lockerBase+"/Me/instagram/getCurrent/photo", json:true}, function(err, r, body){
+        if(!body) return res.end("Instagram isn't connected or has no photos :(");
+        for(var i in body)
+        {
+            if(body[i].caption && body[i].caption.text) photos[body[i].caption.text] = body[i];
+        }
+        request.get({uri:lockerBase+"/Me/wordpress/posts", json:true}, function(err, r, body){
+            if(!body) return res.end("It seems your <a href='/Me/wordpress/'>Wordpress blog</a> isn't connected yet");
+            tosync = [];
+            var synced = "";
+            for(var i in body)
+            {
+                var post = body[i];
+                if(photos[post.title])
+                {
+                    synced += "<li><a href='"+post.permaLink+"'>"+post.title+"</a></li>";
+                    delete photos[post.title];
+                }
+            }
+            var tosync = Object.keys(photos);
+            res.write("<form method='post'><h2>You have "+tosync.length+" Instagram photos to <input type='submit' value='sync' /> to your blog!</h2></form>");
+            if(synced != "") synced = "Sync'd: <ul>" + synced;
+            res.end(synced);
+        })
+    });
+});
+
+app.post('/', function(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    var tosync = Object.keys(photos);
+    async.forEach(tosync, function(key, cb)
+    {
+        var photo = photos[key];
+        var u = url.parse(lockerBase+'/Me/wordpress/newPost');
+        u.query = {};
+        u.query.title = photo.caption.text;
+        u.query.description = "<a href='"+photo.link+"'><img src='"+photo.images.standard_resolution.url+"' style='border:0px' /></a>"
+        console.error("doing "+url.format(u));
+        request.get({uri:url.format(u)}, cb);
+    }, function(){
+        res.end("Done!");
+    });
 });
 
 app.get('/2wp', function(req, res) {
@@ -57,29 +100,6 @@ app.get('/2wp', function(req, res) {
 });
 
 
-app.get('/load', function(req, res) {
-    locker.map(function(error,map){
-        // find flickr
-        var count=0;
-        for(var id in map.installed)
-        {
-            if(map.installed[id].srcdir == "Connectors/Flickr")
-            {
-                count++;
-                flickr = id; // hack hack hack!
-                lfs.readObjectsFromFile("../"+id+"/photos.json",function(p){
-                    photos = p;
-                    res.writeHead(200, {'Content-Type': 'text/html'});
-                    if(count>0)
-                        res.end("loaded "+photos.length+" flickr photos, for now all you can do is send to <a href='./2wp'>wordpress</a>");
-                    else
-                        res.end("couldn't find flickr, go install/connect it? <a href='./'>back</a>");
-                    return;
-                });
-            }
-        }
-    });
-});
 
 var stdin = process.openStdin();
 stdin.setEncoding('utf8');

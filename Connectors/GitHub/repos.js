@@ -1,4 +1,5 @@
 var GitHubApi = require("github").GitHubApi
+  , lconfig = require('../../Common/node/lconfig')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')
@@ -9,30 +10,35 @@ var GitHubApi = require("github").GitHubApi
   , viewers = []
   ;
 
+lconfig.load('../../Config/config.json');
+
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
+    var cached = {};
+    if (processInfo.config && processInfo.config.cached)
+        cached = processInfo.config.cached;
     lockerUrl = processInfo.lockerUrl;
-    github.getUserApi().show(auth.username, function(err, profile) {
+    exports.syncRepos(cached, function(err, repos) {
         if (err) console.error(err);
-        exports.syncRepos(function(err, repos) {
-            if (err) console.error(err);
-            var responseObj = {data : {}, config: {}};
-            responseObj.data.profile = [{obj: profile}];
-            responseObj.data.repo = repos;
-            responseObj.data.view = viewers;
-            console.error(viewers);
-            cb(err, responseObj);
-        });
+        var responseObj = {data : {}, config: { cached: cached }};
+        responseObj.data.repo = repos;
+        responseObj.data.view = viewers;
+        console.error(viewers);
+        cb(err, responseObj);
     });
 };
 
-exports.syncRepos = function(callback) {
+exports.syncRepos = function(cached, callback) {
     github.getRepoApi().getUserRepos(auth.username, function(err, repos) {
         if(err || !repos || !repos.length) return callback(err, []);
         // process each one to get richer data
-        async.forEachSeries(repos, function(repo, cb){
+        async.forEach(repos, function(repo, cb) {
             repo.id = getIDFromUrl(repo.url);
+            // nothing changed
+            var ckey = repo.pushed_at + repo.watchers;
+            if(cached[repo.id] == ckey) return cb();
+            cached[repo.id] = ckey;
             // get the watchers, is nice
             console.error("checking "+repo.id);
             github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
@@ -90,6 +96,8 @@ function syncRepo(repo, callback)
             existing[js.tree[i].path] = js.tree[i].sha;
         }
     } catch(e){};
+    // make sure there's at least one tree entry for the repo dir itself
+    repo.tree.push({path:".",sha:"na",type:"tree"});
     async.forEach(repo.tree, function(t, cb){
         if(t.type != "tree") return cb();
         if(existing[t.path] == t.sha) return cb(); // no changes

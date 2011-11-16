@@ -28,7 +28,12 @@ exports.init = function(callback) {
 exports.addCollection = function(name, dir, id) {
     mongoIDs[dir + "_" + name] = id;
     if(!colls[dir + "_" + name])
+    {
         mongo.addCollection('synclets', dir + "_" + name);
+        var ndx = {};
+        ndx[id] = true;
+        colls[dir + "_" + name].ensureIndex(ndx,{unique:true},function() {});
+    }
     if(!ijodFiles[dir + "_" + name])
         ijodFiles[dir + "_" + name] = new IJOD(name, dir);
 }

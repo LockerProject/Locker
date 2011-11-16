@@ -16,7 +16,8 @@
     "dashboard" : {
         "customLogo": "tlp_logo.png",
         "customTitle": "the locker project",
-        "customLogout": "http://lvh.me:8443/logout",
-        "customHostedEndpoint":"http://lvh.me:8443/users/info"
+        "customLogout": "https://lvh.me:8443/logout",
+        "customHostedEndpoint":"https://lvh.me:8443/users/info",
+        "customHost":"https://lvh.me:8443"
     }
 }

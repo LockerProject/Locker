@@ -1,6 +1,6 @@
 {
     "status": "stable",
-    "title": "Github Account",
+    "title": "Github",
     "synclets": [
         {
             "frequency": 3600,
@@ -9,6 +9,10 @@
         {
             "frequency": 3600,
             "name": "repos"
+        },
+        {
+            "frequency": 3600,
+            "name": "profile"
         }
     ],
     "provides": [

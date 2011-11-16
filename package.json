@@ -2,7 +2,7 @@
     "name": "locker",
     "description": "A personal data locker",
     "version": "0.0.0",
-    "homepage": "https://github.com/quartzjer/Locker",
+    "homepage": "https://github.com/LockerProject/Locker",
     "directories": {
         "lib": "./Common/node"
     },
@@ -35,8 +35,8 @@
         "readabilitySAX": "=0.2.2",
         "mongodb": "=0.9.6-15",
         "winston": "=0.5.2",
-        "clucene": "=0.2.2",
-        "socket.io": "=0.8.4",
+        "clucene": "=0.2.3",
+        "socket.io": "=0.8.5",
         "socket.io-client": "=0.8.4",
         "jade": "= 0.15.4",
         "airbrake": "=0.2.2",

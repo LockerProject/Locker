@@ -59,6 +59,28 @@ function processFacebook(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+function processInstagram(svcId, data, cb) {
+    var photoInfo = {};
+
+    // Gotta have a url minimum
+    if (!data.images || !data.images.standard_resolution) {
+        cb("The data did not have a source");
+        return;
+    }
+    photoInfo.url = data.images.standard_resolution.url;
+    photoInfo.width = data.images.standard_resolution.width;
+    photoInfo.height = data.images.standard_resolution.height;
+    if (data.images.thumbnail) photoInfo.thumbnail = data.images.thumbnail.url;
+    if (data.created_time) photoInfo.timestamp = data.created_time*1000;
+    if (data.caption) photoInfo.title = data.caption.text;
+    if (data.link) photoInfo.sourceLink = data.link;
+
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+
+    saveCommonPhoto(photoInfo, cb);
+}
+
+
 function processShared(svcId, data, cb) {
     logger.log("debug", "Shared processing of a pic");
 
@@ -225,6 +247,7 @@ dataHandlers["checkin/foursquare"] = processFoursquare;
 dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
+dataHandlers["photo/instagram"] = processInstagram;
 
 exports.init = function(mongoCollection, mongo, l) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
