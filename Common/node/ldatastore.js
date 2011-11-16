@@ -128,7 +128,7 @@ function setCurrent(type, object, callback) {
             });
         }
     } else {
-        console.error('failed to set current, l145 of common/node/ldatastore');
+        console.error('failed to set current in ldatastore');
         console.error(type)
         console.error(object)
         console.error(callback);
