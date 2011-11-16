@@ -152,6 +152,8 @@ locker.get("/decrypt", function(req, res) {
 
 // search interface
 locker.get("/query/:query", function(req, res) {
+    if(!url.parse(req.originalUrl).query)
+        req.originalUrl += "?limit=20";
     var data = decodeURIComponent(req.originalUrl.substr(6)).replace(/%21/g, '!').replace(/%27/g, "'").replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2a/ig, '*');
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
