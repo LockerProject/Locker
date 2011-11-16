@@ -296,18 +296,6 @@
                 "dataType": "string",
                 "paramType": "path",
                 "example": "found in a link object returned from the /Me/links/ endpoint"
-            },
-            {
-                "name": "limit",
-                "description": "The maximum number of encounters to return.",
-                "dataType": "number",
-                "paramType": "query"
-            },
-            {
-                "name": "sort",
-                "description": "The order of the returned encounters.  Currently this uses a <a href='http://www.mongodb.org/display/DOCS/Sorting+and+Natural+Order'>MongoDB syntax</a>.",
-                "dataType": "string",
-                "paramType": "query"
             }
             ]
         }
