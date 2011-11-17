@@ -141,8 +141,8 @@ exports.handlePostEvents = function(req, callback) {
                 }, MAX_CLOSE_TIMEOUT);
                 return callback(err, {timeToIndex: time});
             });
-        } else if (req.body.action === 'place') {
-            lsearch.placeDocument(req.body.obj.data._id, function(err, time) {
+        } else if (req.body.action === 'delete') {
+            lsearch.deleteDocument(req.body.obj.data._id, function(err, time) {
                 if (err) {
                     handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
                     return callback(err, {});
@@ -411,8 +411,8 @@ function handleLog(type, action, id, time) {
         case 'update':
             actionWord = 'updated';
             break;
-        case 'place':
-            actionWord = 'placed';
+        case 'delete':
+            actionWord = 'deleted';
             break;
     }
     console.log('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
