@@ -21,8 +21,12 @@ module.exports = function(locker) {
 
     // take data and push it into a collection!
     locker.post('/push/:dataset', function(req, res) {
-        pushManager.acceptData(req.params.dataset, req.body, function() {
-            res.send('ok');
+        pushManager.acceptData(req.params.dataset, req.body, function(err) {
+            if (err) {
+                res.send(err, 500);
+            } else {
+                res.send('ok');
+            }
         });
     });
 
