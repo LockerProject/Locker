@@ -879,9 +879,9 @@
         "responseClass": {
             "id": "pushMap",
             "properties": {
-                "List": {
-                    "type": "object",
-                    "description": "A list of datasets that have been pushed in."
+                "Set": {
+                    "type": "Set",
+                    "description": "A set of datasets that have been pushed in.  You will receive an object with a key for each dataset with a value of true."
                 }
             }
         }
