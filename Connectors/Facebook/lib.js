@@ -118,6 +118,27 @@ exports.getPosts = function (arg, cbEach, cbDone) {
     getDatas(uri, cbEach, cbDone);
 }
 
+
+var profile;
+exports.getProfile = function(cbDone) {
+    if(!profile) {
+        try {
+            profile = JSON.parse(fs.readFileSync('profile.json'));
+            return cbDone(null, profile);
+        } catch (err) {}
+    }
+    if(!profile) {
+        request.get({uri:'https://graph.facebook.com/me?access_token=' + auth.accessToken, json:true}, 
+        function(err, resp, profile) {
+            fs.writeFile('profile.json', JSON.stringify(profile), function(err) {
+                cbDone(err, profile);
+            });
+        });
+    } else {
+        cbDone(null, profile);
+    }
+}
+
 function getOne(uri, cb) {
     if(!uri) return cb("no uri");
     request.get({uri:uri}, function(err, resp, body) {
