@@ -139,6 +139,7 @@ exports.sync = function(callback)
     var startkey = 0;
     // get the newest
     Object.keys(regIndex).forEach(function(k){
+        if(!regIndex[k].time || !regIndex[k].time.modified) return;
         var mod = new Date(regIndex[k].time.modified).getTime();
         if(mod > startkey) startkey = mod;
     });
@@ -147,7 +148,7 @@ exports.sync = function(callback)
     var u = regBase+'npm/-/all/since?stale=update_after&startkey='+startkey;
     console.log("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || Object.keys(body).length === 0) return;
+        if(err || !body || Object.keys(body).length === 0) return callback ? callback() : "";
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
             console.log("new "+k+" "+body[k]["dist-tags"].latest);
