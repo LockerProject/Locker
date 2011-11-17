@@ -23,7 +23,7 @@ var installed = {};
 var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
-var regBase = 'http://registry.singly.com/';
+var regBase = 'http://registry.singly.com/npm';
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
@@ -35,7 +35,7 @@ exports.init = function(config, crypto, callback) {
     process.chdir(path.join(lconfig.lockerDir, lconfig.me));
     loadInstalled(function(err){
         if(err) console.error(err);
-        var config = {registry:regBase+'npm'};
+        var config = {registry:regBase};
 //        config.userconfig = ".npmrc"; shouldn't need
         npm.load(config, function(err) {
             if(err) console.error(err);
@@ -145,7 +145,7 @@ exports.sync = function(callback)
     });
     // look for updated packages newer than the last we've seen
     startkey++;
-    var u = regBase+'npm/-/all/since?stale=update_after&startkey='+startkey;
+    var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     console.log("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
         if(err || !body || Object.keys(body).length === 0) return callback ? callback() : "";
@@ -319,5 +319,5 @@ function adduser (username, password, email, cb) {
       , date: new Date().toISOString()
       }
       console.log("adding user "+JSON.stringify(userobj));
-  request.put({uri:regBase+'npm/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
+  request.put({uri:regBase+'/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
 }
