@@ -23,7 +23,7 @@ var installed = {};
 var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
-var regBase = 'http://registry.singly.com/npm';
+var regBase = 'http://registry.singly.com';
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
