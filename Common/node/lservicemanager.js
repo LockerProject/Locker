@@ -174,7 +174,7 @@ function mergedManifest(dir)
 exports.mapUpsert = function (file, type) {
     var metaData;
     try {
-        metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
+        metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir,file), 'utf8'));
         if(!metaData) throw new Error("no data");
         // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
         if(!metaData.handle && metaData.repository) {
