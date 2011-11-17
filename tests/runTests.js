@@ -94,6 +94,7 @@ if (process.argv.length > 2) {
     }
     if (process.argv[2] == "-f") {
         // Get the files to run
+        runIntegration = false;
         for (var x = 3; x < process.argv.length; ++x) {
             runFiles.push(process.argv[x]);
         }
