@@ -187,7 +187,7 @@ exports.install = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){
-            if(arg.retry) arg.retry=0;
+            if(!arg.retry) arg.retry=0;
             arg.retry++;
             console.error("retry "+arg.retry+": "+err);
             if(arg.retry < 3) return exports.install(arg, callback);
