@@ -61,11 +61,15 @@ exports.app = function(app)
         res.send(exports.getInstalled());
     });
     app.get('/registry/add/:id', function(req, res) {
+        console.log("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
-        exports.install({name:req.parms.id}, function(){ res.send(true); });
+        exports.install({name:req.params.id}, function(){ res.send(true); });
     });
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
+    });
+    app.get('/registry/all', function(req, res) {
+        res.send(exports.getRegistry());
     });
     app.get('/registry/app/:id', function(req, res) {
         var id = req.params.id;
@@ -75,21 +79,23 @@ exports.app = function(app)
         res.send(copy);
     });
     app.get('/registry/sync', function(req, res) {
+        console.log("manual registry sync");
         exports.sync(function(){res.send(true)});
     });
     // takes the local github id format, user-repo
     app.get('/registry/publish/:id', function(req, res) {
+        console.log("registry publishing "+req.params.id);
         var id = req.params.id;
         if(id.indexOf("-") <= 0) return res.send("not found", 404);
-        id.replace("-","/");
+        id = id.replace("-","/");
         var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
         fs.stat(dir, function(err, stat){
             if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
             var args = req.query || {};
             args.dir = dir;
-            exports.publish(args, function(err){
+            exports.publish(args, function(err, doc){
                 if(err) res.send(err, 500);
-                res.send(JSON.parse(fs.readFileSync(path.join(dir,"package.json"))));
+                res.send(doc);
             });
         });
     });
@@ -121,7 +127,7 @@ function loadPackage(name, callback)
             console.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join(lconfig.lockerDir,'Me/node_modules',name,'package.json')}, function(){
+        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });
@@ -170,8 +176,8 @@ exports.getPackage = function(name) {
     return regIndex[name];
 }
 exports.getApps = function() {
-    var apps = [];
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps.push(regIndex[k]); });
+    var apps = {};
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 
@@ -179,7 +185,12 @@ exports.getApps = function() {
 exports.install = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
-        if(err) console.error(err);
+        if(err){
+            if(arg.retry) arg.retry=0;
+            arg.retry++;
+            console.error("retry "+arg.retry+": "+err);
+            if(arg.retry < 3) return exports.install(arg, callback);
+        }
         loadPackage(arg.name, callback); // once installed, load
     });
 };
@@ -216,8 +227,9 @@ exports.publish = function(arg, callback) {
                     // finally !!!
                     npm.commands.publish([arg.dir], function(err){
                         if(err) return callback(err);
-                        setTimeout(exports.sync, 10000); // trigger re-sync soon, takes a bit for couch to process the publish
-                        callback();
+                        var updated = JSON.parse(fs.readFileSync(pjs));
+                        regIndex[updated.name] = updated; // shim it in, sync will replace it eventually too just to be sure
+                        callback(null, updated);
                     })
                 });
             });
@@ -239,7 +251,7 @@ function checkPackage(pjs, arg, gh, callback)
               "description": arg.description || "auto generated",
               "version": "0.0.0",
               "repository": {
-                "title": arg.title || "blank",
+                "title": arg.title || pkg,
                 "handle": handle,
                 "type": "app",
                 "author": gh.name,

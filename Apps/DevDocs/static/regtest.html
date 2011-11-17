@@ -5,29 +5,14 @@
 </head>
 <body>
 <h2>Registry Tester</h2>
-<h3>Viewer List</h3>
-<ul id="viewers">
+<h3>App List</h3>
+<ul id="apps">
 </ul>
+<a id="sync" href="">force registry re-sync</a>
 <h3>Available to Publish from your GitHub</h3>
 <ul id="repos">
 </ul>
 
-<script>
-$.getJSON('/registry/viewers', {}, function(viewers) {
-    console.log(viewers);
-    if(!viewers || !viewers.length) return;
-  $.getJSON('/registry/installed', {}, function(installed) {
-      console.log(installed);
-      if(!installed) return;
-
-  });
-});
-
-$.getJSON('/Me/github/getCurrent/repos', {}, function(repos) {
-    console.log(repos);
-    if(!repos || !repos.length) return;
-})
-
-</script>
+<script src='regtest.js'></script>
 </body>
 </html>
