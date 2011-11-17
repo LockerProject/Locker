@@ -240,9 +240,9 @@ exports.handleGetQuery = function(req, callback) {
 };
 
 exports.handleGetReindexForType = function(type, callback) {
-    // this handleGetReindex method can happen async, but placeDocumentsByType MUST happen first before the callback.
+    // this handleGetReindex method can happen async, but deleteDocumentsByType MUST happen first before the callback.
     // That's why we call it here
-    lsearch.placeDocumentsByType(type, function(err, indexTime) {
+    lsearch.deleteDocumentsByType(type, function(err, indexTime) {
         callback(err, {indexTime: indexTime});
     });
 
