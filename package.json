@@ -62,7 +62,6 @@
         "mkdirp": "0.0.7",
         "underscore": "1.1.7",
         "htmlparser2": "1.0.0",
-        "bitly": "1.0.1",
         "loggly": "0.3.8",
         "timespan": "2.2.0",
         "wrench": "1.1.0",
