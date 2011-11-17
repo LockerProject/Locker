@@ -178,6 +178,16 @@ vows.describe("Push Manager").addBatch({
         }
     }
 }).addBatch({
+    "invalid dataset names are" : {
+        topic: function() {
+            var self = this;
+            request.post({uri: "http://localhost:8043/push/^^$"}, this.callback);
+        },
+        "prohibited" : function(err, resp, data) {
+            assert.equal(data, "Invalid dataset name");
+        }
+    }
+}).addBatch({
     "the config file is saved to disk" : {
         topic: function() {
             fs.readFile(path.join(lconfig.me, "push", "push_config.json"), 'ascii', this.callback);

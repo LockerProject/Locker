@@ -3,6 +3,13 @@ var pushManager = require(__dirname + '/../Common/node/lpushmanager')
   ;
 
 module.exports = function(locker) {
+    locker.all('/push/:dataset*', function(req, res, next) {
+        if (RegExp("^[a-zA-Z0-9_]*$").test(req.params.dataset)) {
+            next();
+        } else {
+            res.send('Invalid dataset name', 500);
+        }
+    });
     // get the map of available datasets
     locker.get('/push', function(req, res) {
         res.writeHead(200, {
