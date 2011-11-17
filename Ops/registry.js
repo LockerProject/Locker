@@ -190,7 +190,7 @@ exports.install = function(arg, callback) {
             if(!arg.retry) arg.retry=0;
             arg.retry++;
             console.error("retry "+arg.retry+": "+err);
-            if(arg.retry < 3) return exports.install(arg, callback);
+            if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
         }
         loadPackage(arg.name, callback); // once installed, load
     });
