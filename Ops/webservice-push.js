@@ -36,11 +36,9 @@ module.exports = function(locker) {
 
             dataStore.getAllCurrent("push", "push_" + req.params.dataset, function(err, objects) {
                 if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
+                    res.send({error : err}, 500);
                 } else {
-                    res.writeHead(200, {'content-type' : 'application/json'});
-                    res.end(JSON.stringify(objects));
+                    res.send(objects, 200);
                 }
             }, options);
         });
@@ -53,11 +51,9 @@ module.exports = function(locker) {
                     console.error(err);
                     res.end();
                 } else if (doc) {
-                    res.writeHead(200, {'content-type' : 'application/json'});
-                    res.end(JSON.stringify(doc));
+                    res.send(doc);
                 } else {
-                    res.writeHead(404);
-                    res.end();
+                    res.send('', 404);
                 }
             });
         });
