@@ -28,12 +28,6 @@ var vows = require("vows")
 lconfig.load("Config/config.json");
 var levents = require("levents");
 var realFireEvent = levents.fireEvent;
-levents.fireEvent = function(type, id, action, obj) {
-    if (type == primaryType || type == otherType) {
-        if (!allEvents.hasOwnProperty(type)) allEvents[type] = [];
-        allEvents[type].push(obj);
-    }
-}
 
 var syncManager = require("lsyncmanager.js");
 var lmongo = require('../Common/node/lmongo');
@@ -52,6 +46,12 @@ syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
+        levents.fireEvent = function(type, id, action, obj) {
+            if (type == primaryType || type == otherType) {
+                if (!allEvents.hasOwnProperty(type)) allEvents[type] = [];
+                allEvents[type].push(obj);
+            }
+        }
         assert.include(syncManager, "synclets");
         assert.include(syncManager.synclets(), "available");
         assert.include(syncManager.synclets(), "installed");
