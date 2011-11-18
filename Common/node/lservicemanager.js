@@ -164,6 +164,11 @@ function mergedManifest(dir)
     if (serviceInfo && serviceInfo.manifest) {
 
         var fullInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, serviceInfo.manifest)));
+        if(!fullInfo.handle && fullInfo.repository) {
+            var version =fullInfo.version;
+            fullInfo = fullInfo.repository;
+            fullInfo.version = version; // at least preserve native package version
+        }
         return lutil.extend(js, fullInfo);
     } else {
         return js;
