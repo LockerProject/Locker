@@ -72,7 +72,7 @@ function processTwitter(svcId, type, data, cb) {
         title = data.place.full_name.replace(/\n/g,'').replace(/\s+/g, ' ').replace(/^\w/, function($0) { return $0.toUpperCase(); });
     }
 
-    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) || 
+    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) ||
         (data.place !== null && data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
@@ -155,9 +155,8 @@ function saveCommonPlace(placeInfo, cb) {
             return cb(err);
         }
         updateState();
-        var eventObj = {source: "places", type: "place", data:doc};
-        locker.event("place", eventObj);
-        return cb(undefined, eventObj);
+        locker.ievent(lutil.idrNew("place","places",doc.id), doc);
+        return cb(undefined, doc);
     });
 }
 

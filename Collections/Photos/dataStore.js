@@ -219,9 +219,8 @@ function saveCommonPhoto(photoInfo, cb) {
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             updateState();
-            var eventObj = {source: "photos", type: "photo", data:doc};
-            locker.event("photo", eventObj);
-            return cb(undefined, eventObj);
+            locker.ievent(lutil.idrNew("photo", "photos", doc.id), doc);
+            return cb(undefined, doc);
         }
         cb(err);
     });

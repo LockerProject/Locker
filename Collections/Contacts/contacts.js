@@ -14,6 +14,7 @@ lconfig.load('../../Config/config.json');
 
 var fs = require('fs'),
     locker = require('locker.js');
+var lutil = require('lutil');
 
 var sync = require('./sync');
 var dataStore = require("./dataStore");
@@ -81,8 +82,8 @@ app.post('/events', function(req, res) {
             res.end(err);
         } else {
             if (eventObj) {
-
-                locker.event("contact/full", eventObj);
+                var idr = lutil.idrNew("contact", "contacts", eventObj._id);
+                locker.ievent(idr, eventObj);
             }
             res.writeHead(200);
             res.end('processed event');
@@ -127,10 +128,6 @@ process.stdin.on('data', function(data) {
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));
-            sync.eventEmitter.on('contact/full', function(eventObj) {
-                locker.event('contact/full', eventObj);
-            });
-            // gatherContacts();
         });
     });
 });

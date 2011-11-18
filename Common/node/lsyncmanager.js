@@ -151,7 +151,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
+    levents.fireEvent('newservice://syncmanager/#'+serviceInfo.id, 'new', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
@@ -407,11 +407,9 @@ function processData (deleteIDs, info, key, data, callback) {
 }
 
 function deleteData (collection, mongoId, deleteIds, info, eventType, callback) {
+    var etype = eventType.split('/');
     var q = async.queue(function(id, cb) {
-        var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
-        newEvent.obj.data[mongoId] = id;
-        newEvent.fromService = info.id;
-        levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+        levents.fireEvent(lutil.idrNew(etype[0], etype[1], id, info.id), 'delete');
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
@@ -420,6 +418,7 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
 
 function addData (collection, mongoId, data, info, eventType, callback) {
     var errs = [];
+    var etype = eventType.split('/');
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
@@ -428,16 +427,13 @@ function addData (collection, mongoId, data, info, eventType, callback) {
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
-            var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
-            newEvent.fromService = info.id;
             if (object.type === 'delete') {
-                levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], info.id), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
-                    newEvent.obj.data = doc;
-                    levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
+                    levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], info.id), type, doc);
                     return cb();
                 });
             }

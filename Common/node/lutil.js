@@ -30,20 +30,20 @@ exports.extend = function() {
     // Make sure that DOM nodes and window objects don't pass through, as well
     if (!obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval)
       return false;
-    
+
     var has_own_constructor = hasOwnProperty.call(obj, "constructor");
     var has_is_property_of_method = hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf");
     // Not own constructor property must be Object
     if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
       return false;
-    
+
     // Own properties are enumerated firstly, so to speed up,
     // if last one is own, then all properties are own.
 
     var last_key;
     for (var key in obj)
       last_key = key;
-    
+
     return typeof last_key === "undefined" || hasOwnProperty.call(obj, last_key);
   };
 
@@ -94,7 +94,7 @@ exports.addAll = function(thisArray, anotherArray) {
 exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
 
     var foundValues = [];
-    
+
     function recurseObject(jsonObject, propertyName) {
         if (exports.is("Object", jsonObject)) {
             for (var m in jsonObject) {
@@ -125,16 +125,16 @@ exports.sanitize = function(term){
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-}; 
+};
 
 exports.trim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+|\s+$/g,"");
+  return stringToTrim.replace(/^\s+|\s+$/g,"");
 };
 exports.ltrim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+/,"");
+  return stringToTrim.replace(/^\s+/,"");
 };
 exports.rtrim = function(stringToTrim) {
-	return stringToTrim.replace(/\s+$/,"");
+  return stringToTrim.replace(/\s+$/,"");
 };
 
 exports.atomicWriteFileSync = function(dest, data) {
@@ -149,4 +149,17 @@ exports.atomicWriteFileSync = function(dest, data) {
             throw err;
     }
     fs.renameSync(tmp, dest);
+}
+
+// creates an idr, type://network/context?id=account#id
+// context and account are optional
+exports.idrNew = function(type, network, id, context, account)
+{
+    var r = {slashes:true};
+    r.host = network;
+    if(context) r.pathname = context;
+    if(account) r.query = {id: account};
+    r.protocol = type;
+    r.hash = id;
+    return url.format(r);
 }

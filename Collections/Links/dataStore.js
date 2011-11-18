@@ -18,6 +18,7 @@ exports.init = function(lCollection, eCollection, qCollection, mongo) {
     db = mongo.dbClient;
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
+    linkCollection.ensureIndex({"id":1},{unique:true},function() {});
     encounterCollection = eCollection;
     encounterCollection.ensureIndex({"link":1},{background:true},function() {});
     encounterCollection.ensureIndex({"orig":1},{background:true},function() {});

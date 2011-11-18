@@ -5,6 +5,7 @@ var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
 var oembed = require('./oembed');
+var crypto = require('crypto');
 var debug = false;
 
 var dataStore, locker, search;
@@ -146,6 +147,7 @@ function linkMagic(origUrl, callback){
               }
               // new link!!!
               link = {link:linkUrl};
+              link.id = crypto.createHash('md5').update(linkUrl).digest('hex');
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
                   // TODO: should we support link rel canonical here and change it?
                   util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
@@ -155,7 +157,7 @@ function linkMagic(origUrl, callback){
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
-                              locker.event("link",obj); // let happen independently
+                              locker.ievent(lutil.idrNew("link","links",obj.id),obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){

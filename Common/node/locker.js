@@ -13,6 +13,7 @@ var request = require('request'),
     http = require("http"),
     url = require("url"),
     lstate = require("lstate"),
+    lutil = require("lutil"),
     querystring = require("querystring");
 
 var lockerBase;
@@ -80,14 +81,32 @@ exports.providers = function(types, callback) {
  * action - the action, defaults to new
  */
 exports.event = function(type, obj, action) {
+    console.error("EVENT() DEPRECIATED, use ievent please");
+};
+
+/**
+ * Post an event
+ * idr - from .idr()
+ * data - the object to make a JSON string of as the event body
+ * action - the action, defaults to new
+ */
+exports.ievent = function(idr, data, action) {
+    if(!idr || !data) return console.error("invalid input to ievent");
     if (action === undefined) action = "new";
     request.post({
         headers:{'Connection':'keep-alive'},
         url:baseServiceUrl + "/event",
-        json:{"type":type,"obj":obj},
-        action:action
+        json:{"idr":idr,"data":data, action:action}
     });
 };
+
+// creates a locally scoped idr
+exports.idrLocal = function(idr)
+{
+    var r = url.parse(idr);
+    r.query = {id: localServiceId}; // best proxy of account id right now
+    return url.format(r);
+}
 
 /**
  * Sign up to be notified of events

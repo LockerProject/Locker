@@ -14,6 +14,7 @@ var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js").logger;
 var syncManager = require('lsyncmanager');
+var url = require('url');
 
 var eventListeners = {};
 var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
@@ -43,16 +44,21 @@ exports.makeRequest = function(httpOpts, body, callback) {
     req.end();
 }
 
-exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
-    logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+exports.fireEvent = function(idr, action, obj) {
+    logger.debug("Firing an event for " + idr + " action(" + action + ")");
+    var r = url.parse(idr);
+    // we're back-porting to the type system for now
+    var serviceType = r.protocol.substr(0,r.protocol.length-1);
+    if(r.pathname && r.pathname.length > 0)
+    {
+        serviceType = r.pathname.substr(1) + '/' + r.host;
+    }
     // Short circuit when no one is listening
     if (!eventListeners.hasOwnProperty(serviceType)) return;
     var newEventInfo = {
-        type:serviceType,
+        idr:idr,
         action:action,
-        via:fromServiceId,
-        timestamp:Date.now(),
-        obj:obj,
+        data:obj,
         listeners:eventListeners[serviceType].slice()
     };
     // console.log(require("sys").inspect(newEventInfo));
@@ -109,7 +115,7 @@ function processEvents(queue) {
             };
             logger.debug("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-            exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
+            exports.makeRequest(httpOpts, JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data}), function(response) {
                 listener.response = response.statusCode;
                 if (listener.response != 200) {
                     console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
