@@ -28,18 +28,23 @@ app.set('views', __dirname);
 
 app.get('/', function(req, res) {
     var fields = {};
-    var sort = {"first":-1};
     if (req.query.fields) {
         try { fields = JSON.parse(req.query.fields); } catch(E) {}
-    }
-    if (req.query.sort) {
-        try { sort = JSON.parse(req.query.sort); } catch(E) {}
     }
     dataStore.getAll(fields, function(err, cursor) {
         if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
         if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        cursor.sort(sort);
+        var sorter = {"first":-1};
+        if(req.query["sort"]) {
+            if(req.query["order"]) {
+                sorter[req.query["sort"]] = +req.query["order"];
+            } else {
+                sorter[req.query["sort"]] = 1;
+            }
+        }
+        console.log("SORTING "+JSON.stringify(sorter));
+        cursor.sort(sorter);
         var ndx = {};
         cursor.toArray(function(err, items) {
             if(req.query["all"] || !req.query.full) return res.send(items); // default not include responses, forced if all

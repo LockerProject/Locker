@@ -62,7 +62,7 @@ exports.update = function(locker, type, callback) {
 function getData(type, svcId, callback)
 {
     var subtype = type.substr(0, type.indexOf('/'));
-    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100";
+    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100&sort=_id&order=-1";
     request.get({uri:lurl, json:true}, function(err, resp, arr) {
         if(err || !arr) return;
         async.forEachSeries(arr,function(a,cb){
