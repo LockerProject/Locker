@@ -63,6 +63,7 @@ exports.app = function(app)
     app.get('/registry/add/:id', function(req, res) {
         console.log("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
+        if(!verify(regIndex[req.params.id])) return res.send("invalid app", 500);
         exports.install({name:req.params.id}, function(){ res.send(true); });
     });
     app.get('/registry/apps', function(req, res) {
@@ -100,6 +101,16 @@ exports.app = function(app)
             });
         });
     });
+}
+
+// verify the validity of a package
+function verify(pkg)
+{
+    if(!pkg) return false;
+    if(!pkg.repository) return false;
+    if(!pkg.repository.static) return false;
+    if(pkg.repository.static === true || pkg.repository.static === "true") return true;
+    return false;
 }
 
 // just load up any installed packages in node_modules
