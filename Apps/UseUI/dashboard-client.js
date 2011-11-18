@@ -124,18 +124,18 @@ var isSomeoneListening = 0;
 
 app.post('/new', function(req, res) {
     res.send({});
-    io.sockets.emit('newservice', req.body.obj);
+    io.sockets.emit('newservice', req.body.data);
 });
 
 app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
-        if(req.body.type === 'view/github') {
-            console.error("DEBUG: req.body", req.body);
-            io.sockets.emit('viewer', req.body);
+        if(req.body.idr.indexOf("github") >= 0) {
+            io.sockets.emit('viewer', {req.body});
         } else {
-            var evInfo = eventInfo[req.body.type];
+            var idr = req.body.idr.split(':');
+            var evInfo = eventInfo[idr[0]];
             if (evInfo.timer) {
                 clearTimeout(evInfo.timer);
             }
@@ -270,5 +270,5 @@ io.sockets.on('connection', function (socket) {
         console.dir(socket);
         socket.emit("counts", counts);
     });
-    
+
 });
