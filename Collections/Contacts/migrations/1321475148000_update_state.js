@@ -4,9 +4,12 @@ module.exports = function(dir) {
     var lutil = require(__dirname + '/../../../Common/node/lutil');
 
     var state = JSON.parse(fs.readFileSync(__dirname + '/../../../Me/useui/state.json'));
-    state.contact = state['contact/full'];
-    delete state['contact/full'];
-    lutil.atomicWriteFileSync(__dirname + '/../../../Me/useui/state.json', JSON.stringify(state, null, 4));
-
+    
+    if (state.hasOwnProperty('contact/full')) {
+        state.contact = state['contact/full'];
+        delete state['contact/full'];
+        lutil.atomicWriteFileSync(__dirname + '/../../../Me/useui/state.json', JSON.stringify(state, null, 4));
+    }
+    
     return true;
 };
