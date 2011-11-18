@@ -19,7 +19,7 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/places';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['places'];
+var thecollections = ['place'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
@@ -33,8 +33,8 @@ suite.next().suite.addBatch({
         topic: function() {
             process.chdir("." + mePath);
             var self = this;
-            lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+            lmongo.init("places", thecollections, function(mongo, colls) {
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterEvent, self.callback);
             });
         },
