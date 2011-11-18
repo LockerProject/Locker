@@ -1,5 +1,6 @@
 var fs = require("fs");
 var path = require("path");
+var url = require("url");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.

@@ -69,22 +69,23 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.obj.type || !req.body.via) {
+    if (!req.body.idr || !req.body.data) {
         console.log('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
         return;
     }
-
-    dataStore.addEvent(req.body, function(err, eventObj) {
+    // we don't support these yet
+    if(req.body.action == "delete")
+    {
+        return res.send("skipping");
+    }
+    var idr = url.parse(req.body.idr);
+    dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
         if (err) {
             res.writeHead(500);
             res.end(err);
         } else {
-            if (eventObj) {
-                var idr = lutil.idrNew("contact", "contacts", eventObj._id);
-                locker.ievent(idr, eventObj);
-            }
             res.writeHead(200);
             res.end('processed event');
         }

@@ -81,14 +81,6 @@ function addContacts(type, endpoint, contacts, callback) {
     } else {
         var contact = contacts.shift();
         dataStore.addData(type, endpoint, {data:contact}, function(err, doc) {
-            // what event should this be?
-            // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-            //
-            // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
-            if (doc._id) {
-                var eventObj = {source: "contacts", type:endpoint, data:doc};
-                exports.eventEmitter.emit('contact/full', eventObj);
-            }
             addContacts(type, endpoint, contacts, callback);
         })
     }

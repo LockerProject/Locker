@@ -12,7 +12,9 @@ var db;
 var lconfig = require('../../Common/node/lconfig');
 var fs = require('fs');
 var lutil = require('lutil');
+var locker = require('locker');
 var lmongoutil = require("lmongoutil");
+var url = require('url');
 
 exports.init = function(mongoCollection, mongo) {
     collection = mongoCollection;
@@ -56,62 +58,21 @@ function updateState()
     }, 5000);
 }
 
-exports.addEvent = function(eventBody, callback) {
-    var target;
-
-    switch (eventBody.type) {
-        case 'contact/foursquare':
-            target = exports.addFoursquareData;
-            break;
-        case 'contact/facebook':
-            target = exports.addFacebookData;
-            break;
-        case 'contact/twitter':
-            target = exports.addTwitterData;
-            break;
-        case 'contact/github':
-            if(eventBody.obj.source !== 'watcher')
-                target = exports.addGithubData;
-            break;
-        case 'contact/gcontacts':
-            target = exports.addGoogleContactsData;
-            break;
-        case 'contact/flickr':
-            target = exports.addFlickrData;
-            break;
-        case 'contact/instagram':
-            target = exports.addInstagramData;
-            break;
+exports.addData = function(type, data, cb) {
+    // shim to send events, post-add stuff
+    var callback = function(err, doc)
+    {
+        if(doc && doc._id)
+        {
+            var idr = lutil.idrNew("contact", "contacts", eventObj._id);
+            locker.ievent(idr, eventObj);
+        }
+        cb(err, doc);
     }
-    if(!target) {
-        callback('event received could not be processed by the contacts collection');
-        return;
-    }
-    switch (eventBody.obj.type) {
-        // what do we want to do for a delete event?
-        //
-        case 'delete':
-            return callback();
-            break;
-        default:
-            target(eventBody.obj, function(err, doc) {
-                // what event should this be?
-                // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-                //
-                // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
-                updateState();
-                var eventObj = {source: "contacts", type:eventBody.obj.type, data:doc};
-                return callback(undefined, eventObj);
-            });
-            break;
-    }
-}
-
-exports.addData = function(type, endpoint, data, callback) {
     if (type == 'facebook') {
         exports.addFacebookData(data, callback);
     } else if (type == 'twitter') {
-        exports.addTwitterData(endpoint, data, callback);
+        exports.addTwitterData(data, callback);
     } else if (type == 'foursquare') {
         exports.addFoursquareData(data, callback);
     } else if (type == 'gcontacts') {
@@ -121,25 +82,16 @@ exports.addData = function(type, endpoint, data, callback) {
     } else if (type == 'instagram') {
         exports.addInstagramData(data, callback);
     } else if (type == 'github') {
-        exports.addGithubData(endpoint, data, callback);
+        exports.addGithubData(data, callback);
     }
 }
 
-exports.addTwitterData = function(relationship, twitterData, callback) {
-    if (typeof twitterData === 'function') {
-        callback = twitterData;
-        twitterData = relationship;
-        relationship = twitterData.source;
-    } else if (relationship === 'followers') {
-        relationship = relationship.substring(0, relationship.length - 1);
-    }
-    var data = twitterData.data;
+exports.addTwitterData = function(data, callback) {
     var twID  = data.id;
     var cleanedName = cleanName(data.name);
     var query = {'accounts.twitter.data.id':twID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:twitterData.timeStamp || new Date().getTime()};
-    baseObj[relationship] = true;
+    var baseObj = {data:data, lastUpdated:new Date().getTime()};
     set['accounts.twitter.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -157,7 +109,7 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
                         {safe:true, new: true}, function(err, doc) {
         if(!doc) {
             //match otherwise
-            var or = [{'accounts.foursquare.data.contact.twitter':twitterData.data.screen_name}];
+            var or = [{'accounts.foursquare.data.contact.twitter':data.screen_name}];
             if(cleanedName)
                 or.push({'_matching.cleanedNames':cleanedName});
             var set = {};
@@ -172,20 +124,11 @@ exports.addTwitterData = function(relationship, twitterData, callback) {
     });
 }
 
-exports.addGithubData = function(relationship, gitHubData, callback) {
-    if (typeof gitHubData === 'function') {
-        callback = gitHubData;
-        gitHubData = relationship;
-        relationship = gitHubData.source;
-    } else {
-        relationship = relationship.substring(0, relationship.length - 1);
-    }
-    var data = gitHubData.data;
+exports.addGithubData = function(data, callback) {
     var cleanedName = cleanName(data.name);
     var query = {'accounts.github.data.id':data.id};
     var set = {};
     var baseObj = {data:data, lastUpdated:new Date().getTime()};
-    baseObj[relationship] = true;
     set['accounts.github.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -227,15 +170,14 @@ exports.addGithubData = function(relationship, gitHubData, callback) {
     });
 }
 
-exports.addFoursquareData = function(foursquareData, callback) {
-    var data = foursquareData.data;
+exports.addFoursquareData = function(data, callback) {
     var foursquareID = data.id;
     var name = data.firstName;
     if(data.lastName) name += ' ' + data.lastName;
     var cleanedName = cleanName(name);
     var query = {'accounts.foursquare.data.id':foursquareID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:foursquareData.timeStamp || new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:new Date().getTime()};
     set['accounts.foursquare.$'] = baseObj;
     //name
     setName(set, name);
@@ -289,13 +231,12 @@ exports.addFoursquareData = function(foursquareData, callback) {
     });
 }
 
-exports.addFacebookData = function(facebookData, callback) {
-    var data = facebookData.data;
+exports.addFacebookData = function(data, callback) {
     var fbID  = data.id;
     var cleanedName = cleanName(data.name);
     var query = {'accounts.facebook.data.id':fbID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:facebookData.timeStamp || new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:new Date().getTime()};
     set['accounts.facebook.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -326,13 +267,12 @@ exports.addFacebookData = function(facebookData, callback) {
     });
 }
 
-exports.addGoogleContactsData = function(googleContactsData, callback) {
-    var data = googleContactsData.data;
+exports.addGoogleContactsData = function(data, callback) {
     var gcID  = data.id;
     var cleanedName = cleanName(data.name);
     var query = {'accounts.googleContacts.data.id':gcID};
     var set = {};
-    var baseObj = {data:googleContactsData.data, lastUpdated:data.lastUpdated || new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:new Date().getTime()};
     set['accounts.googleContacts.$'] = baseObj;
     setName(set, data.name);
 
@@ -399,13 +339,12 @@ exports.addGoogleContactsData = function(googleContactsData, callback) {
     });
 }
 
-exports.addFlickrData = function(flickrData, callback) {
-    var data = flickrData.data;
+exports.addFlickrData = function(data, callback) {
     var flID  = data.nsid;
     var cleanedName = cleanName(data.realname);
     var query = {'accounts.flickr.data.nsid':flID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:flickrData.timeStamp || Date.now()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.flickr.$'] = baseObj;
     //name
     setName(set, data.realname);
@@ -437,8 +376,7 @@ exports.addFlickrData = function(flickrData, callback) {
     });
 }
 
-exports.addInstagramData = function(iData, callback) {
-    var data = iData.data;
+exports.addInstagramData = function(data, callback) {
     var cleanedName = cleanName(data.full_name);
     var query = {'accounts.instagram.data.id':data.id};
     var set = {};
