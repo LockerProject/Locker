@@ -22,14 +22,13 @@ var suite = vows.describe("Registry");
 
 var installed;
 var apps;
-var app;
 var linkvid = fs.readFileSync(__dirname + '/fixtures/registry/linkvid.json');
 suite.addBatch({
     'Can init': {
         topic: function() {
             var self = this;
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'http://registry.singly.com/npm/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
+            fakeweb.registerUri({uri : 'http://registry.singly.com/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
             registry.init(lconfig, lcrypto, function(i){
                 installed = i;
                 self.callback();
@@ -53,16 +52,12 @@ suite.addBatch({
 /*}).addBatch({
     'Add App': {
         topic: function() {
-            var self = this;
             fakeweb.allowNetConnect = false;
             // todo: need header support to add etag for npm
             fakeweb.registerUri({uri : 'http://registry.singly.com:80/npm/app-quartzjer-linkvid', body:linkvid});
-            registry.install({name:"app-quartzjer-linkvid"}, function(err, a){
-                app = a;
-                self.callback();
-            })
+            registry.install({name:"app-quartzjer-linkvid"}, this.callback)
         },
-        "successfully" : function() {
+        "successfully" : function(err, a) {
             assert.equal(a.name, "app-quartzjer-linkvid");
         }
     }

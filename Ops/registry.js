@@ -74,7 +74,7 @@ exports.app = function(app)
     app.get('/registry/app/:id', function(req, res) {
         var id = req.params.id;
         if(!regIndex[id]) return res.send("not found", 404);
-        var copy = JSON.parse(JSON.stringify(regIndex[id]));
+        var copy = lutil.extend(true, {}, regIndex[id]);
         copy.installed = installed[id];
         res.send(copy);
     });
@@ -87,6 +87,7 @@ exports.app = function(app)
         console.log("registry publishing "+req.params.id);
         var id = req.params.id;
         if(id.indexOf("-") <= 0) return res.send("not found", 404);
+        if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
         id = id.replace("-","/");
         var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
         fs.stat(dir, function(err, stat){
