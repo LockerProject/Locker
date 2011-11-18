@@ -30,7 +30,7 @@ var photoGatherers = {
 exports.gatherPhotos = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo/full'}, function() {
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo'}, function() {
             cb(); // synchro delete, async/background reindex
             locker.providers(['photo','checkin','tweets'], function(err, services) {
                 if (!services) return;

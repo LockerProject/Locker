@@ -24,7 +24,7 @@ exports.gatherContacts = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
         // now that we've deleted them, we need to tell search to whack ours too before we start
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact/full'}, function(){
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
             cb(); // synchro delete, async/background reindex
             // This should really be timered, triggered, something else
             locker.providers(['contact/facebook', 'contact/twitter', 'contact/flickr',
@@ -87,7 +87,7 @@ function addContacts(type, endpoint, contacts, callback) {
             // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
             if (doc._id) {
                 var eventObj = {source: "contacts", type:endpoint, data:doc};
-                exports.eventEmitter.emit('contact/full', eventObj);
+                exports.eventEmitter.emit('contact', eventObj);
             }
             addContacts(type, endpoint, contacts, callback);
         })
