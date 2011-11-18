@@ -39,6 +39,8 @@ exports.update = function(locker, type, callback) {
                     async.forEachSeries(["recents/foursquare", "checkin/foursquare"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
                 } else if(svc.provides.indexOf('feed/instagram') >= 0) {
                     async.forEachSeries(["photo/instagram", "feed/instagram"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
+                } else {
+                    cb();
                 }
             }, function(err){
                 // process links too
@@ -330,7 +332,7 @@ function itemTwitter(item, tweet)
         var hash = crypto.createHash('md5');
         hash.update(item.text.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
-        var hash = crypto.createHash('md5');
+        hash = crypto.createHash('md5');
         hash.update(item.text.replace(/ http\:\/\/\S+$/,"")); // cut off appendege links that some apps add (like instagram)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
@@ -440,7 +442,7 @@ function itemTwitterRelated(item, relateds)
                 resp.type = "comment";
                 resp.text = result.value.text;
                 user = result.value.user;
-                resp.at = new Date(result.value.created_at).getTime()
+                resp.at = new Date(result.value.created_at).getTime();
             }
             resp.from.id = "contact://twitter/#"+user.screen_name;
             resp.from.name = user.name;
