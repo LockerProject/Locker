@@ -6,36 +6,36 @@
 * Please see the LICENSE file for more information.
 *
 */
-var IJOD = require('../ijod').IJOD
-  , lconfig = require('../lconfig')
-  , lmongo = require('../lmongo')
+var IJOD = require('ijod').IJOD
+  , lconfig = require('lconfig')
+  , lmongo = require('lmongo')
   , ijodFiles = {}
-  , deepCompare = require('../deepCompare')
-  , mongo
-  , colls
+  , deepCompare = require('deepCompare')
+  , mongo = {}
+  , colls = {}
   , mongoIDs = {}
   ;
 var syncManager = require('lsyncmanager');
 var synclets;
 
-exports.init = function(callback) {
-    if (mongo) return callback();
+exports.init = function(owner, callback) {
+    if (mongo[owner]) return callback();
     synclets = syncManager.synclets();
-    lmongo.init('synclets', [], function(_mongo) {
-        mongo = _mongo;
-        colls = mongo.collections.synclets;
+    lmongo.init(owner, [], function(_mongo) {
+        mongo[owner] = _mongo;
+        colls[owner] = mongo[owner].collections[owner];
         callback();
     });
 }
 
-exports.addCollection = function(name, dir, id) {
+exports.addCollection = function(owner, name, dir, id) {
     mongoIDs[dir + "_" + name] = id;
-    if(!colls[dir + "_" + name])
+    if(!colls[owner][dir + "_" + name])
     {
-        mongo.addCollection('synclets', dir + "_" + name);
+        mongo[owner].addCollection(owner, dir + "_" + name);
         var ndx = {};
         ndx[id] = true;
-        colls[dir + "_" + name].ensureIndex(ndx,{unique:true},function() {});
+        colls[owner][dir + "_" + name].ensureIndex(ndx,{unique:true},function() {});
     }
     if(!ijodFiles[dir + "_" + name])
         ijodFiles[dir + "_" + name] = new IJOD(name, dir);
@@ -48,7 +48,7 @@ exports.addCollection = function(name, dir, id) {
 // options = {strip: ['person','checkins']}, for example
 // timeStamp will be the timestamp stored w/ the record if it exists, otherwise, just use now.
 //
-exports.addObject = function(type, object, options, callback) {
+exports.addObject = function(owner, type, object, options, callback) {
     var timeStamp = now();
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
@@ -59,7 +59,7 @@ exports.addObject = function(type, object, options, callback) {
             timeStamp = options['timeStamp'];
         }
     }
-    setCurrent(type, object, function(err, newType, doc) {
+    setCurrent(owner, type, object, function(err, newType, doc) {
         if (newType === 'same') return callback(err, newType, doc);
         ijodFiles[type].addRecord(timeStamp, object, function(err) {
             callback(err, newType, doc);
@@ -68,9 +68,9 @@ exports.addObject = function(type, object, options, callback) {
 }
 
 // same deal, except no strip option, just timestamp is available currently
-exports.removeObject = function(type, id, options, callback) {
+exports.removeObject = function(owner, type, id, options, callback) {
     var timeStamp = now();
-    if (arguments.length == 3) callback = options;
+    if (arguments.length == 4) callback = options;
     if (typeof options == 'object') {
         if (options['timeStamp']) {
             timeStamp = options['timeStamp'];
@@ -81,33 +81,33 @@ exports.removeObject = function(type, id, options, callback) {
     ijodFiles[type].addRecord(timeStamp, record, function(err) {
         if (err)
             callback(err);
-        removeCurrent(type, id, callback);
+        removeCurrent(owner, type, id, callback);
     })
 }
 
-exports.queryCurrent = function(type, query, options, callback) {
+exports.queryCurrent = function(owner, type, query, options, callback) {
     query = query || {};
     options = options || {};
-    var m = getMongo(type);
+    var m = getMongo(owner, type, callback);
     m.find(query, options).toArray(callback);
 }
 
-exports.getAllCurrent = function(type, callback, options) {
+exports.getAllCurrent = function(owner, type, callback, options) {
     options = options || {};
-    var m = getMongo(type, callback);
-    m.find({}, options).sort({_id:-1}).toArray(callback);
+    var m = getMongo(owner, type, callback);
+    m.find({}, options).toArray(callback);
 }
 
-exports.getCurrent = function(type, id, callback) {
+exports.getCurrent = function(owner, type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
-    var m = getMongo(type, callback);
+    var m = getMongo(owner, type, callback);
     var or = [];
     try {
-        or.push({_id: mongo.db.bson_serializer.ObjectID(id)});
+        or.push({_id: mongo[owner].db.bson_serializer.ObjectID(id)});
     }catch(E){}
     var parts = type.split("_");
     var idname = "id";
-    // this is some crazy shit, serious refactoring needed someday
+    // BEWARE THE mongoId s appendage WEIRDNESS! #techdebt
     if(parts.length == 2 && synclets && synclets[parts[0]] && synclets[parts[0]].mongoId && synclets[parts[0]].mongoId[parts[1]+'s']) idname = synclets[parts[0]].mongoId[parts[1]+'s'];
     var id2 = {};
     id2[idname] = id;
@@ -116,9 +116,17 @@ exports.getCurrent = function(type, id, callback) {
     m.findOne({$or: or}, callback);
 }
 
-function setCurrent(type, object, callback) {
+exports.getCurrentId = function(owner, type, id, callback) {
+    if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
+    var m = getMongo(owner, type, callback);
+    var query = {"id":parseInt(id)};
+    m.findOne(query, callback);
+}
+
+
+function setCurrent(owner, type, object, callback) {
     if (type && object && callback && object[mongoIDs[type]]) {
-        var m = getMongo(type, callback);
+        var m = getMongo(owner, type, callback);
         if(m) {
             var query = {};
             query[mongoIDs[type]] = object[mongoIDs[type]];
@@ -140,15 +148,15 @@ function setCurrent(type, object, callback) {
             });
         }
     } else {
-        console.error('failed to set current, l145 of common/node/synclet/datastore');
+        console.error('failed to set current in ldatastore');
         console.error(type)
         console.error(object)
         console.error(callback);
     }
 }
 
-function removeCurrent(type, id, callback) {
-    var m = getMongo(type, id, callback);
+function removeCurrent(owner, type, id, callback) {
+    var m = getMongo(owner, type, callback);
     if(m) {
         var query = {};
         query[mongoIDs[type]] = id;
@@ -156,15 +164,15 @@ function removeCurrent(type, id, callback) {
     }
 }
 
-function getMongo(type, callback) {
-    var m = colls[type];
+function getMongo(owner, type, callback) {
+    var m = colls[owner][type];
     if(!m) {
         try {
-            mongo.addCollection('synclets', type);
+            mongo[owner].addCollection(owner, type);
         } catch (E) {
             return callback(E, []);
         }
-        m = colls[type];
+        m = colls[owner][type];
     }
     return m;
 }
@@ -172,3 +180,4 @@ function getMongo(type, callback) {
 function now() {
     return new Date().getTime();
 }
+

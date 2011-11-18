@@ -39,7 +39,7 @@ var dashboard, devdashboard;
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" ) {
+                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -56,10 +56,13 @@ var locker = express.createServer(
             connect.session({key:'locker.project.id', secret : "locker"})
         );
 
+var push = require('./webservice-push')(locker);
 var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);
 
 var listeners = new Object(); // listeners for events
+
+var DEFAULT_QUERY_LIMIT = 20;
 
 // return the known map of our world
 locker.get('/map', function(req, res) {
@@ -152,6 +155,8 @@ locker.get("/decrypt", function(req, res) {
 
 // search interface
 locker.get("/query/:query", function(req, res) {
+    if(!url.parse(req.originalUrl).query)
+        req.originalUrl += "?limit=" + DEFAULT_QUERY_LIMIT;
     var data = decodeURIComponent(req.originalUrl.substr(6)).replace(/%21/g, '!').replace(/%27/g, "'").replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2a/ig, '*');
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
@@ -174,7 +179,7 @@ locker.get("/query/:query", function(req, res) {
                 var collection = colls[provider.mongoCollections[0]];
                 console.log("Querying " + JSON.stringify(query));
                 var options = {};
-                if (query.limit) options.limit = query.limit;
+                options.limit = query.limit || DEFAULT_QUERY_LIMIT;
                 if (query.skip) options.skip = query.skip;
                 if (query.fields) options.fields = query.fields;
                 if (query.sort) options.sort = query.sort;

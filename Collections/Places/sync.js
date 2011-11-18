@@ -23,29 +23,35 @@ exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
     exports.eventEmitter = new EventEmitter();
 };
 
-exports.gatherPlaces = function(cb) {
-    lconfig.load('../../Config/config.json');
+function reset(flag, callback)
+{
+    if(flag) return callback();
     dataStore.clear(function(err) {
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, function() {
-            cb(); // synchro delete, async/background reindex
-            locker.providers(['place','checkin','tweets','location'], function(err, services) {
-                if (!services) return;
-                services.forEach(function(svc) {
-                    if(svc.type === 'collection') return;
-                    if (svc.provider === 'twitter') {
-                        gatherFromUrl(svc.id, "/getCurrent/home_timeline", "timeline/twitter");
-                        gatherFromUrl(svc.id, "/getCurrent/timeline", "timeline/twitter");
-                        gatherFromUrl(svc.id, "/getCurrent/tweets", "tweets/twitter");
-                    } else if (svc.provider === 'foursquare') {
-                        gatherFromUrl(svc.id, "/getCurrent/places", "checkin/foursquare");
-                        gatherFromUrl(svc.id, "/getCurrent/recent", "recents/foursquare");
-                        gatherFromUrl(svc.id, "/getCurrent/recents", "recents/foursquare");
-                        gatherFromUrl(svc.id, "/getCurrent/checkin", "checkin/foursquare");
-                        gatherFromUrl(svc.id, "/getCurrent/checkins", "checkin/foursquare");
-                    } else if (svc.provider === 'glatitude') {
-                        gatherFromUrl(svc.id, "/getCurrent/location", "location/glatitude");
-                    }
-                });
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=place'}, callback);
+    });
+}
+exports.gatherPlaces = function(type, cb) {
+    lconfig.load('../../Config/config.json');
+    reset(type, function(){
+        cb(); // synchro delete, async/background reindex
+        var types = (type) ? [type] : ['checkin','tweets','location'];
+        locker.providers(types, function(err, services) {
+            if (!services) return;
+            services.forEach(function(svc) {
+                if(svc.type === 'collection') return;
+                if (svc.provider === 'twitter') {
+                    gatherFromUrl(svc.id, "/getCurrent/home_timeline", "timeline/twitter");
+                    gatherFromUrl(svc.id, "/getCurrent/timeline", "timeline/twitter");
+                    gatherFromUrl(svc.id, "/getCurrent/tweets", "tweets/twitter");
+                } else if (svc.provider === 'foursquare') {
+                    gatherFromUrl(svc.id, "/getCurrent/places", "checkin/foursquare");
+                    gatherFromUrl(svc.id, "/getCurrent/recent", "recents/foursquare");
+                    gatherFromUrl(svc.id, "/getCurrent/recents", "recents/foursquare");
+                    gatherFromUrl(svc.id, "/getCurrent/checkin", "checkin/foursquare");
+                    gatherFromUrl(svc.id, "/getCurrent/checkins", "checkin/foursquare");
+                } else if (svc.provider === 'glatitude') {
+                    gatherFromUrl(svc.id, "/getCurrent/location", "location/glatitude");
+                }
             });
         });
     });
@@ -55,7 +61,7 @@ function gatherFromUrl(svcId, url, type) {
     console.log(lconfig.lockerBase + '/Me/' + svcId + url);
     request.get({uri:lconfig.lockerBase + '/Me/' + svcId + url}, function(err, resp, body) {
         if (err) {
-            logger.debug("Error getting basic places from " + svcId);
+            logger.debug("Error getting basic places from " + svcId + ": "+ err);
             return;
         }
         try {
