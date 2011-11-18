@@ -60,7 +60,7 @@ suite.next().suite.addBatch({
         topic: function() {
             var self = this;
             lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterBBEvent, self.callback);
             });
         },
@@ -68,14 +68,14 @@ suite.next().suite.addBatch({
             var box = twitterBBEvent.obj.data.place.bounding_box.coordinates[0];
             var allLat = 0;
             var allLng = 0;
-            
+
             for (var i=0; i<box.length; ++i) {
                 allLat += box[i][1];
                 allLng += box[i][0];
             }
             var lat = +(allLat / 4).toFixed(5);
             var lng = +(allLng / 4).toFixed(5);
-            
+
             assert.isNull(err);
             assert.equal(response.data.lat, lat);
             assert.equal(response.data.lng, lng);
