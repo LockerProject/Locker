@@ -52,8 +52,8 @@ exports.fireEvent = function(idr, action, obj) {
     // we're back-porting to the type system for now
     var serviceType = r.protocol.substr(0,r.protocol.length-1);
     if(r.pathname && r.pathname.length > 0)
-    {
-        serviceType = r.pathname.substr(1) + '/' + r.host;
+    { // synclets
+        serviceType += '/' + r.host;
     }
     // Short circuit when no one is listening
     if (!eventListeners.hasOwnProperty(serviceType)) return;

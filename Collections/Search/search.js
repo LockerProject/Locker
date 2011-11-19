@@ -163,7 +163,7 @@ exports.handlePostEvents = function(req, callback) {
 exports.handlePostIndex = function(req, callback) {
     var error;
 
-    if (!req.body.type || !req.body.source || !req.body.data) {
+    if (!req.body.idr || !req.body.data) {
         error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
         console.error(error);
         return callback(error, {});
@@ -380,7 +380,7 @@ function makeEnrichedRequest(url, item, callback) {
 function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
     var source;
- 
+
     var via = body.via;
     source = via;
     if(via.indexOf('/') > -1) { // shouldn't need this anymore

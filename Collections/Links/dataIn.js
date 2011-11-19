@@ -6,6 +6,7 @@ var logger = require(__dirname + "/../../Common/node/logger").logger;
 var lutil = require('lutil');
 var oembed = require('./oembed');
 var crypto = require('crypto');
+var url = require('url');
 var debug = false;
 
 var dataStore, locker, search;
@@ -50,15 +51,15 @@ exports.processEvent = function(event, callback)
     if(!callback) callback = function(){};
     // TODO: what should we be doing with other action types?
     if(event.action != "new") return callback();
-    // what a mess
-    var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
-    if(event.type.indexOf("facebook") > 0)
+    var idr = url.parse(event.idr);
+    if(idr.host === "facebook")
     {
-        processEncounter(getEncounterFB(item),callback);
-    }
-    if(event.type.indexOf("twitter") > 0)
-    {
-        processEncounter(getEncounterTwitter(item),callback);
+        processEncounter(getEncounterFB(event.data),callback);
+    }else if(idr.host === "twitter") {
+        processEncounter(getEncounterTwitter(event.data),callback);
+    }else{
+        console.error("unhandled event, shouldn't happen");
+        callback();
     }
 }
 

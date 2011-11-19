@@ -17,6 +17,7 @@ var crypto = require("crypto");
 var async = require("async");
 var url = require("url");
 var fs = require('fs');
+var url = require('url');
 var lmongoutil = require("lmongoutil");
 var locker;
 
@@ -300,9 +301,11 @@ exports.addEvent = function(eventBody, callback) {
         return;
     }
     // Run the data processing
-    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
-    var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, callback);
+    var idr = url.parse(eventBody.idr, true);
+    var svcId = idr.query[id];
+    var type = idr.protocol.substr(0,idr.protocol.length-1) + '/' + idr.host
+    var handler = dataHandlers[type] || processShared;
+    handler(svcId, eventBody.data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {

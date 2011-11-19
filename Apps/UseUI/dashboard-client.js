@@ -132,7 +132,7 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         if(req.body.idr.indexOf("github") >= 0) {
-            io.sockets.emit('viewer', {req.body});
+            io.sockets.emit('viewer', req.body);
         } else {
             var idr = req.body.idr.split(':');
             var evInfo = eventInfo[idr[0]];
