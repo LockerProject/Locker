@@ -114,7 +114,7 @@ app.post('/setViewer', function(req, res) {
 
 var eventInfo = {
     "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
-    "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "contact":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "place":{"name":"place", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
 };
@@ -181,7 +181,7 @@ function bootState(doneCb)
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
-            if(coll == 'contacts') var evInfo = eventInfo['contact/full'];
+            if(coll == 'contacts') var evInfo = eventInfo['contact'];
             if(coll == 'places') var evInfo = eventInfo['place'];
             evInfo.count = (body && body.count && body.count > 0) ? body.count : 0;
             evInfo.updated = (body && body.updated && body.updated > 0) ? body.updated : 0;
@@ -192,7 +192,7 @@ function bootState(doneCb)
         logger.debug("finishing boot");
         var last = {
             "link":{"count":0, "lastId":0},
-            "contact/full":{"count":0, "lastId":0},
+            "contact":{"count":0, "lastId":0},
             "photo":{"count":0, "lastId":0},
             "place":{"count":0, "lastId":0}
         };
@@ -212,7 +212,7 @@ function bootState(doneCb)
         saveState(); // now that we possibly pushed events, note it
         locker.listen("photo","/event");
         locker.listen("link","/event");
-        locker.listen("contact/full","/event");
+        locker.listen("contact","/event");
         locker.listen("place", "/event");
         locker.listen('newservice', '/new');
         locker.listen('view/github', "/event");
@@ -255,7 +255,7 @@ io.sockets.on('connection', function (socket) {
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("place","/event");
-            locker.deafen("contact/full","/event");
+            locker.deafen("contact","/event");
             locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }

@@ -8,6 +8,7 @@ var fs = require('fs')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
+  , logger = require("./logger.js").logger;
   ;
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
@@ -369,7 +370,7 @@ function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    console.log("processing synclet data from "+key+" of length "+len);
+    logger.debug("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 

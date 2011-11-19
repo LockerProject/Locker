@@ -23,14 +23,16 @@ exports.sync = function(processInfo, cb) {
 };
 
 exports.syncPhotos = function(callback) {
-    // use a queue so we know when all the albums are done individually async'ly processing
-    var albums = [];
-    fb.getAlbums({id:"me"},function(album){albums.push(album);},function(){
-        async.forEach(albums,function(album,cbDone){
-            fb.getAlbum({id:album.id},function(photo){
-                // TODO: call fb.getPhoto() here to actually sync the image locally
-                photos.push({'obj' : photo, timestamp: new Date(), type : 'new'});            
-            },cbDone);
-        },callback);
+    fb.getProfile(function(profile) {
+        // use a queue so we know when all the albums are done individually async'ly processing
+        var albums = [{id:"me"}];
+        fb.getAlbums({id:"me"},function(album){albums.push(album);},function(){
+            async.forEach(albums,function(album,cbDone){
+                fb.getAlbum({id:album.id},function(photo){
+                    // TODO: call fb.getPhoto() here to actually sync the image locally
+                    photos.push({'obj' : photo, timestamp: new Date(), type : 'new'});            
+                },cbDone);
+            },callback);
+        });
     });
 }

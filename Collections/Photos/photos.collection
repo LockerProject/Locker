@@ -5,7 +5,7 @@
     "status":"stable",
     "handle":"photos",
     "provides":["photo"],
-    "mongoCollections":["photos"],
+    "mongoCollections":["photo"],
     "events":[
         ["tweets/twitter", "/events"],
         ["checkin/foursquare", "/events"],
