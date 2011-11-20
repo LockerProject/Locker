@@ -44,8 +44,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact" : {
-            "_id":"_id",
+        "contact contacts" : {
             "name":"name",
             "nicknames":[],
             "accounts":{
@@ -73,29 +72,25 @@ CLEngine = function()
                 }
             ]
         },
-        "photo" : {
-            "_id":"_id",
+        "photo photos" : {
             "caption":"caption",
             "title":"title"
         },
-        "timeline/twitter" : {
-            "_id":"_id",
+        "tweet twitter" : {
             "text":"text",
             "user":{
                 "name":"name",
                 "screen_name":"screen_name"
             }
         },
-        "status/facebook" : {
-            "_id":"_id",
+        "post facebook" : {
             "description":"description",
             "message":"message",
             "from":{
                 "name":"name"
             }
         },
-        "place" : {
-            "_id":"_id",
+        "place places" : {
             "title":"title"
         },
     };
@@ -118,26 +113,25 @@ CLEngine = function()
       TERMVECTOR_YES: 512,
       TERMVECTOR_WITH_POSITIONS: 512 | 1024,
       TERMVECTOR_WITH_OFFSETS: 512 | 2048,
-      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048) 
+      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048)
     };
-    
+
     return this;
 };
 
-CLEngine.prototype.indexType = function(type, source, value, callback) {
+CLEngine.prototype.indexType = function(type, id, value, callback) {
     var doc = new this.cl.Document();
 
+    if (!id) {
+        callback("No valid id property was found");
+        return;
+    }
+
+    var idr = url.parse(id);
     if (!this.mappings.hasOwnProperty(type)) {
         callback("No valid mapping for the type: " + type);
         return;
     }
-    
-    idToStore = value[this.mappings[type]["_id"]];
-    if (!idToStore) {
-        callback("No valid id property was found");
-        return;
-    }
-    idToStore = idToStore.toString();
 
     var contentTokens = [];
     processValue = function(v, parentMapping) {
@@ -166,23 +160,20 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
 
     };
     processValue(value, this.mappings[type]);
-    
+
     if (contentTokens.length === 0) {
-        console.log("No valid tokens were found to index id " + idToStore);
+        console.log("No valid tokens were found to index id " + r);
         return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
-    
+
     //console.log("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
-    if (source !== null) {
-        doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
-    }
     doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
     //console.log('about to index at ' + indexPath);
     assert.ok(indexPath);
-    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime) {
+    this.lucene.addDocument(id, doc, indexPath, function(err, indexTime) {
         callback(err, indexTime);
     });
 };
@@ -232,7 +223,7 @@ exports.setIndexPath = function(newPath) {
     if (!path.existsSync(indexPath)) {
       fs.mkdirSync(indexPath, 0755);
     };
-    
+
 };
 
 function exportEngineFunction(funcName) {
@@ -250,18 +241,13 @@ exportEngineFunction("flushAndCloseWriter");
 var indexQueue = [];
 var indexing = false;
 
-exports.indexType = function(type, value, cb) {
-    indexQueue.push({"type":type, "source":null, "value":value, "cb":cb});
-    process.nextTick(indexMore);
-};
-
-exports.indexTypeAndSource = function(type, source, value, cb) {
-    indexQueue.push({"type":type, "source":source, "value":value, "cb":cb});
+exports.indexType = function(type, id, value, cb) {
+    indexQueue.push({"type":type, "id":id, "value":value, "cb":cb});
     process.nextTick(indexMore);
 };
 
 exports.deleteDocument = function(id, cb) {
-  exports.currentEngine.deleteDocument(id, cb);  
+  exports.currentEngine.deleteDocument(id, cb);
 };
 
 exports.deleteDocumentsByType = function(type, cb) {
@@ -290,7 +276,7 @@ function indexMore(keepGoing) {
     }
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
-    exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
+    exports.currentEngine.indexType(cur.type, cur.id, cur.value, function(err, indexTime) {
         //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         delete cur;
