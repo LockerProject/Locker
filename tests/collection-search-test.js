@@ -56,7 +56,7 @@ suite.next().suite.addBatch({
     'Can query new contact just indexed' : {
         topic: function() {
             req.params.q = 'matt';
-            req.params.type = 'contact/full*';
+            req.params.type = 'contact*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
@@ -64,7 +64,7 @@ suite.next().suite.addBatch({
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
-            assert.equal(response.hits[0]._type, 'contact/full');
+            assert.equal(response.hits[0]._type, 'contact');
             assert.equal(response.hits[0]._source, 'contacts');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
@@ -85,7 +85,7 @@ suite.next().suite.addBatch({
     'Can query updated contact just indexed' : {
         topic: function() {
             req.params.q = 'matthew';
-            req.params.type = 'contact/full*';
+            req.params.type = 'contact*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
@@ -93,7 +93,7 @@ suite.next().suite.addBatch({
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
             assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
-            assert.equal(response.hits[0]._type, 'contact/full');
+            assert.equal(response.hits[0]._type, 'contact');
             assert.equal(response.hits[0]._source, 'contacts');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');

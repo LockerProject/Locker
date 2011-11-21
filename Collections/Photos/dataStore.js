@@ -37,26 +37,37 @@ function processTwitPic(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+
+var fbProfile;
+function getFacebookProfile(callback) {
+    if(fbProfile) return callback();
+    request.get({uri:lconfig.lockerBase + '/synclets/facebook/get_profile', json:true}, function(err, resp, profile) {
+        fbProfile = profile;
+        callback();
+    });
+}
 function processFacebook(svcId, data, cb) {
-    var photoInfo = {};
+    getFacebookProfile(function() {
+        var photoInfo = {};
 
-    // Gotta have a url minimum
-    if (!data.source) {
-        cb("The data did not have a source");
-        return;
-    }
-    photoInfo.url = data.source;
-    // TODO:  For now we're just taking the smallest one, there's also an icon field
-    if (data.images) photoInfo.thumbnail = data.images[data.images.length - 1].source;
-    if (data.width) photoInfo.width = data.width;
-    if (data.height) photoInfo.height = data.height;
-    if (data.created_time) photoInfo.timestamp = data.created_time*1000;
-    if (data.name) photoInfo.title = data.name;
-    if (data.link) photoInfo.sourceLink = data.link;
+        // Gotta have a url minimum
+        if (!data.source) {
+            cb("The data did not have a source");
+            return;
+        }
+        photoInfo.url = data.source;
+        // TODO:  For now we're just taking the smallest one, there's also an icon field
+        if (data.images) photoInfo.thumbnail = data.images[data.images.length - 1].source;
+        if (data.width) photoInfo.width = data.width;
+        if (data.height) photoInfo.height = data.height;
+        if (data.created_time) photoInfo.timestamp = data.created_time*1000;
+        if (data.name) photoInfo.title = data.name;
+        if (data.link) photoInfo.sourceLink = data.link;
 
-    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
-
-    saveCommonPhoto(photoInfo, cb);
+        photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+        photoInfo.me = (data.from.id == fbProfile.id);
+        saveCommonPhoto(photoInfo, cb);
+    });
 }
 
 function processInstagram(svcId, data, cb) {

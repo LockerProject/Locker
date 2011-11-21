@@ -58,8 +58,11 @@ suite.next().suite.addBatch({
     "Can get photos" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me?access_token=foo&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
+                file : __dirname + '/fixtures/facebook/1234.json' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/albums?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/albums.js' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/427822997594/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
             photos.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
