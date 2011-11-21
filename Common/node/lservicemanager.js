@@ -436,7 +436,7 @@ exports.spawn = function(serviceId, callback) {
     }
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
-    var app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
+    var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;

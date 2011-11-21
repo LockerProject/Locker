@@ -9,7 +9,7 @@
 
 //just a place for lockerd.js to populate config info
 var fs = require('fs');
-
+var path = require('path');
 
 exports.load = function(filepath) {
     var config = {};
@@ -44,7 +44,7 @@ exports.load = function(filepath) {
         "port": 27018
     };
     exports.me = config.me || "Me";
-    exports.lockerDir = process.cwd();
+    exports.lockerDir = path.join(__dirname, "..", "..");
     exports.logFile = config.logFile || undefined;
     exports.ui = config.ui || 'useui';
     exports.dashboard = config.dashboard;
