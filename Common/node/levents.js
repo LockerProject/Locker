@@ -7,7 +7,7 @@
 *
 */
 
-var SPAM_ME_TO_DEATH = false;
+var SPAM_ME_TO_DEATH = true;
 
 var http = require("http");
 var url = require("url");
@@ -19,7 +19,7 @@ var syncManager = require('lsyncmanager');
 var url = require('url');
 
 var eventListeners = {};
-var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
+var processingQueue = []; // queue of events being processed
 
 exports.addListener = function(type, id, cb) {
     console.log("Adding a listener for " + id + cb + " to " + type);
@@ -46,32 +46,47 @@ exports.makeRequest = function(httpOpts, body, callback) {
     req.end();
 }
 
+// get all possible listeners
+function fetchListeners(idr)
+{
+    var r = url.parse(idr);
+    var types = [];
+    // we're back-porting to the type system for now too
+    var oldType = r.protocol.substr(0,r.protocol.length-1);
+    types.push(oldType);
+    oldType += '/' + r.host;
+    types.push(oldType);
+    delete r.hash;
+    delete r.search;
+    types.push(url.format(r));
+    delete r.pathname;
+    types.push(url.format(r));
+    var ret = [];
+    types.forEach(function(type){
+        if(!eventListeners.hasOwnProperty(type)) return;
+        eventListeners[type].forEach(function(e){ret.push(e)});
+    });
+    return ret;
+}
+
 exports.fireEvent = function(idr, action, obj) {
     if (SPAM_ME_TO_DEATH) logger.debug("Firing an event for " + idr + " action(" + action + ")");
-    var r = url.parse(idr);
-    // we're back-porting to the type system for now
-    var serviceType = r.protocol.substr(0,r.protocol.length-1);
-    if(r.pathname && r.pathname.length > 0)
-    { // synclets
-        serviceType += '/' + r.host;
-    }
     // Short circuit when no one is listening
-    if (!eventListeners.hasOwnProperty(serviceType)) return;
+    var listeners = fetchListeners(idr);
+    if (listeners.length == 0) return;
     var newEventInfo = {
         idr:idr,
         action:action,
         data:obj,
-        listeners:eventListeners[serviceType].slice()
+        listeners:listeners
     };
     // console.log(require("sys").inspect(newEventInfo));
-    if (!processingEvents.hasOwnProperty(fromServiceId)) processingEvents[fromServiceId] = [];
-    var queue = processingEvents[fromServiceId];
-    queue.push(newEventInfo);
+    processingQueue.push(newEventInfo);
     // We bail out unless this is the first time into the queue
-    if (queue.length == 1)
-        processEvents(queue);
+    if (processingQueue.length == 1)
+        processEvents(processingQueue);
     else
-        process.nextTick(function() { processEvents(queue); });
+        process.nextTick(function() { processEvents(processingQueue); });
 }
 
 exports.displayListeners = function(type) {

@@ -159,9 +159,9 @@ exports.idrNew = function(type, network, id, context, account)
     var r = {slashes:true};
     r.host = network;
     if(context) r.pathname = context;
-    if(account) r.query = {id: account};
+    if(account) r.query = {id: account.toString()};
     r.protocol = type;
-    r.hash = id;
+    r.hash = id.toString();
     return url.format(r);
 }
 /*

@@ -162,6 +162,7 @@ vows.describe("Synclet Manager").addBatch({
                 });
             },
             "successfully" : function(err, count) {
+                console.error("allEvents: "+JSON.stringify(allEvents));
                 assert.equal(allEvents[primaryType].length, 2);
             }
         }
