@@ -43,8 +43,11 @@ exports.load = function(filepath) {
         "host": "localhost",
         "port": 27018
     };
+    // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
-    exports.lockerDir = path.join(__dirname, "..", "..");
+    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from? 
+    // Right now it is ambiguous, we probably need two different vars
+    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
     exports.logFile = config.logFile || undefined;
     exports.ui = config.ui || 'useui';
     exports.dashboard = config.dashboard;
