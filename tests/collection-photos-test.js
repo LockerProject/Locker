@@ -18,7 +18,7 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/photos';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['photos'];
+var thecollections = ['photo'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
@@ -33,7 +33,7 @@ suite.next().suite.addBatch({
             process.chdir("." + mePath);
             var self = this;
             lmongo.init("photos", thecollections, function(mongo, colls) {
-                dataStore.init(colls.photos, mongo, locker);
+                dataStore.init(colls.photo, mongo, locker);
                 dataStore.addEvent(facebookEvent, self.callback);
             });
         },

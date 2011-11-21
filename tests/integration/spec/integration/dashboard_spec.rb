@@ -21,7 +21,7 @@ describe 'dashboard' do
     page.execute_script("$('#places').click()")
     page.should have_css('#places.selected')
     within_frame 'appFrame' do
-      #page.should have_content('Places')
+      page.should have_content('Places')
     end
   end
 

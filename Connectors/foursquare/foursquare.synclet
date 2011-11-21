@@ -15,6 +15,9 @@
             "name": "recent"
         }
     ],
+    "mongoId" : {
+        "photos": "photoID"
+    },
     "provides": [
         "contact/foursquare",
         "profile/foursquare",
