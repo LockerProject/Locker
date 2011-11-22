@@ -49,6 +49,7 @@ exports.load = function(filepath) {
     // Right now it is ambiguous, we probably need two different vars
     exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
     exports.logFile = config.logFile || undefined;
+    exports.logFileMaxSize = config.logFileMaxSize || 256 * 1024 * 1024; // default max log file size of 64MB
     exports.ui = config.ui || 'useui';
     exports.dashboard = config.dashboard;
 }
