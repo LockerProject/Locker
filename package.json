@@ -10,7 +10,7 @@
         "node": ">= 0.4.6  <=0.4.99999"
     },
     "dependencies": {
-        "npm":"=1.0.27",
+        "npm":"=1.0.106",
         "connect": "=1.7.0",
         "express": "=2.4.3",
         "async": "=0.1.9",
@@ -31,7 +31,6 @@
         "wrench": "=1.1.0",
         "eyes": "=0.1.6",
         "knox": "=0.0.9",
-        "unshortener": "=0.0.8",
         "readabilitySAX": "=0.2.2",
         "mongodb": "=0.9.6-15",
         "winston": "=0.5.2",
@@ -40,11 +39,12 @@
         "socket.io-client": "=0.8.4",
         "jade": "= 0.15.4",
         "airbrake": "=0.2.2",
-        "node-fakeweb": "=0.0.2",
+        "node-fakeweb": "=0.0.5",
         "ejs": "=0.4.3",
         "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
         "node-fs": "=0.1.0",
+        "semver": "=1.0.10",
 
 
         "hashish": "=0.0.4",

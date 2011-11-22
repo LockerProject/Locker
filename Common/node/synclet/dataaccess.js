@@ -20,8 +20,7 @@ module.exports = function(app) {
                     res.writeHead(500, {'content-type' : 'application/json'});
                     res.end('{error : ' + err + '}')
                 } else {
-                    res.writeHead(200, {'content-type' : 'application/json'});
-                    res.end(JSON.stringify(objects));
+                    res.send(objects);
                 }
             }, options);
         });

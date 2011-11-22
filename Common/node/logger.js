@@ -45,7 +45,7 @@ FileBugLogger.prototype.open = function(cb) {
 
 var transports = [new ModuleConsoleLogger({colorize:true,timestamp:true})];
 if (lconfig.logFile) {
-    var fileLogger = new FileBugLogger({filename:path.join("Logs", lconfig.logFile), timestamp:true});
+    var fileLogger = new FileBugLogger({filename:path.join("Logs", lconfig.logFile), timestamp:true, maxsize:lconfig.logFileMaxSize});
     fileLogger.on("open", function() {
         var realWrite = fileLogger.stream.write;
         fileLogger.stream.write = function(data) {

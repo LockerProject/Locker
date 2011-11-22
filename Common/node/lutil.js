@@ -142,7 +142,7 @@ exports.atomicWriteFileSync = function(dest, data) {
     var tmp = dest + '.tmp';
     var bkp = dest + '.bkp';
     fs.writeFileSync(tmp, data);
-    if(data.length && fs.statSync(tmp).size !== data.length) throw new Error('atomic write error! file size !== data.length');
+    if(data.length && fs.statSync(tmp).size !== Buffer.byteLength(data, 'utf8')) throw new Error('atomic write error! file size !== data.length');
     try {
         fs.renameSync(dest, bkp);
     } catch(err) {
