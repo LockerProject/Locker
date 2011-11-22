@@ -14,13 +14,14 @@ var url = require("url");
 var http = require("http");
 var request = require("request");
 var lconfig = require('lconfig');
+var path = require('path');
 
 SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
 SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
 
 exports.Scheduler = function() {
     this.scheduledActions = [];
-    this.filename = lconfig.me + "/scheduler.json";
+    this.filename = path.join(lconfig.lockerDir, lconfig.me, "scheduler.json");
 };
 
 exports.Scheduler.prototype.loadAndStart = function() {
@@ -88,7 +89,7 @@ exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
     }
     var trackingInfo = {
         at:atTime,
-        type:SCHEDULE_ACTION_DIRECT, 
+        type:SCHEDULE_ACTION_DIRECT,
         cb:callback
     };
     var self = this;
