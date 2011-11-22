@@ -40,7 +40,7 @@
         "socket.io-client": "=0.8.4",
         "jade": "= 0.15.4",
         "airbrake": "=0.2.2",
-        "node-fakeweb": "=0.0.4",
+        "node-fakeweb": "=0.0.5",
         "ejs": "=0.4.3",
         "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
