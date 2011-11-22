@@ -293,7 +293,7 @@ locker.post('/core/:svcId/enable', function(req, res) {
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
+locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
     // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
     if(!req.params[1]) {
         var url = "/Me/" + req.params[0];
@@ -310,27 +310,23 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
         res.send(302);
     } else {
         console.log("Normal proxy of " + req.originalUrl);
-        proxyRequest('GET', req, res);
+        proxyRequest('GET', req, res, next);
     }
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.post('/Me/*', function(req,res){
-    proxyRequest('POST', req, res);
+locker.post('/Me/*', function(req,res, next){
+    proxyRequest('POST', req, res, next);
 });
 
-function proxyRequest(method, req, res) {
+function proxyRequest(method, req, res, next) {
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
     if (syncManager.isInstalled(id)) {
-        var u = 'http://' + lconfig.lockerHost + ':' + lconfig.lockerPort + '/' + path.join('synclets', id, ppath);
-        return request({method:method, uri:u, headers:req.headers, encoding:'binary'}, function(err, res2, body){
-            res.writeHead(res2.statusCode, res2.headers);
-            res.write(body, "binary");
-            res.end();
-        });
+        req.url = req.url.replace('Me', 'synclets');
+        return next();
     }
     if(serviceManager.isDisabled(id)) {
         res.writeHead(503);
@@ -537,6 +533,10 @@ locker.on('upgrade', function(req, socket, head) {
 locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
+
+var push = require('./webservice-push')(locker);
+var synclets = require('./webservice-synclets')(locker);
+var syncletAuth = require('./webservice-synclets-auth')(locker);
 
 function proxied(method, svc, ppath, req, res, buffer) {
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
