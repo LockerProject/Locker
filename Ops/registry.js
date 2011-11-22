@@ -9,7 +9,7 @@
 
 // all of the registry-related interactions
 
-var npm;
+var npm = require('npm');
 var fs = require('fs');
 var path = require('path');
 var async = require('async');
@@ -37,9 +37,7 @@ exports.init = function(config, crypto, callback) {
         // janky stuff to make npm run isolated fully
         var home = path.join(lconfig.lockerDir, lconfig.me);
         process.chdir(home);
-        process.env.HOME = home;
-        npm = require('npm');  // uses process.env.HOME here?! issue filed https://github.com/isaacs/npm/issues/1755
-        var config = {registry:regBase, root:home};
+        var config = {registry:regBase, cache:path.join(home, '.npm')};
         npm.load(config, function(err) {
             if(err) console.error(err);
             fs.readFile('registry.json', 'utf8', function(err, reg){
