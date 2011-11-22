@@ -164,6 +164,11 @@ function mergedManifest(dir)
     if (serviceInfo && serviceInfo.manifest) {
 
         var fullInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, serviceInfo.manifest)));
+        if(!fullInfo.handle && fullInfo.repository) {
+            var version =fullInfo.version;
+            fullInfo = fullInfo.repository;
+            fullInfo.version = version; // at least preserve native package version
+        }
         return lutil.extend(js, fullInfo);
     } else {
         return js;
@@ -174,8 +179,15 @@ function mergedManifest(dir)
 exports.mapUpsert = function (file, type) {
     var metaData;
     try {
-        metaData = JSON.parse(fs.readFileSync(file, 'utf8'));
-        if(!metaData || !metaData.handle) throw new Error("no handle");
+        metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir,file), 'utf8'));
+        if(!metaData) throw new Error("no data");
+        // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
+        if(!metaData.handle && metaData.repository) {
+            var version = metaData.version;
+            metaData = metaData.repository;
+            metaData.version = version; // at least preserve native package version
+        }
+        if(!metaData.handle) throw new Error("no handle");
     } catch (E) {
         console.error("failed to upsert "+file+" due to "+E);
         return;
@@ -424,7 +436,7 @@ exports.spawn = function(serviceId, callback) {
     }
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
-    var app = spawn(run.shift(), run, {cwd: svc.srcdir, env:process.env});
+    var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
         var mod = console.outputModule;

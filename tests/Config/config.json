@@ -12,6 +12,7 @@
                       "lcrypto-test-local.js",
                       "lutil-test-local.js",
                       "ijod-test-local.js",
+                      "registry-test-local.js",
                       "lpquery-test-local.js",
                       "mongo-test.js",
                       "lscheduler-test-local.js",
