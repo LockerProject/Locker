@@ -182,10 +182,8 @@ exports.getUsers = function(users, cbEach, cbDone) {
         if(i > 0) id_str += ',';
         id_str += id;
     }
-    console.error("lookup "+users.length + " " + id_str);
     getOne({path:'/users/lookup.json',user_id:id_str},function(err,infos){
         if(err) return cbDone(err);
-        console.error("checking "+JSON.stringify(infos));
         for(var i=0; i < infos.length; i++){
             if(!ids[infos[i].id_str]) continue; // skip dups
             delete ids[infos[i].id_str];

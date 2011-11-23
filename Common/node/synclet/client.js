@@ -32,7 +32,7 @@ function run (processInfo) {
     process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
-            console.error("synclet returned an error: "+err);
+            console.error("synclet returned an error: "+JSON.stringify(err));
         }
         if(!returnedInfo)
         {
