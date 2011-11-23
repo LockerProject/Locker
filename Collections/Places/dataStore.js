@@ -10,6 +10,7 @@ var collection;
 var db;
 var locker;
 var lconfig = require('../../Common/node/lconfig');
+lconfig.load('../../Config/config.json'); // ugh
 var lutil = require('../../Common/node/lutil');
 var logger = require("logger").logger;
 var request = require("request");
@@ -173,7 +174,7 @@ exports.init = function(mongoCollection, mongo, l) {
     collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
-    lconfig.load('../../Config/config.json'); // ugh
+
     locker = l;
 };
 

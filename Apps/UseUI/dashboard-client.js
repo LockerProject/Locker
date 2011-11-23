@@ -14,10 +14,11 @@ var express = require('express'),
     fs = require('fs'),
     socketio = require('socket.io'),
     request = require('request');
-var logger = require("logger").logger;
 var lutil = require('lutil');
 var lconfig = require('../../Common/node/lconfig.js');
 lconfig.load('../../Config/config.json');
+
+var logger = require("logger").logger;
 
 var externalBase;
 var closed;

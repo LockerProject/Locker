@@ -10,6 +10,7 @@
 var collection;
 var db;
 var lconfig = require('../../Common/node/lconfig');
+lconfig.load('../../Config/config.json'); // ugh
 var lutil = require('../../Common/node/lutil');
 var logger = require("logger").logger;
 var request = require("request");
@@ -264,7 +265,6 @@ exports.init = function(mongoCollection, mongo, l) {
     logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     db = mongo.dbClient;
-    lconfig.load('../../Config/config.json'); // ugh
     locker = l;
 }
 
