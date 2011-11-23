@@ -96,15 +96,15 @@ app.post('/setViewer', function(req, res) {
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
-        console.error("No type given for viewer");
+        logger.error("No type given for viewer");
     } else if(!handle) {
-        console.error("No handle given for viewer");
+        logger.error("No handle given for viewer");
     } else {
         if(!(type === 'photos' || type === 'contacts' || type === 'links' || type === 'places')) {
-            console.error("Type is invalid for a viewer:" + type);
+            logger.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
-            console.log("Setting the viewer for " + type + " to " + handle);
+            logger.verbose("Setting the viewer for " + type + " to " + handle);
             viewers.selected[type] = handle;
             lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
         }
@@ -133,7 +133,6 @@ app.post('/event', function(req, res) {
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
         if(req.body.type === 'view/github') {
-            console.error("DEBUG: req.body", req.body);
             io.sockets.emit('viewer', req.body);
         } else {
             var evInfo = eventInfo[req.body.type];
@@ -145,7 +144,7 @@ app.post('/event', function(req, res) {
                 request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
                     if(!body || !body.count || evInfo.count == body.count) return;
                     io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
-                    console.log("Sent events, setting to ",body);
+                    logger.verbose("Sent events, setting to ",body);
                     evInfo.count = body.count;
                     evInfo.updated = body.updated;
                     evInfo.lastId = body.lastId;
@@ -206,7 +205,7 @@ function bootState(doneCb)
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                console.log("Sent a bootup event",eventInfo[type]);
+                logger.verbose("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
@@ -267,8 +266,8 @@ io.sockets.on('connection', function (socket) {
         for (var key in eventInfo) {
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
         }
-        console.log("Sending counts");
-        console.dir(socket);
+        logger.silly("Sending counts");
+        logger.silly(socket);
         socket.emit("counts", counts);
     });
     

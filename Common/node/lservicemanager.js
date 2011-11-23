@@ -18,8 +18,6 @@ var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
 var logger = require('logger').logger;
 
-console.log(require('logger'));
-
 var serviceMap = {
     available:[],
     disabled:[],
@@ -442,18 +440,13 @@ exports.spawn = function(serviceId, callback) {
     var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
-        // var mod = console.outputModule;
-        // console.outputModule = svc.title;
-        console.error(data);
-        // console.outputModule = mod;
+        console.error(svc.id + ' error:', data.toString());
     });
     var dbuff = "";
     app.stdout.on('data',function (data) {
-        // var mod = console.outputModule;
-        // console.outputModule = svc.title;
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
-            console.log(data);
+            console.log(svc.id + ' output:', data.toString());
         } else {
             // Process the startup json info
             dbuff += data;
@@ -464,7 +457,6 @@ exports.spawn = function(serviceId, callback) {
             }catch(error){
                 if(dbuff.substr(0,1) == '{')
                 { // json hasn't all been written yet, come back, should use newline terminated!
-                    // console.outputModule = mod;
                     return;
                 }
                 logger.error("The process did not return valid startup information. "+error+" on "+dbuff);
@@ -499,7 +491,6 @@ exports.spawn = function(serviceId, callback) {
                 app.kill();
             }
         }
-        // console.outputModule = mod;
 
     });
     app.on('exit', function (code,signal) {
@@ -518,7 +509,7 @@ exports.spawn = function(serviceId, callback) {
         */
         checkForShutdown();
     });
-    logger.info("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+    logger.verbose("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.on('error',function(err){
         logger.error("STDIN error:",err);
     });
@@ -533,8 +524,8 @@ exports.spawn = function(serviceId, callback) {
 exports.metaInfo = function(serviceId) {
     /*
     var installedInfo = serviceMap.installed[serviceId] || {};
-    console.log("metaInfo")
-    console.dir(installedInfo);
+    logger.debug("metaInfo")
+    logger.debug(installedInfo);
     var serviceInfo;
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == installedInfo.srcdir) {
@@ -545,7 +536,7 @@ exports.metaInfo = function(serviceId) {
         return false;
     });
     if (!serviceInfo) {
-        console.log("Unknown");
+        logger.warn("Unknown");
         throw "Unknown service " + serviceId;
     }
     serviceMap.installed[serviceId] = lutil.extend(serviceInfo, installedInfo);

@@ -14,6 +14,8 @@ var locker = require('../../Common/node/locker.js');
 var fs = require('fs');
 var sync = require('./sync');
 var dataStore = require("./dataStore");
+var lconfig = require('lconfig');
+lconfig.load('../../Config/config.json');
 var logger = require("../../Common/node/logger.js").logger;
 
 var lockerInfo;
@@ -146,7 +148,6 @@ process.stdin.on('data', function(data) {
     process.chdir(lockerInfo.workingDirectory);
 
     locker.connectToMongo(function(mongo) {
-        logger.verbose("connected to mongo " + mongo);
         sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};

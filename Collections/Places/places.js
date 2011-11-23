@@ -126,7 +126,6 @@ process.stdin.on('data', function(data) {
     process.chdir(lockerInfo.workingDirectory);
 
     locker.connectToMongo(function(mongo) {
-        logger.verbose("connected to mongo " + mongo);
         sync.init(lockerInfo.lockerUrl, mongo.collections.place, mongo, locker);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};

@@ -16,7 +16,6 @@ var EventEmitter = require('events').EventEmitter;
 var logger = require("../../Common/node/logger.js").logger;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
-    logger.verbose("Photos sync init mongoCollection(" + mongoCollection + ")");
     lockerUrl = theLockerUrl;
     dataStore.init(mongoCollection, mongo, locker);
     exports.eventEmitter = new EventEmitter();

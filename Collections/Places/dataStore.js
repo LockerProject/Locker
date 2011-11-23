@@ -170,7 +170,6 @@ dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["location/glatitude"] = processGLatitude;
 
 exports.init = function(mongoCollection, mongo, l) {
-    logger.verbose("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;

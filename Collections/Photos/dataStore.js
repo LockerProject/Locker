@@ -262,7 +262,6 @@ dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 
 exports.init = function(mongoCollection, mongo, l) {
-    logger.verbose("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     db = mongo.dbClient;
     locker = l;

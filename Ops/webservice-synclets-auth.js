@@ -1,5 +1,6 @@
 var syncManager = require('lsyncmanager')
   , lconfig = require('lconfig')
+  , logger = require('logger').logger
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')
@@ -99,7 +100,7 @@ function handleOAuth2 (code, options, res) {
                         installSynclet(options.provider, auth);
                         res.end("<script type='text/javascript'> window.close(); </script>");
                     } catch (e) {
-                        console.error('Failed to auth github - ' + body);
+                        logger.error('Failed to auth github - ' + body);
                     }
                 });
             } else if (auth.accessToken) {
@@ -131,7 +132,7 @@ function handleOAuth2Post (code, options, res) {
         });
 
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -150,7 +151,7 @@ function handleTwitter (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -169,7 +170,7 @@ function handleTumblr (req, res) {
                 res.end("<script type='text/javascript'> window.close(); </script>");
             });
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }

@@ -12,6 +12,7 @@ var path = require('path');
 var lconfig = require('lconfig');
 var wrench = require('wrench');
 var is = require("lutil").is;
+var logger = require("logger").logger;
 var util = require('util');
 var indexPath;
 
@@ -168,19 +169,19 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
     processValue(value, this.mappings[type]);
     
     if (contentTokens.length === 0) {
-        console.log("No valid tokens were found to index id " + idToStore);
+        logger.info("No valid tokens were found to index id " + idToStore);
         return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
     
-    //console.log("Going to store " + contentString);
+    //logger.debug("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     if (source !== null) {
         doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     }
     doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
-    //console.log('about to index at ' + indexPath);
+    //logger.debug('about to index at ' + indexPath);
     assert.ok(indexPath);
     this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime) {
         callback(err, indexTime);
@@ -214,7 +215,7 @@ CLEngine.prototype.flushAndCloseWriter = function() {
 
 exports.setEngine = function(engine) {
     if (engine === undefined) {
-        console.error("Falling back to search Null Engine, your indexing and queries will not work.");
+        logger.error("Falling back to search Null Engine, your indexing and queries will not work.");
         exports.currentEngine = new NullEngine();
         return;
     }
@@ -222,7 +223,7 @@ exports.setEngine = function(engine) {
     try {
         exports.currentEngine = new engine();
     } catch (E) {
-        console.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
+        logger.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
         exports.currentEngine = new NullEngine();
     }
 };
@@ -283,7 +284,7 @@ function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee
     if (indexing && !keepGoing) return;
     indexing = true;
-    //console.log('IndexQueue length: ' + indexQueue.length);
+    //logger.debug('IndexQueue length: ' + indexQueue.length);
     if (indexQueue.length === 0) {
         indexing = false;
         return;
@@ -291,11 +292,11 @@ function indexMore(keepGoing) {
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
     exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
-        //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
+        //logger.debug('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
         cur.cb(err, indexTime);
         delete cur;
         cur = null;
-        //console.log("Setting up for next tick");
+        //logger.debug("Setting up for next tick");
         // TODO: review for optimization per ctide comment (per 100 instead of per 1?)
         process.nextTick(function() { indexMore(true); });
     });

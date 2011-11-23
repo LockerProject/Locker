@@ -10,11 +10,11 @@
 var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
 
-var lsearch = require('../../Common/node/lsearch');
 var lutil = require('../../Common/node/lutil');
 var lconfig = require('lconfig');
-lconfig.load('Config/config.json');
+lconfig.load('../../Config/config.json');
 
+var lsearch = require('../../Common/node/lsearch');
 var logger = require(__dirname + '/../../Common/node/logger').logger;
 
 var lockerInfo = {};
@@ -428,6 +428,7 @@ process.stdin.on('data', function(data) {
     if (allData.indexOf("\n") > 0) {
         data = allData.substr(0, allData.indexOf("\n"));
         lockerInfo = JSON.parse(data);
+        lockerInfo
         locker.initClient(lockerInfo);
         if (!lockerInfo || !lockerInfo.workingDirectory) {
             process.stderr.write('Was not passed valid startup information.'+data+'\n');

@@ -310,7 +310,7 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
         res.header("Location", url);
         res.send(302);
     } else {
-        logger.info("Normal proxy of " + req.originalUrl);
+        logger.verbose("Normal proxy of " + req.originalUrl);
         proxyRequest('GET', req, res, next);
     }
 });
@@ -350,7 +350,7 @@ function proxyRequest(method, req, res, next) {
     var info = serviceManager.metaInfo(id);
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
-        logger.info("Checking " + req.url);
+        logger.verbose("Checking " + req.url);
         var fileUrl = url.parse(ppath);
         if(fileUrl.pathname.indexOf("..") >= 0)
         { // extra sanity check
@@ -371,7 +371,7 @@ function proxyRequest(method, req, res, next) {
                 });
             }
         });
-        logger.info("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
+        logger.verbose("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
     } else {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
@@ -383,7 +383,7 @@ function proxyRequest(method, req, res, next) {
             proxied(method, serviceManager.metaInfo(id),ppath,req,res);
         }
     }
-    logger.info("Proxy complete");
+    logger.verbose("Proxy complete");
 };
 
 // DIARY
@@ -521,7 +521,7 @@ locker.all("/socket.io*", function(req, res) {
 // proxy websockets
 locker.on('upgrade', function(req, socket, head) {
     // TODO be selective about who they're routing too?
-    logger.info("** websocket proxying to dashboard");
+    logger.verbose("** websocket proxying to dashboard");
     var buffer = httpProxy.buffer(socket);
     proxy.proxyWebSocketRequest(req, socket, head, {
         host: url.parse(dashboard.instance.uriLocal).hostname,
@@ -541,7 +541,7 @@ var syncletAuth = require('./webservice-synclets-auth')(locker);
 
 function proxied(method, svc, ppath, req, res, buffer) {
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
-    logger.info("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
+    logger.verbose("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
     proxy.proxyRequest(req, res, {
       host: url.parse(svc.uriLocal).hostname,

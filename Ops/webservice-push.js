@@ -1,5 +1,6 @@
 var pushManager = require(__dirname + '/../Common/node/lpushmanager')
   , dataStore = require(__dirname + '/../Common/node/ldatastore')
+  , logger = require(__dirname + '/../Common/node/logger').logger;
   ;
 
 module.exports = function(locker) {
@@ -52,7 +53,7 @@ module.exports = function(locker) {
         dataStore.init("push", function() {
             dataStore.getCurrentId("push", "push_" + req.params.dataset, req.params.id, function(err, doc) {
                 if (err) {
-                    console.error(err);
+                    logger.error(err);
                     res.end();
                 } else if (doc) {
                     res.send(doc);
