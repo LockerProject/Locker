@@ -18,6 +18,8 @@ var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
 var logger = require('logger').logger;
 
+console.log(require('logger'));
+
 var serviceMap = {
     available:[],
     disabled:[],
@@ -516,7 +518,7 @@ exports.spawn = function(serviceId, callback) {
         */
         checkForShutdown();
     });
-    logger.debug("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+    logger.info("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.on('error',function(err){
         logger.error("STDIN error:",err);
     });

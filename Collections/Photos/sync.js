@@ -16,7 +16,7 @@ var EventEmitter = require('events').EventEmitter;
 var logger = require("../../Common/node/logger.js").logger;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
-    logger.debug("Photos sync init mongoCollection(" + mongoCollection + ")");
+    logger.verbose("Photos sync init mongoCollection(" + mongoCollection + ")");
     lockerUrl = theLockerUrl;
     dataStore.init(mongoCollection, mongo, locker);
     exports.eventEmitter = new EventEmitter();
@@ -79,7 +79,7 @@ function basicPhotoGatherer(svcId, type, provides) {
 function gatherFromUrl(svcId, url, type) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcId + url}, function(err, resp, body) {
         if (err) {
-            logger.debug("Error getting basic photos from " + svcId);
+            logger.error("Error getting basic photos from " + svcId);
             return;
         }
         try {

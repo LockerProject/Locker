@@ -142,19 +142,19 @@ function processFlickr(svcId, data, cb) {
 // pretty experimental! extract photos from your tweets using embedly :)
 function processTwitter(svcId, data, cb)
 {
-    logger.debug('processTwitter!');
+    logger.verbose('processTwitter!');
     if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
 
     async.forEach(data.entities.urls,function(u,callback){
         if(!u || !u.url) return callback();
         var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
-        logger.debug('found twitter url:', u.url);
+        logger.verbose('found twitter url:', u.url);
         embed.query = {url:u.url};
         request.get({uri:url.format(embed), json:true},function(err,resp,js){
             if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
 
-            logger.debug('found twitter photo! ', u.url);
+            logger.verbose('found twitter photo! ', u.url);
             var photoInfo = {};
             photoInfo.url = js.url;
             if (js.height) photoInfo.height = js.height;
@@ -262,7 +262,7 @@ dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 
 exports.init = function(mongoCollection, mongo, l) {
-    logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
+    logger.verbose("dataStore init mongoCollection(" + mongoCollection + ")");
     collection = mongoCollection;
     db = mongo.dbClient;
     locker = l;

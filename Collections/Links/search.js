@@ -60,7 +60,7 @@ exports.index = function(linkUrl, callback){
         function(err){
             if(err) return callback(err);
             if (!link) {
-                logger.debug("No url was found for " + linkUrl);
+                logger.warn("No url was found for " + linkUrl);
                 return callback(err);
             }
             var at=0;
@@ -87,7 +87,7 @@ exports.index = function(linkUrl, callback){
 
 var flushAndCloseTimeout = null;
 var indexQueue = async.queue(function(task, callback) {
-//    logger.debug("NDX "+task.url+" at "+task.at+" of "+task.txt);
+//    logger.verbose("NDX "+task.url+" at "+task.at+" of "+task.txt);
     var doc = new clucene.Document();
     doc.addField("at", task.at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', task.txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
@@ -111,7 +111,7 @@ var indexQueue = async.queue(function(task, callback) {
 // raw indexing lucene wrapper
 function ndx(id,at,txt,cb)
 {
-    logger.debug("NDX "+id+" at "+at+" of "+txt);
+    logger.verbose("NDX "+id+" at "+at+" of "+txt);
     var doc = new clucene.Document();
     doc.addField("at", at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);

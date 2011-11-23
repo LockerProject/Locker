@@ -176,9 +176,9 @@ function saveState()
 function bootState(doneCb)
 {
     if(isSomeoneListening > 1) return doneCb(); // only boot after we've been idle
-    logger.debug("booting state fresh");
+    logger.verbose("booting state fresh");
     async.forEach(['contacts','links','photos','places'],function(coll,callback){
-        //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
+        //logger.verbose("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
@@ -190,7 +190,7 @@ function bootState(doneCb)
             callback();
         });
     },function(){
-        logger.debug("finishing boot");
+        logger.verbose("finishing boot");
         var last = {
             "link":{"count":0, "lastId":0},
             "contact":{"count":0, "lastId":0},
@@ -224,7 +224,7 @@ function bootState(doneCb)
 function getViewers(callback) {
     locker.map(function(err, map) {
         if(err) {
-            logger.debug("failed to get map "+err);
+            logger.error("failed to get map "+err);
         } else {
             viewers.available = {};
             map.available.forEach(function(app) {
@@ -244,15 +244,15 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
+    logger.verbose("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
     socket.emit("heartbeat", true);
     socket.on('disconnect', function () {
-        logger.debug("Socket " + socket.id + " is disconnected");
+        logger.verbose("Socket " + socket.id + " is disconnected");
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
         if(isSomeoneListening == 0)
         {
-            logger.debug("everybody left, quiesce");
+            logger.info("everybody left, quiesce");
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("place","/event");

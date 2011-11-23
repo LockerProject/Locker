@@ -18,7 +18,7 @@ var EventEmitter = require('events').EventEmitter;
 var logger = require("../../Common/node/logger.js").logger;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
-    logger.debug("Places sync init mongoCollection(" + mongoCollection + ")");
+    logger.verbose("Places sync init mongoCollection(" + mongoCollection + ")");
     lockerUrl = theLockerUrl;
     dataStore.init(mongoCollection, mongo, locker);
     exports.eventEmitter = new EventEmitter();
@@ -61,7 +61,7 @@ function gatherFromUrl(svcId, type, callback) {
     logger.info("updating from "+url);
     request.get({uri:url, json:true}, function(err, resp, body) {
         if (err || !body) {
-            logger.debug("Error getting basic places from " + svcId + " " + err);
+            logger.error("Error getting basic places from " + svcId + " " + err);
             return callback(); // swallow errors here
         }
         if(!body.length || body.length == 0) return callback();

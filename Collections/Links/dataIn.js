@@ -82,11 +82,11 @@ function processEncounter(e, cb)
 {
     dataStore.enqueue(e, function() {
         encounterQueue.push(e, function(arg){
-            logger.debug("QUEUE SIZE: "+encounterQueue.length());
+            logger.verbose("QUEUE SIZE: "+encounterQueue.length());
             cb();
         });
     });
-    logger.debug("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
@@ -120,7 +120,7 @@ exports.loadQueue = function() {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
             encounterQueue.push(docs[i].obj, function(arg) {
-                logger.debug("QUEUE SIZE: " + encounterQueue.length());
+                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
             });
         }
     });

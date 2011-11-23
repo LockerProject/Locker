@@ -8,6 +8,7 @@
 */
 var IJOD = require('ijod').IJOD
   , lconfig = require('lconfig')
+  , logger = require('logger').logger
   , lmongo = require('lmongo')
   , ijodFiles = {}
   , deepCompare = require('deepCompare')
@@ -134,10 +135,10 @@ function setCurrent(owner, type, object, callback) {
             });
         }
     } else {
-        console.error('failed to set current in ldatastore');
-        console.error(type)
-        console.error(object)
-        console.error(callback);
+        logger.error('failed to set current in ldatastore');
+        logger.error(type)
+        logger.error(object)
+        logger.error(callback);
     }
 }
 

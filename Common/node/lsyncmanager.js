@@ -370,7 +370,7 @@ function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    logger.debug("processing synclet data from "+key+" of length "+len);
+    logger.info("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
