@@ -66,6 +66,12 @@ exports.map = function(callback) {
     });
 };
 
+exports.synclets = function(callback) {
+    request.get({url:exports.lockerBase + "/synclets"}, function(error, res, body) {
+        callback(error, body ? JSON.parse(body) : undefined);
+    });
+};
+
 exports.providers = function(types, callback) {
     if (typeof(types) == "string") types = [types];
     request.get({url:exports.lockerBase + "/providers?" + querystring.stringify({"types":types.join(",")})},

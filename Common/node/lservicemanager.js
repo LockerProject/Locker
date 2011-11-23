@@ -206,6 +206,7 @@ exports.mapUpsert = function (file, type) {
     });
     if(!found) serviceMap.available.push(metaData);
     // update any "installed"
+    exports.install(metaData);
     if(serviceMap.installed[metaData.handle]) return serviceMap.installed[metaData.handle] = lutil.extend(serviceMap.installed[metaData.handle], metaData);
     return metaData;
 }
