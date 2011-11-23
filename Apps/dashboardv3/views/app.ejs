@@ -48,16 +48,20 @@
         <% } %>
         <p><a class="orange" href="#">Explore more apps</a></p>
       </div>
-      <div class="sidenav-header">
-        <p class='sidenav-header-title'>YOUR APPS</p>
-        <p class="sidenav-header-link orange">see all</p>
-      </div>
-      <div class="sidenav-items">
-        <% for (var i = 0; i < yourApps.length; i++) { %>
-          <p><a href="<%= yourApps[i].externalUri %>" class="iframeLink" data-id="<%= yourApps[i].id %>"><%= yourApps[i].title %></a></p>
-        <% } %>
-        <p><a class="orange" href="#">Explore more apps</a></p>
-      </div>
+      <section class='your-apps' <% if (github) { %> class='visible' <% } %>>
+        <div class="sidenav-header">
+          <p class='sidenav-header-title'>YOUR APPS</p>
+          <p class="sidenav-header-link orange">see all</p>
+        </div>
+        <div class="sidenav-items">
+          <% if (yourApps.length === 0) { %>
+            <p><a class='orange' href='#'>Create an app!</a></p>
+          <% } %>
+          <% for (var i = 0; i < yourApps.length; i++) { %>
+            <p><a href="<%= yourApps[i].externalUri %>" class="iframeLink" data-id="<%= yourApps[i].id %>"><%= yourApps[i].title %></a></p>
+          <% } %>
+        </div>
+      </section>
       <div class="sidenav-header">
         <p class='sidenav-header-title'>YOUR SERVICES</p>
       </div>

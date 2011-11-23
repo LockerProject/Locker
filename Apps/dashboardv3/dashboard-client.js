@@ -11,6 +11,7 @@ var express = require('express')
   , connect = require('connect')
   , locker
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
+  , github = false
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
@@ -55,6 +56,7 @@ var drawPage = function(req, res) {
         }
         locker.synclets(function(err, synclets) {
             for (var i in synclets.installed) {
+                if (i === 'github') { github = true; }
                 synclets.available.some(function(synclet) {
                     if (synclet.provider === synclets.installed[i].provider) {
                         synclets.available.splice(synclets.available.indexOf(synclet), 1);
@@ -72,6 +74,7 @@ var drawPage = function(req, res) {
             res.render('app', {
                 synclets: synclets,
                 yourApps: yourApps,
+                github: github,
                 map: result,
                 dashboard: lconfig.dashboard
             });

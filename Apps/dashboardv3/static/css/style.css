@@ -12,6 +12,14 @@ a {
   color: #F7931E;
 }
 
+.your-apps {
+  display: none;
+}
+
+.your-apps.visible {
+  display: block;
+}
+
 /* header section */
 header {
   z-index: 2;

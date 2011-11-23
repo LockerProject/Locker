@@ -25,6 +25,9 @@ var loadApp = function() {
 };
 
 var installed = function(provider) {
+  if (provider === 'github') {
+    $('.your-apps').show();
+  }
   var link = $('.oauthLink[data-provider="' + provider + '"]');
   link.children('img').addClass('installde').appendTo('.sidenav-items.synclets');
   link.remove();
