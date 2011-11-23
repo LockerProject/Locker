@@ -8,6 +8,8 @@ var fakeweb = require('node-fakeweb');
 var lsearch = require('lsearch');
 var search = require('../Collections/Search/search');
 var fs = require('fs');
+search.init(lconfig, lsearch, require('logger').logger);
+
 
 search.lockerInfo.lockerUrl = 'http://localhost:8042';
 locker.lockerBase = search.lockerInfo.lockerUrl;

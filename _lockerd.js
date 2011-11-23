@@ -210,7 +210,7 @@ exports.alive = false;
                     if(err || !res || res.statusCode != 200)
                     {
                         logger.error("failed to run migration, should be bailing hard! "+util.inspect(err)+":"+util.inspect(res)+" trying to hit " + call);
-                        process.exit(1);
+                        // process.exit(1);
                     }else{
                         logger.info("migration success: "+JSON.stringify(body));
                     }

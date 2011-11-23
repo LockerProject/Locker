@@ -11,11 +11,9 @@ var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
 
 var lutil = require('../../Common/node/lutil');
-var lconfig = require('lconfig');
-lconfig.load('../../Config/config.json');
-
-var lsearch = require('../../Common/node/lsearch');
-var logger = require(__dirname + '/../../Common/node/logger').logger;
+var lconfig;
+var lsearch;
+var logger;
 
 var lockerInfo = {};
 exports.lockerInfo = lockerInfo;
@@ -79,6 +77,7 @@ app.get('/reindexForType', function(req, res) {
        return res.send(response);
    });
 });
+
 
 exports.handleGetUpdate = function(callback) {
     var error;
@@ -420,6 +419,12 @@ function handleLog(type, action, id, time) {
     logger.info('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
 }
 
+exports.init = function(config, search, _logger) {
+    lconfig = config;
+    lsearch = search;
+    logger = _logger;
+}
+
 // Process the startup JSON object
 process.stdin.resume();
 var allData = "";
@@ -428,14 +433,18 @@ process.stdin.on('data', function(data) {
     if (allData.indexOf("\n") > 0) {
         data = allData.substr(0, allData.indexOf("\n"));
         lockerInfo = JSON.parse(data);
-        lockerInfo
+        console.error("DEBUG: lockerInfo", lockerInfo);
         locker.initClient(lockerInfo);
         if (!lockerInfo || !lockerInfo.workingDirectory) {
             process.stderr.write('Was not passed valid startup information.'+data+'\n');
             process.exit(1);
         }
         process.chdir(lockerInfo.workingDirectory);
-
+        var _lconfig = require('lconfig');
+        _lconfig.load('../../Config/config.json');
+        exports.init(_lconfig, 
+                     require('../../Common/node/lsearch'),
+                     require(__dirname + '/../../Common/node/logger').logger);
         lsearch.setEngine(lsearch.engines.CLucene);
         lsearch.setIndexPath(process.cwd() + "/search.index");
 

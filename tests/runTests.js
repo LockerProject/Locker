@@ -4,7 +4,6 @@ require.paths.push(__dirname + "/../Common/node");
 process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
 var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
-var lconsole = require("lconsole");
 var wrench = require("wrench");
 var runIntegration = true;
 var integrationOnly = false;
@@ -17,9 +16,9 @@ function writeLogLine() {
 }
 
 // We're going to replace the logging here so we can have it all and show it later
-console.log = writeLogLine;
-console.warn = writeLogLine;
-console.error = writeLogLine;
+// console.log = writeLogLine;
+// console.warn = writeLogLine;
+// console.error = writeLogLine;
 
 
 if (process.argv.indexOf("-c") === -1) {
