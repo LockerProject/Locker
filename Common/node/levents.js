@@ -135,7 +135,7 @@ function processEvents(queue) {
             exports.makeRequest(httpOpts, JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data}), function(response) {
                 listener.response = response.statusCode;
                 if (listener.response != 200) {
-                    console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
+                    console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
                     // TODO: Need to evaluate the logic here, to see if we should retry or other options.
                 }
             });

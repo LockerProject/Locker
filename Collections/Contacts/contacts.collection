@@ -12,6 +12,6 @@
         ["contact/github", "/events"],
         ["contact/tumblr", "/events"],
         ["contact/instagram", "/events"],
-        ["contact/gcontacts", "/events"],
+        ["following/gcontacts", "/events"],
         ["contact/flickr", "/events"]]
 }

@@ -13,6 +13,7 @@ var lconfig = require('lconfig');
 var wrench = require('wrench');
 var is = require("lutil").is;
 var util = require('util');
+var url = require('url');
 var indexPath;
 
 exports.currentEngine;
@@ -162,7 +163,7 @@ CLEngine.prototype.indexType = function(type, id, value, callback) {
     processValue(value, this.mappings[type]);
 
     if (contentTokens.length === 0) {
-        console.log("No valid tokens were found to index id " + r);
+        console.log("No valid tokens were found to index id " + id);
         return callback(null, 0, 0);
     }
 

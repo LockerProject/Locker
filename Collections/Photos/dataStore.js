@@ -142,7 +142,6 @@ function processFlickr(svcId, data, cb) {
 // pretty experimental! extract photos from your tweets using embedly :)
 function processTwitter(svcId, data, cb)
 {
-    console.log('processTwitter!');
     if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
 
     async.forEach(data.entities.urls,function(u,callback){

@@ -123,7 +123,7 @@ exports.handlePostEvents = function(req, callback) {
         var idr = url.parse(req.body.idr);
 
         // https://github.com/LockerProject/Locker/issues/285
-        if (!idr || !id.host) {
+        if (!idr || !idr.host) {
             error = 'No source found for event: '+JSON.stringify(req.body);
             console.error(error);
             return callback(error, {});

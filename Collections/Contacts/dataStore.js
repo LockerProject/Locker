@@ -64,8 +64,8 @@ exports.addData = function(type, data, cb) {
     {
         if(doc && doc._id)
         {
-            var idr = lutil.idrNew("contact", "contacts", eventObj._id);
-            locker.ievent(idr, eventObj);
+            var idr = lutil.idrNew("contact", "contacts", doc._id);
+            locker.ievent(idr, doc);
         }
         cb(err, doc);
     }
