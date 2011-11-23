@@ -15,12 +15,6 @@ function writeLogLine() {
     fs.writeSync(logFd, "[" + (new Date()).toLocaleString() + "][" + console.outputModule + "] " + Array.prototype.slice.call(arguments).toString() + "\n");
 }
 
-// We're going to replace the logging here so we can have it all and show it later
-// console.log = writeLogLine;
-// console.warn = writeLogLine;
-// console.error = writeLogLine;
-
-
 if (process.argv.indexOf("-c") === -1) {
     try {
         wrench.rmdirSyncRecursive(lconfig.me);
@@ -140,7 +134,6 @@ var checkLocker = function() {
     if (lockerd.alive === true) {
         runTests();
     } else {
-        console.error('locker hasn\'t started yet, checking again in a second');
         setTimeout(checkLocker, 1000);
     }
 }
