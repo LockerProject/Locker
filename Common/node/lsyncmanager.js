@@ -270,7 +270,7 @@ function executeSynclet(info, synclet, callback) {
     var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
     app.stderr.on('data', function (data) {
-        localError(info.title+" "+synclet.name + "error:",data.toString());
+        localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
     app.stdout.on('data',function (data) {

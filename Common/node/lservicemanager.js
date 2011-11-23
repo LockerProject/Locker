@@ -440,13 +440,14 @@ exports.spawn = function(serviceId, callback) {
     var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
-        console.error(svc.id + ' error:', data.toString());
+        process.stderr.write('[' + svc.id + '] ' + data.toString());
     });
     var dbuff = "";
     app.stdout.on('data',function (data) {
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
-            console.log(svc.id + ' output:', data.toString());
+            // process.stdout.setEncoding('utf-8');
+            process.stdout.write('[' + svc.id + '] ' + data.toString());
         } else {
             // Process the startup json info
             dbuff += data;

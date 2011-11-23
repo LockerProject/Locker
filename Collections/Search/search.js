@@ -416,7 +416,7 @@ function handleLog(type, action, id, time) {
             actionWord = 'deleted';
             break;
     }
-    logger.info('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
+    logger.verbose('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
 }
 
 exports.init = function(config, search, _logger) {
@@ -433,7 +433,6 @@ process.stdin.on('data', function(data) {
     if (allData.indexOf("\n") > 0) {
         data = allData.substr(0, allData.indexOf("\n"));
         lockerInfo = JSON.parse(data);
-        console.error("DEBUG: lockerInfo", lockerInfo);
         locker.initClient(lockerInfo);
         if (!lockerInfo || !lockerInfo.workingDirectory) {
             process.stderr.write('Was not passed valid startup information.'+data+'\n');
@@ -442,7 +441,7 @@ process.stdin.on('data', function(data) {
         process.chdir(lockerInfo.workingDirectory);
         var _lconfig = require('lconfig');
         _lconfig.load('../../Config/config.json');
-        exports.init(_lconfig, 
+        exports.init(_lconfig,
                      require('../../Common/node/lsearch'),
                      require(__dirname + '/../../Common/node/logger').logger);
         lsearch.setEngine(lsearch.engines.CLucene);

@@ -17,7 +17,7 @@ var request = require('request');
 var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
-var logger = require('logger').logger;
+var logger;
 var lconfig;
 var lcrypto;
 var installed = {};
@@ -29,6 +29,7 @@ var regBase = 'http://registry.singly.com';
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
     lconfig = config;
+    logger = require('logger').logger;
     lcrypto = crypto;
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
@@ -198,6 +199,7 @@ exports.getApps = function() {
 
 // npm wrappers
 exports.install = function(arg, callback) {
+    
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){

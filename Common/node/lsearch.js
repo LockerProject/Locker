@@ -169,7 +169,7 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
     processValue(value, this.mappings[type]);
     
     if (contentTokens.length === 0) {
-        logger.info("No valid tokens were found to index id " + idToStore);
+        logger.verbose("No valid tokens were found to index id " + idToStore);
         return callback(null, 0, 0);
     }
 

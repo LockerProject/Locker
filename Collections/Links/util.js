@@ -11,7 +11,7 @@ exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
     longus.expand(arg, function(a){
         if(!a || !a.url) return cbDone("invalid url")
-        if(a.err) logger.error("error unshortening url: "+a.err);
+        if(a.err) logger.verbose("error unshortening url: "+a.err);
         cbEach(a.url);
         cbDone();
     });

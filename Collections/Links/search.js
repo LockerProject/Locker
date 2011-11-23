@@ -91,10 +91,10 @@ var indexQueue = async.queue(function(task, callback) {
     var doc = new clucene.Document();
     doc.addField("at", task.at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', task.txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
-    logger.info("Going to add " + task.url);
+    logger.verbose("Going to add " + task.url);
     lucene.addDocument(task.url, doc, indexPath, function(err, indexTime) {
         if (err) logger.error(err);
-        logger.info("Added " + task.url);
+        logger.verbose("Added " + task.url);
         if (flushAndCloseTimeout) clearTimeout(flushAndCloseTimeout);
         flushAndCloseTimeout = setTimeout(function() { lucene.closeWriter(); }, MAX_FLUSH_AND_CLOSE_TIME);
         callback(err);

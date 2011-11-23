@@ -75,7 +75,7 @@ exports.fetch = function (args, callback) {
         up.query["url"] = args.url;
         delete up.search;
         request.get({uri:url.format(up), json:true, timeout:args.timeout, followRedirect:true, maxRedirects:3}, function(err,resp,body) {
-            if(err || !body || !body.type) logger.error(err?err:body);
+            if(err || !body || !body.type) logger.verbose(err?err:body);
             if(err || !body || !body.type) return cb(); // continue on to next one
             cb(body); // aborts and finishes w/ a result
         });
