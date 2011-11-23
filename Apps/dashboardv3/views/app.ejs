@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title><%= dashboard && dashboard.customTitle ? dashboard.customTitle : "The Locker Project" %></title>
+
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script src="/static/js/jquery-1.6.2.min.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+    <script src="js/dashboard.js"></script>
+  </head>
+  <body class="app-page">
+
+    <header class="header">
+      <div class="user-info">
+        <a href='/'><img class="avatar" src="img/default-profile.png"></a>
+        <div class="user-info-name"><a class='user-info-name-link' href='/'></a></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav">
+          <a class='selected' href='/'>YOU</a>
+          <a href='#'>EXPLORE</a>
+          <a href='#'>CREATE</A>
+        </div>
+        <% if (dashboard && dashboard.customHostedEndpoint) { %>
+          <div class="hosted-nav">
+            <a href='<%= dashboard.customLogout %>'>Sign out</a>
+            <a href='<%= dashboard.customSettings %>'>Account Settings</a>
+            <a href='https://www.singly.com/#learnmore'>Hosted by Singly</a>
+          </div>
+          <script src="js/hosted.js"></script>
+          <script src="<%= dashboard.customHostedEndpoint %>"></script>
+        <% } %>
+      </div>
+    </header>
+    <aside class="sidenav">
+      <div class="sidenav-header">
+        <p class='sidenav-header-title'>APPS</p>
+        <p class="sidenav-header-link orange">see all</p>
+      </div>
+      <div class="sidenav-items">
+        <% for (var i = 0; i < map.length; i++) { %>
+          <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
+        <% } %>
+        <p><a class="orange" href="#">Explore more apps</a></p>
+      </div>
+      <div class="sidenav-header">
+        <p class='sidenav-header-title'>YOUR APPS</p>
+        <p class="sidenav-header-link orange">see all</p>
+      </div>
+      <div class="sidenav-items">
+        <% for (var i = 0; i < yourApps.length; i++) { %>
+          <p><a href="<%= yourApps[i].externalUri %>" class="iframeLink" data-id="<%= yourApps[i].id %>"><%= yourApps[i].title %></a></p>
+        <% } %>
+        <p><a class="orange" href="#">Explore more apps</a></p>
+      </div>
+      <div class="sidenav-header">
+        <p class='sidenav-header-title'>YOUR SERVICES</p>
+      </div>
+      <div class="sidenav-items synclets">
+        <% for (var i = 0; i < synclets.available.length; i++) { %>
+          <% if (synclets.available[i].authurl) { %>
+            <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
+               data-width="<%= synclets.available[i].oauthSize.width %>"
+               data-height="<%= synclets.available[i].oauthSize.height %>"><img src="img/icons/<%= synclets.available[i].provider %>.png"></a>
+          <% } %>
+        <% } %>
+        <% for (var i in synclets.installed) { %>
+          <img class='installed' src="img/icons/<%= synclets.installed[i].provider %>.png"></a>
+        <% } %>
+      </div>
+    </aside>
+    <iframe id="appFrame"></iframe>
+
+  </body>
+</html>

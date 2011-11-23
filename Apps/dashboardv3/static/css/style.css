@@ -1,0 +1,140 @@
+body {
+  font-family: MyriadPro-Regular, 'Myriad Pro Regular', MyriadPro, 'Myriad Pro', Helvetica, Arial, sans-serif;
+  color: #4d4d4d;
+}
+
+a {
+  text-decoration: none;
+  color: #4d4d4d;
+}
+
+.orange {
+  color: #F7931E;
+}
+
+/* header section */
+header {
+  z-index: 2;
+  min-width: 960px;
+  position: absolute;
+  width: 100%;
+  height: 83px;
+}
+
+header .user-info {
+  float: left;
+  margin: 18px;
+  width: 184px;
+  height: 48px;
+}
+
+header .user-info img {
+  width: 46px;
+  height: 46px;
+  margin-right: 10px;
+  border: solid 1px #999;
+  float: left;
+}
+
+header .user-info-name {
+  width: 126px;
+  height: 48px;
+  font-size: 16px;
+  float: left;
+}
+
+header .nav-section {
+  margin-left: 220px;
+  border-bottom: solid 1px #4d4d4d;
+  height: 82px;
+}
+
+header .nav {
+  margin-top: 39px;
+  float: left;
+}
+
+header .nav a {
+  font-family: Helvetica;
+  font-size: 24px;
+  border-left: 1px dashed #4d4d4d;
+  padding: 5px 20px;
+}
+
+header .nav a.selected {
+  color: #29ABE2;
+  font-weight: bold;
+}
+
+header .hosted-nav {
+  float: right;
+  font-size: 12px;
+}
+
+header .hosted-nav a {
+  float: right;
+  padding: 5px 13px;
+  border-left: 1px dashed #4b4b4b;
+}
+
+/* styling for the sidebar */
+aside {
+  z-index: 2;
+  position: absolute;
+  top: 83px;
+  width: 220px;
+}
+
+/* iframe styling */
+#appFrame {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding-top: 83px;
+  padding-left: 220px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* sidenav styling */
+.sidenav {
+  margin-left: 18px;
+  width: 184px;
+}
+
+.sidenav-header {
+  border-bottom: solid 1px #4d4d4d;
+  width: 100%
+  font-size: 14px;
+  letter-spacing: -.5px;
+  height: 16px;
+}
+
+.sidenav-header-title {
+  float: left;
+  margin-left: 2px;
+}
+
+.sidenav-header-link {
+  float: right;
+  margin-right: 5px;
+}
+
+.sidenav-items {
+  padding-top: 5px;
+  margin-bottom: 20px;
+}
+
+.sidenav-items p {
+  margin: 5px 0px 5px 2px;
+}
+
+.sidenav-items .installed {
+  opacity: .5
+}
