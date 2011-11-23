@@ -63,7 +63,6 @@ var drawPage = function(req, res) {
                     }
                 });
             }
-            console.dir(synclets.available);
             for (var i = 0; i < synclets.available.length; i++) {
                 if (oauthPopupSizes[synclets.available[i].provider]) {
                     synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
