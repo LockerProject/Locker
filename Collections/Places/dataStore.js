@@ -9,10 +9,9 @@
 var collection;
 var db;
 var locker;
-var lconfig = require('../../Common/node/lconfig');
-lconfig.load('../../Config/config.json'); // ugh
+var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger = require("logger").logger;
+var logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -169,12 +168,13 @@ dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["location/glatitude"] = processGLatitude;
 
-exports.init = function(mongoCollection, mongo, l) {
+exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
-
     locker = l;
+    lconfig = config;
+    logger = require("logger").logger;
 };
 
 exports.getTotalCount = function(callback) {

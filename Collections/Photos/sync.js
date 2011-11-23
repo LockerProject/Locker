@@ -9,15 +9,17 @@
 
 var request = require('request');
 var locker = require('../../Common/node/locker.js');
-var lconfig = require('../../Common/node/lconfig.js');
+var lconfig;
 var dataStore = require('./dataStore');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
-var logger = require("../../Common/node/logger.js").logger;
+var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
+exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection, mongo, locker);
+    lconfig = config;
+    logger = require("../../Common/node/logger.js").logger;
+    dataStore.init(mongoCollection, mongo, locker, lconfig);
     exports.eventEmitter = new EventEmitter();
 }
 
@@ -27,7 +29,6 @@ var photoGatherers = {
 };
 
 exports.gatherPhotos = function(cb) {
-    lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo'}, function() {
             cb(); // synchro delete, async/background reindex

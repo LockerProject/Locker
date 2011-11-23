@@ -11,15 +11,17 @@ var request = require('request');
 var async = require('async');
 var path = require('path');
 var locker = require('../../Common/node/locker.js');
-var lconfig = require('../../Common/node/lconfig.js');
+var lconfig;
 var dataStore = require('./dataStore');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
-var logger = require("../../Common/node/logger.js").logger;
+var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
+exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection, mongo, locker);
+    lconfig = config;
+    logger = require("../../Common/node/logger.js").logger;
+    dataStore.init(mongoCollection, mongo, locker, lconfig);
     exports.eventEmitter = new EventEmitter();
 };
 
@@ -31,7 +33,6 @@ function reset(flag, callback)
     });
 }
 exports.gatherPlaces = function(type, cb) {
-    lconfig.load('../../Config/config.json');
     reset(type, function(){
         cb(); // synchro delete, async/background reindex
         var types = (type) ? [type] : ['checkin','tweets','location'];

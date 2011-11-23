@@ -9,10 +9,9 @@
 
 var collection;
 var db;
-var lconfig = require('../../Common/node/lconfig');
-lconfig.load('../../Config/config.json'); // ugh
+var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger = require("logger").logger;
+var logger
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -261,10 +260,12 @@ dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 
-exports.init = function(mongoCollection, mongo, l) {
+exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
     db = mongo.dbClient;
     locker = l;
+    lconfig = config;
+    logger = require("logger").logger;
 }
 
 exports.getTotalCount = function(callback) {

@@ -10,13 +10,11 @@
 // merge contacts from connectors
 
 var locker = require('../../Common/node/locker.js');
+var logger;
 
 var fs = require('fs');
 var sync = require('./sync');
 var dataStore = require("./dataStore");
-var lconfig = require('lconfig');
-lconfig.load('../../Config/config.json');
-var logger = require("../../Common/node/logger.js").logger;
 
 var lockerInfo;
 var express = require('express'),
@@ -147,8 +145,11 @@ process.stdin.on('data', function(data) {
     }
     process.chdir(lockerInfo.workingDirectory);
 
+    var lconfig = require('lconfig');
+    lconfig.load('../../Config/config.json');
+    logger = require(__dirname + "/../../Common/node/logger.js").logger;
     locker.connectToMongo(function(mongo) {
-        sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker);
+        sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker, lconfig);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

@@ -43,7 +43,9 @@ FileBugLogger.prototype.open = function(cb) {
 	if (this.stream) this.stream.setMaxListeners(0);
 };
 
-var transports = [new ModuleConsoleLogger({level:lconfig.logging.level, colorize:true,timestamp:true})];
+var transports = [];
+if (lconfig.logging.console)
+    transports.push(new ModuleConsoleLogger({level:lconfig.logging.level, colorize:true,timestamp:true}));
 if (lconfig.logging.file) {
     var fileLogger = new FileBugLogger({
         filename:path.join(lconfig.lockerDir, "Logs", lconfig.logging.file),
