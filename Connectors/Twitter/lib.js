@@ -172,6 +172,7 @@ function getIdList(arg, cbEach, cbDone) {
 // bulk chunk get user details
 exports.getUsers = function(users, cbEach, cbDone) {
     if(users.length == 0) return cbDone();
+    var lenStart = users.length;
     var me = this;
     var id_str = "";
     var ids = {};
@@ -181,8 +182,10 @@ exports.getUsers = function(users, cbEach, cbDone) {
         if(i > 0) id_str += ',';
         id_str += id;
     }
+    console.error("lookup "+users.length + " " + id_str);
     getOne({path:'/users/lookup.json',user_id:id_str},function(err,infos){
         if(err) return cbDone(err);
+        console.error("checking "+JSON.stringify(infos));
         for(var i=0; i < infos.length; i++){
             if(!ids[infos[i].id_str]) continue; // skip dups
             delete ids[infos[i].id_str];
@@ -191,6 +194,7 @@ exports.getUsers = function(users, cbEach, cbDone) {
         for(id in ids){
             users.push(id); // any non-done users push back for next attempt
         }
+        if(lenStart == users.length) return cbDone("failed to find remaining users");
         me.getUsers(users, cbEach, cbDone); // loop loop till done
     });
 }
