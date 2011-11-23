@@ -44,7 +44,7 @@ exports.alive = false;
     fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
 
     var logger = require("logger");
-    var lconsole = require("lconsole");
+    // var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
     var syncManager = require('lsyncmanager');
     var serviceManager = require("lservicemanager");

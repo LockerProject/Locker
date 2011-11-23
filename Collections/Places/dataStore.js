@@ -223,7 +223,7 @@ exports.addData = function(svcId, type, allData, callback) {
     var handler = dataHandlers[type] || processShared;
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
-            if(e) console.error("error processing: "+e);
+            if(e) logger.error("error processing: "+e);
             cb();
         });
     }, callback);

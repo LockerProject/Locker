@@ -49,7 +49,7 @@ exports.gatherPlaces = function(type, cb) {
                     callback();
                 }
             }, function(){
-                console.log("DONE UPDATING PLACES");
+                logger.info("DONE UPDATING PLACES");
             });
         });
     });
@@ -58,7 +58,7 @@ exports.gatherPlaces = function(type, cb) {
 function gatherFromUrl(svcId, type, callback) {
     var url = path.join("Me", svcId, "getCurrent", type.split("/")[0]);
     url = lconfig.lockerBase + "/" + url;
-    console.log("updating from "+url);
+    logger.info("updating from "+url);
     request.get({uri:url, json:true}, function(err, resp, body) {
         if (err || !body) {
             logger.debug("Error getting basic places from " + svcId + " " + err);

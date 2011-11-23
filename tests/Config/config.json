@@ -42,5 +42,8 @@
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020
+    },
+    "logging": {
+        "level": "error"
     }
 }

@@ -35,7 +35,6 @@ exports.gatherPhotos = function(cb) {
             locker.providers(['photo','checkin','tweets'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
-                    console.error("DEBUG: svc", svc);
                     if(svc.handle === 'photos') return;
                     var gathered = false;
                     var lastType = "";
@@ -88,7 +87,7 @@ function gatherFromUrl(svcId, url, type) {
             if (!arr) throw("No data");
             dataStore.addData(svcId, type, arr);
         } catch (E) {
-            console.error("Error processing photos from " + svcId + url + ": " + E);
+            logger.error("Error processing photos from " + svcId + url + ": " + E);
         }
     });
 }
