@@ -16,7 +16,7 @@ var spawn = require('child_process').spawn;
 var levents = require('levents');
 var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
-var logger = require('logger').logger;
+var logger = require('logger');
 
 var serviceMap = {
     available:[],

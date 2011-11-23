@@ -28,7 +28,7 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
 var lconfig = require("lconfig");
-var logger = require('logger').logger;
+var logger = require('logger');
 
 var lcrypto = require("lcrypto");
 

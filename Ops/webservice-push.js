@@ -1,6 +1,6 @@
 var pushManager = require(__dirname + '/../Common/node/lpushmanager')
   , dataStore = require(__dirname + '/../Common/node/ldatastore')
-  , logger = require(__dirname + '/../Common/node/logger').logger;
+  , logger = require(__dirname + '/../Common/node/logger');
   ;
 
 module.exports = function(locker) {

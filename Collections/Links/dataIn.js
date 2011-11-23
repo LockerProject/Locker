@@ -2,7 +2,7 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
 

@@ -11,7 +11,7 @@
 require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
 lconfig.load('../../Config/config.json');
-var logger = require('logger').logger;
+var logger = require('logger');
 
 var fs = require('fs'),
     locker = require('locker.js');

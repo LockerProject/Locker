@@ -12,7 +12,7 @@ var path = require('path');
 var lconfig = require('lconfig');
 var wrench = require('wrench');
 var is = require("lutil").is;
-var logger = require("logger").logger;
+var logger = require("logger");
 var util = require('util');
 var indexPath;
 

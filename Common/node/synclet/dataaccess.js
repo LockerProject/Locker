@@ -2,7 +2,7 @@ var dataStore = require('../ldatastore')
   , fs = require('fs')
   , path = require('path')
   , lconfig = require('../lconfig')
-  , logger = require('../logger').logger
+  , logger = require('../logger')
   , lfs = require('../lfs')
   ;
 

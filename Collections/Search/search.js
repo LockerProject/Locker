@@ -443,7 +443,7 @@ process.stdin.on('data', function(data) {
         _lconfig.load('../../Config/config.json');
         exports.init(_lconfig,
                      require('../../Common/node/lsearch'),
-                     require(__dirname + '/../../Common/node/logger').logger);
+                     require(__dirname + '/../../Common/node/logger'));
         lsearch.setEngine(lsearch.engines.CLucene);
         lsearch.setIndexPath(process.cwd() + "/search.index");
 

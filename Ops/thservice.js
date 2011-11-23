@@ -8,7 +8,7 @@
 */
 
 var spawn = require('child_process').spawn;
-var logger = require(__dirname + '/../Common/node/logger').logger;
+var logger = require(__dirname + '/../Common/node/logger');
 var thswitch;
 exports.instance = thswitch;
 

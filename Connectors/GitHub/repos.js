@@ -1,6 +1,6 @@
 var GitHubApi = require("github").GitHubApi
   , lconfig = require('../../Common/node/lconfig')
-  , logger = require('../../Common/node/logger').logger
+  , logger = require('../../Common/node/logger')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')

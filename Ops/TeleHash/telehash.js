@@ -5,7 +5,7 @@ var dgram = require("dgram");
 var dns = require("dns");
 var lconfig = require(__dirname + '/../../Common/node/lconfig');
 lconfig.load(__dirname + '/../../Config/config.json');
-var logger = require(__dirname + '/../../Common/node/logger').logger;
+var logger = require(__dirname + '/../../Common/node/logger');
 
 /*
  * Some generally useful functions.

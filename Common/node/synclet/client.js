@@ -14,7 +14,7 @@ var fs = require('fs')
   ;
 
 lconfig.load('Config/config.json');
-var logger = require('../logger').logger;
+var logger = require('../logger');
 
 // Process the startup JSON object
 process.stdin.setEncoding('utf8');

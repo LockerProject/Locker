@@ -3,7 +3,7 @@ var lucene = new clucene.Lucene();
 var path = require('path');
 var fs = require('fs');
 var async = require("async");
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var wrench = require("wrench");
 
 var MAX_FLUSH_AND_CLOSE_TIME = 10000;

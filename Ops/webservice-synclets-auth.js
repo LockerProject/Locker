@@ -1,6 +1,6 @@
 var syncManager = require('lsyncmanager')
   , lconfig = require('lconfig')
-  , logger = require('logger').logger
+  , logger = require('logger')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')

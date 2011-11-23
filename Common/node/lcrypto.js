@@ -11,7 +11,7 @@ var path = require("path");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
 var lconfig = require('lconfig');
-var logger = require('logger').logger;
+var logger = require('logger');
 
 var idKey,idKeyPub,symKey;
 

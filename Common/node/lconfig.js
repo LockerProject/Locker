@@ -51,7 +51,7 @@ exports.load = function(filepath) {
     if(!config.logging) config.logging = {};
     exports.logging =  {
         file: config.logging.file || undefined,
-        level:config.logging.level || "warn",
+        level:config.logging.level || "info",
         maxsize: config.logging.maxsize || 256 * 1024 * 1024, // default max log file size of 64MBB
         console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
     };

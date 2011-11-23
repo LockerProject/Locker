@@ -4,7 +4,7 @@ var lutil = require('lutil');
 var async = require('async');
 var request = require('request');
 var url = require('url');
-var logger = require('logger').logger;
+var logger = require('logger');
 
 var map = { "youtube": [/youtube\.com\/watch.+v=[\w-]+/i , "http://www.youtube.com/oembed"]
     , "flickr": [/flickr\.com\/photos\/.+/i , "http://flickr.com/services/oembed?format=json"]

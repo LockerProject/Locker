@@ -127,7 +127,7 @@ process.stdin.on('data', function(data) {
     
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
-    logger = require(__dirname + "/../../Common/node/logger.js").logger;
+    logger = require(__dirname + "/../../Common/node/logger.js");
     locker.connectToMongo(function(mongo) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.place, mongo, locker, lconfig);
         app.listen(0, function() {

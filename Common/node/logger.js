@@ -65,12 +65,13 @@ if (lconfig.logging.file) {
     });
     transports.push(fileLogger);
 }
-exports["logger"] = new (winston.Logger)({"transports":transports});
-var realLog = exports.logger.log;
-exports.logger.log = function(level, msg) {
+
+module.exports = new (winston.Logger)({"transports":transports});
+var realLog = exports.log;
+exports.log = function(level, msg) {
     try {
-        realLog.call(exports.logger, level, msg.toString('utf8'));
+        realLog.call(module.exports, level, msg.toString('utf8'));
     } catch (E) {
-        realLog.call(exports.logger, level, msg);
+        realLog.call(module.logger, level, msg);
     }
 }

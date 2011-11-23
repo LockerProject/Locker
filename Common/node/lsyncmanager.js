@@ -8,7 +8,7 @@ var fs = require('fs')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
-  , logger = require("./logger.js").logger;
+  , logger = require("./logger.js");
   ;
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage

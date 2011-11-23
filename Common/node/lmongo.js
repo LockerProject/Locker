@@ -10,7 +10,7 @@
 var mongodb = require('mongodb')
   , mongo
   , lconfig = require('./lconfig')
-  , logger = require('./logger').logger
+  , logger = require('./logger')
   ;
 
 module.exports = mongo = {collections : {}, client : undefined};

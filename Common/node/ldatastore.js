@@ -8,7 +8,7 @@
 */
 var IJOD = require('ijod').IJOD
   , lconfig = require('lconfig')
-  , logger = require('logger').logger
+  , logger = require('logger')
   , lmongo = require('lmongo')
   , ijodFiles = {}
   , deepCompare = require('deepCompare')

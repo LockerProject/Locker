@@ -174,7 +174,7 @@ exports.init = function(mongoCollection, mongo, l, config) {
     db = mongo.dbClient;
     locker = l;
     lconfig = config;
-    logger = require("logger").logger;
+    logger = require("logger");
 };
 
 exports.getTotalCount = function(callback) {

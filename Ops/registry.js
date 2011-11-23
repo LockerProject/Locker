@@ -29,7 +29,7 @@ var regBase = 'http://registry.singly.com';
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
     lconfig = config;
-    logger = require('logger').logger;
+    logger = require('logger');
     lcrypto = crypto;
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space

@@ -18,7 +18,7 @@ var lutil = require('lutil');
 var lconfig = require('../../Common/node/lconfig.js');
 lconfig.load('../../Config/config.json');
 
-var logger = require("logger").logger;
+var logger = require("logger");
 
 var externalBase;
 var closed;
