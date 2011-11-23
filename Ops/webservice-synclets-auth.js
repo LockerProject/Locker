@@ -30,6 +30,7 @@ var syncManager = require('lsyncmanager')
       "grantType" : "authorization_code"}
   , instagram = {"provider" : "instagram",
       "endPoint" : "https://api.instagram.com/oauth/access_token",
+      "grantType" : "authorization_code",
       "redirectURI" : "auth/instagram/auth"}
   , glatitude = {"provider" : "glatitude",
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
