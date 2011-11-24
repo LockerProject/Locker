@@ -129,7 +129,7 @@ exports.handlePostEvents = function(req, callback) {
             return callback(error, {});
         }
 
-        var type = idr.protocol.substr(0,idr.protocol.length-1) + " " + idr.host;
+        var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
         if (req.body.action === 'new' || req.body.action === 'update') {
             lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
                 if (err) {
@@ -153,12 +153,10 @@ exports.handlePostEvents = function(req, callback) {
                 return callback(err, {timeToIndex: time});
             });
         } else {
-            console.log("Unexpected event: " + req.body.idr + " and " + req.body.action);
-            res.end();
+            return callback("Unexpected event: " + req.body.idr + " and " + req.body.action);
         }
     } else {
-        console.log("Unexpected event or not json " + req.headers["content-type"]);
-        res.end();
+        return callback("Unexpected event or not json " + req.headers["content-type"]);
     }
 };
 
@@ -172,8 +170,8 @@ exports.handlePostIndex = function(req, callback) {
     }
 
     var idr = url.parse(req.body.idr);
-    var type = idr.protocol.substr(0,idr.protocol.length-1) + " " + idr.host;
-    lsearch.indexType(type, idr.host, req.body.data, function(err, time) {
+    var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
+    lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
         if (err) {
             handleError(req.body.idr, 'new', err);
             return callback(err, {});
@@ -218,6 +216,16 @@ exports.handleGetQuery = function(req, callback) {
 
         if(limit) results = results.slice(0,limit);
 
+        if(req.param('simple') == "true")
+        {
+            var data = {};
+            data.took = queryTime;
+            data.error = null;
+            data.hits = results;
+            data.total = results.length;
+            return callback(null, data);
+        }
+
         enrichResultsWithFullObjects(results, function(err, richResults) {
             var data = {};
             data.took = queryTime;
@@ -236,6 +244,7 @@ exports.handleGetQuery = function(req, callback) {
         });
     }
 
+console.error("querying "+type+" for "+q);
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);
     } else {
@@ -324,8 +333,8 @@ function enrichResultsWithFullObjects(results, callback) {
                 function(item, forEachCb) {
                     var idr = url.parse(item._id);
                     var source = (idr.host == 'twitter') ? 'twitter/timeline' : idr.host; // we only process timeline
-                    var url = lockerInfo.lockerUrl + '/Me/' + source + '/id/' + idr.hash.substr(1);
-                    makeEnrichedRequest(url, item, forEachCb);
+                    var u = lockerInfo.lockerUrl + '/Me/' + source + '/id/' + idr.hash.substr(1);
+                    makeEnrichedRequest(u, item, forEachCb);
                 },
                 function(err) {
                     waterfallCb(err, results);
@@ -354,7 +363,7 @@ function cullAndSortResults(results, callback) {
 function makeEnrichedRequest(url, item, callback) {
     request.get({uri:url, json:true}, function(err, res, body) {
         if (err) {
-            console.error('Error when attempting to enrich search results: ' + err);
+            console.error('Error when attempting to enrich search results at '+url+' - ' + err);
             return callback(err);
         }
         if (res.statusCode >= 400) {

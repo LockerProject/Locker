@@ -24,7 +24,7 @@ function noop() {
 NullEngine = function()
 {
 }
-NullEngine.prototype.indexType = function(type, obj, cb) {
+NullEngine.prototype.indexType = function(type, id, obj, cb) {
     cb("Null engine");
 };
 NullEngine.prototype.queryAll = function(q, params, cb) {
@@ -45,7 +45,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact contacts" : {
+        "contactcontacts" : {
             "name":"name",
             "nicknames":[],
             "accounts":{
@@ -73,25 +73,32 @@ CLEngine = function()
                 }
             ]
         },
-        "photo photos" : {
+        "photophotos" : {
             "caption":"caption",
             "title":"title"
         },
-        "tweet twitter" : {
+        "tweettwitter" : {
             "text":"text",
             "user":{
                 "name":"name",
                 "screen_name":"screen_name"
             }
         },
-        "post facebook" : {
+        "timelinetwitter" : {
+            "text":"text",
+            "user":{
+                "name":"name",
+                "screen_name":"screen_name"
+            }
+        },
+        "postfacebook" : {
             "description":"description",
             "message":"message",
             "from":{
                 "name":"name"
             }
         },
-        "place places" : {
+        "placeplaces" : {
             "title":"title"
         },
     };

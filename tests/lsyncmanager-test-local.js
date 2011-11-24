@@ -19,8 +19,6 @@ var vows = require("vows")
   , mongo
   , allEvents = {}
   , request = require('request')
-  , primaryType = "testSync/testSynclet"
-  , otherType = "eventType/testSynclet"
   , _id
   , obj
   , colls
@@ -46,11 +44,8 @@ syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
-        levents.fireEvent = function(type, id, action, obj) {
-            if (type == primaryType || type == otherType) {
-                if (!allEvents.hasOwnProperty(type)) allEvents[type] = [];
-                allEvents[type].push(obj);
-            }
+        levents.fireEvent = function(idr, action, data) {
+            allEvents[idr] = {action:action, data:data};
         }
         assert.include(syncManager, "synclets");
         assert.include(syncManager.synclets(), "available");
@@ -162,8 +157,7 @@ vows.describe("Synclet Manager").addBatch({
                 });
             },
             "successfully" : function(err, count) {
-                console.error("allEvents: "+JSON.stringify(allEvents));
-                assert.equal(allEvents[primaryType].length, 2);
+                assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].action, "new");
             }
         }
     }
@@ -212,7 +206,7 @@ vows.describe("Synclet Manager").addBatch({
     "and after generating " : {
         topic: allEvents,
         "correct number of events" : function(topic) {
-            assert.equal(allEvents[primaryType].length, 2);
+            assert.equal(Object.keys(allEvents).length, 3);
         },
         "with correct data" : function(topic) {
             /*
@@ -220,20 +214,15 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(events[1].fromService, 'synclet/testSynclet');
             assert.equal(events[2].fromService, 'synclet/testSynclet');
             */
-            var events = allEvents[primaryType];
-            assert.equal(events[1].type, 'new');
-            assert.notEqual(events[0].data._id, undefined);
-            assert.notEqual(events[1].data._id, undefined)
-            assert.equal(events[0].data.notId, 500);
-            assert.equal(events[1].data.notId, 1);
-            events = [];
+            assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].action, 'new');
+            assert.notEqual(allEvents["testSync://testSynclet/testSynclet#500"].data._id, undefined);
+            assert.notEqual(allEvents["testSync://testSynclet/testSynclet#1"].data._id, undefined)
+            assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].data.notId, 500);
+            assert.equal(allEvents["testSync://testSynclet/testSynclet#1"].data.notId, 1);
         },
         "correct types of events": function(topic) {
-            var nsEvents = allEvents[otherType];
-            assert.equal(nsEvents.length, 1);
-            assert.equal(nsEvents[0].type, 'new');
-            assert.equal(nsEvents[0].data.random, 'data');
-            nsEvents = [];
+            assert.equal(allEvents["eventType://testSynclet/testSynclet#5"].action, 'new');
+            assert.equal(allEvents["eventType://testSynclet/testSynclet#5"].data.random, 'data');
         }
     },
     "and set the finishedOnce property to true" : function(err, status) {
@@ -265,19 +254,17 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "Running testSynclet again" : {
         topic: function() {
-            allEvents[primaryType] = [];
+            allEvents = {};
             syncManager.syncNow("testSynclet", this.callback);
         },
         "with no data will leave everything intact" : function(topic) {
-            var events = allEvents[primaryType];
-            assert.equal(events.length, 0);
-            assert.equal(events[0], undefined);
+            assert.equal(Object.keys(allEvents).length, 0);
         }
     }
 }).addBatch({
     "If the source doesn't return an ID" : {
         topic: function() {
-            allEvents[primaryType] = [];
+            allEvents = {};
             var self = this;
             colls.testSynclet_testSync.drop(function() {
                 syncManager.syncNow("testSynclet", function() {
@@ -286,11 +273,9 @@ vows.describe("Synclet Manager").addBatch({
             });
         },
         "it will generate a delete event and remove the row from mongo" : function(err, count) {
-            var events = allEvents[primaryType];
             assert.equal(count, 0);
-            assert.equal(events.length, 1);
-            assert.equal(events[0].type, 'delete');
-            assert.equal(events[0].data.notId, 500);
+            assert.equal(Object.keys(allEvents).length, 1);
+            assert.equal(allEvents['testSync://testSynclet/testSynclet#500'].action, 'delete');
         }
     }
 }).addBatch({

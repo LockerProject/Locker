@@ -18,14 +18,14 @@ var contactAddEvent2 = JSON.parse(fs.readFileSync('fixtures/events/contacts/cont
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/timeline_twitter/twitter_tweet_1.json','ascii'));
 
 fakeweb.allowNetConnect = false;
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/twitter/timeline/id/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.obj.data), contentType:"application/json"});
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
-fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b29', body:JSON.stringify(contactAddEvent.obj.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/twitter/timeline/id/4e604465cec3a369b34a3126', body:JSON.stringify(twitterEvent.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b28', body:JSON.stringify(contactAddEvent.data), contentType:"application/json"});
+fakeweb.registerUri({uri : 'http://localhost:8042/Me/contacts/id/4e5e9731e4884f5600595b29', body:JSON.stringify(contactAddEvent.data), contentType:"application/json"});
 
 var req = {};
 req.headers = {};
 req.headers['content-type'] = 'application/json';
-req.params = {};
+req.params = {'simple':'true'};
 req.param = function(n) { return this.params[n];};
 
 lsearch.setEngine(lsearch.engines.CLucene);
@@ -56,16 +56,15 @@ suite.next().suite.addBatch({
     'Can query new contact just indexed' : {
         topic: function() {
             req.params.q = 'matt';
-            req.params.type = 'contact*';
+            req.params.type = 'contactcontacts*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
-            assert.equal(response.hits[0]._type, 'contact');
-            assert.equal(response.hits[0]._source, 'contacts');
+            assert.equal(response.hits[0]._id, 'contact://contacts/#4e5e9731e4884f5600595b28');
+            assert.equal(response.hits[0]._type, 'contactcontacts');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'Matt Berry <> Enquiries - Troika - CAA');
         }
@@ -85,16 +84,15 @@ suite.next().suite.addBatch({
     'Can query updated contact just indexed' : {
         topic: function() {
             req.params.q = 'matthew';
-            req.params.type = 'contact*';
+            req.params.type = 'contactcontacts*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e5e9731e4884f5600595b28');
-            assert.equal(response.hits[0]._type, 'contact');
-            assert.equal(response.hits[0]._source, 'contacts');
+            assert.equal(response.hits[0]._id, 'contact://contacts/#4e5e9731e4884f5600595b28');
+            assert.equal(response.hits[0]._type, 'contactcontacts');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'Matthew Berry <> Enquiries - Troika - CAA');
         }
@@ -114,16 +112,15 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet body' : {
         topic: function() {
             req.params.q = 'forkly';
-            req.params.type = 'timeline/twitter*';
+            req.params.type = 'timelinetwitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'timeline/twitter');
-            assert.equal(response.hits[0]._source, 'twitter/timeline');
+            assert.equal(response.hits[0]._id, 'timeline://twitter/timeline/#109457638479233026');
+            assert.equal(response.hits[0]._type, 'timelinetwitter');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
@@ -132,16 +129,15 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet author' : {
         topic: function() {
             req.params.q = 'David';
-            req.params.type = 'timeline/twitter*';
+            req.params.type = 'timelinetwitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'timeline/twitter');
-            assert.equal(response.hits[0]._source, 'twitter/timeline');
+            assert.equal(response.hits[0]._id, 'timeline://twitter/timeline/#109457638479233026');
+            assert.equal(response.hits[0]._type, 'timelinetwitter');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
@@ -150,16 +146,15 @@ suite.next().suite.addBatch({
     'Can query new twitter status synclet just indexed, within tweet handle' : {
         topic: function() {
             req.params.q = 'davidcohen';
-            req.params.type = 'timeline/twitter*';
+            req.params.type = 'timelinetwitter*';
             search.handleGetQuery(req, this.callback);
         },
         'successfully' : function(err, response) {
             assert.equal(err, null);
             assert.equal(response.total, 1);
             assert.equal(response.hits.length, 1);
-            assert.equal(response.hits[0]._id, '4e604465cec3a369b34a3126');
-            assert.equal(response.hits[0]._type, 'timeline/twitter');
-            assert.equal(response.hits[0]._source, 'twitter/timeline');
+            assert.equal(response.hits[0]._id, 'timeline://twitter/timeline/#109457638479233026');
+            assert.equal(response.hits[0]._type, 'timelinetwitter');
             // Content is longer stored
             // assert.equal(response.hits[0].content, 'RT Awesome, @forkly just made it into the NEW listings in the app store in the US! /cc berry @ forkly HQ http://t.co/Deb41Ng <> David Cohen <> davidcohen');
         }
