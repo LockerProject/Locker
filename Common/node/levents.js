@@ -56,6 +56,13 @@ function fetchListeners(idr)
     types.push(oldType);
     oldType += '/' + r.host;
     types.push(oldType);
+    if(r.pathname && r.pathname.length > 1)
+    {
+        oldType = r.pathname.substr(1);
+        types.push(oldType);
+        oldType += '/' + r.host;
+        types.push(oldType);
+    }
     delete r.hash;
     delete r.search;
     types.push(url.format(r));

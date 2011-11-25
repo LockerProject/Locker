@@ -92,24 +92,6 @@ function processInstagram(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
-
-function processShared(svcId, data, cb) {
-    logger.log("debug", "Shared processing of a pic");
-
-    var commonFields = ["url", "height", "width", "timestamp", "title", "mime-type", "thumbnail", "sourceLink", "size", "caption"];
-    if (!data.url) {
-        cb("Must have a url");
-        return ;
-    }
-    var photoInfo = {};
-    commonFields.forEach(function(fieldName) {
-        if (data.hasOwnProperty(fieldName)) photoInfo[fieldName] = data[fieldName];
-    });
-    if (data.id) photoInfo.sources = [{service:svcId, id:data.id, data:data}];
-
-    saveCommonPhoto(photoInfo, cb);
-}
-
 function getFlickrItem(photoObject, field) {
     return photoObject[field + '_o'] || photoObject[field + '_l'] || photoObject[field + '_z'] ||
            photoObject[field + '_m'] || photoObject[field + '_s'] || photoObject[field + '_t'];
@@ -307,8 +289,13 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var idr = url.parse(eventBody.idr, true);
     var svcId = idr.query["id"];
-    var type = idr.protocol.substr(0,idr.protocol.length-1) + '/' + idr.host
-    var handler = dataHandlers[type] || processShared;
+    var type = idr.pathname.substr(1) + '/' + idr.host
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     handler(svcId, eventBody.data, callback);
 }
 
@@ -316,7 +303,12 @@ exports.addData = function(svcId, type, allData, callback) {
     if (callback === undefined) {
         callback = function() {};
     }
-    var handler = dataHandlers[type] || processShared;
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     async.forEachSeries(allData,function(data,cb) {
         handler(svcId, data, cb);
     },callback);

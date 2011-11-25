@@ -216,8 +216,13 @@ exports.addEvent = function(eventBody, callback) {
     // Run the data processing
     var idr = url.parse(eventBody.idr, true);
     var svcId = idr.query["id"];
-    var type = idr.protocol.substr(0,idr.protocol.length-1) + '/' + idr.host
-    var handler = dataHandlers[type] || processShared;
+    var type = idr.pathname.substr(1) + '/' + idr.host
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     handler(svcId, type, eventBody.data, callback);
 };
 
@@ -225,7 +230,12 @@ exports.addData = function(svcId, type, allData, callback) {
     if (callback === undefined) {
         callback = function() {};
     }
-    var handler = dataHandlers[type] || processShared;
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
             if(e) console.error("error processing: "+e);
