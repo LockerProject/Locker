@@ -1,4 +1,4 @@
-var fakeweb = require('node-fakeweb');
+//var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Photos/dataStore');
 var sync = require('../Collections/Photos/sync');
 var assert = require("assert");
@@ -22,7 +22,7 @@ var thecollections = ['photo'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
-locker.event = function(){};
+locker.ievent = function(){};
 
 var cwd = process.cwd();
 var lmongo = require('../Common/node/lmongo.js');
@@ -39,8 +39,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.sourceLink, 'http://www.facebook.com/photo.php?pid=1887967&id=709761820');
-            assert.equal(response.data.timestamp, 1233685472000);
+            assert.equal(response.sourceLink, 'http://www.facebook.com/photo.php?pid=1887967&id=709761820');
+            assert.equal(response.timestamp, 1233685472000);
         }
     }
 }).addBatch({
@@ -50,8 +50,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.timestamp, 1303341763000);
-            assert.equal(response.data.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
+            assert.equal(response.timestamp, 1303341763000);
+            assert.equal(response.sourceLink, 'http://foursquare.com/user/7604010/checkin/4daf6ac35da3f2f3d2a5cd04');
         }
     }
 }).addBatch({

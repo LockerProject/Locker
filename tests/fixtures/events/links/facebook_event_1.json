@@ -1,1 +1,32 @@
-{"obj":{"source":"newsfeed","type":"new","data":{"url":"http://singly.com/","sourceObject":{"id":"100002438955325_224550747571079","from":{"name":"Eric Doe","id":"100002438955325"},"message":"Secret weapon!","link":"http://singly.com/","name":"Singly","caption":"singly.com","description":"Singly is the home of the Locker Project and personal data resources.","icon":"http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif","actions":[{"name":"Comment","link":"http://www.facebook.com/100002438955325/posts/101"},{"name":"Like","link":"http://www.facebook.com/100002438955325/posts/101"}],"privacy":{"description":"Friends Only","value":"ALL_FRIENDS"},"type":"link","created_time":1306369954,"updated_time":1306369954}}},"via":"facebook-test","action":"new","type":"status/facebook"}
+{
+    "data": {
+        "id": "100002438955325_224550747571079",
+        "from": {
+            "name": "Eric Doe",
+            "id": "100002438955325"
+        },
+        "message": "Secret weapon!",
+        "link": "http://singly.com/",
+        "name": "Singly",
+        "caption": "singly.com",
+        "description": "Singly is the home of the Locker Project and personal data resources.",
+        "icon": "http://b.static.ak.fbcdn.net/rsrc.php/v1/yD/r/aS8ecmYRys0.gif",
+        "actions": [{
+            "name": "Comment",
+            "link": "http://www.facebook.com/100002438955325/posts/101"
+        },
+        {
+            "name": "Like",
+            "link": "http://www.facebook.com/100002438955325/posts/101"
+        }],
+        "privacy": {
+            "description": "Friends Only",
+            "value": "ALL_FRIENDS"
+        },
+        "type": "link",
+        "created_time": 1306369954,
+        "updated_time": 1306369954
+    },
+    "action": "new",
+    "idr": "status://facebook/?id=facebook#100002438955325_224550747571079"
+}

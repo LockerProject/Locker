@@ -210,7 +210,7 @@ exports.addEvent = function(eventBody, callback) {
     }
     // Run the data processing
     var idr = url.parse(eventBody.idr, true);
-    var svcId = idr.query[id];
+    var svcId = idr.query["id"];
     var type = idr.protocol.substr(0,idr.protocol.length-1) + '/' + idr.host
     var handler = dataHandlers[type] || processShared;
     handler(svcId, type, eventBody.data, callback);
