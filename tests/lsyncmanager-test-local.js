@@ -157,7 +157,7 @@ vows.describe("Synclet Manager").addBatch({
                 });
             },
             "successfully" : function(err, count) {
-                assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].action, "new");
+                assert.equal(allEvents["datastore://testsynclet/dataStore?id=testSynclet#5"].action, "new");
             }
         }
     }
@@ -214,15 +214,15 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(events[1].fromService, 'synclet/testSynclet');
             assert.equal(events[2].fromService, 'synclet/testSynclet');
             */
-            assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].action, 'new');
-            assert.notEqual(allEvents["testSync://testSynclet/testSynclet#500"].data._id, undefined);
-            assert.notEqual(allEvents["testSync://testSynclet/testSynclet#1"].data._id, undefined)
-            assert.equal(allEvents["testSync://testSynclet/testSynclet#500"].data.notId, 500);
-            assert.equal(allEvents["testSync://testSynclet/testSynclet#1"].data.notId, 1);
+            assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].action, 'new');
+            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].data._id, undefined);
+            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#1"].data._id, undefined)
+            assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].data.notId, 500);
+            assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#1"].data.notId, 1);
         },
         "correct types of events": function(topic) {
-            assert.equal(allEvents["eventType://testSynclet/testSynclet#5"].action, 'new');
-            assert.equal(allEvents["eventType://testSynclet/testSynclet#5"].data.random, 'data');
+            assert.equal(allEvents["datastore://testsynclet/dataStore?id=testSynclet#5"].action, 'new');
+            assert.equal(allEvents["datastore://testsynclet/dataStore?id=testSynclet#5"].data.random, 'data');
         }
     },
     "and set the finishedOnce property to true" : function(err, status) {
@@ -275,7 +275,7 @@ vows.describe("Synclet Manager").addBatch({
         "it will generate a delete event and remove the row from mongo" : function(err, count) {
             assert.equal(count, 0);
             assert.equal(Object.keys(allEvents).length, 1);
-            assert.equal(allEvents['testSync://testSynclet/testSynclet#500'].action, 'delete');
+            assert.equal(allEvents['testsync://testsynclet/testSync?id=testSynclet#500'].action, 'delete');
         }
     }
 }).addBatch({

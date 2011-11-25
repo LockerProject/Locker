@@ -161,7 +161,7 @@ exports.idrNew = function(type, network, id, context, account)
     r.pathname = (context) ? context : '/';
     if(account) r.query = {id: account.toString()};
     r.protocol = type;
-    r.hash = id.toString();
+    if(id) r.hash = id.toString();
     return url.format(r);
 }
 /*
