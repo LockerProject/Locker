@@ -185,7 +185,12 @@ exports.getAll = function(fields, callback) {
 };
 
 exports.get = function(id, callback) {
-    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+    var or = []
+    try {
+        or.push({_id:new db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    or.push({id:id});
+    collection.findOne({$or:or}, callback);
 };
 
 exports.getOne = function(id, callback) {

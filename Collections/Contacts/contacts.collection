@@ -9,9 +9,9 @@
     "events":[["contact/foursquare", "/events"],
         ["contact/facebook", "/events"],
         ["contact/twitter", "/events"],
-        ["contact/github", "/events"],
+        ["following/github", "/events"],
         ["contact/tumblr", "/events"],
         ["contact/instagram", "/events"],
-        ["following/gcontacts", "/events"],
+        ["contact/gcontacts", "/events"],
         ["contact/flickr", "/events"]]
 }

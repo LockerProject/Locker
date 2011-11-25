@@ -15,6 +15,7 @@ lconfig.load('../../Config/config.json');
 var fs = require('fs'),
     locker = require('locker.js');
 var lutil = require('lutil');
+var url = require('url');
 
 var sync = require('./sync');
 var dataStore = require("./dataStore");

@@ -410,7 +410,7 @@ function processData (deleteIDs, info, key, data, callback) {
 function deleteData (collection, mongoId, deleteIds, info, eventType, callback) {
     var etype = eventType.split('/');
     var q = async.queue(function(id, cb) {
-        levents.fireEvent(lutil.idrNew(etype[0], etype[1], id, info.id), 'delete');
+        levents.fireEvent(lutil.idrNew(etype[0], etype[1], id, "", info.id), 'delete');
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
@@ -429,12 +429,12 @@ function addData (collection, mongoId, data, info, eventType, callback) {
                 return cb();
             }
             if (object.type === 'delete') {
-                levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], info.id), 'delete');
+                levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], "", info.id), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
-                    levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], info.id), type, doc);
+                    levents.fireEvent(lutil.idrNew(etype[0], etype[1], object.obj[mongoId], "", info.id), type, doc);
                     return cb();
                 });
             }

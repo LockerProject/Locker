@@ -107,7 +107,6 @@ app.post('/events', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
         res.send(doc);
     })
