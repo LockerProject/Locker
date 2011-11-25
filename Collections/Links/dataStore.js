@@ -95,7 +95,12 @@ exports.getLastObjectID = function(cbDone) {
 }
 
 exports.get = function(id, callback) {
-    linkCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+    var or = []
+    try {
+        or.push({_id:new db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    or.push({id:id});
+    linkCollection.findOne({$or:or}, callback);
 }
 
 function findWrap(a,b,c,cbEach,cbDone){
