@@ -12,6 +12,7 @@
                 {"name": "friends", "frequency": 3600},
                 {"name": "timeline", "frequency": 120},
                 {"name": "tweets", "frequency": 600},
+                {"name": "tweet", "frequency": 99999999},
                 {"name": "mentions", "frequency": 600}],
     "info":"Syncs your status updates, information about the people you're following and their status updates, as well as tweets that mention you."
 }
