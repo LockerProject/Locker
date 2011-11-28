@@ -4,7 +4,6 @@ require.paths.push(__dirname + "/../Common/node");
 process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
 var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
-var lconsole = require("lconsole");
 var wrench = require("wrench");
 var runIntegration = true;
 var integrationOnly = false;
@@ -15,12 +14,6 @@ var runGroups = [];
 function writeLogLine() {
     fs.writeSync(logFd, "[" + (new Date()).toLocaleString() + "][" + console.outputModule + "] " + Array.prototype.slice.call(arguments).toString() + "\n");
 }
-
-// We're going to replace the logging here so we can have it all and show it later
-console.log = writeLogLine;
-console.warn = writeLogLine;
-console.error = writeLogLine;
-
 
 if (process.argv.indexOf("-c") === -1) {
     try {
@@ -141,7 +134,6 @@ var checkLocker = function() {
     if (lockerd.alive === true) {
         runTests();
     } else {
-        console.error('locker hasn\'t started yet, checking again in a second');
         setTimeout(checkLocker, 1000);
     }
 }

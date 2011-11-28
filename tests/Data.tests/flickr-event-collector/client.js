@@ -23,7 +23,6 @@ process.stdin.resume();
 process.stdin.on("data", function(chunk) {
     var processInfo = JSON.parse(chunk);
     process.chdir(processInfo.workingDirectory);
-    process.stderr.write("Listening on " + processInfo.port);
     app.listen(0, function() {
         process.stdout.write(JSON.stringify({port: app.address().port}));
         process.stdout.flush();

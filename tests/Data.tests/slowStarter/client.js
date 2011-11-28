@@ -9,7 +9,6 @@ process.stdin.on("data", function(data) {
     setTimeout(function() {
         var info = JSON.parse(data);
         server = http.createServer(function(req, res) {
-            process.stdout.write("Sending: " + '{"url":"'+req.url+'","method":"'+req.method+'"}');
             if (req.url == "/firstPass") {
                 res.writeHead(200);
                 res.end();
