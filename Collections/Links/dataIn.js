@@ -2,10 +2,9 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
-var debug = false;
 
 var dataStore, locker, search;
 // internally we need these for happy fun stuff
@@ -27,14 +26,14 @@ exports.reIndex = function(locker,cb) {
                     getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/newsfeed', function() {
                         getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/wall', function() {
                             getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home', function() {
-                                console.error('facebook done!');
+                                logger.info('facebook done!');
                             });
                         });
                     });
                 } else if(svc.provides.indexOf('timeline/twitter') >= 0) {
                     getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
-                            console.error('twitter done!');
+                            logger.info('twitter done!');
                         });
                     });
                 }
@@ -73,7 +72,7 @@ function getLinks(getter, lurl, callback) {
         async.forEachSeries(arr,function(a,cb){
             var e = getter(a);
             if(!e.text) return cb();
-            processEncounter(e,function(err){if(err) console.log("getLinks error:"+err);});
+            processEncounter(e,function(err){if(err) logger.error("getLinks error:"+err);});
             cb(); // run pE() async as it queues
         },callback);
     });
@@ -83,11 +82,11 @@ function processEncounter(e, cb)
 {
     dataStore.enqueue(e, function() {
         encounterQueue.push(e, function(arg){
-            if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
+            logger.verbose("QUEUE SIZE: "+encounterQueue.length());
             cb();
         });
     });
-    if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
@@ -121,7 +120,7 @@ exports.loadQueue = function() {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
             encounterQueue.push(docs[i].obj, function(arg) {
-                console.error("QUEUE SIZE: " + encounterQueue.length());
+                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
             });
         }
     });

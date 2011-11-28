@@ -10,6 +10,7 @@
 var mongodb = require('mongodb')
   , mongo
   , lconfig = require('./lconfig')
+  , logger = require('./logger')
   ;
 
 module.exports = mongo = {collections : {}, client : undefined};
@@ -26,8 +27,8 @@ mongo.connect = function(callback) {
             if (error) {
                 attempts--;
                 if (attempts == 0) {
-                    console.error('mongod is doing that thing that we don\'t like much.');
-                    console.error(error);
+                    logger.error('mongod is doing that thing that we don\'t like much.');
+                    logger.error(error);
                     process.kill(process.pid, 'SIGINT');
                 } else {
                    setTimeout(function() { tryMongo(attempts) }, 2000);

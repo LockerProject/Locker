@@ -63,7 +63,7 @@ app.get('/search', function(req, res) {
     }
 
     search.search(req.query["q"], function(err,results) {
-        if(err) console.error(err);
+        if(err) logger.error(err);
         if(err || !results || results.length == 0) return res.send([]);
         var links = [];
         var len = (req.query["limit"] < results.length) ? req.query["limit"] : results.length;
@@ -126,7 +126,7 @@ app.get('/embed', function(req, res) {
 
 app.post('/events', function(req, res) {
     if (!req.body.type || !req.body.obj || !req.body.obj.data){
-        console.log('5 HUNDO bad data:',JSON.stringify(req.body));
+        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
         return;
