@@ -7,14 +7,12 @@
 *
 */
 
-var SPAM_ME_TO_DEATH = true;
-
 var http = require("http");
 var url = require("url");
 require.paths.push(__dirname);
 var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
-var logger = require("./logger.js").logger;
+var logger = require("./logger.js");
 var syncManager = require('lsyncmanager');
 var url = require('url');
 
@@ -22,7 +20,7 @@ var eventListeners = {};
 var processingQueue = []; // queue of events being processed
 
 exports.addListener = function(type, id, cb) {
-    console.log("Adding a listener for " + id + cb + " to " + type);
+    logger.info("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     // Remove the previous listener for the id
     eventListeners[type] = eventListeners[type].filter(function(entry) {
@@ -33,14 +31,14 @@ exports.addListener = function(type, id, cb) {
 }
 
 exports.removeListener = function(type, id, cb) {
-    console.log("Going to remove " + id + cb + " from " + type);
+    logger.info("Going to remove " + id + cb + " from " + type);
     if (!eventListeners.hasOwnProperty(type)) return;
     var pos = findListenerPosition(type, id, cb);
     if (pos >= 0) eventListeners[type].splice(pos, 1);
 }
 
 exports.makeRequest = function(httpOpts, body, callback) {
-    //console.log("HTTP " + JSON.stringify(httpOpts));
+    //logger.info("HTTP " + JSON.stringify(httpOpts));
     var req = http.request(httpOpts, callback);
     req.write(body);
     req.end();
@@ -77,7 +75,7 @@ function fetchListeners(idr)
 }
 
 exports.fireEvent = function(idr, action, obj) {
-    if (SPAM_ME_TO_DEATH) logger.debug("Firing an event for " + idr + " action(" + action + ")");
+    logger.verbose("Firing an event for " + idr + " action(" + action + ")");
     // Short circuit when no one is listening
     var listeners = fetchListeners(idr);
     if (listeners.length == 0) return;
@@ -87,7 +85,6 @@ exports.fireEvent = function(idr, action, obj) {
         data:obj,
         listeners:listeners
     };
-    // console.log(require("sys").inspect(newEventInfo));
     processingQueue.push(newEventInfo);
     // We bail out unless this is the first time into the queue
     if (processingQueue.length == 1)
@@ -120,7 +117,7 @@ function processEvents(queue) {
     // We loop over all the pending events to fire from the service
     do {
         var curEvent = queue.pop();
-        //console.log("Current event from " + curEvent.via + " " + curEvent.listeners.length + " listeners");
+        //logger.log("Current event from " + curEvent.via + " " + curEvent.listeners.length + " listeners");
         curEvent.listeners.forEach(function(listener) {
             if (!serviceManager.isInstalled(listener.id)) return;
             //console.log("Send to " + listener.id);
@@ -137,12 +134,12 @@ function processEvents(queue) {
                     "Connection":"keep-alive"
                 }
             };
-            if (SPAM_ME_TO_DEATH) logger.debug("Firing event to " + listener.id + " to " + listener.cb);
+            logger.verbose("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
             exports.makeRequest(httpOpts, JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data}), function(response) {
                 listener.response = response.statusCode;
                 if (listener.response != 200) {
-                    console.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
+                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
                     // TODO: Need to evaluate the logic here, to see if we should retry or other options.
                 }
             });

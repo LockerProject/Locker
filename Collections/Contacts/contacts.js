@@ -11,6 +11,7 @@
 require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
 lconfig.load('../../Config/config.json');
+var logger = require('logger');
 
 var fs = require('fs'),
     locker = require('locker.js');
@@ -71,7 +72,7 @@ app.get('/update', function(req, res) {
 
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
-        console.log('5 HUNDO');
+        logger.error('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
         return;

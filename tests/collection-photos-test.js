@@ -33,7 +33,7 @@ suite.next().suite.addBatch({
             process.chdir("." + mePath);
             var self = this;
             lmongo.init("photos", thecollections, function(mongo, colls) {
-                dataStore.init(colls.photo, mongo, locker);
+                dataStore.init(colls.photo, mongo, locker, lconfig);
                 dataStore.addEvent(facebookEvent, self.callback);
             });
         },

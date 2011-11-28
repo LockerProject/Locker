@@ -10,10 +10,10 @@
 var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
 
-var lsearch = require('../../Common/node/lsearch');
 var lutil = require('../../Common/node/lutil');
-var lconfig = require('lconfig');
-lconfig.load('Config/config.json');
+var lconfig;
+var lsearch;
+var logger;
 
 var lockerInfo = {};
 exports.lockerInfo = lockerInfo;
@@ -79,12 +79,13 @@ app.get('/reindexForType', function(req, res) {
    });
 });
 
+
 exports.handleGetUpdate = function(callback) {
     var error;
     lsearch.resetIndex(function(err) {
         if (err) {
             error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
-            console.error(error);
+            logger.error(error);
             return callback(err);
         }
 
@@ -109,13 +110,13 @@ exports.handlePostEvents = function(req, callback) {
 
     if (req.headers['content-type'] !== 'application/json') {
         error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
-        console.error(error);
+        logger.error(error);
         return callback(error, {});
     }
 
     if (!req.body) {
         error = 'Empty body received for /search/events POST request.';
-        console.error(error);
+        logger.error(error);
         return callback(error, {});
     }
 
@@ -125,7 +126,7 @@ exports.handlePostEvents = function(req, callback) {
         // https://github.com/LockerProject/Locker/issues/285
         if (!idr || !idr.host) {
             error = 'No source found for event: '+JSON.stringify(req.body);
-            console.error(error);
+            logger.error(error);
             return callback(error, {});
         }
 
@@ -165,7 +166,7 @@ exports.handlePostIndex = function(req, callback) {
 
     if (!req.body.idr || !req.body.data) {
         error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
-        console.error(error);
+        logger.error(error);
         return callback(error, {});
     }
 
@@ -185,7 +186,7 @@ exports.handleGetQuery = function(req, callback) {
     var error;
     if (!req.param('q')) {
         error = 'Invalid arguments given for /search/query GET request.';
-        console.error(error);
+        logger.error(error);
         return callback(error, {});
     }
 
@@ -203,14 +204,14 @@ exports.handleGetQuery = function(req, callback) {
 
     if (!q || q.substr(0, 1) == '*') {
         error = 'Please supply a valid query string for /search/query GET request.';
-        console.error(error);
+        logger.error(error);
         return callback(error, {});
     }
 
     function sendResults(err, results, queryTime) {
         if (err) {
             error = 'Error querying via /search/query GET request: '+JSON.stringify(err);
-            console.error(error);
+            logger.error(error);
             return callback(error, {});
         }
 
@@ -285,12 +286,12 @@ exports.handleGetReindexForType = function(type, callback) {
 function reindexType(url, type, source, callback) {
     var reqObj = request.get({uri:url}, function(err, res, body) {
         if (err) {
-            console.error('Error when attempting to reindex ' + type + ' collection: ' + err);
+            logger.error('Error when attempting to reindex ' + type + ' collection: ' + err);
             return callback(err);
         }
         if (res.statusCode >= 400) {
             var error = 'Received a ' + res.statusCode + ' when attempting to reindex ' + type + ' collection';
-            console.error(err);
+            logger.error(err);
             return callback(err);
         }
 
@@ -311,10 +312,10 @@ function reindexType(url, type, source, callback) {
         },function(err) {
             reqObj = null;
             if (err) {
-                console.error(err);
+                logger.error(err);
                 return callback(err);
             }
-            console.log('Reindexing of ' + type + ' completed.');
+            logger.info('Reindexing of ' + type + ' completed.');
             return callback(err);
         });
     });
@@ -363,12 +364,12 @@ function cullAndSortResults(results, callback) {
 function makeEnrichedRequest(url, item, callback) {
     request.get({uri:url, json:true}, function(err, res, body) {
         if (err) {
-            console.error('Error when attempting to enrich search results at '+url+' - ' + err);
+            logger.error('Error when attempting to enrich search results at '+url+' - ' + err);
             return callback(err);
         }
         if (res.statusCode >= 400) {
             var error = 'Received a ' + res.statusCode + ' when attempting to enrich search results from '+url;
-            console.error(error);
+            logger.error(error);
             return callback(error);
         }
 
@@ -392,8 +393,29 @@ function makeEnrichedRequest(url, item, callback) {
     });
 }
 
+function getSourceForEvent(body) {
+    // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
+    var source;
+
+    var via = body.via;
+    source = via;
+    if(via.indexOf('/') > -1) { // shouldn't need this anymore
+        var splitVia = via.split('/');
+        via = splitVia[1];
+    }
+    if (via.indexOf("_") > -1) {
+        var splitSource = body.obj.source.split('_');
+        source = via + '/' + splitSource[1];
+    }
+    if (via == "twitter" && body.type.indexOf("timeline") > -1) {
+        source = "twitter/timeline";
+    }
+    return source;
+    // END FIXME
+}
+
 function handleError(idr, action, error) {
-    console.error('Error attempting to index "' + idr + '" with action of "' + action + ' - ' + error);
+    logger.error('Error attempting to index "' + idr + '" with action of "' + action + '" - ' + error);
 }
 
 function handleLog(idr, action, time) {
@@ -409,7 +431,13 @@ function handleLog(idr, action, time) {
             actionWord = 'deleted';
             break;
     }
-    console.log('Successfully ' + actionWord + ' record in search index:' + idr + ' in ' + time + 'ms');
+    logger.verbose('Successfully ' + actionWord + ' record in search index:' + idr + ' in ' + time + 'ms');
+}
+
+exports.init = function(config, search, _logger) {
+    lconfig = config;
+    lsearch = search;
+    logger = _logger;
 }
 
 // Process the startup JSON object
@@ -426,7 +454,11 @@ process.stdin.on('data', function(data) {
             process.exit(1);
         }
         process.chdir(lockerInfo.workingDirectory);
-
+        var _lconfig = require('lconfig');
+        _lconfig.load('../../Config/config.json');
+        exports.init(_lconfig,
+                     require('../../Common/node/lsearch'),
+                     require(__dirname + '/../../Common/node/logger'));
         lsearch.setEngine(lsearch.engines.CLucene);
         lsearch.setIndexPath(process.cwd() + "/search.index");
 

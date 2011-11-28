@@ -144,7 +144,6 @@ vows.describe("Synclet Manager").addBatch({
             syncManager.syncNow("testSynclet", this.callback);
         },
         "successfully" : function(err, status) {
-            console.error(syncManager.synclets().installed.testSynclet.synclets[0]);
             assert.isNull(err);
         },
         "and after running generates data in mongo" : {
@@ -168,7 +167,6 @@ vows.describe("Synclet Manager").addBatch({
             syncManager.syncNow("testSynclet", this.callback);
         },
         "successfully" : function(err, status) {
-            console.error(syncManager.synclets().installed.testSynclet.synclets[0]);
             assert.isNull(err);
         },
         "and services specifying a positive nextRun time in the past get rescheduled at the next interval time" : function(err, status) {

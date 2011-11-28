@@ -9,9 +9,9 @@
 var collection;
 var db;
 var locker;
-var lconfig = require('../../Common/node/lconfig');
+var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger = require("logger").logger;
+var logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -167,13 +167,13 @@ dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["location/glatitude"] = processGLatitude;
 
-exports.init = function(mongoCollection, mongo, l) {
-    logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
+exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
-    lconfig.load('../../Config/config.json'); // ugh
     locker = l;
+    lconfig = config;
+    logger = require("logger");
 };
 
 exports.getTotalCount = function(callback) {
@@ -238,7 +238,7 @@ exports.addData = function(svcId, type, allData, callback) {
     }
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
-            if(e) console.error("error processing: "+e);
+            if(e) logger.error("error processing: "+e);
             cb();
         });
     }, callback);
