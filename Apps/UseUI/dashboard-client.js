@@ -267,8 +267,6 @@ io.sockets.on('connection', function (socket) {
         for (var key in eventInfo) {
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
         }
-        logger.silly("Sending counts");
-        logger.silly(socket);
         socket.emit("counts", counts);
     });
 
