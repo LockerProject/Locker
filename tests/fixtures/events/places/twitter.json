@@ -1,5 +1,5 @@
 {
-    "idr": "timeline://twitter/?id=twitter#122435457991720960",
+    "idr": "tweet://twitter/timeline?id=twitter#122435457991720960",
     "action": "new",
     "data":
     {
