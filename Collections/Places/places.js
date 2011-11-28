@@ -123,7 +123,6 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
     logger = require(__dirname + "/../../Common/node/logger.js");
