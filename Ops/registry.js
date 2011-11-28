@@ -163,7 +163,7 @@ exports.sync = function(callback)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || Object.keys(body).length === 0) return callback ? callback() : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
             logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
