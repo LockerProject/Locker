@@ -1,5 +1,6 @@
 var GitHubApi = require("github").GitHubApi
   , lconfig = require('../../Common/node/lconfig')
+  , logger = require('../../Common/node/logger')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')
@@ -20,11 +21,11 @@ exports.sync = function(processInfo, cb) {
         cached = processInfo.config.cached;
     lockerUrl = processInfo.lockerUrl;
     exports.syncRepos(cached, function(err, repos) {
-        if (err) console.error(err);
+        if (err) logger.error(err);
         var responseObj = {data : {}, config: { cached: cached }};
         responseObj.data.repo = repos;
         responseObj.data.view = viewers;
-        console.error(viewers);
+        // logger.debug(viewers);
         cb(err, responseObj);
     });
 };
@@ -40,7 +41,7 @@ exports.syncRepos = function(cached, callback) {
             if(cached[repo.id] == ckey) return cb();
             cached[repo.id] = ckey;
             // get the watchers, is nice
-            console.error("checking "+repo.id);
+            // logger.debug("checking "+repo.id);
             github.getRepoApi().getRepoWatchers(auth.username, repo.id.substring(repo.id.indexOf('/') + 1), function(err, watchers){
                 repo.watchers = watchers;
                 // get a snapshot of the full repo, is nice too
@@ -51,7 +52,7 @@ exports.syncRepos = function(cached, callback) {
                     var viewer = false;
                     for(var i=0; i < repo.tree.length; i++) if(/^\w+\.app$/.test(repo.tree[i].path)) viewer = repo.tree[i].path;
                     if(!viewer) return cb();
-                    console.error("found a viewer! "+repo.id);
+                    // logger.debug("found a viewer! "+repo.id);
                     syncRepo(repo, function(err) {
                         // mangle the manifest so it's a unique handle
                         var manifest = repo.id+"/"+viewer;
@@ -64,7 +65,7 @@ exports.syncRepos = function(cached, callback) {
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
                             // bail, no viewer for you
-                            console.error("failed: "+err);
+                            logger.error("failed: "+err);
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
@@ -109,7 +110,7 @@ function syncRepo(repo, callback)
             if(existing[t.path] == t.sha) return cb(); // no changes
             setTimeout(function(){
                 request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
-                    console.error(resp.statusCode + " for "+ t.path);
+                    // logger.debug(resp.statusCode + " for "+ t.path);
                     if(err || !resp || resp.statusCode != 200) {t.sha = ""; return cb(); } // don't save the sha so it gets retried again
                     fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
                 });

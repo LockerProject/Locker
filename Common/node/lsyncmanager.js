@@ -8,7 +8,7 @@ var fs = require('fs')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
-  , logger = require("./logger.js").logger;
+  , logger = require("./logger.js");
   ;
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
@@ -85,7 +85,7 @@ exports.findInstalled = function (callback) {
             if (js.synclets) {
                 js = mergeManifest(js);
                 exports.migrate(dir, js);
-                console.log("Loaded synclets for "+js.id);
+                logger.info("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
                 synclets.installed[js.id].status = "waiting";
                 for (var j = 0; j < js.synclets.length; j++) {
@@ -94,7 +94,7 @@ exports.findInstalled = function (callback) {
                 }
             }
         } catch (E) {
-            console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
+            logger.warn("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
 }
@@ -214,10 +214,7 @@ function scheduleRun(info, synclet) {
 
 function localError(base, err)
 {
-//    var mod = console.outputModule;
-//    console.outputModule = base;
-    console.error(base+"\t"+err);
-//    console.outputModule = mod;
+    logger.error(base+"\t"+err);
 }
 
 function mergeManifest(js) {
@@ -255,7 +252,7 @@ function executeSynclet(info, synclet, callback) {
         }, 1000);
         return;
     }
-    console.log("Synclet "+synclet.name+" starting for "+info.id);
+    logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
     if (!synclet.run) {
@@ -271,7 +268,7 @@ function executeSynclet(info, synclet, callback) {
     var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
     app.stderr.on('data', function (data) {
-        localError(info.title+" "+synclet.name, "STDERR: "+data.toString());
+        localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
     app.stdout.on('data',function (data) {
@@ -288,7 +285,7 @@ function executeSynclet(info, synclet, callback) {
             if (callback) callback(E);
             return;
         }
-        console.log("Synclet "+synclet.name+" finished for "+info.id);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         var tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
@@ -365,10 +362,9 @@ function checkStatus(info) {
 }
 
 function processData (deleteIDs, info, key, data, callback) {
-    // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    logger.debug("processing synclet data from "+key+" of length "+len);
+    logger.info("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
@@ -469,7 +465,7 @@ exports.migrate = function(installedDir, metaData) {
                 try {
                     var cwd = process.cwd();
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
-                    console.log("running synclet migration : " + migrations[i] + " for service " + metaData.title);
+                    logger.info("running synclet migration : " + migrations[i] + " for service " + metaData.title);
                     if (migrate(installedDir)) {
                         var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'), 'utf8'));
                         lutil.extend(true, metaData, curMe);
@@ -479,7 +475,7 @@ exports.migrate = function(installedDir, metaData) {
                     }
                     process.chdir(cwd);
                 } catch (E) {
-                    console.log("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
+                    logger.error("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
                     process.chdir(cwd);
                 }
             }
@@ -505,7 +501,7 @@ function addUrls() {
         try {
             apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
         } catch(e) {
-            return console.log('Error reading apikeys.json file - ' + e);
+            return logger.error('Error reading apikeys.json file - ' + e);
         }
         for (var i = 0; i < synclets.available.length; i++) {
             var synclet = synclets.available[i];

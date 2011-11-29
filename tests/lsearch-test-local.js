@@ -14,8 +14,8 @@ var events = require('events');
 var RESTeasy = require('api-easy');
 var suite = RESTeasy.describe('Locker Search');
 var lconfig = require('lconfig');
-var lsearch = require('lsearch');
 lconfig.load('Config/config.json');
+var lsearch = require('lsearch');
 
 lsearch.setEngine(lsearch.engines.CLucene);
 lsearch.setIndexPath(__dirname + "/" + lconfig.me + "/search.index");
