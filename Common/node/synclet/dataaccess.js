@@ -1,4 +1,4 @@
-var dataStore = require('./datastore')
+var dataStore = require('../ldatastore')
   , fs = require('fs')
   , path = require('path')
   , lconfig = require('../lconfig')
@@ -9,19 +9,18 @@ module.exports = function(app) {
     // In adherence with the contact/* provider API
     // Returns a list of the current set of friends or followers
     app.get('/synclets/:syncletId/getCurrent/:type', function(req, res) {
-        dataStore.init(function() {
+        dataStore.init('synclets', function() {
             var type = req.params.type;
             var options = {};
             if(req.query['limit']) options.limit = parseInt(req.query['limit']);
             if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
-            dataStore.getAllCurrent(req.params.syncletId + "_" + req.params.type, function(err, objects) {
+            dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
                 if (err) {
                     res.writeHead(500, {'content-type' : 'application/json'});
                     res.end('{error : ' + err + '}')
                 } else {
-                    res.writeHead(200, {'content-type' : 'application/json'});
-                    res.end(JSON.stringify(objects));
+                    res.send(objects);
                 }
             }, options);
         });
@@ -36,7 +35,7 @@ module.exports = function(app) {
 
     app.get('/synclets/:syncletId/getPhoto/:id', function(req, res) {
         var id = req.param('id');
-        dataStore.init(function() {
+        dataStore.init('synclets', function() {
             fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
                 var file;
                 for (var i = 0; i < files.length; i++) {
@@ -71,8 +70,8 @@ module.exports = function(app) {
     });
 
     app.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
-        dataStore.init(function() {
-            dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
+        dataStore.init('synclets', function() {
+            dataStore.getCurrent('synclets', req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
                     console.error(err);
                     res.end();

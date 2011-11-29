@@ -231,10 +231,10 @@ function search() {
     var q = searchTerm = $('.search')[0].value;
     var baseURL = '/Me/search/query';
     var star = (q.length < 3 || q.substr(-1) == ' ') ? "" : "*";
-    $.get(baseURL, {q: q + star, type: 'contact/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'contact*', limit: 3}, function(results) {
         processResults('people', resXform(results), q);
     });
-    $.get(baseURL, {q: q + star, type: 'photo/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'photo*', limit: 3}, function(results) {
         processResults('photos', resXform(results), q);
     });
     $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {

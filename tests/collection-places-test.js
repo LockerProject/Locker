@@ -19,7 +19,7 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/places';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['places'];
+var thecollections = ['place'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
@@ -33,8 +33,8 @@ suite.next().suite.addBatch({
         topic: function() {
             process.chdir("." + mePath);
             var self = this;
-            lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+            lmongo.init("places", thecollections, function(mongo, colls) {
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterEvent, self.callback);
             });
         },
@@ -60,7 +60,7 @@ suite.next().suite.addBatch({
         topic: function() {
             var self = this;
             lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterBBEvent, self.callback);
             });
         },
@@ -68,14 +68,14 @@ suite.next().suite.addBatch({
             var box = twitterBBEvent.obj.data.place.bounding_box.coordinates[0];
             var allLat = 0;
             var allLng = 0;
-            
+
             for (var i=0; i<box.length; ++i) {
                 allLat += box[i][1];
                 allLng += box[i][0];
             }
             var lat = +(allLat / 4).toFixed(5);
             var lng = +(allLng / 4).toFixed(5);
-            
+
             assert.isNull(err);
             assert.equal(response.data.lat, lat);
             assert.equal(response.data.lng, lng);

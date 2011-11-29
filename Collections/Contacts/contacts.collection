@@ -5,7 +5,7 @@
     "status":"stable",
     "handle":"contacts",
     "provides":["contact"],
-    "mongoCollections": ["contacts"],
+    "mongoCollections": ["contact"],
     "events":[["contact/foursquare", "/events"],
         ["contact/facebook", "/events"],
         ["contact/twitter", "/events"],

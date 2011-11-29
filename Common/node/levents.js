@@ -7,6 +7,8 @@
 *
 */
 
+var SPAM_ME_TO_DEATH = false;
+
 var http = require("http");
 var url = require("url");
 require.paths.push(__dirname);
@@ -44,7 +46,7 @@ exports.makeRequest = function(httpOpts, body, callback) {
 }
 
 exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
-    logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+    if (SPAM_ME_TO_DEATH) logger.debug("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
     // Short circuit when no one is listening
     if (!eventListeners.hasOwnProperty(serviceType)) return;
     var newEventInfo = {
@@ -107,7 +109,7 @@ function processEvents(queue) {
                     "Connection":"keep-alive"
                 }
             };
-            logger.debug("Firing event to " + listener.id + " to " + listener.cb);
+            if (SPAM_ME_TO_DEATH) logger.debug("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
             exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
                 listener.response = response.statusCode;

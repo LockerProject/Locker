@@ -12,14 +12,14 @@ var fs = require('fs'),
     async = require('async'),
     sys = require('sys');
 
-    
+
 var auth;
 
 // enumeration of all fields on a user for open graph, cuz they're not all default
 var allUserFields = "id,name,first_name,middle_name,last_name,gender,locale,languages," +
-                    "link,username,third_party_id,timezone,updated_time,verified,bio," + 
-                    "birthday,education,email,hometown,interested_in,location,political," + 
-                    "favorite_athletes,favorite_teams,quotes,relationship_status," + 
+                    "link,username,third_party_id,timezone,updated_time,verified,bio," +
+                    "birthday,education,email,hometown,interested_in,location,political," +
+                    "favorite_athletes,favorite_teams,quotes,relationship_status," +
                     "religion,significant_other,video_upload_limits,website,work";
 
 exports.init = function(theAuth) {
@@ -116,6 +116,27 @@ exports.getPosts = function (arg, cbEach, cbDone) {
     var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since + '&limit=100';
     // possible facebook bug here when using since, sometimes the paging.next doesn't contain the since and it'll end up re-walking the whole list
     getDatas(uri, cbEach, cbDone);
+}
+
+
+var profile;
+exports.getProfile = function(cbDone) {
+    if(!profile) {
+        try {
+            profile = JSON.parse(fs.readFileSync('profile.json'));
+            return cbDone(null, profile);
+        } catch (err) {}
+    }
+    if(!profile) {
+        request.get({uri:'https://graph.facebook.com/me?access_token=' + auth.accessToken + '&fields='+allUserFields, json:true},
+        function(err, resp, profile) {
+            fs.writeFile('profile.json', JSON.stringify(profile), function(err) {
+                cbDone(err, profile);
+            });
+        });
+    } else {
+        cbDone(null, profile);
+    }
 }
 
 function getOne(uri, cb) {

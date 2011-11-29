@@ -2,12 +2,35 @@ var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
-  , datastore
+  , ldatastore = require('ldatastore')
+  , datastore = {}
   , async = require('async')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
+  , logger = require("./logger.js").logger;
   ;
+
+// this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
+datastore.init = function(callback) {
+    ldatastore.init('synclets', callback);
+}
+
+datastore.addCollection = function(collectionKey, id, mongoId) {
+    ldatastore.addCollection('synclets', collectionKey, id, mongoId);
+}
+
+datastore.removeObject = function(collectionKey, id, ts, callback) {
+    if (typeof(ts) === 'function') {
+        ldatastore.removeObject('synclets', collectionKey, id, {timeStamp: Date.now()}, ts);
+    } else {
+        ldatastore.removeObject('synclets', collectionKey, id, ts, callback);
+    }
+}
+
+datastore.addObject = function(collectionKey, obj, ts, callback) {
+    ldatastore.addObject('synclets', collectionKey, obj, ts, callback);
+}
 
 var synclets = {
     available:[],
@@ -77,7 +100,6 @@ exports.findInstalled = function (callback) {
 }
 
 exports.scanDirectory = function(dir) {
-    datastore = require('./synclet/datastore');
     var files = fs.readdirSync(dir);
     for (var i = 0; i < files.length; i++) {
         var fullPath = dir + '/' + files[i];
@@ -346,7 +368,7 @@ function processData (deleteIDs, info, key, data, callback) {
     // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    console.log("processing synclet data from "+key+" of length "+len);
+    logger.debug("processing synclet data from "+key+" of length "+len);
     var collection = info.id + "_" + key;
     var eventType = key + "/" + info.provider;
 
@@ -389,7 +411,7 @@ function deleteData (collection, mongoId, deleteIds, info, eventType, callback) 
         newEvent.obj.data[mongoId] = id;
         newEvent.fromService = info.id;
         levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
-        datastore.removeObject(collection, id, {timeStampe: Date.now()}, cb);
+        datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;

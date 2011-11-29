@@ -17,7 +17,7 @@ var suite = RESTeasy.describe("Contacts Collection");
 
 var friend;
 
-var thecollections = ['contacts'];
+var thecollections = ['contact'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 
@@ -44,11 +44,11 @@ suite.next().suite.addBatch({
             process.chdir('./' + lconfig.me + '/contacts');
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact%2Ffull"}, function() {
                 lmongoclient.connect(function(mongo) {
-                    mongoCollections = mongo.collections.contacts;
+                    mongoCollections = mongo.collections.contact;
                     contacts.init("", mongoCollections, mongo);
                     dataStore.init(mongoCollections, mongo);
                     dataStore.clear();
-                    contacts.eventEmitter.on('contact/full', function(obj) {
+                    contacts.eventEmitter.on('contact', function(obj) {
                         events++;
                     });
                     contacts.getContacts('foursquare', 'friends', 'foursquare', function() {

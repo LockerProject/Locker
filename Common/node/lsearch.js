@@ -44,7 +44,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact/full" : {
+        "contact" : {
             "_id":"_id",
             "name":"name",
             "nicknames":[],
@@ -73,7 +73,7 @@ CLEngine = function()
                 }
             ]
         },
-        "photo/full" : {
+        "photo" : {
             "_id":"_id",
             "caption":"caption",
             "title":"title"
@@ -118,9 +118,9 @@ CLEngine = function()
       TERMVECTOR_YES: 512,
       TERMVECTOR_WITH_POSITIONS: 512 | 1024,
       TERMVECTOR_WITH_OFFSETS: 512 | 2048,
-      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048) 
+      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048)
     };
-    
+
     return this;
 };
 
@@ -131,7 +131,7 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
         callback("No valid mapping for the type: " + type);
         return;
     }
-    
+
     idToStore = value[this.mappings[type]["_id"]];
     if (!idToStore) {
         callback("No valid id property was found");
@@ -166,14 +166,14 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
 
     };
     processValue(value, this.mappings[type]);
-    
+
     if (contentTokens.length === 0) {
         console.log("No valid tokens were found to index id " + idToStore);
         return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
-    
+
     //console.log("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
     if (source !== null) {
@@ -196,8 +196,12 @@ CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
-    this.flushAndCloseWriter();
-    this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
+    var self = this;
+// caused worse problems over time, memory corruption
+//    this.lucene.deleteDocument("", indexPath, function(){
+        self.flushAndCloseWriter();
+        self.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
+//    });
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
     assert.ok(indexPath);
@@ -232,7 +236,7 @@ exports.setIndexPath = function(newPath) {
     if (!path.existsSync(indexPath)) {
       fs.mkdirSync(indexPath, 0755);
     };
-    
+
 };
 
 function exportEngineFunction(funcName) {
@@ -261,7 +265,7 @@ exports.indexTypeAndSource = function(type, source, value, cb) {
 };
 
 exports.deleteDocument = function(id, cb) {
-  exports.currentEngine.deleteDocument(id, cb);  
+  exports.currentEngine.deleteDocument(id, cb);
 };
 
 exports.deleteDocumentsByType = function(type, cb) {
