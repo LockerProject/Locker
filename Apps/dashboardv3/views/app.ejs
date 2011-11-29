@@ -42,7 +42,7 @@
         <p class='sidenav-header-title'>APPS</p>
         <p class="sidenav-header-link orange">see all</p>
       </div>
-      <div class="sidenav-items">
+      <div class="installed-apps sidenav-items">
         <% for (var i = 0; i < map.length; i++) { %>
           <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
         <% } %>
