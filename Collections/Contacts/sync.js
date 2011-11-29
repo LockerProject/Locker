@@ -32,34 +32,33 @@ exports.gatherContacts = function(cb) {
                               'contact/github'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
-                    console.log("svc", svc.id, svc.provides);
                     if(svc.provides.indexOf('contact/facebook') >= 0) {
                         exports.getContacts("facebook", "contact", svc.id, function() {
-                            console.error('facebook done!');
+                            logger.info('facebook done!');
                         });
                     } else if(svc.provides.indexOf('contact/twitter') >= 0) {
                         exports.getContacts("twitter", "contact", svc.id, function() {
-                            console.error('twitter done!');
+                            logger.info('twitter done!');
                         });
                     } else if(svc.provides.indexOf('contact/flickr') >= 0) {
                         exports.getContacts("flickr", "contact", svc.id, function() {
-                            console.error('flickr done!');
+                            logger.info('flickr done!');
                         });
                     } else if(svc.provides.indexOf('contact/gcontacts') >= 0) {
                         exports.getContacts("gcontacts", "contact", svc.id, function() {
-                            console.error('gcontacts done!');
+                            logger.info('gcontacts done!');
                         });
                     } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
                         exports.getContacts('foursquare', "contact", svc.id, function() {
-                            console.error('foursquare done!');
+                            logger.info('foursquare done!');
                         });
                     } else if(svc.provides.indexOf('contact/instagram') >= 0) {
                         exports.getContacts('instagram', "contact", svc.id, function() {
-                            console.error('instagram done!');
+                            logger.info('instagram done!');
                         });
                     } else if(svc.provides.indexOf('contact/github') >= 0) {
                         exports.getContacts('github', 'following', svc.id, function() {
-                            console.error('github done!');
+                            logger.info('github done!');
                         })
                     }
                 });

@@ -43,9 +43,16 @@ FileBugLogger.prototype.open = function(cb) {
 	if (this.stream) this.stream.setMaxListeners(0);
 };
 
-var transports = [new ModuleConsoleLogger({colorize:true,timestamp:true})];
-if (lconfig.logFile) {
-    var fileLogger = new FileBugLogger({filename:path.join("Logs", lconfig.logFile), timestamp:true, maxsize:lconfig.logFileMaxSize});
+var transports = [];
+if (lconfig.logging.console)
+    transports.push(new ModuleConsoleLogger({level:lconfig.logging.level, colorize:true,timestamp:true}));
+if (lconfig.logging.file) {
+    var fileLogger = new FileBugLogger({
+        filename:path.join(lconfig.lockerDir, "Logs", lconfig.logging.file),
+        timestamp:true,
+        maxsize:lconfig.logging.maxsize,
+        level:lconfig.logging.level
+    });
     fileLogger.on("open", function() {
         var realWrite = fileLogger.stream.write;
         fileLogger.stream.write = function(data) {
@@ -58,12 +65,13 @@ if (lconfig.logFile) {
     });
     transports.push(fileLogger);
 }
-exports["logger"] = new (winston.Logger)({"transports":transports});
-var realLog = exports.logger.log;
-exports.logger.log = function(level, msg) {
+
+module.exports = new (winston.Logger)({"transports":transports});
+var realLog = exports.log;
+exports.log = function(level, msg) {
     try {
-        realLog.call(exports.logger, level, msg.toString('utf8'));
+        realLog.call(module.exports, level, msg.toString('utf8'));
     } catch (E) {
-        realLog.call(exports.logger, level, msg);
+        realLog.call(module.logger, level, msg);
     }
 }

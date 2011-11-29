@@ -3,7 +3,7 @@ var lucene = new clucene.Lucene();
 var path = require('path');
 var fs = require('fs');
 var async = require("async");
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var wrench = require("wrench");
 
 var MAX_FLUSH_AND_CLOSE_TIME = 10000;
@@ -60,7 +60,7 @@ exports.index = function(linkUrl, callback){
         function(err){
             if(err) return callback(err);
             if (!link) {
-                logger.debug("No url was found for " + linkUrl);
+                logger.warn("No url was found for " + linkUrl);
                 return callback(err);
             }
             var at=0;
@@ -87,14 +87,14 @@ exports.index = function(linkUrl, callback){
 
 var flushAndCloseTimeout = null;
 var indexQueue = async.queue(function(task, callback) {
-//    logger.debug("NDX "+task.url+" at "+task.at+" of "+task.txt);
+//    logger.verbose("NDX "+task.url+" at "+task.at+" of "+task.txt);
     var doc = new clucene.Document();
     doc.addField("at", task.at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', task.txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
-    console.log("Going to add " + task.url);
+    logger.verbose("Going to add " + task.url);
     lucene.addDocument(task.url, doc, indexPath, function(err, indexTime) {
-        if (err) console.error(err);
-        console.log("Added " + task.url);
+        if (err) logger.error(err);
+        logger.verbose("Added " + task.url);
         if (flushAndCloseTimeout) clearTimeout(flushAndCloseTimeout);
         flushAndCloseTimeout = setTimeout(function() { lucene.closeWriter(); }, MAX_FLUSH_AND_CLOSE_TIME);
         callback(err);
@@ -102,7 +102,7 @@ var indexQueue = async.queue(function(task, callback) {
     
     /*
     ndx(task.url, task.at, task.txt, function(err, indexTime, docsReplacedCount) {
-        console.log("index queue callback");
+        logger.info("index queue callback");
         callback();
     });
     */
@@ -111,12 +111,12 @@ var indexQueue = async.queue(function(task, callback) {
 // raw indexing lucene wrapper
 function ndx(id,at,txt,cb)
 {
-    logger.debug("NDX "+id+" at "+at+" of "+txt);
+    logger.verbose("NDX "+id+" at "+at+" of "+txt);
     var doc = new clucene.Document();
     doc.addField("at", at, EStore.STORE_YES|EIndex.INDEX_UNTOKENIZED);
     doc.addField('content', txt, EStore.STORE_NO|EIndex.INDEX_TOKENIZED);
     lucene.addDocument(id, doc, indexPath, function(err, indexTime) {
-        console.log("NDX DONE");
+        logger.info("NDX DONE");
         cb(err, indexTime);
     });
 }    
