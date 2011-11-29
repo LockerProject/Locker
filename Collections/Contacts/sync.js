@@ -31,7 +31,6 @@ exports.gatherContacts = function(cb) {
             locker.providers(['contact'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
-                    logger.info("svc", svc.id, svc.provides);
                     if(svc.provides.indexOf('contact/facebook') >= 0) {
                         exports.getContacts("facebook", "contact", svc.id, function() {
                             logger.info('facebook done!');

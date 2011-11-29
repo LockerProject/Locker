@@ -72,7 +72,7 @@ exports.alive = false;
                 fs.mkdirSync(lconfig.me, 0755);
             } catch(err) {
                 if(err.code !== 'EEXIST')
-                    logger.error('err', err);
+                    logger.error('err: ' + util.inspect(err));
             }
             fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
         }

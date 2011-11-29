@@ -145,7 +145,6 @@ app.post('/event', function(req, res) {
                 request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
                     if(!body || !body.count || evInfo.count == body.count) return;
                     io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
-                    logger.verbose("Sent events, setting to ",body);
                     evInfo.count = body.count;
                     evInfo.updated = body.updated;
                     evInfo.lastId = body.lastId;
@@ -206,7 +205,6 @@ function bootState(doneCb)
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                logger.verbose("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
