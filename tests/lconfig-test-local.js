@@ -17,6 +17,11 @@ vows.describe("Locker Config").addBatch({
             assert.equal(lconfig.externalHost, "example.com");
             assert.equal(lconfig.externalSecure, false);
             assert.equal(lconfig.externalBase, "http://example.com");
+            assert.isDefined(lconfig.logging);
+            assert.equal(lconfig.logging.file, "locker-tests.out");
+            assert.equal(lconfig.logging.level, "error");
+            assert.equal(lconfig.logging.console, false);
+            assert.equal(lconfig.logging.maxsize, 256*1024*1024);
         },
     }
 }).addBatch({

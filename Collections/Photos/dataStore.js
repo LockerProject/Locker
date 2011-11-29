@@ -9,9 +9,9 @@
 
 var collection;
 var db;
-var lconfig = require('../../Common/node/lconfig');
+var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger = require("logger").logger;
+var logger
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -141,19 +141,19 @@ function processFlickr(svcId, data, cb) {
 // pretty experimental! extract photos from your tweets using embedly :)
 function processTwitter(svcId, data, cb)
 {
-    console.log('processTwitter!');
+    logger.verbose('processTwitter!');
     if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
 
     async.forEach(data.entities.urls,function(u,callback){
         if(!u || !u.url) return callback();
         var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
-        console.log('found twitter url:', u.url);
-        embed.query = {url:u.url};
+        var turl = (u.expanded_url) ? u.expanded_url : u.url;
+        logger.verbose('found twitter url:' + turl);
+        embed.query = {url:turl};
         request.get({uri:url.format(embed), json:true},function(err,resp,js){
             if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
-
-            console.log('found twitter photo! ', u.url);
+            logger.verbose('found twitter photo! ' +  turl);
             var photoInfo = {};
             photoInfo.url = js.url;
             if (js.height) photoInfo.height = js.height;
@@ -260,12 +260,12 @@ dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 
-exports.init = function(mongoCollection, mongo, l) {
-    logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
+exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
     db = mongo.dbClient;
-    lconfig.load('../../Config/config.json'); // ugh
     locker = l;
+    lconfig = config;
+    logger = require("logger");
 }
 
 exports.getTotalCount = function(callback) {

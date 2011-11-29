@@ -13,8 +13,8 @@ var fs = require('fs');
 var path = require('path');
 var fakeweb = require('node-fakeweb');
 var lconfig = require("lconfig");
-var lcrypto = require("lcrypto");
 lconfig.load("Config/config.json");
+var lcrypto = require("lcrypto");
 var registry = require("../Ops/registry.js");
 try { fs.unlinkSync(path.join(lconfig.lockerDir, lconfig.me, "registry.json")); } catch(e) {}
 

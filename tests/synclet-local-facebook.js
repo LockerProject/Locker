@@ -32,8 +32,6 @@ suite.next().suite.addBatch({
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1234');
         }
     }
@@ -49,8 +47,6 @@ suite.next().suite.addBatch({
             home.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.home[0].obj.id, '100002438955325_224550747571079');
         }
     }
@@ -66,8 +62,6 @@ suite.next().suite.addBatch({
             photos.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.photo[0].obj.id, '214713967594');
         }
     }

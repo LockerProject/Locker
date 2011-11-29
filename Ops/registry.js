@@ -17,6 +17,7 @@ var request = require('request');
 var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
+var logger;
 var lconfig;
 var lcrypto;
 var installed = {};
@@ -28,23 +29,24 @@ var regBase = 'http://registry.singly.com';
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
     lconfig = config;
+    logger = require('logger');
     lcrypto = crypto;
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
     loadInstalled(function(err){
-        if(err) console.error(err);
+        if(err) logger.error(err);
         // janky stuff to make npm run isolated fully
         var home = path.join(lconfig.lockerDir, lconfig.me);
         process.chdir(home);
         var config = {registry:regBase, cache:path.join(home, '.npm')};
         npm.load(config, function(err) {
-            if(err) console.error(err);
+            if(err) logger.error(err);
             fs.readFile('registry.json', 'utf8', function(err, reg){
                 try {
                     if(reg) regIndex = JSON.parse(reg);
                 }catch(E){
-                    console.error("couldn't parse registry.json: "+E);
+                    logger.error("couldn't parse registry.json: "+E);
                 }
                 syncTimer = setInterval(exports.sync, syncInterval);
                 exports.sync();
@@ -62,7 +64,7 @@ exports.app = function(app)
         res.send(exports.getInstalled());
     });
     app.get('/registry/add/:id', function(req, res) {
-        console.log("registry trying to add "+req.params.id);
+        logger.info("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
         if(!verify(regIndex[req.params.id])) return res.send("invalid app", 500);
         exports.install({name:req.params.id}, function(){ res.send(true); });
@@ -81,12 +83,12 @@ exports.app = function(app)
         res.send(copy);
     });
     app.get('/registry/sync', function(req, res) {
-        console.log("manual registry sync");
+        logger.info("manual registry sync");
         exports.sync(function(){res.send(true)});
     });
     // takes the local github id format, user-repo
     app.get('/registry/publish/:id', function(req, res) {
-        console.log("registry publishing "+req.params.id);
+        logger.info("registry publishing "+req.params.id);
         var id = req.params.id;
         if(id.indexOf("-") <= 0) return res.send("not found", 404);
         if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
@@ -137,7 +139,7 @@ function loadPackage(name, callback)
             if(js.name != name) throw new Error("invalid package");
             installed[js.name] = js;
         }catch(E){
-            console.error("couldn't parse "+name+"'s package.json: "+E);
+            logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
         request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
@@ -159,17 +161,17 @@ exports.sync = function(callback)
     // look for updated packages newer than the last we've seen
     startkey++;
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
-    console.log("registry update from "+u);
+    logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || Object.keys(body).length === 0) return callback ? callback() : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
-            console.log("new "+k+" "+body[k]["dist-tags"].latest);
+            logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
             regIndex[k] = body[k];
             // if installed and autoupdated and newer, do it!
             if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
             {
-                console.log("auto-updating "+k);
+                logger.verbose("auto-updating "+k);
                 exports.update({name:k}, function(){}); // lazy
             }
         });
@@ -197,12 +199,13 @@ exports.getApps = function() {
 
 // npm wrappers
 exports.install = function(arg, callback) {
+    
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){
             if(!arg.retry) arg.retry=0;
             arg.retry++;
-            console.error("retry "+arg.retry+": "+err);
+            logger.warn("retry "+arg.retry+": "+err);
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
         }
         loadPackage(arg.name, callback); // once installed, load
@@ -211,7 +214,7 @@ exports.install = function(arg, callback) {
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.update([arg.name], function(err){
-        if(err) console.error(err);
+        if(err) logger.error(err);
         loadPackage(arg.name, callback); // once updated, re-load
     });
 };
@@ -220,7 +223,7 @@ exports.update = function(arg, callback) {
 exports.publish = function(arg, callback) {
     if(!arg || !arg.dir) return callback("missing base dir");
     var pjs = path.join(arg.dir, "package.json");
-    console.log("publishing "+pjs);
+    logger.info("publishing "+pjs);
     // first, required github
     github(function(gh){
         if(!gh) return callback("github account is required");
@@ -294,8 +297,8 @@ function regUser(gh, callback)
         // try creating this user on the registry
         adduser(gh.login, pw, gh.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
-            console.error(err);
-            console.error(resp);
+            logger.error(err);
+            logger.error(resp);
             js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
@@ -331,6 +334,6 @@ function adduser (username, password, email, cb) {
       , roles : []
       , date: new Date().toISOString()
       }
-      console.log("adding user "+JSON.stringify(userobj));
+      logger.info("adding user "+JSON.stringify(userobj));
   request.put({uri:regBase+'/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
 }

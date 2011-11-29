@@ -11,16 +11,17 @@ var request = require('request');
 var async = require('async');
 var path = require('path');
 var locker = require('../../Common/node/locker.js');
-var lconfig = require('../../Common/node/lconfig.js');
+var lconfig;
 var dataStore = require('./dataStore');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
-var logger = require("../../Common/node/logger.js").logger;
+var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker) {
-    logger.debug("Places sync init mongoCollection(" + mongoCollection + ")");
+exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
     lockerUrl = theLockerUrl;
-    dataStore.init(mongoCollection, mongo, locker);
+    lconfig = config;
+    logger = require("../../Common/node/logger.js");
+    dataStore.init(mongoCollection, mongo, locker, lconfig);
     exports.eventEmitter = new EventEmitter();
 };
 
@@ -32,7 +33,6 @@ function reset(flag, callback)
     });
 }
 exports.gatherPlaces = function(type, cb) {
-    lconfig.load('../../Config/config.json');
     reset(type, function(){
         cb(); // synchro delete, async/background reindex
         var types = (type) ? [type] : ['checkin','tweets','location'];
@@ -49,7 +49,7 @@ exports.gatherPlaces = function(type, cb) {
                     callback();
                 }
             }, function(){
-                console.log("DONE UPDATING PLACES");
+                logger.info("DONE UPDATING PLACES");
             });
         });
     });
@@ -58,10 +58,10 @@ exports.gatherPlaces = function(type, cb) {
 function gatherFromUrl(svcId, type, callback) {
     var url = path.join("Me", svcId, "getCurrent", type.split("/")[0]);
     url = lconfig.lockerBase + "/" + url;
-    console.log("updating from "+url);
+    logger.info("updating from "+url);
     request.get({uri:url, json:true}, function(err, resp, body) {
         if (err || !body) {
-            logger.debug("Error getting basic places from " + svcId + " " + err);
+            logger.error("Error getting basic places from " + svcId + " " + err);
             return callback(); // swallow errors here
         }
         if(!body.length || body.length == 0) return callback();
