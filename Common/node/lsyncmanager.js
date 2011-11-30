@@ -270,6 +270,12 @@ function executeSynclet(info, synclet, callback) {
 
     var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
+    // edge case backup, max 30 min runtime by default
+    var timer = setTimeout(function(){
+        logger.error("Having to kill long-running "+synclet.name+" synclet of "+info.id);
+        process.kill(app.pid); // will fire exit event below and cleanup
+    }, (synclet.timeout) ? synclet.timeout : 30*60*1000);
+
     app.stderr.on('data', function (data) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
@@ -279,6 +285,7 @@ function executeSynclet(info, synclet, callback) {
     });
 
     app.on('exit', function (code,signal) {
+        clearTimeout(timer);
         var response;
         try {
             response = JSON.parse(dataResponse);
