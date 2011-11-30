@@ -16,9 +16,9 @@ var lfs = require('lfs');
 var lutil = require('lutil');
 var request = require('request');
 var nodemailer = require('nodemailer');
-var lcrypto = require('lcrypto');
 var lconfig = require('lconfig');
 lconfig.load('../../Config/config.json');
+var lcrypto = require('lcrypto');
 
 var me;
 var auth=false;
