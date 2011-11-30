@@ -228,8 +228,12 @@ app.get('/encounters/:id', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
-    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+    dataStore.get(req.param('id'), function(err, doc) {
+        if(err || !doc) return res.send(err, 500);
+        if(!isFull(req.query.full)) return res.send(doc);
+        doc.encounters = [];
+        dataStore.getEncounters({link: doc.link}, function(e){ doc.encounters.push(e); }, function(err) { res.send(doc); });
+    });
 });
 
 // expose all utils
