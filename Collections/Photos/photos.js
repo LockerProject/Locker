@@ -76,7 +76,7 @@ app.get("/image/:photoId", function(req, res) {
         res.end("No photo id supplied");
         return;
     }
-    dataStore.getOne(req.params.photoId, function(error, data) {
+    dataStore.get(req.params.photoId, function(error, data) {
         if (error || !data || !data.url) {
             res.writeHead(500);
             res.end(error);

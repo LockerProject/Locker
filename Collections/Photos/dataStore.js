@@ -266,21 +266,6 @@ exports.get = function(id, callback) {
     collection.findOne({$or:or}, callback);
 }
 
-exports.getOne = function(id, callback) {
-    collection.find({"id":id}, function(error, cursor) {
-        if (error) {
-            callback(error, null);
-        } else {
-            cursor.nextObject(function(err, doc) {
-                if (err)
-                    callback(err);
-                else
-                    callback(err, doc);
-            });
-        }
-    });
-}
-
 exports.addEvent = function(eventBody, callback) {
     // TODO:  Handle the other actions appropiately
     if (eventBody.action !== "new") {
