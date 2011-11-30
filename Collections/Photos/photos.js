@@ -105,7 +105,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj) {
+    if (!req.body.idr || !req.body.data) {
         logger.warn("Invalid event.");
         res.writeHead(500);
         res.end("Invalid Event");

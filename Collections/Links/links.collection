@@ -6,9 +6,7 @@
     "handle":"links",
     "provides":["link"],
     "mongoCollections": ["link","encounter","queue"],
-    "events":[["link/facebook","/events"]
-        ,["link/twitter","/events"]
-        ,["timeline/twitter","/events"]
-        ,["home/facebook","/events"]
+    "events":[["post/facebook","/events"]
+        ,["tweet/twitter","/events"]
     ]
 }

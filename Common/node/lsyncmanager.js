@@ -5,6 +5,7 @@ var fs = require('fs')
   , ldatastore = require('ldatastore')
   , datastore = {}
   , async = require('async')
+  , url = require('url')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
@@ -152,7 +153,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
+    levents.fireEvent('newservice://syncmanager/#'+serviceInfo.id, 'new', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
@@ -366,14 +367,14 @@ function checkStatus(info) {
 function processData (deleteIDs, info, key, data, callback) {
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    logger.info("processing synclet data from "+key+" of length "+len);
+    var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
+    var idr = lutil.idrNew(type, info.provider, undefined, key, info.id);
+    logger.info("processing synclet data from "+idr+" of length "+len);
     var collection = info.id + "_" + key;
-    var eventType = key + "/" + info.provider;
 
     if (key.indexOf('/') !== -1) {
-        collection = info.id + "_" + key.substring(key.indexOf('/') + 1);
-        eventType = key.substring(0, key.indexOf('/')) + "/" + info.provider;
-        key = key.substring(key.indexOf('/') + 1);
+        console.error("DEPRECIATED, dropping! "+key);
+        return callback();
     }
 
     var mongoId;
@@ -387,54 +388,52 @@ function processData (deleteIDs, info, key, data, callback) {
     datastore.addCollection(key, info.id, mongoId);
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(collection, mongoId, data, info, eventType, function(err) {
+        addData(collection, mongoId, data, info, idr, function(err) {
             if(err) {
                 callback(err);
             } else {
-                deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
+                deleteData(collection, mongoId, deleteIDs, info, idr, callback);
             }
         });
     } else if (data && data.length > 0) {
-        addData(collection, mongoId, data, info, eventType, callback);
+        addData(collection, mongoId, data, info, idr, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
+        deleteData(collection, mongoId, deleteIDs, info, idr, callback);
     } else {
         callback();
     }
 }
 
-function deleteData (collection, mongoId, deleteIds, info, eventType, callback) {
+function deleteData (collection, mongoId, deleteIds, info, idr, callback) {
     var q = async.queue(function(id, cb) {
-        var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
-        newEvent.obj.data[mongoId] = id;
-        newEvent.fromService = info.id;
-        levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+        var r = url.parse(idr);
+        r.hash = id.toString();
+        levents.fireEvent(url.format(r), 'delete');
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-function addData (collection, mongoId, data, info, eventType, callback) {
+function addData (collection, mongoId, data, info, idr, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + url.format(idr), "missing primary key value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
-            var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
-            newEvent.fromService = info.id;
+            var r = url.parse(idr);
+            r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
-                levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                levents.fireEvent(url.format(r), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
-                    newEvent.obj.data = doc;
-                    levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
+                    levents.fireEvent(url.format(r), type, doc);
                     return cb();
                 });
             }

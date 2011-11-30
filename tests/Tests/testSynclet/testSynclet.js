@@ -30,7 +30,7 @@ function sync(config) {
         response.config = { "ids" : { "testSync" : [1, 500]}, "runNumber" : 1};
         response.data.testSync = [ { "obj" : {"notId" : 500, "someData":"BAM"}, "type" : "new", "timestamp" : 1312325283581 },
                                    {"obj" : {"notId" : 1, "someData":"datas"}, "type" : "new", "timestamp" : 1312325283582 }];
-        response.data["eventType/dataStore"] = [ {"obj" : {"id" : 5, "notId": 5, "random" : "data"}, "type" : "new", "timestamp" : 1312325283583 } ];
+        response.data["dataStore"] = [ {"obj" : {"id" : 5, "notId": 5, "random" : "data"}, "type" : "new", "timestamp" : 1312325283583 } ];
     } else if (config.config.runNumber == 1) {
         response.config = {"runNumber" : 2, nextRun:(Date.now() - 1)};
     } else if (config.config.runNumber == 2) {

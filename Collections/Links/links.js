@@ -51,7 +51,7 @@ app.get('/search', function(req, res) {
     if (!req.query.q) {
         res.send([]);
         return;
-    }    
+    }
     var map = {};
     function send() {
         var results = [];
@@ -125,7 +125,8 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj || !req.body.obj.data){
+    if (!req.body.idr || !req.body.data){
+        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
         return;

@@ -39,10 +39,9 @@ suite.next().suite.addBatch({
             users.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            assert.equal(response.data['contact/followers'][0].obj.company, 'Focus.com');
-            assert.equal(response.data['contact/followers'][1].obj.id, 399496);
-            assert.equal(response.data['contact/following'][0].obj.login, 'wmw');
-            assert.equal(response.config.id.followers[0], 'fourk');
+            assert.equal(response.data['followers'][0].obj.company, 'Focus.com');
+            assert.equal(response.data['followers'][1].obj.id, 399496);
+            assert.equal(response.data['following'][0].obj.login, 'wmw');
         }
     }
 })
