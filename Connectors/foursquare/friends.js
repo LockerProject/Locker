@@ -23,7 +23,6 @@ exports.sync = function(processInfo, cb) {
         responseObj.config.ids = {contact: friendIDs};
         responseObj.data.contact = contacts;
         responseObj.data.photo = photos;
-console.error(JSON.stringify(responseObj));
         cb(err, responseObj);
     });
 };
