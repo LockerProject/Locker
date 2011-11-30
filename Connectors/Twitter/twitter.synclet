@@ -13,7 +13,7 @@
         "tweets":"tweet",
         "mentions":"tweet"
     },
-    "synclets":[{"name": "related", "frequency": 1800},
+    "synclets":[{"name": "related", "frequency": 3600},
                 {"name": "friends", "frequency": 3600},
                 {"name": "timeline", "frequency": 120},
                 {"name": "tweets", "frequency": 600},
