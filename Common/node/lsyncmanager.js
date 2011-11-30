@@ -369,7 +369,7 @@ function processData (deleteIDs, info, key, data, callback) {
     var len = (data)?data.length:0;
     var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
     var idr = lutil.idrNew(type, info.provider, undefined, key, info.id);
-    logger.info("processing synclet data from "+idr+" of length "+len);
+    if(len > 0) logger.info("processing synclet data from "+idr+" of length "+len);
     var collection = info.id + "_" + key;
 
     if (key.indexOf('/') !== -1) {
