@@ -100,6 +100,35 @@ function processTwitter(svcId, type, data, cb) {
     saveCommonPlace(placeInfo, cb);
 }
 
+function processInstagram(svcId, type, data, cb) {
+    // Gotta have location/at at minimum
+    if (!data || !data.created_time || !data.location || !data.location.latitude || !data.location.longitude) {
+        cb("The Instagram data did not have a location");
+        return;
+    }
+
+    var title = (data.caption && data.caption.text) ? data.caption.text : '';
+
+    var me = false;
+    if (type === 'photo/instagram') {
+        me = true; // I think this is probably getting overwritten, fix the right way when we do profiles uniformly
+    }
+
+    var placeInfo = {
+            me:me,
+            lat: data.location.latitude,
+            lng: data.location.longitude,
+            path: false,
+            title: title,
+            network:"instagram",
+            from: (data.user)?data.user.username:"",
+            fromID: (data.user)?data.user.id:"",
+            at: data.created_time * 1000,
+            via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
+        };
+    saveCommonPlace(placeInfo, cb);
+}
+
 function processGLatitude(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
     if (!data.latitude || !data.longitude) {
@@ -166,6 +195,8 @@ dataHandlers["recents/foursquare"] = processFoursquare;
 dataHandlers["tweets/twitter"] = processTwitter;
 dataHandlers["timeline/twitter"] = processTwitter;
 dataHandlers["location/glatitude"] = processGLatitude;
+dataHandlers["photo/instagram"] = processInstagram;
+dataHandlers["feed/instagram"] = processInstagram;
 
 exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;

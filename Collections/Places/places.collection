@@ -10,6 +10,7 @@
             ,["recents/foursquare","/events"]
             ,["tweets/twitter","/events"]
             ,["timeline/twitter","/events"]
+            ,["photo://instagram","/events"]
             ,["location/glatitude","/events"]
     ]
 }

@@ -35,7 +35,7 @@ function reset(flag, callback)
 exports.gatherPlaces = function(type, cb) {
     reset(type, function(){
         cb(); // synchro delete, async/background reindex
-        var types = (type) ? [type] : ['checkin','tweets','location'];
+        var types = (type) ? [type] : ['checkin','tweets','location','photo/instagram'];
         locker.providers(types, function(err, services) {
             if (!services) return;
             async.forEachSeries(services, function(svc, callback) {
@@ -45,6 +45,8 @@ exports.gatherPlaces = function(type, cb) {
                     async.forEachSeries(["recents/foursquare", "checkin/foursquare"], function(type, cb2) { gatherFromUrl(svc.id, type, cb2); }, callback);
                 } else if (svc.provider === 'glatitude') {
                     gatherFromUrl(svc.id, "location/glatitude", callback);
+                } else if (svc.provider === 'instagram') {
+                    async.forEachSeries(["feed/instagram", "photo/instagram"], function(type, cb2) { gatherFromUrl(svc.id, type, cb2); }, callback);
                 } else {
                     callback();
                 }
