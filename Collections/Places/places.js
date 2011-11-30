@@ -86,7 +86,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj) {
+    if (!req.body.idr || !req.body.data) {
         logger.error("Invalid event.");
         res.writeHead(500);
         res.end("Invalid Event");
@@ -107,7 +107,6 @@ app.post('/events', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
         res.send(doc);
     })
@@ -124,7 +123,6 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
     logger = require(__dirname + "/../../Common/node/logger.js");

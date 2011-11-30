@@ -1,1 +1,4 @@
-{"obj":{"source":"friends","type":"delete","data":{"id":"2715557","deleted":true}},"via":"foursquare","action":"new","type":"contact/foursquare"}
+{
+    "action": "delete",
+    "idr": "contact://foursquare/#2715557"
+}

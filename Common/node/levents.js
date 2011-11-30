@@ -14,9 +14,10 @@ var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js");
 var syncManager = require('lsyncmanager');
+var url = require('url');
 
 var eventListeners = {};
-var processingEvents = {}; // just a map of arrays of the service events that are currently being processed
+var processingQueue = []; // queue of events being processed
 
 exports.addListener = function(type, id, cb) {
     logger.info("Adding a listener for " + id + cb + " to " + type);
@@ -43,27 +44,53 @@ exports.makeRequest = function(httpOpts, body, callback) {
     req.end();
 }
 
-exports.fireEvent = function(serviceType, fromServiceId, action, obj) {
-    logger.verbose("Firing an event for " + serviceType + " from " + fromServiceId + " action(" + action + ")");
+// get all possible listeners
+function fetchListeners(idr)
+{
+    var r = url.parse(idr);
+    var types = [];
+    // we're back-porting to the type system for now too
+    var oldType = r.protocol.substr(0,r.protocol.length-1);
+    types.push(oldType);
+    oldType += '/' + r.host;
+    types.push(oldType);
+    if(r.pathname && r.pathname.length > 1)
+    {
+        oldType = r.pathname.substr(1);
+        types.push(oldType);
+        oldType += '/' + r.host;
+        types.push(oldType);
+    }
+    delete r.hash;
+    delete r.search;
+    types.push(url.format(r));
+    delete r.pathname;
+    types.push(url.format(r));
+    var ret = [];
+    types.forEach(function(type){
+        if(!eventListeners.hasOwnProperty(type)) return;
+        eventListeners[type].forEach(function(e){ret.push(e)});
+    });
+    return ret;
+}
+
+exports.fireEvent = function(idr, action, obj) {
+    logger.verbose("Firing an event for " + idr + " action(" + action + ")");
     // Short circuit when no one is listening
-    if (!eventListeners.hasOwnProperty(serviceType)) return;
+    var listeners = fetchListeners(idr);
+    if (listeners.length == 0) return;
     var newEventInfo = {
-        type:serviceType,
+        idr:idr,
         action:action,
-        via:fromServiceId,
-        timestamp:Date.now(),
-        obj:obj,
-        listeners:eventListeners[serviceType].slice()
+        data:obj,
+        listeners:listeners
     };
-    // logger.verbose(require("sys").inspect(newEventInfo));
-    if (!processingEvents.hasOwnProperty(fromServiceId)) processingEvents[fromServiceId] = [];
-    var queue = processingEvents[fromServiceId];
-    queue.push(newEventInfo);
+    processingQueue.push(newEventInfo);
     // We bail out unless this is the first time into the queue
-    if (queue.length == 1)
-        processEvents(queue);
+    if (processingQueue.length == 1)
+        processEvents(processingQueue);
     else
-        process.nextTick(function() { processEvents(queue); });
+        process.nextTick(function() { processEvents(processingQueue); });
 }
 
 exports.displayListeners = function(type) {
@@ -109,10 +136,10 @@ function processEvents(queue) {
             };
             logger.verbose("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-            exports.makeRequest(httpOpts, JSON.stringify({"type":curEvent.type, "via":curEvent.via, "timestamp":curEvent.timestamp, "action":curEvent.action, "obj":curEvent.obj}), function(response) {
+            exports.makeRequest(httpOpts, JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data}), function(response) {
                 listener.response = response.statusCode;
                 if (listener.response != 200) {
-                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response);
+                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
                     // TODO: Need to evaluate the logic here, to see if we should retry or other options.
                 }
             });
