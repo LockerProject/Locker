@@ -36,11 +36,11 @@ exports.initClient = function(instanceInfo) {
 };
 
 exports.at = function(uri, delayInSec, stateField) {
-    if(stateField) lstate.next(stateField,(new Date().getTime() + (delayInSec * 1000)));
+    if(stateField) lstate.next(stateField,(Date.now() + (delayInSec * 1000)));
     request.get({
         url:baseServiceUrl + '/at?' + querystring.stringify({
             cb:uri,
-            at:((new Date().getTime() + (delayInSec * 1000))/1000)
+            at:((Date.now() + (delayInSec * 1000))/1000)
             })
     });
 };
