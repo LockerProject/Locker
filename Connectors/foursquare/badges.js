@@ -11,7 +11,6 @@ var fs = require('fs')
   , request = require('request')
   , auth
   , seenIDs = {}
-  , Badgess = []
   , lastBadges = {}
   , newBadges = []
   ;
@@ -40,8 +39,8 @@ exports.syncBadges = function (callback) {
         if (!badges || badges.length == 0) {
             return callback();
         }
-        badges = JSON.stringify(badges);
         for(var i = 0; i < badges.length; i++) {
+            console.log(badges[i]);
             if (lastBadges[badges[i].id]) break;
             newBadges.push({obj: badges[i], timestamp: Date.now()});
             seenIDs[badges[i].id] = true;
