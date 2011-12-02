@@ -33,10 +33,9 @@ exports.sync = function(processInfo, cb) {
 exports.syncBadges = function (callback) {
     getBadges(auth.accessToken, function(err, resp, data) {
         if(err || !data || !JSON.parse(data).response.badges) return callback("broke" + err);
-        //console.log(data.response)
         var badges_json = JSON.parse(data).response.badges;
         if (badges_json === undefined) {
-            return callback('error attempting to get profile data - ' + data);
+            return callback('error attempting to get badge data - ' + data);
         }
         badges = JSON.stringify(badges_json);
         for (var badge in badges_json) {
