@@ -1,10 +1,5 @@
-{"type": "timeline/twitter",
-  "via": "twitter",
-  "timestamp": 1320449999158,
+{"idr": "tweet://twitter/timeline?id=twitter#122435457991720960",
   "action": "new",
-  "obj": 
-   { "source": "twitter_timeline",
-     "type": "new",
      "data":
      {
         "_id":"32ccd529146dfc30f2a318034c734ae01f1c0687",
@@ -128,5 +123,4 @@
         "text":"Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus",
         "created_at":"Fri Oct 07 22:17:42 +0000 2011"
     }
-  }
 }

@@ -17,7 +17,7 @@ exports.sync = function(processInfo, cb) {
     tw.getMe({},function(js){me=js}, function(err){
         if(err) return cb(err, responseObj);
         var statuses = false;
-        tw.getTimelinePage({screen_name:me.screen_name},function(js){
+        tw.getTimelinePage({screen_name:me.screen_name, count:50},function(js){
             statuses = js;
         },function(err){
             if(!statuses) return cb(err, responseObj);

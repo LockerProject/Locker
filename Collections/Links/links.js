@@ -51,7 +51,7 @@ app.get('/search', function(req, res) {
     if (!req.query.q) {
         res.send([]);
         return;
-    }    
+    }
     var map = {};
     function send() {
         var results = [];
@@ -125,7 +125,8 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj || !req.body.obj.data){
+    if (!req.body.idr || !req.body.data){
+        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
         return;
@@ -227,8 +228,12 @@ app.get('/encounters/:id', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
-    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+    dataStore.get(req.param('id'), function(err, doc) {
+        if(err || !doc) return res.send(err, 500);
+        if(!isFull(req.query.full)) return res.send(doc);
+        doc.encounters = [];
+        dataStore.getEncounters({link: doc.link}, function(e){ doc.encounters.push(e); }, function(err) { res.send(doc); });
+    });
 });
 
 // expose all utils

@@ -11,6 +11,7 @@ var request = require('request');
 var locker = require('../../Common/node/locker.js');
 var lconfig = require('../../Common/node/lconfig.js');
 var dataStore = require('./dataStore');
+var async = require('async');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 
@@ -27,9 +28,7 @@ exports.gatherContacts = function(cb) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
             cb(); // synchro delete, async/background reindex
             // This should really be timered, triggered, something else
-            locker.providers(['contact/facebook', 'contact/twitter', 'contact/flickr',
-                              'contact/gcontacts', 'contact/foursquare', 'contact/instagram',
-                              'contact/github'], function(err, services) {
+            locker.providers(['contact'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
                     if(svc.provides.indexOf('contact/facebook') >= 0) {
@@ -70,25 +69,9 @@ exports.gatherContacts = function(cb) {
 
 exports.getContacts = function(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
-        if(body && Array.isArray(body)) addContacts(type, endpoint, body, callback);
+        if(err || !body || !Array.isArray(body)) return callback(err);
+        async.forEachSeries(body, function(contact, cb){
+            dataStore.addData(type, contact, cb);
+        }, callback);
     });
-}
-
-function addContacts(type, endpoint, contacts, callback) {
-    if (!(contacts && contacts.length)) {
-        callback();
-    } else {
-        var contact = contacts.shift();
-        dataStore.addData(type, endpoint, {data:contact}, function(err, doc) {
-            // what event should this be?
-            // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-            //
-            // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
-            if (doc._id) {
-                var eventObj = {source: "contacts", type:endpoint, data:doc};
-                exports.eventEmitter.emit('contact', eventObj);
-            }
-            addContacts(type, endpoint, contacts, callback);
-        })
-    }
 }

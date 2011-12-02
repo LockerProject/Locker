@@ -76,7 +76,7 @@ app.get("/image/:photoId", function(req, res) {
         res.end("No photo id supplied");
         return;
     }
-    dataStore.getOne(req.params.photoId, function(error, data) {
+    dataStore.get(req.params.photoId, function(error, data) {
         if (error || !data || !data.url) {
             res.writeHead(500);
             res.end(error);
@@ -105,7 +105,7 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj) {
+    if (!req.body.idr || !req.body.data) {
         logger.warn("Invalid event.");
         res.writeHead(500);
         res.end("Invalid Event");
@@ -126,10 +126,9 @@ app.post('/events', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
+        if(err) return res.send(err, 500);
+        res.send(doc);
     })
 });
 

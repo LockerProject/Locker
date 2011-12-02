@@ -79,7 +79,7 @@ locker.get('/map', function(req, res) {
 // return the known map of our world
 locker.get('/map/upsert', function(req, res) {
     logger.info("Upserting " + req.param("manifest"));
-    res.send(serviceManager.mapUpsert(req.param("manifest")));
+    res.send(serviceManager.mapUpsert(req.param("manifest"), req.param("type")));
 });
 
 locker.get("/providers", function(req, res) {
@@ -489,20 +489,18 @@ locker.post('/core/:svcId/event', function(req, res) {
         res.end("Post data missing");
         return;
     }
-    var type = req.body['type'], obj = req.body['obj'];
-    var action = req.body["action"] || "new";
     var svcId = req.params.svcId;
     if(!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    if (!type || !obj) {
+    if (!req.body.idr || !req.body.data || !req.body.action) {
         res.writeHead(400);
-        res.end("Invalid type or object");
+        res.end("Invalid, missing idr, data, or action");
         return;
     }
-    levents.fireEvent(type, svcId, action, obj);
+    levents.fireEvent(req.body.idr, req.body.action, req.body.data);
     res.writeHead(200);
     res.end("OKTHXBI");
 });

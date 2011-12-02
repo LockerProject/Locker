@@ -1,1 +1,53 @@
-{"obj":{"source":"friends","type":"update","data":{"id":"2715557","firstName":"Jake","lastName":"Mitchell","photo":"https://foursquare.com/img/blank_boy.png","gender":"male","homeCity":"Frederick, CO","relationship":"friend","type":"user","pings":true,"contact":{"email":"fake@testdata.com"},"badges":{"count":1},"mayorships":{"count":0,"items":[]},"checkins":{"count":1},"friends":{"count":6,"groups":[{"type":"others","name":"other friends","count":6,"items":[]}]},"following":{"count":0},"tips":{"count":0},"todos":{"count":0},"scores":{"recent":0,"max":0,"goal":50,"checkinsCount":0},"name":"Jake Mitchell"}},"via":"foursquare","type":"contact/foursquare","action":"new"}
+{
+    "data": {
+        "id": "2715557",
+        "firstName": "Jake",
+        "lastName": "Mitchell",
+        "photo": "https://foursquare.com/img/blank_boy.png",
+        "gender": "male",
+        "homeCity": "Frederick, CO",
+        "relationship": "friend",
+        "type": "user",
+        "pings": true,
+        "contact": {
+            "email": "fake@testdata.com"
+        },
+        "badges": {
+            "count": 1
+        },
+        "mayorships": {
+            "count": 0,
+            "items": []
+        },
+        "checkins": {
+            "count": 1
+        },
+        "friends": {
+            "count": 6,
+            "groups": [{
+                "type": "others",
+                "name": "other friends",
+                "count": 6,
+                "items": []
+            }]
+        },
+        "following": {
+            "count": 0
+        },
+        "tips": {
+            "count": 0
+        },
+        "todos": {
+            "count": 0
+        },
+        "scores": {
+            "recent": 0,
+            "max": 0,
+            "goal": 50,
+            "checkinsCount": 0
+        },
+        "name": "Jake Mitchell"
+    },
+    "idr": "contact://foursquare/#2715557",
+    "action": "update"
+}

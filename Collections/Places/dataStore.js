@@ -72,7 +72,7 @@ function processTwitter(svcId, type, data, cb) {
         title = data.place.full_name.replace(/\n/g,'').replace(/\s+/g, ' ').replace(/^\w/, function($0) { return $0.toUpperCase(); });
     }
 
-    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) || 
+    var ll = firstLL(data.geo) || firstLL(data.coordinates, true) ||
         (data.place !== null && data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
     if (!ll) {
         // quietly return, as lots of tweets aren't geotagged, so let's just bail
@@ -155,9 +155,8 @@ function saveCommonPlace(placeInfo, cb) {
             return cb(err);
         }
         updateState();
-        var eventObj = {source: "places", type: "place", data:doc};
-        locker.event("place", eventObj);
-        return cb(undefined, eventObj);
+        locker.ievent(lutil.idrNew("place","places",doc.id), doc);
+        return cb(undefined, doc);
     });
 }
 
@@ -186,7 +185,12 @@ exports.getAll = function(fields, callback) {
 };
 
 exports.get = function(id, callback) {
-    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+    var or = []
+    try {
+        or.push({_id:new db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    or.push({id:id});
+    collection.findOne({$or:or}, callback);
 };
 
 exports.getOne = function(id, callback) {
@@ -210,16 +214,28 @@ exports.addEvent = function(eventBody, callback) {
         return;
     }
     // Run the data processing
-    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
-    var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, eventBody.type, data, callback);
+    var idr = url.parse(eventBody.idr, true);
+    var svcId = idr.query["id"];
+    var type = idr.pathname.substr(1) + '/' + idr.host
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
+    handler(svcId, type, eventBody.data, callback);
 };
 
 exports.addData = function(svcId, type, allData, callback) {
     if (callback === undefined) {
         callback = function() {};
     }
-    var handler = dataHandlers[type] || processShared;
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
             if(e) logger.error("error processing: "+e);
