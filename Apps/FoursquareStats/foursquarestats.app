@@ -2,7 +2,7 @@
     "title":"Foursquare Stats",
     "action":"View Your Foursquare Activity",
     "desc":"Visualize your Foursquare activity.",
-    "status":"stable",
+    "status":"unstable",
     "static":"true",
     "uses":["foursquare"],
     "viewer":"places",
