@@ -15,7 +15,7 @@
             "name": "recent"
         },
         {
-            "frequency": 5,
+            "frequency": 3600,
             "name": "badges"
         }
 
