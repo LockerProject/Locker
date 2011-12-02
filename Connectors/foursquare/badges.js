@@ -31,8 +31,12 @@ exports.sync = function(processInfo, cb) {
 
 exports.syncBadges = function (callback) {
     getBadges(auth.accessToken, function(err, resp, data) {
+        console.log(data);
+        //console.log(resp);
         if(err || !data || !JSON.parse(data).response.badges) return callback("broke" + err);
         var badges = JSON.parse(data).response.badges;
+        //console.log(data);
+        //console.log(data);
         if (badges === undefined) {
             return callback('error attempting to get profile data - ' + data);
         }
@@ -50,5 +54,5 @@ exports.syncBadges = function (callback) {
 }
 
 function getBadges(token, callback) {
-    request.get({uri:'https://api.foursquare.com/v2/users/self/badges?oauth_token=' + token}, callback);
+    request.get({uri:'https://api.foursquare.com/v2/users/self/badges?v=20111202&oauth_token=' + token}, callback);
 }
