@@ -17,8 +17,8 @@ var fs = require('fs')
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
-    if (processInfo.config && processInfo.config.Badgess) {
-        lastBadges = processInfo.config.Badgess;
+    if (processInfo.config && processInfo.config.badges) {
+        lastBadges = processInfo.config.badges;
     }
     exports.syncBadges(function(err) {
         var responseObj = {data : {}, config : {}};
