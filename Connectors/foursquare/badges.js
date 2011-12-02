@@ -22,8 +22,8 @@ exports.sync = function(processInfo, cb) {
     }
     exports.syncBadges(function(err) {
         var responseObj = {data : {}, config : {}};
-        responseObj.data.Badges = newBadges;
-        responseObj.config.Badges = seenIDs;
+        responseObj.data.badges = newBadges;
+        responseObj.config.badges = seenIDs;
         cb(err, responseObj);
     });
 };
