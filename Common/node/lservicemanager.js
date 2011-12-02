@@ -195,7 +195,7 @@ exports.mapUpsert = function (file, type) {
     }
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
-    metaData.is = type;
+    if(metaData.type) metaData.is = metaData.type; // legacy
     metaData.installable = true;
     // replace references in available array (legacy)
     var found = false;
@@ -207,7 +207,10 @@ exports.mapUpsert = function (file, type) {
     });
     if(!found) serviceMap.available.push(metaData);
     // update any "installed"
-    exports.install(metaData);
+    if(type && type === "install" && !serviceMap.installed[metaData.handle])
+    {
+        exports.install(metaData);
+    }
     if(serviceMap.installed[metaData.handle]) return serviceMap.installed[metaData.handle] = lutil.extend(serviceMap.installed[metaData.handle], metaData);
     return metaData;
 }

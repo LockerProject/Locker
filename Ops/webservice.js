@@ -79,7 +79,7 @@ locker.get('/map', function(req, res) {
 // return the known map of our world
 locker.get('/map/upsert', function(req, res) {
     logger.info("Upserting " + req.param("manifest"));
-    res.send(serviceManager.mapUpsert(req.param("manifest")));
+    res.send(serviceManager.mapUpsert(req.param("manifest"), req.param("type")));
 });
 
 locker.get("/providers", function(req, res) {
