@@ -3,7 +3,7 @@ Locker - the "me" platform
 
 This is an open source project that helps me collect all of my personal data, from wherever it is, into one place, and then lets me do really awesome stuff with it.
 
-[What Is My Locker??](http://www.youtube.com/watch?v=8M2gUP5HCto)
+[Background Video](http://www.youtube.com/watch?v=pTNO5npNq28)
 
 STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress, and come hang out with us on freenode IRC in [#lockerproject](http://webchat.freenode.net/?channels=lockerproject).
 
@@ -11,10 +11,6 @@ We also have a [mailing list](http://bit.ly/singly-dev-list) setup.  Join and sa
 
 
 ## Getting Started
-
-### The Take-No-Prisoners Way
-
-If you just want to get a locker up and running, there are [semi-regularly refreshed standalone tarballs available](http://lockerproject.org/tarballs/) for OS X and Linux (in both 32-bit and 64-bit flavors). Unpack the tarball, cd into the lockerproject directory, and ./run!
 
 ### The Fast Way
 

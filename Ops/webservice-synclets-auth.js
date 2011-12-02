@@ -1,5 +1,6 @@
 var syncManager = require('lsyncmanager')
   , lconfig = require('lconfig')
+  , logger = require('logger')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
   , request = require('request')
@@ -100,7 +101,7 @@ function handleOAuth2 (code, options, res) {
                         installSynclet(options.provider, auth);
                         res.end("<script type='text/javascript'> window.opener.installed('" + options.provider + "'); window.close(); </script>");
                     } catch (e) {
-                        console.error('Failed to auth github - ' + body);
+                        logger.error('Failed to auth github - ' + body);
                     }
                 });
             } else if (auth.accessToken) {
@@ -132,14 +133,15 @@ function handleOAuth2Post (code, options, res) {
         });
 
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
 
 function handleTwitter (req, res) {
+    var tc = require('../Connectors/Twitter/twitter_client');
     try {
-        require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
+        tc(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
                 if(err) throw new Error(err);
                 if(!newToken) throw new Error("token missing");
@@ -151,7 +153,7 @@ function handleTwitter (req, res) {
                 res.end("<script type='text/javascript'> window.opener.installed('twitter'); window.close(); </script>");
             });
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }
@@ -170,7 +172,7 @@ function handleTumblr (req, res) {
                 res.end("<script type='text/javascript'> window.opener.installed('tumblr');  window.close(); </script>");
             });
     } catch (E) {
-        console.error("auth error: "+E);
+        logger.error("auth error: "+E);
         res.end('failed to authenticate against service - ' + E);
     }
 }

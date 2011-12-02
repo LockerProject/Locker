@@ -11,9 +11,12 @@
 require.paths.push(__dirname + "/../../Common/node");
 var lconfig = require('lconfig');
 lconfig.load('../../Config/config.json');
+var logger = require('logger');
 
 var fs = require('fs'),
     locker = require('locker.js');
+var lutil = require('lutil');
+var url = require('url');
 
 var sync = require('./sync');
 var dataStore = require("./dataStore");
@@ -68,22 +71,23 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.obj.type || !req.body.via) {
-        console.log('5 HUNDO');
+    if (!req.body.idr || !req.body.data) {
+        logger.error('5 HUNDO');
         res.writeHead(500);
         res.end('bad data');
         return;
     }
-
-    dataStore.addEvent(req.body, function(err, eventObj) {
+    // we don't support these yet
+    if(req.body.action == "delete")
+    {
+        return res.send("skipping");
+    }
+    var idr = url.parse(req.body.idr);
+    dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
         if (err) {
             res.writeHead(500);
             res.end(err);
         } else {
-            if (eventObj) {
-
-                locker.event("contact", eventObj);
-            }
             res.writeHead(200);
             res.end('processed event');
         }
@@ -127,10 +131,6 @@ process.stdin.on('data', function(data) {
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));
-            sync.eventEmitter.on('contact', function(eventObj) {
-                locker.event('contact', eventObj);
-            });
-            // gatherContacts();
         });
     });
 });

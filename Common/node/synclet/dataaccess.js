@@ -2,6 +2,7 @@ var dataStore = require('../ldatastore')
   , fs = require('fs')
   , path = require('path')
   , lconfig = require('../lconfig')
+  , logger = require('../logger')
   , lfs = require('../lfs')
   ;
 
@@ -73,7 +74,7 @@ module.exports = function(app) {
         dataStore.init('synclets', function() {
             dataStore.getCurrent('synclets', req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
-                    console.error(err);
+                    logger.error(err);
                     res.end();
                 } else if (doc) {
                     res.writeHead(200, {'content-type' : 'application/json'});

@@ -23,7 +23,7 @@ var thecollections = ['place'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
-locker.event = function(){};
+locker.ievent = function(){};
 
 var cwd = process.cwd();
 var lmongo = require('../Common/node/lmongo.js');
@@ -40,8 +40,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.text, 'Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus');
-            assert.equal(response.data.id, '32ccd529146dfc30f2a318034c734ae01f1c0687');
+            assert.equal(response.text, 'Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus');
+            assert.equal(response.id, '32ccd529146dfc30f2a318034c734ae01f1c0687');
         }
     }
 }).addBatch({
@@ -51,8 +51,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.at, 1303341763000);
-            assert.equal(response.data.title, 'Singly Is Awesome');
+            assert.equal(response.at, 1303341763000);
+            assert.equal(response.title, 'Singly Is Awesome');
         }
     }
 }).addBatch({
@@ -65,7 +65,7 @@ suite.next().suite.addBatch({
             });
         },
         "successfully" : function(err, response) {
-            var box = twitterBBEvent.obj.data.place.bounding_box.coordinates[0];
+            var box = twitterBBEvent.data.place.bounding_box.coordinates[0];
             var allLat = 0;
             var allLng = 0;
 
@@ -77,8 +77,8 @@ suite.next().suite.addBatch({
             var lng = +(allLng / 4).toFixed(5);
 
             assert.isNull(err);
-            assert.equal(response.data.lat, lat);
-            assert.equal(response.data.lng, lng);
+            assert.equal(response.lat, lat);
+            assert.equal(response.lng, lng);
         }
     }
 }).addBatch({

@@ -12,7 +12,9 @@ var path = require('path');
 var lconfig = require('lconfig');
 var wrench = require('wrench');
 var is = require("lutil").is;
+var logger = require("logger");
 var util = require('util');
+var url = require('url');
 var indexPath;
 
 exports.currentEngine;
@@ -23,7 +25,7 @@ function noop() {
 NullEngine = function()
 {
 }
-NullEngine.prototype.indexType = function(type, obj, cb) {
+NullEngine.prototype.indexType = function(type, id, obj, cb) {
     cb("Null engine");
 };
 NullEngine.prototype.queryAll = function(q, params, cb) {
@@ -44,8 +46,7 @@ CLEngine = function()
     this.cl = this.engine.CLucene;
     this.lucene = new this.cl.Lucene();
     this.mappings = {
-        "contact" : {
-            "_id":"_id",
+        "contactcontacts" : {
             "name":"name",
             "nicknames":[],
             "accounts":{
@@ -73,29 +74,32 @@ CLEngine = function()
                 }
             ]
         },
-        "photo" : {
-            "_id":"_id",
+        "photophotos" : {
             "caption":"caption",
             "title":"title"
         },
-        "timeline/twitter" : {
-            "_id":"_id",
+        "tweettwitter" : {
             "text":"text",
             "user":{
                 "name":"name",
                 "screen_name":"screen_name"
             }
         },
-        "status/facebook" : {
-            "_id":"_id",
+        "timelinetwitter" : {
+            "text":"text",
+            "user":{
+                "name":"name",
+                "screen_name":"screen_name"
+            }
+        },
+        "postfacebook" : {
             "description":"description",
             "message":"message",
             "from":{
                 "name":"name"
             }
         },
-        "place" : {
-            "_id":"_id",
+        "placeplaces" : {
             "title":"title"
         },
     };
@@ -118,26 +122,24 @@ CLEngine = function()
       TERMVECTOR_YES: 512,
       TERMVECTOR_WITH_POSITIONS: 512 | 1024,
       TERMVECTOR_WITH_OFFSETS: 512 | 2048,
-      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048) 
+      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048)
     };
-    
+
     return this;
 };
 
-CLEngine.prototype.indexType = function(type, source, value, callback) {
+CLEngine.prototype.indexType = function(type, id, value, callback) {
     var doc = new this.cl.Document();
+
+    if (!id) {
+        callback("No valid id property was found");
+        return;
+    }
 
     if (!this.mappings.hasOwnProperty(type)) {
         callback("No valid mapping for the type: " + type);
         return;
     }
-    
-    idToStore = value[this.mappings[type]["_id"]];
-    if (!idToStore) {
-        callback("No valid id property was found");
-        return;
-    }
-    idToStore = idToStore.toString();
 
     var contentTokens = [];
     processValue = function(v, parentMapping) {
@@ -166,23 +168,19 @@ CLEngine.prototype.indexType = function(type, source, value, callback) {
 
     };
     processValue(value, this.mappings[type]);
-    
+
     if (contentTokens.length === 0) {
-        console.log("No valid tokens were found to index id " + idToStore);
+        logger.verbose("No valid tokens were found to index id " + id);
         return callback(null, 0, 0);
     }
 
     var contentString = contentTokens.join(" <> ");
-    
-    //console.log("Going to store " + contentString);
+    //logger.debug("Going to store " + contentString);
     doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
-    if (source !== null) {
-        doc.addField("_source", source, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
-    }
     doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
-    //console.log('about to index at ' + indexPath);
+    //logger.debug('about to index at ' + indexPath);
     assert.ok(indexPath);
-    this.lucene.addDocument(idToStore, doc, indexPath, function(err, indexTime) {
+    this.lucene.addDocument(id, doc, indexPath, function(err, indexTime) {
         callback(err, indexTime);
     });
 };
@@ -196,8 +194,12 @@ CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
 };
 CLEngine.prototype.queryType = function(type, query, params, callback) {
     assert.ok(indexPath);
-    this.flushAndCloseWriter();
-    this.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
+    var self = this;
+// caused worse problems over time, memory corruption
+//    this.lucene.deleteDocument("", indexPath, function(){
+        self.flushAndCloseWriter();
+        self.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
+//    });
 };
 CLEngine.prototype.queryAll = function(query, params, callback) {
     assert.ok(indexPath);
@@ -214,7 +216,7 @@ CLEngine.prototype.flushAndCloseWriter = function() {
 
 exports.setEngine = function(engine) {
     if (engine === undefined) {
-        console.error("Falling back to search Null Engine, your indexing and queries will not work.");
+        logger.error("Falling back to search Null Engine, your indexing and queries will not work.");
         exports.currentEngine = new NullEngine();
         return;
     }
@@ -222,7 +224,7 @@ exports.setEngine = function(engine) {
     try {
         exports.currentEngine = new engine();
     } catch (E) {
-        console.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
+        logger.error("Falling back to search Null Engine, your indexing and queries will not work. (" + E + ")");
         exports.currentEngine = new NullEngine();
     }
 };
@@ -232,7 +234,7 @@ exports.setIndexPath = function(newPath) {
     if (!path.existsSync(indexPath)) {
       fs.mkdirSync(indexPath, 0755);
     };
-    
+
 };
 
 function exportEngineFunction(funcName) {
@@ -250,18 +252,13 @@ exportEngineFunction("flushAndCloseWriter");
 var indexQueue = [];
 var indexing = false;
 
-exports.indexType = function(type, value, cb) {
-    indexQueue.push({"type":type, "source":null, "value":value, "cb":cb});
-    process.nextTick(indexMore);
-};
-
-exports.indexTypeAndSource = function(type, source, value, cb) {
-    indexQueue.push({"type":type, "source":source, "value":value, "cb":cb});
+exports.indexType = function(type, id, value, cb) {
+    indexQueue.push({"type":type, "id":id, "value":value, "cb":cb});
     process.nextTick(indexMore);
 };
 
 exports.deleteDocument = function(id, cb) {
-  exports.currentEngine.deleteDocument(id, cb);  
+  exports.currentEngine.deleteDocument(id, cb);
 };
 
 exports.deleteDocumentsByType = function(type, cb) {
@@ -283,19 +280,18 @@ function indexMore(keepGoing) {
     // I still feel like async can break this unless there's some sort of atomic guarantee
     if (indexing && !keepGoing) return;
     indexing = true;
-    //console.log('IndexQueue length: ' + indexQueue.length);
+    //logger.debug('IndexQueue length: ' + indexQueue.length);
     if (indexQueue.length === 0) {
         indexing = false;
         return;
     }
     var cur = indexQueue.shift();
     assert.ok(exports.currentEngine);
-    exports.currentEngine.indexType(cur.type, cur.source, cur.value, function(err, indexTime) {
-        //console.log('Indexed ' + cur.type + ' id: ' + cur.value._id + ' in ' + indexTime + ' ms');
+    exports.currentEngine.indexType(cur.type, cur.id, cur.value, function(err, indexTime) {
         cur.cb(err, indexTime);
         delete cur;
         cur = null;
-        //console.log("Setting up for next tick");
+        //logger.debug("Setting up for next tick");
         // TODO: review for optimization per ctide comment (per 100 instead of per 1?)
         process.nextTick(function() { indexMore(true); });
     });

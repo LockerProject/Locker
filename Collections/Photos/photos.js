@@ -10,11 +10,11 @@
 // merge contacts from connectors
 
 var locker = require('../../Common/node/locker.js');
+var logger;
 
 var fs = require('fs');
 var sync = require('./sync');
 var dataStore = require("./dataStore");
-var logger = require("../../Common/node/logger.js").logger;
 
 var lockerInfo;
 var express = require('express'),
@@ -76,7 +76,7 @@ app.get("/image/:photoId", function(req, res) {
         res.end("No photo id supplied");
         return;
     }
-    dataStore.getOne(req.params.photoId, function(error, data) {
+    dataStore.get(req.params.photoId, function(error, data) {
         if (error || !data || !data.url) {
             res.writeHead(500);
             res.end(error);
@@ -105,8 +105,8 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj) {
-        logger.debug("Invalid event.");
+    if (!req.body.idr || !req.body.data) {
+        logger.warn("Invalid event.");
         res.writeHead(500);
         res.end("Invalid Event");
         return;
@@ -114,7 +114,7 @@ app.post('/events', function(req, res) {
 
     dataStore.addEvent(req.body, function(err, eventObj) {
         if (err) {
-            logger.debug("Error processing: " + err);
+            logger.error("Error processing: " + err);
             res.writeHead(500);
             res.end(err);
             return;
@@ -126,10 +126,9 @@ app.post('/events', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
+        if(err) return res.send(err, 500);
+        res.send(doc);
     })
 });
 
@@ -145,9 +144,11 @@ process.stdin.on('data', function(data) {
     }
     process.chdir(lockerInfo.workingDirectory);
 
+    var lconfig = require('lconfig');
+    lconfig.load('../../Config/config.json');
+    logger = require(__dirname + "/../../Common/node/logger.js");
     locker.connectToMongo(function(mongo) {
-        logger.debug("connected to mongo " + mongo);
-        sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker);
+        sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker, lconfig);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

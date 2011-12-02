@@ -44,7 +44,10 @@
         "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
         "node-fs": "=0.1.0",
+        "nodemailer": "=0.2.3",
         "semver": "=1.0.10",
+        "ini": "=1.0.1",
+        "uglify-js": "=1.1.1",
 
 
         "hashish": "=0.0.4",
