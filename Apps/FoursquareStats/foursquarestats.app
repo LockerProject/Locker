@@ -2,7 +2,12 @@
     "title":"Foursquare Stats",
     "action":"View Your Foursquare Activity",
     "desc":"Visualize your Foursquare activity.",
-    "status":"unstable",
-    "run":"node foursquarestats-server.js",
+    "status":"stable",
+    "static":"true",
+    "uses":["foursquare"],
+    "viewer":"places",
+    "author":"Chris Hannam",
+    "autoInstall":true,
     "handle":"foursquarestats"
+
 }
