@@ -333,6 +333,7 @@ function enrichResultsWithFullObjects(results, callback) {
             async.forEachSeries(results,
                 function(item, forEachCb) {
                     var idr = url.parse(item._id);
+                    if(!idr || !idr.host || !idr.hash) return forEachCb();
                     var source = (idr.host == 'twitter') ? 'twitter/timeline' : idr.host; // we only process timeline
                     var u = lockerInfo.lockerUrl + '/Me/' + source + '/id/' + idr.hash.substr(1);
                     makeEnrichedRequest(u, item, forEachCb);
