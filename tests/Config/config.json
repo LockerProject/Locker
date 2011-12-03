@@ -12,10 +12,12 @@
                       "lcrypto-test-local.js",
                       "lutil-test-local.js",
                       "ijod-test-local.js",
+                      "registry-test-local.js",
                       "lpquery-test-local.js",
                       "mongo-test.js",
                       "lscheduler-test-local.js",
-                      "deepCompare-test.js"],
+                      "deepCompare-test.js",
+                      "lpushmanager-test-local.js"],
         "client-api" : ["locker-client-test.js"],
         "search" : ["collection-search-test.js",
                     "lsearch-test-local.js"],
@@ -25,7 +27,7 @@
                       "synclet-local-facebook.js",
                       "synclet-local-flickr.js",
                       "synclet-local-googleContacts.js"],
-        "collections" : ["sync-contacts-test.js",
+        "collections" : ["collection-contacts-test.js",
                          "collection-photos-test.js",
                          "collection-places-test.js",
                          "collection-links-test.js"],
@@ -40,5 +42,10 @@
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020
+    },
+    "logging": {
+        "console":false,
+        "file":"locker-tests.out",
+        "level": "error"
     }
 }

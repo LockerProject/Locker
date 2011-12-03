@@ -8,6 +8,7 @@
 */
 
 var spawn = require('child_process').spawn;
+var logger = require(__dirname + '/../Common/node/logger');
 var thswitch;
 exports.instance = thswitch;
 
@@ -15,14 +16,14 @@ exports.start = function() {
     // start dashboard
     thswitch  = spawn('node', ['switch.js'],
                             {cwd: __dirname + '/TeleHash'});
-    console.log('Spawned TeleHash switch pid: ' + thswitch.pid);
+    logger.info('Spawned TeleHash switch pid: ' + thswitch.pid);
     thswitch.stdout.on('data',function (data){
     });
     thswitch.stderr.on('data',function (data){
-        console.log('Error TeleHash: '+data);
+        logger.error('Error TeleHash: '+data);
     });
     thswitch.on('exit', function (code) {
-      if(code > 0) console.log('TeleHash died with code ' + code);
+      if(code > 0) logger.info('TeleHash died with code ' + code);
     });
     exports.instance = thswitch;
 }

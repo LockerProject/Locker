@@ -19,11 +19,11 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/places';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['places'];
+var thecollections = ['place'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = require(__dirname + "/../Common/node/locker");
-locker.event = function(){};
+locker.ievent = function(){};
 
 var cwd = process.cwd();
 var lmongo = require('../Common/node/lmongo.js');
@@ -33,15 +33,15 @@ suite.next().suite.addBatch({
         topic: function() {
             process.chdir("." + mePath);
             var self = this;
-            lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+            lmongo.init("places", thecollections, function(mongo, colls) {
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterEvent, self.callback);
             });
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.text, 'Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus');
-            assert.equal(response.data.id, '32ccd529146dfc30f2a318034c734ae01f1c0687');
+            assert.equal(response.text, 'Wired: U.S. Drone Controllers Said To Be Infected By Computer Virus');
+            assert.equal(response.id, '32ccd529146dfc30f2a318034c734ae01f1c0687');
         }
     }
 }).addBatch({
@@ -51,8 +51,8 @@ suite.next().suite.addBatch({
         },
         "successfully" : function(err, response) {
             assert.isNull(err);
-            assert.equal(response.data.at, 1303341763000);
-            assert.equal(response.data.title, 'Singly Is Awesome');
+            assert.equal(response.at, 1303341763000);
+            assert.equal(response.title, 'Singly Is Awesome');
         }
     }
 }).addBatch({
@@ -60,25 +60,25 @@ suite.next().suite.addBatch({
         topic: function() {
             var self = this;
             lmongo.init("place", thecollections, function(mongo, colls) {
-                dataStore.init(colls.places, mongo, locker);
+                dataStore.init(colls.place, mongo, locker);
                 dataStore.addEvent(twitterBBEvent, self.callback);
             });
         },
         "successfully" : function(err, response) {
-            var box = twitterBBEvent.obj.data.place.bounding_box.coordinates[0];
+            var box = twitterBBEvent.data.place.bounding_box.coordinates[0];
             var allLat = 0;
             var allLng = 0;
-            
+
             for (var i=0; i<box.length; ++i) {
                 allLat += box[i][1];
                 allLng += box[i][0];
             }
             var lat = +(allLat / 4).toFixed(5);
             var lng = +(allLng / 4).toFixed(5);
-            
+
             assert.isNull(err);
-            assert.equal(response.data.lat, lat);
-            assert.equal(response.data.lng, lng);
+            assert.equal(response.lat, lat);
+            assert.equal(response.lng, lng);
         }
     }
 }).addBatch({

@@ -4,5 +4,10 @@
     "displayUnstable" : true,
     "externalHost" : "example.com",
     "externalPort" : "80",
-    "externalSecure" : false
+    "externalSecure" : false,
+    "logging": {
+        "console":false,
+        "file":"locker-tests.out",
+        "level": "error"
+    }
 }

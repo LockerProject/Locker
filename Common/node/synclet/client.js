@@ -8,9 +8,13 @@
 */
 
 var fs = require('fs')
+  , lconfig = require('../lconfig')
   , data = ''
   , failTimeout = ''
   ;
+
+lconfig.load('Config/config.json');
+var logger = require('../logger');
 
 // Process the startup JSON object
 process.stdin.setEncoding('utf8');
@@ -32,9 +36,12 @@ function run (processInfo) {
     process.chdir(run.workingDirectory);
     sync.sync(processInfo, function(err, returnedInfo) {
         if (err) {
-            var error = JSON.stringify(err);
-            fs.writeSync(1, error);
-        } else {
+            console.error("synclet returned an error: "+JSON.stringify(err));
+        }
+        if(!returnedInfo)
+        {
+            fs.writeSync(1, "{}");
+        }else{
             var output = JSON.stringify(returnedInfo);
             fs.writeSync(1, output);
         }
@@ -43,7 +50,7 @@ function run (processInfo) {
 }
 
 function fail(e) {
-    console.error('synclet parsing of stdin failed - ' + e)
+    logger.error('synclet parsing of stdin failed - ' + e)
     process.exit();
 }
 

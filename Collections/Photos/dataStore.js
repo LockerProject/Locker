@@ -9,14 +9,15 @@
 
 var collection;
 var db;
-var lconfig = require('../../Common/node/lconfig');
+var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger = require("logger").logger;
+var logger
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
 var url = require("url");
 var fs = require('fs');
+var url = require('url');
 var lmongoutil = require("lmongoutil");
 var locker;
 
@@ -37,26 +38,37 @@ function processTwitPic(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+
+var fbProfile;
+function getFacebookProfile(callback) {
+    if(fbProfile) return callback();
+    request.get({uri:lconfig.lockerBase + '/synclets/facebook/get_profile', json:true}, function(err, resp, profile) {
+        fbProfile = profile;
+        callback();
+    });
+}
 function processFacebook(svcId, data, cb) {
-    var photoInfo = {};
+    getFacebookProfile(function() {
+        var photoInfo = {};
 
-    // Gotta have a url minimum
-    if (!data.source) {
-        cb("The data did not have a source");
-        return;
-    }
-    photoInfo.url = data.source;
-    // TODO:  For now we're just taking the smallest one, there's also an icon field
-    if (data.images) photoInfo.thumbnail = data.images[data.images.length - 1].source;
-    if (data.width) photoInfo.width = data.width;
-    if (data.height) photoInfo.height = data.height;
-    if (data.created_time) photoInfo.timestamp = data.created_time*1000;
-    if (data.name) photoInfo.title = data.name;
-    if (data.link) photoInfo.sourceLink = data.link;
+        // Gotta have a url minimum
+        if (!data.source) {
+            cb("The data did not have a source");
+            return;
+        }
+        photoInfo.url = data.source;
+        // TODO:  For now we're just taking the smallest one, there's also an icon field
+        if (data.images) photoInfo.thumbnail = data.images[data.images.length - 1].source;
+        if (data.width) photoInfo.width = data.width;
+        if (data.height) photoInfo.height = data.height;
+        if (data.created_time) photoInfo.timestamp = data.created_time*1000;
+        if (data.name) photoInfo.title = data.name;
+        if (data.link) photoInfo.sourceLink = data.link;
 
-    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
-
-    saveCommonPhoto(photoInfo, cb);
+        photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+        photoInfo.me = (data.from.id == fbProfile.id);
+        saveCommonPhoto(photoInfo, cb);
+    });
 }
 
 function processInstagram(svcId, data, cb) {
@@ -76,24 +88,6 @@ function processInstagram(svcId, data, cb) {
     if (data.link) photoInfo.sourceLink = data.link;
 
     photoInfo.sources = [{service:svcId, id:data.id, data:data}];
-
-    saveCommonPhoto(photoInfo, cb);
-}
-
-
-function processShared(svcId, data, cb) {
-    logger.log("debug", "Shared processing of a pic");
-
-    var commonFields = ["url", "height", "width", "timestamp", "title", "mime-type", "thumbnail", "sourceLink", "size", "caption"];
-    if (!data.url) {
-        cb("Must have a url");
-        return ;
-    }
-    var photoInfo = {};
-    commonFields.forEach(function(fieldName) {
-        if (data.hasOwnProperty(fieldName)) photoInfo[fieldName] = data[fieldName];
-    });
-    if (data.id) photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
     saveCommonPhoto(photoInfo, cb);
 }
@@ -130,19 +124,19 @@ function processFlickr(svcId, data, cb) {
 // pretty experimental! extract photos from your tweets using embedly :)
 function processTwitter(svcId, data, cb)
 {
-    console.log('processTwitter!');
+    logger.verbose('processTwitter!');
     if(!data || !data.entities || !Array.isArray(data.entities.urls)) return cb();
 
     async.forEach(data.entities.urls,function(u,callback){
         if(!u || !u.url) return callback();
         var embed = url.parse(lconfig.lockerBase+"/Me/links/embed");
-        console.log('found twitter url:', u.url);
-        embed.query = {url:u.url};
+        var turl = (u.expanded_url) ? u.expanded_url : u.url;
+        logger.verbose('found twitter url:' + turl);
+        embed.query = {url:turl};
         request.get({uri:url.format(embed), json:true},function(err,resp,js){
             if(err || !js) return callback();
             if(!js || !js.type || js.type != "photo" || !js.url) return callback();
-
-            console.log('found twitter photo! ', u.url);
+            logger.verbose('found twitter photo! ' +  turl);
             var photoInfo = {};
             photoInfo.url = js.url;
             if (js.height) photoInfo.height = js.height;
@@ -219,9 +213,8 @@ function saveCommonPhoto(photoInfo, cb) {
     collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             updateState();
-            var eventObj = {source: "photos", type: "photo", data:doc};
-            locker.event("photo", eventObj);
-            return cb(undefined, eventObj);
+            locker.ievent(lutil.idrNew("photo", "photos", doc.id), doc);
+            return cb(undefined, doc);
         }
         cb(err);
     });
@@ -249,12 +242,12 @@ dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 
-exports.init = function(mongoCollection, mongo, l) {
-    logger.debug("dataStore init mongoCollection(" + mongoCollection + ")");
+exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
     db = mongo.dbClient;
-    lconfig.load('../../Config/config.json'); // ugh
     locker = l;
+    lconfig = config;
+    logger = require("logger");
 }
 
 exports.getTotalCount = function(callback) {
@@ -265,22 +258,12 @@ exports.getAll = function(fields, callback) {
 }
 
 exports.get = function(id, callback) {
-    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
-}
-
-exports.getOne = function(id, callback) {
-    collection.find({"id":id}, function(error, cursor) {
-        if (error) {
-            callback(error, null);
-        } else {
-            cursor.nextObject(function(err, doc) {
-                if (err)
-                    callback(err);
-                else
-                    callback(err, doc);
-            });
-        }
-    });
+    var or = []
+    try {
+        or.push({_id:new db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    or.push({id:id});
+    collection.findOne({$or:or}, callback);
 }
 
 exports.addEvent = function(eventBody, callback) {
@@ -290,16 +273,28 @@ exports.addEvent = function(eventBody, callback) {
         return;
     }
     // Run the data processing
-    var data = (eventBody.obj.data) ? eventBody.obj.data : eventBody.obj;
-    var handler = dataHandlers[eventBody.type] || processShared;
-    handler(eventBody.via, data, callback);
+    var idr = url.parse(eventBody.idr, true);
+    var svcId = idr.query["id"];
+    var type = idr.pathname.substr(1) + '/' + idr.host
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
+    handler(svcId, eventBody.data, callback);
 }
 
 exports.addData = function(svcId, type, allData, callback) {
     if (callback === undefined) {
         callback = function() {};
     }
-    var handler = dataHandlers[type] || processShared;
+    var handler = dataHandlers[type];
+    if(!handler)
+    {
+        console.error("unhandled "+type);
+        return callback();
+    }
     async.forEachSeries(allData,function(data,cb) {
         handler(svcId, data, cb);
     },callback);

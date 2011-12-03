@@ -13,13 +13,22 @@
         {
             "frequency": 60,
             "name": "recent"
+        },
+        {
+            "frequency": 3600,
+            "name": "badges"
         }
+
     ],
+    "mongoId" : {
+        "photos": "photoID"
+    },
     "provides": [
         "contact/foursquare",
         "profile/foursquare",
         "recents/foursquare",
-        "checkin/foursquare"
+        "checkin/foursquare",
+        "badges/foursquare"
     ],
     "provider": "foursquare",
     "action": "Connect to a Foursquare account",

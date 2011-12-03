@@ -32,9 +32,14 @@ exports.syncFriends = function(callback) {
         if(err) {
             return callback(err);
         } else if(resp && resp.statusCode > 500) { //fail whale
-            return callback(resp);
+            return callback("500'd");
         }
-        var self = JSON.parse(data).response.user;
+        var self;
+        try {
+            self = JSON.parse(data).response.user;
+        }catch(E){
+            return callback(E);
+        }
         if (self === undefined) {
             return callback('error attempting to get profile data - ' + data);
         }
@@ -51,11 +56,16 @@ exports.syncFriends = function(callback) {
             });
         }
         request.get({uri:'https://api.foursquare.com/v2/users/self/friends.json?oauth_token=' + auth.accessToken + '&limit=500'}, function(err, resp, body) {
-            var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
-            friendIDs = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
-            downloadUsers(friends, function(err) {
-                callback(err);
-            });
+            if(err || !body) return callback(err);
+            try{
+                var friends = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
+                friendIDs = JSON.parse(body).response.friends.items.map(function(item) {return item.id});
+                downloadUsers(friends, function(err) {
+                    callback(err);
+                });
+            } catch(E) {
+                callback(E);
+            }
         });
     });
 }

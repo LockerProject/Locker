@@ -2,9 +2,11 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
+var crypto = require('crypto');
+var url = require('url');
 var debug = false;
 
 var dataStore, locker, search;
@@ -27,14 +29,14 @@ exports.reIndex = function(locker,cb) {
                     getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/newsfeed', function() {
                         getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/wall', function() {
                             getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home', function() {
-                                console.error('facebook done!');
+                                logger.info('facebook done!');
                             });
                         });
                     });
                 } else if(svc.provides.indexOf('timeline/twitter') >= 0) {
                     getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
-                            console.error('twitter done!');
+                            logger.info('twitter done!');
                         });
                     });
                 }
@@ -49,15 +51,15 @@ exports.processEvent = function(event, callback)
     if(!callback) callback = function(){};
     // TODO: what should we be doing with other action types?
     if(event.action != "new") return callback();
-    // what a mess
-    var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
-    if(event.type.indexOf("facebook") > 0)
+    var idr = url.parse(event.idr);
+    if(idr.host === "facebook")
     {
-        processEncounter(getEncounterFB(item),callback);
-    }
-    if(event.type.indexOf("twitter") > 0)
-    {
-        processEncounter(getEncounterTwitter(item),callback);
+        processEncounter(getEncounterFB(event.data),callback);
+    }else if(idr.host === "twitter") {
+        processEncounter(getEncounterTwitter(event.data),callback);
+    }else{
+        console.error("unhandled event, shouldn't happen");
+        callback();
     }
 }
 
@@ -73,7 +75,7 @@ function getLinks(getter, lurl, callback) {
         async.forEachSeries(arr,function(a,cb){
             var e = getter(a);
             if(!e.text) return cb();
-            processEncounter(e,function(err){if(err) console.log("getLinks error:"+err);});
+            processEncounter(e,function(err){if(err) logger.error("getLinks error:"+err);});
             cb(); // run pE() async as it queues
         },callback);
     });
@@ -83,11 +85,11 @@ function processEncounter(e, cb)
 {
     dataStore.enqueue(e, function() {
         encounterQueue.push(e, function(arg){
-            if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
+            logger.verbose("QUEUE SIZE: "+encounterQueue.length());
             cb();
         });
     });
-    if (debug) console.error("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
@@ -121,7 +123,7 @@ exports.loadQueue = function() {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
             encounterQueue.push(docs[i].obj, function(arg) {
-                console.error("QUEUE SIZE: " + encounterQueue.length());
+                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
             });
         }
     });
@@ -146,6 +148,7 @@ function linkMagic(origUrl, callback){
               }
               // new link!!!
               link = {link:linkUrl};
+              link.id = crypto.createHash('md5').update(linkUrl).digest('hex');
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
                   // TODO: should we support link rel canonical here and change it?
                   util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
@@ -155,7 +158,7 @@ function linkMagic(origUrl, callback){
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
-                              locker.event("link",obj); // let happen independently
+                              locker.ievent(lutil.idrNew("link","links",obj.id),obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){

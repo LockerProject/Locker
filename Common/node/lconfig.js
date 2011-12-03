@@ -9,7 +9,7 @@
 
 //just a place for lockerd.js to populate config info
 var fs = require('fs');
-
+var path = require('path');
 
 exports.load = function(filepath) {
     var config = {};
@@ -43,9 +43,18 @@ exports.load = function(filepath) {
         "host": "localhost",
         "port": 27018
     };
+    // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
-    exports.lockerDir = process.cwd();
-    exports.logFile = config.logFile || undefined;
+    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from? 
+    // Right now it is ambiguous, we probably need two different vars
+    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
+    if(!config.logging) config.logging = {};
+    exports.logging =  {
+        file: config.logging.file || undefined,
+        level:config.logging.level || "info",
+        maxsize: config.logging.maxsize || 256 * 1024 * 1024, // default max log file size of 64MBB
+        console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
+    };
     exports.ui = config.ui || 'useui';
     exports.dashboard = config.dashboard;
 }
