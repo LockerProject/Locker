@@ -73,7 +73,7 @@ exports.init = function(dbfile, callback)
     });
 }
 
-exports.index = function(idr, data, callback) {
+exports.index = function(idr, data, update, callback) {
     if (!idr) return callback("Missing idr");
     if (!data) return callback("Missing data");
 
@@ -113,7 +113,9 @@ exports.index = function(idr, data, callback) {
     if (contentTokens.length === 0) return callback();
 
     var contentString = contentTokens.join(" <> ");
-    db.execute("INSERT OR REPLACE INTO ndx VALUES (?, ?, ?, ?)", [idr, at, title, contentString], function(err, rows){
+    var sql = "INSERT INTO ndx VALUES (?, ?, ?, ?)";
+    if(update) sql = "UPDATE ndx SET idr = ?, at = ?, title = ?, content = ? WHERE idr MATCH ?";
+    db.execute(sql, [idr, at, title, contentString, idr], function(err, rows){
         callback(err);
     });
 };
@@ -128,8 +130,15 @@ exports.deleteType = function(type, callback) {
 
 exports.query = function(arg, cbEach, cbDone) {
     if(!arg.q) return cbDone("no query");
+    if(!arg.limit) arg.limit = 100;
+    if(!arg.offset) arg.offset = 0;
+    var sql = "SELECT idr";
+    sql += arg.snippet ? ", snippet(ndx)" : "";
+    sql += " FROM ndx WHERE ndx MATCH ?";
+    sql += arg.sort ? " ORDER BY at DESC" : "";
+    sql += " LIMIT ? OFFSET ?";
     // sort, limit, offset
-    db.query("SELECT idr FROM ndx WHERE ndx MATCH ?", [arg.q], function(err, row){
+    db.query(sql, [arg.q, arg.limit, arg.offset], function(err, row){
         if(!row) return cbDone(err);
         cbEach(row);
     })
