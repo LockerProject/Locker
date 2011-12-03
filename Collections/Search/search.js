@@ -30,6 +30,10 @@ var MAX_CLOSE_TIMEOUT = 10000;
 
 app.set('views', __dirname);
 
+query
+    limit
+    sort created, updated, score
+
 app.get('/', function(req, res) {
     res.send("You should use a search interface instead of trying to talk to me directly.");
 });
