@@ -245,7 +245,6 @@ exports.handleGetQuery = function(req, callback) {
         });
     }
 
-console.error("querying "+type+" for "+q);
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);
     } else {
@@ -298,8 +297,9 @@ function reindexType(url, type, source, callback) {
         var items = JSON.parse(body);
         async.forEachSeries(items, function(item, forEachCb) {
             var fullBody = {};
-            fullBody.type = type;
-            fullBody.source = source;
+            var id = (item.id) ? item.id : item._id;
+            if(type == "twitter") id = item.id_str;
+            fullBody.idr = type+"://"+source+"/#"+id; // backport
             fullBody.data = item;
             var req = {};
             req.body = fullBody;
@@ -332,7 +332,7 @@ function enrichResultsWithFullObjects(results, callback) {
         function(results, waterfallCb) {
             async.forEachSeries(results,
                 function(item, forEachCb) {
-                    var idr = url.parse(item._id);
+                    var idr = url.parse(item.id);
                     if(!idr || !idr.host || !idr.hash) return forEachCb();
                     var source = (idr.host == 'twitter') ? 'twitter/timeline' : idr.host; // we only process timeline
                     var u = lockerInfo.lockerUrl + '/Me/' + source + '/id/' + idr.hash.substr(1);
@@ -355,7 +355,7 @@ function enrichResultsWithFullObjects(results, callback) {
 function cullAndSortResults(results, callback) {
     async.sortBy(results, function(item, sortByCb) {
         // we concatenate the score to the type, and we use the reciprocal of the score so the sort has the best scores at the top
-        sortByCb(null, item._type + (1/item.score).toFixed(3));
+        sortByCb(null, item.type + (1/item.score).toFixed(3));
     },
     function(err, results) {
        callback(null, results);
@@ -460,11 +460,11 @@ process.stdin.on('data', function(data) {
         exports.init(_lconfig,
                      require('../../Common/node/lsearch'),
                      require(__dirname + '/../../Common/node/logger'));
-        lsearch.setEngine(lsearch.engines.CLucene);
-        lsearch.setIndexPath(process.cwd() + "/search.index");
-
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
+        lsearch.setEngine(lsearch.engines.SQLite);
+        lsearch.setIndexPath(process.cwd() + "/index.db", function(){
+            app.listen(lockerInfo.port, 'localhost', function() {
+                process.stdout.write(data);
+            });
         });
     }
 });

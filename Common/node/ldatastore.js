@@ -96,6 +96,12 @@ exports.getAllCurrent = function(owner, type, callback, options) {
     m.find({}, options).toArray(callback);
 }
 
+exports.getEachCurrent = function(owner, type, callback, options) {
+    options = options || {};
+    var m = getMongo(owner, type, callback);
+    m.find({}, options).each(callback);
+}
+
 exports.getCurrent = function(owner, type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
     var m = getMongo(owner, type, callback);

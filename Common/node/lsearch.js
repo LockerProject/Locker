@@ -10,7 +10,6 @@ var assert = require("assert");
 var fs = require('fs');
 var path = require('path');
 var lconfig = require('lconfig');
-var wrench = require('wrench');
 var is = require("lutil").is;
 var logger = require("logger");
 var util = require('util');
@@ -40,11 +39,10 @@ NullEngine.prototype.name = function() {
 NullEngine.prototype.flushAndCloseWriter = function() {
 };
 
-CLEngine = function()
+SLEngine = function()
 {
-    this.engine = require('clucene');
-    this.cl = this.engine.CLucene;
-    this.lucene = new this.cl.Lucene();
+    this.sqlite = require('sqlite-fts');
+    this.db = new this.sqlite.Database();
     this.mappings = {
         "contactcontacts" : {
             "name":"name",
@@ -104,33 +102,26 @@ CLEngine = function()
         },
     };
 
-    this.engine.Store = {
-      STORE_YES: 1,
-      STORE_NO: 2,
-      STORE_COMPRESS: 4
-    };
-
-    this.engine.Index = {
-      INDEX_NO: 16,
-      INDEX_TOKENIZED: 32,
-      INDEX_UNTOKENIZED: 64,
-      INDEX_NONORMS: 128,
-    };
-
-    this.engine.TermVector = {
-      TERMVECTOR_NO: 256,
-      TERMVECTOR_YES: 512,
-      TERMVECTOR_WITH_POSITIONS: 512 | 1024,
-      TERMVECTOR_WITH_OFFSETS: 512 | 2048,
-      TERMVECTOR_WITH_POSITIONS_OFFSETS: (512 | 1024) | (512 | 2048)
-    };
-
     return this;
 };
 
-CLEngine.prototype.indexType = function(type, id, value, callback) {
-    var doc = new this.cl.Document();
+SLEngine.prototype.init = function(callback){
+    assert.ok(indexPath);
+    var self = this;
+    this.db.open(indexPath, function (error) {
+        if (error) {
+            logger.error("failed to open "+indexPath+": "+error);
+            callback();
+        }else{
+            self.db.executeScript("CREATE VIRTUAL TABLE ndx USING fts4(id, type, content);", function (error) {
+                if (error) logger.error("failed to create table: "+error);
+                callback();
+            });
+        }
+    });
+}
 
+SLEngine.prototype.indexType = function(type, id, value, callback) {
     if (!id) {
         callback("No valid id property was found");
         return;
@@ -175,42 +166,39 @@ CLEngine.prototype.indexType = function(type, id, value, callback) {
     }
 
     var contentString = contentTokens.join(" <> ");
-    //logger.debug("Going to store " + contentString);
-    doc.addField("_type", type, this.engine.Store.STORE_YES|this.engine.Index.INDEX_UNTOKENIZED);
-    doc.addField('content', contentString, this.engine.Store.STORE_NO|this.engine.Index.INDEX_TOKENIZED);
-    //logger.debug('about to index at ' + indexPath);
-    assert.ok(indexPath);
-    this.lucene.addDocument(id, doc, indexPath, function(err, indexTime) {
-        callback(err, indexTime);
+    var at = Date.now();
+    this.db.execute("INSERT INTO ndx VALUES (?, ?, ?)", [id, type, contentString], function(err, rows){
+        callback(err, Date.now() - at);
     });
 };
-CLEngine.prototype.deleteDocument = function(id, callback) {
-    assert.ok(indexPath);
-    this.lucene.deleteDocument(id, indexPath, callback);
+SLEngine.prototype.deleteDocument = function(id, callback) {
+    this.db.execute("DELETE FROM ndx WHERE id = ?", [id], callback);
 };
-CLEngine.prototype.deleteDocumentsByType = function(type, callback) {
-    assert.ok(indexPath);
-    this.lucene.deleteDocumentsByType(type, indexPath, callback);
+SLEngine.prototype.deleteDocumentsByType = function(type, callback) {
+    this.db.execute("DELETE FROM ndx WHERE type MATCH ?", [type], callback);
 };
-CLEngine.prototype.queryType = function(type, query, params, callback) {
-    assert.ok(indexPath);
-    var self = this;
-// caused worse problems over time, memory corruption
-//    this.lucene.deleteDocument("", indexPath, function(){
-        self.flushAndCloseWriter();
-        self.lucene.search(indexPath, "content:(" + query + ") AND +_type:" + type, callback);
-//    });
+SLEngine.prototype.queryType = function(type, query, params, callback) {
+    var rows = [];
+    var at = Date.now();
+    this.db.query("SELECT id, type FROM ndx WHERE ndx MATCH ?", ["type:"+type+" "+query], function(err, row){
+        if(err) logger.error("query failed: "+err);
+        if(!row) return callback(err, rows, Date.now() - at);
+        rows.push(row);
+    })
 };
-CLEngine.prototype.queryAll = function(query, params, callback) {
-    assert.ok(indexPath);
-    this.flushAndCloseWriter();
-    this.lucene.search(indexPath, "content:(" + query + ")", callback);
+SLEngine.prototype.queryAll = function(query, params, callback) {
+    var rows = [];
+    var at = Date.now();
+    this.db.query("SELECT id, type FROM ndx WHERE ndx MATCH ?", [query], function(err, row){
+        if(err) logger.error("query failed: "+err);
+        if(!row) return callback(err, rows, Date.now() - at);
+        rows.push(row);
+    })
 };
-CLEngine.prototype.name = function() {
-    return "CLEngine";
+SLEngine.prototype.name = function() {
+    return "SLEngine";
 };
-CLEngine.prototype.flushAndCloseWriter = function() {
-    this.lucene.closeWriter();
+SLEngine.prototype.flushAndCloseWriter = function() {
 };
 
 
@@ -229,12 +217,10 @@ exports.setEngine = function(engine) {
     }
 };
 
-exports.setIndexPath = function(newPath) {
+exports.setIndexPath = function(newPath, callback) {
     indexPath = newPath;
-    if (!path.existsSync(indexPath)) {
-      fs.mkdirSync(indexPath, 0755);
-    };
-
+    if(!exports.currentEngine.init) return callback();
+    exports.currentEngine.init(callback);
 };
 
 function exportEngineFunction(funcName) {
@@ -267,8 +253,9 @@ exports.deleteDocumentsByType = function(type, cb) {
 
 // CAREFUL!  Make sure all your readers/writers are closed before calling this
 exports.resetIndex = function(callback) {
+    assert.ok(indexPath);
     try {
-        wrench.rmdirSyncRecursive(indexPath);
+        fs.unlinkSync(indexPath);
         callback(null)
     } catch (E) {
         if (E.code == "ENOENT") return callback(null);
@@ -298,7 +285,8 @@ function indexMore(keepGoing) {
 }
 
 exports.engines = {
-    "CLucene" : CLEngine,
+    "SQLite" : SLEngine,
+    "CLucene" : undefined, // CLEngine, depreciated due to clucene project stagnation :(
     "ElasticSearch" : undefined // ESEngine
 };
 
