@@ -7,13 +7,15 @@
 *
 */
 
-var async = require('async'),
-    lcrypto = require(__dirname + '/../../Common/node/lcrypto')
-    lutil = require(__dirname + '/../../Common/node/lutil');
-    
 var lconfig = require('lconfig');
 //TODO: fix lconfig and remove this!
 lconfig.load('../../Config/config.json');
+
+var async = require('async'),
+    lcrypto = require(__dirname + '/../../Common/node/lcrypto'),
+    logger = require(__dirname + '/../../Common/node/logger')
+    lutil = require(__dirname + '/../../Common/node/lutil');
+    
 
 var uidsPerCycle = 25;
 

@@ -13,8 +13,8 @@ process.on('uncaughtException',function(error){
 
 
 var auth = { 
-    username: 'b007f1758619d3f2395abdc5b7f13c06d284b620b8330a064935e1a0511fa40b',
-    password: '16be7986e979e6e094cee5b2f50c53b5',
+    username: '4bd2c0a23380a878044276c378854f77a5959241bc05d8d9d32adc03ac42e98f',
+    password: '8d7513c98dc062c941c6ee8fa813a767',
     host: 'imap.gmail.com',
     port: '993',
     secure: true,
@@ -27,6 +27,7 @@ suite.next().suite.addBatch({
     "Can get messages in INBOX" : {
         topic: function() {
             process.chdir('.' + mePath);
+            pinfo.auth = auth;
             messages.sync(pinfo, this.callback);
         },
         "with all message data" : function(err, response) {
