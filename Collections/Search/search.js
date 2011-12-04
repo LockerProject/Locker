@@ -11,9 +11,9 @@ var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
 
 var lutil = require('../../Common/node/lutil');
-var lconfig;
-var lsearch;
-var logger;
+var lconfig = require('lconfig');
+lconfig.load('../../Config/config.json');
+var logger = require('logger');
 
 var lockerInfo = {};
 exports.lockerInfo = lockerInfo;
@@ -25,18 +25,14 @@ var async = require('async');
 var url = require('url');
 var app = express.createServer(connect.bodyParser());
 
-var maxCloseTimeout = null;
-var MAX_CLOSE_TIMEOUT = 10000;
 
 app.set('views', __dirname);
 
-query
-    limit
-    sort created, updated, score
 
 app.get('/', function(req, res) {
     res.send("You should use a search interface instead of trying to talk to me directly.");
 });
+/*
 
 app.post('/events', function(req, res) {
     exports.handlePostEvents(req, function(err, response) {
@@ -444,7 +440,7 @@ exports.init = function(config, search, _logger) {
     lsearch = search;
     logger = _logger;
 }
-
+ */
 // Process the startup JSON object
 process.stdin.resume();
 var allData = "";
@@ -459,16 +455,8 @@ process.stdin.on('data', function(data) {
             process.exit(1);
         }
         process.chdir(lockerInfo.workingDirectory);
-        var _lconfig = require('lconfig');
-        _lconfig.load('../../Config/config.json');
-        exports.init(_lconfig,
-                     require('../../Common/node/lsearch'),
-                     require(__dirname + '/../../Common/node/logger'));
-        lsearch.setEngine(lsearch.engines.SQLite);
-        lsearch.setIndexPath(process.cwd() + "/index.db", function(){
-            app.listen(lockerInfo.port, 'localhost', function() {
-                process.stdout.write(data);
-            });
+        app.listen(lockerInfo.port, 'localhost', function() {
+            process.stdout.write(data);
         });
     }
 });

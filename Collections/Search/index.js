@@ -8,7 +8,6 @@
 */
 
 var fs = require('fs');
-var path = require('path');
 var is = require("lutil").is;
 var url = require('url');
 var sqlite = require('sqlite-fts');
@@ -132,7 +131,7 @@ exports.query = function(arg, cbEach, cbDone) {
     if(!arg.q) return cbDone("no query");
     if(!arg.limit) arg.limit = 100;
     if(!arg.offset) arg.offset = 0;
-    var sql = "SELECT idr";
+    var sql = "SELECT idr,at";
     sql += arg.snippet ? ", snippet(ndx)" : "";
     sql += " FROM ndx WHERE ndx MATCH ?";
     sql += arg.sort ? " ORDER BY at DESC" : "";
@@ -147,7 +146,7 @@ exports.query = function(arg, cbEach, cbDone) {
 exports.reset = function(callback) {
     try {
         fs.unlinkSync(indexPath);
-        callback(null)
+        exports.init(indexPath,callback);
     } catch (E) {
         if (E.code == "ENOENT") return callback(null);
         callback(E);
