@@ -28,8 +28,7 @@ function reset(type, callback)
 exports.gather = function(type, cbDel, cbDone) {
     reset(type, function(){
         if(cbDel) cbDel();
-//        var services = ['contacts', 'photos', 'places', 'links'];
-        var services = ['places'];
+        var services = ['contacts', 'photos', 'places', 'links'];
         async.forEachSeries(services, gatherFromUrl, cbDone);
     });
 };
@@ -73,6 +72,20 @@ exports.add = function(service, data, callback){
             idr.protocol = "place";
             idr.hash = data.id;
             break;
+        case "contacts":
+            idr.protocol = "contact";
+            idr.hash = data._id;
+            break;
+        case "photos":
+            idr.protocol = "photo";
+            idr.hash = data.id;
+            break;
+        case "links":
+            idr.protocol = "link";
+            idr.hash = data._id;
+            break;
+        default:
+            callback("unknown service");
     }
     index.index(url.format(idr), data, false, callback);
 }

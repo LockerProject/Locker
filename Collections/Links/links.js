@@ -183,7 +183,13 @@ app.get('/', function(req, res) {
         } catch(E) {}
     }
     var ndx = {};
+    if(req.query['stream'] == "true")
+    {
+        res.writeHead(200, {'content-type' : 'application/jsonstream'});
+        options = {}; // exclusive
+    }
     dataStore.getLinks(options, function(item) {
+        if(req.query['stream'] == "true") return res.write(JSON.stringify(item)+'\n');
         if(full)
             item.encounters = [];
         ndx[item.link] = item;
@@ -191,6 +197,7 @@ app.get('/', function(req, res) {
             delete item.link;
         results.push(item);
     }, function(err) {
+        if(req.query['stream'] == "true") return res.end();
         if(full) {
             var arg = {"link":{$in: Object.keys(ndx)}};
             if(options.fields) {
