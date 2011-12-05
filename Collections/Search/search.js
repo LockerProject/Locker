@@ -42,7 +42,7 @@ app.post('/events', function(req, res) {
     }
     var update = (req.body.action == "update") ? true : false;
     index.index(req.body.idr, req.body.data, update, function(err){
-        logger.error(err);
+        if(err) logger.error(err);
         res.send(true);
     });
 });
