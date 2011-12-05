@@ -54,8 +54,9 @@ app.get('/search', function(req, res) {
         res.send([]);
         return;
     }
-    var u = url.parse(locker.lockerBase+"/Me/search/");
+    var u = url.parse(locker.lockerBase+"/Me/search/query");
     u.query = req.query;
+    u.query.type = "link";
     u.query.sort = "true"; // default sorted
     // pretty much just dumb proxy it at this point
     request({url:url.format(u)}, function(err, resp, body){
