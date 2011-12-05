@@ -1,5 +1,5 @@
 var index = require('./index.js');
-var data = require('./data');
+var data = require('./sync');
 var logger = {};
 logger.info = console.log;
 logger.error = console.error;

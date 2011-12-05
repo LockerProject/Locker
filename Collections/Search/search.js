@@ -24,6 +24,8 @@ var request = require('request');
 var async = require('async');
 var url = require('url');
 var app = express.createServer(connect.bodyParser());
+var index = require('index');
+var sync = require('sync');
 
 
 app.set('views', __dirname);
@@ -32,155 +34,81 @@ app.set('views', __dirname);
 app.get('/', function(req, res) {
     res.send("You should use a search interface instead of trying to talk to me directly.");
 });
-/*
 
 app.post('/events', function(req, res) {
-    exports.handlePostEvents(req, function(err, response) {
-        if (err) {
-            return res.send(err, 500);
-        }
-        return res.send(response);
+    if (!req.body.idr || !req.body.data) {
+        logger.error("Invalid event.");
+        return res.send("Invalid", 500);
+    }
+    var update = (req.body.action == "update") ? true : false;
+    index.index(req.body.idr, req.body.data, update, function(err){
+        logger.error(err);
+        res.send(true);
     });
-});
-
-app.post('/index', function(req, res) {
-    exports.handlePostIndex(req, function(err, response) {
-       if (err) {
-           return res.send(err, 500);
-       }
-       return res.send(response);
-   });
-});
-
-app.get('/query', function(req, res) {
-    exports.handleGetQuery(req, function(err, response) {
-       if (err) {
-           return res.send(err, 500);
-       }
-       return res.send(response);
-   });
 });
 
 app.get('/update', function(req, res) {
-    exports.handleGetUpdate(function(err, response) {
-       if (err) {
-           return res.send(err, 500);
-       }
-       return res.send('Full search reindex started');
-   });
+    logger.info("updating search index");
+    sync.gather(false, function(){
+        return res.send('Full search reindex started');
+    });
 });
 
 app.get('/reindexForType', function(req, res) {
-    exports.handleGetReindexForType(req.param('type'), function(err, response) {
-       if (err) {
-           return res.send(err, 500);
-       }
-       return res.send(response);
-   });
+    logger.info("updating search index for "+req.param("type"));
+    sync.gather(req.param("type"), function(){
+        return res.send('Partial search reindex started');
+    });
+});
+
+app.get('/query', function(req, res) {
+    if (!req.param('q')) {
+    }
+    var args = {};
+    args.q = lutil.trim(req.param('q'));
+    if (!args.q || args.q.length == 0) {
+        logger.warn('missing or invalid query');
+        return res.send('missing or invalid query');
+    }
+
+    if (req.param('type')) args.type = req.param('type');
+    if (req.param('limit')) args.limit = parseInt(req.param('limit'));
+
+
 });
 
 
-exports.handleGetUpdate = function(callback) {
-    var error;
-    lsearch.resetIndex(function(err) {
-        if (err) {
-            error = 'Failed attempting to reset search index for /search/update GET request: ' + err;
-            logger.error(error);
-            return callback(err);
+// Process the startup JSON object
+process.stdin.resume();
+var allData = "";
+process.stdin.on('data', function(data) {
+    allData += data;
+    if (allData.indexOf("\n") > 0) {
+        data = allData.substr(0, allData.indexOf("\n"));
+        lockerInfo = JSON.parse(data);
+        locker.initClient(lockerInfo);
+        if (!lockerInfo || !lockerInfo.workingDirectory) {
+            process.stderr.write('Was not passed valid startup information.'+data+'\n');
+            process.exit(1);
         }
-
-        reindexType(lockerInfo.lockerUrl + '/Me/contacts/?all=true', 'contact', 'contacts', function(err) {});
-        reindexType(lockerInfo.lockerUrl + '/Me/photos/?all=true', 'photo', 'photos', function(err) {});
-        reindexType(lockerInfo.lockerUrl + '/Me/places/?all=true', 'place', 'places', function(err) {});
-        locker.providers('timeline/twitter', function(err, services) {
-            if (!services) return;
-            services.forEach(function(svc) {
-               if (svc.provides.indexOf('timeline/twitter') >= 0) {
-                   reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'tweet', 'twitter', function(err) {});
-                }
+        process.chdir(lockerInfo.workingDirectory);
+        index.init("index.db", function(err){
+            if(err) logger.error(err);
+            sync.init(lconfig, index, logger);
+            app.listen(lockerInfo.port, 'localhost', function() {
+                process.stdout.write(data);
             });
         });
-
-        return callback(err);
-    });
-};
-
-exports.handlePostEvents = function(req, callback) {
-    var error;
-
-    if (req.headers['content-type'] !== 'application/json') {
-        error = 'Expected content-type of "application/json" for /search/events POST request. Received content-type: ' + req.headers['content-type'];
-        logger.error(error);
-        return callback(error, {});
     }
+});
 
-    if (!req.body) {
-        error = 'Empty body received for /search/events POST request.';
-        logger.error(error);
-        return callback(error, {});
-    }
 
-    if (req.body.hasOwnProperty('idr')) {
-        var idr = url.parse(req.body.idr);
+/*
 
-        // https://github.com/LockerProject/Locker/issues/285
-        if (!idr || !idr.host) {
-            error = 'No source found for event: '+JSON.stringify(req.body);
-            logger.error(error);
-            return callback(error, {});
-        }
 
-        var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
-        if (req.body.action === 'new' || req.body.action === 'update') {
-            lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
-                if (err) {
-                    handleError(req.body.idr, req.body.action, err);
-                    return callback(err, {});
-                }
-                handleLog(req.body.idr, req.body.action, time);
-                if (maxCloseTimeout) clearTimeout(maxCloseTimeout);
-                maxCloseTimeout = setTimeout(function() {
-                    lsearch.flushAndCloseWriter();
-                }, MAX_CLOSE_TIMEOUT);
-                return callback(err, {timeToIndex: time});
-            });
-        } else if (req.body.action === 'delete') {
-            lsearch.deleteDocument(req.body.idr, function(err, time) {
-                if (err) {
-                    handleError(req.body.idr, req.body.action, err);
-                    return callback(err, {});
-                }
-                handleLog(req.body.idr, req.body.action, time);
-                return callback(err, {timeToIndex: time});
-            });
-        } else {
-            return callback("Unexpected event: " + req.body.idr + " and " + req.body.action);
-        }
-    } else {
-        return callback("Unexpected event or not json " + req.headers["content-type"]);
-    }
-};
 
-exports.handlePostIndex = function(req, callback) {
-    var error;
 
-    if (!req.body.idr || !req.body.data) {
-        error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
-        logger.error(error);
-        return callback(error, {});
-    }
 
-    var idr = url.parse(req.body.idr);
-    var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
-    lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
-        if (err) {
-            handleError(req.body.idr, 'new', err);
-            return callback(err, {});
-        }
-        handleLog(req.body.idr, 'new', time);
-        return callback(null, {timeToIndex: time});
-    });
-};
 
 exports.handleGetQuery = function(req, callback) {
     var error;
@@ -441,22 +369,3 @@ exports.init = function(config, search, _logger) {
     logger = _logger;
 }
  */
-// Process the startup JSON object
-process.stdin.resume();
-var allData = "";
-process.stdin.on('data', function(data) {
-    allData += data;
-    if (allData.indexOf("\n") > 0) {
-        data = allData.substr(0, allData.indexOf("\n"));
-        lockerInfo = JSON.parse(data);
-        locker.initClient(lockerInfo);
-        if (!lockerInfo || !lockerInfo.workingDirectory) {
-            process.stderr.write('Was not passed valid startup information.'+data+'\n');
-            process.exit(1);
-        }
-        process.chdir(lockerInfo.workingDirectory);
-        app.listen(lockerInfo.port, 'localhost', function() {
-            process.stdout.write(data);
-        });
-    }
-});

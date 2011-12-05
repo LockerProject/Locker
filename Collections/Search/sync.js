@@ -28,7 +28,7 @@ function reset(type, callback)
 exports.gather = function(type, cbDel, cbDone) {
     reset(type, function(){
         if(cbDel) cbDel();
-        var services = ['contacts', 'photos', 'places', 'links'];
+        var services = (type) ? [type] : ['contacts', 'photos', 'places', 'links'];
         async.forEachSeries(services, gatherFromUrl, cbDone);
     });
 };
