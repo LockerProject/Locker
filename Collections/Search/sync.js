@@ -12,6 +12,7 @@ var async = require('async');
 var lutil = require('lutil');
 var url = require('url');
 var path = require('path');
+var crypto = require('crypto');
 
 var lconfig, index, logger;
 exports.init = function(l, i, c){
@@ -26,6 +27,7 @@ function reset(type, callback)
     index.deleteType(type, callback);
 }
 exports.gather = function(type, cbDel, cbDone) {
+    if(!cbDone) cbDone = function(){ logger.info("done gathering"); };
     reset(type, function(){
         if(cbDel) cbDel();
         var services = (type) ? [type] : ['contacts', 'photos', 'places', 'links'];
@@ -82,7 +84,7 @@ exports.add = function(service, data, callback){
             break;
         case "links":
             idr.protocol = "link";
-            idr.hash = data._id;
+            idr.hash = data._id; // TODO when links fully uses .id, switch to that here
             break;
         default:
             callback("unknown service");

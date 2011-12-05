@@ -66,7 +66,7 @@ exports.init = function(dbfile, callback)
     db.open(indexPath, function (error) {
         if (error) return callback("failed to open "+indexPath+": "+error);
         db.executeScript("CREATE VIRTUAL TABLE ndx USING fts4(idr TEXT PRIMARY KEY, at INT, title TEXT, content TEXT);", function (error) {
-            if (error) return callback("failed to create table: "+error);
+            if (error && error.toString().indexOf("already exists") == -1) return callback("failed to create table: "+error);
             callback();
         });
     });
@@ -129,16 +129,18 @@ exports.deleteType = function(type, callback) {
 
 exports.query = function(arg, cbEach, cbDone) {
     if(!arg.q) return cbDone("no query");
-    if(!arg.limit) arg.limit = 100;
+    if(!arg.limit) arg.limit = 20;
     if(!arg.offset) arg.offset = 0;
     var sql = "SELECT idr,at";
     sql += arg.snippet ? ", snippet(ndx)" : "";
     sql += " FROM ndx WHERE ndx MATCH ?";
     sql += arg.sort ? " ORDER BY at DESC" : "";
     sql += " LIMIT ? OFFSET ?";
-    // sort, limit, offset
+    // console.error(sql + " " + JSON.stringify([arg.q, arg.limit, arg.offset]));
     db.query(sql, [arg.q, arg.limit, arg.offset], function(err, row){
         if(!row) return cbDone(err);
+        row.snippet = row["snippet(ndx)"];
+        delete row["snippet(ndx)"]; // friendlier name
         cbEach(row);
     })
 };
