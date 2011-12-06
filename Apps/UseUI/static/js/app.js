@@ -254,6 +254,9 @@ function processResults(name, results, query) {
     if(query != searchTerm) return; // bail if search changed!
     var ids = {};
     if (results !== undefined && results.length > 0) {
+        $('.search-header-row.' + name).hide();
+        $('.search-result-row.' + name).remove();
+
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
