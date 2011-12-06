@@ -15,7 +15,6 @@ var levents = require("levents");
 var lutil = require('lutil');
 var serviceManager = require("lservicemanager");
 var syncManager = require('lsyncmanager');
-// var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
@@ -34,8 +33,6 @@ var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
-
-var dashboard, devdashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -295,7 +292,7 @@ locker.post('/core/:svcId/enable', function(req, res) {
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
-    // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
+    // ensure the ending slash - i.e. /Me/foo ==>> /Me/foo/
     if(!req.params[1]) {
         var url = "/Me/" + req.params[0];
         if (!req.params[1]) {
@@ -510,24 +507,13 @@ locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
-    req.url = '/Me/' + dashboard.instance.handle + '/' + req.url.substring(11);
+    req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
 });
 
 locker.all("/socket.io*", function(req, res) {
-    if (dashboard && dashboard.instance) proxied(req.method, dashboard.instance, req.url, req, res);
-});
-// proxy websockets
-locker.on('upgrade', function(req, socket, head) {
-    // TODO be selective about who they're routing too?
-    logger.verbose("** websocket proxying to dashboard");
-    var buffer = httpProxy.buffer(socket);
-    proxy.proxyWebSocketRequest(req, socket, head, {
-        host: url.parse(dashboard.instance.uriLocal).hostname,
-        port: url.parse(dashboard.instance.uriLocal).port,
-        buffer: buffer,
-        https:false
-  });
+    req.url = '/Me/' + lconfig.ui + req.url;
+    proxyRequest(req.method, req, res);
 });
 
 locker.get('/', function(req, res) {
@@ -550,7 +536,6 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
-
 exports.startService = function(port, cb) {
     if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
         logger.error('you have specified an invalid UI in your config file.  please fix it!');
@@ -559,10 +544,7 @@ exports.startService = function(port, cb) {
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
     locker.listen(port, function() {
-        serviceManager.spawn(lconfig.ui, function() {
-            registry.init(lconfig, lcrypto, cb);
-            dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
-            logger.info('ui spawned');
-        });
+        registry.init(lconfig, lcrypto, cb);
+        logger.info('init done');
     });
 }
