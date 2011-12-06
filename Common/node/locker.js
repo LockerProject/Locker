@@ -10,7 +10,6 @@
 var request = require('request'),
     fs = require("fs"),
     sys = require('sys'),
-    http = require("http"),
     url = require("url"),
     lstate = require("lstate"),
     lutil = require("lutil"),
