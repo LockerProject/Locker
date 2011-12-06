@@ -527,13 +527,14 @@ exports.spawn = function(serviceId, callback) {
 
 function quiesce(svc)
 {
-    if(!svc || !svc.pid || svc.isDashboard) return;
+    if(!svc || !svc.pid) return;
     var now = Date.now();
     if(svc.last > 0 && now - svc.last < 20000) return setTimeout(function() { quiesce(svc); }, 25000);
     try {
-        console.log("Quiescing idle service " + svc.id + " at pid " + svc.pid);
+        logger.info("Quiescing idle service " + svc.id + " at pid " + svc.pid);
         process.kill(svc.pid, "SIGINT");
     } catch(e) {
+        logger.error("got error while quiescing: "+e);
     }
 }
 
