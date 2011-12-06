@@ -1,5 +1,6 @@
 var syncManager = require('lsyncmanager')
   , lconfig = require('lconfig')
+  , lcrypto = require('lcrypto')
   , logger = require('logger')
   , fs = require('fs')
   , locker = require('../Common/node/locker')
@@ -76,6 +77,9 @@ module.exports = function(locker) {
     locker.get('/auth/flickr/auth', function(req, res) {
         handleFlickr(req, res);
     });
+    
+    locker.get('/auth/gmail/auth', handleUserAndPassGet);
+    locker.post('/auth/gmail/auth', handleUserAndPassPost);
 };
 
 function handleOAuth2 (code, options, res) {
@@ -190,6 +194,35 @@ function handleFlickr (req, res) {
             installSynclet("flickr", auth);
             res.end("<script type='text/javascript'> window.close(); </script>");
         });
+    }
+}
+
+function handleUserAndPassGet (req, res) {
+    res.send('<html><body>\
+              <form action="/auth/gmail/auth" method="POST">\
+                Username: <input name="username"><br>\
+                Password: <input name="password" type="password">\
+                <input type="submit">\
+              </form>\
+              </body></body>');
+}
+function handleUserAndPassPost (req, res) {
+    console.error("DEBUG: req", req.body);
+    var username = req.body.username;
+    var password = req.body.password;
+    if(!(username && password)) {
+        
+    } else {
+        var auth = {
+            host: "imap.gmail.com",
+            port: 993,
+            secure: true,
+            debug: false
+        };
+        auth.username = lcrypto.encrypt(username);
+        auth.password = lcrypto.encrypt(password);
+        installSynclet("imap", auth);
+        res.send('ok!');
     }
 }
 

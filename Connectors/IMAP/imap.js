@@ -1,13 +1,14 @@
 var util = require('util'), net = require('net'),
     tls = require('tls'), EventEmitter = require('events').EventEmitter;
-var emptyFn = function() {}, CRLF = "\r\n", debug=emptyFn,
+var emptyFn = function() {}, CRLF = '\r\n', debug=emptyFn,
     STATES = {
       NOCONNECT: 0,
       NOAUTH: 1,
       AUTH: 2,
       BOXSELECTING: 3,
       BOXSELECTED: 4
-    }, BOX_ATTRIBS = ['NOINFERIORS', 'NOSELECT', 'MARKED', 'UNMARKED'];
+    }, BOX_ATTRIBS = ['NOINFERIORS', 'NOSELECT', 'MARKED', 'UNMARKED'],
+    reFetch = /^\* (\d+) FETCH .+? \{(\d+)\}\r\n/;
 
 function ImapConnection (options) {
   if (!(this instanceof ImapConnection))
@@ -34,10 +35,9 @@ function ImapConnection (options) {
     tmrKeepalive: null,
     tmoKeepalive: 10000,
     tmrConn: null,
-    curData: '',
+    curData: null,
     curExpected: 0,
     curXferred: 0,
-    capabilities: [],
     box: {
       _uidnext: 0,
       _flags: [],
@@ -63,6 +63,7 @@ function ImapConnection (options) {
     debug = this._options.debug;
   this.delim = null;
   this.namespaces = { personal: [], other: [], shared: [] };
+  this.capabilities = [];
 };
 util.inherits(ImapConnection, EventEmitter);
 exports.ImapConnection = ImapConnection;
@@ -80,7 +81,7 @@ ImapConnection.prototype.connect = function(loginCb) {
               return;
             }
             // Next, get the list of available namespaces if supported
-            if (!reentry && self._state.capabilities.indexOf('NAMESPACE') > -1) {
+            if (!reentry && self.capabilities.indexOf('NAMESPACE') > -1) {
               var fnMe = arguments.callee;
               // Re-enter this function after we've obtained the available
               // namespaces
@@ -108,9 +109,9 @@ ImapConnection.prototype.connect = function(loginCb) {
     this._state.conn.on('secure', function() {
       debug('Secure connection made.');
     });
-    this._state.conn.cleartext.setEncoding('utf8');
+    //this._state.conn.cleartext.setEncoding('utf8');
   } else {
-    this._state.conn.setEncoding('utf8');
+    //this._state.conn.setEncoding('utf8');
     this._state.conn.cleartext = this._state.conn;
   }
 
@@ -126,40 +127,47 @@ ImapConnection.prototype.connect = function(loginCb) {
   this._state.conn.cleartext.on('data', function(data) {
     if (data.length === 0) return;
     var trailingCRLF = false, literalInfo;
-    debug('\n<<RECEIVED>>: ' + util.inspect(data) + '\n');
-    
+    debug('\n<<RECEIVED>>: ' + util.inspect(data.toString()) + '\n');
+
     if (self._state.curExpected === 0) {
       if (data.indexOf(CRLF) === -1) {
-        self._state.curData += data;
+        if (self._state.curData)
+          self._state.curData = bufferAppend(self._state.curData, data);
+        else
+          self._state.curData = data;
         return;
       }
-      if (self._state.curData.length) {
-        data = self._state.curData + data;
-        self._state.curData = '';
+      if (self._state.curData && self._state.curData.length) {
+        data = bufferAppend(self._state.curData, data);
+        self._state.curData = null;
       }
     }
 
     // Don't mess with incoming data if it's part of a literal
+    var strdata;
     if (self._state.curExpected > 0) {
       var curReq = self._state.requests[0];
+
       if (!curReq._done) {
         var chunk = data;
-        self._state.curXferred += Buffer.byteLength(data, 'utf8');
+        self._state.curXferred += data.length;
         if (self._state.curXferred > self._state.curExpected) {
-          var pos = Buffer.byteLength(data, 'utf8')
+          var pos = data.length
                     - (self._state.curXferred - self._state.curExpected),
-              extra = (new Buffer(data)).slice(pos).toString('utf8');
+              extra = data.slice(pos);
           if (pos > 0)
-            chunk = (new Buffer(data)).slice(0, pos).toString('utf8');
+            chunk = data.slice(0, pos);
           else
             chunk = undefined;
           data = extra;
           curReq._done = 1;
         }
-        
-        if (chunk) {
-          if (curReq._msgtype === 'headers')
-            self._state.curData += chunk;
+
+        if (chunk && chunk.length) {
+          if (curReq._msgtype === 'headers') {
+            chunk.copy(self._state.curData, curReq.curPos, 0);
+            curReq.curPos += chunk.length;
+          }
           else
             curReq._msg.emit('data', chunk);
         }
@@ -168,39 +176,32 @@ ImapConnection.prototype.connect = function(loginCb) {
         var restDesc;
         if (curReq._done === 1) {
           if (curReq._msgtype === 'headers')
-            curReq._headers = self._state.curData;
-          self._state.curData = '';
+            curReq._headers = self._state.curData.toString();
+          self._state.curData = null;
           curReq._done = true;
         }
-        self._state.curData += data;
-        //console.log('int: 1');
-        // if (self._state.curData.match(/^(\r\n+)(.*?)\)\r\n/)) {
-        //         self._state.curData['input'] = ')\r\n';
-        //     }
-        //console.log(self._state.curData);
-        if (restDesc = self._state.curData.match(/^(.*?)\)\r\n/)) {
-            //console.log('int: 1:1');
+
+        if (self._state.curData)
+          self._state.curData = bufferAppend(self._state.curData, data);
+        else
+          self._state.curData = data;
+
+        if (restDesc = self._state.curData.toString().match(/^(.*?)\)\r\n/)) {
           if (restDesc[1]) {
-              //console.log('int: 1:2');
             restDesc[1] = restDesc[1].trim();
-            if (restDesc[1].length) {
-                //console.log('int: 1:3');
+            if (restDesc[1].length)
               restDesc[1] = ' ' + restDesc[1];
-             }
-          } else {
-          //console.log('int: 1:4');
+          } else
             restDesc[1] = '';
-        }
-        //console.log('int: 2');
           parseFetch(curReq._desc + restDesc[1], curReq._headers, curReq._msg);
-          data = self._state.curData.substring(self._state.curData.indexOf(CRLF)
-                                               + 2);
+          data = self._state.curData.slice(self._state.curData.indexOf(CRLF)
+                                           + 2);
           curReq._done = false;
           self._state.curXferred = 0;
           self._state.curExpected = 0;
-          self._state.curData = '';
+          self._state.curData = null;
           curReq._msg.emit('end');
-          if (data.length && data[0] === '*') {
+          if (data.length && data[0] === 42/* '*' */) {
             self._state.conn.cleartext.emit('data', data);
             return;
           }
@@ -209,36 +210,51 @@ ImapConnection.prototype.connect = function(loginCb) {
       } else
         return;
     } else if (self._state.curExpected === 0
-               && (literalInfo = data.match(/^\* \d+ FETCH .+? \{(\d+)\}\r\n/))) {
-      self._state.curExpected = parseInt(literalInfo[1], 10);
+               && (literalInfo = (strdata = data.toString()).match(reFetch))) {
+      self._state.curExpected = parseInt(literalInfo[2], 10);
       var idxCRLF = data.indexOf(CRLF),
           curReq = self._state.requests[0],
-          type = /BODY\[(.*)\](?:\<\d+\>)?/.exec(data.substring(0, idxCRLF)),
+          type = /BODY\[(.*)\](?:\<\d+\>)?/.exec(strdata.substring(0, idxCRLF)),
           msg = new ImapMessage(),
-          desc = data.substring(data.indexOf("(")+1, idxCRLF).trim();
+          desc = strdata.substring(data.indexOf('(')+1, idxCRLF).trim();
+      msg.seqno = parseInt(literalInfo[1], 10);
       type = type[1];
       curReq._desc = desc;
       curReq._msg = msg;
       curReq._fetcher.emit('message', msg);
       curReq._msgtype = (type.indexOf('HEADER') === 0 ? 'headers' : 'body');
-      self._state.conn.cleartext.emit('data', data.substring(idxCRLF + 2));
+      if (curReq._msgtype === 'headers') {
+        self._state.curData = new Buffer(self._state.curExpected);
+        curReq.curPos = 0;
+      }
+      self._state.conn.cleartext.emit('data', data.slice(idxCRLF + 2));
       return;
     }
 
     if (data.length === 0)
       return;
-    data = data.split(CRLF).filter(isNotEmpty);
+    var endsInCRLF = (data[data.length-2] === 13 && data[data.length-1] === 10);
+    data = data.split(CRLF);
 
     // Defer any extra server responses found in the incoming data
     if (data.length > 1) {
-      data.slice(1).forEach(function(line) {
-        process.nextTick(function() {
-          self._state.conn.cleartext.emit('data', line + CRLF);
-        });
-      });
+      for (var i=1,len=data.length; i<len; ++i) {
+        (function(line, isLast) {
+          process.nextTick(function() {
+            var needsCRLF = !isLast || (isLast && endsInCRLF),
+                b = new Buffer(needsCRLF ? line.length + 2 : line.length);
+            line.copy(b, 0, 0);
+            if (needsCRLF) {
+              b[b.length-2] = 13;
+              b[b.length-1] = 10;
+            }
+            self._state.conn.cleartext.emit('data', b);
+          });
+        })(data[i], i === len-1);
+      }
     }
 
-    data = data[0].explode(' ', 3);
+    data = data[0].toString().explode(' ', 3);
 
     if (data[0] === '*') { // Untagged server response
       if (self._state.status === STATES.NOAUTH) {
@@ -262,7 +278,7 @@ ImapConnection.prototype.connect = function(loginCb) {
         case 'CAPABILITY':
           if (self._state.numCapRecvs < 2)
             self._state.numCapRecvs++;
-          self._state.capabilities = data[2].split(' ').map(up);
+          self.capabilities = data[2].split(' ').map(up);
         break;
         case 'FLAGS':
           if (self._state.status === STATES.BOXSELECTING) {
@@ -277,11 +293,11 @@ ImapConnection.prototype.connect = function(loginCb) {
             self.emit('alert', result[1]);
           else if (self._state.status === STATES.BOXSELECTING) {
             var result;
-            if (result = /^\[UIDVALIDITY (\d+)\].*/i.exec(data[2]))
+            if (result = /^\[UIDVALIDITY (\d+)\]/i.exec(data[2]))
               self._state.box.validity = result[1];
-            else if (result = /^\[UIDNEXT (\d+)\].*/i.exec(data[2]))
+            else if (result = /^\[UIDNEXT (\d+)\]/i.exec(data[2]))
               self._state.box._uidnext = result[1];
-            else if (result = /^\[PERMANENTFLAGS \((.*)\)\].*/i.exec(data[2])) {
+            else if (result = /^\[PERMANENTFLAGS \((.*)\)\]/i.exec(data[2])) {
               self._state.box.permFlags = result[1].split(' ');
               var idx;
               if ((idx = self._state.box.permFlags.indexOf('\\*')) > -1) {
@@ -316,13 +332,13 @@ ImapConnection.prototype.connect = function(loginCb) {
         case 'LIST':
           var result;
           if (self.delim === null
-              && (result = /^\(\\Noselect\) (.+?) ".*"$/.exec(data[2])))
+              && (result = /^\(\\No[sS]elect\) (.+?) .*$/.exec(data[2])))
             self.delim = (result[1] === 'NIL'
                           ? false : result[1].substring(1, result[1].length-1));
           else if (self.delim !== null) {
             if (self._state.requests[0].args.length === 0)
               self._state.requests[0].args.push({});
-            result = /^\((.*)\) (.+?) "(.+)"$/.exec(data[2]);
+            result = /^\((.*)\) (.+?) "?([^"]+)"?$/.exec(data[2]);
             var box = {
               attribs: result[1].split(' ').map(function(attrib) {
                          return attrib.substr(1).toUpperCase();
@@ -354,6 +370,9 @@ ImapConnection.prototype.connect = function(loginCb) {
         break;
         default:
           if (/^\d+$/.test(data[1])) {
+            var isUnsolicited = (self._state.requests[0] &&
+                      self._state.requests[0].command.indexOf('NOOP') > -1) ||
+                      (self._state.isIdle && self._state.ext.idle.sentIdle);
             switch (data[2]) {
               case 'EXISTS':
                 // mailbox total message count
@@ -373,22 +392,29 @@ ImapConnection.prototype.connect = function(loginCb) {
                 // confirms permanent deletion of a single message
                 if (self._state.box.messages.total > 0)
                   self._state.box.messages.total--;
+                if (isUnsolicited)
+                  self.emit('deleted', parseInt(data[1], 10));
               break;
               default:
                 // fetches without header or body (part) retrievals
                 if (/^FETCH/.test(data[2])) {
-                  var curReq = self._state.requests[0],
-                      msg = new ImapMessage();
+                  var msg = new ImapMessage();
                   parseFetch(data[2].substring(data[2].indexOf("(")+1,
                                                data[2].lastIndexOf(")")),
                              "", msg);
-                  curReq._fetcher.emit('message', msg);
-                  msg.emit('end');
+                  msg.seqno = parseInt(data[1], 10);
+                  if (self._state.requests.length &&
+                      self._state.requests[0].command.indexOf('FETCH') > -1) {
+                    var curReq = self._state.requests[0];
+                    curReq._fetcher.emit('message', msg);
+                    msg.emit('end');
+                  } else if (isUnsolicited)
+                    self.emit('msgupdate', msg);
                 }
             }
           }
       }
-    } else if (data[0].indexOf('A') === 0) { // Tagged server response
+    } else if (data[0][0] === 'A') { // Tagged server response
       var sendBox = false;
       clearTimeout(self._state.tmrKeepalive);
 
@@ -437,7 +463,7 @@ ImapConnection.prototype.connect = function(loginCb) {
       if (self._state.requests.length === 0
           && recentCmd !== 'LOGOUT') {
         if (self._state.status === STATES.BOXSELECTED &&
-            self._state.capabilities.indexOf('IDLE') > -1) {
+            self.capabilities.indexOf('IDLE') > -1) {
           // According to RFC 2177, we should re-IDLE at least every 29
           // minutes to avoid disconnection by the server
           self._send('IDLE', undefined, true);
@@ -578,12 +604,14 @@ ImapConnection.prototype.search = function(options, cb) {
     throw new Error('No mailbox is currently selected');
   if (!Array.isArray(options))
     throw new Error('Expected array for search options');
-  this._send('UID SEARCH' + buildSearchQuery(options), cb);
+  this._send('UID SEARCH'
+             + buildSearchQuery(options, this.capabilities), cb);
 };
 
 ImapConnection.prototype.fetch = function(uids, options) {
   if (this._state.status !== STATES.BOXSELECTED)
     throw new Error('No mailbox is currently selected');
+
   if (typeof uids === undefined || typeof uids === null
       || (Array.isArray(uids) && uids.length === 0))
     throw new Error('Nothing to fetch');
@@ -632,11 +660,14 @@ ImapConnection.prototype.fetch = function(uids, options) {
       // all message parts
       toFetch = 'TEXT';
     } else if (typeof opts.request.body === 'string') {
-      if (opts.request.body !== ''
-          && !/^([\d]+[\.]{0,1})*[\d]+$/.test(opts.request.body))
+      if (opts.request.body.toUpperCase() === 'FULL') {
+        // fetches the whole entire message (including the headers)
+        toFetch = '';
+      } else if (/^([\d]+[\.]{0,1})*[\d]+$/.test(opts.request.body)) {
+        // specific message part identifier, e.g. '1', '2', '1.1', '1.2', etc
+        toFetch = opts.request.body;
+      } else
         throw new Error("Invalid body partID format");
-      // specific message part identifier, e.g. '1', '2', '1.1', '1.2', etc
-      toFetch = opts.request.body;
     }
   } else {
     // fetch specific headers only
@@ -644,7 +675,11 @@ ImapConnection.prototype.fetch = function(uids, options) {
               + ')';
   }
 
-  this._send('UID FETCH ' + uids.join(',') + ' (FLAGS INTERNALDATE'
+  var extensions = '';
+  if (this.capabilities.indexOf('X-GM-EXT-1') > -1)
+    extensions = 'X-GM-THRID X-GM-MSGID X-GM-LABELS ';
+
+  this._send('UID FETCH ' + uids.join(',') + ' (' + extensions + 'FLAGS INTERNALDATE'
              + (opts.request.struct ? ' BODYSTRUCTURE' : '')
              + (typeof toFetch === 'string' ? ' BODY'
              + (!opts.markSeen ? '.PEEK' : '')
@@ -656,7 +691,8 @@ ImapConnection.prototype.fetch = function(uids, options) {
                  self.emit('error', e);
                else if (fetcher)
                  fetcher.emit('end');
-             });
+             }
+  );
   var imapFetcher = new ImapFetch();
   this._state.requests[this._state.requests.length-1]._fetcher = imapFetcher;
   return imapFetcher;
@@ -679,7 +715,7 @@ ImapConnection.prototype.delFlags = function(uids, flags, cb) {
 };
 
 ImapConnection.prototype.addKeywords = function(uids, flags, cb) {
-  if (!self._state.box._newKeywords)
+  if (!this._state.box._newKeywords)
     throw new Error('This mailbox does not allow new keywords to be added');
   try {
     this._store(uids, flags, true, cb);
@@ -829,7 +865,7 @@ ImapConnection.prototype._login = function(cb) {
         cb(err);
       };
   if (this._state.status === STATES.NOAUTH) {
-    if (typeof this._state.capabilities.LOGINDISABLED !== 'undefined') {
+    if (this.capabilities.indexOf('LOGINDISABLED') > -1) {
       cb(new Error('Logging in is disabled on this server'));
       return;
     }
@@ -849,11 +885,14 @@ ImapConnection.prototype._reset = function() {
   this._state.status = STATES.NOCONNECT;
   this._state.numCapRecvs = 0;
   this._state.requests = [];
-  this._state.capabilities = [];
   this._state.isIdle = true;
   this._state.isReady = false;
+  this._state.ext.idle.sentIdle = false;
+  this._state.ext.idle.timeWaited = 0;
+
   this.namespaces = { personal: [], other: [], shared: [] };
   this.delim = null;
+  this.capabilities = [];
   this._resetBox();
 };
 ImapConnection.prototype._resetBox = function() {
@@ -903,7 +942,7 @@ util.inherits(ImapFetch, EventEmitter);
 
 /****** Utility Functions ******/
 
-function buildSearchQuery(options, isOrChild) {
+function buildSearchQuery(options, extensions, isOrChild) {
   var searchargs = '',
       months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
                 'Oct', 'Nov', 'Dec'];
@@ -924,14 +963,16 @@ function buildSearchQuery(options, isOrChild) {
     if (criteria === 'OR') {
       if (args.length !== 2)
         throw new Error('OR must have exactly two arguments');
-      searchargs += ' OR (' + buildSearchQuery(args[0], true) + ') ('
-                    + buildSearchQuery(args[1], true) + ')'
+      searchargs += ' OR (' + buildSearchQuery(args[0], extensions, true) + ') ('
+                    + buildSearchQuery(args[1], extensions, true) + ')'
     } else {
       if (criteria[0] === '!') {
         modifier += 'NOT ';
         criteria = criteria.substr(1);
       }
       switch(criteria) {
+        // -- Standard criteria --
+        case 'ALL':
         case 'ANSWERED':
         case 'DELETED':
         case 'DRAFT':
@@ -1005,13 +1046,44 @@ function buildSearchQuery(options, isOrChild) {
           if (!args)
             throw new Error('Incorrect number of arguments for search option: '
                             + criteria);
-          args = args.slice(1);
           try {
             validateUIDList(args);
           } catch(e) {
             throw e;
           }
           searchargs += modifier + criteria + ' ' + args.join(',');
+        break;
+        // -- Extensions criteria --
+        case 'X-GM-MSGID': // Gmail unique message ID
+        case 'X-GM-THRID': // Gmail thread ID
+          if (extensions.indexOf('X-GM-EXT-1') === -1)
+            throw new Error('IMAP extension not available: ' + criteria);
+          var val;
+          if (!args || args.length !== 1)
+            throw new Error('Incorrect number of arguments for search option: '
+                            + criteria);
+          else {
+            val = ''+args[0];
+            if (!(/^\d+$/.test(args[0])))
+              throw new Error('Invalid value');
+          }
+          searchargs += modifier + criteria + ' ' + val;
+        break;
+        case 'X-GM-RAW': // Gmail search syntax
+          if (extensions.indexOf('X-GM-EXT-1') === -1)
+            throw new Error('IMAP extension not available: ' + criteria);
+          if (!args || args.length !== 1)
+            throw new Error('Incorrect number of arguments for search option: '
+                            + criteria);
+          searchargs += modifier + criteria + ' "' + escape(''+args[0]) + '"';
+        break;
+        case 'X-GM-LABELS': // Gmail labels
+          if (extensions.indexOf('X-GM-EXT-1') === -1)
+            throw new Error('IMAP extension not available: ' + criteria);
+          if (!args || args.length !== 1)
+            throw new Error('Incorrect number of arguments for search option: '
+                            + criteria);
+          searchargs += modifier + criteria + ' ' + args[0];
         break;
         default:
           throw new Error('Unexpected search option: ' + criteria);
@@ -1082,6 +1154,8 @@ function parseFetch(str, literalData, fetchData) {
       fetchData.flags = result[i+1].filter(isNotEmpty);
     else if (result[i] === 'BODYSTRUCTURE')
       fetchData.structure = parseBodyStructure(result[i+1]);
+    else if (typeof result[i] === 'string') // simple extensions
+      fetchData[result[i].toLowerCase()] = result[i+1];
     else if (Array.isArray(result[i]) && typeof result[i][0] === 'string' &&
              result[i][0].indexOf('HEADER') === 0 && literalData) {
       var headers = literalData.split(/\r\n(?=[\w])/), header;
@@ -1278,13 +1352,13 @@ String.prototype.explode = function(delimiter, limit) {
       || typeof delimiter === 'object')
       return false;
 
-	delimiter = (delimiter === true ? '1' : delimiter.toString());
+  delimiter = (delimiter === true ? '1' : delimiter.toString());
 
   if (!limit || limit === 0)
     return this.split(delimiter);
   else if (limit < 0)
-		return false;
-	else if (limit > 0) {
+    return false;
+  else if (limit > 0) {
     var splitted = this.split(delimiter);
     var partA = splitted.splice(0, limit - 1);
     var partB = splitted.join(delimiter);
@@ -1292,11 +1366,11 @@ String.prototype.explode = function(delimiter, limit) {
     return partA;
   }
 
-	return false;
+  return false;
 }
 
 function isNotEmpty(str) {
-	return str.trim().length > 0;
+  return str.trim().length > 0;
 }
 
 function escape(str) {
@@ -1353,9 +1427,12 @@ function convStr(str) {
     return str.substring(1, str.length-1);
   else if (str === 'NIL')
     return null;
-  else if (/^\d+$/.test(str))
-    return parseInt(str, 10);
-  else
+  else if (/^\d+$/.test(str)) {
+    // some IMAP extensions utilize large (64-bit) integers, which JavaScript
+    // can't handle natively, so we'll just keep it as a string if it's too big
+    var val = parseInt(str, 10);
+    return (val.toString() === str ? val : str);
+  } else
     return str;
 }
 
@@ -1410,7 +1487,7 @@ function extend() {
     // if last one is own, then all properties are own.
 
     var last_key;
-    for (key in obj)
+    for (var key in obj)
       last_key = key;
     
     return typeof last_key === "undefined" || hasOwnProperty.call(obj, last_key);
@@ -1446,6 +1523,69 @@ function extend() {
 
   // Return the modified object
   return target;
+};
+
+function bufferAppend(buf1, buf2) {
+  var newBuf = new Buffer(buf1.length + buf2.length);
+  buf1.copy(newBuf, 0, 0);
+  if (Buffer.isBuffer(buf2))
+    buf2.copy(newBuf, buf1.length, 0);
+  else if (Array.isArray(buf2)) {
+    for (var i=buf1.length, len=buf2.length; i<len; i++)
+      newBuf[i] = buf2[i];
+  }
+
+  return newBuf;
+};
+
+Buffer.prototype.split = function(str) {
+  if ((typeof str !== 'string' && !Array.isArray(str))
+      || str.length === 0 || str.length > this.length)
+    return [this];
+  var search = !Array.isArray(str)
+                ? str.split('').map(function(el) { return el.charCodeAt(0); })
+                : str,
+      searchLen = search.length,
+      ret = [], pos, start = 0;
+
+  while ((pos = this.indexOf(search, start)) > -1) {
+    ret.push(this.slice(start, pos));
+    start = pos + searchLen;
+  }
+  if (!ret.length)
+    ret = [this];
+  else if (start < this.length)
+    ret.push(this.slice(start));
+  
+  return ret;
+};
+
+Buffer.prototype.indexOf = function(str, start) {
+  if (str.length > this.length)
+    return -1;
+  var search = !Array.isArray(str)
+                ? str.split('').map(function(el) { return el.charCodeAt(0); })
+                : str,
+      searchLen = search.length,
+      ret = -1, i, j, len;
+  for (i=start||0,len=this.length; i<len; ++i) {
+    if (this[i] == search[0] && (len-i) >= searchLen) {
+      if (searchLen > 1) {
+        for (j=1; j<searchLen; ++j) {
+          if (this[i+j] != search[j])
+            break;
+          else if (j == searchLen-1) {
+            ret = i;
+            break;
+          }
+        }
+      } else
+        ret = i;
+      if (ret > -1)
+        break;
+    }
+  }
+  return ret;
 };
 
 net.Stream.prototype.setSecure = function() {

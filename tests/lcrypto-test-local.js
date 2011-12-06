@@ -11,12 +11,12 @@ var vows = require("vows");
 var assert = require("assert");
 var fs = require("fs");
 var events = require("events");
+var lconfig = require("lconfig");
+lconfig.load("Config/config.json");
 require.paths.push(__dirname + "/../Common/node");
 var lcrypto = require("lcrypto");
 var request = require("request");
-var lconfig = require("lconfig");
 var querystring = require("querystring");
-lconfig.load("Config/config.json");
 
 vows.describe("Crypto Wrapper").addBatch({
     "lcrypto" : {

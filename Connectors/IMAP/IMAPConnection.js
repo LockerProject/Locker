@@ -45,25 +45,29 @@ module.exports = function(auth) {
     
     IMAPConnection.fetchMessages = function(mailbox, query, maxUIDs, fetchMessageCallback) {
         var results;
-        
+        if (debug) console.error("DEBUG: fetchMessages for mailbox", mailbox);
+        var start = Date.now();
         async.series({
             connect: function(callback) {
-                reconnectToBox(mailbox, callback);
+                openBox(mailbox, callback);
             },
             search: function(callback) {
+                if (debug) console.error('for mailbox', mailbox, 'connect took', Date.now() - start); start = Date.now();
                 if (debug) console.error('search: ' + query);
-                client.search([ ['UID', 'SEARCH', query] ], function(err, searchResults) {
+                client.search([ ['UID', query] ], function(err, searchResults) {
                     results = searchResults;
                     callback(err, 'search');
                 });
             },
             fetch: function(callback) {
+                if (debug) console.error('for mailbox', mailbox, 'fetch took', Date.now() - start); start = Date.now();
                 if (debug) console.error('fetch');
                 if(results.length < 1) 
                     return callback(null, 'fetch');
                 var theseUIDs = results.splice(0, maxUIDs);
                 try {
                     getMessages(theseUIDs, mailbox, function(messages) {
+                        if (debug) console.error('for mailbox', mailbox, 'getMessages took', Date.now() - start); start = Date.now();
                         fetchMessageCallback(null, messages);
                     });
                 } catch(e) {
@@ -83,6 +87,11 @@ module.exports = function(auth) {
             }
             fetchMessageCallback(err);
         });
+    }
+    
+    function openBox(mailbox, callback) {
+        if(!client) return reconnectToBox(mailbox, callback);
+        return client.openBox(mailbox, false, callback);
     }
     
     function reconnectToBox(mailbox, callback) {
@@ -106,7 +115,9 @@ module.exports = function(auth) {
     }
     
     function getMessages(uids, mailbox, callback) {
+        var start = Date.now();
         fetchAllHeaders(uids, { headers: true }, mailbox, function(headers) {
+            if (debug) console.error('for mailbox', mailbox, 'fetchAllHeaders took', Date.now() - start); start = Date.now();
             getBodies(headers, mailbox, callback);
         });
     }
@@ -161,7 +172,6 @@ module.exports = function(auth) {
             });
             msg.on('end', function() {
                 clearTimeout(t);
-                if (debug) console.error('Finished: ' + msg.id);
                 messages.push(msg);
             });
         });

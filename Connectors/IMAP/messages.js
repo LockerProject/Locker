@@ -55,7 +55,9 @@ exports.sync = function(processInfo, syncCallback) {
         if(!updateState.messages[mailbox])
             updateState.messages[mailbox] = {syncedThrough: 0};
         var query = (updateState.messages[mailbox].syncedThrough + 1) + ':*'
+        var start = Date.now();
         imapConnection.fetchMessages(mailbox, query, uidsPerCycle, function(err, messages) {
+            console.error('for mailbox', mailbox, 'imapConnection.fetchMessages took', Date.now() - start);
             if(err) {
                 console.error("DEBUG: err", err);
             } else if(messages) {
@@ -69,6 +71,7 @@ exports.sync = function(processInfo, syncCallback) {
                     if(msg.messageId > updateState.messages[mailbox].syncedThrough)
                          updateState.messages[mailbox].syncedThrough = msg.messageId;
                 }
+                console.error("DEBUG: updateState", updateState);
             }
             callback(err);
         });
