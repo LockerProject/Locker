@@ -489,12 +489,13 @@ locker.post('/core/:svcId/event', function(req, res) {
         res.end("Post data missing");
         return;
     }
-    var svcId = req.params.svcId;
-    if(!serviceManager.isInstalled(svcId)) {
+    var fromService = serviceManager.metaInfo(req.params.svcId);
+    if(!fromService) {
         res.writeHead(404);
-        res.end(svcId+" doesn't exist, but does anything really? ");
+        res.end(req.params.svcId+" doesn't exist, but does anything really? ");
         return;
     }
+    fromService.last = Date.now();
     if (!req.body.idr || !req.body.data || !req.body.action) {
         res.writeHead(400);
         res.end("Invalid, missing idr, data, or action");
@@ -538,6 +539,7 @@ var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);
 
 function proxied(method, svc, ppath, req, res, buffer) {
+    svc.last = new Date().getTime();
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
     logger.verbose("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
