@@ -42,7 +42,7 @@
         <p class='sidenav-header-title'>APPS</p>
         <p class="sidenav-header-link orange">see all</p>
       </div>
-      <div class="sidenav-items">
+      <div class="installed-apps sidenav-items">
         <% for (var i = 0; i < map.length; i++) { %>
           <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
         <% } %>
@@ -70,11 +70,11 @@
           <% if (synclets.available[i].authurl) { %>
             <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
                data-width="<%= synclets.available[i].oauthSize.width %>"
-               data-height="<%= synclets.available[i].oauthSize.height %>"><img src="img/icons/<%= synclets.available[i].provider %>.png"></a>
+               data-height="<%= synclets.available[i].oauthSize.height %>"><img src="img/icons/32px/<%= synclets.available[i].provider %>.png"></a>
           <% } %>
         <% } %>
         <% for (var i in synclets.installed) { %>
-          <img class='installed' src="img/icons/<%= synclets.installed[i].provider %>.png"></a>
+          <img class='installed' src="img/icons/32px/<%= synclets.installed[i].provider %>.png"></a>
         <% } %>
       </div>
     </aside>

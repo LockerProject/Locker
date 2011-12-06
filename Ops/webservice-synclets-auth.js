@@ -139,8 +139,9 @@ function handleOAuth2Post (code, options, res) {
 }
 
 function handleTwitter (req, res) {
+    var tc = require('../Connectors/Twitter/twitter_client');
     try {
-        require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
+        tc(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
                 if(err) throw new Error(err);
                 if(!newToken) throw new Error("token missing");

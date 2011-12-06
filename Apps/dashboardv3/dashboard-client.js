@@ -12,6 +12,7 @@ var express = require('express')
   , locker
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
   , github = false
+  , uistate = require(__dirname + '/state')
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
@@ -19,9 +20,7 @@ var express = require('express')
                  facebook: {width: 980, height: 705},
                  instagram: {width: 800, height: 500},
                  flickr: {width: 1000, height: 877}
-                }
-
-  ;
+                };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     lconfig.load('../../Config/config.json');
@@ -42,16 +41,34 @@ app.configure(function() {
     app.use(express.static(__dirname + '/static'));
 });
 
+var clickApp = function(req, res) {
+    var clickedApp = req.params.app;
+    if (clickedApp) {
+        uistate.appClicked(clickedApp);
+    }
+    res.end();
+}
+
 var drawPage = function(req, res) {
+    uistate.fetchState();
     locker.synclets
     locker.map(function(err, map) {
         var result = [];
+        var sortedResult = [];
         var yourApps = [];
         for (var i in map.installed) {
             if (map.installed[i].srcdir && map.installed[i].srcdir.indexOf('/github/') > -1) {
                 yourApps.push(map.installed[i]);
             } else if (map.installed[i].is === 'app') {
                 result.push(map.installed[i]);
+            }
+        }
+        var recentApps = uistate.getNLastUsedApps(8);
+        for (var i = 0; i < recentApps.length; i++) {
+            for (var j in result) {
+                if (result[j].id === recentApps[i].name) {
+                    sortedResult.push(result[j]);
+                }
             }
         }
         locker.synclets(function(err, synclets) {
@@ -74,12 +91,13 @@ var drawPage = function(req, res) {
                 synclets: synclets,
                 yourApps: yourApps,
                 github: github,
-                map: result,
+                map: sortedResult,
                 dashboard: lconfig.dashboard
             });
         });
     });
 };
 
+app.get('/clickapp/:app', clickApp);
 app.get('/app', drawPage);
 app.get('/', drawPage);

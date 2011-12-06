@@ -20,6 +20,7 @@ $(document).ready(function() {
 var loadApp = function() {
   $('.iframeLink').removeClass('orange');
   window.location.hash = app;
+  $.get('clickapp/' + app, function(e) {});
   $('.iframeLink[data-id="' + app + '"]').addClass('orange');
   $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
 };
@@ -29,6 +30,6 @@ var installed = function(provider) {
     $('.your-apps').show();
   }
   var link = $('.oauthLink[data-provider="' + provider + '"]');
-  link.children('img').addClass('installde').appendTo('.sidenav-items.synclets');
+  link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
   link.remove();
 };
