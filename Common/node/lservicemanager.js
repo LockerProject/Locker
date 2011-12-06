@@ -521,14 +521,14 @@ exports.spawn = function(serviceId, callback) {
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
-    svc.last = new Date().getTime();
+    svc.last = Date.now();
     setTimeout(function() { quiesce(svc); }, 25000);
 }
 
 function quiesce(svc)
 {
     if(!svc || !svc.pid || svc.isDashboard) return;
-    var now = new Date().getTime();
+    var now = Date.now();
     if(svc.last > 0 && now - svc.last < 20000) return setTimeout(function() { quiesce(svc); }, 25000);
     try {
         console.log("Quiescing idle service " + svc.id + " at pid " + svc.pid);

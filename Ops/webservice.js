@@ -539,7 +539,7 @@ var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);
 
 function proxied(method, svc, ppath, req, res, buffer) {
-    svc.last = new Date().getTime();
+    svc.last = Date.now();
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
     logger.verbose("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
