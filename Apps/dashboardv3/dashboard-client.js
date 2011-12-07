@@ -10,6 +10,7 @@
 var express = require('express')
   , connect = require('connect')
   , locker
+  , request = require('request')
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
   , github = false
   , uistate = require(__dirname + '/state')
@@ -51,7 +52,15 @@ var clickApp = function(req, res) {
 
 var drawPage = function(req, res) {
     uistate.fetchState();
-    locker.synclets
+    var profileImage = 'img/default-profile.png';
+    request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
+        try {
+            var body = JSON.parse(body);
+            if (body.username) {
+                profileImage = "http://graph.facebook.com/" + body.username + "/picture";
+            }
+        } catch (E) {}
+    });
     locker.map(function(err, map) {
         var result = [];
         var sortedResult = [];
@@ -94,6 +103,7 @@ var drawPage = function(req, res) {
                 synclets: synclets,
                 github: github,
                 map: sortedResult,
+                profileImage: profileImage,
                 dashboard: lconfig.dashboard
             });
         });
