@@ -53,6 +53,8 @@ var clickApp = function(req, res) {
 var drawPage = function(req, res) {
     uistate.fetchState();
     var profileImage = 'img/default-profile.png';
+    // hackzzzzzzzzzzzzzzzzz
+    // will replace when we have a reasonable notion of a user's profile
     request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
         try {
             var body = JSON.parse(body);
