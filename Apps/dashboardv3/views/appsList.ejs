@@ -25,12 +25,13 @@
           <li class="appList" data-id='<%= apps[i].id %>'>
             <p>
               <%= apps[i].title %>, by <%= apps[i].author || "Singly, Inc." %> <span class="pipe">|</span>
-              <a class="orange" href="<%= apps[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a> <span class="pipe">|</span>
-              STAR
+              <a class="orange" href="<%= apps[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a>
             </p>
-            <p class="date">
-              used <time class="timeago" datetime="<%= apps[i].lastUsed %>"></time>
-            </p>
+            <% if (apps[i].lastUsed) { %>
+              <p class="date">
+                used <time class="timeago" datetime="<%= apps[i].lastUsed %>"></time>
+              </p>
+            <% } %>
           </li>
         <% } %>
       </ul>

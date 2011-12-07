@@ -33,7 +33,7 @@ var loadApp = function() {
   }
 };
 
-var installed = function(provider) {
+var syncletInstalled = function(provider) {
   if (provider === 'github') {
     $('.your-apps').show();
   }
