@@ -30,7 +30,7 @@
           <div class="hosted-nav">
             <a href='<%= dashboard.customLogout %>'>Sign out</a>
             <a href='<%= dashboard.customSettings %>'>Account Settings</a>
-            <a href='https://www.singly.com/#learnmore'>Hosted by Singly</a>
+            <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore#learnmore" %>'>Hosted by Singly</a>
           </div>
           <script src="js/hosted.js"></script>
           <script src="<%= dashboard.customHostedEndpoint %>"></script>
