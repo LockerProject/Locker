@@ -7,7 +7,7 @@
 *
 */
 
-var http = require("http");
+var request = require("request");
 var url = require("url");
 require.paths.push(__dirname);
 var lconfig = require("lconfig");
@@ -35,13 +35,6 @@ exports.removeListener = function(type, id, cb) {
     if (!eventListeners.hasOwnProperty(type)) return;
     var pos = findListenerPosition(type, id, cb);
     if (pos >= 0) eventListeners[type].splice(pos, 1);
-}
-
-exports.makeRequest = function(httpOpts, body, callback) {
-    //logger.info("HTTP " + JSON.stringify(httpOpts));
-    var req = http.request(httpOpts, callback);
-    req.write(body);
-    req.end();
 }
 
 // get all possible listeners
@@ -125,18 +118,17 @@ function processEvents(queue) {
             //console.log("Sevice info " + serviceInfo.url);
             var cbUrl = url.parse(lconfig.lockerBase);
             var httpOpts = {
-                host: cbUrl.hostname,
-                port: cbUrl.port,
-                path: "/Me/" + listener.id + listener.cb,
+                url: "http://"+ cbUrl.hostname + ":" + cbUrl.port + "/Me/" + listener.id + listener.cb,
                 method:"POST",
                 headers: {
                     "Content-Type":"application/json",
                     "Connection":"keep-alive"
-                }
+                },
+                body: JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data})
             };
             logger.verbose("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-            exports.makeRequest(httpOpts, JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data}), function(response) {
+            request(httpOpts, function(err, response) {
                 listener.response = response.statusCode;
                 if (listener.response != 200) {
                     logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
