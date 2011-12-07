@@ -1,7 +1,7 @@
 var app;
 
 $(document).ready(function() {
-  app = window.location.hash.substring(1) || "contactsviewer";
+  app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
   loadApp();
 
   $('.iframeLink').click(function() {

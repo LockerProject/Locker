@@ -1,6 +1,6 @@
-var   lutil = require(__dirname + '/../../Common/node/lutil.js')
-    , fs = require('fs')
-    ;
+var lutil = require(__dirname + '/../../Common/node/lutil.js')
+  , fs = require('fs')
+  ;
 
 var state = {
       collectionInfo: {
@@ -9,7 +9,7 @@ var state = {
           photo: {name:"photo", timer:null, count:0, new:0, updated:0, lastId:0},
           place: {name:"place", timer:null, count:0, new:0, updated:0, lastId:0}
       },
-      appInfo: { 
+      appInfo: {
           contactsviewer: {lastUsed: 0},
           photosv09: {lastUsed: 0},
           linkalatte: {lastUsed: 0},
