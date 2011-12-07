@@ -16,14 +16,6 @@ a {
   color: #F7931E;
 }
 
-.your-apps {
-  display: none;
-}
-
-.your-apps.visible {
-  display: block;
-}
-
 /* header section */
 header {
   z-index: 2;
@@ -149,4 +141,17 @@ aside {
 
 .sidenav-items .installed {
   opacity: .5
+}
+
+.sidenav-items .app-details {
+  background-color: #f2f2f2;
+  margin-left: 10px;
+  padding: 4px 7px;
+  font-size: 14px;
+  display: none;
+}
+
+.sidenav-items .app-details a {
+  margin-top: 2px;
+  display: inline-block;
 }

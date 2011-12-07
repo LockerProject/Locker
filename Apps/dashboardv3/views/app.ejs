@@ -43,9 +43,17 @@
         <p class="sidenav-header-link orange">see all</p>
       </div>
       <div class="installed-apps sidenav-items">
-        <% for (var i = 0; i < map.length; i++) { %>
-          <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
-        <% } %>
+        <ul>
+          <% for (var i = 0; i < map.length; i++) { %>
+            <li>
+              <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
+              <div class="app-details">
+                created by <%= map[i].author || "Singly" %><br />
+                <a class="orange" href="<%= map[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a>
+              </div>
+            </li>
+          <% } %>
+        </ul>
         <p><a class="orange" href="#">Explore more apps</a></p>
       </div>
       <div class="sidenav-header">

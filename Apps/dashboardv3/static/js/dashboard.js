@@ -18,10 +18,11 @@ $(document).ready(function() {
 });
 
 var loadApp = function() {
+  $('.app-details').hide();
   $('.iframeLink').removeClass('orange');
   window.location.hash = app;
   $.get('clickapp/' + app, function(e) {});
-  $('.iframeLink[data-id="' + app + '"]').addClass('orange');
+  $('.iframeLink[data-id="' + app + '"]').addClass('orange').parent('p').siblings().show();
   $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
 };
 
