@@ -36,4 +36,15 @@ describe 'dashboard' do
     end
   end
 
+  it "should allow the user to view all of their apps" do
+    visit '/'
+    click_link 'see all'
+    within_frame 'appFrame' do
+      page.should have_content('Hello Links, by Singly, Inc.')
+      page.execute_script("$('li[data-id=\"hellolinks\"]').click()")
+      page.should have_content('This is example of how easy it is to load your links using HTML and jQuery')
+    end
+
+  end
+
 end
