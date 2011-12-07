@@ -22,13 +22,13 @@ $(document).ready(function() {
 
 var loadApp = function() {
   $('.app-details').hide();
-  $('.iframeLink').removeClass('orange');
+  $('.iframeLink').removeClass('blue');
   window.location.hash = app;
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
   } else {
     $.get('clickapp/' + app, function(e) {});
-    $('.iframeLink[data-id="' + app + '"]').addClass('orange').parent('p').siblings().show();
+    $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
   }
 };
