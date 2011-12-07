@@ -55,21 +55,24 @@ var drawPage = function(req, res) {
     locker.map(function(err, map) {
         var result = [];
         var sortedResult = [];
-        var yourApps = [];
         for (var i in map.installed) {
-            if (map.installed[i].srcdir && map.installed[i].srcdir.indexOf('/github/') > -1) {
-                yourApps.push(map.installed[i]);
-            } else if (map.installed[i].is === 'app') {
+            if (map.installed[i].is === 'app') {
                 result.push(map.installed[i]);
             }
         }
         var recentApps = uistate.getNLastUsedApps(8);
+        var added = {};
         for (var i = 0; i < recentApps.length; i++) {
             for (var j in result) {
-                if (result[j].id === recentApps[i].name) {
+                if (result[j].id === recentApps[i].name && result[j].static) {
                     sortedResult.push(result[j]);
+                    added[j] = true;
+                    break;
                 }
             }
+        }
+        for (var i in result) {
+            if(result[i].static && !added[i]) sortedResult.push(result[i]);
         }
         locker.synclets(function(err, synclets) {
             for (var i in synclets.installed) {
@@ -89,7 +92,6 @@ var drawPage = function(req, res) {
             }
             res.render('app', {
                 synclets: synclets,
-                yourApps: yourApps,
                 github: github,
                 map: sortedResult,
                 dashboard: lconfig.dashboard
