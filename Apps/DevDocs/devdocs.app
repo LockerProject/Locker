@@ -5,5 +5,5 @@
   "static":"true",
   "handle":"devdocs",
   "uses":["github"],
-  "author":"Singly"
+  "author":"Singly, Inc."
 }
