@@ -5,5 +5,6 @@
   "static":"true",
   "handle":"devdocs",
   "uses":["github"],
+  "autoInstall":true,
   "author":"Singly, Inc."
 }
