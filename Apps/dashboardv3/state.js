@@ -48,5 +48,10 @@ exports.getNLastUsedApps = function(n) {
             appArray.push({name: i, lastUsed: state.appInfo[i].lastUsed});
         }
     }
-    return appArray.sort(function(a, b) { return (b.lastUsed - a.lastUsed); }).slice(0, n - 1);
+    var array = appArray.sort(function(a, b) { return (b.lastUsed - a.lastUsed); });
+    if (n) {
+        return array.slice(0, n - 1);
+    } else {
+        return array;
+    }
 };

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title><%= dashboard && dashboard.customTitle ? dashboard.customTitle : "The Locker Project" %></title>
+
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/appList.css" />
+
+    <script src="/static/js/jquery-1.6.2.min.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+    <script src="js/appList.js"></script>
+    <script src="js/jquery.timeago.js"></script>
+  </head>
+  <body>
+    <section class="header">
+      APPS ADDED TO YOUR ACCOUNT
+    </section>
+    <content class="body">
+      <ul>
+        <% for (var i = 0; i < apps.length; i++) { %>
+          <li class="appList" data-id='<%= apps[i].id %>'>
+            <p>
+              <%= apps[i].title %>, by <%= apps[i].author || "Singly, Inc." %> <span class="pipe">|</span>
+              <a class="orange" href="<%= apps[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a> <span class="pipe">|</span>
+              STAR
+            </p>
+            <p class="date">
+              used <time class="timeago" datetime="<%= apps[i].lastUsed %>"></time>
+            </p>
+          </li>
+        <% } %>
+      </ul>
+    </content>
+  </body>
+</html>
+

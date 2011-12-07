@@ -50,6 +50,44 @@ var clickApp = function(req, res) {
     res.end();
 }
 
+var drawApps = function(req, res) {
+    uistate.fetchState();
+    getAppsInfo(null, function(sortedResult) {
+        res.render('appsList', {
+            apps: sortedResult,
+            dashboard: lconfig.dashboard
+        });
+    })
+}
+
+var getAppsInfo = function(count, callback) {
+    locker.map(function(err, map) {
+        var result = [];
+        var sortedResult = [];
+        for (var i in map.installed) {
+            if (map.installed[i].is === 'app') {
+                result.push(map.installed[i]);
+            }
+        }
+        var recentApps = uistate.getNLastUsedApps(count);
+        var added = {};
+        for (var i = 0; i < recentApps.length; i++) {
+            for (var j in result) {
+                if (result[j].id === recentApps[i].name && result[j].static) {
+                    result[j].lastUsed = recentApps[i].lastUsed;
+                    sortedResult.push(result[j]);
+                    added[j] = true;
+                    break;
+                }
+            }
+        }
+        for (var i in result) {
+            if(result[i].static && !added[i]) sortedResult.push(result[i]);
+        }
+        callback(sortedResult);
+    });
+}
+
 var drawPage = function(req, res) {
     uistate.fetchState();
     var profileImage = 'img/default-profile.png';
@@ -63,28 +101,7 @@ var drawPage = function(req, res) {
             }
         } catch (E) {}
     });
-    locker.map(function(err, map) {
-        var result = [];
-        var sortedResult = [];
-        for (var i in map.installed) {
-            if (map.installed[i].is === 'app') {
-                result.push(map.installed[i]);
-            }
-        }
-        var recentApps = uistate.getNLastUsedApps(8);
-        var added = {};
-        for (var i = 0; i < recentApps.length; i++) {
-            for (var j in result) {
-                if (result[j].id === recentApps[i].name && result[j].static) {
-                    sortedResult.push(result[j]);
-                    added[j] = true;
-                    break;
-                }
-            }
-        }
-        for (var i in result) {
-            if(result[i].static && !added[i]) sortedResult.push(result[i]);
-        }
+    getAppsInfo(8, function(sortedResult) {
         locker.synclets(function(err, synclets) {
             for (var i in synclets.installed) {
                 if (i === 'github') { github = true; }
@@ -115,3 +132,4 @@ var drawPage = function(req, res) {
 app.get('/clickapp/:app', clickApp);
 app.get('/app', drawPage);
 app.get('/', drawPage);
+app.get('/allApps', drawApps);

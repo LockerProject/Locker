@@ -1,4 +1,7 @@
 var app;
+var specialApps = {
+    "allApps" : "/dashboard/allApps"
+};
 
 $(document).ready(function() {
   app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
@@ -21,9 +24,13 @@ var loadApp = function() {
   $('.app-details').hide();
   $('.iframeLink').removeClass('orange');
   window.location.hash = app;
-  $.get('clickapp/' + app, function(e) {});
-  $('.iframeLink[data-id="' + app + '"]').addClass('orange').parent('p').siblings().show();
-  $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
+  if (specialApps[app]) {
+    $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
+  } else {
+    $.get('clickapp/' + app, function(e) {});
+    $('.iframeLink[data-id="' + app + '"]').addClass('orange').parent('p').siblings().show();
+    $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
+  }
 };
 
 var installed = function(provider) {
