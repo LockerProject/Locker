@@ -1,0 +1,27 @@
+{
+    "title": "Gowalla",
+    "status": "stable",
+    "provider": "gowalla",
+    "provides": ["friend/gowalla", "checkin/gowalla", "pin/gowalla"],
+    "mongoId": {
+        "friends": "url",
+        "checkins": "url",
+        "pins": "url"
+    },
+    "synclets": [{
+        "name": "friends",
+        "frequency": 100000000
+    },
+    {
+        "name": "checkins",
+        "frequency": 100000000
+    },
+    {
+        "name": "profile",
+        "frequency": 100000000
+    },
+    {
+        "name": "pins",
+        "frequency": 100000000
+    }]
+}

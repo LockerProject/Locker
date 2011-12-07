@@ -542,6 +542,10 @@ function addUrls() {
                 if (apiKeys.instagram)
                     synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
                                                     "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
+            } else if (synclet.provider === 'gowalla') {
+                if (apiKeys.gowalla)
+                    synclet.authurl = "https://gowalla.com/api/oauth/new?client_id=" + apiKeys.gowalla.appKey +
+                                                    "&redirect_uri=" + host + "auth/gowalla/auth";
             } else if (synclet.provider === 'glatitude') {
                 if (apiKeys.glatitude)
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
