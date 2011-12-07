@@ -10,7 +10,6 @@
 var request = require('request'),
     fs = require("fs"),
     sys = require('sys'),
-    http = require("http"),
     url = require("url"),
     lstate = require("lstate"),
     lutil = require("lutil"),
@@ -52,12 +51,6 @@ exports.diary = function(message, level) {
             level:level
         })
     });
-};
-
-exports.makeRequest = function(httpOpts, body, callback) {
-    var req = http.request(httpOpts, callback);
-    req.write(body);
-    req.end();
 };
 
 exports.map = function(callback) {

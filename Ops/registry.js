@@ -298,7 +298,7 @@ function regUser(gh, callback)
         adduser(gh.login, pw, gh.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
             logger.error(err);
-            logger.error(resp);
+            //logger.error(resp);
             js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
