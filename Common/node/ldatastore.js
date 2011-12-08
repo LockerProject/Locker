@@ -165,6 +165,6 @@ function getMongo(owner, type, callback) {
 }
 
 function now() {
-    return new Date().getTime();
+    return Date.now();
 }
 
