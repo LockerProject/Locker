@@ -125,7 +125,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }
