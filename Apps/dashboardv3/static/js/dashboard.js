@@ -26,6 +26,7 @@ var loadApp = function() {
   window.location.hash = app;
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
+    $('.iframeLink[data-id="' + app + '"]').addClass('blue');
   } else {
     $.get('clickapp/' + app, function(e) {});
     $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
