@@ -12,6 +12,7 @@
     <script src="/static/js/jquery-1.6.2.min.js"></script>
     <script src="js/jquery.cookie.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/create.js"></script>
   </head>
   <body class="app-page">
 
@@ -22,9 +23,9 @@
       </div>
       <div class="nav-section">
         <div class="nav">
-          <a class='selected' href='/'>YOU</a>
-          <a href='#'>EXPLORE</a>
-          <a href='#'>CREATE</A>
+          <a <% if (page === 'you') { %>class='selected'<% } %> href='/dashboard/you'>YOU</a>
+          <a <% if (page === 'explore') { %>class='selected'<% } %> href='#'>EXPLORE</a>
+          <a <% if (page === 'create') { %>class='selected'<% } %> href='/dashboard/create'>CREATE</A>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">

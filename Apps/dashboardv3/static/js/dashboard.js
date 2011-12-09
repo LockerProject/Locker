@@ -1,6 +1,7 @@
 var app;
 var specialApps = {
-    "allApps" : "/dashboard/allApps"
+    "allApps" : "/dashboard/allApps",
+    "publish" : "/dashboard/publish"
 };
 
 $(document).ready(function() {

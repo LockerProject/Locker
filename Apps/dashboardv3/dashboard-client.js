@@ -15,6 +15,7 @@ var express = require('express')
   , github = false
   , uistate = require(__dirname + '/state')
   , profileImage = 'img/default-profile.png'
+  , page = ''
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
@@ -49,6 +50,17 @@ app.configure(function() {
     app.set('view engine', 'ejs');
     app.use(express.bodyParser());
     app.use(express.static(__dirname + '/static'));
+    app.dynamicHelpers({
+        dashboard: function(req, res) {
+            return lconfig.dashboard;
+        },
+        profileImage: function(req, res) {
+            return profileImage;
+        },
+        page: function(req, res) {
+            return page;
+        }
+    });
 });
 
 var clickApp = function(req, res) {
@@ -71,6 +83,19 @@ var renderApps = function(req, res) {
 }
 
 var renderCreate = function(req, res) {
+    page = 'create';
+    var apps = [];
+    var pattern = /^Me\/github/
+    locker.map(function(err, map) {
+        for (var i in map.installed) {
+            if (pattern.exec(map.installed[i].srcdir)) {
+                apps.push(map.installed[i]);
+            }
+        }
+        res.render('create', {
+            apps: apps
+        });
+    });
 }
 
 var getAppsInfo = function(count, callback) {
@@ -120,19 +145,18 @@ var renderYou = function(req, res) {
                     synclets.available[i].oauthSize = {width: 960, height: 600};
                 }
             }
+            page = 'you';
             res.render('you', {
                 synclets: synclets,
                 github: github,
-                map: sortedResult,
-                profileImage: profileImage,
-                dashboard: lconfig.dashboard
+                map: sortedResult
             });
         });
     });
 };
 
 app.get('/clickapp/:app', clickApp);
-app.get('/app', renderYou);
+app.get('/you', renderYou);
 app.get('/', renderYou);
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);

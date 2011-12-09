@@ -160,3 +160,32 @@ aside {
   margin-top: 2px;
   display: inline-block;
 }
+
+/* styling for the create page */
+.viewAll.expanded:after {
+  content: " \25BC";
+  font-size: .75em;
+}
+
+.viewAll:not(.expanded):after {
+  content: " \25B6";
+  font-size: .75em;
+}
+
+p.your-apps {
+  margin: 5px 0px 5px 20px;
+  display: none;
+  font-size: 14px;
+}
+
+.your-apps.published {
+  color: #39b74f;
+}
+
+.your-apps.in-review {
+  color: #999999;
+}
+
+.your-apps.drafts {
+  color: #feaecd;
+}
