@@ -528,11 +528,13 @@ exports.spawn = function(serviceId, callback) {
 function quiesce(svc)
 {
     if(!svc) return;
-    var pid = svc.startingPid || svc.pid;
-    if(!pid || !svc.last) return logger.warn("something odd quiescing "+svc.id+", skipping");
-    if(Date.now() - svc.last < 20000) return setTimeout(function() { quiesce(svc); }, 25000);
+    if(svc.starting || Date.now() - svc.last < 20000){
+        logger.info("delaying quiesce for "+svc.id);
+        return setTimeout(function() { quiesce(svc); }, 25000);
+    }
+    if(!svc.pid) return logger.warn("trying to quiesce "+svc.id+" but missing pid");
     try {
-        logger.info("Quiescing idle service " + svc.id + " at pid " + svc.pid);
+        logger.info("quiesce idle service " + svc.id + " at pid " + svc.pid);
         process.kill(svc.pid, "SIGTERM");
     } catch(e) {
         logger.error("got error while quiescing: "+e);
