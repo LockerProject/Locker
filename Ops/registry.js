@@ -270,11 +270,11 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "type": "app",
+                "is": "app",
                 "author": gh.name,
                 "static": "true",
                 "update": "auto",
-                "url": "http://github.com/"+gh.login+"/"+pkg
+                "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
               "devDependencies": {},
