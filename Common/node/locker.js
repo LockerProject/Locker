@@ -10,9 +10,9 @@
 var request = require('request'),
     fs = require("fs"),
     sys = require('sys'),
-    http = require("http"),
     url = require("url"),
     lstate = require("lstate"),
+    lutil = require("lutil"),
     querystring = require("querystring");
 
 var lockerBase;
@@ -35,11 +35,11 @@ exports.initClient = function(instanceInfo) {
 };
 
 exports.at = function(uri, delayInSec, stateField) {
-    if(stateField) lstate.next(stateField,(new Date().getTime() + (delayInSec * 1000)));
+    if(stateField) lstate.next(stateField,(Date.now() + (delayInSec * 1000)));
     request.get({
         url:baseServiceUrl + '/at?' + querystring.stringify({
             cb:uri,
-            at:((new Date().getTime() + (delayInSec * 1000))/1000)
+            at:((Date.now() + (delayInSec * 1000))/1000)
             })
     });
 };
@@ -51,12 +51,6 @@ exports.diary = function(message, level) {
             level:level
         })
     });
-};
-
-exports.makeRequest = function(httpOpts, body, callback) {
-    var req = http.request(httpOpts, callback);
-    req.write(body);
-    req.end();
 };
 
 exports.map = function(callback) {
@@ -86,14 +80,32 @@ exports.providers = function(types, callback) {
  * action - the action, defaults to new
  */
 exports.event = function(type, obj, action) {
+    console.error("EVENT() DEPRECIATED, use ievent please");
+};
+
+/**
+ * Post an event
+ * idr - from .idr()
+ * data - the object to make a JSON string of as the event body
+ * action - the action, defaults to new
+ */
+exports.ievent = function(idr, data, action) {
+    if(!idr || !data) return console.error("invalid input to ievent");
     if (action === undefined) action = "new";
     request.post({
         headers:{'Connection':'keep-alive'},
         url:baseServiceUrl + "/event",
-        json:{"type":type,"obj":obj},
-        action:action
+        json:{"idr":idr,"data":data, action:action}
     });
 };
+
+// creates a locally scoped idr
+exports.idrLocal = function(idr)
+{
+    var r = url.parse(idr);
+    r.query = {id: localServiceId}; // best proxy of account id right now
+    return url.format(r);
+}
 
 /**
  * Sign up to be notified of events

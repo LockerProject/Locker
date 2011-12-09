@@ -378,7 +378,7 @@ function getTwitterClient() {
 exports.getRateLimitStatus = function(callback) {
     request.get({uri:'http://api.twitter.com/1/account/rate_limit_status.json'}, function(err, resp, body) {
         var limits = JSON.parse(body);
-        var remainingTime = limits.reset_time_in_seconds - (new Date().getTime() / 1000);
+        var remainingTime = limits.reset_time_in_seconds - (Date.now() / 1000);
         if(limits.remaining_hits)
             limits.sec_between_calls = remainingTime / limits.remaining_hits;
         else

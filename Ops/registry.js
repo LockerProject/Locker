@@ -142,7 +142,7 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
+        request.get({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });
@@ -199,7 +199,7 @@ exports.getApps = function() {
 
 // npm wrappers
 exports.install = function(arg, callback) {
-    
+
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){
@@ -298,7 +298,7 @@ function regUser(gh, callback)
         adduser(gh.login, pw, gh.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
             logger.error(err);
-            logger.error(resp);
+            //logger.error(resp);
             js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);

@@ -121,7 +121,7 @@ exports.testSuite = {
         }
         // Cleanup and output
         if (self.testPosition >= self.tests.length) {
-            var runTime = (new Date().getTime() - self.startTime.getTime()) / 1000;
+            var runTime = (Date.now() - self.startTime.getTime()) / 1000;
             process.stdout.write("\nRan " + self.tests.length + " tests in " + 
                 runTime + " seconds " + self.successes + " successes " + self.failures + " failures.\n");
             return;

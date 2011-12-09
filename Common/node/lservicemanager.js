@@ -195,7 +195,7 @@ exports.mapUpsert = function (file, type) {
     }
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
-    metaData.is = type;
+    if(metaData.type) metaData.is = metaData.type; // legacy
     metaData.installable = true;
     // replace references in available array (legacy)
     var found = false;
@@ -207,7 +207,10 @@ exports.mapUpsert = function (file, type) {
     });
     if(!found) serviceMap.available.push(metaData);
     // update any "installed"
-    exports.install(metaData);
+    if(type && type === "install" && !serviceMap.installed[metaData.handle])
+    {
+        exports.install(metaData);
+    }
     if(serviceMap.installed[metaData.handle]) return serviceMap.installed[metaData.handle] = lutil.extend(serviceMap.installed[metaData.handle], metaData);
     return metaData;
 }
@@ -476,7 +479,7 @@ exports.spawn = function(serviceId, callback) {
                 svc.pid = svc.startingPid;
                 delete svc.startingPid;
                 logger.info(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
-                svc.starting.forEach(function(cb) {
+                if(svc.starting) svc.starting.forEach(function(cb) {
                     cb.call();
                     // See if it ended whilst running the callbacks
                     if (!svc.hasOwnProperty("pid") && svc.starting.length > 0) {
@@ -518,6 +521,24 @@ exports.spawn = function(serviceId, callback) {
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
+    svc.last = Date.now();
+    setTimeout(function() { quiesce(svc); }, 650000);
+}
+
+function quiesce(svc)
+{
+    if(!svc) return;
+    if(svc.starting || Date.now() - svc.last < 20000){
+        logger.info("delaying quiesce for "+svc.id);
+        return setTimeout(function() { quiesce(svc); }, 650000);
+    }
+    if(!svc.pid) return logger.warn("trying to quiesce "+svc.id+" but missing pid");
+    try {
+        logger.info("quiesce idle service " + svc.id + " at pid " + svc.pid);
+        process.kill(svc.pid, "SIGTERM");
+    } catch(e) {
+        logger.error("got error while quiescing: "+e);
+    }
 }
 
 /**
