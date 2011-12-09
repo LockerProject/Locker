@@ -13,6 +13,8 @@ var externalBase = window.location.origin;
 
 var _kmq = _kmq || [];
 
+var syncletInstalled = function() {};
+
 $(document).ready(
     function() {
         // any mouse activity resets it
@@ -80,7 +82,7 @@ $(document).ready(
           else
             expandServices();
         });
-        
+
         function showDevDocsPage(page) {
             if(typeof page !== 'string' || page == undefined) page = "";
             app = 'devdocs';
@@ -91,15 +93,15 @@ $(document).ready(
         }
         $('.devdocs-box').click(showDevDocsPage);
         $('li.develop span.label').click(showDevDocsPage);
-        
+
         $('.devdocs-explorer').click(function() {
             showDevDocsPage('explorer.html');
         });
-        
+
         $('.devdocs-local').click(function() {
             showDevDocsPage('local.html');
         });
-        
+
         $('.syncviewers').click(function() {
             showGritter('syncgithub');
             $.getJSON("/synclets/github/run?id=repos", function(success) {
