@@ -509,6 +509,7 @@ locker.use(express.static(__dirname + '/static'));
 locker.all('/dashboard*', function(req, res) {
     req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
+    syncManager.synclets().tolerance = Date.now(); // run things faster while someone is around
 });
 
 locker.all("/socket.io*", function(req, res) {

@@ -36,7 +36,8 @@ datastore.addObject = function(collectionKey, obj, ts, callback) {
 var synclets = {
     available:[],
     installed:{},
-    executeable:true
+    executeable:true,
+    tolerance:0
 };
 
 exports.synclets = function() {
@@ -238,22 +239,27 @@ function mergeManifest(js) {
 * Executes a synclet
 */
 function executeSynclet(info, synclet, callback) {
-    if (synclet.status === 'running') {
-        if (callback) {
-            callback('already running');
-        }
-        return;
-    }
+    if(!callback) callback = function(){};
+    if (synclet.status === 'running') return callback('already running');
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
         logger.info("Delaying execution of synclet "+synclet.name+" for "+info.id);
         scheduleRun(info, synclet);
-        if (callback) {
-            callback();
-        }
-        return;
+        return callback();
+    }
+    if(!synclet.tolMax){
+        synclet.tolAt = 0;
+        synclet.tolMax = 0;
+    }
+    // if we can have tolerance, try again later
+    if(Date.now() - synclets.tolerance > 600000 && synclet.tolAt > 0)
+    {
+        synclet.tolAt--;
+        logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
+        scheduleRun(info, synclet);
+        return callback();
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
@@ -347,9 +353,22 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         if (typeof(response.data) === 'string') {
             return callback('bad data from synclet');
         }
+        var total=0;
         for (var i in response.data) {
+            if(!Array.isArray(response.data[i])) continue;
+            total += response.data[i].length;
             dataKeys.push(i);
         }
+        var threshold = synclet.threshold || 50; // default is fairly arbitrary right now
+        if(total < threshold)
+        {
+            if(synclet.tolMax < 10) synclet.tolMax++; // max 10x scheduled
+            synclet.tolAt = synclet.tolMax;
+        }else{
+            if(synclet.tolMax > 0) synclet.tolMax--;
+            synclet.tolAt = synclet.tolMax;
+        }
+        logger.info("total of "+total+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
         for (var i in deleteIDs) {
             if (!dataKeys[i]) dataKeys.push(i);
         }
