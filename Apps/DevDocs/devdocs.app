@@ -6,5 +6,6 @@
   "handle":"devdocs",
   "uses":["github"],
   "autoInstall":true,
+  "hidden":true,
   "author":"Singly, Inc."
 }
