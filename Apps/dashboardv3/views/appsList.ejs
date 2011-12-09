@@ -2,18 +2,10 @@
 
 <html>
   <head>
-    <meta charset="utf-8" />
-
-    <title><%= dashboard && dashboard.customTitle ? dashboard.customTitle : "The Locker Project" %></title>
-
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/appList.css" />
-
-    <script src="/static/js/jquery-1.6.2.min.js"></script>
-    <script src="js/jquery.cookie.js"></script>
-    <script src="js/appList.js"></script>
+    <%- partial('header_partial') %>
     <script src="js/jquery.timeago.js"></script>
+    <script src="js/appList.js"></script>
+    <link rel="stylesheet" href="css/appList.css" />
   </head>
   <body>
     <section class="header">

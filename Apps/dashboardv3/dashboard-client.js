@@ -84,19 +84,23 @@ var renderApps = function(req, res) {
 
 var renderCreate = function(req, res) {
     page = 'create';
-    var apps = [];
-    var pattern = /^Me\/github/
-    locker.map(function(err, map) {
-        for (var i in map.installed) {
-            if (pattern.exec(map.installed[i].srcdir)) {
-                apps.push(map.installed[i]);
-            }
-        }
+    getGithubApps(function(apps) {
         res.render('create', {
             apps: apps
         });
     });
 }
+
+var renderPublish = function(req, res) {
+    getGithubApps(function(apps) {
+        res.render('publish', {
+            layout: false,
+            apps: apps
+        });
+    });
+}
+
+var submitPublish = function(req, res) {}
 
 var getAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
@@ -160,3 +164,21 @@ app.get('/you', renderYou);
 app.get('/', renderYou);
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
+
+app.get('/publish', renderPublish);
+app.post('/publish', submitPublish);
+
+
+
+var getGithubApps = function(callback) {
+    var apps = [];
+    var pattern = /^Me\/github/
+    locker.map(function(err, map) {
+        for (var i in map.installed) {
+            if (pattern.exec(map.installed[i].srcdir)) {
+                apps.push(map.installed[i]);
+            }
+        }
+        callback(apps);
+    });
+}
