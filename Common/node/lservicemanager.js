@@ -522,7 +522,7 @@ exports.spawn = function(serviceId, callback) {
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
     svc.last = Date.now();
-    setTimeout(function() { quiesce(svc); }, 25000);
+    setTimeout(function() { quiesce(svc); }, 650000);
 }
 
 function quiesce(svc)
@@ -530,7 +530,7 @@ function quiesce(svc)
     if(!svc) return;
     if(svc.starting || Date.now() - svc.last < 20000){
         logger.info("delaying quiesce for "+svc.id);
-        return setTimeout(function() { quiesce(svc); }, 25000);
+        return setTimeout(function() { quiesce(svc); }, 650000);
     }
     if(!svc.pid) return logger.warn("trying to quiesce "+svc.id+" but missing pid");
     try {
