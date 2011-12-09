@@ -48,6 +48,7 @@
         "semver": "=1.0.10",
         "ini": "=1.0.1",
         "uglify-js": "=1.1.1",
+        "connect-form": "0.2.1",
 
 
         "hashish": "=0.0.4",

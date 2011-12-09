@@ -13,6 +13,7 @@ var express = require('express')
   , request = require('request')
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
   , github = false
+  , form = require('connect-form')
   , uistate = require(__dirname + '/state')
   , profileImage = 'img/default-profile.png'
   , page = ''
@@ -49,6 +50,7 @@ app.configure(function() {
     app.set('views', __dirname + '/views');
     app.set('view engine', 'ejs');
     app.use(express.bodyParser());
+    app.use(form({ keepExtensions: true }));
     app.use(express.static(__dirname + '/static'));
     app.dynamicHelpers({
         dashboard: function(req, res) {
@@ -100,7 +102,19 @@ var renderPublish = function(req, res) {
     });
 }
 
-var submitPublish = function(req, res) {}
+var submitPublish = function(req, res) {
+    if (req.form) {
+        req.form.complete(function(err, fields, files) {
+            res.writeHead(200, {});
+            if (err) res.write(JSON.stringify(err.message));
+            res.write(JSON.stringify(fields));
+            res.write(JSON.stringify(files));
+            res.end();
+        });
+    } else {
+        res.send(req.body);
+    }
+}
 
 var getAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
