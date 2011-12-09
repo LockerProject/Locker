@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title><%= dashboard && dashboard.customTitle ? dashboard.customTitle : "The Locker Project" %></title>
+
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <script src="/static/js/jquery-1.6.2.min.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+    <script src="js/dashboard.js"></script>
+  </head>
+  <body class="app-page">
+
+    <header class="header">
+      <div class="user-info">
+        <a href='/'><img class="avatar" src="<%= profileImage %>"></a>
+        <div class="user-info-name"><a class='user-info-name-link' href='/'></a></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav">
+          <a class='selected' href='/'>YOU</a>
+          <a href='#'>EXPLORE</a>
+          <a href='#'>CREATE</A>
+        </div>
+        <% if (dashboard && dashboard.customHostedEndpoint) { %>
+          <div class="hosted-nav">
+            <a href='<%= dashboard.customLogout %>'>Sign out</a>
+            <a href='<%= dashboard.customSettings %>'>Account Settings</a>
+            <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore#learnmore" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
+          </div>
+          <script src="js/hosted.js"></script>
+          <script src="<%= dashboard.customHostedEndpoint %>"></script>
+        <% } %>
+      </div>
+    </header>
+    <aside class="sidenav">
+      <%- body %>
+    </aside>
+    <iframe id="appFrame"></iframe>
+
+  </body>
+</html>
+

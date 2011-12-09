@@ -14,6 +14,7 @@ var express = require('express')
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
   , github = false
   , uistate = require(__dirname + '/state')
+  , profileImage = 'img/default-profile.png'
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
@@ -27,6 +28,17 @@ module.exports = function(passedLocker, passedExternalBase, listenPort, callback
     lconfig.load('../../Config/config.json');
     locker = passedLocker;
     app.listen(listenPort, callback);
+    // hackzzzzzzzzzzzzzzzzz
+    // will replace when we have a reasonable notion of a user's profile
+    request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
+        try {
+            var body = JSON.parse(body);
+            if (body.username) {
+                profileImage = "http://graph.facebook.com/" + body.username + "/picture";
+            }
+        } catch (E) {}
+    });
+
 };
 
 var app = express.createServer();
@@ -35,9 +47,6 @@ app.use(express.cookieParser());
 app.configure(function() {
     app.set('views', __dirname + '/views');
     app.set('view engine', 'ejs');
-    app.set('view options', {
-      layout: false
-    });
     app.use(express.bodyParser());
     app.use(express.static(__dirname + '/static'));
 });
@@ -50,14 +59,18 @@ var clickApp = function(req, res) {
     res.end();
 }
 
-var drawApps = function(req, res) {
+var renderApps = function(req, res) {
     uistate.fetchState();
     getAppsInfo(null, function(sortedResult) {
         res.render('appsList', {
+            layout: false,
             apps: sortedResult,
             dashboard: lconfig.dashboard
         });
     })
+}
+
+var renderCreate = function(req, res) {
 }
 
 var getAppsInfo = function(count, callback) {
@@ -88,19 +101,8 @@ var getAppsInfo = function(count, callback) {
     });
 }
 
-var drawPage = function(req, res) {
+var renderYou = function(req, res) {
     uistate.fetchState();
-    var profileImage = 'img/default-profile.png';
-    // hackzzzzzzzzzzzzzzzzz
-    // will replace when we have a reasonable notion of a user's profile
-    request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
-        try {
-            var body = JSON.parse(body);
-            if (body.username) {
-                profileImage = "http://graph.facebook.com/" + body.username + "/picture";
-            }
-        } catch (E) {}
-    });
     getAppsInfo(8, function(sortedResult) {
         locker.synclets(function(err, synclets) {
             for (var i in synclets.installed) {
@@ -118,7 +120,7 @@ var drawPage = function(req, res) {
                     synclets.available[i].oauthSize = {width: 960, height: 600};
                 }
             }
-            res.render('app', {
+            res.render('you', {
                 synclets: synclets,
                 github: github,
                 map: sortedResult,
@@ -130,6 +132,7 @@ var drawPage = function(req, res) {
 };
 
 app.get('/clickapp/:app', clickApp);
-app.get('/app', drawPage);
-app.get('/', drawPage);
-app.get('/allApps', drawApps);
+app.get('/app', renderYou);
+app.get('/', renderYou);
+app.get('/allApps', renderApps);
+app.get('/create', renderCreate);
