@@ -65,7 +65,7 @@ var getAppsInfo = function(count, callback) {
         var result = [];
         var sortedResult = [];
         for (var i in map.installed) {
-            if (map.installed[i].is === 'app' && !map.installed[i].hidden) {
+            if ((map.installed[i].is === 'app' || map.installed[i].type === 'app') && !map.installed[i].hidden) {
                 result.push(map.installed[i]);
             }
         }
