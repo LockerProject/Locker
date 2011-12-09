@@ -11,7 +11,7 @@ var collection;
 var db;
 var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger
+var logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -279,7 +279,7 @@ exports.addEvent = function(eventBody, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     handler(svcId, eventBody.data, callback);
@@ -292,7 +292,7 @@ exports.addData = function(svcId, type, allData, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     async.forEachSeries(allData,function(data,cb) {
