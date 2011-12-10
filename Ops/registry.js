@@ -142,7 +142,7 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
+        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });
@@ -193,7 +193,7 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 

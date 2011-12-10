@@ -195,7 +195,6 @@ exports.mapUpsert = function (file, type) {
     }
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
-    if(metaData.type) metaData.is = metaData.type; // legacy
     metaData.installable = true;
     // replace references in available array (legacy)
     var found = false;
