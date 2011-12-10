@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/allApps.css" />
+    <script src="js/allApps.js"></script>
+  </head>
+  <body>
+    <content class="body">
+      <ul class="apps-list">
+        <% for (var i = 0; i < apps.length; i++) { %>
+          <li>
+            <div class="app-screenshot-container"><img src="http://www.planetpals.com/weather/rainbow.jpg" class="app-screenshot"></div>
+            <div class="app-data">
+              <div class="header">
+                <p class="title"><%= apps[i].title %><span class="pipe">|</span><span class="drafts">draft</span><button class="publish">publish app</button>
+                <p>last updated 12.12.2012</p>
+              </div>
+              <div class="divider"></div>
+              <div class="content">
+                <p class="description"><%= apps[i].desc %></p>
+                <p class="bold">Uses Stuff</p>
+                <div class="authorship-history">Authorship History
+                </div>
+              </div>
+            </div>
+          </li>
+        <% } %>
+      </ul>
+    </content>
+  </body>
+</html>

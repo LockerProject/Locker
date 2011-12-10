@@ -10,8 +10,18 @@ $(document).ready(function() {
   });
 
   $('.screenshot-url').blur(function() {
-    $('.preview img').attr('src', $('.screenshot-url').attr('value'));
-    $('.preview').show();
+    if ($(this).attr('value').length > 0) {
+      $('.preview img').attr('src', $('.screenshot-url').attr('value'));
+      $('.preview').show();
+    } else {
+      $('.preview').hide();
+    }
+  });
+
+  $('.save-draft').click(function() {
+    $('input[name=app-publish]').attr('value', false);
+    $('form').submit();
+    return false;
   });
 });
 

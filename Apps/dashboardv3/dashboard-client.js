@@ -76,7 +76,7 @@ var clickApp = function(req, res) {
 var renderApps = function(req, res) {
     uistate.fetchState();
     getAppsInfo(null, function(sortedResult) {
-        res.render('appsList', {
+        res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult,
             dashboard: lconfig.dashboard
@@ -95,7 +95,7 @@ var renderCreate = function(req, res) {
 
 var renderPublish = function(req, res) {
     getGithubApps(function(apps) {
-        res.render('publish', {
+        res.render('iframe/publish', {
             layout: false,
             apps: apps
         });
@@ -173,6 +173,15 @@ var renderYou = function(req, res) {
     });
 };
 
+var renderAllApps = function(req, res) {
+    getGithubApps(function(apps) {
+        res.render('iframe/allApps', {
+            layout: false,
+            apps: apps
+        });
+    });
+};
+
 app.get('/clickapp/:app', clickApp);
 app.get('/you', renderYou);
 app.get('/', renderYou);
@@ -182,6 +191,7 @@ app.get('/create', renderCreate);
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
 
+app.get('/viewAll', renderAllApps);
 
 
 var getGithubApps = function(callback) {

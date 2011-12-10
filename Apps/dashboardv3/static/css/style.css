@@ -186,15 +186,15 @@ p.your-apps {
   font-size: 14px;
 }
 
-.your-apps.published {
+.published {
   color: #39b74f;
 }
 
-.your-apps.in-review {
+.in-review {
   color: #999999;
 }
 
-.your-apps.drafts {
+.drafts {
   color: #feaecd;
 }
 
@@ -233,8 +233,8 @@ p.your-apps {
 
 .publish-list .preview {
   position: relative;
-  width: 150px;
-  height: 150px;
+  width: 200px;
+  height: 200px;
   border: solid 1px #999;
 }
 
@@ -249,8 +249,8 @@ p.your-apps {
 }
 
 .publish-list .preview img {
-  max-width: 150px;
-  max-height: 150px;
+  max-width: 200px;
+  max-height: 200px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -271,7 +271,7 @@ p.your-apps {
   border-bottom: solid 1px #F7931E;
 }
 
-.actions button {
+button.publish {
   background-color: #F7931E;
   color: white;
   font-size: 18px;

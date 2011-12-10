@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <script src="js/publish.js"></script>
+  </head>
+  <body>
+    <content class="body">
+      <form method="POST" action="publish" enctype="multipart/form-data">
+        <input type="hidden" name="app-publish" value="true">
+        <ul class="publish-list">
+          <li><p>1. Choose an application to submit
+            <select name="app" class='app'>
+              <% for (var i = 0; i < apps.length; i++) { %>
+                <option value="<% apps[i].handle %>" data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
+              <% } %>
+            </select></p>
+            <p class="indented">
+              <input type="checkbox" name="rename-app" class="rename-app" id="rename-app"/> <label for="rename-app">I want to rename this app</label>
+            </p>
+            <p class="indented app-name hidden">Rename "<span class="app-name-span"></span>" as <input type="text" class='app-newname' name="app-newname" placeholder="40 characters left" maxlength=40></input></p>
+          </li>
+          <li><p>2. Confirm your app description</p>
+            <textarea rows="4" cols="50" name="app-description" placeholder="Describe your application...."><%= apps[0].desc %></textarea>
+          </li>
+          <li><p>3. Choose screenshot or other appropriate imagery</p>
+            <p><input type="file" name="app-screenshot"/></p>
+            <p class="bold">OR</p>
+            <p><input class="screenshot-url" type="text" name="app-screenshot-url" placeholder="Set URL for image"/></p>
+            <div class="hidden preview"><img src=""/><p>preview</p></div>
+          </li>
+        </ul>
+        <div class="actions">
+          <a class="orange cancel" href="#">cancel</a>
+          <a class="orange save-draft" href="#">save as draft</a>
+          <button type="submit" class="publish">Publish to registry</button
+      </form>
+    </content>
+  </body>
+</html>
+
+
