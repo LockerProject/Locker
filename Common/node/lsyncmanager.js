@@ -459,7 +459,10 @@ function addData (collection, mongoId, data, info, idr, callback) {
                 levents.fireEvent(url.format(r), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
-                datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
+                var source = r.pathname.substring(1);
+                var options = {timeStamp: object.timestamp};
+                if(info.strip && info.strip[source]) options.strip = info.strip[source];
+                datastore.addObject(collection, object.obj, options, function(err, type, doc) {
                     if (type === 'same') return cb();
                     levents.fireEvent(url.format(r), type, doc);
                     return cb();

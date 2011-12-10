@@ -73,8 +73,8 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
-// return the known map of our world
-locker.get('/map/upsert', function(req, res) {
+
+locker.post('/map/upsert', function(req, res) {
     logger.info("Upserting " + req.param("manifest"));
     res.send(serviceManager.mapUpsert(req.param("manifest"), req.param("type")));
 });
@@ -501,6 +501,11 @@ locker.post('/core/:svcId/event', function(req, res) {
     levents.fireEvent(req.body.idr, req.body.action, req.body.data);
     res.writeHead(200);
     res.end("OKTHXBI");
+});
+
+locker.get('/wildmode', function(req, res) {
+    lconfig.ui = 'dashboardv3';
+    res.redirect('/');
 });
 
 locker.use(express.static(__dirname + '/static'));
