@@ -193,7 +193,7 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 
