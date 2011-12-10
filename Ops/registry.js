@@ -142,7 +142,7 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
+        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });

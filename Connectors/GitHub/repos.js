@@ -69,7 +69,7 @@ exports.syncRepos = function(cached, callback) {
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
-                        request.get({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
+                        request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
                             cb();
                         });
                     });

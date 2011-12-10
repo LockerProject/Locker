@@ -73,8 +73,8 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
-// return the known map of our world
-locker.get('/map/upsert', function(req, res) {
+
+locker.post('/map/upsert', function(req, res) {
     logger.info("Upserting " + req.param("manifest"));
     res.send(serviceManager.mapUpsert(req.param("manifest"), req.param("type")));
 });
