@@ -23,6 +23,11 @@ $(document).ready(function() {
     $('form').submit();
     return false;
   });
+
+  $('.cancel').click(function() {
+    window.parent.app = 'viewAll';
+    window.parent.loadApp();
+  });
 });
 
 var rename = function() {
