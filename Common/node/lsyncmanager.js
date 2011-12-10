@@ -286,7 +286,9 @@ function executeSynclet(info, synclet, callback) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
+    var tstart;
     app.stdout.on('data',function (data) {
+        if(!tstart) tstart = Date.now();
         dataResponse += data;
     });
 
@@ -301,7 +303,7 @@ function executeSynclet(info, synclet, callback) {
             if (callback) callback(E);
             return;
         }
-        logger.info("Synclet "+synclet.name+" finished for "+info.id);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         var tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
