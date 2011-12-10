@@ -13,6 +13,9 @@
         "tweets":"tweet",
         "mentions":"tweet"
     },
+    "strip" : {
+        "contact":["status"]
+    },
     "synclets":[{"name": "related", "frequency": 3600},
                 {"name": "friends", "frequency": 3600},
                 {"name": "timeline", "frequency": 120},
