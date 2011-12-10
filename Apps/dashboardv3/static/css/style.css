@@ -170,20 +170,22 @@ aside {
 }
 
 /* styling for the create page */
-.viewAll.expanded:after {
+.viewAll.blue:after {
   content: " \25BC";
   font-size: .75em;
 }
 
-.viewAll:not(.expanded):after {
+.viewAll:not(.blue):after {
   content: " \25B6";
   font-size: .75em;
 }
 
-p.your-apps {
+.your-apps.your-apps.app-details {
   margin: 5px 0px 5px 20px;
   display: none;
   font-size: 14px;
+  background-color: white;
+  padding: 0px;
 }
 
 .published {
