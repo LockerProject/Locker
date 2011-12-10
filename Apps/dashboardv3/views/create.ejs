@@ -7,8 +7,9 @@
       <li>
         <p><a href="/dashboard/viewAll" class="iframeLink viewAll" data-id="viewAll">View All</a></p>
         <p class="your-apps published app-details">Published (0)</p>
-        <p class="your-apps in-review app-details">In Review (0)</p>
-        <p class="your-apps drafts app-details">Drafts (0)</p>
+        <!--no review stage yet, so omitting this one for now-->
+        <!--<p class="your-apps in-review app-details">In Review (0)</p>-->
+        <p class="your-apps drafts app-details">Drafts (<%= apps.length %>)</p>
       </li>
       <li>
         <p><a href="/dashboard/publish" class="iframeLink" data-id="publish">Publish New</a></p>
