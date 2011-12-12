@@ -99,9 +99,7 @@ app.get('/query', function(req, res) {
             res.send(all);
         });
     });
-
 });
-
 
 // Process the startup JSON object
 process.stdin.resume();

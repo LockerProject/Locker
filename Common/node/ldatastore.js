@@ -51,7 +51,8 @@ exports.addObject = function(owner, type, object, options, callback) {
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
         for (var i in options['strip']) {
-            object[options['strip'][i]].delete
+            var key = options['strip'][i];
+            delete object[key];
         }
         if (options['timeStamp']) {
             timeStamp = options['timeStamp'];
@@ -171,6 +172,6 @@ function getMongo(owner, type, callback) {
 }
 
 function now() {
-    return new Date().getTime();
+    return Date.now();
 }
 

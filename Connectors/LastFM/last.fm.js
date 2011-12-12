@@ -84,7 +84,7 @@ function nowSec() {
     return now() / 1000;
 }
 function now() {
-    return new Date().getTime();
+    return Date.new();
 }
 
 function readMeta(user) {

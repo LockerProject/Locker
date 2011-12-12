@@ -13,6 +13,8 @@ var externalBase = window.location.origin;
 
 var _kmq = _kmq || [];
 
+var syncletInstalled = function() {};
+
 $(document).ready(
     function() {
         // any mouse activity resets it

@@ -139,7 +139,7 @@ function updateState() {
     }
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }
@@ -220,7 +220,7 @@ exports.addEvent = function(eventBody, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     handler(svcId, type, eventBody.data, callback);
@@ -233,7 +233,7 @@ exports.addData = function(svcId, type, allData, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     async.forEachSeries(allData, function(data, cb) {

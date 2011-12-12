@@ -203,7 +203,7 @@ function getPhotos(auth_token, username, user_id, page, oldest, newest) {
     if(!oldest)
         oldest = 0;
     if(!newest)
-        newest = new Date().getTime()/1000;
+        newest = Date.new()/1000;
     var url = getSignedMethodURL('flickr.people.getPhotos',
                                 ['auth_token=' + auth_token, 'user_id=' + user_id,
                                  'min_upload_date=' + oldest, 'max_upload_date=' + newest,
@@ -260,7 +260,7 @@ function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    var now = new Date().getTime()/1000;
+    var now = Date.new()/1000;
     getPhotos(auth.token._content, userInfo.username, 'me', 1, state.newest, now);
     state.newest = now;
     lfs.writeObjectToFile('state.json', state);
