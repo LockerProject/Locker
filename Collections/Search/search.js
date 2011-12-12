@@ -50,8 +50,12 @@ app.post('/events', function(req, res) {
 app.get('/update', function(req, res) {
     logger.info("updating search index");
     sync.gather(false, function(){
+        logger.info("full search reindex started")
         return res.send('Full search reindex started');
-    });
+    }, function(err){
+        if(err) logger.error("search reindex error: "+err);
+        logger.info("full search reindex completed");
+    }, req.param("delay"));
 });
 
 app.get('/reindexForType', function(req, res) {

@@ -26,12 +26,16 @@ function reset(type, callback)
     if(!type) return index.reset(callback);
     index.deleteType(type, callback);
 }
-exports.gather = function(type, cbDel, cbDone) {
+exports.gather = function(type, cbDel, cbDone, delayMax) {
     if(!cbDone) cbDone = function(){ logger.info("done gathering"); };
     reset(type, function(){
         if(cbDel) cbDel();
         var services = (type) ? [type] : ['contacts', 'photos', 'places', 'links'];
-        async.forEachSeries(services, gatherFromUrl, cbDone);
+        var delay = 0;
+        if(delayMax) delay = Math.floor(Math.random()*delayMax);
+        setTimeout(function(){
+            async.forEachSeries(services, gatherFromUrl, cbDone);
+        }, delay);
     });
 };
 

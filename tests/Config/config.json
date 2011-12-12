@@ -19,8 +19,6 @@
                       "deepCompare-test.js",
                       "lpushmanager-test-local.js"],
         "client-api" : ["locker-client-test.js"],
-        "search" : ["collection-search-test.js",
-                    "lsearch-test-local.js"],
         "synclets" : ["synclet-local-foursquare.js",
                       "synclet-local-github.js",
                       "synclet-local-twitter.js",
@@ -29,6 +27,7 @@
                       "synclet-local-googleContacts.js"],
         "collections" : ["collection-contacts-test.js",
                          "collection-photos-test.js",
+                         "collection-search-test.js",
                          "collection-places-test.js",
                          "collection-links-test.js"],
         "issues" : ["locker-issues-test.js"]

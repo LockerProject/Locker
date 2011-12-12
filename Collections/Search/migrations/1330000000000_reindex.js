@@ -1,3 +1,3 @@
 module.exports = function(dir) {
-    return "update";
+    return "update?delay=60000";
 };

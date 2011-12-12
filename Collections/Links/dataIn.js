@@ -105,7 +105,11 @@ var encounterQueue = async.queue(function(e, callback) {
                 // make sure to pass in a new object, asyncutu
                 dataStore.addEncounter(lutil.extend(true,{orig:u,link:link},e), function(err,doc){
                     if(err) return cb(err);
-                    dataStore.updateLinkAt(doc.link, doc.at, cb);
+                    dataStore.updateLinkAt(doc.link, doc.at, function(err, obj){
+                        if(err) return cb(err);
+                        locker.ievent(lutil.idrNew("link","links",obj.id),obj,"update"); // let happen independently
+                        cb();
+                    });
                 }); // once resolved, store the encounter
             });
         }, callback);
