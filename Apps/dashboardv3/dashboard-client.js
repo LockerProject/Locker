@@ -42,7 +42,6 @@ module.exports = function(passedLocker, passedExternalBase, listenPort, callback
             }
         } catch (E) {}
     });
-
 };
 
 var app = express.createServer();
@@ -89,7 +88,15 @@ var renderApps = function(req, res) {
 var renderCreate = function(req, res) {
     page = 'create';
     getGithubApps(function(apps) {
+        var publishedCount = 0;
+        for (var i = 0; i < apps.length; i++) {
+            if (apps[i].published) {
+                publishedCount++;
+            }
+        }
         res.render('create', {
+            published: publishedCount,
+            draft: apps.length - publishedCount,
             apps: apps
         });
     });
@@ -131,7 +138,7 @@ var submitPublish = function(req, res) {
                 if (fields['rename-app'] === 'on') {
                     data.title = fields['app-newname'];
                 }
-                request.post({uri: lconfig.externalBase + '/registry/publish/' + fields.app, data: data});
+                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data});
             }
             uistate.saveDraft(fields);
             res.write(JSON.stringify(fields));
@@ -243,13 +250,26 @@ var getGithubApps = function(callback) {
     uistate.fetchState();
     var apps = [];
     var pattern = /^Me\/github/
-    locker.map(function(err, map) {
-        for (var i in map.installed) {
-            if (pattern.exec(map.installed[i].srcdir)) {
-                apps.push(checkDraftState(map.installed[i]));
+    getRegistryApps(function(registry) {
+        locker.map(function(err, map) {
+            for (var i in map.installed) {
+                if (pattern.exec(map.installed[i].srcdir)) {
+                    var appInfo = checkDraftState(map.installed[i]);
+                    if (registry['app-' + appInfo.id.toLowerCase()]) {
+                        appInfo.published = registry['app-' + appInfo.id.toLowerCase()];
+                    }
+                    apps.push(appInfo);
+                    console.dir(appInfo);
+                }
             }
-        }
-        callback(apps);
+            callback(apps);
+        });
+    });
+}
+
+var getRegistryApps = function(callback) {
+    request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
+        callback(JSON.parse(body));
     });
 }
 

@@ -92,6 +92,8 @@ exports.app = function(app)
     app.get('/registry/publish/:id', publishPackage);
 
     app.post('/registry/publish/:id', publishPackage);
+
+    app.get('/registry/myApps', exports.getMyApps);
 }
 
 function publishPackage(req, res) {
@@ -109,7 +111,8 @@ function publishPackage(req, res) {
             args.body = req.body;
         }
         exports.publish(args, function(err, doc){
-            if(err) res.send(err, 500);
+            // npm publish always returns an error even though it works, so until that's fixed, commenting this out
+            //if(err) res.send(err, 500);
             res.send(doc);
         });
     });
@@ -204,6 +207,13 @@ exports.getApps = function() {
     var apps = {};
     Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
     return apps;
+}
+exports.getMyApps = function(req, res) {
+    github(function(gh) {
+        var apps = {};
+        Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app' && regIndex[k].maintainers[0].name === gh.login) apps[k] = regIndex[k]; });
+        res.send(apps);
+    });
 }
 
 // npm wrappers

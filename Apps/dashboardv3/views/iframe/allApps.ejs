@@ -14,7 +14,12 @@
             <div class="app-screenshot-container"><img src='<%= "screenshot/" + apps[i].handle %>' class="app-screenshot"></div>
             <div class="app-data">
               <div class="header">
-                <p class="title"><%= apps[i].title %><span class="pipe">|</span><span class="drafts">draft</span><button class="publish">publish app</button>
+                <p class="title"><%= apps[i].title %><span class="pipe">|</span>
+                <% if (apps[i].published) { %>
+                  <span class="published">published</span><button class="publish">update app</button>
+                <% } else { %>
+                  <span class="drafts">draft</span><button class="publish">publish app</button>
+                <% } %>
                 <p>last updated <%= apps[i].lastUpdated.getMonth() + "." + apps[i].lastUpdated.getDate() + "." + apps[i].lastUpdated.getFullYear() %></p>
               </div>
               <div class="divider"></div>

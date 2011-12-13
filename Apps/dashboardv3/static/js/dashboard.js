@@ -20,11 +20,17 @@ $(document).ready(function() {
     popup.focus();
     return false;
   });
+
+  $('.your-apps').click(function() {
+    $('.blue').removeClass('blue');
+    $(this).addClass('blue');
+    document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+  });
 });
 
 var loadApp = function() {
   $('.app-details').hide();
-  $('.iframeLink').removeClass('blue');
+  $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
