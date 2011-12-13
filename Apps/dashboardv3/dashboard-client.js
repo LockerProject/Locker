@@ -16,6 +16,8 @@ var express = require('express')
   , form = require('connect-form')
   , uistate = require(__dirname + '/state')
   , profileImage = 'img/default-profile.png'
+  , path = require('path')
+  , fs = require('fs')
   , page = ''
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
@@ -95,6 +97,7 @@ var renderCreate = function(req, res) {
 
 var renderPublish = function(req, res) {
     getGithubApps(function(apps) {
+        console.dir(apps);
         res.render('iframe/publish', {
             layout: false,
             apps: apps
@@ -107,6 +110,14 @@ var submitPublish = function(req, res) {
         req.form.complete(function(err, fields, files) {
             res.writeHead(200, {});
             if (err) res.write(JSON.stringify(err.message));
+            if (files) {
+                var write = fs.createWriteStream(fields.app);
+                var uploadedFile = fs.createReadStream(files['app-screenshot'].path);
+                write.once('open', function(fd) {
+                    require('util').pump(uploadedFile, write);
+                });
+            }
+            uistate.saveDraft(fields);
             res.write(JSON.stringify(fields));
             res.write(JSON.stringify(files));
             res.end();
@@ -173,6 +184,23 @@ var renderYou = function(req, res) {
     });
 };
 
+var renderScreenshot = function(req, res) {
+    // fix this to iterate over the list of apps, this is a ghetto hack, and is certainly exploitable in some fashion
+    if (req.params.handle.indexOf('\.\.') > -1) return res.send('');
+    path.exists(process.cwd() + '/' + req.params.handle, function(exists) {
+        if (uistate.state.draftApps[req.params.handle]) {
+            var state = uistate.state.draftApps[req.params.handle];
+            if (state['app-screenshot-url']) {
+                return res.redirect(state['app-screenshot-url']);
+            }
+            if (exists) {
+                return res.sendfile(process.cwd() + '/' + req.params.handle);
+            }
+        }
+        res.sendfile(__dirname + '/static/img/rainbow.jpg');
+    });
+};
+
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
         res.render('iframe/allApps', {
@@ -193,16 +221,29 @@ app.post('/publish', submitPublish);
 
 app.get('/viewAll', renderAllApps);
 
+app.get('/screenshot/:handle', renderScreenshot);
 
 var getGithubApps = function(callback) {
+    uistate.fetchState();
     var apps = [];
     var pattern = /^Me\/github/
     locker.map(function(err, map) {
         for (var i in map.installed) {
             if (pattern.exec(map.installed[i].srcdir)) {
-                apps.push(map.installed[i]);
+                apps.push(checkDraftState(map.installed[i]));
             }
         }
         callback(apps);
     });
+}
+
+var checkDraftState = function(appInfo) {
+    if (uistate.state.draftApps[appInfo.handle]) {
+        appInfo.draft = uistate.state.draftApps[appInfo.handle];
+        if (appInfo.draft['rename-app'] === 'on') {
+            appInfo.title = appInfo.draft['app-newname'];
+        }
+        appInfo.desc = appInfo.draft['app-description'];
+    }
+    return appInfo;
 }

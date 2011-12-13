@@ -13,7 +13,7 @@
           <li><p>1. Choose an application to submit
             <select name="app" class='app'>
               <% for (var i = 0; i < apps.length; i++) { %>
-                <option value="<% apps[i].handle %>" data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
+                <option value="<%= apps[i].handle %>" data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
               <% } %>
             </select></p>
             <p class="indented">

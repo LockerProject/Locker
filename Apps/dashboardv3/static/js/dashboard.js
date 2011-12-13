@@ -1,8 +1,8 @@
 var app;
 var specialApps = {
-    "allApps" : "/dashboard/allApps",
-    "publish" : "/dashboard/publish",
-    "viewAll" : "/dashboard/viewAll"
+    "allApps" : "allApps",
+    "publish" : "publish",
+    "viewAll" : "viewAll"
 };
 
 $(document).ready(function() {

@@ -11,7 +11,7 @@
       <ul class="apps-list">
         <% for (var i = 0; i < apps.length; i++) { %>
           <li>
-            <div class="app-screenshot-container"><img src="http://www.planetpals.com/weather/rainbow.jpg" class="app-screenshot"></div>
+            <div class="app-screenshot-container"><img src='<%= "screenshot/" + apps[i].handle %>' class="app-screenshot"></div>
             <div class="app-data">
               <div class="header">
                 <p class="title"><%= apps[i].title %><span class="pipe">|</span><span class="drafts">draft</span><button class="publish">publish app</button>
