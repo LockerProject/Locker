@@ -9,10 +9,13 @@ $(document).ready(function() {
     $('textarea[name=app-description]').text(self.data('description'));
     if (self.data('rename') == 'on') {
       $('.app-name').show();
+      $('.app-name-span').text($('.app>option:selected').text());
       $('.rename-app').attr('checked', 'on');
+      $('.app-newname').attr('value', $('.app>option:selected').text());
     } else {
       $('.app-name').hide();
       $('.rename-app').attr('checked', false);
+      $('.app-newname').attr('value', '');
     }
     $('.preview img').attr('src', 'screenshot/' + self.data('handle'));
     rename();

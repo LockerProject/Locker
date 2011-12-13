@@ -110,7 +110,7 @@ var submitPublish = function(req, res) {
         req.form.complete(function(err, fields, files) {
             res.writeHead(200, {});
             if (err) res.write(JSON.stringify(err.message));
-            if (files) {
+            if (files['app-screenshot'].filename) {
                 var write = fs.createWriteStream(fields.app);
                 var uploadedFile = fs.createReadStream(files['app-screenshot'].path);
                 write.once('open', function(fd) {
@@ -123,6 +123,7 @@ var submitPublish = function(req, res) {
                     });
                 }
             }
+            fields.updatedAt = Date.now();
             uistate.saveDraft(fields);
             res.write(JSON.stringify(fields));
             res.write(JSON.stringify(files));
@@ -253,5 +254,6 @@ var checkDraftState = function(appInfo) {
     } else {
         appInfo.draft = {};
     }
+    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || 1223807394911);
     return appInfo;
 }

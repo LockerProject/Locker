@@ -15,7 +15,7 @@
             <div class="app-data">
               <div class="header">
                 <p class="title"><%= apps[i].title %><span class="pipe">|</span><span class="drafts">draft</span><button class="publish">publish app</button>
-                <p>last updated 12.12.2012</p>
+                <p>last updated <%= apps[i].lastUpdated.getMonth() + "." + apps[i].lastUpdated.getDate() + "." + apps[i].lastUpdated.getFullYear() %></p>
               </div>
               <div class="divider"></div>
               <div class="content">
