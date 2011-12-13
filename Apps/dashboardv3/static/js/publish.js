@@ -5,16 +5,24 @@ $(document).ready(function() {
   });
 
   $('.app').change(function() {
-    $('textarea[name=app-description]').text($('.app>option:selected').data('description'));
+    var self = $('.app>option:selected');
+    $('textarea[name=app-description]').text(self.data('description'));
+    if (self.data('rename') == 'on') {
+      $('.app-name').show();
+      $('.rename-app').attr('checked', 'on');
+    } else {
+      $('.app-name').hide();
+      $('.rename-app').attr('checked', false);
+    }
+    $('.preview img').attr('src', 'screenshot/' + self.data('handle'));
     rename();
   });
 
   $('.screenshot-url').blur(function() {
     if ($(this).attr('value').length > 0) {
       $('.preview img').attr('src', $('.screenshot-url').attr('value'));
-      $('.preview').show();
     } else {
-      $('.preview').hide();
+      $('.preview img').attr('src', 'screenshot/' + $('.app>option:selected').data('handle'));
     }
   });
 

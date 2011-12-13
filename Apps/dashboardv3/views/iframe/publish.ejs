@@ -13,11 +13,12 @@
           <li><p>1. Choose an application to submit
             <select name="app" class='app'>
               <% for (var i = 0; i < apps.length; i++) { %>
-                <option value="<%= apps[i].handle %>" data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
+              <option value="<%= apps[i].handle %>" data-rename="<%= apps[i].draft['rename-app'] || 'off' %>" data-handle="<%= apps[i].handle %>"
+                      data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
               <% } %>
             </select></p>
             <p class="indented">
-              <input type="checkbox" name="rename-app" class="rename-app" id="rename-app"/> <label for="rename-app">I want to rename this app</label>
+              <input type="checkbox" name="rename-app" class="rename-app" id="rename-app" <%= apps[0].draft['rename-app'] || 'off' %>/> <label for="rename-app">I want to rename this app</label>
             </p>
             <p class="indented app-name hidden">Rename "<span class="app-name-span"></span>" as <input type="text" class='app-newname' name="app-newname" placeholder="40 characters left" maxlength=40></input></p>
           </li>
@@ -28,7 +29,7 @@
             <p><input type="file" name="app-screenshot"/></p>
             <p class="bold">OR</p>
             <p><input class="screenshot-url" type="text" name="app-screenshot-url" placeholder="Set URL for image"/></p>
-            <div class="hidden preview"><img src=""/><p>preview</p></div>
+            <div class="preview"><img src="screenshot/<%= apps[0].handle %>"/><p>preview</p></div>
           </li>
         </ul>
         <div class="actions">

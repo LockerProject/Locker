@@ -116,6 +116,12 @@ var submitPublish = function(req, res) {
                 write.once('open', function(fd) {
                     require('util').pump(uploadedFile, write);
                 });
+            } else {
+                if (fields['app-screenshot-url']) {
+                    request.get(fields['app-screenshot-url'], function(err, res, body) {
+                        fs.writeFile(fields.app, data);
+                    });
+                }
             }
             uistate.saveDraft(fields);
             res.write(JSON.stringify(fields));
@@ -244,6 +250,8 @@ var checkDraftState = function(appInfo) {
             appInfo.title = appInfo.draft['app-newname'];
         }
         appInfo.desc = appInfo.draft['app-description'];
+    } else {
+        appInfo.draft = {};
     }
     return appInfo;
 }

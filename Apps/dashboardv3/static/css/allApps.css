@@ -45,7 +45,7 @@
 .apps-list .divider {
   width: 100%;
   height: 1px;
-  margin: 15px 0px;
+  margin: 15px 0px 15px 1px;
   border-bottom: dashed 1px;
 }
 
