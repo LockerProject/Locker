@@ -83,6 +83,7 @@ app.get('/query', function(req, res) {
 
     var all = []; // to keep ordering
     var ndx = {}; // to keep uniqueness
+    logger.info("performing query "+JSON.stringify(args));
     index.query(args, function(item){
         if(ndx[item.idr]) return;
         ndx[item.idr] = item;
