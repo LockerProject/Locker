@@ -43,8 +43,10 @@ function gatherFromUrl(svcId, callback) {
     var url = path.join("Me", svcId, "?all=true&stream=true");
     url = lconfig.lockerBase + "/" + url;
     logger.info("updating from "+url);
+    var total = 0;
     var req = request.get({uri:url}, function(err){
         if(err) logger.error(err);
+        logger.info("indexed "+total+" items from "+svcId);
         callback();
     });
     var buff = "";
@@ -59,6 +61,7 @@ function gatherFromUrl(svcId, callback) {
             buff = buff.substr(nl+1);
             var js;
             try{
+                total++;
                 exports.add(svcId, JSON.parse(dat), cb);
             }catch(E){
                 logger.error("got "+E+" processing "+dat);
