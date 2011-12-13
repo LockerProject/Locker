@@ -211,7 +211,9 @@ exports.getApps = function() {
 exports.getMyApps = function(req, res) {
     github(function(gh) {
         var apps = {};
-        Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app' && regIndex[k].maintainers[0].name === gh.login) apps[k] = regIndex[k]; });
+        Object.keys(regIndex).forEach(function(k){
+           if(regIndex[k].repository && regIndex[k].repository.is === 'app' && regIndex[k].maintainers && regIndex[k].maintainers[0].name === gh.login) apps[k] = regIndex[k];
+        });
         res.send(apps);
     });
 }

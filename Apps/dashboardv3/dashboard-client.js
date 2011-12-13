@@ -104,7 +104,6 @@ var renderCreate = function(req, res) {
 
 var renderPublish = function(req, res) {
     getGithubApps(function(apps) {
-        console.dir(apps);
         res.render('iframe/publish', {
             layout: false,
             apps: apps
@@ -130,7 +129,7 @@ var submitPublish = function(req, res) {
                     });
                 }
             }
-            fields.updatedAt = Date.now();
+            fields.lastUpdated = Date.now();
             if (fields['app-publish']) {
                 var data = {
                     desc: fields['app-description']
@@ -259,7 +258,6 @@ var getGithubApps = function(callback) {
                         appInfo.published = registry['app-' + appInfo.id.toLowerCase()];
                     }
                     apps.push(appInfo);
-                    console.dir(appInfo);
                 }
             }
             callback(apps);
