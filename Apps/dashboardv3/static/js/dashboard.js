@@ -5,6 +5,8 @@ var specialApps = {
     "viewAll" : "viewAll"
 };
 
+var iframeLoaded = function() {};
+
 $(document).ready(function() {
   app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
   loadApp();
@@ -28,7 +30,12 @@ $(document).ready(function() {
   });
 });
 
-var loadApp = function() {
+var loadApp = function(callback) {
+  if (callback) {
+    iframeLoaded = callback;
+  } else {
+    iframeLoaded = function() {};
+  }
   $('.app-details').hide();
   $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;

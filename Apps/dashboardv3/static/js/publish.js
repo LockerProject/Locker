@@ -39,8 +39,18 @@ $(document).ready(function() {
     window.parent.app = 'viewAll';
     window.parent.loadApp();
   });
+
+  if (parent.iframeLoaded) {
+    parent.iframeLoaded();
+  }
 });
 
 var rename = function() {
   $('.app-name-span').text($('.app>option:selected').text());
 };
+
+var selectItem = function(id) {
+  $('select options[selected]').removeAttr('selected');
+  $('option[value="' + id + '"]').attr('selected', 'selected');
+  $('.app').change();
+}
