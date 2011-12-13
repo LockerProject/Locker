@@ -17,6 +17,7 @@ var request = require('request');
 var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
+var express = require('express');
 var logger;
 var lconfig;
 var lcrypto;
@@ -60,6 +61,7 @@ exports.init = function(config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
+    app.use(express.bodyParser());
     app.get('/registry/added', function(req, res) {
         res.send(exports.getInstalled());
     });
@@ -87,21 +89,28 @@ exports.app = function(app)
         exports.sync(function(){res.send(true)});
     });
     // takes the local github id format, user-repo
-    app.get('/registry/publish/:id', function(req, res) {
-        logger.info("registry publishing "+req.params.id);
-        var id = req.params.id;
-        if(id.indexOf("-") <= 0) return res.send("not found", 404);
-        if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
-        id = id.replace("-","/");
-        var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
-        fs.stat(dir, function(err, stat){
-            if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
-            var args = req.query || {};
-            args.dir = dir;
-            exports.publish(args, function(err, doc){
-                if(err) res.send(err, 500);
-                res.send(doc);
-            });
+    app.get('/registry/publish/:id', publishPackage);
+
+    app.post('/registry/publish/:id', publishPackage);
+}
+
+function publishPackage(req, res) {
+    logger.info("registry publishing "+req.params.id);
+    var id = req.params.id;
+    if(id.indexOf("-") <= 0) return res.send("not found", 404);
+    if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
+    id = id.replace("-","/");
+    var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
+    fs.stat(dir, function(err, stat){
+        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
+        var args = req.query || {};
+        args.dir = dir;
+        if (req.body) {
+            args.body = req.body;
+        }
+        exports.publish(args, function(err, doc){
+            if(err) res.send(err, 500);
+            res.send(doc);
         });
     });
 }
@@ -258,6 +267,7 @@ exports.publish = function(arg, callback) {
 function checkPackage(pjs, arg, gh, callback)
 {
     fs.stat(pjs, function(err, stat){
+        var js = {};
         if(err || !stat || !stat.isFile())
         {
             var pkg = path.basename(path.dirname(pjs));
@@ -280,8 +290,14 @@ function checkPackage(pjs, arg, gh, callback)
               "devDependencies": {},
               "engines": {"node": "*"}
             };
-            lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
+        } else {
+            js = JSON.parse(fs.readFileSync(pjs));
         }
+        if (arg.body) {
+            js.repository.title = arg.body.title;
+            js.repository.desc = arg.body.desc;
+        }
+        lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });
 }

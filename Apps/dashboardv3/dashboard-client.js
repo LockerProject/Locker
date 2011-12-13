@@ -124,6 +124,15 @@ var submitPublish = function(req, res) {
                 }
             }
             fields.updatedAt = Date.now();
+            if (fields['app-publish']) {
+                var data = {
+                    desc: fields['app-description']
+                }
+                if (fields['rename-app'] === 'on') {
+                    data.title = fields['app-newname'];
+                }
+                request.post({uri: lconfig.externalBase + '/registry/publish/' + fields.app, data: data});
+            }
             uistate.saveDraft(fields);
             res.write(JSON.stringify(fields));
             res.write(JSON.stringify(files));
