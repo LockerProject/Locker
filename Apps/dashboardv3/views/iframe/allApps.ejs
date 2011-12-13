@@ -20,7 +20,9 @@
               <div class="divider"></div>
               <div class="content">
                 <p class="description"><%= apps[i].desc %></p>
-                <p class="bold">Uses Stuff</p>
+                <% if (apps[i].uses) { %>
+                  <p class="bold">Uses <%= apps[i].uses.join(', ') %></p>
+                <% } %>
                 <div class="authorship-history">Authorship History
                 </div>
               </div>
