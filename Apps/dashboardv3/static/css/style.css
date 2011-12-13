@@ -239,6 +239,7 @@ aside {
   height: 200px;
   border: solid 1px #999;
   line-height: 200px;
+  text-align: center;
 }
 
 .publish-list .preview p {
