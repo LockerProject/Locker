@@ -3,4 +3,5 @@ node_js:
     - 0.4
 script: "sh setup-travis.sh && npm test"
 notifications:
-    email: false
+    email:
+        - temas@singly.com
