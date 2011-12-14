@@ -15,7 +15,6 @@ var levents = require("levents");
 var lutil = require('lutil');
 var serviceManager = require("lservicemanager");
 var syncManager = require('lsyncmanager');
-// var dashboard = require(__dirname + "/dashboard.js");
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
@@ -28,13 +27,12 @@ var lfs = require(__dirname + "/../Common/node/lfs.js");
 var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
 var lconfig = require("lconfig");
+var logger = require('logger');
 
 var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
-
-var dashboard, devdashboard;
 
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -59,6 +57,8 @@ var locker = express.createServer(
 var push = require('./webservice-push')(locker);
 var synclets = require('./webservice-synclets')(locker);
 var syncletAuth = require('./webservice-synclets-auth')(locker);
+var registry = require('./registry');
+registry.app(locker); // add it's endpoints
 
 var listeners = new Object(); // listeners for events
 
@@ -73,10 +73,10 @@ locker.get('/map', function(req, res) {
     res.end(JSON.stringify(serviceManager.serviceMap()));
 });
 
-// return the known map of our world
-locker.get('/map/upsert', function(req, res) {
-    console.log("Upserting " + req.param("manifest"));
-    res.send(serviceManager.mapUpsert(req.param("manifest")));
+
+locker.post('/map/upsert', function(req, res) {
+    logger.info("Upserting " + req.param("manifest"));
+    res.send(serviceManager.mapUpsert(req.param("manifest"), req.param("type")));
 });
 
 locker.get("/providers", function(req, res) {
@@ -140,7 +140,7 @@ locker.get("/encrypt", function(req, res) {
         res.end();
         return;
     }
-    console.log("encrypting " + req.param("s"));
+    logger.info("encrypting " + req.param("s"));
     res.end(lcrypto.encrypt(req.param("s")));
 });
 
@@ -177,7 +177,7 @@ locker.get("/query/:query", function(req, res) {
         mongo.init(provider.id, provider.mongoCollections, function(mongo, colls) {
             try {
                 var collection = colls[provider.mongoCollections[0]];
-                console.log("Querying " + JSON.stringify(query));
+                logger.info("Querying " + JSON.stringify(query));
                 var options = {};
                 options.limit = query.limit || DEFAULT_QUERY_LIMIT;
                 if (query.skip) options.skip = query.skip;
@@ -226,7 +226,7 @@ locker.get('/core/:svcId/at', function(req, res) {
     var at = new Date;
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
-    console.log("scheduled "+ svcId + " " + cb + "  at " + at);
+    logger.info("scheduled "+ svcId + " " + cb + "  at " + at);
     res.end("true");
 });
 
@@ -250,7 +250,7 @@ locker.post('/core/:svcId/install', function(req, res) {
 });
 
 locker.post('/core/:svcId/uninstall', function(req, res) {
-    console.log('/core/:svcId/uninstal, :svcId == ' + req.params.svcId);
+    logger.error('/core/:svcId/uninstall, :svcId == ' + req.params.svcId);
     var svcId = req.body.serviceId;
     if(!serviceManager.isInstalled(svcId)) {
         res.writeHead(404);
@@ -291,8 +291,8 @@ locker.post('/core/:svcId/enable', function(req, res) {
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
-    // ensure the ending slash - i.e. /Me/devdashboard ==>> /Me/devdashboard/
+locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
+    // ensure the ending slash - i.e. /Me/foo ==>> /Me/foo/
     if(!req.params[1]) {
         var url = "/Me/" + req.params[0];
         if (!req.params[1]) {
@@ -307,34 +307,24 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res){
         res.header("Location", url);
         res.send(302);
     } else {
-        console.log("Normal proxy of " + req.originalUrl);
-        proxyRequest('GET', req, res);
+        logger.verbose("Normal proxy of " + req.originalUrl);
+        proxyRequest('GET', req, res, next);
     }
 });
 
 // all of the requests to something installed (proxy them, moar future-safe)
-locker.post('/Me/*', function(req,res){
-    proxyRequest('POST', req, res);
+locker.post('/Me/*', function(req,res, next){
+    proxyRequest('POST', req, res, next);
 });
 
-function proxyRequest(method, req, res) {
+function proxyRequest(method, req, res, next) {
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
     if (syncManager.isInstalled(id)) {
-        var u = 'http://' + lconfig.lockerHost + ':' + lconfig.lockerPort + '/' + path.join('synclets', id, ppath);
-        return request({method:method, uri:u, headers:req.headers, encoding:'binary'}, function(err, res2, body){
-            if(err)
-            {
-                res.writeHead(500);
-                res.end("failed to get "+id+" "+ppath);
-                return;
-            }
-            res.writeHead(res2.statusCode, res2.headers);
-            res.write(body, "binary");
-            res.end();
-        });
+        req.url = req.url.replace('Me', 'synclets');
+        return next();
     }
     if(serviceManager.isDisabled(id)) {
         res.writeHead(503);
@@ -351,13 +341,13 @@ function proxyRequest(method, req, res) {
             res.end("so sad, couldn't find "+id);
             return;
         }
-        console.log("auto-installing "+id);
+        logger.info("auto-installing "+id);
         serviceManager.install(match); // magically auto-install!
     }
     var info = serviceManager.metaInfo(id);
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
-        console.log("Checking " + req.url);
+        logger.verbose("Checking " + req.url);
         var fileUrl = url.parse(ppath);
         if(fileUrl.pathname.indexOf("..") >= 0)
         { // extra sanity check
@@ -372,16 +362,16 @@ function proxyRequest(method, req, res) {
                     if (!err && (stats.isFile() || stats.isDirectory())) {
                         res.sendfile(path.join(info.srcdir, fileUrl.pathname));
                     } else {
-                        console.log("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        logger.warn("Could not find " + path.join(info.srcdir, fileUrl.pathname))
                         res.send(404);
                     }
                 });
             }
         });
-        console.log("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
+        logger.verbose("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
     } else {
         if (!serviceManager.isRunning(id)) {
-            console.log("Having to spawn " + id);
+            logger.info("Having to spawn " + id);
             var buffer = httpProxy.buffer(req);
             serviceManager.spawn(id,function(){
                 proxied(method, serviceManager.metaInfo(id),ppath,req,res,buffer);
@@ -390,7 +380,7 @@ function proxyRequest(method, req, res) {
             proxied(method, serviceManager.metaInfo(id),ppath,req,res);
         }
     }
-    console.log("Proxy complete");
+    logger.verbose("Proxy complete");
 };
 
 // DIARY
@@ -403,7 +393,7 @@ locker.get("/core/:svcId/diary", function(req, res) {
     var now = new Date;
     try {
         fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
-            if (err && err.errno != process.EEXIST) console.error("Error creating diary: " + err);
+            if (err && err.errno != process.EEXIST) logger.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
@@ -453,7 +443,7 @@ locker.get('/core/:svcId/listen', function(req, res) {
     var type = req.param('type'), cb = req.param('cb');
     var svcId = req.params.svcId;
     if(!serviceManager.isInstalled(svcId)) {
-        console.log("Could not find " + svcId);
+        logger.error("Could not find " + svcId);
         res.writeHead(404);
         res.end(svcId+" doesn't exist, but does anything really? ");
         return;
@@ -496,55 +486,53 @@ locker.post('/core/:svcId/event', function(req, res) {
         res.end("Post data missing");
         return;
     }
-    var type = req.body['type'], obj = req.body['obj'];
-    var action = req.body["action"] || "new";
-    var svcId = req.params.svcId;
-    if(!serviceManager.isInstalled(svcId)) {
+    var fromService = serviceManager.metaInfo(req.params.svcId);
+    if(!fromService) {
         res.writeHead(404);
-        res.end(svcId+" doesn't exist, but does anything really? ");
+        res.end(req.params.svcId+" doesn't exist, but does anything really? ");
         return;
     }
-    if (!type || !obj) {
+    fromService.last = Date.now();
+    if (!req.body.idr || !req.body.data || !req.body.action) {
         res.writeHead(400);
-        res.end("Invalid type or object");
+        res.end("Invalid, missing idr, data, or action");
         return;
     }
-    levents.fireEvent(type, svcId, action, obj);
+    levents.fireEvent(req.body.idr, req.body.action, req.body.data);
     res.writeHead(200);
     res.end("OKTHXBI");
+});
+
+locker.get('/wildmode', function(req, res) {
+    lconfig.ui = 'dashboardv3';
+    res.redirect('/');
 });
 
 locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
-    req.url = '/Me/' + dashboard.instance.handle + '/' + req.url.substring(11);
+    req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
 });
 
 locker.all("/socket.io*", function(req, res) {
-    if (dashboard && dashboard.instance) proxied(req.method, dashboard.instance, req.url, req, res);
-});
-// proxy websockets
-locker.on('upgrade', function(req, socket, head) {
-    // TODO be selective about who they're routing too?
-    console.log("** websocket proxying to dashboard");
-    var buffer = httpProxy.buffer(socket);
-    proxy.proxyWebSocketRequest(req, socket, head, {
-        host: url.parse(dashboard.instance.uriLocal).hostname,
-        port: url.parse(dashboard.instance.uriLocal).port,
-        buffer: buffer,
-        https:false
-  });
+    req.url = '/Me/' + lconfig.ui + req.url;
+    proxyRequest(req.method, req, res);
 });
 
 locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
+var push = require('./webservice-push')(locker);
+var synclets = require('./webservice-synclets')(locker);
+var syncletAuth = require('./webservice-synclets-auth')(locker);
+
 function proxied(method, svc, ppath, req, res, buffer) {
+    svc.last = Date.now();
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
-    console.log("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
+    logger.verbose("proxying " + method + " " + req.url + " to "+ svc.uriLocal + ppath);
     req.url = ppath;
     proxy.proxyRequest(req, res, {
       host: url.parse(svc.uriLocal).hostname,
@@ -553,19 +541,15 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
-
 exports.startService = function(port, cb) {
     if(lconfig.ui && !serviceManager.getFromAvailable(lconfig.ui)) {
-        console.error('you have specified an invalid UI in your config file.  please fix it!');
+        logger.error('you have specified an invalid UI in your config file.  please fix it!');
         process.exit();
     }
     if(!serviceManager.isInstalled(lconfig.ui))
         serviceManager.install(serviceManager.getFromAvailable(lconfig.ui));
     locker.listen(port, function() {
-        serviceManager.spawn(lconfig.ui, function() {
-            cb();
-            dashboard = {instance: serviceManager.metaInfo(lconfig.ui)};
-            console.log('ui spawned');
-        });
+        registry.init(lconfig, lcrypto, cb);
+        logger.info('init done');
     });
 }

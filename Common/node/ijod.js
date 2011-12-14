@@ -21,7 +21,7 @@ function IJOD(name, dir) {
     this.name = name;
     this.dataFileName = name + '.json';
     if (dir) {
-        this.dataFile = fs.openSync(path.join(process.cwd(),lconfig.me, dir, this.dataFileName), 'a');
+        this.dataFile = fs.openSync(path.join(lconfig.lockerDir, lconfig.me, dir, this.dataFileName), 'a');
     } else {
         this.dataFile = fs.openSync(this.dataFileName, 'a');
     }

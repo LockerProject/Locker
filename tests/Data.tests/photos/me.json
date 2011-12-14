@@ -1,0 +1,7 @@
+{
+    "id": "photos",
+    "srcdir": "Collections/Photos",
+    "version": "1340000000002",
+    "is": "collection",
+    "uri": "http://localhost:8043/Me/photos/"
+}

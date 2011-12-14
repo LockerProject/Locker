@@ -304,7 +304,7 @@ tests.next().suite.addBatch({
                     console.log("Error from request");
                     promise.emit("error", e);
                 });
-                req.write(JSON.stringify({type:"test/event",obj:{test:"value", result:true}}));
+                req.write(JSON.stringify({idr:"test://event",action:"new",data:{test:"value", result:true}}));
                 req.end();
             }).on("error", function(e) {
                 promise.emit("error", e);

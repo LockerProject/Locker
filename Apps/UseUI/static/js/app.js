@@ -13,6 +13,8 @@ var externalBase = window.location.origin;
 
 var _kmq = _kmq || [];
 
+var syncletInstalled = function() {};
+
 $(document).ready(
     function() {
         // any mouse activity resets it
@@ -80,7 +82,7 @@ $(document).ready(
           else
             expandServices();
         });
-        
+
         function showDevDocsPage(page) {
             if(typeof page !== 'string' || page == undefined) page = "";
             app = 'devdocs';
@@ -91,15 +93,15 @@ $(document).ready(
         }
         $('.devdocs-box').click(showDevDocsPage);
         $('li.develop span.label').click(showDevDocsPage);
-        
+
         $('.devdocs-explorer').click(function() {
             showDevDocsPage('explorer.html');
         });
-        
+
         $('.devdocs-local').click(function() {
             showDevDocsPage('local.html');
         });
-        
+
         $('.syncviewers').click(function() {
             showGritter('syncgithub');
             $.getJSON("/synclets/github/run?id=repos", function(success) {
@@ -231,10 +233,10 @@ function search() {
     var q = searchTerm = $('.search')[0].value;
     var baseURL = '/Me/search/query';
     var star = (q.length < 3 || q.substr(-1) == ' ') ? "" : "*";
-    $.get(baseURL, {q: q + star, type: 'contact/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'contact*', limit: 3}, function(results) {
         processResults('people', resXform(results), q);
     });
-    $.get(baseURL, {q: q + star, type: 'photo/full*', limit: 3}, function(results) {
+    $.get(baseURL, {q: q + star, type: 'photo*', limit: 3}, function(results) {
         processResults('photos', resXform(results), q);
     });
     $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {

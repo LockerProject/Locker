@@ -42,7 +42,7 @@ var syncCheckins = function (callback) {
         }
         getCheckins(profile.id, auth.accessToken, 0, function(err, checkins) {
             if (!checkins || !checkins.length) {
-                return callback();
+                return callback(err);
             }
             for (var i = 0; i < checkins.length; i++) {
                 var checkin = checkins[i];

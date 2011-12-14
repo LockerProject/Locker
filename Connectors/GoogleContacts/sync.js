@@ -53,7 +53,7 @@ exports.syncContacts = function(callback) {
                   'orderby':'lastmodified',
                   'max-results':3000
                  };
-    var now = new Date().getTime();
+    var now = Date.new();
     getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
         function(err, result) {
             if(result && !(err && result.error)) {
@@ -81,7 +81,7 @@ exports.syncGroups = function(callback) {
                   'orderby':'lastmodified',
                   'max-results':3000
                  };
-    var now = new Date().getTime();
+    var now = Date.new();
     getClient().getFeed('https://www.google.com/m8/feeds/groups/default/full', params,
         function(err, result) {
             if(result && !(err && result.error)) {

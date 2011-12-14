@@ -24,7 +24,7 @@ var thecollections = ['link','encounter','queue'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = {};
-locker.event = function(){};
+locker.ievent = function(){};
 util.expandUrl = function(a,b,c){b(a.url);c();} // fakeweb doesn't support HEAD reqs AFAICT :(
 
 var lmongo = require('../Common/node/lmongo.js');

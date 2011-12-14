@@ -14,10 +14,11 @@ var express = require('express'),
     fs = require('fs'),
     socketio = require('socket.io'),
     request = require('request');
-var logger = require("logger").logger;
 var lutil = require('lutil');
 var lconfig = require('../../Common/node/lconfig.js');
 lconfig.load('../../Config/config.json');
+
+var logger = require("logger");
 
 var externalBase;
 var closed;
@@ -95,15 +96,15 @@ app.post('/setViewer', function(req, res) {
     var type = req.body.type;
     var handle = req.body.handle;
     if(!type) {
-        console.error("No type given for viewer");
+        logger.error("No type given for viewer");
     } else if(!handle) {
-        console.error("No handle given for viewer");
+        logger.error("No handle given for viewer");
     } else {
         if(!(type === 'photos' || type === 'contacts' || type === 'links' || type === 'places')) {
-            console.error("Type is invalid for a viewer:" + type);
+            logger.error("Type is invalid for a viewer:" + type);
         } else {
             // phew!
-            console.log("Setting the viewer for " + type + " to " + handle);
+            logger.verbose("Setting the viewer for " + type + " to " + handle);
             viewers.selected[type] = handle;
             lutil.atomicWriteFileSync('viewers.json', JSON.stringify(viewers.selected));
         }
@@ -114,7 +115,7 @@ app.post('/setViewer', function(req, res) {
 
 var eventInfo = {
     "link":{"name":"link", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
-    "contact/full":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
+    "contact":{"name":"contact", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "photo":{"name":"photo", "timer":null, "count":0, "new":0, "updated":0, "lastId":0},
     "place":{"name":"place", "timer":null, "count":0, "new":0, "updated":0, "lastId":0}
 };
@@ -124,18 +125,18 @@ var isSomeoneListening = 0;
 
 app.post('/new', function(req, res) {
     res.send({});
-    io.sockets.emit('newservice', req.body.obj);
+    io.sockets.emit('newservice', req.body.data);
 });
 
 app.post('/event', function(req, res) {
     res.send({}); // any positive response
     if(isSomeoneListening == 0) return; // ignore if nobody is around, shouldn't be getting any anyway
     if (req && req.body) {
-        if(req.body.type === 'view/github') {
-            console.error("DEBUG: req.body", req.body);
+        if(req.body.idr.indexOf("github") >= 0) {
             io.sockets.emit('viewer', req.body);
         } else {
-            var evInfo = eventInfo[req.body.type];
+            var idr = req.body.idr.split(':');
+            var evInfo = eventInfo[idr[0]];
             if (evInfo.timer) {
                 clearTimeout(evInfo.timer);
             }
@@ -144,7 +145,6 @@ app.post('/event', function(req, res) {
                 request.get({uri:locker.lockerBase+'/Me/'+evInfo.name+'s/state',json:true},function(err,res,body){
                     if(!body || !body.count || evInfo.count == body.count) return;
                     io.sockets.emit('event',{"name":evInfo.name, "new":(body.count - evInfo.count), "count":body.count, "updated":body.updated, "lastId":evInfo.lastId});
-                    console.log("Sent events, setting to ",body);
                     evInfo.count = body.count;
                     evInfo.updated = body.updated;
                     evInfo.lastId = body.lastId;
@@ -175,13 +175,13 @@ function saveState()
 function bootState(doneCb)
 {
     if(isSomeoneListening > 1) return doneCb(); // only boot after we've been idle
-    logger.debug("booting state fresh");
+    logger.verbose("booting state fresh");
     async.forEach(['contacts','links','photos','places'],function(coll,callback){
-        //logger.debug("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
+        //logger.verbose("fetching "+locker.lockerBase+'/Me/'+coll+'/state '+ JSON.stringify(locker) );
         request.get({uri:locker.lockerBase+'/Me/'+coll+'/state',json:true},function(err,res,body){
             if(coll == 'links') var evInfo = eventInfo['link'];
             if(coll == 'photos') var evInfo = eventInfo['photo'];
-            if(coll == 'contacts') var evInfo = eventInfo['contact/full'];
+            if(coll == 'contacts') var evInfo = eventInfo['contact'];
             if(coll == 'places') var evInfo = eventInfo['place'];
             evInfo.count = (body && body.count && body.count > 0) ? body.count : 0;
             evInfo.updated = (body && body.updated && body.updated > 0) ? body.updated : 0;
@@ -189,10 +189,10 @@ function bootState(doneCb)
             callback();
         });
     },function(){
-        logger.debug("finishing boot");
+        logger.verbose("finishing boot");
         var last = {
             "link":{"count":0, "lastId":0},
-            "contact/full":{"count":0, "lastId":0},
+            "contact":{"count":0, "lastId":0},
             "photo":{"count":0, "lastId":0},
             "place":{"count":0, "lastId":0}
         };
@@ -205,14 +205,13 @@ function bootState(doneCb)
         for(var type in eventInfo) {
             // stupd vrbos
             if(eventInfo[type].count > last[type].count) {
-                console.log("Sent a bootup event",eventInfo[type]);
                 io.sockets.emit('event',{"name":eventInfo[type].name, "updated":eventInfo[type].updated, "lastId":last[type].lastId, "new":(eventInfo[type].count - last[type].count)});
             }
         }
         saveState(); // now that we possibly pushed events, note it
         locker.listen("photo","/event");
         locker.listen("link","/event");
-        locker.listen("contact/full","/event");
+        locker.listen("contact","/event");
         locker.listen("place", "/event");
         locker.listen('newservice', '/new');
         locker.listen('view/github', "/event");
@@ -223,7 +222,7 @@ function bootState(doneCb)
 function getViewers(callback) {
     locker.map(function(err, map) {
         if(err) {
-            logger.debug("failed to get map "+err);
+            logger.error("failed to get map "+err);
         } else {
             viewers.available = {};
             map.available.forEach(function(app) {
@@ -243,19 +242,19 @@ function getViewers(callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-    logger.debug("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
+    logger.verbose("++ got new socket.io connection " + isSomeoneListening + " for " + socket.id + " disconnected:" + socket.disconnected);
     socket.emit("heartbeat", true);
     socket.on('disconnect', function () {
-        logger.debug("Socket " + socket.id + " is disconnected");
+        logger.verbose("Socket " + socket.id + " is disconnected");
         isSomeoneListening--;
         // when nobody is around, don't receive events anymore
         if(isSomeoneListening == 0)
         {
-            logger.debug("everybody left, quiesce");
+            logger.info("everybody left, quiesce");
             locker.deafen("photo","/event");
             locker.deafen("link","/event");
             locker.deafen("place","/event");
-            locker.deafen("contact/full","/event");
+            locker.deafen("contact","/event");
             locker.deafen("view/github","/event");
             locker.deafen('newservice', '/new');
         }
@@ -266,9 +265,7 @@ io.sockets.on('connection', function (socket) {
         for (var key in eventInfo) {
             if (eventInfo.hasOwnProperty(key)) counts[eventInfo[key].name] = {count:eventInfo[key].count, updated:eventInfo[key].updated};
         }
-        console.log("Sending counts");
-        console.dir(socket);
         socket.emit("counts", counts);
     });
-    
+
 });

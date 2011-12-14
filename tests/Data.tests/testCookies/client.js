@@ -21,7 +21,6 @@ stdin.on('data', function (chunk) {
 
 app.get('/test',
 function(req, res) {
-    console.log("Cookie test");
     res.cookie('rememberme', 'yes', { maxAge: 900000 });
     res.writeHead(200, {
         'Content-Type': 'text/html'

@@ -172,6 +172,7 @@ function getIdList(arg, cbEach, cbDone) {
 // bulk chunk get user details
 exports.getUsers = function(users, cbEach, cbDone) {
     if(users.length == 0) return cbDone();
+    var lenStart = users.length;
     var me = this;
     var id_str = "";
     var ids = {};
@@ -191,6 +192,7 @@ exports.getUsers = function(users, cbEach, cbDone) {
         for(id in ids){
             users.push(id); // any non-done users push back for next attempt
         }
+        if(lenStart == users.length) return cbDone("failed to find remaining users");
         me.getUsers(users, cbEach, cbDone); // loop loop till done
     });
 }

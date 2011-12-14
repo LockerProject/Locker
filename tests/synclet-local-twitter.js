@@ -35,8 +35,6 @@ suite.next().suite.addBatch({
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1054551');
         }
     }
@@ -53,8 +51,6 @@ suite.next().suite.addBatch({
             timeline.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.timeline[0].obj.id_str, '71348168469643264');
         }
     }
@@ -70,8 +66,6 @@ suite.next().suite.addBatch({
             timeline.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response, undefined);
             // assert.equal(response.data.timeline.length, 0);
         }
@@ -90,8 +84,6 @@ suite.next().suite.addBatch({
             mentions.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.mentions[0].obj.id_str, '71348168469643264');
         }
     }
@@ -104,13 +96,11 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/twitter/verify_credentials.js' });
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&include_rts=true&count=200&include_entities=true&page=1',
                 file : __dirname + '/fixtures/twitter/home_timeline.js' });
-                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&count=200&include_entities=true&page=2',
+                fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/statuses/user_timeline.json?screen_name=ctide&since_id=1&path=%2Fstatuses%2Fuser_timeline.json&include_rts=true&count=200&include_entities=true&page=2',
                     body :'[]' });
             tweets.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.tweets[0].obj.id_str, '71348168469643264');
         }
     }
