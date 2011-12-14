@@ -1,5 +1,10 @@
 #!/bin/sh
 
+lockerbox_env=../lockerbox_environment.sh
+if [ -f "$lockerbox_env" ]; then
+    . "$lockerbox_env"
+fi
+
 apikeys=Config/apikeys.json
 if [ ! -f "$apikeys" ]; then
     echo "No API keys found in $apikeys" >&2
