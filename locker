@@ -1,0 +1,10 @@
+#!/bin/sh
+
+apikeys=Config/apikeys.json
+if [ ! -f "$apikeys" ]; then
+    echo "No API keys found in $apikeys" >&2
+    echo "see https://github.com/LockerProject/Locker/wiki/GettingAPIKeys" >&2
+    exit 1
+fi
+
+exec node lockerd.js "$@"
