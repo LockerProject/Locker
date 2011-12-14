@@ -112,6 +112,25 @@ var renderCreate = function(req, res) {
     });
 }
 
+var handleUpload = function(req, res) {
+    if (req.form) {
+        req.form.complete(function(err, fields, files) {
+            if (err) {
+                res.send('broken', 500);
+            } else {
+                var write = fs.createWriteStream('tempScreenshot');
+                var uploadedFile = fs.createReadStream(files.file.path);
+                write.once('open', function(fd) {
+                    require('util').pump(uploadedFile, write);
+                });
+                res.send('ok');
+            }
+        });
+    } else {
+        res.send('broken', 500);
+    }
+}
+
 var renderPublish = function(req, res) {
     getGithubApps(function(apps) {
         res.render('iframe/publish', {
@@ -125,9 +144,9 @@ var submitPublish = function(req, res) {
     if (req.form) {
         req.form.complete(function(err, fields, files) {
             if (err) res.write(JSON.stringify(err.message));
-            if (files['app-screenshot'].filename) {
+            if (fields['new-file']) {
                 var write = fs.createWriteStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
-                var uploadedFile = fs.createReadStream(files['app-screenshot'].path);
+                var uploadedFile = fs.createReadStream('tempScreenshot');
                 write.once('open', function(fd) {
                     require('util').pump(uploadedFile, write);
                 });
@@ -226,6 +245,10 @@ var renderScreenshot = function(req, res) {
     }
 };
 
+var renderTempScreenshot = function(req, res) {
+    res.sendfile('tempScreenshot');
+}
+
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
         res.render('iframe/allApps', {
@@ -247,6 +270,10 @@ app.post('/publish', submitPublish);
 app.get('/viewAll', renderAllApps);
 
 app.get('/screenshot/:handle', renderScreenshot);
+
+app.post('/publishScreenshot', handleUpload);
+app.get('/tempScreenshot', renderTempScreenshot);
+
 
 var getGithubApps = function(callback) {
     uistate.fetchState();

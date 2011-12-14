@@ -6,7 +6,9 @@ $(document).ready(function() {
 
   $('.app').change(function() {
     var self = $('.app>option:selected');
+    $('input[name=new-file]').attr('value', 'false');
     $('textarea[name=app-description]').text(self.data('description'));
+    $('.screenshot-url').attr('value', '');
     if (self.data('rename') == 'on') {
       $('.app-name').show();
       $('.app-name-span').text($('.app>option:selected').text());
@@ -40,6 +42,8 @@ $(document).ready(function() {
     window.parent.loadApp();
   });
 
+  var uploader = setupUploader();
+
   if (parent.iframeLoaded) {
     parent.iframeLoaded();
   }
@@ -53,4 +57,34 @@ var selectItem = function(id) {
   $('select options[selected]').removeAttr('selected');
   $('option[value="' + id + '"]').attr('selected', 'selected');
   $('.app').change();
+}
+
+var setupUploader = function() {
+  var uploader = new plupload.Uploader({
+    runtimes : 'gears,html5,flash,silverlight,browserplus',
+    browse_button : 'appscreenshot',
+    container : 'container',
+    max_file_size : '10mb',
+    url : 'publishScreenshot',
+    flash_swf_url : 'js/vendor/plupload.flash.swf',
+    silverlight_xap_url : 'js/vendor/plupload.silverlight.xap',
+    filters : [
+      {title : "Image files", extensions : "jpg,gif,png,jpeg"},
+    ],
+  });
+
+  uploader.init();
+
+  uploader.bind('FilesAdded', function(up, files) {
+    $('.preview img').attr('src', 'img/loading6.gif');
+    uploader.start();
+  });
+
+  uploader.bind('FileUploaded', function(up, file) {
+    $('.preview img').attr('src', 'tempScreenshot');
+    $('input[name=new-file]').attr('value', 'true');
+    $('.screenshot-url').attr('value', '');
+  });
+
+  return uploader;
 }

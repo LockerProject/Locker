@@ -4,11 +4,14 @@
   <head>
     <%- partial('header_partial') %>
     <script src="js/publish.js"></script>
+    <script src="js/vendor/plupload.full.js"></script>
+    <script src="js/vendor/jquery.Jcrop.min.js"></script>
   </head>
   <body>
     <content class="body">
       <form method="POST" action="publish" enctype="multipart/form-data">
         <input type="hidden" name="app-publish" value="true">
+        <input type="hidden" name="new-file" value="false">
         <ul class="publish-list">
           <li><p>1. Choose an application to submit
             <select name="app" class='app'>
@@ -25,8 +28,8 @@
           <li><p>2. Confirm your app description</p>
             <textarea rows="4" cols="50" name="app-description" placeholder="Describe your application...."><%= apps[0].desc %></textarea>
           </li>
-          <li><p>3. Choose screenshot or other appropriate imagery</p>
-            <p><input type="file" name="app-screenshot"/></p>
+          <li id="container"><p>3. Choose screenshot or other appropriate imagery</p>
+            <p><input id="appscreenshot" type="file" name="app-screenshot"/></p>
             <p class="bold">OR</p>
             <p><input class="screenshot-url" type="text" name="app-screenshot-url" placeholder="Set URL for image"/></p>
             <div class="preview"><img src="screenshot/<%= apps[0].handle %>"/><p>preview</p></div>
