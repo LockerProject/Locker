@@ -114,7 +114,6 @@ var renderPublish = function(req, res) {
 var submitPublish = function(req, res) {
     if (req.form) {
         req.form.complete(function(err, fields, files) {
-            res.writeHead(200, {});
             if (err) res.write(JSON.stringify(err.message));
             if (files['app-screenshot'].filename) {
                 var write = fs.createWriteStream(fields.app);
@@ -130,7 +129,7 @@ var submitPublish = function(req, res) {
                 }
             }
             fields.lastUpdated = Date.now();
-            if (fields['app-publish']) {
+            if (fields['app-publish'] === 'true') {
                 var data = {
                     desc: fields['app-description']
                 }
@@ -140,9 +139,7 @@ var submitPublish = function(req, res) {
                 request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data});
             }
             uistate.saveDraft(fields);
-            res.write(JSON.stringify(fields));
-            res.write(JSON.stringify(files));
-            res.end();
+            res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
         });
     } else {
         res.send(req.body);
