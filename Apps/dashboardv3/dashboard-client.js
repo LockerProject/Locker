@@ -13,6 +13,8 @@ var express = require('express')
   , request = require('request')
   , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
   , github = false
+  , githubLogin = ''
+  , githubapps = {}
   , form = require('connect-form')
   , uistate = require(__dirname + '/state')
   , profileImage = 'img/default-profile.png'
@@ -39,6 +41,14 @@ module.exports = function(passedLocker, passedExternalBase, listenPort, callback
             var body = JSON.parse(body);
             if (body.username) {
                 profileImage = "http://graph.facebook.com/" + body.username + "/picture";
+            }
+        } catch (E) {}
+    });
+    request.get({url:locker.lockerBase + "/synclets/github/get_profile"}, function(err, res, body) {
+        try {
+            var body = JSON.parse(body);
+            if (body.login) {
+                githubLogin = body.login;
             }
         } catch (E) {}
     });
@@ -116,16 +126,15 @@ var submitPublish = function(req, res) {
         req.form.complete(function(err, fields, files) {
             if (err) res.write(JSON.stringify(err.message));
             if (files['app-screenshot'].filename) {
-                var write = fs.createWriteStream(fields.app);
+                var write = fs.createWriteStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
                 var uploadedFile = fs.createReadStream(files['app-screenshot'].path);
                 write.once('open', function(fd) {
                     require('util').pump(uploadedFile, write);
                 });
             } else {
                 if (fields['app-screenshot-url']) {
-                    request.get(fields['app-screenshot-url'], function(err, res, body) {
-                        fs.writeFile(fields.app, data);
-                    });
+                    var write = fs.createWriteStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
+                    request.get(fields['app-screenshot-url']).pipe(write);
                 }
             }
             fields.lastUpdated = Date.now();
@@ -204,20 +213,17 @@ var renderYou = function(req, res) {
 };
 
 var renderScreenshot = function(req, res) {
-    // fix this to iterate over the list of apps, this is a ghetto hack, and is certainly exploitable in some fashion
-    if (req.params.handle.indexOf('\.\.') > -1) return res.send('');
-    path.exists(process.cwd() + '/' + req.params.handle, function(exists) {
-        if (uistate.state.draftApps[req.params.handle]) {
-            var state = uistate.state.draftApps[req.params.handle];
-            if (state['app-screenshot-url']) {
-                return res.redirect(state['app-screenshot-url']);
-            }
+    if (githubapps[req.params.handle]) {
+        path.exists(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'), function(exists) {
             if (exists) {
-                return res.sendfile(process.cwd() + '/' + req.params.handle);
+                return res.sendfile(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'));
+            } else {
+                return res.sendfile(__dirname + '/static/img/rainbow.jpg');
             }
-        }
+        });
+    } else {
         res.sendfile(__dirname + '/static/img/rainbow.jpg');
-    });
+    }
 };
 
 var renderAllApps = function(req, res) {
@@ -245,6 +251,7 @@ app.get('/screenshot/:handle', renderScreenshot);
 var getGithubApps = function(callback) {
     uistate.fetchState();
     var apps = [];
+    githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(registry) {
         locker.map(function(err, map) {
@@ -254,6 +261,7 @@ var getGithubApps = function(callback) {
                     if (registry['app-' + appInfo.id.toLowerCase()]) {
                         appInfo.published = registry['app-' + appInfo.id.toLowerCase()];
                     }
+                    githubapps[appInfo.id] = appInfo;
                     apps.push(appInfo);
                 }
             }
