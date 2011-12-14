@@ -1,7 +1,6 @@
 language: node_js
 node_js:
     - 0.4
-script: "sh setup-travis.sh && npm test"
 notifications:
     email:
         - temas@singly.com
