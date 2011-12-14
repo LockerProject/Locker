@@ -3,7 +3,7 @@
 </div>
 <div class="installed-apps sidenav-items">
   <ul>
-    <% if (apps) { %>
+    <% if (apps && apps.length > 0) { %>
       <li>
         <p><a href="/dashboard/viewAll" class="iframeLink viewAll" data-id="viewAll">View All</a></p>
         <p id='published' class="your-apps published app-details">Published (<%= published %>)</p>
