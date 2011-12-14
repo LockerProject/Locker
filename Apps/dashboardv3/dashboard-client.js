@@ -281,6 +281,6 @@ var checkDraftState = function(appInfo) {
     } else {
         appInfo.draft = {};
     }
-    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || 1223807394911);
+    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
 }
