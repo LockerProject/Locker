@@ -218,7 +218,7 @@ var renderScreenshot = function(req, res) {
             if (exists) {
                 return res.sendfile(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'));
             } else {
-                return res.sendfile(__dirname + '/static/img/rainbow.jpg');
+                return res.sendfile(__dirname + '/static/img/batman.jpg');
             }
         });
     } else {
