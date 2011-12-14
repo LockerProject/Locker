@@ -20,7 +20,9 @@ var express = require('express')
   , profileImage = 'img/default-profile.png'
   , path = require('path')
   , fs = require('fs')
+  , im = require('imagemagick')
   , page = ''
+  , cropping = {}
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
                  twitter: {width: 630, height: 500},
@@ -143,17 +145,21 @@ var renderPublish = function(req, res) {
 var submitPublish = function(req, res) {
     if (req.form) {
         req.form.complete(function(err, fields, files) {
+            if (fields['x']) {
+                cropping[fields.app] = true;
+            }
             if (err) res.write(JSON.stringify(err.message));
-            if (fields['new-file']) {
-                var write = fs.createWriteStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
-                var uploadedFile = fs.createReadStream('tempScreenshot');
-                write.once('open', function(fd) {
-                    require('util').pump(uploadedFile, write);
+            if (fields['new-file'] === 'true') {
+                fs.rename('tempScreenshot', path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), function() {
+                    cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
                 });
             } else {
                 if (fields['app-screenshot-url']) {
-                    var write = fs.createWriteStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
-                    request.get(fields['app-screenshot-url']).pipe(write);
+                    request.get({uri: fields['app-screenshot-url'], encoding: 'binary'}, function(err, resp, body) {
+                        fs.writeFile(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), body, 'binary', function() {
+                            cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
+                        });
+                    });
                 }
             }
             fields.lastUpdated = Date.now();
@@ -171,6 +177,27 @@ var submitPublish = function(req, res) {
         });
     } else {
         res.send(req.body);
+    }
+}
+
+var cropImage = function(file, fields) {
+    if (fields['x']) {
+        im.crop({
+            srcPath: file,
+            dstPath: file,
+            width: fields['w'],
+            height: fields['h'],
+            offset: {x: fields['x'], y: fields['y']}
+        }, function(err, stdout, stderr) {
+            im.resize({
+                srcData: file,
+                dstPath: file,
+                width: 200,
+                height: 200
+            }, function() {
+                cropping[fields.app] = false;
+            });
+        });
     }
 }
 
@@ -233,6 +260,9 @@ var renderYou = function(req, res) {
 
 var renderScreenshot = function(req, res) {
     if (githubapps[req.params.handle]) {
+        if (cropping[req.params.handle]) {
+            return res.sendfile(__dirname + '/static/img/loading6.gif');
+        }
         path.exists(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'), function(exists) {
             if (exists) {
                 return res.sendfile(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'));
@@ -241,7 +271,7 @@ var renderScreenshot = function(req, res) {
             }
         });
     } else {
-        res.sendfile(__dirname + '/static/img/rainbow.jpg');
+        res.sendfile(__dirname + '/static/img/batman.jpg');
     }
 };
 
@@ -253,10 +283,15 @@ var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
         res.render('iframe/allApps', {
             layout: false,
-            apps: apps
+            apps: apps,
+            cropping: cropping
         });
     });
 };
+
+var croppingFinished = function(req, res) {
+    res.send(!cropping[req.params.app]);
+}
 
 app.get('/clickapp/:app', clickApp);
 app.get('/you', renderYou);
@@ -273,7 +308,7 @@ app.get('/screenshot/:handle', renderScreenshot);
 
 app.post('/publishScreenshot', handleUpload);
 app.get('/tempScreenshot', renderTempScreenshot);
-
+app.get('/finishedCropping/:app', croppingFinished);
 
 var getGithubApps = function(callback) {
     uistate.fetchState();

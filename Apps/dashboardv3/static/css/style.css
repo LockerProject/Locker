@@ -236,11 +236,23 @@ aside {
 
 .publish-list .preview {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 450px;
+  height: 450px;
   border: solid 1px #999;
-  line-height: 199px;
+  line-height: 450px;
   text-align: center;
+  overflow: hidden;
+}
+
+.publish-list .preview.jcrop {
+  text-align: left;
+}
+
+.publish-list .jcrop-holder {
+  vertical-align: middle;
+  position: absolute !important;
+  top: 50%;
+  left: 50%;
 }
 
 .publish-list .preview p {
@@ -254,9 +266,9 @@ aside {
   line-height: 20px;
 }
 
-.publish-list .preview img {
-  max-width: 200px;
-  max-height: 200px;
+.publish-list .preview:not(.jcrop) img {
+  max-width: 450px;
+  max-height: 450px;
   margin-left: auto;
   margin-right: auto;
   vertical-align: middle;

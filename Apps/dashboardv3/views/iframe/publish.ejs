@@ -6,12 +6,17 @@
     <script src="js/publish.js"></script>
     <script src="js/vendor/plupload.full.js"></script>
     <script src="js/vendor/jquery.Jcrop.min.js"></script>
+    <link rel="stylesheet" href="css/vendor/jquery.Jcrop.css" />
   </head>
   <body>
     <content class="body">
       <form method="POST" action="publish" enctype="multipart/form-data">
         <input type="hidden" name="app-publish" value="true">
         <input type="hidden" name="new-file" value="false">
+        <input type="hidden" name="x" id="x">
+        <input type="hidden" name="y" id="y">
+        <input type="hidden" name="w" id="w">
+        <input type="hidden" name="h" id="h">
         <ul class="publish-list">
           <li><p>1. Choose an application to submit
             <select name="app" class='app'>

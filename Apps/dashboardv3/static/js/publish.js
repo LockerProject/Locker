@@ -1,3 +1,5 @@
+var jcrop_api, uploader;
+
 $(document).ready(function() {
   $('.rename-app').change(function() {
     $('.app-name').toggle();
@@ -5,6 +7,10 @@ $(document).ready(function() {
   });
 
   $('.app').change(function() {
+    $('.preview').removeClass('jcrop');
+    $('.preview p').text('preview');
+    $('#x,#y,#w,#h').attr('value', '');
+    if (jcrop_api) { jcrop_api.destroy(); }
     var self = $('.app>option:selected');
     $('input[name=new-file]').attr('value', 'false');
     $('textarea[name=app-description]').text(self.data('description'));
@@ -26,6 +32,8 @@ $(document).ready(function() {
   $('.screenshot-url').blur(function() {
     if ($(this).attr('value').length > 0) {
       $('.preview img').attr('src', $('.screenshot-url').attr('value'));
+      $('input[name=new-file]').attr('value', 'false');
+      attachJcrop();
     } else {
       $('.preview img').attr('src', 'screenshot/' + $('.app>option:selected').data('handle'));
     }
@@ -42,7 +50,7 @@ $(document).ready(function() {
     window.parent.loadApp();
   });
 
-  var uploader = setupUploader();
+  setupUploader();
 
   if (parent.iframeLoaded) {
     parent.iframeLoaded();
@@ -59,8 +67,31 @@ var selectItem = function(id) {
   $('.app').change();
 }
 
+var attachJcrop = function() {
+  if (jcrop_api) { jcrop_api.destroy(); }
+  $('.preview p').text('crop');
+  $('.preview').addClass('jcrop');
+  $('.preview img').Jcrop({
+      aspectRatio: 1 / 1,
+      boxWidth: 450,
+      boxHeight: 450,
+      onSelect: updateCoords
+    },function(){
+    jcrop_api = this;
+    $('.jcrop-holder').css('margin-top', ($('.jcrop-holder').height() / 2) * -1);
+    $('.jcrop-holder').css('margin-left', ($('.jcrop-holder').width() / 2) * -1);
+  });
+}
+
+var updateCoords = function(c) {
+    $('#x').val(c.x);
+    $('#y').val(c.y);
+    $('#w').val(c.w);
+    $('#h').val(c.h);
+}
+
 var setupUploader = function() {
-  var uploader = new plupload.Uploader({
+  uploader = new plupload.Uploader({
     runtimes : 'gears,html5,flash,silverlight,browserplus',
     browse_button : 'appscreenshot',
     container : 'container',
@@ -84,6 +115,7 @@ var setupUploader = function() {
     $('.preview img').attr('src', 'tempScreenshot');
     $('input[name=new-file]').attr('value', 'true');
     $('.screenshot-url').attr('value', '');
+    attachJcrop();
   });
 
   return uploader;

@@ -11,6 +11,8 @@ $(document).ready(function() {
     });
     return false;
   });
+
+  $('img[src="img/loading6.gif"]').each(poll);
 });
 
 var filterItems = function(type) {
@@ -20,4 +22,14 @@ var filterItems = function(type) {
   } else {
     $('.published').parents('li').fadeOut();
   }
+}
+
+var poll = function(ind, elem) {
+  $.get("finishedCropping/" + $(elem).data('app'), function(data) {
+    if (data) {
+      $(elem).attr('src', 'screenshot/' + $(elem).data('app'));
+    } else {
+      window.setTimeout(function() { poll(ind, elem); }, 200);
+    }
+  });
 }
