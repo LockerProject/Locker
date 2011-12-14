@@ -11,10 +11,6 @@ var integrationOnly = false;
 var runFiles = [];
 var runGroups = [];
 
-function writeLogLine() {
-    fs.writeSync(logFd, "[" + (new Date()).toLocaleString() + "][" + console.outputModule + "] " + Array.prototype.slice.call(arguments).toString() + "\n");
-}
-
 if (process.argv.indexOf("-c") === -1) {
     try {
         wrench.rmdirSyncRecursive(lconfig.me);
@@ -38,9 +34,6 @@ if (process.argv.indexOf("-c") === -1) {
 }
 
 // Cleanup the old runs Me dir and then copy the stub in
-
-// Ladies and gentlemen, get your logs ready
-var logFd = fs.openSync("locker.log", "w+");
 
 // If we have args they can be either files or groups
 if (process.argv.length > 2) {
@@ -202,7 +195,6 @@ var runRake = function() {
 }
 
 var finished = function(exitCode, signal) {
-    console.log('All tests done');
     if (exitCode > 0) {
         console.dir("vows process exited abnormally (code="+exitCode+", signal="+signal+")");
     }
