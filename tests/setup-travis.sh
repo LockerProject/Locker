@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 set -v
 
+# Make sure we're inside the Travis-CI environment before we do all this
 if [ "$TRAVIS" != "true" ]; then
     exit 0
 fi
@@ -15,7 +16,7 @@ if [ "$?" == "1" ]; then
     mkdir clucene/build
     cd clucene/build
     cmake .. && make && sudo make install
-    grep local /etc/ld.so.conf || (sudo sh -c "echo \"/usr/local/lib\" >> /etc/ld.so.conf" && sudo ldconfig)
+    grep "local" /etc/ld.so.conf || (sudo sh -c "echo \"/usr/local/lib\" >> /etc/ld.so.conf" && sudo ldconfig)
     cd $curDir
     rm -rf $workDir
 fi
