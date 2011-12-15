@@ -36,8 +36,7 @@ datastore.addObject = function(collectionKey, obj, ts, callback) {
 var synclets = {
     available:[],
     installed:{},
-    executeable:true,
-    tolerance:0
+    executeable:true
 };
 
 exports.synclets = function() {
@@ -179,6 +178,17 @@ exports.syncNow = function(serviceId, syncletId, callback) {
     }, callback);
 };
 
+// run all synclets that have a tolerance and reset them
+exports.flushTolerance = function(callback) {
+    async.forEach(Object.keys(synclets.installed), function(service, cb){ // do all services in parallel
+        async.forEachSeries(synclets.installed[service].synclets, function(synclet, cb2) { // do each synclet in series
+            if(!synclet.tolAt || synclet.tolAt == 0) return cb2();
+            synclet.tolAt = 0;
+            executeSynclet(synclets.installed[service], synclet, cb2);
+        }, cb);
+    }, callback);
+};
+
 /**
 * Add a timeout to run a synclet
 */
@@ -254,7 +264,7 @@ function executeSynclet(info, synclet, callback) {
         synclet.tolMax = 0;
     }
     // if we can have tolerance, try again later
-    if(Date.now() - synclets.tolerance > 600000 && synclet.tolAt > 0)
+    if(synclet.tolAt > 0)
     {
         synclet.tolAt--;
         logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
@@ -355,29 +365,30 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         if (typeof(response.data) === 'string') {
             return callback('bad data from synclet');
         }
-        var total=0;
         for (var i in response.data) {
             if(!Array.isArray(response.data[i])) continue;
-            total += response.data[i].length;
             dataKeys.push(i);
         }
-        var threshold = synclet.threshold || 50; // default is fairly arbitrary right now
-        if(total < threshold)
-        {
-            if(synclet.tolMax < 10) synclet.tolMax++; // max 10x scheduled
-            synclet.tolAt = synclet.tolMax;
-        }else{
-            if(synclet.tolMax > 0) synclet.tolMax--;
-            synclet.tolAt = synclet.tolMax;
-        }
-        logger.info("total of "+total+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
         for (var i in deleteIDs) {
             if (!dataKeys[i]) dataKeys.push(i);
         }
-        if (dataKeys.length === 0) {
-            return callback();
-        }
-        async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
+        synclet.deleted = synclet.added = synclet.updated = 0;
+        async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, synclet, key, response.data[key], cb); }, function(err){
+            if(err) logger.error("err processing data: "+err);
+            // here we roughly compromise a multiplier up or down based on the threshold being met
+            var threshold = synclet.threshold || lconfig.tolerance.threshold;
+            var total = synclet.deleted + synclet.added + synclet.updated;
+            if(total < threshold)
+            {
+                if(synclet.tolMax < lconfig.tolerance.maxstep) synclet.tolMax++; // max 10x scheduled
+                synclet.tolAt = synclet.tolMax;
+            }else{
+                if(synclet.tolMax > 0) synclet.tolMax--;
+                synclet.tolAt = synclet.tolMax;
+            }
+            logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
+            callback(err);
+        });
     });
 };
 
@@ -392,7 +403,7 @@ function checkStatus(info) {
 
 }
 
-function processData (deleteIDs, info, key, data, callback) {
+function processData (deleteIDs, info, synclet, key, data, callback) {
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
     var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
@@ -416,34 +427,35 @@ function processData (deleteIDs, info, key, data, callback) {
     datastore.addCollection(key, info.id, mongoId);
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(collection, mongoId, data, info, idr, function(err) {
+        addData(collection, mongoId, data, info, synclet, idr, function(err) {
             if(err) {
                 callback(err);
             } else {
-                deleteData(collection, mongoId, deleteIDs, info, idr, callback);
+                deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
             }
         });
     } else if (data && data.length > 0) {
-        addData(collection, mongoId, data, info, idr, callback);
+        addData(collection, mongoId, data, info, synclet, idr, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(collection, mongoId, deleteIDs, info, idr, callback);
+        deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
     } else {
         callback();
     }
 }
 
-function deleteData (collection, mongoId, deleteIds, info, idr, callback) {
+function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callback) {
     var q = async.queue(function(id, cb) {
         var r = url.parse(idr);
         r.hash = id.toString();
         levents.fireEvent(url.format(r), 'delete');
+        synclet.deleted++;
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-function addData (collection, mongoId, data, info, idr, callback) {
+function addData (collection, mongoId, data, info, synclet, idr, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
@@ -457,6 +469,7 @@ function addData (collection, mongoId, data, info, idr, callback) {
             r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
                 levents.fireEvent(url.format(r), 'delete');
+                synclet.deleted++;
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
                 var source = r.pathname.substring(1);
@@ -464,6 +477,8 @@ function addData (collection, mongoId, data, info, idr, callback) {
                 if(info.strip && info.strip[source]) options.strip = info.strip[source];
                 datastore.addObject(collection, object.obj, options, function(err, type, doc) {
                     if (type === 'same') return cb();
+                    if (type === 'new') synclet.added++;
+                    if (type === 'update') synclet.updated++;
                     levents.fireEvent(url.format(r), type, doc);
                     return cb();
                 });

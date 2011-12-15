@@ -44,6 +44,7 @@ syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
+        lconfig.tolerance.threshold=0; // disable
         levents.fireEvent = function(idr, action, data) {
             allEvents[idr] = {action:action, data:data};
         }
