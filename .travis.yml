@@ -1,7 +1,7 @@
 language: node_js
 node_js:
     - 0.4
-before_install:"sh setup-travis.sh"
+before_install: "sh setup-travis.sh"
 notifications:
     email:
         - temas@singly.com
