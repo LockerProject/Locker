@@ -1,11 +1,10 @@
 #!/bin/sh
 
 if [ "$TRAVIS" != "true" ]; then
-    echo "This script is for configuring the Travis-CI environment only."
-    exit 1
+    exit 0
 fi
 
-ldconfig -v | grep clucene
+sudo ldconfig -v | grep clucene
 if [ "$?" == "1" ]; then
     sudo apt-get install -qy cmake
     curDir=`pwd`
