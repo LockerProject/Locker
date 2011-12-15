@@ -26,6 +26,9 @@ exports.fetchState = function() {
         var stateInfo = fs.readFileSync('state.json');
         if (state) {
             exports.state = state = JSON.parse(stateInfo);
+            if (!state.draftApps) {
+                state.draftApps = {}
+            }
         }
     } catch (err) {}
 };
