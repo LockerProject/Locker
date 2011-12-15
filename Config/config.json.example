@@ -17,7 +17,7 @@
         "console": true,
         "file": "locker.out",
         "maxsize": 33554432
-    }
+    },
     "dashboard" : {
         "customLogo": "tlp_logo.png",
         "customTitle": "the locker project",
