@@ -52,19 +52,14 @@ function gatherFromUrl(svcId, callback) {
     var buff = "";
     req.on("data",function(data){
         buff += data.toString();
-        var nl;
-        async.whilst(function(){
-            nl = buff.indexOf('\n');
-            return (nl >= 0);
-        }, function(cb){
-            var dat = buff.substr(0,nl);
-            buff = buff.substr(nl+1);
-            var js;
+        var chunks = buff.split('\n');
+        buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
+        async.forEachSeries(chunks, function(chunk, cb){
+            total++;
             try{
-                total++;
-                exports.add(svcId, JSON.parse(dat), cb);
+                exports.add(svcId, JSON.parse(chunk), cb);
             }catch(E){
-                logger.error("got "+E+" processing "+dat);
+                logger.error("got "+E+" processing "+chunk);
                 return callback();
             }
         }, function(err){

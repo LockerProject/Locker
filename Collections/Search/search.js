@@ -66,8 +66,6 @@ app.get('/reindexForType', function(req, res) {
 });
 
 app.get('/query', function(req, res) {
-    if (!req.param('q')) {
-    }
     var args = {};
     args.q = lutil.trim(req.param('q'));
     if (!args.q || args.q.length == 0) {
