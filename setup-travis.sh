@@ -1,4 +1,5 @@
 #!/bin/sh
+set -v
 
 if [ "$TRAVIS" != "true" ]; then
     exit 0
@@ -15,6 +16,6 @@ if [ "$?" == "1" ]; then
     cd clucene/build
     cmake .. && make && sudo make install
     grep local /etc/ld.so.conf || (sudo sh -c "echo \"/usr/local/lib\" >> /etc/ld.so.conf" && sudo ldconfig)
-    rm -rf $workDir
     cd $curDir
+    rm -rf $workDir
 fi
