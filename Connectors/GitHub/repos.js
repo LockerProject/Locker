@@ -1,6 +1,4 @@
 var GitHubApi = require("github").GitHubApi
-  , lconfig = require('../../Common/node/lconfig')
-  , logger = require('../../Common/node/logger')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')
@@ -11,8 +9,6 @@ var GitHubApi = require("github").GitHubApi
   , viewers = []
   ;
 
-lconfig.load('../../Config/config.json');
-
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
@@ -21,7 +17,7 @@ exports.sync = function(processInfo, cb) {
         cached = processInfo.config.cached;
     lockerUrl = processInfo.lockerUrl;
     exports.syncRepos(cached, function(err, repos) {
-        if (err) logger.error(err);
+        if (err) console.error(err);
         var responseObj = {data : {}, config: { cached: cached }};
         responseObj.data.repo = repos;
         responseObj.data.view = viewers;
@@ -65,7 +61,7 @@ exports.syncRepos = function(cached, callback) {
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
                             // bail, no viewer for you
-                            logger.error("failed: "+err);
+                            console.error("failed: "+err);
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
