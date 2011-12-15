@@ -6,6 +6,7 @@ if [ "$TRAVIS" != "true" ]; then
     exit 0
 fi
 
+# If the environment doesn't have clucene build it in
 ldconfig -p | grep clucene
 if [ "$?" == "1" ]; then
     sudo apt-get install -qy cmake
@@ -20,3 +21,6 @@ if [ "$?" == "1" ]; then
     cd $curDir
     rm -rf $workDir
 fi
+
+# Make sure our submodules are happy
+git submodule update --init
