@@ -10,7 +10,7 @@
         "node": ">= 0.4.6  <=0.4.99999"
     },
     "scripts": {
-        "test": "cd tests && node runTests.js"
+        "test": "sh setup-travis.sh && cd tests && node runTests.js"
     },
     "dependencies": {
         "npm":"=1.0.106",

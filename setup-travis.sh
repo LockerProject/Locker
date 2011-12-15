@@ -1,19 +1,21 @@
 #!/bin/sh
+set -v
 
 if [ "$TRAVIS" != "true" ]; then
-    echo "This script is for configuring the Travis-CI environment only."
-    exit 1
+    exit 0
 fi
 
-ldconfig -v | grep clucene
+ldconfig -p | grep clucene
 if [ "$?" == "1" ]; then
     sudo apt-get install -qy cmake
     curDir=`pwd`
-    cd /tmp
+    workDir=`mktemp -d`
+    cd $workDIr 
     git clone git://clucene.git.sourceforge.net/gitroot/clucene/clucene
     mkdir clucene/build
     cd clucene/build
     cmake .. && make && sudo make install
-    grep local /etc/ld.so.conf || (sudo echo "/usr/local/lib" >> /etc/ld.so.conf && sudo ldconfig)
+    grep local /etc/ld.so.conf || (sudo sh -c "echo \"/usr/local/lib\" >> /etc/ld.so.conf" && sudo ldconfig)
     cd $curDir
+    rm -rf $workDir
 fi
