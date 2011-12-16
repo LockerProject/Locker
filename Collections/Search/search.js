@@ -73,6 +73,7 @@ app.get('/query', function(req, res) {
         return res.send('missing or invalid query');
     }
 
+    args.limit = 20;
     if (req.param('type')) args.type = req.param('type');
     if (req.param('limit')) args.limit = parseInt(req.param('limit'));
     if (req.param('snippet') == "true") args.snippet = true;

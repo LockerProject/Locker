@@ -46,11 +46,9 @@ function gatherFromUrl(svcId, callback) {
     var total = 0;
     var req = request.get({uri:url}, function(err){
         if(err) logger.error(err);
-        logger.info("indexed "+total+" items from "+svcId);
-        callback();
     });
     var buff = "";
-    req.on("data",function(data){
+    var q = async.queue(function(data, cbq){
         buff += data.toString();
         var chunks = buff.split('\n');
         buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
@@ -60,12 +58,19 @@ function gatherFromUrl(svcId, callback) {
                 exports.add(svcId, JSON.parse(chunk), cb);
             }catch(E){
                 logger.error("got "+E+" processing "+chunk);
-                return callback();
+                return cb();
             }
         }, function(err){
             if(err) logger.error("got error "+err);
+            cbq();
         });
-    });
+    },1);
+    req.on("data",q.push);
+    q.drain = function(){
+        logger.info("indexed "+total+" items from "+svcId);
+        callback();
+    };
+    req.on("end",function(){q.push("")}); // this triggers the drain if there was no data, GOTCHA
 }
 
 exports.add = function(service, data, callback){
