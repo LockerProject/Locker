@@ -179,6 +179,7 @@ app.get('/', function(req, res) {
             delete item.link;
         results.push(item);
     }, function(err) {
+        if(err) logger.error(err);
         if(req.query['stream'] == "true") return res.end();
         if(full) {
             var arg = {"link":{$in: Object.keys(ndx)}};

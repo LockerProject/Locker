@@ -65,7 +65,16 @@ exports.checkUrl = function(origUrl, callback) {
 }
 
 // either gets a single link arg:{url:...} or can paginate all arg:{start:10,limit:10}
+var workaround = false;
 exports.getLinks = function(arg, cbEach, cbDone) {
+    if(workaround == false)
+    { // this is the strangest thing, temp workaround till https://github.com/christkv/node-mongodb-native/issues/447
+        workaround = true;
+        findWrap({},{limit:1},linkCollection,function(){},function(){
+            exports.getLinks(arg, cbEach, cbDone);
+        });
+        return;
+    }
     var f = (arg.link)?{link:arg.link}:{};
     delete arg.id;
     findWrap(f,arg,linkCollection,cbEach,cbDone);
@@ -108,10 +117,14 @@ function findWrap(a,b,c,cbEach,cbDone){
     if (b.sort) cursor.sort(b.sort);
     if (b.limit) cursor.limit(b.limit);
     if (b.offset) cursor.skip(b.offset);
+//    cursor.count(function(err,c){console.error("COUNT "+c)});
+    var total = 0;
     cursor.each(function(err, item) {
         if (item != null) {
+            total++;
             cbEach(item);
         } else {
+//            cursor.count(function(err,c){console.error("TOTAL "+total+" COUNT "+c)});
             cbDone();
         }
     });
