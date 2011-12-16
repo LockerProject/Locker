@@ -6,3 +6,6 @@ notifications:
     email:
         - temas@singly.com
         - temas@sparecog.com
+branches:
+    only:
+        - master
