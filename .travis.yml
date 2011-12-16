@@ -5,3 +5,4 @@ before_install: "bash tests/setup-travis.sh"
 notifications:
     email:
         - temas@singly.com
+        - temas@sparecog.com
