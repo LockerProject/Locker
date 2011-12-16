@@ -71,11 +71,11 @@ app.all('*', function(req, res, next) {
             }
         } catch (E) {}
     });
-    request.get({url:locker.lockerBase + "/synclets/github/get_profile"}, function(err, res, body) {
+    request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
         try {
             var body = JSON.parse(body);
-            if (body.login) {
-                githubLogin = body.login;
+            if (body[0].login) {
+                githubLogin = body[0].login;
             }
         } catch (E) {}
     });
