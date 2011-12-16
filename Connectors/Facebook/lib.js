@@ -64,20 +64,20 @@ exports.getPerson = function(arg, cbEach, cbDone) {
 
 // recurse getting all the photos in an album
 exports.getAlbum = function (arg, cbEach, cbDone) {
-    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/photos?access_token=' + auth.accessToken + '&date_format=U';
-    getDatas(uri, cbEach, cbDone);
+    arg.uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/photos?access_token=' + auth.accessToken + '&date_format=U';
+    getDatas(arg, cbEach, cbDone);
 }
 
 // recurse getting all the albums for a person
 exports.getAlbums = function (arg, cbEach, cbDone) {
-    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/albums?access_token=' + auth.accessToken + '&date_format=U';
-    getDatas(uri, cbEach, cbDone);
+    arg.uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/albums?access_token=' + auth.accessToken + '&date_format=U';
+    getDatas(arg, cbEach, cbDone);
 }
 
 // recurse getting all the photos tagged in
 exports.getTagged = function (arg, cbEach, cbDone) {
-    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/photos?access_token=' + auth.accessToken + '&date_format=U';
-    getDatas(uri, cbEach, cbDone);
+    arg.uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/photos?access_token=' + auth.accessToken + '&date_format=U';
+    getDatas(arg, cbEach, cbDone);
 }
 
 // get photo data and thumb/source
@@ -113,9 +113,9 @@ exports.getPhoto = function(arg, cbEach, cbDone) {
 // recurse getting all the posts for a person and type (wall or newsfeed) {id:'me',type:'home',since:123456789}
 exports.getPosts = function (arg, cbEach, cbDone) {
     var since = (arg.since)?"&since="+arg.since:"";
-    var uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since + '&limit=100';
+    arg.uri = (arg.page)?arg.page:'https://graph.facebook.com/'+arg.id+'/'+arg.type+'?access_token=' + auth.accessToken + '&date_format=U'+since + '&limit=100';
     // possible facebook bug here when using since, sometimes the paging.next doesn't contain the since and it'll end up re-walking the whole list
-    getDatas(uri, cbEach, cbDone);
+    getDatas(arg, cbEach, cbDone);
 }
 
 
@@ -153,9 +153,9 @@ function getOne(uri, cb) {
     });
 }
 
-function getDatas(uri, cbEach, cbDone) {
-    if(!uri) return cbDone("no uri");
-    request.get({uri:uri}, function(err, resp, body) {
+function getDatas(arg, cbEach, cbDone) {
+    if(!arg.uri) return cbDone("no uri");
+    request.get({uri:arg.uri}, function(err, resp, body) {
         var js;
         try {
             if(err) throw err;
@@ -165,7 +165,9 @@ function getDatas(uri, cbEach, cbDone) {
         }
         for(var i = 0; js.data && i < js.data.length; i++) cbEach(js.data[i]);
         if(js.paging && js.paging.next) {
-            getDatas(js.paging.next,cbEach,cbDone);
+            arg.uri = js.paging.next;
+            if(arg.since && arg.uri.indexOf("since=") == -1) arg.uri += "&since="+arg.since;
+            getDatas(arg,cbEach,cbDone);
         } else {
             cbDone();
         }
