@@ -26,13 +26,12 @@ function reset(type, callback)
     if(!type) return index.reset(callback);
     index.deleteType(type, callback);
 }
-exports.gather = function(type, cbDel, cbDone, delayMax) {
+exports.gather = function(type, cbDel, cbDone, delay) {
     if(!cbDone) cbDone = function(){ logger.info("done gathering"); };
     reset(type, function(){
         if(cbDel) cbDel();
         var services = (type) ? [type] : ['contacts', 'photos', 'places', 'links'];
-        var delay = 0;
-        if(delayMax) delay = Math.floor(Math.random()*delayMax);
+        if(!delay) delay = 0;
         setTimeout(function(){
             async.forEachSeries(services, gatherFromUrl, cbDone);
         }, delay);
@@ -77,7 +76,7 @@ function gatherFromUrl(svcId, callback) {
 }
 
 exports.add = function(service, data, callback){
-    var idr = {host:service, slashes:true};
+    var idr = {host:service, slashes:true, pathname:'/'};
     switch(service)
     {
         case "places":
@@ -94,7 +93,7 @@ exports.add = function(service, data, callback){
             break;
         case "links":
             idr.protocol = "link";
-            idr.hash = data._id; // TODO when links fully uses .id, switch to that here
+            idr.hash = data.id;
             break;
         default:
             callback("unknown service");
