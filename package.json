@@ -21,6 +21,7 @@
         "facebook-js": "=1.0.0",
         "gdata-js": "=0.1.1",
         "flickr-js":"=0.0.1",
+        "soundcloud-js":"=0.0.1",
         "github": "=0.0.6",
         "imap": "=0.2.4",
         "lastfm": "=0.7.0",
