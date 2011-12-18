@@ -2,89 +2,55 @@ var syncManager = require('lsyncmanager')
   , lconfig = require('lconfig')
   , logger = require('logger')
   , fs = require('fs')
+  , path = require('path')
   , locker = require('../Common/node/locker')
   , request = require('request')
-  , https = require('https')
-  , host = ''
-  , querystring = require('querystring')
-  , lconfig = require('../Common/node/lconfig')
-  , foursquare = {"provider" : "foursquare",
-      "accessTokenResponse" : "json",
-      "endPoint" : "https://foursquare.com/oauth2/",
-      "redirectURI" : "auth/foursquare/auth",
-      "grantType" : "authorization_code"}
-  , facebook = {"provider" : "facebook",
-      "endPoint" : "https://graph.facebook.com/oauth",
-      "redirectURI" : "auth/facebook/auth",
-      "grantType" : ''}
-  , github = {"provider" : "github",
-      "endPoint" : "https://github.com/login/oauth",
-      "redirectURI" : "auth/github/auth"}
-  , gcontacts = {"provider" : "gcontacts",
-      "endPoint" : "https://accounts.google.com/o/oauth2/token",
-      "redirectURI" : "auth/gcontacts/auth",
-      "grantType" : "authorization_code"}
-  , gplus = {"provider" : "gplus",
-      "endPoint" : "https://accounts.google.com/o/oauth2/token",
-      "redirectURI" : "auth/gplus/auth",
-      "grantType" : "authorization_code"}
-  , instagram = {"provider" : "instagram",
-      "endPoint" : "https://api.instagram.com/oauth/access_token",
-      "grantType" : "authorization_code",
-      "redirectURI" : "auth/instagram/auth"}
-  , glatitude = {"provider" : "glatitude",
-      "endPoint" : "https://accounts.google.com/o/oauth2/token",
-      "redirectURI" : "auth/glatitude/auth",
-      "grantType" : "authorization_code"}
+  , querystring = require('querystring');
+
+var handlers = {oauth2: handleOAuth2, oauth2Post: handleOAuth2Post}
   , apiKeys = {}
-  ;
+  , config = {};
 
-try{
+try {
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'))
-}catch(e){}
+} catch(e) { }
 
-host = lconfig.externalBase + "/";
+var host = lconfig.externalBase + "/";
 
 module.exports = function(locker) {
-    locker.get('/auth/foursquare/auth', function(req, res) {
-        handleOAuth2(req.param('code'), foursquare, res);
-    });
-    locker.get('/auth/facebook/auth', function(req, res) {
-        handleOAuth2(req.param('code'), facebook, res);
-    });
-    locker.get('/auth/github/auth', function(req, res) {
-        handleOAuth2(req.param('code'), github, res);
-    });
-    locker.get('/auth/gcontacts/auth', function(req, res) {
-        handleOAuth2Post(req.param('code'), gcontacts, res);
-    });
-    locker.get('/auth/gplus/auth', function(req, res) {
-        handleOAuth2Post(req.param('code'), gplus, res);
-    });
-    locker.get('/auth/instagram/auth', function(req, res) {
-        handleOAuth2Post(req.param('code'), instagram, res);
-    });
-    locker.get('/auth/glatitude/auth', function(req, res) {
-        handleOAuth2Post(req.param('code'), glatitude, res);
-    });
-    locker.get('/auth/twitter/auth', function(req, res) {
-        handleTwitter(req, res);
-    });
-    locker.get('/auth/tumblr/auth', function(req, res) {
-        handleTumblr(req, res);
-    });
-    locker.get('/auth/flickr/auth', function(req, res) {
-        handleFlickr(req, res);
-    });
+    var avail = syncManager.synclets().available;
+    for(var i in avail) {
+        var service = avail[i].provider;
+        var thisConfig = config[avail[i].provider] = require(path.join(lconfig.lockerDir,avail[i].srcdir, 'auth.js'));
+        if(typeof thisConfig.handler == 'string') {
+            addOauth2Handler(locker, service);
+        } else if(typeof thisConfig.handler == 'function') {
+            addCustomHandler(locker, service);
+        }
+    }
 };
 
-function handleOAuth2 (code, options, res) {
+function addOauth2Handler(locker, service) {
+    locker.get('/auth/' + service + '/auth', function(req, res) {
+        handlers[config[service].handler](service, req.param('code'), config[service], res);
+    });
+}
+
+function addCustomHandler(locker, service) {
+    locker.get('/auth/' + service + '/auth', function(req, res) {
+        config[service].handler(host, apiKeys[service], function(err, auth) {
+            finishAuth(service, auth, res);
+        }, req, res);
+    });
+}
+
+function handleOAuth2 (service, code, options, res) {
     try {
         var newUrl = options.endPoint + '/access_token' +
-                        '?client_id=' + apiKeys[options.provider].appKey +
-                        '&client_secret=' + apiKeys[options.provider].appSecret +
+                        '?client_id=' + apiKeys[service].appKey +
+                        '&client_secret=' + apiKeys[service].appSecret +
                         '&grant_type=' + options.grantType +
-                        '&redirect_uri=' + host + options.redirectURI +
+                        '&redirect_uri=' + host + 'auth/' + service + '/auth' +
                         '&code=' + code;
         request.get({url:newUrl}, function(err, resp, body) {
             auth = {};
@@ -93,20 +59,18 @@ function handleOAuth2 (code, options, res) {
             } else {
                 auth.accessToken = querystring.parse(body).access_token;
             }
-            if (options.provider === 'github') {
+            if (service === 'github') {
                 request.get({url:"https://github.com/api/v2/json/user/show?access_token=" + auth.accessToken}, function(err, resp, body) {
                     try {
                         var resp = JSON.parse(body);
                         auth.username = resp.user.login;
-                        installSynclet(options.provider, auth);
-                        res.end("<script type='text/javascript'> window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
+                        finishAuth(service, auth, res);
                     } catch (e) {
                         logger.error('Failed to auth github - ' + body);
                     }
                 });
             } else if (auth.accessToken) {
-                installSynclet(options.provider, auth);
-                res.end("<script type='text/javascript'> window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
+                finishAuth(service, auth, res);
             } else {
                 res.end(body);
             }
@@ -116,20 +80,19 @@ function handleOAuth2 (code, options, res) {
     }
 }
 
-function handleOAuth2Post (code, options, res) {
+function handleOAuth2Post (service, code, options, res) {
     try {
         var postData = {grant_type:options.grantType,
                   code:code,
-                  client_id:apiKeys[options.provider].appKey,
-                  client_secret:apiKeys[options.provider].appSecret,
-                  redirect_uri:host + options.redirectURI};
+                  client_id:apiKeys[service].appKey,
+                  client_secret:apiKeys[service].appSecret,
+                  redirect_uri:host + 'auth/' + service + '/auth'};
         request({method: 'POST', uri :options.endPoint, body: querystring.stringify(postData), headers : {'Content-Type' : 'application/x-www-form-urlencoded'}}, function(err, resp, body) {
             auth = {};
-            auth.clientID = apiKeys[options.provider].appKey;
-            auth.clientSecret = apiKeys[options.provider].appSecret;
+            auth.clientID = apiKeys[service].appKey;
+            auth.clientSecret = apiKeys[service].appSecret;
             auth.token = JSON.parse(body);
-            installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
+            finishAuth(service, auth, res);
         });
 
     } catch (E) {
@@ -138,61 +101,10 @@ function handleOAuth2Post (code, options, res) {
     }
 }
 
-function handleTwitter (req, res) {
-    var tc = require('../Connectors/Twitter/twitter_client');
-    try {
-        tc(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
-            .getAccessToken(req, res, function(err, newToken) {
-                if(err) throw new Error(err);
-                if(!newToken) throw new Error("token missing");
-                var auth = {};
-                auth.consumerKey = apiKeys.twitter.appKey;
-                auth.consumerSecret = apiKeys.twitter.appSecret;
-                auth.token = newToken;
-                installSynclet("twitter", auth);
-                res.end("<script type='text/javascript'> window.opener.syncletInstalled('twitter'); window.close(); </script>");
-            });
-    } catch (E) {
-        logger.error("auth error: "+E);
-        res.end('failed to authenticate against service - ' + E);
-    }
+function finishAuth(service, auth, res) {
+    installSynclet(service, auth);
+    res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + service + "'); window.close(); </script>");
 }
-
-function handleTumblr (req, res) {
-    try {
-        require('../Connectors/Tumblr/tumblr_client')(apiKeys.tumblr.appKey, apiKeys.tumblr.appSecret, host + "auth/tumblr/auth")
-            .getAccessToken(req, res, function(err, newToken) {
-                if(err) throw new Error(err);
-                if(!newToken) throw new Error("token missing");
-                var auth = {};
-                auth.consumerKey = apiKeys.tumblr.appKey;
-                auth.consumerSecret = apiKeys.tumblr.appSecret;
-                auth.token = newToken;
-                installSynclet("tumblr", auth);
-                res.end("<script type='text/javascript'> window.opener.syncletInstalled('tumblr');  window.close(); </script>");
-            });
-    } catch (E) {
-        logger.error("auth error: "+E);
-        res.end('failed to authenticate against service - ' + E);
-    }
-}
-
-function handleFlickr (req, res) {
-    var client = require('flickr-js')(apiKeys.flickr.appKey, apiKeys.flickr.appSecret);
-    var frob = req.param('frob');
-    if(!frob) { //starting out
-        res.redirect(client.getAuthURL('read'));
-    } else { //finishing
-        client.getTokenFromFrob(frob, function(err, auth) {
-            auth.apiKey = apiKeys.flickr.appKey;
-            auth.apiSecret = apiKeys.flickr.appSecret;
-            auth.token = auth.token;
-            installSynclet("flickr", auth);
-            res.end("<script type='text/javascript'> window.opener.syncletInstalled('flickr');  window.close(); </script>");
-        });
-    }
-}
-
 
 function installSynclet (provider, auth) {
     var avail = syncManager.synclets().available;

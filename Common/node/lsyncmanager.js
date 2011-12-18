@@ -516,45 +516,18 @@ function addUrls() {
         }
         for (var i = 0; i < synclets.available.length; i++) {
             var synclet = synclets.available[i];
-            if (synclet.provider === 'facebook') {
-                if (apiKeys.facebook)
-                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +
-                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" +
-                                        "&scope=email,offline_access,read_stream,user_photos,friends_photos,user_photo_video_tags";
-            } else if (synclet.provider === 'twitter') {
-                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
-            } else if (synclet.provider === 'flickr') {
-                if (apiKeys.flickr) synclet.authurl = host + "auth/flickr/auth";
-            } else if (synclet.provider === 'tumblr') {
-                if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
-            } else if (synclet.provider === 'foursquare') {
-                if (apiKeys.foursquare)
-                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
-                                                            "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
-            } else if (synclet.provider === 'gcontacts') {
-                if (apiKeys.gcontacts)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
-                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" +
-                                                    "&scope=https://www.google.com/m8/feeds/&response_type=code";
-            } else if (synclet.provider === 'gplus') {
-                if (apiKeys.gplus)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
-                                                    "&redirect_uri=" + host + "auth/gplus/auth" +
-                                                    "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
-            } else if (synclet.provider === 'instagram') {
-                if (apiKeys.instagram)
-                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
-                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
-            } else if (synclet.provider === 'glatitude') {
-                if (apiKeys.glatitude)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
-                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
-                                                    "&scope=" + synclet.provider_args.scope +
-                                                    "&response_type=code";
-            } else if (synclet.provider === 'github') {
-                if (apiKeys.github)
-                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
-                                                    '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            try {
+                var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+                if(authModule.authUrl) {
+                    synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                        "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+                } else {
+                    synclet.authurl = host + "auth/" + synclet.provider + "/auth";
+                }
+            } catch(err) {
+                if (apiKeys[synclet.provider]) {
+                    synclet.authurl = host + "auth/" + synclet.provider + "/auth";
+                }
             }
         }
     }

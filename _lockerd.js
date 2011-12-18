@@ -50,7 +50,6 @@ exports.alive = false;
     var serviceManager = require("lservicemanager");
     var pushManager = require(__dirname + "/Common/node/lpushmanager");
     var mongodb = require('mongodb');
-    var webservice = require(__dirname + "/Ops/webservice.js");
     var lcrypto = require("lcrypto");
     var thservice = require(__dirname + "/Ops/thservice.js");
     var lmongo = require('lmongo');
@@ -152,6 +151,7 @@ exports.alive = false;
         serviceManager.findInstalled();
         pushManager.init();
 
+        var webservice = require(__dirname + "/Ops/webservice.js");
         // start web server (so we can all start talking)
         webservice.startService(lconfig.lockerPort, runMigrations);
         var lockerPortNext = "1"+lconfig.lockerPort;

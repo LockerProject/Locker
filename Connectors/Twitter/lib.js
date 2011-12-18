@@ -19,7 +19,7 @@ var auth;
 
 exports.init = function(theAuth) {
     auth = theAuth;
-    tw = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
+    tw = require('./twitter_client')(auth.appKey, auth.appSecret);
     try {
         fs.mkdirSync('friends', 0755);
     } catch(e) {};
