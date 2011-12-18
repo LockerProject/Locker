@@ -36,15 +36,19 @@ exports.alive = false;
     require('graceful-fs');
 
 
-    // This lconfig stuff has to come before and other locker modules are loaded!!
+    // This lconfig stuff has to come before any other locker modules are loaded!!
     var lconfig = require('lconfig');
     lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
-
+    
+    if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
+        console.error('You must have an apikeys.json file in the Config directory. See the Config/apikeys.json.example file');
+        process.exit(1);
+    }
+    
     fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
 
     var logger = require("logger");
     logger.info('proccess id:' + process.pid);
-    // var lconsole = require("lconsole");
     var lscheduler = require("lscheduler");
     var syncManager = require('lsyncmanager');
     var serviceManager = require("lservicemanager");
