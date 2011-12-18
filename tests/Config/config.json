@@ -26,6 +26,7 @@
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
                       "synclet-local-flickr.js",
+                      "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
         "collections" : ["collection-contacts-test.js",
                          "collection-photos-test.js",
