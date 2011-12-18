@@ -43,7 +43,6 @@
         "port": 27020
     },
     "logging": {
-        "console":false,
         "file":"locker-tests.out",
         "level": "error"
     }

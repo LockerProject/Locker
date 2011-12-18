@@ -506,28 +506,18 @@ function mapMetaData(file) {
 }
 
 function addUrls() {
-    var apiKeys;
-    var host = lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
-        try {
-            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
-        } catch(e) {
-            return logger.error('Error reading apikeys.json file - ' + e);
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
+        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
+        var host = lconfig.externalBase + "/";
+        for (var i in synclets.available) {
             var synclet = synclets.available[i];
-            try {
-                var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
-                if(authModule.authUrl) {
-                    synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
-                                        "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
-                } else {
-                    synclet.authurl = host + "auth/" + synclet.provider + "/auth";
-                }
-            } catch(err) {
-                if (apiKeys[synclet.provider]) {
-                    synclet.authurl = host + "auth/" + synclet.provider + "/auth";
-                }
+            if(!apiKeys[synclet.provider]) continue;
+            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+            if(authModule.authUrl) {
+                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+            } else {
+                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
             }
         }
     }
