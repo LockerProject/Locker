@@ -21,7 +21,7 @@ var base = 'http://api.tumblr.com/v2';
 
 exports.init = function(theAuth) {
     auth = theAuth;
-    tumblr = require('./tumblr_client')(auth.appKey, auth.appSecret);
+    tumblr = require('./tumblr_client')(auth.consumerKey, auth.consumerSecret);
 };
 
 exports.getMe = function(arg, cbEach, cbDone) {
@@ -93,7 +93,7 @@ function getOneKey(arg, cb)
     if(!arg.field) return cb("no field");
     var api = url.parse(base+arg.path);
     delete arg.path;
-    arg.api_key = auth.appKey;
+    arg.api_key = auth.consumerKey;
     api.query = arg;
     var field = arg.field;
     delete arg.field;

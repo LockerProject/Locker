@@ -5,8 +5,8 @@ module.exports = {
             if(err) return done(err);
             if(!newToken) return done(new Error("token missing"));
             done(null, {
-                appKey : apiKeys.appKey,
-                appSecret : apiKeys.appSecret,
+                consumerKey : apiKeys.appKey,
+                consumerSecret : apiKeys.appSecret,
                 token : newToken
             });
         });
