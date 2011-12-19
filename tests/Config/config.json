@@ -38,6 +38,7 @@
         "connector-IMAP-test.js"
     ],
     "mongo" : {
+        "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020
