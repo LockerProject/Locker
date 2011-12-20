@@ -175,10 +175,13 @@ var submitPublish = function(req, res) {
                 if (fields['rename-app'] === 'on') {
                     data.title = fields['app-newname'];
                 }
-                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data});
+                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data}, function(err, resp, body) {
+                    res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
+                });
+            } else {
+                res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
             }
             uistate.saveDraft(fields);
-            res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
         });
     } else {
         res.send(req.body);
