@@ -2,7 +2,8 @@ var app;
 var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
-    "viewAll" : "viewAll"
+    "viewAll" : "viewAll",
+    "exploreApps" : "exploreApps"
 };
 
 var iframeLoaded = function() {};
@@ -31,6 +32,10 @@ $(document).ready(function() {
 });
 
 var loadApp = function(callback) {
+  var appUrl = app;
+  if (app.indexOf('&') != -1) {
+    appUrl = app.substring(0, app.indexOf('&'));
+  }
   if (callback) {
     iframeLoaded = callback;
   } else {
@@ -39,11 +44,11 @@ var loadApp = function(callback) {
   $('.app-details').hide();
   $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;
-  if (specialApps[app]) {
-    $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
+  if (specialApps[appUrl]) {
+    $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl]);
   } else {
-    $.get('clickapp/' + app, function(e) {});
-    $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
+    $.get('clickapp/' + appUrl, function(e) {});
+    $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
   $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
 };

@@ -97,9 +97,13 @@ var renderApps = function(req, res) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult,
-            dashboard: lconfig.dashboard
         });
     })
+}
+
+var renderExplore = function(req, res) {
+    page = 'explore';
+    res.render('explore');
 }
 
 var renderCreate = function(req, res) {
@@ -306,6 +310,7 @@ app.get('/you', renderYou);
 app.get('/', renderYou);
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
+app.get('/explore', renderExplore);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
