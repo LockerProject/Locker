@@ -6,6 +6,7 @@
     "mongoId": {
         "friends": "url",
         "checkins": "url",
+        "profile": "url",
         "pins": "url"
     },
     "synclets": [{
