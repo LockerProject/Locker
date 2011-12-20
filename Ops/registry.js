@@ -61,7 +61,11 @@ exports.init = function(config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
-    app.use(express.bodyParser());
+    app.all('/registry/*', function(req, res, next) {
+        express.bodyParser();
+        next();
+    });
+
     app.get('/registry/added', function(req, res) {
         res.send(exports.getInstalled());
     });
