@@ -13,6 +13,7 @@ var thswitch;
 exports.instance = thswitch;
 
 exports.start = function() {
+    return; // temp disabled
     // start dashboard
     thswitch  = spawn('node', ['switch.js'],
                             {cwd: __dirname + '/TeleHash'});

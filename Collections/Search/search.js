@@ -22,6 +22,7 @@ var express = require('express'),
     connect = require('connect');
 var request = require('request');
 var async = require('async');
+var url = require('url');
 var app = express.createServer(connect.bodyParser());
 
 var maxCloseTimeout = null;
@@ -95,7 +96,7 @@ exports.handleGetUpdate = function(callback) {
             if (!services) return;
             services.forEach(function(svc) {
                if (svc.provides.indexOf('timeline/twitter') >= 0) {
-                   reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                   reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'tweet', 'twitter', function(err) {});
                 }
             });
         });
@@ -119,23 +120,24 @@ exports.handlePostEvents = function(req, callback) {
         return callback(error, {});
     }
 
-    if (req.body.hasOwnProperty('type')) {
-        var source = getSourceForEvent(req.body);
+    if (req.body.hasOwnProperty('idr')) {
+        var idr = url.parse(req.body.idr);
 
         // https://github.com/LockerProject/Locker/issues/285
-        if (!source) {
+        if (!idr || !idr.host) {
             error = 'No source found for event: '+JSON.stringify(req.body);
             logger.error(error);
             return callback(error, {});
         }
 
+        var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
         if (req.body.action === 'new' || req.body.action === 'update') {
-            lsearch.indexTypeAndSource(req.body.type, source, req.body.obj.data, function(err, time) {
+            lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
                 if (err) {
-                    handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+                    handleError(req.body.idr, req.body.action, err);
                     return callback(err, {});
                 }
-                handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+                handleLog(req.body.idr, req.body.action, time);
                 if (maxCloseTimeout) clearTimeout(maxCloseTimeout);
                 maxCloseTimeout = setTimeout(function() {
                     lsearch.flushAndCloseWriter();
@@ -143,39 +145,39 @@ exports.handlePostEvents = function(req, callback) {
                 return callback(err, {timeToIndex: time});
             });
         } else if (req.body.action === 'delete') {
-            lsearch.deleteDocument(req.body.obj.data._id, function(err, time) {
+            lsearch.deleteDocument(req.body.idr, function(err, time) {
                 if (err) {
-                    handleError(req.body.type, req.body.action, req.body.obj.data._id, err);
+                    handleError(req.body.idr, req.body.action, err);
                     return callback(err, {});
                 }
-                handleLog(req.body.type, req.body.action, req.body.obj.data._id, time);
+                handleLog(req.body.idr, req.body.action, time);
                 return callback(err, {timeToIndex: time});
             });
         } else {
-            logger.error("Unexpected event: " + req.body.type + " and " + req.body.action);
-            res.end();
+            return callback("Unexpected event: " + req.body.idr + " and " + req.body.action);
         }
     } else {
-        logger.error("Unexpected event or not json " + req.headers["content-type"]);
-        res.end();
+        return callback("Unexpected event or not json " + req.headers["content-type"]);
     }
 };
 
 exports.handlePostIndex = function(req, callback) {
     var error;
 
-    if (!req.body.type || !req.body.source || !req.body.data) {
+    if (!req.body.idr || !req.body.data) {
         error = 'Invalid arguments given for /search/index POST request. '+JSON.stringify(req.body);
         logger.error(error);
         return callback(error, {});
     }
 
-    lsearch.indexTypeAndSource(req.body.type, req.body.source, req.body.data, function(err, time) {
+    var idr = url.parse(req.body.idr);
+    var type = idr.protocol.substr(0,idr.protocol.length-1) + idr.host;
+    lsearch.indexType(type, req.body.idr, req.body.data, function(err, time) {
         if (err) {
-            handleError(req.body.type, 'new', req.body.data._id, err);
+            handleError(req.body.idr, 'new', err);
             return callback(err, {});
         }
-        handleLog(req.body.type, 'new', req.body.data._id, time);
+        handleLog(req.body.idr, 'new', time);
         return callback(null, {timeToIndex: time});
     });
 };
@@ -215,6 +217,16 @@ exports.handleGetQuery = function(req, callback) {
 
         if(limit) results = results.slice(0,limit);
 
+        if(req.param('simple') == "true")
+        {
+            var data = {};
+            data.took = queryTime;
+            data.error = null;
+            data.hits = results;
+            data.total = results.length;
+            return callback(null, data);
+        }
+
         enrichResultsWithFullObjects(results, function(err, richResults) {
             var data = {};
             data.took = queryTime;
@@ -233,6 +245,7 @@ exports.handleGetQuery = function(req, callback) {
         });
     }
 
+console.error("querying "+type+" for "+q);
     if (type) {
         lsearch.queryType(type, q, {}, sendResults);
     } else {
@@ -263,7 +276,7 @@ exports.handleGetReindexForType = function(type, callback) {
             if (!services) return;
             services.forEach(function(svc) {
                if (svc.provides.indexOf('timeline/twitter') >= 0) {
-                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/home_timeline', 'timeline/twitter', 'twitter/timeline', function(err) {});
+                    reindexType(lockerInfo.lockerUrl + '/Me/' + svc.id + '/getCurrent/timeline', 'tweet', 'twitter', function(err) {});
                 }
             });
         });
@@ -319,8 +332,11 @@ function enrichResultsWithFullObjects(results, callback) {
         function(results, waterfallCb) {
             async.forEachSeries(results,
                 function(item, forEachCb) {
-                    var url = lockerInfo.lockerUrl + '/Me/' + item._source + '/id/' + item._id;
-                    makeEnrichedRequest(url, item, forEachCb);
+                    var idr = url.parse(item._id);
+                    if(!idr || !idr.host || !idr.hash) return forEachCb();
+                    var source = (idr.host == 'twitter') ? 'twitter/timeline' : idr.host; // we only process timeline
+                    var u = lockerInfo.lockerUrl + '/Me/' + source + '/id/' + idr.hash.substr(1);
+                    makeEnrichedRequest(u, item, forEachCb);
                 },
                 function(err) {
                     waterfallCb(err, results);
@@ -349,7 +365,7 @@ function cullAndSortResults(results, callback) {
 function makeEnrichedRequest(url, item, callback) {
     request.get({uri:url, json:true}, function(err, res, body) {
         if (err) {
-            logger.error('Error when attempting to enrich search results: ' + err);
+            logger.error('Error when attempting to enrich search results at '+url+' - ' + err);
             return callback(err);
         }
         if (res.statusCode >= 400) {
@@ -361,7 +377,7 @@ function makeEnrichedRequest(url, item, callback) {
         item.fullobject = body;
 
         if (item.fullobject.hasOwnProperty('created_at')) {
-            var dateDiff = new Date(new Date().getTime() - new Date(item.fullobject.created_at).getTime());
+            var dateDiff = new Date(Date.now() - new Date(item.fullobject.created_at).getTime());
             if (dateDiff.getUTCDate() > 2) {
                 item.fullobject.created_at_since = (dateDiff.getUTCDate() - 2) + ' day';
                 if (dateDiff.getUTCDate() > 3) item.fullobject.created_at_since += 's';
@@ -381,7 +397,7 @@ function makeEnrichedRequest(url, item, callback) {
 function getSourceForEvent(body) {
     // FIXME: This is a bad hack to deal with the tech debt we have around service type naming and eventing inconsistencies
     var source;
- 
+
     var via = body.via;
     source = via;
     if(via.indexOf('/') > -1) { // shouldn't need this anymore
@@ -399,11 +415,11 @@ function getSourceForEvent(body) {
     // END FIXME
 }
 
-function handleError(type, action, id, error) {
-    logger.error('Error attempting to index type "' + type + '" with action of "' + action + '" and id: ' + id + ' - ' + error);
+function handleError(idr, action, error) {
+    logger.error('Error attempting to index "' + idr + '" with action of "' + action + '" - ' + error);
 }
 
-function handleLog(type, action, id, time) {
+function handleLog(idr, action, time) {
     var actionWord;
     switch (action) {
         case 'new':
@@ -416,7 +432,7 @@ function handleLog(type, action, id, time) {
             actionWord = 'deleted';
             break;
     }
-    logger.verbose('Successfully ' + actionWord + ' ' + type + ' record in search index with id ' + id + ' in ' + time + 'ms');
+    logger.verbose('Successfully ' + actionWord + ' record in search index:' + idr + ' in ' + time + 'ms');
 }
 
 exports.init = function(config, search, _logger) {

@@ -31,7 +31,7 @@ exports.addCollection = function(name) {
 }
 
 function now() {
-    return new Date().getTime();
+    return Date.now();
 }
 
 // arguments: type should match up to one of the mongo collection fields

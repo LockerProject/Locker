@@ -16,6 +16,8 @@ var fs = require('fs'),
     locker = require('../../Common/node/locker.js');
 var async = require("async");
 lconfig.load('../../Config/config.json');
+var logger = require(__dirname + "/../../Common/node/logger");
+
 
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
@@ -37,7 +39,7 @@ app.get('/state', function(req, res) {
             if(err) return res.send(err, 500);
             var objId = "000000000000000000000000";
             if (lastObject) objId = lastObject._id.toHexString();
-            var updated = new Date().getTime();
+            var updated = Date.now();
             try {
                 var js = JSON.parse(fs.readFileSync('state.json'));
                 if(js && js.updated) updated = js.updated;
@@ -51,7 +53,7 @@ app.get('/search', function(req, res) {
     if (!req.query.q) {
         res.send([]);
         return;
-    }    
+    }
     var map = {};
     function send() {
         var results = [];
@@ -125,7 +127,8 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.type || !req.body.obj || !req.body.obj.data){
+    if (!req.body.idr || !req.body.data){
+        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
         return;
@@ -227,8 +230,12 @@ app.get('/encounters/:id', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
-    dataStore.get(req.param('id'), function(err, doc) { res.send(doc); });
+    dataStore.get(req.param('id'), function(err, doc) {
+        if(err || !doc) return res.send(err, 500);
+        if(!isFull(req.query.full)) return res.send(doc);
+        doc.encounters = [];
+        dataStore.getEncounters({link: doc.link}, function(e){ doc.encounters.push(e); }, function(err) { res.send(doc); });
+    });
 });
 
 // expose all utils

@@ -38,7 +38,7 @@ suite.next().suite.addBatch({
     "Can index a document":{
         topic:function() {
             lsearch.currentEngine.mappings["test"] = {"_id":"randomId", "test":"test"};
-            lsearch.indexType("test", {"randomId":1, "test":"testing the indexing of a document"}, this.callback);
+            lsearch.indexType("test", "test://testing/#1", {"randomId":1, "test":"testing the indexing of a document"}, this.callback);
         },
         "successfully":function(err, indexTime) {
             assert.isNull(err);
@@ -67,7 +67,7 @@ suite.next().suite.addBatch({
 }).addBatch({
     "Can add doc 1 of a type":{
         topic:function() {
-            lsearch.indexType("test", {"randomId":1, "test":"testing the indexing of a document1"}, this.callback);         
+            lsearch.indexType("test", "test://testing/#1", {"randomId":1, "test":"testing the indexing of a document1"}, this.callback);
         },
         "successfully":function(err, indexTime) {
             assert.isNull(err);
@@ -76,7 +76,7 @@ suite.next().suite.addBatch({
     },
     "Can add doc 2 of a type":{
         topic:function() {
-            lsearch.indexType("test", {"randomId":2, "test":"testing the indexing of a document2"}, this.callback);         
+            lsearch.indexType("test", "test://testing/#2", {"randomId":2, "test":"testing the indexing of a document2"}, this.callback);
         },
         "successfully":function(err, indexTime) {
             assert.isNull(err);
@@ -85,7 +85,7 @@ suite.next().suite.addBatch({
     },
     "Can add doc 3 of a type":{
         topic:function() {
-            lsearch.indexType("test", {"randomId":3, "test":"testing the indexing of a document3"}, this.callback);         
+            lsearch.indexType("test", "test://testing/#3", {"randomId":3, "test":"testing the indexing of a document3"}, this.callback);
         },
         "successfully":function(err, indexTime) {
             assert.isNull(err);

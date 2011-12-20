@@ -18,6 +18,7 @@ exports.init = function(lCollection, eCollection, qCollection, mongo) {
     db = mongo.dbClient;
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
+    linkCollection.ensureIndex({"id":1},{unique:true},function() {});
     encounterCollection = eCollection;
     encounterCollection.ensureIndex({"link":1},{background:true},function() {});
     encounterCollection.ensureIndex({"orig":1},{background:true},function() {});
@@ -94,7 +95,12 @@ exports.getLastObjectID = function(cbDone) {
 }
 
 exports.get = function(id, callback) {
-    linkCollection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+    var or = []
+    try {
+        or.push({_id:new db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    or.push({id:id});
+    linkCollection.findOne({$or:or}, callback);
 }
 
 function findWrap(a,b,c,cbEach,cbDone){
@@ -119,7 +125,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }

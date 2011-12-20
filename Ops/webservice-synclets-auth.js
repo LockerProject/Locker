@@ -99,14 +99,14 @@ function handleOAuth2 (code, options, res) {
                         var resp = JSON.parse(body);
                         auth.username = resp.user.login;
                         installSynclet(options.provider, auth);
-                        res.end("<script type='text/javascript'> window.close(); </script>");
+                        res.end("<script type='text/javascript'> window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
                     } catch (e) {
                         logger.error('Failed to auth github - ' + body);
                     }
                 });
             } else if (auth.accessToken) {
                 installSynclet(options.provider, auth);
-                res.end("<script type='text/javascript'> window.close(); </script>");
+                res.end("<script type='text/javascript'> window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
             } else {
                 res.end(body);
             }
@@ -129,7 +129,7 @@ function handleOAuth2Post (code, options, res) {
             auth.clientSecret = apiKeys[options.provider].appSecret;
             auth.token = JSON.parse(body);
             installSynclet(options.provider, auth);
-            res.end("<script type='text/javascript'> window.close(); </script>");
+            res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + options.provider + "'); window.close(); </script>");
         });
 
     } catch (E) {
@@ -139,8 +139,9 @@ function handleOAuth2Post (code, options, res) {
 }
 
 function handleTwitter (req, res) {
+    var tc = require('../Connectors/Twitter/twitter_client');
     try {
-        require('../Connectors/Twitter/twitter_client')(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
+        tc(apiKeys.twitter.appKey, apiKeys.twitter.appSecret, host + "auth/twitter/auth")
             .getAccessToken(req, res, function(err, newToken) {
                 if(err) throw new Error(err);
                 if(!newToken) throw new Error("token missing");
@@ -149,7 +150,7 @@ function handleTwitter (req, res) {
                 auth.consumerSecret = apiKeys.twitter.appSecret;
                 auth.token = newToken;
                 installSynclet("twitter", auth);
-                res.end("<script type='text/javascript'> window.close(); </script>");
+                res.end("<script type='text/javascript'> window.opener.syncletInstalled('twitter'); window.close(); </script>");
             });
     } catch (E) {
         logger.error("auth error: "+E);
@@ -168,7 +169,7 @@ function handleTumblr (req, res) {
                 auth.consumerSecret = apiKeys.tumblr.appSecret;
                 auth.token = newToken;
                 installSynclet("tumblr", auth);
-                res.end("<script type='text/javascript'> window.close(); </script>");
+                res.end("<script type='text/javascript'> window.opener.syncletInstalled('tumblr');  window.close(); </script>");
             });
     } catch (E) {
         logger.error("auth error: "+E);
@@ -187,7 +188,7 @@ function handleFlickr (req, res) {
             auth.apiSecret = apiKeys.flickr.appSecret;
             auth.token = auth.token;
             installSynclet("flickr", auth);
-            res.end("<script type='text/javascript'> window.close(); </script>");
+            res.end("<script type='text/javascript'> window.opener.syncletInstalled('flickr');  window.close(); </script>");
         });
     }
 }

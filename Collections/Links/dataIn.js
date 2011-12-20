@@ -5,6 +5,9 @@ var wrench = require('wrench');
 var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
+var crypto = require('crypto');
+var url = require('url');
+var debug = false;
 
 var dataStore, locker, search;
 // internally we need these for happy fun stuff
@@ -48,15 +51,15 @@ exports.processEvent = function(event, callback)
     if(!callback) callback = function(){};
     // TODO: what should we be doing with other action types?
     if(event.action != "new") return callback();
-    // what a mess
-    var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
-    if(event.type.indexOf("facebook") > 0)
+    var idr = url.parse(event.idr);
+    if(idr.host === "facebook")
     {
-        processEncounter(getEncounterFB(item),callback);
-    }
-    if(event.type.indexOf("twitter") > 0)
-    {
-        processEncounter(getEncounterTwitter(item),callback);
+        processEncounter(getEncounterFB(event.data),callback);
+    }else if(idr.host === "twitter") {
+        processEncounter(getEncounterTwitter(event.data),callback);
+    }else{
+        console.error("unhandled event, shouldn't happen");
+        callback();
     }
 }
 
@@ -145,6 +148,7 @@ function linkMagic(origUrl, callback){
               }
               // new link!!!
               link = {link:linkUrl};
+              link.id = crypto.createHash('md5').update(linkUrl).digest('hex');
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
                   // TODO: should we support link rel canonical here and change it?
                   util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
@@ -154,7 +158,7 @@ function linkMagic(origUrl, callback){
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
-                              locker.event("link",obj); // let happen independently
+                              locker.ievent(lutil.idrNew("link","links",obj.id),obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){

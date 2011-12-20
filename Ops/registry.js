@@ -142,7 +142,7 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
+        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });
@@ -193,13 +193,13 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 
 // npm wrappers
 exports.install = function(arg, callback) {
-    
+
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){
@@ -270,11 +270,11 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "type": "app",
+                "is": "app",
                 "author": gh.name,
                 "static": "true",
                 "update": "auto",
-                "url": "http://github.com/"+gh.login+"/"+pkg
+                "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
               "devDependencies": {},
@@ -298,7 +298,7 @@ function regUser(gh, callback)
         adduser(gh.login, pw, gh.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
             logger.error(err);
-            logger.error(resp);
+            //logger.error(resp);
             js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);

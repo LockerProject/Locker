@@ -9,6 +9,9 @@
     "engines": {
         "node": ">= 0.4.6  <=0.4.99999"
     },
+    "scripts": {
+        "test": "cd tests && node runTests.js"
+    },
     "dependencies": {
         "npm":"=1.0.106",
         "connect": "=1.7.0",
@@ -46,6 +49,8 @@
         "node-fs": "=0.1.0",
         "nodemailer": "=0.2.3",
         "semver": "=1.0.10",
+        "ini": "=1.0.1",
+        "uglify-js": "=1.1.1",
 
 
         "hashish": "=0.0.4",

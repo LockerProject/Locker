@@ -111,10 +111,7 @@ function processData (deleteIDs, data, dataset, callback) {
 
 function deleteData (dataset, deleteIds, callback) {
     var q = async.queue(function(id, cb) {
-        var newEvent = {obj : {source : 'push/' + dataset, type: 'delete', data : {}}};
-        newEvent.obj.data['id'] = id;
-        newEvent.fromService = dataset;
-        levents.fireEvent('push/' + dataset, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+        levents.fireEvent(lutil.idrNew(dataset, 'push', id), 'delete');
         datastore.removeObject(dataset, id, cb);
     }, 5);
     deleteIds.forEach(q.push);
@@ -130,16 +127,13 @@ function addData (dataset, data, callback) {
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
-            var newEvent = {obj : {source : dataset, type: object.type, data: object.obj}};
-            newEvent.fromService = dataset;
             if (object.type === 'delete') {
-                levents.fireEvent('push/' + dataset, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), 'delete');
                 datastore.removeObject(dataset, object.obj["id"], {timeStamp: object.timestamp}, cb);
             } else {
                 datastore.addObject(dataset, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
                     if (type === 'same') return cb();
-                    newEvent.obj.data = doc;
-                    levents.fireEvent('push/' + dataset, newEvent.fromService, type, newEvent.obj);
+                    levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), type, doc);
                     return cb();
                 });
             }

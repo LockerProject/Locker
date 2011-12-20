@@ -1,5 +1,6 @@
 var fs = require("fs");
 var path = require("path");
+var url = require("url");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
@@ -30,20 +31,20 @@ exports.extend = function() {
     // Make sure that DOM nodes and window objects don't pass through, as well
     if (!obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval)
       return false;
-    
+
     var has_own_constructor = hasOwnProperty.call(obj, "constructor");
     var has_is_property_of_method = hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf");
     // Not own constructor property must be Object
     if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
       return false;
-    
+
     // Own properties are enumerated firstly, so to speed up,
     // if last one is own, then all properties are own.
 
     var last_key;
     for (var key in obj)
       last_key = key;
-    
+
     return typeof last_key === "undefined" || hasOwnProperty.call(obj, last_key);
   };
 
@@ -94,7 +95,7 @@ exports.addAll = function(thisArray, anotherArray) {
 exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
 
     var foundValues = [];
-    
+
     function recurseObject(jsonObject, propertyName) {
         if (exports.is("Object", jsonObject)) {
             for (var m in jsonObject) {
@@ -125,16 +126,16 @@ exports.sanitize = function(term){
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-}; 
+};
 
 exports.trim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+|\s+$/g,"");
+  return stringToTrim.replace(/^\s+|\s+$/g,"");
 };
 exports.ltrim = function(stringToTrim) {
-	return stringToTrim.replace(/^\s+/,"");
+  return stringToTrim.replace(/^\s+/,"");
 };
 exports.rtrim = function(stringToTrim) {
-	return stringToTrim.replace(/\s+$/,"");
+  return stringToTrim.replace(/\s+$/,"");
 };
 
 exports.atomicWriteFileSync = function(dest, data) {
@@ -150,3 +151,50 @@ exports.atomicWriteFileSync = function(dest, data) {
     }
     fs.renameSync(tmp, dest);
 }
+
+// creates an idr, type://network/context?id=account#id
+// context and account are optional
+exports.idrNew = function(type, network, id, context, account)
+{
+    var r = {slashes:true};
+    r.host = network;
+    r.pathname = (context) ? context : '/';
+    if(account) r.query = {id: account.toString()};
+    r.protocol = type;
+    if(id) r.hash = id.toString();
+    return url.format(r);
+}
+/*
+IDR
+
+A simple way to store a rich extensible id structure as a parseable/serializeable string key, examples:
+
+require('url').parse('tweet://twitter/mention?id=jeremie#103976138702983168',true)
+{ protocol: 'tweet:',
+  slashes: true,
+  host: 'twitter',
+  hostname: 'twitter',
+  href: 'tweet://twitter/mention?id=jeremie#103976138702983168',
+  hash: '#103976138702983168',
+  search: '?id=jeremie',
+  query: { id: 'jeremie' },
+  pathname: '/mention' }
+
+require('url').parse('post://facebook/wall?id=630347951#630347951_10150351352017952',true)
+{ protocol: 'post:',
+  slashes: true,
+  host: 'facebook',
+  hostname: 'facebook',
+  href: 'post://facebook/wall?id=630347951#630347951_10150351352017952',
+  hash: '#630347951_10150351352017952',
+  search: '?id=630347951',
+  query: { id: '630347951' },
+  pathname: '/wall' }
+
+IDR - TL;DR
+
+There are an innumerable amount of things that need to be "addressed" within the locker, and not just externally, but strong internal references to the actual local storage identifiers as well.  These addressible entities are not simple GUIDs either, they have a critical set of metadata that makes up their identity, most importantly the originating network, the type of entity it is on that network, and the unique identifier assigned to it by that network.  Often equally important is the context in which it was discovered from that network, the common example being a tweet, from twitter, encountered as a mention.  Other locally important attributes sometimes need to be tracked as well, such as the account id that the entity originated from.
+
+All of these attributes are required to uniquely resolve a reference to an entity to the actual data, either locally (requiring the context and account bits) or globally (just the type, network, and id bits).  While programmatically each of these is independently important, as identifiers they need to be stored in a consistent way as a unique string for simple KV lookups/matching.  There is a standard and built-in library perfect for this job, URLs! They're also very familiar to read and the tools handle all the encoding, parsing, etc.
+
+*/
