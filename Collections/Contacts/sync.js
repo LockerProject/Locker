@@ -12,6 +12,7 @@ var locker = require('../../Common/node/locker.js');
 var lconfig = require('../../Common/node/lconfig.js');
 var dataStore = require('./dataStore');
 var lockerUrl;
+var logger;
 var EventEmitter = require('events').EventEmitter;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo) {
@@ -22,6 +23,7 @@ exports.init = function(theLockerUrl, mongoCollection, mongo) {
 
 exports.gatherContacts = function(cb) {
     lconfig.load('../../Config/config.json');
+    logger = require('logger');
     dataStore.clear(function(err) {
         // now that we've deleted them, we need to tell search to whack ours too before we start
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
