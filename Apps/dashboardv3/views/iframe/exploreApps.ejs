@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <script src="js/exploreApps.js"></script>
+    <link rel="stylesheet" href="css/exploreApps.css" />
+  </head>
+  <body>
+    <content class="body">
+      <% for (var i in apps) { %>
+        <div class="app-card">
+          <div class="left-side">
+            <div class="description"><%= apps[i].description %></div>
+            <div class="screenshot"><img src="img/batman.jpg"></div>
+          </div>
+          <div class="app-info">
+            <p class="title"><%= apps[i].repository.title %></p>
+            <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].maintainers[0].name %>">by <%= apps[i].maintainers[0].name %></a></p>
+            <% if (apps[i].uses) { %>
+              <p class="uses">Uses <%= apps[i].repository.uses.join(', ') %></p>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </content>
+  </body>
+</html>
+

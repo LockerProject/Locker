@@ -1,0 +1,44 @@
+.app-card {
+  width: 300px;
+  height: 124px;
+  border: solid 1px #eaeaea;
+  background-color: #f4f4f4;
+  padding: 6px;
+  margin: 10px;
+  float: left;
+}
+
+.app-card .screenshot img {
+  width: 124px;
+  height: 124px;
+}
+
+.app-card .left-side {
+  float: left;
+  position: relative;
+  width: 124px;
+}
+
+.app-card .left-side .description {
+  z-index: 0;
+}
+
+.app-card .left-side .screenshot {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 1;
+}
+
+.app-card .app-info {
+  float: right;
+  width: 160px;
+}
+
+.app-card .app-info .author {
+  font-size: 14px;
+}
+
+.app-card .app-info p {
+  margin: 0px 0px 2px 0px;
+}

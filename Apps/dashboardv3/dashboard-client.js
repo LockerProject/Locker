@@ -106,6 +106,16 @@ var renderExplore = function(req, res) {
     res.render('explore');
 }
 
+var renderExploreApps = function(req, res) {
+    getAllRegistryApps(function(apps) {
+        console.dir(apps);
+        res.render('iframe/exploreApps', {
+            layout: false,
+            apps: apps
+        });
+    });
+}
+
 var renderCreate = function(req, res) {
     page = 'create';
     getGithubApps(function(apps) {
@@ -310,7 +320,9 @@ app.get('/you', renderYou);
 app.get('/', renderYou);
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
+
 app.get('/explore', renderExplore);
+app.get('/exploreApps', renderExploreApps);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
@@ -348,6 +360,12 @@ var getGithubApps = function(callback) {
 
 var getRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
+        callback(JSON.parse(body));
+    });
+}
+
+var getAllRegistryApps = function(callback) {
+    request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
         callback(JSON.parse(body));
     });
 }
