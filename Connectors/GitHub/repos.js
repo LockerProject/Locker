@@ -59,6 +59,7 @@ exports.syncRepos = function(cached, callback) {
                             js.handle = repo.id.replace("/", "-");
                             js.author = auth.username;
                             js.is = 'app';
+                            js.github = "https://www.github.com/" + repo.id;
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
                             // bail, no viewer for you

@@ -92,6 +92,10 @@ if (process.argv.length > 2) {
     }
 }
 
+if (process.env["TRAVIS"] == "true") {
+    runIntegration = false;
+}
+
 // If they have specified any groups or defaulting to all we need to process this
 if (runGroups.length > 0 || (runFiles.length === 0 && runGroups.length === 0)) {
     var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
