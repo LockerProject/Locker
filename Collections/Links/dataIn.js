@@ -9,17 +9,15 @@ var crypto = require('crypto');
 var url = require('url');
 var debug = false;
 
-var dataStore, locker, search;
+var dataStore, locker;
 // internally we need these for happy fun stuff
 exports.init = function(l, dStore, s){
     dataStore = dStore;
     locker = l;
-    search = s;
 }
 
 // manually walk and reindex all possible link sources
 exports.reIndex = function(locker,cb) {
-    search.resetIndex();
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
         locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
@@ -107,10 +105,10 @@ var encounterQueue = async.queue(function(e, callback) {
                 // make sure to pass in a new object, asyncutu
                 dataStore.addEncounter(lutil.extend(true,{orig:u,link:link},e), function(err,doc){
                     if(err) return cb(err);
-                    dataStore.updateLinkAt(doc.link, doc.at, function() {
-                        search.index(doc.link, function() {
-                            cb()
-                        });
+                    dataStore.updateLinkAt(doc.link, doc.at, function(err, obj){
+                        if(err) return cb(err);
+                        locker.ievent(lutil.idrNew("link","links",obj.id),obj,"update"); // let happen independently
+                        cb();
                     });
                 }); // once resolved, store the encounter
             });

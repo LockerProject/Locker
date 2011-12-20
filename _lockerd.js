@@ -160,8 +160,6 @@ exports.alive = false;
         webservice.startService(lconfig.lockerPort, runMigrations);
         var lockerPortNext = "1"+lconfig.lockerPort;
         lockerPortNext++;
-
-
     }
 
     function runMigrations() {
