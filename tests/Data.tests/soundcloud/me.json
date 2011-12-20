@@ -1,0 +1,22 @@
+{
+    "title": "SoundCloud Account",
+    "status":"stable",
+    "provides": [
+        "contact/soundcloud",
+        "track/soundcloud"
+    ],
+    "srcdir": "Connectors/Facebook",
+    "id": "soundcloud",
+    "provider": "soundcloud",
+    "auth": {
+        "appKey": "67",
+        "appSecret": "42",
+        "token": {"access_token": "foo"}
+    },
+    "synclets": [
+        {
+            "name": "tracks",
+            "frequency": 3600
+        }
+    ]
+}

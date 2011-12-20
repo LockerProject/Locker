@@ -28,10 +28,18 @@ var syncManager = require('lsyncmanager')
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/gplus/auth",
       "grantType" : "authorization_code"}
+  , gowalla = {"provider" : "gowalla",
+      "endPoint" : "https://api.gowalla.com/api/oauth/token",
+      "redirectURI" : "auth/gowalla/auth",
+      "grantType" : "authorization_code"}
   , instagram = {"provider" : "instagram",
       "endPoint" : "https://api.instagram.com/oauth/access_token",
       "grantType" : "authorization_code",
       "redirectURI" : "auth/instagram/auth"}
+  , soundcloud = {"provider" : "soundcloud",
+      "endPoint" : "https://api.soundcloud.com/oauth2/token",
+      "grantType" : "authorization_code",
+      "redirectURI" : "auth/soundcloud/auth"}
   , glatitude = {"provider" : "glatitude",
       "endPoint" : "https://accounts.google.com/o/oauth2/token",
       "redirectURI" : "auth/glatitude/auth",
@@ -61,8 +69,14 @@ module.exports = function(locker) {
     locker.get('/auth/gplus/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), gplus, res);
     });
+    locker.get('/auth/gowalla/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), gowalla, res);
+    });
     locker.get('/auth/instagram/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), instagram, res);
+    });
+    locker.get('/auth/soundcloud/auth', function(req, res) {
+        handleOAuth2Post(req.param('code'), soundcloud, res);
     });
     locker.get('/auth/glatitude/auth', function(req, res) {
         handleOAuth2Post(req.param('code'), glatitude, res);
