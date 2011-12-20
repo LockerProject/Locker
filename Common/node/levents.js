@@ -128,10 +128,9 @@ function processEvents(queue) {
             };
             logger.verbose("Firing event to " + listener.id + " to " + listener.cb);
             // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-            request(httpOpts, function(err, response) {
-                listener.response = response.statusCode;
-                if (listener.response != 200) {
-                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + listener.response + " " + response.body);
+            request(httpOpts, function(err, res) {
+                if (err || res.statusCode != 200) {
+                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + (err || res.statusCode));
                     // TODO: Need to evaluate the logic here, to see if we should retry or other options.
                 }
             });

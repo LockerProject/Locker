@@ -377,7 +377,7 @@ function makeEnrichedRequest(url, item, callback) {
         item.fullobject = body;
 
         if (item.fullobject.hasOwnProperty('created_at')) {
-            var dateDiff = new Date(new Date().getTime() - new Date(item.fullobject.created_at).getTime());
+            var dateDiff = new Date(Date.now() - new Date(item.fullobject.created_at).getTime());
             if (dateDiff.getUTCDate() > 2) {
                 item.fullobject.created_at_since = (dateDiff.getUTCDate() - 2) + ' day';
                 if (dateDiff.getUTCDate() > 3) item.fullobject.created_at_since += 's';

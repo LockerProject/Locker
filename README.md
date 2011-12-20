@@ -1,4 +1,4 @@
-Locker - the "me" platform
+Locker - the "me" platform [![Build Status](https://secure.travis-ci.org/LockerProject/Locker.png)](http://travis-ci.org/LockerProject/Locker)
 ======================
 
 This is an open source project that helps me collect all of my personal data, from wherever it is, into one place, and then lets me do really awesome stuff with it.

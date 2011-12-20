@@ -8,13 +8,9 @@
 */
 
 var fs = require('fs')
-  , lconfig = require('../lconfig')
   , data = ''
   , failTimeout = ''
   ;
-
-lconfig.load('Config/config.json');
-var logger = require('../logger');
 
 // Process the startup JSON object
 process.stdin.setEncoding('utf8');
@@ -50,7 +46,7 @@ function run (processInfo) {
 }
 
 function fail(e) {
-    logger.error('synclet parsing of stdin failed - ' + e)
+    console.error('synclet parsing of stdin failed - ' + e)
     process.exit();
 }
 

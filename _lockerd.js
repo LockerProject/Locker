@@ -233,7 +233,7 @@ exports.alive = false;
 
         lscheduler.masterScheduler.loadAndStart();
 
-        logger.info('locker is running, use your browser and visit ' + lconfig.lockerBase);
+        logger.info('locker is up and running at ' + lconfig.lockerBase);
         exports.alive = true;
     }
 

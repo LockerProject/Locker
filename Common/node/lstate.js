@@ -33,7 +33,7 @@ exports.set = function(field,val){
 
 exports.next = function(field, at){
     stateIt[field+'Next'] = at;
-    stateUpdated = new Date().getTime();
+    stateUpdated = Date.now();
 }
 
 exports.state = function()
@@ -48,13 +48,13 @@ exports.init = function()
     } catch(e){
         stateIt = {};
     }
-    stateUpdated = stateSynced = new Date().getTime();
+    stateUpdated = stateSynced = Date.now();
     stateSync();
 }
 
 function stateChange(field)
 {
-    stateIt[field+"Last"] = stateIt["updated"] = stateUpdated = new Date().getTime();    
+    stateIt[field+"Last"] = stateIt["updated"] = stateUpdated = Date.now();    
 }
 
 function stateSync()

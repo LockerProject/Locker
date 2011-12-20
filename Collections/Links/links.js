@@ -39,7 +39,7 @@ app.get('/state', function(req, res) {
             if(err) return res.send(err, 500);
             var objId = "000000000000000000000000";
             if (lastObject) objId = lastObject._id.toHexString();
-            var updated = new Date().getTime();
+            var updated = Date.now();
             try {
                 var js = JSON.parse(fs.readFileSync('state.json'));
                 if(js && js.updated) updated = js.updated;
