@@ -15,6 +15,7 @@ var fs = require('fs'),
     lconfig = require('../../Common/node/lconfig.js');
     locker = require('../../Common/node/locker.js');
 var async = require("async");
+var crypto = require("crypto");
 lconfig.load('../../Config/config.json');
 var logger = require(__dirname + "/../../Common/node/logger");
 
@@ -22,7 +23,6 @@ var logger = require(__dirname + "/../../Common/node/logger");
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw links and encounters
 var util = require("./util"); // handy things for anyone and used within dataIn
-var search = require("./search"); // our indexing and query magic
 var oembed = require("./oembed"); // wrapper to do best oembed possible
 
 var lockerInfo;
@@ -54,34 +54,16 @@ app.get('/search', function(req, res) {
         res.send([]);
         return;
     }
-    var map = {};
-    function send() {
-        var results = [];
-        for(var k in map) results.push(map[k]);
-        results = results.sort(function(lh, rh) {
-            return rh.at - lh.at;
-        });
-        res.send(results.slice(0,50));
-    }
-
-    search.search(req.query["q"], function(err,results) {
-        if(err) logger.error(err);
-        if(err || !results || results.length == 0) return res.send([]);
-        var links = [];
-        var len = (req.query["limit"] < results.length) ? req.query["limit"] : results.length;
-        for(var i=0; i < len; i++) links.push(results[i]._id);
-        dataStore.getLinks({"link":{$in: links}}, function(link){
-            link.encounters = [];
-            map[link.link] = link;
-        }, function(err){
-            if(isFull(req.query.full)) {
-                dataStore.getEncounters({"link":{$in: Object.keys(map)}}, function(encounter) {
-                    map[encounter.link].encounters.push(encounter);
-                }, send);
-            } else {
-                send();
-            }
-        });
+    var u = url.parse(locker.lockerBase+"/Me/search/query");
+    u.query = req.query;
+    u.query.type = "link";
+    u.query.sort = "true"; // default sorted
+    // pretty much just dumb proxy it at this point
+    request({url:url.format(u)}, function(err, resp, body){
+        if(err || !body) return res.send(err, 500);
+        res.writeHead(200, {'content-type' : 'application/json'});
+        res.write(body);
+        res.end();
     });
 });
 
@@ -183,7 +165,13 @@ app.get('/', function(req, res) {
         } catch(E) {}
     }
     var ndx = {};
+    if(req.query['stream'] == "true")
+    {
+        res.writeHead(200, {'content-type' : 'application/jsonstream'});
+        options = {}; // exclusive
+    }
     dataStore.getLinks(options, function(item) {
+        if(req.query['stream'] == "true") return res.write(JSON.stringify(item)+'\n');
         if(full)
             item.encounters = [];
         ndx[item.link] = item;
@@ -191,6 +179,8 @@ app.get('/', function(req, res) {
             delete item.link;
         results.push(item);
     }, function(err) {
+        if(err) logger.error(err);
+        if(req.query['stream'] == "true") return res.end();
         if(full) {
             var arg = {"link":{$in: Object.keys(ndx)}};
             if(options.fields) {
@@ -232,6 +222,7 @@ app.get('/encounters/:id', function(req, res) {
 app.get('/id/:id', function(req, res, next) {
     dataStore.get(req.param('id'), function(err, doc) {
         if(err || !doc) return res.send(err, 500);
+        if(!doc.id) doc.id = crypto.createHash('md5').update(doc.link).digest('hex'); // older links are missing id, meh
         if(!isFull(req.query.full)) return res.send(doc);
         doc.encounters = [];
         dataStore.getEncounters({link: doc.link}, function(e){ doc.encounters.push(e); }, function(err) { res.send(doc); });
@@ -270,8 +261,7 @@ process.stdin.on('data', function(data) {
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
         dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo);
-        search.init(dataStore);
-        dataIn.init(locker, dataStore, search);
+        dataIn.init(locker, dataStore);
         app.listen(0, 'localhost', function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

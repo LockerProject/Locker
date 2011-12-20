@@ -51,9 +51,19 @@ app.get('/', function(req, res) {
         if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
         if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        cursor.toArray(function(err, items) {
-            res.send(items);
-        });
+        if(req.query['stream'] == "true")
+        {
+            res.writeHead(200, {'content-type' : 'application/jsonstream'});
+            cursor.each(function(err, object){
+                if (err) logger.error(err); // only useful here for logging really
+                if (!object) return res.end();
+                res.write(JSON.stringify(object)+'\n');
+            });
+        }else{
+            cursor.toArray(function(err, items) {
+                res.send(items);
+            });
+        }
     });
 });
 

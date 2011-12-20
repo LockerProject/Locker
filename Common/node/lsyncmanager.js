@@ -388,7 +388,7 @@ function processData (deleteIDs, info, key, data, callback) {
     if(typeof info.mongoId === 'string')
         mongoId = info.mongoId
     else if(info.mongoId)
-        mongoId = info.mongoId[key + 's'] || 'id';
+        mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
     else
         mongoId = 'id';
 
@@ -428,7 +428,7 @@ function addData (collection, mongoId, data, info, idr, callback) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + url.format(idr), "missing primary key value: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + url.format(idr), "missing primary key (" + mongoId + ") value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
@@ -545,6 +545,14 @@ function addUrls() {
                 if (apiKeys.instagram)
                     synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
                                                     "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
+            } else if (synclet.provider === 'soundcloud') {
+                if (apiKeys.soundcloud)
+                    synclet.authurl = "https://soundcloud.com/connect/?client_id=" + apiKeys.soundcloud.appKey +
+                                                    "&redirect_uri=" + host + "auth/soundcloud/auth&response_type=code";
+            } else if (synclet.provider === 'gowalla') {
+                if (apiKeys.gowalla)
+                    synclet.authurl = "https://gowalla.com/api/oauth/new?client_id=" + apiKeys.gowalla.appKey +
+                                                    "&redirect_uri=" + host + "auth/gowalla/auth";
             } else if (synclet.provider === 'glatitude') {
                 if (apiKeys.glatitude)
                     synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
