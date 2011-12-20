@@ -58,6 +58,7 @@ exports.syncRepos = function(cached, callback) {
                             if(!js || js.static != "true") throw new Error("invalid manifest");
                             js.handle = repo.id.replace("/", "-");
                             js.author = auth.username;
+                            js.is = 'app';
                             js.github = "https://www.github.com/" + repo.id;
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
@@ -66,7 +67,7 @@ exports.syncRepos = function(cached, callback) {
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
-                        request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
+                        request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest+'&type=install'}, function(err, resp) {
                             cb();
                         });
                     });

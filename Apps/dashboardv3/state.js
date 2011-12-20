@@ -14,7 +14,8 @@ var state = {
           photosv09: {lastUsed: 0},
           linkalatte: {lastUsed: 0},
           helloplaces: {lastUsed: 0}
-      }
+      },
+      draftApps: {}
 };
 
 exports.state = state;
@@ -24,7 +25,10 @@ exports.fetchState = function() {
         fs.statSync('state.json');
         var stateInfo = fs.readFileSync('state.json');
         if (state) {
-            state = JSON.parse(stateInfo);
+            exports.state = state = JSON.parse(stateInfo);
+            if (!state.draftApps) {
+                state.draftApps = {}
+            }
         }
     } catch (err) {}
 };
@@ -40,6 +44,11 @@ exports.appClicked = function(clickedApp) {
     state.appInfo[clickedApp].lastUsed = new Date().getTime();
     exports.saveState();
 };
+
+exports.saveDraft = function(appInfo) {
+    state.draftApps[appInfo.app] = appInfo;
+    exports.saveState();
+}
 
 exports.getNLastUsedApps = function(n) {
     var appArray = [];
