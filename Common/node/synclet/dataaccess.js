@@ -39,7 +39,7 @@ module.exports = function(app) {
         dataStore.init('synclets', function() {
             fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
                 var file;
-                for (var i = 0; i < files.length; i++) {
+                for (var i = 0; files && i < files.length; i++) {
                     if (files[i].match('^' + id + '\\.[a-zA-Z0-9]+')) {
                         file = files[i];
                         break;
