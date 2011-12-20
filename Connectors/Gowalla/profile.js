@@ -13,8 +13,8 @@ exports.sync = function(processInfo, cb) {
     gowalla.init(processInfo.auth);
     var me;
     gowalla.getMe({},function(js){ me = js; }, function(err) {
-            var responseObj = {data : { }};
-            if(me) responseObj.data.profile = me;
-            cb(err, responseObj);
+        var responseObj = {data : { }};
+        if(me) responseObj.data.profile = [me];
+        cb(err, responseObj);
     });
 }

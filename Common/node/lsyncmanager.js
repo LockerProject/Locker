@@ -388,7 +388,7 @@ function processData (deleteIDs, info, key, data, callback) {
     if(typeof info.mongoId === 'string')
         mongoId = info.mongoId
     else if(info.mongoId)
-        mongoId = info.mongoId[key + 's'] || 'id';
+        mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
     else
         mongoId = 'id';
 
@@ -428,7 +428,7 @@ function addData (collection, mongoId, data, info, idr, callback) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + url.format(idr), "missing primary key value: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + url.format(idr), "missing primary key (" + mongoId + ") value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
