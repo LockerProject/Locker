@@ -16,14 +16,24 @@ module.exports = function(app) {
             if(req.query['limit']) options.limit = parseInt(req.query['limit']);
             if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
-            dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
-                if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
-                } else {
-                    res.send(objects);
-                }
-            }, options);
+            if(req.query['stream'] == "true")
+            {
+                res.writeHead(200, {'content-type' : 'application/jsonstream'});
+                dataStore.getEachCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, object) {
+                    if (err) logger.error(err); // only useful here for logging really
+                    if (!object) return res.end();
+                    res.write(JSON.stringify(object)+'\n');
+                }, options);
+            }else{
+                dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
+                    if (err) {
+                        res.writeHead(500, {'content-type' : 'application/json'});
+                        res.end('{error : ' + err + '}')
+                    } else {
+                        res.send(objects);
+                    }
+                }, options);
+            }
         });
     });
 
