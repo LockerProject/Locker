@@ -7,7 +7,8 @@ var suite = RESTeasy.describe('Search Collection');
 var fakeweb = require('node-fakeweb');
 var search = require('../Collections/Search/index');
 var fs = require('fs');
-search.init("test.db",function(){});
+var path = require('path');
+search.init(path.join(lconfig.me, "test.db"),function(){});
 
 
 var contactAddEvent = JSON.parse(fs.readFileSync('fixtures/events/contacts/contacts_collection_contact_1.json','ascii'));
