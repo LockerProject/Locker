@@ -213,7 +213,9 @@ exports.getMyApps = function(req, res) {
         var apps = {};
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
-               if(regIndex[k].repository && regIndex[k].repository.is === 'app' && regIndex[k].maintainers && regIndex[k].maintainers[0].name === gh.login) apps[k] = regIndex[k];
+                var thiz = regIndex[k];
+                if(thiz.repository && thiz.repository.is === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                    apps[k] = thiz;
             });
         }
         res.send(apps);
@@ -251,11 +253,11 @@ exports.publish = function(arg, callback) {
     github(function(gh){
         if(!gh) return callback("github account is required");
         // next, required registry auth
-        regUser(gh, function(err, auth){
+        regUser(function(err, auth){
             if(err ||!auth || !auth._auth) return callback(err);
             // saves for publish auth and maintainer
-            npm.config.set("username", gh.login);
-            npm.config.set("email", gh.email);
+            npm.config.set("username", auth.username);
+            npm.config.set("email", auth.email);
             npm.config.set("_auth", auth._auth);
             // make sure there's a package.json
             checkPackage(pjs, arg, gh, function(){
@@ -316,20 +318,30 @@ function checkPackage(pjs, arg, gh, callback)
     });
 }
 
+var user;
+function getUser() {
+    if(user && user.username && user.email && user.pw) return user;
+    return user = {
+        username: lcrypto.encrypt('username'), // we just need something locally regenerable
+        email: lcrypto.encrypt('email') + '@singly.com', // we just need something locally regenerable
+        pw: lcrypto.encrypt('password'), // we just need something locally regenerable
+    }
+}
+
 // return authenticated user, or create/init them
-function regUser(gh, callback)
+function regUser(callback)
 {
     fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), 'utf8', function(err, auth){
         var js;
         try { js = JSON.parse(auth); }catch(E){}
         if(js) return callback(false, js);
-        var pw = lcrypto.encrypt(gh.email); // we just need something locally regenerable
+        var user = getUser();
         // try creating this user on the registry
-        adduser(gh.login, pw, gh.email, function(err, resp, body){
+        adduser(user.username, user.pw, user.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
-            logger.error(err);
+            if(err) logger.error(err);
             //logger.error(resp);
-            js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
+            js = {_auth:(new Buffer(user.username+":"+user.pw,"ascii").toString("base64")), username:user.username, email:user.email};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
         });

@@ -320,13 +320,14 @@ var getGithubApps = function(callback) {
     var apps = [];
     githubapps = {};
     var pattern = /^Me\/github/
-    getRegistryApps(function(registry) {
+    getRegistryApps(function(myPublishedApps) {
         locker.map(function(err, map) {
             for (var i in map.installed) {
                 if (pattern.exec(map.installed[i].srcdir)) {
                     var appInfo = checkDraftState(map.installed[i]);
-                    if (registry['app-' + appInfo.id.toLowerCase()]) {
-                        appInfo.published = registry['app-' + appInfo.id.toLowerCase()];
+                    var appId = 'app-' + appInfo.id.toLowerCase();
+                    if (myPublishedApps[appId]) {
+                        appInfo.published = myPublishedApps[appId];
                     }
                     githubapps[appInfo.id] = appInfo;
                     apps.push(appInfo);
