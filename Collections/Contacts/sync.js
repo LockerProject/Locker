@@ -26,7 +26,6 @@ exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
 
 exports.gatherContacts = function(cb) {
     lconfig.load('../../Config/config.json');
-    logger = require('logger');
     dataStore.clear(function(err) {
         // now that we've deleted them, we need to tell search to whack ours too before we start
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
