@@ -14,15 +14,15 @@
       </div>
       <div class="nav-section">
         <div class="nav">
-          <a <% if (page === 'you') { %>class='selected'<% } %> href='/dashboard/you'>YOU</a>
+          <a <% if (page === 'you') { %>class='selected'<% } %> href='you'>YOU</a>
           <a <% if (page === 'explore') { %>class='selected'<% } %> href='#'>EXPLORE</a>
-          <a <% if (page === 'create') { %>class='selected'<% } %> href='/dashboard/create'>CREATE</A>
+          <a <% if (page === 'create') { %>class='selected'<% } %> href='create'>CREATE</A>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
             <a href='<%= dashboard.customLogout %>'>Sign out</a>
             <a href='<%= dashboard.customSettings %>'>Account Settings</a>
-            <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore#learnmore" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
+            <a href='<%= dashboard.customLearnmore || "https://singly.com/" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
           </div>
           <script src="js/hosted.js"></script>
           <script src="<%= dashboard.customHostedEndpoint %>"></script>

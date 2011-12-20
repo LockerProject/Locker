@@ -5,14 +5,14 @@
   <ul>
     <% if (apps && apps.length > 0) { %>
       <li>
-        <p><a href="/dashboard/viewAll" class="iframeLink viewAll" data-id="viewAll">View All</a></p>
+        <p><a href="viewAll" class="iframeLink viewAll" data-id="viewAll">View All</a></p>
         <p id='published' class="your-apps published app-details">Published (<%= published %>)</p>
         <!--no review stage yet, so omitting this one for now-->
         <!--<p class="your-apps in-review app-details">In Review (0)</p>-->
         <p id='drafts' class="your-apps drafts app-details">Drafts (<%= draft %>)</p>
       </li>
       <li>
-        <p><a href="/dashboard/publish" class="iframeLink" data-id="publish">Publish New</a></p>
+        <p><a href="publish" class="iframeLink" data-id="publish">Publish New</a></p>
       </li>
     <% } else { %>
       <li>
