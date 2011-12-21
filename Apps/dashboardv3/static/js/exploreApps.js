@@ -11,5 +11,9 @@ $(document).ready(function() {
     $.get('/registry/add/' + id, function() {
       parent.window.location = 'you#' + id;
     });
+    return false;
+  }).delegate('.app-card', 'click', function(e) {
+    parent.window.app = 'registryApp&' + $(e.currentTarget).attr('id');
+    parent.window.loadApp();
   });
 });

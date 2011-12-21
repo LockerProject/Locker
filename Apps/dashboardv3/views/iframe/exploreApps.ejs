@@ -9,7 +9,7 @@
   <body>
     <content class="body">
       <% for (var i in apps) { %>
-        <div class="app-card">
+        <div class="app-card" id="<%= i %>&breadcrumb=featured">
           <div class="left-side">
             <div class="description"><%= apps[i].repository.desc %></div>
             <div class="screenshot"><img src="img/batman.jpg"></div>

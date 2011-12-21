@@ -3,7 +3,8 @@ var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
     "viewAll" : "viewAll",
-    "exploreApps" : "exploreApps"
+    "exploreApps" : "exploreApps",
+    "registryApp" : "registryApp"
 };
 
 var iframeLoaded = function() {};
@@ -33,8 +34,10 @@ $(document).ready(function() {
 
 var loadApp = function(callback) {
   var appUrl = app;
+  var params = '';
   if (app.indexOf('&') != -1) {
     appUrl = app.substring(0, app.indexOf('&'));
+    params = app.substring(app.indexOf('&') + 1);
   }
   if (callback) {
     iframeLoaded = callback;
@@ -45,7 +48,7 @@ var loadApp = function(callback) {
   $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;
   if (specialApps[appUrl]) {
-    $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl]);
+    $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl] + '?params=' + params);
   } else {
     $.get('clickapp/' + appUrl, function(e) {});
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);

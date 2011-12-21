@@ -316,6 +316,17 @@ var croppingFinished = function(req, res) {
     res.send(!cropping[req.params.app]);
 }
 
+var registryApp = function(req, res) {
+    request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
+        var app = JSON.parse(body);
+        res.render('iframe/registryApp', {
+            layout: false,
+            breadcrumb: req.param('breadcrumb'),
+            app: app
+        });
+    });
+}
+
 app.get('/clickapp/:app', clickApp);
 app.get('/you', renderYou);
 app.get('/', renderYou);
@@ -335,6 +346,7 @@ app.get('/screenshot/:handle', renderScreenshot);
 app.post('/publishScreenshot', handleUpload);
 app.get('/tempScreenshot', renderTempScreenshot);
 app.get('/finishedCropping/:app', croppingFinished);
+app.get('/registryApp', registryApp);
 
 var getGithubApps = function(callback) {
     uistate.fetchState();

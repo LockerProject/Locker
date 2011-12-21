@@ -1,7 +1,9 @@
 <script type="text/javascript">
   $(document).ready(function() {
-    app = 'exploreApps&featured';
-    loadApp();
+    if (window.location.hash.length === 0) {
+      app = 'exploreApps&featured';
+      loadApp();
+    }
   });
 </script>
 <div class="sidenav-header">
