@@ -185,10 +185,12 @@ socket.on('event', function (body) {
 socket.on('newservice', function(service) {
   log('got new service: ', service);
   queueGritter('newservice', service);
+  _kmq.push(['record', 'Add Service', {'Name': service.title}]);
   if (window.guidedSetup) window.guidedSetup.serviceConnected();
 });
 
 socket.on('viewer', function(evt) {
+    _kmq.push(['record', 'installed viewer', {'Name': evt.data.id.split('/')[1]}]);
     queueGritter('viewer', evt);
 });
 
