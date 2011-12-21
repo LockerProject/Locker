@@ -108,7 +108,6 @@ var renderExplore = function(req, res) {
 
 var renderExploreApps = function(req, res) {
     getAllRegistryApps(function(apps) {
-        console.dir(apps);
         res.render('iframe/exploreApps', {
             layout: false,
             apps: apps
@@ -188,8 +187,10 @@ var submitPublish = function(req, res) {
                 }
                 if (fields['rename-app'] === 'on') {
                     data.title = fields['app-newname'];
+                } else {
+                    data.title = fields['old-name'];
                 }
-                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data}, function(err, resp, body) {
+                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
                     res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
                 });
             } else {

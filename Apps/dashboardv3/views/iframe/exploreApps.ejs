@@ -16,7 +16,9 @@
           </div>
           <div class="app-info">
             <p class="title"><%= apps[i].repository.title %></p>
-            <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].maintainers[0].name %>">by <%= apps[i].maintainers[0].name %></a></p>
+            <% if (apps[i].maintainers) { %>
+              <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].maintainers[0].name %>">by <%= apps[i].maintainers[0].name %></a></p>
+            <% } %>
             <% if (apps[i].uses) { %>
               <p class="uses">Uses <%= apps[i].repository.uses.join(', ') %></p>
             <% } %>

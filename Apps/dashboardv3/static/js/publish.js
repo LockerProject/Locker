@@ -18,6 +18,7 @@ $(document).ready(function() {
     if (self.data('rename') == 'on') {
       $('.app-name').show();
       $('.app-name-span').text($('.app>option:selected').text());
+      $('.old-name').value($('.app>option:selected').text());
       $('.rename-app').attr('checked', 'on');
       $('.app-newname').attr('value', $('.app>option:selected').text());
     } else {
