@@ -14,11 +14,11 @@ $(document).ready(function() {
     var self = $('.app>option:selected');
     $('input[name=new-file]').attr('value', 'false');
     $('textarea[name=app-description]').text(self.data('description'));
+    $('.old-name').attr('value', $('.app>option:selected').text());
     $('.screenshot-url').attr('value', '');
     if (self.data('rename') == 'on') {
       $('.app-name').show();
       $('.app-name-span').text($('.app>option:selected').text());
-      $('.old-name').value($('.app>option:selected').text());
       $('.rename-app').attr('checked', 'on');
       $('.app-newname').attr('value', $('.app>option:selected').text());
     } else {

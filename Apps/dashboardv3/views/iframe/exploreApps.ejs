@@ -11,18 +11,16 @@
       <% for (var i in apps) { %>
         <div class="app-card">
           <div class="left-side">
-            <div class="description"><%= apps[i].description %></div>
+            <div class="description"><%= apps[i].repository.desc %></div>
             <div class="screenshot"><img src="img/batman.jpg"></div>
           </div>
           <div class="app-info">
             <p class="title"><%= apps[i].repository.title %></p>
-            <% if (apps[i].maintainers) { %>
-              <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].maintainers[0].name %>">by <%= apps[i].maintainers[0].name %></a></p>
-            <% } %>
+            <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
             <% if (apps[i].uses) { %>
               <p class="uses">Uses <%= apps[i].repository.uses.join(', ') %></p>
             <% } %>
-            <% if (!apps[i].installed) { %>
+            <% if (apps[i].installed) { %>
               <input type='button' id='<%= apps[i].name %>' class='install' value='+ add to account'>
             <% } else { %>
               <input disabled type='button' value='added'>
