@@ -25,16 +25,22 @@ describe 'dashboard' do
     end
   end
 
-  #it 'should allow access to api explorer' do
-    #visit '/'
-    #sleep 1
-    #page.execute_script("$('.iframeLink[data-id=\"devdocs\"]').click()")
-    #within_frame 'appFrame' do
-      #page.should have_content('Make your own viewer!')
-      #click_on 'API Explorer'
-      #page.should have_content('API Explorer')
-    #end
-  #end
+  it 'should allow people to access the create interface' do
+    visit '/'
+    click_link 'CREATE'
+    page.should have_content('Getting Started')
+  end
+
+  it 'should allow access to api explorer' do
+    visit '/'
+    click_link 'CREATE'
+    click_link 'Getting Started'
+    within_frame 'appFrame' do
+      page.should have_content('Make your own viewer!')
+      click_on 'API Explorer'
+      page.should have_content('API Explorer')
+    end
+  end
 
   it "should allow the user to view all of their apps" do
     visit '/'
@@ -44,7 +50,7 @@ describe 'dashboard' do
       page.execute_script("$('li[data-id=\"hellolinks\"]').click()")
       page.should have_content('This is example of how easy it is to load your links using HTML and jQuery')
     end
-
   end
+
 
 end
