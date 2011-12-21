@@ -45,7 +45,7 @@ exports.load = function(filepath) {
     };
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
-    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from? 
+    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
     // Right now it is ambiguous, we probably need two different vars
     exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
     if(!config.logging) config.logging = {};
@@ -56,6 +56,7 @@ exports.load = function(filepath) {
         console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
     };
     exports.ui = config.ui || 'useui';
+    exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
 }
 

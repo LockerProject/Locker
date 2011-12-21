@@ -182,13 +182,15 @@ exports.sync = function(callback)
         if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
-            logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
-            regIndex[k] = body[k];
-            // if installed and autoupdated and newer, do it!
-            if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
-            {
-                logger.verbose("auto-updating "+k);
-                exports.update({name:k}, function(){}); // lazy
+            if (body[k]["dist-tags"]) {
+                logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
+                regIndex[k] = body[k];
+                // if installed and autoupdated and newer, do it!
+                if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+                {
+                    logger.verbose("auto-updating "+k);
+                    exports.update({name:k}, function(){}); // lazy
+                }
             }
         });
         // cache to disk lazily
