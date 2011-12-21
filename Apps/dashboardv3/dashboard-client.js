@@ -190,9 +190,6 @@ var submitPublish = function(req, res) {
                 } else {
                     data.title = fields['old-name'];
                 }
-                console.dir(fields['old-name']);
-                console.dir(data.title);
-                console.dir(data);
                 request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
                     res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
                 });
