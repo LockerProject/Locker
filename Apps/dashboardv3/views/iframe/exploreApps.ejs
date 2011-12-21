@@ -22,6 +22,11 @@
             <% if (apps[i].uses) { %>
               <p class="uses">Uses <%= apps[i].repository.uses.join(', ') %></p>
             <% } %>
+            <% if (!apps[i].installed) { %>
+              <input type='button' id='<%= apps[i].name %>' class='install' value='+ add to account'>
+            <% } else { %>
+              <input disabled type='button' value='added'>
+            <% } %>
           </div>
         </div>
       <% } %>

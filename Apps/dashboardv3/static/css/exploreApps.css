@@ -34,6 +34,8 @@
 .app-card .app-info {
   float: right;
   width: 160px;
+  position: relative;
+  height: 136px;
 }
 
 .app-card .app-info .author {
@@ -42,4 +44,20 @@
 
 .app-card .app-info p {
   margin: 0px 0px 2px 0px;
+}
+
+.app-card .app-info input[type=button] {
+  position: absolute;
+  bottom: 10px;
+  left: 0px;
+  width: 140px;
+}
+
+.app-card .app-info .install {
+  color: white;
+  background-color: #F7931E;
+  border: 0px;
+  border-radius: 3px;
+  font-weight: bold;
+  cursor: pointer;
 }

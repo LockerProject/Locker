@@ -367,7 +367,13 @@ var getRegistryApps = function(callback) {
 
 var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        callback(JSON.parse(body));
+        apps = JSON.parse(body);
+        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
+            for (var i in added) {
+                apps[i].installed = true;
+            }
+            callback(apps);
+        }
     });
 }
 
