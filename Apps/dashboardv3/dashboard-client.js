@@ -373,7 +373,7 @@ var getAllRegistryApps = function(callback) {
                 apps[i].installed = true;
             }
             callback(apps);
-        }
+        });
     });
 }
 
