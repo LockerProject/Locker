@@ -29,6 +29,9 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/me.json' });
+                fakeweb.registerUri({
+                    uri : 'https://api.foursquare.com:443/v2/users/self.json?oauth_token=abc',
+                    file : __dirname + '/fixtures/foursquare/me.json' });
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
                 file : __dirname + '/fixtures/foursquare/checkins_1.json' });
