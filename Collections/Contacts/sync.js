@@ -13,6 +13,7 @@ var lconfig;
 var dataStore = require('./dataStore');
 var async = require('async');
 var lockerUrl;
+var logger;
 var EventEmitter = require('events').EventEmitter;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
