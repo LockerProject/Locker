@@ -38,12 +38,12 @@
         "connector-IMAP-test.js"
     ],
     "mongo" : {
+        "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020
     },
     "logging": {
-        "console":false,
         "file":"locker-tests.out",
         "level": "error"
     }
