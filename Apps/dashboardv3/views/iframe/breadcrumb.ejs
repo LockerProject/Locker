@@ -1,5 +1,11 @@
 <ul class="breadcrumb">
-  <li><a class='iframeLink' href='explore'>App Gallery</a></li>
-  <li><a class='iframeLink' href='explore#exploreApps&<%= breadcrumb %>'><%= breadcrumb.charAt(0).toUpperCase() + breadcrumb.slice(1) %></a></li>
-  <li><a class='blue iframeLink' href='explore#registryApp&<%= app.repository.title %>'><%= app.repository.title %></a></li>
+  <li><a class='parentLink' href='explore#exploreApps'>App Gallery</a></li>
+  <% if (breadcrumb == 'featured') { %>
+    <li><a class='parentLink' href='explore#exploreApps&featured'>Featured</a></li>
+  <% } else { %>
+    <li><a class='<% if (!app.repository) { %> blue <% } %> parentLink' href='explore#exploreApps&author&author=<%= breadcrumb %>'>by <%= breadcrumb %></li>
+  <% } %>
+  <% if (app && app.repository) { %>
+    <li><a class='blue parentLink' href='explore#registryApp&<%= app.repository.title %>'><%= app.repository.title %></a></li>
+  <% } %>
 </ul>

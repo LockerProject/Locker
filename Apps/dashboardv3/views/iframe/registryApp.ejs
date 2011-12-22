@@ -9,6 +9,31 @@
   <body>
     <content class="body">
       <%- partial('iframe/breadcrumb') %>
+      <div class='full-app-details'>
+        <div class='screenshot-container'>
+          <img src='img/batman.jpg'>
+        </div>
+        <div class='full-app-info'>
+          <div class='action-buttons'>
+            <% if (app.installed) { %>
+              <input type='button' id='<%= app.name %>' class='install' value='+ add to account'>
+            <% } else { %>
+              <input disabled type='button' value='added'>
+            <% } %>
+            <a href='#' class='orange twitter'>Share to Twitter!</a>
+            <a href='#' class='orange facebook'>Share to Facebook!</a>
+          </div>
+          <p class="title"><%= app.repository.title %></p>
+          <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.repository.author %>'>by <%= app.repository.author %></a></p>
+          <% if (app.uses) { %>
+            <p class="uses">Uses <%= app.repository.uses.join(', ') %></p>
+          <% } %>
+          <div class="description"><%= app.repository.desc %></div>
+          <div class='version'>version <%= app['dist-tags'].latest %></div>
+          <% var date = new Date(app.time.modified) %>
+          <div class='last-update'>last updated <%= date.getMonth() + "." + date.getDate() + "." + date.getFullYear() %>
+        </div>
+      </div>
     </content>
   </body>
 </html>

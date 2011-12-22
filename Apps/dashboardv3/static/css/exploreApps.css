@@ -58,7 +58,7 @@
   width: 140px;
 }
 
-.app-card .app-info .install {
+input[type=button].install {
   color: white;
   background-color: #F7931E;
   border: 0px;
@@ -74,6 +74,7 @@
 }
 
 .breadcrumb li {
+  font-size: 18px;
   float: left;
 }
 
@@ -118,4 +119,67 @@
 
 .breadcrumb li:first-child a {
   padding-left: 20px;
+}
+
+.full-app-details {
+  margin-top: 16px;
+  width: 800px;
+  height: 390px;
+  background-color: #f4f4f4;
+  overflow: hidden;
+  font-size: 16px;
+}
+
+.full-app-details .screenshot-container {
+  margin: 15px;
+  float: left;
+}
+
+.full-app-details .screenshot-container img {
+  width: 360px;
+  height: 360px;
+}
+
+.full-app-details .full-app-info {
+  margin: 15px 0px 0px 3px;
+  float: left;
+  width: 400px;
+  height: 375px;
+}
+
+.full-app-details .action-buttons {
+  float: right;
+  width: 150px;
+  margin-right: 15px;
+}
+
+.full-app-details .action-buttons input {
+  width: 140px;
+}
+
+.action-buttons a {
+  font-size: 14px;
+  height: 24px;
+  background-position: left;
+  background-repeat: no-repeat;
+  padding-left: 30px;
+  line-height: 26px;
+  margin: 4px 0px;
+}
+
+.action-buttons a.twitter {
+  background-image: url('../img/icons/24px/twitter.png');
+}
+
+.action-buttons a.facebook {
+  background-image: url('../img/icons/24px/facebook.png');
+}
+
+.full-app-details .title {
+  font-size: 20px;
+  font-size: bold;
+}
+
+.full-app-details .version,.last-update {
+  font-weight: bold;
 }

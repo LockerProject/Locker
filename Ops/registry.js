@@ -318,7 +318,6 @@ function checkPackage(pjs, arg, gh, callback)
                 js.repository.desc = arg.body.desc;
             }
         }
-        console.dir(js);
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });

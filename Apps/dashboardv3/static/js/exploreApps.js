@@ -16,4 +16,10 @@ $(document).ready(function() {
     parent.window.app = 'registryApp&' + $(e.currentTarget).attr('id');
     parent.window.loadApp();
   });
+
+  $('.body').delegate('.parentLink', 'click', function() {
+    window.parent.app = $(this).attr('href').split('#')[1];
+    parent.window.loadApp();
+    return false;
+  });
 });

@@ -108,10 +108,21 @@ var renderExplore = function(req, res) {
 
 var renderExploreApps = function(req, res) {
     getAllRegistryApps(function(apps) {
-        res.render('iframe/exploreApps', {
-            layout: false,
-            apps: apps
-        });
+        var data = {layout: false, apps: apps}
+        if (req.param('author')) {
+            data.breadcrumb = req.param('author');
+            for (var i in apps) {
+                // yes i know this is gross, i just make sure all the proper variables are present before checking them
+                if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
+                    delete apps[i];
+                }
+            }
+        }
+        if (Object.keys(apps).length === 0) {
+            res.send('No apps by that user!', 404);
+        } else {
+            res.render('iframe/exploreApps', data);
+        }
     });
 }
 

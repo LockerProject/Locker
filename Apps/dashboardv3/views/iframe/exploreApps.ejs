@@ -8,6 +8,9 @@
   </head>
   <body>
     <content class="body">
+      <% if (locals.breadcrumb) { %>
+        <%- partial('iframe/breadcrumb') %>
+      <% } %>
       <% for (var i in apps) { %>
         <div class="app-card" id="<%= i %>&breadcrumb=featured">
           <div class="left-side">
