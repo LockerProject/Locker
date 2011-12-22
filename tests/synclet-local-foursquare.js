@@ -27,19 +27,31 @@ suite.next().suite.addBatch({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252460',
                 body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
             fakeweb.registerUri({
+                uri : 'https://api.foursquare.com:443/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1305252460',
+                body : '{"meta":{"code":200},"response":{"checkins":{"count":1450,"items":[]}}}' });
+            fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self.json?oauth_token=abc',
                 file : __dirname + '/fixtures/foursquare/me.json' });
-                fakeweb.registerUri({
-                    uri : 'https://api.foursquare.com:443/v2/users/self.json?oauth_token=abc',
-                    file : __dirname + '/fixtures/foursquare/me.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com:443/v2/users/self.json?oauth_token=abc',
+                file : __dirname + '/fixtures/foursquare/me.json' });
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
+                file : __dirname + '/fixtures/foursquare/checkins_1.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.foursquare.com:443/v2/users/self/checkins.json?limit=250&offset=0&oauth_token=abc&afterTimestamp=1',
                 file : __dirname + '/fixtures/foursquare/checkins_1.json' });
             fakeweb.registerUri({
                 uri : 'https://api.foursquare.com/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
                 file : __dirname + '/fixtures/foursquare/checkins_2.json' });
             fakeweb.registerUri({
+                uri : 'https://api.foursquare.com:443/v2/users/self/checkins.json?limit=250&offset=250&oauth_token=abc&afterTimestamp=1',
+                file : __dirname + '/fixtures/foursquare/checkins_2.json' });
+            fakeweb.registerUri({
                 uri : 'https://playfoursquare.s3.amazonaws.com/pix/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg',
+                file : __dirname + '/fixtures/foursquare/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg' });
+            fakeweb.registerUri({
+                uri : 'https://playfoursquare.s3.amazonaws.com:443/pix/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg',
                 file : __dirname + '/fixtures/foursquare/EU5F5YNRMM04QJR0YDMWEHPJ1DYUSTYXOET2BK0YJNFSHSKE.jpg' });
             checkins.sync(pinfo, this.callback);
         },
