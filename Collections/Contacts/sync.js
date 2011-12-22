@@ -9,15 +9,17 @@
 
 var request = require('request');
 var locker = require('../../Common/node/locker.js');
-var lconfig = require('../../Common/node/lconfig.js');
-var logger = require('../../Common/node/logger.js');
+var lconfig;
 var dataStore = require('./dataStore');
 var async = require('async');
 var lockerUrl;
+var logger;
 var EventEmitter = require('events').EventEmitter;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo) {
+exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
     lockerUrl = theLockerUrl;
+    lconfig = config;
+    logger = require(__dirname + "/../../Common/node/logger.js");
     dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
