@@ -21,7 +21,7 @@ suite.next().suite.addBatch({
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
+                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=100&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
                 file : __dirname + '/fixtures/googleContacts/contacts.json' });
             contacts.sync(pinfo, this.callback)
         },
@@ -44,7 +44,7 @@ suite.next().suite.addBatch({
         topic: function() {
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
+                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=100&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
                 file : __dirname + '/fixtures/googleContacts/contacts2.json' });
             contacts.sync(pinfo, this.callback)
         },
@@ -59,13 +59,13 @@ suite.next().suite.addBatch({
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 statusCode: 401,
-                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
+                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=100&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=ert&alt=json',
                 body: ''});
             fakeweb.registerUri({
                 uri : 'https://accounts.google.com:443/o/oauth2/token',
                 body : JSON.stringify({'access_token':'rty', 'refresh_token':'tyu'}) });
             fakeweb.registerUri({
-                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=3000&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=rty&alt=json',
+                uri : 'https://www.google.com:443/m8/feeds/contacts/default/full?showdeleted=true&sortorder=ascending&orderby=lastmodified&max-results=100&updated-min=1970-01-01T00%3A00%3A00Z&start-index=1&oauth_token=rty&alt=json',
                 file : __dirname + '/fixtures/googleContacts/contacts.json' });
             contacts.sync(pinfo, this.callback)
         },

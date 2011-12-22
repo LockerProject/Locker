@@ -248,11 +248,9 @@ function executeSynclet(info, synclet, callback) {
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
-        logger.info("Delaying execution of synclet "+synclet.name+" for "+info.id);
-        scheduleRun(info, synclet);
-        if (callback) {
-            callback();
-        }
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 1000);
         return;
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
