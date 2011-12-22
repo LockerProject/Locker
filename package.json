@@ -53,6 +53,7 @@
         "ini": "=1.0.1",
         "uglify-js": "=1.1.1",
         "connect-form": "0.2.1",
+        "gzbz2": "0.1.4",
         "imagemagick": "https://github.com/lpatters/node-imagemagick/tarball/master",
 
 
