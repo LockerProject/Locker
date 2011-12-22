@@ -1,15 +1,16 @@
 var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
+  , logger = require("logger")
   , async = require('async')
   , datasets = {}
   , levents = require('levents')
   , lutil = require('lutil')
+  , IJOD = require('ijod').IJOD
   , config = {}
   ;
 
 
-// this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
 config.ijods = {};
 config.datasets = {};
 module.exports.datasets = config.datasets;
@@ -125,8 +126,9 @@ function addData (dataset, data, ijod, callback) {
             } else {
                 var arg = {id:object.obj.id, data:object.obj};
                 if(object.timestamp) arg.at = object.timestamp;
-                ijod.addData(arg, function(err, type) {
-                    if (type === 'same') return cb();
+                ijod.smartAdd(arg, function(err, type) {
+                    if(err) logger.error(err);
+                    if (!type || type === 'same') return cb();
                     levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), type, object.obj);
                     return cb();
                 });

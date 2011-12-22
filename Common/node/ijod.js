@@ -145,7 +145,8 @@ IJOD.prototype.smartAdd = function(arg, callback) {
             self.addData(arg, function(err){
                 if(err) return callback(err);
                 callback(null, "new");
-            })
+            });
+            return;
         }
         try { var obj = JSON.parse(existing); } catch(E){ return callback(E); }
         delete obj.at; // make sure not to compare any timestamps
@@ -202,5 +203,5 @@ IJOD.prototype.reqID = function(req, res)
 function stripper(buf)
 {
     var s = buf.toString();
-    return s.slice(s.indexOf('{',1),s.lastIndexOf('}',s.length-2)+1);
+    return s.slice(s.indexOf('{',1),s.lastIndexOf('}',s.length-3)+1); // -3 accounts for }\n
 }

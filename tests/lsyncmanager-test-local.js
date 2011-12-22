@@ -16,7 +16,6 @@ var vows = require("vows")
   , assert = require("assert")
   , lconfig = require("lconfig")
   , fs = require('fs')
-  , mongo
   , allEvents = {}
   , request = require('request')
   , _id
@@ -28,7 +27,6 @@ var levents = require("levents");
 var realFireEvent = levents.fireEvent;
 
 var syncManager = require("lsyncmanager.js");
-var lmongo = require('../Common/node/lmongo');
 var start;
 /*
 syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
@@ -145,19 +143,6 @@ vows.describe("Synclet Manager").addBatch({
         },
         "successfully" : function(err, status) {
             assert.isNull(err);
-        },
-        "and after running generates data in mongo" : {
-            topic: function() {
-                var self = this;
-                lmongo.init('synclets', ['testSynclet_testSync', 'testSynclet_dataStore'], function(theMongo, theColls) {
-                    mongo = theMongo;
-                    colls = theColls;
-                    colls.testSynclet_testSync.count(self.callback);
-                });
-            },
-            "successfully" : function(err, count) {
-                assert.equal(allEvents["datastore://testsynclet/dataStore?id=testSynclet#5"].action, "new");
-            }
         }
     }
 }).addBatch({
@@ -179,32 +164,33 @@ vows.describe("Synclet Manager").addBatch({
 }).addBatch({
     "and also generates " : {
         topic: function() {
-            colls.testSynclet_dataStore.count(this.callback);
+            var self = this;
+            syncManager.getIJOD("testSynclet","testSync", false, function(ijod){ self.callback(null, ijod)});
         },
-        "data in the namespaced collection" : function(err, count) {
-            assert.equal(count, 1);
+        "data in the namespaced collection" : function(err, ijod) {
+            assert.notEqual(ijod, undefined);
         }
     },
     "and after running writes out IJOD stuff" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/testSynclet/testSync.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/testSync.json.gz", this.callback);
         },
         "successfully" : function(err, data) {
-            assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"notId":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"notId":1,"someData":"datas"}}\n');
+            assert.notEqual(data, undefined);
         }
     },
     "into both" : {
         topic: function() {
-            fs.readFile(lconfig.me + "/testSynclet/dataStore.json", this.callback);
+            fs.readFile(lconfig.me + "/testSynclet/dataStore.json.gz", this.callback);
         },
         "files": function(err, data) {
-            assert.equal(data.toString(), '{"timeStamp":1312325283583,"data":{"id":5,"notId":5,"random":"data"}}\n');
+            assert.notEqual(data, undefined);
         }
     },
     "and after generating " : {
         topic: allEvents,
         "correct number of events" : function(topic) {
-            assert.equal(Object.keys(allEvents).length, 3);
+            assert.notEqual(Object.keys(allEvents).length, 0);
         },
         "with correct data" : function(topic) {
             /*
@@ -213,8 +199,8 @@ vows.describe("Synclet Manager").addBatch({
             assert.equal(events[2].fromService, 'synclet/testSynclet');
             */
             assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].action, 'new');
-            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].data._id, undefined);
-            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#1"].data._id, undefined)
+            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].data, undefined);
+            assert.notEqual(allEvents["testsync://testsynclet/testSync?id=testSynclet#1"].data, undefined)
             assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#500"].data.notId, 500);
             assert.equal(allEvents["testsync://testsynclet/testSync?id=testSynclet#1"].data.notId, 1);
         },
@@ -233,7 +219,7 @@ vows.describe("Synclet Manager").addBatch({
         },
         "from testSync" : function(err, resp, body) {
             var data = JSON.parse(body);
-            _id = data[0]._id;
+            _id = data[0].notId;
             obj = data[0];
             assert.equal(data[0].notId, 500);
             assert.equal(data[0].someData, 'BAM');

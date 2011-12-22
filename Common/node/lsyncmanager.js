@@ -440,7 +440,7 @@ function addData (collection, mongoId, data, info, idr, ij, callback) {
                         delete object[key];
                     }
                 }
-                ij.addData({id:object.obj[mongoId], data:object.obj}, function(err, type) {
+                ij.smartAdd({id:object.obj[mongoId], data:object.obj}, function(err, type) {
                     if (type === 'same') return cb();
                     levents.fireEvent(url.format(r), type, object.obj);
                     return cb();

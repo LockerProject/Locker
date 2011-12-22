@@ -53,21 +53,21 @@ module.exports = function(locker) {
         });
     });
 
-    app.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
+    locker.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
         syncManager.getIJOD(req.params.syncletId, req.params.type, false, function(ijod) {
             if(!ijod) return res.send("not found",404);
             ijod.reqID(req, res);
         });
     });
 
-    app.get('/synclets/:syncletId/get_profile', function(req, res) {
+    locker.get('/synclets/:syncletId/get_profile', function(req, res) {
         lfs.readObjectFromFile(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'profile.json'), function(userInfo) {
             res.writeHead(200, {"Content-Type":"application/json"});
             res.end(JSON.stringify(userInfo));
         });
     });
 
-    app.get('/synclets/:syncletId/getPhoto/:id', function(req, res) {
+    locker.get('/synclets/:syncletId/getPhoto/:id', function(req, res) {
         var id = req.param('id');
         fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
             var file;

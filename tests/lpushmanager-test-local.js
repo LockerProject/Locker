@@ -16,7 +16,6 @@ var vows = require("vows")
   , assert = require("assert")
   , lconfig = require("lconfig")
   , fs = require('fs')
-  , mongo
   , path = require('path')
   , request = require('request')
   , events = []
@@ -37,7 +36,6 @@ dataSets[4] = {"data": [ { "obj" : {"id" : 1}, "type" : "delete" } ]};
 lconfig.load("Config/config.json");
 
 var pushManager = require(__dirname + "/../Common/node/lpushmanager.js");
-var lmongo = require(__dirname + '/../Common/node/lmongo');
 
 var levents = require("levents");
 var realFireEvent = levents.fireEvent;
@@ -70,31 +68,16 @@ vows.describe("Push Manager").addBatch({
             "generates events" : function() {
                 assert.equal(eventCount, 2);
                 assert.equal(events[1].action, 'new');
-                assert.notEqual(events[0].data._id, undefined);
-                assert.notEqual(events[1].data._id, undefined)
                 assert.equal(events[0].data.id, 500);
                 assert.equal(events[1].data.id, 1);
                 events = [];
             },
-            "and generates mongo data" : {
-                topic: function() {
-                    var self = this;
-                    lmongo.init('push', ['push_testing'], function(theMongo, theColls) {
-                        mongo = theMongo;
-                        colls = theColls;
-                        colls.push_testing.count(self.callback);
-                    });
-                },
-                "successfully" : function(err, count) {
-                    assert.equal(count, 2);
-                }
-            },
             "and writes out IJOD stuff" : {
                 topic: function() {
-                    fs.readFile(lconfig.me + "/push/testing.json", this.callback);
+                    fs.readFile(lconfig.me + "/push/testing.json.gz", this.callback);
                 },
                 "successfully" : function(err, data) {
-                    assert.equal(data.toString(), '{"timeStamp":1312325283581,"data":{"id":500,"someData":"BAM"}}\n{"timeStamp":1312325283582,"data":{"id":1,"someData":"datas"}}\n');
+                    assert.notEqual(data, undefined);
                 }
             }
         }
@@ -137,15 +120,10 @@ vows.describe("Push Manager").addBatch({
         topic: function() {
             var self = this;
             events = [];
-            pushManager.acceptData('testing', dataSets[2], function() {
-                colls.push_testing.count(self.callback);
-            });
-            //request.post({uri : "http://localhost:8043/push/testing", json: dataSets[2]}, function() {
-                 //colls.push_testing.count(self.callback);
-            //});
+            pushManager.acceptData('testing', dataSets[2], self.callback)
         },
-        "it will generate a delete event and remove the row from mongo" : function(err, count) {
-            assert.equal(count, 1);
+        "it handles it" : function(err) {
+            assert.equal(err, null);
             assert.equal(events.length, 1);
             assert.equal(events[0].action, 'delete');
             assert.equal(events[0].idr, "testing://push/#500");
