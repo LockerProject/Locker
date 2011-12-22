@@ -19,7 +19,7 @@ var EventEmitter = require('events').EventEmitter;
 exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
-    logger = require("../../Common/node/logger.js");
+    logger = require(__dirname + "/../../Common/node/logger.js");
     dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
