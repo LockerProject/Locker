@@ -37,16 +37,15 @@ app.get('/', function(req, res) {
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
         var sorter = {"first":-1};
         if(req.query["sort"]) {
+            sorter = {};
             if(req.query["order"]) {
                 sorter[req.query["sort"]] = +req.query["order"];
             } else {
-                sorter[req.query["sort"]] = 1;
+                sorter[req.query["sort"]]= 1;
             }
         }
-        console.log("SORTING "+JSON.stringify(sorter));
-        cursor.sort(sorter);
         var ndx = {};
-        cursor.toArray(function(err, items) {
+        cursor.sort(sorter).toArray(function(err, items) {
             if(req.query["all"] || !req.query.full) return res.send(items); // default not include responses, forced if all
             items.forEach(function(item){ ndx[item.id] = item; item.responses = []; }); // build index
             var arg = {"item":{$in: Object.keys(ndx)}};
