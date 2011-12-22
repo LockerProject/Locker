@@ -1,1 +1,0 @@
-This folder is for static files specific to the dashboard. When dashboard gets pulled into it's own app, the name of this directory will likely change to something more generic like "static", but right now global static files are in that folder.
