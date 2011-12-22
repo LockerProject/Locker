@@ -144,12 +144,12 @@ function getKey(network, data)
 exports.processEvent = function(event, callback)
 {
     if(!callback) callback = function(err){if(err) console.error(err);};
+    var idr = url.parse(event.idr, true);
     // handle links as a special case as we're using them for post-process-deduplication
-    if(event.type == 'link') return processLink(event, callback);
+    if(idr.protocol == 'link') return processLink(event, callback);
 
-    var idr = getIdr(event.type, event.via, event.obj.data);
     if(!idr.protocol) return callback("don't understand this data");
-    masterMaster(idr, event.obj.data, callback);
+    masterMaster(idr, event.data, callback);
 }
 
 function isItMe(idr)
