@@ -31,36 +31,24 @@ module.exports = function(locker) {
         });
     });
 
-    // copy pasta from the synclet code, these should be utilizing some generic stuff instead
     locker.get('/push/:dataset/getCurrent', function(req, res) {
-        dataStore.init("push", function() {
-            var type = req.params.type;
-            var options = {};
-            if(req.query['limit']) options.limit = parseInt(req.query['limit']);
-            if(req.query['offset']) options.skip = parseInt(req.query['offset']);
-
-            dataStore.getAllCurrent("push", "push_" + req.params.dataset, function(err, objects) {
-                if (err) {
-                    res.send({error : err}, 500);
-                } else {
-                    res.send(objects, 200);
-                }
-            }, options);
+        pushManager.getIJOD(req.params.dataset, false, function(ijod) {
+            if(!ijod) return res.send("not found",404);
+            ijod.reqCurrent(req, res);
         });
     });
 
     locker.get('/push/:dataset/:id', function(req, res) {
-        dataStore.init("push", function() {
-            dataStore.getCurrentId("push", "push_" + req.params.dataset, req.params.id, function(err, doc) {
-                if (err) {
-                    logger.error(err);
-                    res.end();
-                } else if (doc) {
-                    res.send(doc);
-                } else {
-                    res.send('', 404);
-                }
-            });
+        pushManager.getIJOD(req.params.dataset, false, function(ijod) {
+            if(!ijod) return res.send("not found",404);
+            ijod.reqID(req, res);
+        });
+    });
+
+    locker.get('/push/:dataset/id/:id', function(req, res) {
+        pushManager.getIJOD(req.params.dataset, false, function(ijod) {
+            if(!ijod) return res.send("not found",404);
+            ijod.reqID(req, res);
         });
     });
 };
