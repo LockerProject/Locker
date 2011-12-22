@@ -2,8 +2,7 @@ var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
   , spawn = require('child_process').spawn
-  , ldatastore = require('ldatastore')
-  , datastore = {}
+  , IJOD = require('ijod').IJOD
   , async = require('async')
   , url = require('url')
   , lutil = require('lutil')
@@ -12,30 +11,10 @@ var fs = require('fs')
   , logger = require("./logger.js");
   ;
 
-// this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
-datastore.init = function(callback) {
-    ldatastore.init('synclets', callback);
-}
-
-datastore.addCollection = function(collectionKey, id, mongoId) {
-    ldatastore.addCollection('synclets', collectionKey, id, mongoId);
-}
-
-datastore.removeObject = function(collectionKey, id, ts, callback) {
-    if (typeof(ts) === 'function') {
-        ldatastore.removeObject('synclets', collectionKey, id, {timeStamp: Date.now()}, ts);
-    } else {
-        ldatastore.removeObject('synclets', collectionKey, id, ts, callback);
-    }
-}
-
-datastore.addObject = function(collectionKey, obj, ts, callback) {
-    ldatastore.addObject('synclets', collectionKey, obj, ts, callback);
-}
-
 var synclets = {
     available:[],
     installed:{},
+    ijods:{},
     executeable:true
 };
 
@@ -339,25 +318,23 @@ function compareIDs (originalConfig, newConfig) {
 }
 
 function processResponse(deleteIDs, info, synclet, response, callback) {
-    datastore.init(function() {
-        synclet.status = 'waiting';
-        checkStatus(info);
+    synclet.status = 'waiting';
+    checkStatus(info);
 
-        var dataKeys = [];
-        if (typeof(response.data) === 'string') {
-            return callback('bad data from synclet');
-        }
-        for (var i in response.data) {
-            dataKeys.push(i);
-        }
-        for (var i in deleteIDs) {
-            if (!dataKeys[i]) dataKeys.push(i);
-        }
-        if (dataKeys.length === 0) {
-            return callback();
-        }
-        async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
-    });
+    var dataKeys = [];
+    if (typeof(response.data) === 'string') {
+        return callback('bad data from synclet');
+    }
+    for (var i in response.data) {
+        dataKeys.push(i);
+    }
+    for (var i in deleteIDs) {
+        if (!dataKeys[i]) dataKeys.push(i);
+    }
+    if (dataKeys.length === 0) {
+        return callback();
+    }
+    async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
 };
 
 function checkStatus(info) {
@@ -369,6 +346,16 @@ function checkStatus(info) {
     lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json'),
                               JSON.stringify(info, null, 4));
 
+}
+
+// simple async friendly wrapper
+function ijodGet(id, key, callback) {
+    var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
+    if(synclets.ijods[name]) return callback(synclets.ijods[name]);
+    synclets.ijods[name] = new IJOD({name:name}, function(err, ij){
+        if(err) logger.error(err);
+        return callback(ij);
+    });
 }
 
 function processData (deleteIDs, info, key, data, callback) {
@@ -392,37 +379,38 @@ function processData (deleteIDs, info, key, data, callback) {
     else
         mongoId = 'id';
 
-    datastore.addCollection(key, info.id, mongoId);
+    ijodGet(info.id, key, function(ij){
+        if (deleteIDs && deleteIDs.length > 0 && data) {
+            addData(collection, mongoId, data, info, idr, function(err) {
+                if(err) {
+                    callback(err);
+                } else {
+                    deleteData(collection, mongoId, deleteIDs, info, idr, ij, callback);
+                }
+            });
+        } else if (data && data.length > 0) {
+            addData(collection, mongoId, data, info, idr, ij, callback);
+        } else if (deleteIDs && deleteIDs.length > 0) {
+            deleteData(collection, mongoId, deleteIDs, info, idr, ij, callback);
+        } else {
+            callback();
+        }
+    })
 
-    if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(collection, mongoId, data, info, idr, function(err) {
-            if(err) {
-                callback(err);
-            } else {
-                deleteData(collection, mongoId, deleteIDs, info, idr, callback);
-            }
-        });
-    } else if (data && data.length > 0) {
-        addData(collection, mongoId, data, info, idr, callback);
-    } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(collection, mongoId, deleteIDs, info, idr, callback);
-    } else {
-        callback();
-    }
 }
 
-function deleteData (collection, mongoId, deleteIds, info, idr, callback) {
+function deleteData (collection, mongoId, deleteIds, info, idr, ij, callback) {
     var q = async.queue(function(id, cb) {
         var r = url.parse(idr);
         r.hash = id.toString();
         levents.fireEvent(url.format(r), 'delete');
-        datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
+        ij.delData({id:id}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-function addData (collection, mongoId, data, info, idr, callback) {
+function addData (collection, mongoId, data, info, idr, ij, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
@@ -436,14 +424,19 @@ function addData (collection, mongoId, data, info, idr, callback) {
             r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
                 levents.fireEvent(url.format(r), 'delete');
-                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
+                ij.delData({id:object.obj[mongoId]}, cb);
             } else {
                 var source = r.pathname.substring(1);
-                var options = {timeStamp: object.timestamp};
-                if(info.strip && info.strip[source]) options.strip = info.strip[source];
-                datastore.addObject(collection, object.obj, options, function(err, type, doc) {
+                if(info.strip && info.strip[source])
+                { // if there's strip options, remove some things from the raw object
+                    for (var i in info.strip[source]) {
+                        var key = info.strip[source][i];
+                        delete object[key];
+                    }
+                }
+                ij.addData({id:object.obj[mongoId], data:object.obj}, function(err, type) {
                     if (type === 'same') return cb();
-                    levents.fireEvent(url.format(r), type, doc);
+                    levents.fireEvent(url.format(r), type, object.obj);
                     return cb();
                 });
             }

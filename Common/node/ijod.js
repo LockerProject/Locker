@@ -27,13 +27,8 @@ function IJOD(arg, callback) {
     self.gzname = arg.name + '.json.gz';
     self.dbname = arg.name + '.db';
     try{
-        if (arg.dir) {
-            self.fda = fs.openSync(path.join(arg.dir, self.gzname), 'a');
-            self.fdr = fs.openSync(path.join(arg.dir, self.gzname), 'r');
-        } else {
-            self.fda = fs.openSync(self.gzname, 'a');
-            self.fdr = fs.openSync(self.gzname, 'r');
-        }
+        self.fda = fs.openSync(self.gzname, 'a');
+        self.fdr = fs.openSync(self.gzname, 'r');
         var stat = fs.fstatSync(self.fdr);
         self.len = stat.size;
     }catch(E){
@@ -53,6 +48,7 @@ exports.IJOD = IJOD;
 // takes arg of at least an id and data, callback(err) when done
 IJOD.prototype.addData = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
+    arg.id = arg.id.toString(); // safety w/ numbers
     if(!arg.at) arg.at = Date.now();
     gzip.init();
     var gzdata = gzip.deflate(new Buffer(JSON.stringify(arg)+"\n"));
@@ -71,8 +67,32 @@ IJOD.prototype.addData = function(arg, callback) {
     this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, this.len-at], callback);
 }
 
+// adds a deleted record to the ijod and removes from index
+IJOD.prototype.delData = function(arg, callback) {
+    if(!arg || !arg.id) return callback("invalid arg");
+    arg.id = arg.id.toString(); // safety w/ numbers
+    if(!arg.at) arg.at = Date.now();
+    arg.type = "delete";
+    gzip.init();
+    var gzdata = gzip.deflate(new Buffer(JSON.stringify(arg)+"\n"));
+    var gzlast = gzip.end();
+
+    try{
+        fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
+        fs.writeSync(this.fda, gzlast, 0, gzlast.length, null);
+    }catch(E){
+        return callback(E);
+    }
+
+    var at = this.len;
+    this.len += gzdata.length;
+    this.len += gzlast.length;
+    this.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+}
+
 IJOD.prototype.getOne = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
+    arg.id = arg.id.toString(); // safety w/ numbers
     var self = this;
     self.db.query("SELECT at,len FROM ijod WHERE id = ? LIMIT 1", [arg.id], function(err, row){
         if(err) return callback(err);
@@ -115,6 +135,7 @@ IJOD.prototype.getAll = function(arg, callback) {
 // callback(err, new|same|update)
 IJOD.prototype.smartAdd = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
+    arg.id = arg.id.toString(); // safety w/ numbers
     var self = this;
     self.getOne(arg, function(err, existing){
         if(err) return callback(err);
@@ -126,11 +147,15 @@ IJOD.prototype.smartAdd = function(arg, callback) {
                 callback(null, "new");
             })
         }
-        if (deepCompare(doc, object)) {
-            callback(err, 'same', doc);
-        } else {
-            doc._id = id;
-            callback(err, 'update', doc);
-        }
+        try { var obj = JSON.parse(existing); } catch(E){ return callback(E); }
+        delete obj.at; // make sure not to compare any timestamps
+        delete arg.at;
+        // they're identical, do nothing
+        if (deepCompare(arg, obj)) return callback(null, 'same');
+        // it's different, save an update
+        self.addData(arg, function(err){
+            if(err) return callback(err);
+            callback(null, "update");
+        })
     });
 }
