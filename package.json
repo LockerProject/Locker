@@ -27,7 +27,7 @@
         "lastfm": "=0.7.0",
         "oauth": "=0.9.5",
         "sax": "=0.2.3",
-        "request": "=2.2.9",
+        "request": "=2.1.1",
         "api-easy": "=0.2.3",
         "http-proxy": "=0.7.6",
         "xml2js": "=0.1.10",
@@ -52,6 +52,9 @@
         "semver": "=1.0.10",
         "ini": "=1.0.1",
         "uglify-js": "=1.1.1",
+        "connect-form": "0.2.1",
+        "imagemagick": "https://github.com/lpatters/node-imagemagick/tarball/master",
+
 
 
         "hashish": "=0.0.4",

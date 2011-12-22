@@ -17,8 +17,16 @@ a {
 }
 
 .blue {
-  color: #29ABE2;
+  color: #29ABE2 !important;
   font-weight: bold;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.hidden {
+  display: none;
 }
 
 /* header section */
@@ -159,4 +167,134 @@ aside {
 .sidenav-items .app-details a {
   margin-top: 2px;
   display: inline-block;
+}
+
+/* styling for the create page */
+.viewAll.blue:after {
+  content: " \25BC";
+  font-size: .75em;
+}
+
+.viewAll:not(.blue):after {
+  content: " \25B6";
+  font-size: .75em;
+}
+
+.your-apps.your-apps.app-details {
+  margin: 5px 0px 5px 20px;
+  display: none;
+  font-size: 14px;
+  background-color: white;
+  padding: 0px;
+  cursor: pointer;
+}
+
+.published {
+  color: #39b74f;
+}
+
+.in-review {
+  color: #999999;
+}
+
+.drafts {
+  color: #feaecd;
+}
+
+.publish-list li {
+  margin-left: 30px;
+  margin-top: 20px;
+}
+
+.publish-list select {
+  margin-left: 8px;
+}
+
+.publish-list li p {
+  margin: 7px 0px;
+}
+
+.publish-list input[type="text"] {
+  height: 20px;
+  width: 200px;
+}
+
+.publish-list input[type="checkbox"] {
+  -webkit-appearance: radio;
+  -moz-appearance: radio;
+  -ms-appearance: radio;
+  -o-appearance: radio;
+}
+
+.publish-list select {
+  min-width: 200px;
+}
+
+.publish-list p.indented {
+  margin-left: 50px;
+}
+
+.publish-list .preview {
+  position: relative;
+  width: 450px;
+  height: 450px;
+  border: solid 1px #999;
+  line-height: 450px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.publish-list .preview.jcrop {
+  text-align: left;
+}
+
+.publish-list .jcrop-holder {
+  vertical-align: middle;
+  position: absolute !important;
+  top: 50%;
+  left: 50%;
+}
+
+.publish-list .preview p {
+  position: absolute;
+  bottom: 0px;
+  text-align: center;
+  color: #000;
+  width: 100%;
+  background-color: rgba(255, 255, 255, .5);
+  margin: 0px;
+  line-height: 20px;
+}
+
+.publish-list .preview:not(.jcrop) img {
+  max-width: 450px;
+  max-height: 450px;
+  margin-left: auto;
+  margin-right: auto;
+  vertical-align: middle;
+}
+
+.publish-list .app-newname {
+  margin-left: 5px;
+}
+
+.actions {
+  margin-left: 300px;
+}
+
+.actions a {
+  margin-right: 40px;
+  font-size: 14px;
+  padding: 0px 2px 1px;
+  border-bottom: solid 1px #F7931E;
+}
+
+button.publish {
+  background-color: #F7931E;
+  color: white;
+  font-size: 18px;
+  border-radius: 4px;
+  border: 0px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
