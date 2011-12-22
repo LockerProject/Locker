@@ -349,14 +349,20 @@ function checkStatus(info) {
 }
 
 // simple async friendly wrapper
-function ijodGet(id, key, callback) {
+function getIJOD(id, key, create, callback) {
     var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
     if(synclets.ijods[name]) return callback(synclets.ijods[name]);
-    synclets.ijods[name] = new IJOD({name:name}, function(err, ij){
-        if(err) logger.error(err);
-        return callback(ij);
+    // only load if one exists or create flag is set
+    fs.stat(name+".db", function(err, stat){
+        if(!stat && !create) return callback();
+        synclets.ijods[name] = new IJOD({name:name}, function(err, ij){
+            if(err) logger.error(err);
+            return callback(ij);
+        });
     });
 }
+
+exports.getIJOD = getIJOD;
 
 function processData (deleteIDs, info, key, data, callback) {
     // this extra (handy) log breaks the synclet tests somehow??
@@ -379,7 +385,7 @@ function processData (deleteIDs, info, key, data, callback) {
     else
         mongoId = 'id';
 
-    ijodGet(info.id, key, function(ij){
+    getIJOD(info.id, key, true, function(ij){
         if (deleteIDs && deleteIDs.length > 0 && data) {
             addData(collection, mongoId, data, info, idr, function(err) {
                 if(err) {

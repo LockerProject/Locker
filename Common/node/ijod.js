@@ -101,7 +101,7 @@ IJOD.prototype.getOne = function(arg, callback) {
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
         gunzip.init();
         var x = gunzip.inflate(buf);
-        return callback(null, x.toString());
+        return callback(null, arg.raw ? x : stripper(x));
     });
 }
 
@@ -127,7 +127,7 @@ IJOD.prototype.getAll = function(arg, callback) {
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
         gunzip.init();
         var x = gunzip.inflate(buf);
-        return callback(null, x.toString());
+        return callback(null, arg.raw ? x : stripper(x));
     });
 }
 
@@ -158,4 +158,49 @@ IJOD.prototype.smartAdd = function(arg, callback) {
             callback(null, "update");
         })
     });
+}
+
+// utilities to respond to a web request, shared between synclets and push
+IJOD.prototype.reqCurrent = function(req, res)
+{
+    var streaming = (req.query['stream'] == "true");
+    var options = {};
+    if(req.query['limit']) options.limit = parseInt(req.query['limit']);
+    if(req.query['offset']) options.offset = parseInt(req.query['offset']);
+
+    var ctype = streaming ? "application/jsonstream" : "application/json";
+    res.writeHead(200, {'content-type' : ctype});
+    var first = true;
+    this.getAll(options, function(err, item){
+        if(err) logger.error(err);
+        if(item == null)
+        { // all done
+            if(!streaming) res.write("]");
+            return res.end()
+        }
+        if(streaming) return res.write(item+'\n');
+        if(first)
+        {
+            first = false;
+            return res.write('['+item);
+        }
+        res.write(','+item);
+    });
+
+}
+IJOD.prototype.reqID = function(req, res)
+{
+    this.getOne({id:req.params.id}, function(err, item) {
+        if (err) logger.error(err);
+        if (!item) return res.send("not found",404);
+        res.writeHead(200, {'content-type' : 'application/json'});
+        res.end(item);
+    });
+}
+
+// make a string and return only the interior data object!
+function stripper(buf)
+{
+    var s = buf.toString();
+    return s.slice(s.indexOf('{',1),s.lastIndexOf('}',s.length-2)+1);
 }
