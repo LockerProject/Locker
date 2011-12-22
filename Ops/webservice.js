@@ -54,10 +54,6 @@ var locker = express.createServer(
             connect.session({key:'locker.project.id', secret : "locker"})
         );
 
-require('./webservice-push')(locker);
-require('./webservice-synclets')(locker);
-require('./webservice-synclets-auth')(locker);
-
 var registry = require('./registry');
 registry.app(locker); // add it's endpoints
 
@@ -525,6 +521,13 @@ locker.all("/socket.io*", function(req, res) {
 locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
+
+// THESE MUST BE REQUIRED AFTER the /Me endpoints
+// since it calls a req.next() that depends on /synclet catching them!
+require('./webservice-push')(locker);
+require('./webservice-synclets')(locker);
+require('./webservice-synclets-auth')(locker);
+
 
 function proxied(method, svc, ppath, req, res, buffer) {
     svc.last = Date.now();

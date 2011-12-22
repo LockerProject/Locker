@@ -10,6 +10,7 @@
 var request = require('request');
 var locker = require('../../Common/node/locker.js');
 var lconfig = require('../../Common/node/lconfig.js');
+var logger = require('../../Common/node/logger.js');
 var dataStore = require('./dataStore');
 var async = require('async');
 var lockerUrl;
