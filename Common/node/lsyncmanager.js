@@ -187,6 +187,8 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
+    if (!synclet.frequency) return;
+
     var milliFreq = parseInt(synclet.frequency) * 1000;
 
     function run() {
