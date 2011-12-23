@@ -105,7 +105,7 @@ $(document).ready(
         $('.syncviewers').click(function() {
             showGritter('syncgithub');
             $.getJSON("/synclets/github/run?id=repos", function(success) {
-                // _kmq.push(['record', 'synced viewers']);
+                _kmq.push(['record', 'synced viewers']);
                 // if(success) {
                 //     $("#sync-link").attr("href", "#");
                 //     syncingViewers = false;
@@ -562,9 +562,6 @@ function drawViewers() {
             var viewersToRender = data.available[apps[j]];
             for(var i in viewersToRender) {
                 drawViewer(viewersToRender[i], data.selected[app] === viewersToRender[i].handle, apps[j]);
-                if (viewersToRender[i].author !== 'Singly') {
-                    _kmq.push(['record', 'installed viewer']);
-                }
             }
         }
         /*

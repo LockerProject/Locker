@@ -123,7 +123,6 @@ function showGritter(name, arg, lastId) {
         drawServices();
         drawViewers();
         var action = (arg.action === 'update'? 'Updated' : 'New');
-        var arg = data
         var gritterId = $.gritter.add({
           title: action + " " + arg.viewer.charAt(0).toUpperCase() + arg.viewer.slice(1)+" Viewer",
           text:arg.id,
@@ -185,10 +184,12 @@ socket.on('event', function (body) {
 socket.on('newservice', function(service) {
   log('got new service: ', service);
   queueGritter('newservice', service);
+  _kmq.push(['record', 'Add Service', {'Name': service.title}]);
   if (window.guidedSetup) window.guidedSetup.serviceConnected();
 });
 
 socket.on('viewer', function(evt) {
+    _kmq.push(['record', 'installed viewer', {'Name': evt.data.id.split('/')[1]}]);
     queueGritter('viewer', evt);
 });
 
