@@ -93,6 +93,17 @@ exports.getFriends = function(arg, cbEach, cbDone) {
     });
 }
 
+// create a new tweet
+exports.update = function(arg, cbEach, cbDone) {
+    if(!arg.status) return cbDone("status missing");
+    arg.path = '/statuses/update.json';
+    postOne(arg,function(err,js){
+        if(err) return cbDone(err);
+        if(!js || !js.id_str) return cbDone("invalid response, missing id_str: "+JSON.stringify(js));
+        cbEach(js);
+        cbDone();
+    });
+}
 
 // just get extended details of all followers
 exports.getFollowers = function(arg, cbEach, cbDone) {
@@ -220,6 +231,16 @@ function getOne(arg, cb) {
     arg.token = auth.token;
     arg.include_entities = true;
     tw.apiCall('GET', arg.path, arg, function(err, js){
+        if(err) return cb(err);
+        cb(null,js);
+    });
+}
+
+function postOne(arg, cb) {
+    if(!arg.path) return cb("no path");
+    arg.token = auth.token;
+    arg.include_entities = true;
+    tw.apiCall('POST', arg.path, arg, function(err, js){
         if(err) return cb(err);
         cb(null,js);
     });

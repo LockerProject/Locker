@@ -165,7 +165,7 @@ exports.status = function(serviceId) {
     return synclets.installed[serviceId];
 };
 
-exports.syncNow = function(serviceId, syncletId, callback) {
+exports.syncNow = function(serviceId, syncletId, post, callback) {
     if(typeof syncletId == "function")
     {
         callback = syncletId;
@@ -174,6 +174,11 @@ exports.syncNow = function(serviceId, syncletId, callback) {
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
     async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) {
         if(syncletId && synclet.name != syncletId) return cb();
+        if(post)
+        {
+            if(!Array.isArray(synclet.posts)) synclet.posts = [];
+            synclet.posts.push(post);
+        }
         executeSynclet(synclets.installed[serviceId], synclet, cb);
     }, callback);
 };
@@ -182,6 +187,8 @@ exports.syncNow = function(serviceId, syncletId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
+    if (!synclet.frequency) return;
+
     var milliFreq = parseInt(synclet.frequency) * 1000;
 
     function run() {
@@ -315,6 +322,7 @@ function executeSynclet(info, synclet, callback) {
         localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
+    if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
     delete info.syncletToRun;
 };
 

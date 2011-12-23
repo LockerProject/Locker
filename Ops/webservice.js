@@ -37,7 +37,7 @@ var scheduler = lscheduler.masterScheduler;
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/') {
+                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/' || req.url.substring(0, 6) == '/post/') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
