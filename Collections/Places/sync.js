@@ -11,6 +11,7 @@ var request = require('request');
 var async = require('async');
 var path = require('path');
 var locker = require('../../Common/node/locker.js');
+var lutil = require('lutil');
 var lconfig;
 var dataStore = require('./dataStore');
 var lockerUrl;
@@ -59,17 +60,14 @@ exports.gatherPlaces = function(type, cb) {
 
 function gatherFromUrl(svcId, type, callback) {
     var url = path.join("Me", svcId, "getCurrent", type.split("/")[0]);
-    url = lconfig.lockerBase + "/" + url;
+    url = lconfig.lockerBase + "/" + url + "?stream=true";
     logger.info("updating from "+url);
-    request.get({uri:url, json:true}, function(err, resp, body) {
-        if (err || !body) {
-            logger.error("Error getting basic places from " + svcId + " " + err);
-            return callback(); // swallow errors here
-        }
-        if(!body.length || body.length == 0) return callback();
-        // take a deep breath first
-        setTimeout(function(){
-            dataStore.addData(svcId, type, body, callback);
-        }, 10000);
+    var total = 0;
+    lutil.streamFromUrl(url, function(js, cb){
+        total++;
+        dataStore.addData(svcId, type, js, cb);
+    }, function(){
+        logger.info("indexed "+total+" items from "+svcId);
+        callback();
     });
 }

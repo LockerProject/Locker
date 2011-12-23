@@ -1,6 +1,8 @@
 var fs = require("fs");
 var path = require("path");
 var url = require("url");
+var async = require("async");
+var request = require("request");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
@@ -152,6 +154,39 @@ exports.atomicWriteFileSync = function(dest, data) {
     fs.renameSync(tmp, dest);
 }
 
+// processes a json newline stream, cbEach(json, callback) and cbDone(err) when done
+exports.streamFromUrl = function(url, cbEach, cbDone) {
+    var ended = false;
+    var q = async.queue(function(chunk, cb){
+        console.error("doing chunk");
+        if(chunk == "") return cb();
+        try{ var js = JSON.parse(chunk); }catch(E){
+            logger.error("got "+E+" processing "+chunk);
+            return cb();
+        }
+        cbEach(js, cb);
+    },1);
+    var req = request.get({uri:url}, function(err){
+        if(err) logger.error(url+" "+err);
+        ended = true;
+        q.push(""); // this triggers the drain if there was no data, GOTCHA
+    });
+    var buff = "";
+    req.on("data",function(data){
+        buff += data.toString();
+        var chunks = buff.split('\n');
+        buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
+        chunks.forEach(q.push);
+    });
+    q.drain = function(){
+        if(!ended) return; // drain can be called many times, we only care when it's after data is done coming in
+        cbDone();
+    };
+    req.on("end",function(){
+        ended = true;
+        q.push(""); // this triggers the drain if there was no data, GOTCHA
+    });
+}
 // creates an idr, type://network/context?id=account#id
 // context and account are optional
 exports.idrNew = function(type, network, id, context, account)

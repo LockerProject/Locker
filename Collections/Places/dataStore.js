@@ -265,6 +265,15 @@ exports.addData = function(svcId, type, allData, callback) {
         logger.error("unhandled "+type);
         return callback();
     }
+    // if called with just one item, streaming
+    if(!Array.isArray(allData))
+    {
+        handler(svcId, type, allData, function(e){
+            if(e) logger.error("error processing: "+e);
+            callback();
+        });
+        return;
+    }
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
             if(e) logger.error("error processing: "+e);
