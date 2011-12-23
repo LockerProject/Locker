@@ -107,8 +107,6 @@ function processInstagram(svcId, type, data, cb) {
         return;
     }
 
-    var title = (data.caption && data.caption.text) ? data.caption.text : '';
-
     var me = false;
     if (type === 'photo/instagram') {
         me = true; // I think this is probably getting overwritten, fix the right way when we do profiles uniformly
@@ -119,7 +117,7 @@ function processInstagram(svcId, type, data, cb) {
             lat: data.location.latitude,
             lng: data.location.longitude,
             path: false,
-            title: title,
+            title: (data.caption && data.caption.text) ? data.caption.text : '',
             network:"instagram",
             from: (data.user)?data.user.username:"",
             fromID: (data.user)?data.user.id:"",
