@@ -8,6 +8,7 @@
 */
 var IJOD = require('ijod').IJOD
   , lconfig = require('lconfig')
+  , logger = require('logger')
   , lmongo = require('lmongo')
   , ijodFiles = {}
   , deepCompare = require('deepCompare')
@@ -50,7 +51,8 @@ exports.addObject = function(owner, type, object, options, callback) {
     if (arguments.length == 3) callback = options;
     if (typeof options == 'object') {
         for (var i in options['strip']) {
-            object[options['strip'][i]].delete
+            var key = options['strip'][i];
+            delete object[key];
         }
         if (options['timeStamp']) {
             timeStamp = options['timeStamp'];
@@ -95,6 +97,12 @@ exports.getAllCurrent = function(owner, type, callback, options) {
     m.find({}, options).toArray(callback);
 }
 
+exports.getEachCurrent = function(owner, type, callback, options) {
+    options = options || {};
+    var m = getMongo(owner, type, callback);
+    m.find({}, options).each(callback);
+}
+
 exports.getCurrent = function(owner, type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
     var m = getMongo(owner, type, callback);
@@ -134,10 +142,10 @@ function setCurrent(owner, type, object, callback) {
             });
         }
     } else {
-        console.error('failed to set current in ldatastore');
-        console.error(type)
-        console.error(object)
-        console.error(callback);
+        logger.error('failed to set current in ldatastore');
+        logger.error(type)
+        logger.error(object)
+        logger.error(callback);
     }
 }
 
@@ -164,6 +172,6 @@ function getMongo(owner, type, callback) {
 }
 
 function now() {
-    return new Date().getTime();
+    return Date.now();
 }
 

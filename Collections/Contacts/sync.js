@@ -9,13 +9,17 @@
 
 var request = require('request');
 var locker = require('../../Common/node/locker.js');
-var lconfig = require('../../Common/node/lconfig.js');
+var lconfig;
 var dataStore = require('./dataStore');
+var async = require('async');
 var lockerUrl;
+var logger;
 var EventEmitter = require('events').EventEmitter;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo) {
+exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
     lockerUrl = theLockerUrl;
+    lconfig = config;
+    logger = require(__dirname + "/../../Common/node/logger.js");
     dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
@@ -27,39 +31,36 @@ exports.gatherContacts = function(cb) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
             cb(); // synchro delete, async/background reindex
             // This should really be timered, triggered, something else
-            locker.providers(['contact/facebook', 'contact/twitter', 'contact/flickr',
-                              'contact/gcontacts', 'contact/foursquare', 'contact/instagram',
-                              'contact/github'], function(err, services) {
+            locker.providers(['contact'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
-                    console.log("svc", svc.id, svc.provides);
                     if(svc.provides.indexOf('contact/facebook') >= 0) {
                         exports.getContacts("facebook", "contact", svc.id, function() {
-                            console.error('facebook done!');
+                            logger.info('facebook done!');
                         });
                     } else if(svc.provides.indexOf('contact/twitter') >= 0) {
                         exports.getContacts("twitter", "contact", svc.id, function() {
-                            console.error('twitter done!');
+                            logger.info('twitter done!');
                         });
                     } else if(svc.provides.indexOf('contact/flickr') >= 0) {
                         exports.getContacts("flickr", "contact", svc.id, function() {
-                            console.error('flickr done!');
+                            logger.info('flickr done!');
                         });
                     } else if(svc.provides.indexOf('contact/gcontacts') >= 0) {
                         exports.getContacts("gcontacts", "contact", svc.id, function() {
-                            console.error('gcontacts done!');
+                            logger.info('gcontacts done!');
                         });
                     } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
                         exports.getContacts('foursquare', "contact", svc.id, function() {
-                            console.error('foursquare done!');
+                            logger.info('foursquare done!');
                         });
                     } else if(svc.provides.indexOf('contact/instagram') >= 0) {
                         exports.getContacts('instagram', "contact", svc.id, function() {
-                            console.error('instagram done!');
+                            logger.info('instagram done!');
                         });
                     } else if(svc.provides.indexOf('contact/github') >= 0) {
                         exports.getContacts('github', 'following', svc.id, function() {
-                            console.error('github done!');
+                            logger.info('github done!');
                         })
                     }
                 });
@@ -71,25 +72,9 @@ exports.gatherContacts = function(cb) {
 
 exports.getContacts = function(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
-        if(body && Array.isArray(body)) addContacts(type, endpoint, body, callback);
+        if(err || !body || !Array.isArray(body)) return callback(err);
+        async.forEachSeries(body, function(contact, cb){
+            dataStore.addData(type, contact, cb);
+        }, callback);
     });
-}
-
-function addContacts(type, endpoint, contacts, callback) {
-    if (!(contacts && contacts.length)) {
-        callback();
-    } else {
-        var contact = contacts.shift();
-        dataStore.addData(type, endpoint, {data:contact}, function(err, doc) {
-            // what event should this be?
-            // also, should the source be what initiated the change, or just contacts?  putting contacts for now.
-            //
-            // var eventObj = {source: req.body.obj.via, type:req.body.obj.type, data:doc};
-            if (doc._id) {
-                var eventObj = {source: "contacts", type:endpoint, data:doc};
-                exports.eventEmitter.emit('contact', eventObj);
-            }
-            addContacts(type, endpoint, contacts, callback);
-        })
-    }
 }

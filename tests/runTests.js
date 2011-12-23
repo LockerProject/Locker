@@ -4,23 +4,12 @@ require.paths.push(__dirname + "/../Common/node");
 process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
 var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
-var lconsole = require("lconsole");
 var wrench = require("wrench");
 var runIntegration = true;
 var integrationOnly = false;
 
 var runFiles = [];
 var runGroups = [];
-
-function writeLogLine() {
-    fs.writeSync(logFd, "[" + (new Date()).toLocaleString() + "][" + console.outputModule + "] " + Array.prototype.slice.call(arguments).toString() + "\n");
-}
-
-// We're going to replace the logging here so we can have it all and show it later
-console.log = writeLogLine;
-console.warn = writeLogLine;
-console.error = writeLogLine;
-
 
 if (process.argv.indexOf("-c") === -1) {
     try {
@@ -45,9 +34,6 @@ if (process.argv.indexOf("-c") === -1) {
 }
 
 // Cleanup the old runs Me dir and then copy the stub in
-
-// Ladies and gentlemen, get your logs ready
-var logFd = fs.openSync("locker.log", "w+");
 
 // If we have args they can be either files or groups
 if (process.argv.length > 2) {
@@ -106,6 +92,10 @@ if (process.argv.length > 2) {
     }
 }
 
+if (process.env["TRAVIS"] == "true") {
+    runIntegration = false;
+}
+
 // If they have specified any groups or defaulting to all we need to process this
 if (runGroups.length > 0 || (runFiles.length === 0 && runGroups.length === 0)) {
     var testGroups = JSON.parse(fs.readFileSync("Config/config.json")).testGroups;
@@ -141,7 +131,6 @@ var checkLocker = function() {
     if (lockerd.alive === true) {
         runTests();
     } else {
-        console.error('locker hasn\'t started yet, checking again in a second');
         setTimeout(checkLocker, 1000);
     }
 }
@@ -210,7 +199,6 @@ var runRake = function() {
 }
 
 var finished = function(exitCode, signal) {
-    console.log('All tests done');
     if (exitCode > 0) {
         console.dir("vows process exited abnormally (code="+exitCode+", signal="+signal+")");
     }

@@ -44,8 +44,13 @@ var realFireEvent = levents.fireEvent;
 
 vows.describe("Push Manager").addBatch({
     "has a map of the data sets" : function() {
-        levents.fireEvent = function(type, id, action, obj) {
+        levents.fireEvent = function(id, action, data) {
             eventCount++;
+            var obj = {
+                idr:id,
+                action:action,
+                data:data
+            };
             events.push(obj);
         }
         pushManager.init();
@@ -64,7 +69,7 @@ vows.describe("Push Manager").addBatch({
         "and also" : {
             "generates events" : function() {
                 assert.equal(eventCount, 2);
-                assert.equal(events[1].type, 'new');
+                assert.equal(events[1].action, 'new');
                 assert.notEqual(events[0].data._id, undefined);
                 assert.notEqual(events[1].data._id, undefined)
                 assert.equal(events[0].data.id, 500);
@@ -112,7 +117,6 @@ vows.describe("Push Manager").addBatch({
             request.get({uri : "http://localhost:8043/push/testing/500"}, this.callback);
         },
         "successfully" : function(err, resp, body) {
-            console.dir(body);
             var data = JSON.parse(body);
             assert.deepEqual(obj, data);
         }
@@ -143,8 +147,8 @@ vows.describe("Push Manager").addBatch({
         "it will generate a delete event and remove the row from mongo" : function(err, count) {
             assert.equal(count, 1);
             assert.equal(events.length, 1);
-            assert.equal(events[0].type, 'delete');
-            assert.equal(events[0].data.id, 500);
+            assert.equal(events[0].action, 'delete');
+            assert.equal(events[0].idr, "testing://push/#500");
         }
     }
 }).addBatch({

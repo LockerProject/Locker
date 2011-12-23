@@ -9,6 +9,9 @@
     "engines": {
         "node": ">= 0.4.6  <=0.4.99999"
     },
+    "scripts": {
+        "test": "cd tests && node runTests.js"
+    },
     "dependencies": {
         "npm":"=1.0.106",
         "connect": "=1.7.0",
@@ -18,6 +21,7 @@
         "facebook-js": "=1.0.0",
         "gdata-js": "=0.1.1",
         "flickr-js":"=0.0.1",
+        "soundcloud-js":"=0.0.1",
         "github": "=0.0.6",
         "imap": "=0.2.4",
         "lastfm": "=0.7.0",
@@ -25,16 +29,16 @@
         "sax": "=0.2.3",
         "request": "=2.1.1",
         "api-easy": "=0.2.3",
-        "http-proxy": "=0.7.2",
+        "http-proxy": "=0.7.6",
         "xml2js": "=0.1.10",
         "vows": "=0.5.11",
         "wrench": "=1.1.0",
         "eyes": "=0.1.6",
         "knox": "=0.0.9",
         "readabilitySAX": "=0.2.2",
-        "mongodb": "=0.9.6-15",
+        "mongodb": "=0.9.7-2",
         "winston": "=0.5.2",
-        "clucene": "=0.2.3",
+        "sqlite-fts": "=0.0.2",
         "socket.io": "=0.8.5",
         "socket.io-client": "=0.8.4",
         "jade": "= 0.15.4",
@@ -44,7 +48,13 @@
         "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
         "node-fs": "=0.1.0",
+        "nodemailer": "=0.2.3",
         "semver": "=1.0.10",
+        "ini": "=1.0.1",
+        "uglify-js": "=1.1.1",
+        "connect-form": "0.2.1",
+        "imagemagick": "https://github.com/lpatters/node-imagemagick/tarball/master",
+
 
 
         "hashish": "=0.0.4",

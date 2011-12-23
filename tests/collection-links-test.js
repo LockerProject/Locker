@@ -2,7 +2,6 @@ var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Links/dataStore');
 var dataIn = require('../Collections/Links/dataIn');
 var util = require('../Collections/Links/util');
-var search = require('../Collections/Links/search');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
@@ -24,7 +23,7 @@ var thecollections = ['link','encounter','queue'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = {};
-locker.event = function(){};
+locker.ievent = function(){};
 util.expandUrl = function(a,b,c){b(a.url);c();} // fakeweb doesn't support HEAD reqs AFAICT :(
 
 var lmongo = require('../Common/node/lmongo.js');
@@ -36,8 +35,7 @@ suite.next().suite.addBatch({
             process.chdir("." + mePath);
             lmongo.init("links", thecollections, function(mongo, colls) {
                 dataStore.init(colls.link, colls.encounter, colls.queue, mongo);
-                search.init(dataStore);
-                dataIn.init(locker, dataStore, search);
+                dataIn.init(locker, dataStore);
 
                 dataStore.clear(function() {
                     request.get({uri:lconfig.lockerBase + "/Me/links/state", json:true}, self.callback);
@@ -76,30 +74,12 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
-    "Can Search" : {
-        topic: function() {
-            search.search("gnome",this.callback);
-        },
-        "successfully" : function(err, response) {
-            assert.equal(response.length, 2);
-        }
-    }
-}).addBatch({
     "state" : {
         topic:function() {
             request.get({uri:lconfig.lockerBase + "/Me/links/state"}, this.callback);
         },
         "contains lastId":function(topic) {
             assert.include(topic.body, "lastId");
-        }
-    }
-}).addBatch({
-    "limit" : {
-        topic:function() {
-            request.get({uri:lconfig.lockerBase + "/Me/links/search?q=singly&limit=100"}, this.callback);
-        },
-        "obeys limit":function(topic) {
-            assert.include(topic.body, "singly");
         }
     }
 });

@@ -5,10 +5,11 @@ var fs = require('fs')
   , ldatastore = require('ldatastore')
   , datastore = {}
   , async = require('async')
+  , url = require('url')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
-  , logger = require("./logger.js").logger;
+  , logger = require("./logger.js");
   ;
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
@@ -85,7 +86,7 @@ exports.findInstalled = function (callback) {
             if (js.synclets) {
                 js = mergeManifest(js);
                 exports.migrate(dir, js);
-                console.log("Loaded synclets for "+js.id);
+                logger.info("Loaded synclets for "+js.id);
                 synclets.installed[js.id] = js;
                 synclets.installed[js.id].status = "waiting";
                 for (var j = 0; j < js.synclets.length; j++) {
@@ -94,7 +95,7 @@ exports.findInstalled = function (callback) {
                 }
             }
         } catch (E) {
-            console.log("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
+            logger.warn("Me/"+dirs[i]+" does not appear to be a synclet (" +E+ ")");
         }
     }
 }
@@ -152,7 +153,7 @@ exports.install = function(metaData) {
     for (var i = 0; i < serviceInfo.synclets.length; i++) {
         scheduleRun(serviceInfo, serviceInfo.synclets[i]);
     }
-    levents.fireEvent('newservice', '', '', {title:serviceInfo.title, provider:serviceInfo.provider});
+    levents.fireEvent('newservice://syncmanager/#'+serviceInfo.id, 'new', {title:serviceInfo.title, provider:serviceInfo.provider});
     return serviceInfo;
 }
 
@@ -219,10 +220,7 @@ function scheduleRun(info, synclet) {
 
 function localError(base, err)
 {
-//    var mod = console.outputModule;
-//    console.outputModule = base;
-    console.error(base+"\t"+err);
-//    console.outputModule = mod;
+    logger.error(base+"\t"+err);
 }
 
 function mergeManifest(js) {
@@ -255,14 +253,12 @@ function executeSynclet(info, synclet, callback) {
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
-        console.log("Delaying execution of synclet "+synclet.name+" for "+info.id);
-        scheduleRun(info, synclet);
-        if (callback) {
-            callback();
-        }
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 1000);
         return;
     }
-    console.log("Synclet "+synclet.name+" starting for "+info.id);
+    logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
     if (!synclet.run) {
@@ -277,8 +273,14 @@ function executeSynclet(info, synclet, callback) {
 
     var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
+    // edge case backup, max 30 min runtime by default
+    var timer = setTimeout(function(){
+        logger.error("Having to kill long-running "+synclet.name+" synclet of "+info.id);
+        process.kill(app.pid); // will fire exit event below and cleanup
+    }, (synclet.timeout) ? synclet.timeout : 30*60*1000);
+
     app.stderr.on('data', function (data) {
-        localError(info.title+" "+synclet.name, "STDERR: "+data.toString());
+        localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
     app.stdout.on('data',function (data) {
@@ -286,6 +288,7 @@ function executeSynclet(info, synclet, callback) {
     });
 
     app.on('exit', function (code,signal) {
+        clearTimeout(timer);
         var response;
         try {
             response = JSON.parse(dataResponse);
@@ -295,7 +298,7 @@ function executeSynclet(info, synclet, callback) {
             if (callback) callback(E);
             return;
         }
-        console.log("Synclet "+synclet.name+" finished for "+info.id);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         var tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
@@ -373,78 +376,78 @@ function checkStatus(info) {
 }
 
 function processData (deleteIDs, info, key, data, callback) {
-    // console.error(deleteIDs);
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
-    logger.debug("processing synclet data from "+key+" of length "+len);
+    var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
+    var idr = lutil.idrNew(type, info.provider, undefined, key, info.id);
+    if(len > 0) logger.info("processing synclet data from "+idr+" of length "+len);
     var collection = info.id + "_" + key;
-    var eventType = key + "/" + info.provider;
 
     if (key.indexOf('/') !== -1) {
-        collection = info.id + "_" + key.substring(key.indexOf('/') + 1);
-        eventType = key.substring(0, key.indexOf('/')) + "/" + info.provider;
-        key = key.substring(key.indexOf('/') + 1);
+        console.error("DEPRECIATED, dropping! "+key);
+        return callback();
     }
 
     var mongoId;
     if(typeof info.mongoId === 'string')
         mongoId = info.mongoId
     else if(info.mongoId)
-        mongoId = info.mongoId[key + 's'] || 'id';
+        mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
     else
         mongoId = 'id';
 
     datastore.addCollection(key, info.id, mongoId);
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(collection, mongoId, data, info, eventType, function(err) {
+        addData(collection, mongoId, data, info, idr, function(err) {
             if(err) {
                 callback(err);
             } else {
-                deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
+                deleteData(collection, mongoId, deleteIDs, info, idr, callback);
             }
         });
     } else if (data && data.length > 0) {
-        addData(collection, mongoId, data, info, eventType, callback);
+        addData(collection, mongoId, data, info, idr, callback);
     } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(collection, mongoId, deleteIDs, info, eventType, callback);
+        deleteData(collection, mongoId, deleteIDs, info, idr, callback);
     } else {
         callback();
     }
 }
 
-function deleteData (collection, mongoId, deleteIds, info, eventType, callback) {
+function deleteData (collection, mongoId, deleteIds, info, idr, callback) {
     var q = async.queue(function(id, cb) {
-        var newEvent = {obj : {source : eventType, type: 'delete', data : {}}};
-        newEvent.obj.data[mongoId] = id;
-        newEvent.fromService = info.id;
-        levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+        var r = url.parse(idr);
+        r.hash = id.toString();
+        levents.fireEvent(url.format(r), 'delete');
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-function addData (collection, mongoId, data, info, eventType, callback) {
+function addData (collection, mongoId, data, info, idr, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + eventType, "missing primary key value: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + url.format(idr), "missing primary key (" + mongoId + ") value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
-            var newEvent = {obj : {source : collection, type: object.type, data: object.obj}};
-            newEvent.fromService = info.id;
+            var r = url.parse(idr);
+            r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
-                levents.fireEvent(eventType, newEvent.fromService, newEvent.obj.type, newEvent.obj);
+                levents.fireEvent(url.format(r), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
-                datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
+                var source = r.pathname.substring(1);
+                var options = {timeStamp: object.timestamp};
+                if(info.strip && info.strip[source]) options.strip = info.strip[source];
+                datastore.addObject(collection, object.obj, options, function(err, type, doc) {
                     if (type === 'same') return cb();
-                    newEvent.obj.data = doc;
-                    levents.fireEvent(eventType, newEvent.fromService, type, newEvent.obj);
+                    levents.fireEvent(url.format(r), type, doc);
                     return cb();
                 });
             }
@@ -477,7 +480,7 @@ exports.migrate = function(installedDir, metaData) {
                 try {
                     var cwd = process.cwd();
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
-                    console.log("running synclet migration : " + migrations[i] + " for service " + metaData.title);
+                    logger.info("running synclet migration : " + migrations[i] + " for service " + metaData.title);
                     if (migrate(installedDir)) {
                         var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, installedDir, 'me.json'), 'utf8'));
                         lutil.extend(true, metaData, curMe);
@@ -487,7 +490,7 @@ exports.migrate = function(installedDir, metaData) {
                     }
                     process.chdir(cwd);
                 } catch (E) {
-                    console.log("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
+                    logger.error("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
                     process.chdir(cwd);
                 }
             }
@@ -507,55 +510,18 @@ function mapMetaData(file) {
 }
 
 function addUrls() {
-    var apiKeys;
-    var host = lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
-        try {
-            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
-        } catch(e) {
-            return console.log('Error reading apikeys.json file - ' + e);
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
+        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
+        var host = lconfig.externalBase + "/";
+        for (var i in synclets.available) {
             var synclet = synclets.available[i];
-            if (synclet.provider === 'facebook') {
-                if (apiKeys.facebook)
-                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +
-                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" +
-                                        "&scope=email,offline_access,read_stream,user_photos,friends_photos,user_photo_video_tags";
-            } else if (synclet.provider === 'twitter') {
-                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
-            } else if (synclet.provider === 'flickr') {
-                if (apiKeys.flickr) synclet.authurl = host + "auth/flickr/auth";
-            } else if (synclet.provider === 'tumblr') {
-                if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
-            } else if (synclet.provider === 'foursquare') {
-                if (apiKeys.foursquare)
-                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
-                                                            "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
-            } else if (synclet.provider === 'gcontacts') {
-                if (apiKeys.gcontacts)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
-                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" +
-                                                    "&scope=https://www.google.com/m8/feeds/&response_type=code";
-            } else if (synclet.provider === 'gplus') {
-                if (apiKeys.gplus)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
-                                                    "&redirect_uri=" + host + "auth/gplus/auth" +
-                                                    "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
-            } else if (synclet.provider === 'instagram') {
-                if (apiKeys.instagram)
-                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
-                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
-            } else if (synclet.provider === 'glatitude') {
-                if (apiKeys.glatitude)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
-                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
-                                                    "&scope=" + synclet.provider_args.scope +
-                                                    "&response_type=code";
-            } else if (synclet.provider === 'github') {
-                if (apiKeys.github)
-                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
-                                                    '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            if(!apiKeys[synclet.provider]) continue;
+            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+            if(authModule.authUrl) {
+                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+            } else {
+                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
             }
         }
     }

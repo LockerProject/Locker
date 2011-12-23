@@ -59,5 +59,5 @@ function tweet()
 }
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 100, true);
+    reload(0, null, true);
 });

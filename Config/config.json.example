@@ -1,7 +1,6 @@
 {
     "lockerHost" : "localhost",
     "lockerPort" : 8042,
-    "logFile": null,
     "me" : "Me",
     "scannedDirs" : [
         "Apps",
@@ -12,6 +11,12 @@
         "dataDir": "mongodata",
         "host": "localhost",
         "port": 27018
+    },
+    "logging": {
+        "level": "error",
+        "console": true,
+        "file": "locker.out",
+        "maxsize": 33554432
     },
     "dashboard" : {
         "customLogo": "tlp_logo.png",

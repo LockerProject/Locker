@@ -13,6 +13,8 @@ var externalBase = window.location.origin;
 
 var _kmq = _kmq || [];
 
+var syncletInstalled = function() {};
+
 $(document).ready(
     function() {
         // any mouse activity resets it
@@ -80,7 +82,7 @@ $(document).ready(
           else
             expandServices();
         });
-        
+
         function showDevDocsPage(page) {
             if(typeof page !== 'string' || page == undefined) page = "";
             app = 'devdocs';
@@ -91,15 +93,15 @@ $(document).ready(
         }
         $('.devdocs-box').click(showDevDocsPage);
         $('li.develop span.label').click(showDevDocsPage);
-        
+
         $('.devdocs-explorer').click(function() {
             showDevDocsPage('explorer.html');
         });
-        
+
         $('.devdocs-local').click(function() {
             showDevDocsPage('local.html');
         });
-        
+
         $('.syncviewers').click(function() {
             showGritter('syncgithub');
             $.getJSON("/synclets/github/run?id=repos", function(success) {
@@ -231,20 +233,17 @@ function search() {
     var q = searchTerm = $('.search')[0].value;
     var baseURL = '/Me/search/query';
     var star = (q.length < 3 || q.substr(-1) == ' ') ? "" : "*";
-    $.get(baseURL, {q: q + star, type: 'contact*', limit: 3}, function(results) {
-        processResults('people', resXform(results), q);
+    $.get(baseURL, {q: q + star, type: 'contact', limit: 3}, function(results) {
+        processResults('people', results, q);
     });
-    $.get(baseURL, {q: q + star, type: 'photo*', limit: 3}, function(results) {
-        processResults('photos', resXform(results), q);
+    $.get(baseURL, {q: q + star, type: 'photo', limit: 3}, function(results) {
+        processResults('photos', results, q);
     });
-    $.get(baseURL, {q: q + star, type: 'timeline/twitter*', limit: 3}, function(results) {
-        processResults('tweets', resXform(results), q);
+    $.get(baseURL, {q: q + star, type: 'place', limit: 3}, function(results) {
+        processResults('places', results, q);
     });
-    $.get(baseURL, {q: q + star, type: 'place*', limit: 3}, function(results) {
-        processResults('places', resXform(results), q);
-    });
-    $.get('/Me/links/search', {q: q + star, limit: 3}, function(otherData) {
-        processResults('links', otherData, q);
+    $.get(baseURL, {q: q + star, type: 'link', limit: 3}, function(results) {
+        processResults('links', results, q);
     });
 }
 
@@ -257,15 +256,18 @@ function processResults(name, results, query) {
     if(query != searchTerm) return; // bail if search changed!
     var ids = {};
     if (results !== undefined && results.length > 0) {
+        $('.search-header-row.' + name).hide();
+        $('.search-result-row.' + name).remove();
+
         for (var i = 0; i < $('.search-result-row.' + name).length; i++) {
             ids[$($('.search-result-row.' + name)[i]).attr('id')] = true;
         }
         updateHeader(name, query);
         for (var i = 0; i < results.length; i++) {
-            if (results[i] !== undefined) {
+            if (results[i] !== undefined && results[i].data) {
                 var obj = results[i];
-                delete ids[obj._id];
-                if ($('#' + obj._id + '.' + name).length === 0) {
+                delete ids[obj.data.id];
+                if ($('#' + obj.data.id + '.' + name).length === 0) {
                     if (renderRow(name, obj) === false) {
                         results.splice(i, 1);
                         i--;
@@ -308,7 +310,7 @@ function renderRow(name, obj) {
     var newResult = $('.search-result-row.template').clone();
     newResult.removeClass('template');
     newResult.addClass(name);
-    newResult.attr('id', obj._id);
+    newResult.attr('id', obj.data.id);
     if (resultModifiers[name](newResult, obj) === false) {
         return false;
     }
@@ -318,18 +320,18 @@ function renderRow(name, obj) {
 var resultModifiers = {};
 
 resultModifiers.people = function(newResult, obj) {
-    newResult.children('.search-result').html(obj.fullobject.name);
-    if (obj.fullobject['photos']) {
-        newResult.find('.search-result-icon').attr('src', obj.fullobject.photos[0]);
+    newResult.children('.search-result').html(obj.data.name);
+    if (obj.data['photos']) {
+        newResult.find('.search-result-icon').attr('src', obj.data.photos[0]);
     } else {
         newResult.find('.search-result-icon').attr('src', '/static/img/silhouette.png');
     }
-    newResult.click(function() { app = 'contacts'; renderApp('view-' + obj._id); });
+    newResult.click(function() { app = 'contacts'; renderApp('view-' + obj.data._id); });
 }
 
 resultModifiers.photos = function(newResult, obj) {
-    newResult.children('.search-result').html(obj.fullobject.title);
-    newResult.find('.search-result-icon').attr('src', obj.fullobject['thumbnail'] || obj.fullobject['url']);
+    newResult.children('.search-result').html(obj.data.title);
+    newResult.find('.search-result-icon').attr('src', obj.data['thumbnail'] || obj.data['url']);
     var img = newResult.find('.search-result-icon')[0];
     img.onload = function() {
         if (this.clientWidth > 36) {
@@ -337,22 +339,22 @@ resultModifiers.photos = function(newResult, obj) {
             $(this).css('left', left * -1);
         }
     }
-    newResult.click(function() { app = 'photos'; renderApp('view-' + obj._id); });
+    newResult.click(function() { app = 'photos'; renderApp('view-' + obj.data.id); });
 }
 
 resultModifiers.links = function(newResult, obj) {
-    if (obj.title === undefined) {
+    if (obj.data.title === undefined) {
         return false;
     }
-    newResult.attr('title', obj.title);
-    newResult.children('.search-result').html(obj.title);
-    newResult.find('.search-result-icon').attr('src', obj.favicon || 'img/link.png').addClass("favicon");
-    newResult.click(function() { window.open(obj.link,'_blank'); });
+    newResult.attr('title', obj.data.title);
+    newResult.children('.search-result').html(obj.data.title);
+    newResult.find('.search-result-icon').attr('src', obj.data.favicon || 'img/link.png').addClass("favicon");
+    newResult.click(function() { window.open(obj.data.link,'_blank'); });
 }
 
 resultModifiers.places = function(newResult, obj) {
-    newResult.children('.search-result').html(obj.fullobject.title);
-    switch (obj.fullobject.network) {
+    newResult.children('.search-result').html(obj.data.title);
+    switch (obj.data.network) {
         case 'foursquare':
             newResult.find('.search-result-icon').attr('src', '/dashboard/img/icons/foursquare.png');
             break;
@@ -365,14 +367,7 @@ resultModifiers.places = function(newResult, obj) {
         default:
             newResult.find('.search-result-icon').attr('src', 'silhouette.png');
     }
-    newResult.click(function() { app = 'places'; renderApp('view-' + obj._id); });
-}
-
-resultModifiers.tweets = function(newResult, obj) {
-    newResult.attr('title', obj.fullobject.text);
-    newResult.children('.search-result').html(obj.fullobject.text);
-    newResult.find('.search-result-icon').attr('src', obj.fullobject.user.profile_image_url_https);
-    newResult.click(function() { window.open('https://www.twitter.com/' + obj.fullobject.user.screen_name + '/status/' + obj.fullobject.id_str, '_blank'); });
+    newResult.click(function() { app = 'places'; renderApp('view-' + obj.data.id); });
 }
 
 /*

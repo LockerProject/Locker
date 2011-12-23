@@ -16,6 +16,7 @@ var spawn = require('child_process').spawn;
 var levents = require('levents');
 var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
+var logger = require('logger');
 
 var serviceMap = {
     available:[],
@@ -26,7 +27,7 @@ var serviceMap = {
 
 var shuttingDown = null;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
-console.log('lservicemanager lockerPortNext = ' + lockerPortNext);
+logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 exports.serviceMap = function() {
     var sterilized = lutil.extend(true, {}, serviceMap);
@@ -81,9 +82,9 @@ function mapMetaData(file, type, installable) {
     metaData.installable = installable;
     serviceMap.available.push(metaData);
     if (type === "collection") {
-        console.log("***** Should install collection " + metaData.handle);
+        logger.info("***** Should install collection " + metaData.handle);
         if(!metaData.handle) {
-            console.error("missing handle for "+file);
+            logger.error("missing handle for "+file);
             return;
         }
         if (metaData.status != 'stub') {
@@ -189,12 +190,11 @@ exports.mapUpsert = function (file, type) {
         }
         if(!metaData.handle) throw new Error("no handle");
     } catch (E) {
-        console.error("failed to upsert "+file+" due to "+E);
+        logger.error("failed to upsert "+file+" due to "+E);
         return;
     }
     metaData.manifest = file;
     metaData.srcdir = path.dirname(file);
-    metaData.is = type;
     metaData.installable = true;
     // replace references in available array (legacy)
     var found = false;
@@ -206,7 +206,10 @@ exports.mapUpsert = function (file, type) {
     });
     if(!found) serviceMap.available.push(metaData);
     // update any "installed"
-    exports.install(metaData);
+    if(type && type === "install" && !serviceMap.installed[metaData.handle])
+    {
+        exports.install(metaData);
+    }
     if(serviceMap.installed[metaData.handle]) return serviceMap.installed[metaData.handle] = lutil.extend(serviceMap.installed[metaData.handle], metaData);
     return metaData;
 }
@@ -230,16 +233,16 @@ exports.findInstalled = function () {
                 js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
                 serviceMap.installed[js.id] = js;
                 if (js.disabled) {
-                    console.log("Disabled " + js.id);
+                    logger.info("Disabled " + js.id);
                     serviceMap.disabled.push(js.id);
                 } else {
                     js = serviceMap.installed[js.id] = exports.migrate(dir, js);
                     addEvents(js);
-                    console.log("Loaded " + js.id);
+                    logger.info("Loaded " + js.id);
                 }
             }
         } catch (E) {
-//            console.log("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
+//            logger.error("Me/"+dirs[i]+" does not appear to be a service (" +E+ ")");
         }
     }
 }
@@ -269,7 +272,7 @@ exports.migrate = function(installedDir, metaData) {
             if (migrations[i].substring(0, 13) > metaData.version) {
                 try {
                     var cwd = process.cwd();
-                    console.log("running migration : " + migrations[i] + " for service " + metaData.title);
+                    logger.info("running migration : " + migrations[i] + " for service " + metaData.title);
                     migrate = require(cwd + "/" + metaData.srcdir + "/migrations/" + migrations[i]);
                     var ret = migrate(installedDir); // prolly needs to be sync and given a callback someday
                     if (ret) {
@@ -281,7 +284,7 @@ exports.migrate = function(installedDir, metaData) {
                                                   JSON.stringify(curMe, null, 4));
                     }else{
                         // this isn't clean but we have to do something drastic!!!
-                        console.error("failed to run migration!");
+                        logger.error("failed to run migration!");
                         process.exit(1);
                     }
                     // if they returned a string, it's a post-startup callback!
@@ -291,7 +294,7 @@ exports.migrate = function(installedDir, metaData) {
                     }
                     process.chdir(cwd);
                 } catch (E) {
-                    console.log("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
+                    logger.log("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
                     process.chdir(cwd);
                 }
             }
@@ -380,7 +383,7 @@ exports.install = function(metaData, installOverride) {
 exports.spawn = function(serviceId, callback) {
     var svc = exports.metaInfo(serviceId);
     if (!svc) {
-        console.error("Attempting to spawn an unknown service " + serviceId);
+        logger.error("Attempting to spawn an unknown service " + serviceId);
         return;
     }
 
@@ -389,7 +392,7 @@ exports.spawn = function(serviceId, callback) {
     // Queue up callbacks if we are already trying to start this service
     if (callback) {
         if (svc.hasOwnProperty("starting")) {
-            console.log(svc.id + " is still spawning, adding callback to queue.");
+            logger.info(svc.id + " is still spawning, adding callback to queue.");
             svc.starting.push(callback);
             return;
         } else {
@@ -413,14 +416,14 @@ exports.spawn = function(serviceId, callback) {
     }
     run = run || svc.run;
     if(!run) {
-        console.error('Could not spawn service from source directory', svc.srcdir);
+        logger.error('Could not spawn service from source directory ' +  svc.srcdir);
         return;
     }
 
     run = run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
-    console.log('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
+    logger.info('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = {
         port: svc.port, // This is just a suggested port
         sourceDirectory: path.join(lconfig.lockerDir, svc.srcdir),
@@ -440,18 +443,14 @@ exports.spawn = function(serviceId, callback) {
     var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
-        var mod = console.outputModule;
-        console.outputModule = svc.title;
-        console.error(data);
-        console.outputModule = mod;
+        process.stderr.write('[' + svc.id + '] ' + data.toString());
     });
     var dbuff = "";
     app.stdout.on('data',function (data) {
-        var mod = console.outputModule;
-        console.outputModule = svc.title;
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
-            console.log(data);
+            // process.stdout.setEncoding('utf-8');
+            process.stdout.write('[' + svc.id + '] ' + data.toString());
         } else {
             // Process the startup json info
             dbuff += data;
@@ -462,25 +461,24 @@ exports.spawn = function(serviceId, callback) {
             }catch(error){
                 if(dbuff.substr(0,1) == '{')
                 { // json hasn't all been written yet, come back, should use newline terminated!
-                    console.outputModule = mod;
                     return;
                 }
-                console.error("The process did not return valid startup information. "+error+" on "+dbuff);
+                logger.error("The process did not return valid startup information. "+error+" on "+dbuff);
                 app.kill();
             }
             try {
                 // if they tell us a port, use that
                 if(returnedProcessInformation.port) svc.port = returnedProcessInformation.port;
                 svc.uriLocal = "http://localhost:"+svc.port+"/";
-                console.log("Set local uri to " + svc.uriLocal + " for " + svc.id);
+                logger.info("Set local uri to " + svc.uriLocal + " for " + svc.id);
                 // save out all updated meta fields
                 //fs.writeFileSync(lconfig.lockerDir + "/" + lconfig.me + "/" + svc.id + '/me.json',JSON.stringify(svc, null, 4));
                 // Set the pid after the write because it's transient to this locker instance only
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
                 delete svc.startingPid;
-                console.log(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
-                svc.starting.forEach(function(cb) {
+                logger.info(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
+                if(svc.starting) svc.starting.forEach(function(cb) {
                     cb.call();
                     // See if it ended whilst running the callbacks
                     if (!svc.hasOwnProperty("pid") && svc.starting.length > 0) {
@@ -493,15 +491,14 @@ exports.spawn = function(serviceId, callback) {
                 });
                 delete svc.starting;
             } catch(error) {
-                console.error("The process did not return valid startup information. "+error);
+                logger.error("The process did not return valid startup information. "+error);
                 app.kill();
             }
         }
-        console.outputModule = mod;
 
     });
     app.on('exit', function (code,signal) {
-        console.log(svc.id + " process has ended. (" + code + ":" + signal + ")");
+        logger.info(svc.id + " process has ended. (" + code + ":" + signal + ")");
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
@@ -516,13 +513,31 @@ exports.spawn = function(serviceId, callback) {
         */
         checkForShutdown();
     });
-    console.log("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+    logger.verbose("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.on('error',function(err){
-        console.error("STDIN error:",err);
+        logger.error("STDIN error:" + util.inspec(err));
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
+    svc.last = Date.now();
+    setTimeout(function() { quiesce(svc); }, lconfig.quiesce);
+}
+
+function quiesce(svc)
+{
+    if(!svc) return;
+    if(svc.starting || Date.now() - svc.last < (lconfig.quiesce / 2)){
+        logger.info("delaying quiesce for "+svc.id);
+        return setTimeout(function() { quiesce(svc); }, lconfig.quiesce);
+    }
+    if(!svc.pid) return logger.warn("trying to quiesce "+svc.id+" but missing pid");
+    try {
+        logger.info("quiesce idle service " + svc.id + " at pid " + svc.pid);
+        process.kill(svc.pid, "SIGTERM");
+    } catch(e) {
+        logger.error("got error while quiescing: "+e);
+    }
 }
 
 /**
@@ -531,8 +546,8 @@ exports.spawn = function(serviceId, callback) {
 exports.metaInfo = function(serviceId) {
     /*
     var installedInfo = serviceMap.installed[serviceId] || {};
-    console.log("metaInfo")
-    console.dir(installedInfo);
+    logger.debug("metaInfo")
+    logger.debug(installedInfo);
     var serviceInfo;
     serviceMap.available.some(function(svcInfo) {
         if (svcInfo.srcdir == installedInfo.srcdir) {
@@ -543,7 +558,7 @@ exports.metaInfo = function(serviceId) {
         return false;
     });
     if (!serviceInfo) {
-        console.log("Unknown");
+        logger.warn("Unknown");
         throw "Unknown service " + serviceId;
     }
     serviceMap.installed[serviceId] = lutil.extend(serviceInfo, installedInfo);
@@ -585,7 +600,7 @@ exports.shutdown = function(cb) {
         var svc = serviceMap.installed[mapEntry];
         if (svc.pid) {
             try {
-                console.log("Killing running service " + svc.id + " at pid " + svc.pid);
+                logger.info("Killing running service " + svc.id + " at pid " + svc.pid);
                 process.kill(svc.pid, "SIGINT");
             } catch(e) {
             }
@@ -605,7 +620,7 @@ exports.disable = function(id, callback) {
     if (svc) {
         if (svc.pid) {
             try {
-                console.log("Killing running service " + svc.id + " at pid " + svc.pid);
+                logger.info("Killing running service " + svc.id + " at pid " + svc.pid);
                 process.kill(svc.pid, "SIGINT");
             } catch (e) {}
         }
@@ -671,7 +686,7 @@ function checkForShutdown() {
     for(var mapEntry in serviceMap.installed) {
         var svc = serviceMap.installed[mapEntry];
         if (svc.pid)  {
-            console.log(svc.id + " is still running, cannot complete shutdown.");
+            logger.info(svc.id + " is still running, cannot complete shutdown.");
             return;
         }
     }

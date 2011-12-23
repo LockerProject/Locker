@@ -2,6 +2,7 @@ var dataStore = require('../ldatastore')
   , fs = require('fs')
   , path = require('path')
   , lconfig = require('../lconfig')
+  , logger = require('../logger')
   , lfs = require('../lfs')
   ;
 
@@ -15,14 +16,24 @@ module.exports = function(app) {
             if(req.query['limit']) options.limit = parseInt(req.query['limit']);
             if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
-            dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
-                if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
-                } else {
-                    res.send(objects);
-                }
-            }, options);
+            if(req.query['stream'] == "true")
+            {
+                res.writeHead(200, {'content-type' : 'application/jsonstream'});
+                dataStore.getEachCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, object) {
+                    if (err) logger.error(err); // only useful here for logging really
+                    if (!object) return res.end();
+                    res.write(JSON.stringify(object)+'\n');
+                }, options);
+            }else{
+                dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
+                    if (err) {
+                        res.writeHead(500, {'content-type' : 'application/json'});
+                        res.end('{error : ' + err + '}')
+                    } else {
+                        res.send(objects);
+                    }
+                }, options);
+            }
         });
     });
 
@@ -38,7 +49,7 @@ module.exports = function(app) {
         dataStore.init('synclets', function() {
             fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
                 var file;
-                for (var i = 0; i < files.length; i++) {
+                for (var i = 0; files && i < files.length; i++) {
                     if (files[i].match('^' + id + '\\.[a-zA-Z0-9]+')) {
                         file = files[i];
                         break;
@@ -73,7 +84,7 @@ module.exports = function(app) {
         dataStore.init('synclets', function() {
             dataStore.getCurrent('synclets', req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
-                    console.error(err);
+                    logger.error(err);
                     res.end();
                 } else if (doc) {
                     res.writeHead(200, {'content-type' : 'application/json'});

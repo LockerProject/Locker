@@ -13,8 +13,8 @@ var fs = require('fs');
 var path = require('path');
 var fakeweb = require('node-fakeweb');
 var lconfig = require("lconfig");
-var lcrypto = require("lcrypto");
 lconfig.load("Config/config.json");
+var lcrypto = require("lcrypto");
 var registry = require("../Ops/registry.js");
 try { fs.unlinkSync(path.join(lconfig.lockerDir, lconfig.me, "registry.json")); } catch(e) {}
 
@@ -28,6 +28,7 @@ suite.addBatch({
             var self = this;
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'http://registry.singly.com/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
+            fakeweb.registerUri({uri : 'http://registry.singly.com:80/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
             registry.init(lconfig, lcrypto, function(i){
                 installed = i;
                 self.callback();

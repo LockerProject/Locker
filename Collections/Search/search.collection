@@ -5,5 +5,5 @@
     "status":"unstable",
     "handle":"search",
     "provides":["search"],
-    "events":[["contact","/events"],["photo","/events"],["timeline/twitter","/events"],["status/facebook","/events"],["place","/events"]]
+    "events":[["contact/contacts","/events"],["photo/photos","/events"],["link/links","/events"],["place/places","/events"]]
 }
