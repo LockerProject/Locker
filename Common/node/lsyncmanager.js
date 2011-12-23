@@ -428,24 +428,24 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
 
     getIJOD(info.id, key, true, function(ij){
         if (deleteIDs && deleteIDs.length > 0 && data) {
-            addData(collection, mongoId, data, info, idr, function(err) {
+            addData(collection, mongoId, data, info, synclet, idr, ij, function(err) {
                 if(err) {
                     callback(err);
                 } else {
-                    deleteData(collection, mongoId, deleteIDs, info, idr, ij, callback);
+                    deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
                 }
             });
         } else if (data && data.length > 0) {
-            addData(collection, mongoId, data, info, idr, ij, callback);
+            addData(collection, mongoId, data, info, synclet, idr, ij, callback);
         } else if (deleteIDs && deleteIDs.length > 0) {
-            deleteData(collection, mongoId, deleteIDs, info, idr, ij, callback);
+            deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
         } else {
             callback();
         }
     })
 }
 
-function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callback) {
+function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, callback) {
     var q = async.queue(function(id, cb) {
         var r = url.parse(idr);
         r.hash = id.toString();
@@ -457,7 +457,7 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callbac
     q.drain = callback;
 }
 
-function addData (collection, mongoId, data, info, synclet, idr, callback) {
+function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
