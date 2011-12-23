@@ -1,7 +1,11 @@
 var app;
 var specialApps = {
-    "allApps" : "allApps"
+    "allApps" : "allApps",
+    "publish" : "publish",
+    "viewAll" : "viewAll"
 };
+
+var iframeLoaded = function() {};
 
 $(document).ready(function() {
   app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
@@ -18,20 +22,30 @@ $(document).ready(function() {
     popup.focus();
     return false;
   });
+
+  $('.your-apps').click(function() {
+    $('.blue').removeClass('blue');
+    $(this).addClass('blue');
+    document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+  });
 });
 
-var loadApp = function() {
+var loadApp = function(callback) {
+  if (callback) {
+    iframeLoaded = callback;
+  } else {
+    iframeLoaded = function() {};
+  }
   $('.app-details').hide();
-  $('.iframeLink').removeClass('blue');
+  $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
-    $('.iframeLink[data-id="' + app + '"]').addClass('blue');
   } else {
     $.get('clickapp/' + app, function(e) {});
-    $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
   }
+  $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
 };
 
 var syncletInstalled = function(provider) {

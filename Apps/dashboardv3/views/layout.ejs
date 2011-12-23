@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <script src="js/dashboard.js"></script>
+  </head>
+  <body class="app-page">
+
+    <header class="header">
+      <div class="user-info">
+        <a href='/'><img class="avatar" src="<%= profileImage %>"></a>
+        <div class="user-info-name"><a class='user-info-name-link' href='/'></a></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav">
+          <a <% if (page === 'you') { %>class='selected'<% } %> href='you'>YOU</a>
+          <a <% if (page === 'explore') { %>class='selected'<% } %> href='#'>EXPLORE</a>
+          <a <% if (page === 'create') { %>class='selected'<% } %> href='create'>CREATE</A>
+        </div>
+        <% if (dashboard && dashboard.customHostedEndpoint) { %>
+          <div class="hosted-nav">
+            <a href='<%= dashboard.customLogout %>'>Sign out</a>
+            <a href='<%= dashboard.customSettings %>'>Account Settings</a>
+            <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
+          </div>
+          <script src="js/hosted.js"></script>
+          <script src="<%= dashboard.customHostedEndpoint %>"></script>
+        <% } %>
+      </div>
+    </header>
+    <aside class="sidenav">
+      <%- body %>
+    </aside>
+    <iframe id="appFrame"></iframe>
+
+  </body>
+</html>
+

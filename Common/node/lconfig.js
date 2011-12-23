@@ -62,6 +62,7 @@ exports.load = function(filepath) {
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
     exports.ui = config.ui || 'useui';
+    exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
 }
 

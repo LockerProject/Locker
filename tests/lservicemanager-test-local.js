@@ -41,21 +41,18 @@ vows.describe("Service Manager").addBatch({
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
             "and can be installed" : {
-                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                topic:serviceManager.install({srcdir:"Connectors/IMAP"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
                 "setting a version number equivalent to the highest migration" : function(svcMetaInfo) {
-                    assert.equal(svcMetaInfo.version, 1340889652916);
+                    assert.equal(svcMetaInfo.version, 1309052268000);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
-                },
-                "and passes along the icon": function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
         }
@@ -126,7 +123,7 @@ vows.describe("Service Manager").addBatch({
                 assert.equal(serviceManager.getFromAvailable("facebookconnector").handle, "facebookconnector");
             },
             "and can be installed" : {
-                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                topic:serviceManager.install({srcdir:"Connectors/IMAP"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
@@ -138,9 +135,6 @@ vows.describe("Service Manager").addBatch({
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
-                },
-                "and passes along the icon": function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
         }

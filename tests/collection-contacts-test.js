@@ -48,7 +48,7 @@ suite.next().suite.addBatch({
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact"}, function() {
                 lmongoclient.connect(function(mongo) {
                     mongoCollections = mongo.collections.contact;
-                    contacts.init(lconfig.lockerBase, mongoCollections, mongo);
+                    contacts.init(lconfig.lockerBase, mongoCollections, mongo, lconfig);
                     dataStore.init(mongoCollections, mongo);
                     dataStore.clear();
                     contacts.getContacts('foursquare', 'contact', 'foursquare', function() {
