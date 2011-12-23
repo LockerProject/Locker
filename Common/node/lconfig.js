@@ -55,6 +55,12 @@ exports.load = function(filepath) {
         maxsize: config.logging.maxsize || 256 * 1024 * 1024, // default max log file size of 64MBB
         console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
     };
+    if(!config.tolerance) config.tolerance = {};
+    exports.tolerance =  {
+        threshold: config.tolerance.threshold || 50, // how many new/updated items
+        maxstep: config.tolerance.maxstep || 10, // what is the largest frequency multiplier
+        idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
+    };
     exports.ui = config.ui || 'useui';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;

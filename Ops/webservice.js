@@ -511,6 +511,11 @@ locker.use(express.static(__dirname + '/static'));
 locker.all('/dashboard*', function(req, res) {
     req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
+    // detect when coming back from idle, and flush any delayed synclets if configured to do so
+    if(locker.last && lconfig.tolerance.idle && (Date.now() - locker.last) > (lconfig.tolerance.idle * 1000)) syncManager.flushTolerance(function(err){
+        if(err) logger.error("got error when flushing synclets: "+err);
+    });
+    locker.last = Date.now();
 });
 
 locker.all("/socket.io*", function(req, res) {
