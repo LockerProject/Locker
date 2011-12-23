@@ -158,16 +158,13 @@ exports.atomicWriteFileSync = function(dest, data) {
 exports.streamFromUrl = function(url, cbEach, cbDone) {
     var ended = false;
     var q = async.queue(function(chunk, cb){
-        console.error("doing chunk");
         if(chunk == "") return cb();
-        try{ var js = JSON.parse(chunk); }catch(E){
-            logger.error("got "+E+" processing "+chunk);
-            return cb();
-        }
+        try{ var js = JSON.parse(chunk); }catch(E){ return cb(); }
         cbEach(js, cb);
     },1);
+    var error;
     var req = request.get({uri:url}, function(err){
-        if(err) logger.error(url+" "+err);
+        if(err) error = err;
         ended = true;
         q.push(""); // this triggers the drain if there was no data, GOTCHA
     });
@@ -180,7 +177,7 @@ exports.streamFromUrl = function(url, cbEach, cbDone) {
     });
     q.drain = function(){
         if(!ended) return; // drain can be called many times, we only care when it's after data is done coming in
-        cbDone();
+        cbDone(error);
     };
     req.on("end",function(){
         ended = true;
