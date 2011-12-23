@@ -33,7 +33,7 @@ suite.addBatch({
         topic: function() {
             var self = this;
             console.error(lconfig.me);
-            myIJOD = new IJOD({name:"ijodtest", dir:path.join(lconfig.lockerDir, lconfig.me)}, function(err){
+            myIJOD = new IJOD({name:"Data/ijodtest", dir:path.join(lconfig.lockerDir, lconfig.me)}, function(err){
                 if(err) errs.push(err);
                 myIJOD.addData(events[0], function(err) {
                     if(err) errs.push(err);

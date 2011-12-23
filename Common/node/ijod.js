@@ -90,11 +90,15 @@ IJOD.prototype.delData = function(arg, callback) {
     this.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
 }
 
+// this only calls callback(err, rawstring) once!
 IJOD.prototype.getOne = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
     arg.id = arg.id.toString(); // safety w/ numbers
     var self = this;
+    var did = false;
     self.db.query("SELECT at,len FROM ijod WHERE id = ? LIMIT 1", [arg.id], function(err, row){
+        if(did) return; // only call callback ones
+        did = true;
         if(err) return callback(err);
         if(!row) return callback();
         var buf = new Buffer(row.len);
@@ -105,6 +109,7 @@ IJOD.prototype.getOne = function(arg, callback) {
     });
 }
 
+// will call callback(err, rawstring) continuously until rawstring==undefined
 IJOD.prototype.getAll = function(arg, callback) {
     if(!arg) return callback("invalid arg");
     var params = [];

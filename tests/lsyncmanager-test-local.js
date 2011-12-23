@@ -247,23 +247,6 @@ vows.describe("Synclet Manager").addBatch({
         }
     }
 }).addBatch({
-    "If the source doesn't return an ID" : {
-        topic: function() {
-            allEvents = {};
-            var self = this;
-            colls.testSynclet_testSync.drop(function() {
-                syncManager.syncNow("testSynclet", function() {
-                    colls.testSynclet_testSync.count(self.callback);
-                });
-            });
-        },
-        "it will generate a delete event and remove the row from mongo" : function(err, count) {
-            assert.equal(count, 0);
-            assert.equal(Object.keys(allEvents).length, 1);
-            assert.equal(allEvents['testsync://testsynclet/testSync?id=testSynclet#500'].action, 'delete');
-        }
-    }
-}).addBatch({
     "Running testSynclet again" : {
         topic: function() {
             syncManager.syncNow("testSynclet", this.callback);

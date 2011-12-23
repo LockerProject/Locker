@@ -148,18 +148,6 @@ vows.describe("Push Manager").addBatch({
         }
     }
 }).addBatch({
-    "rows can be deleted by posting delete commands" : {
-        topic: function() {
-            var self = this;
-            pushManager.acceptData('testing', dataSets[4], function() {
-                colls.push_testing.count(self.callback);
-            });
-        },
-        "as well" : function(err, count) {
-            assert.equal(count, 0);
-        }
-    }
-}).addBatch({
     "invalid dataset names are" : {
         topic: function() {
             var self = this;
