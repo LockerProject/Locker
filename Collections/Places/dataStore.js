@@ -119,7 +119,7 @@ function processInstagram(svcId, type, data, cb) {
             path: false,
             title: (data.caption && data.caption.text) ? data.caption.text : '',
             network:"instagram",
-            from: (data.user)?data.user.username:"",
+            from: (data.user)?data.user.full_name:"",
             fromID: (data.user)?data.user.id:"",
             at: data.created_time * 1000,
             via: '/Me/' + svcId + '/' + type.split('/')[0] + '/id/'+data._id
