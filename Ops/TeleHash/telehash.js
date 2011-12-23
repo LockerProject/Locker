@@ -32,7 +32,7 @@ exports.keys = keys;
  * See time(2).
  */
 function time() {
-    return new Date().getTime() / 1000;
+    return Date.now() / 1000;
 }
 
 /**

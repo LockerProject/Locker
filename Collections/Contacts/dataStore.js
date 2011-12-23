@@ -53,7 +53,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }
@@ -91,7 +91,7 @@ exports.addTwitterData = function(data, callback) {
     var cleanedName = cleanName(data.name);
     var query = {'accounts.twitter.data.id':twID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.twitter.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -128,7 +128,7 @@ exports.addGithubData = function(data, callback) {
     var cleanedName = cleanName(data.name);
     var query = {'accounts.github.data.id':data.id};
     var set = {};
-    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.github.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -177,7 +177,7 @@ exports.addFoursquareData = function(data, callback) {
     var cleanedName = cleanName(name);
     var query = {'accounts.foursquare.data.id':foursquareID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.foursquare.$'] = baseObj;
     //name
     setName(set, name);
@@ -236,7 +236,7 @@ exports.addFacebookData = function(data, callback) {
     var cleanedName = cleanName(data.name);
     var query = {'accounts.facebook.data.id':fbID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.facebook.$'] = baseObj;
     //name
     setName(set, data.name);
@@ -272,7 +272,7 @@ exports.addGoogleContactsData = function(data, callback) {
     var cleanedName = cleanName(data.name);
     var query = {'accounts.googleContacts.data.id':gcID};
     var set = {};
-    var baseObj = {data:data, lastUpdated:new Date().getTime()};
+    var baseObj = {data:data, lastUpdated:Date.now()};
     set['accounts.googleContacts.$'] = baseObj;
     setName(set, data.name);
 
@@ -280,8 +280,8 @@ exports.addGoogleContactsData = function(data, callback) {
     if(cleanedName)
         addToSet['_matching.cleanedNames'] = cleanedName;
     //photos
-    // if(data.id && data.photo)
-    //     addToSet.photos = '/' + lconfig.me + '/gcontacts/photo/' + data.id;
+    if(data.id && data.photo)
+        addToSet.photos = '/synclets/gcontacts/getPhoto/' + data.id;
     //addresses
     if(data.address) {
         var addresses = [];

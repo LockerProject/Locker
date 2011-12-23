@@ -248,11 +248,9 @@ function executeSynclet(info, synclet, callback) {
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
-        logger.info("Delaying execution of synclet "+synclet.name+" for "+info.id);
-        scheduleRun(info, synclet);
-        if (callback) {
-            callback();
-        }
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 1000);
         return;
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
@@ -270,6 +268,12 @@ function executeSynclet(info, synclet, callback) {
 
     var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
 
+    // edge case backup, max 30 min runtime by default
+    var timer = setTimeout(function(){
+        logger.error("Having to kill long-running "+synclet.name+" synclet of "+info.id);
+        process.kill(app.pid); // will fire exit event below and cleanup
+    }, (synclet.timeout) ? synclet.timeout : 30*60*1000);
+
     app.stderr.on('data', function (data) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
@@ -279,6 +283,7 @@ function executeSynclet(info, synclet, callback) {
     });
 
     app.on('exit', function (code,signal) {
+        clearTimeout(timer);
         var response;
         try {
             response = JSON.parse(dataResponse);
@@ -369,7 +374,7 @@ function processData (deleteIDs, info, key, data, callback) {
     var len = (data)?data.length:0;
     var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
     var idr = lutil.idrNew(type, info.provider, undefined, key, info.id);
-    logger.info("processing synclet data from "+idr+" of length "+len);
+    if(len > 0) logger.info("processing synclet data from "+idr+" of length "+len);
     var collection = info.id + "_" + key;
 
     if (key.indexOf('/') !== -1) {
@@ -381,7 +386,7 @@ function processData (deleteIDs, info, key, data, callback) {
     if(typeof info.mongoId === 'string')
         mongoId = info.mongoId
     else if(info.mongoId)
-        mongoId = info.mongoId[key + 's'] || 'id';
+        mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
     else
         mongoId = 'id';
 
@@ -421,7 +426,7 @@ function addData (collection, mongoId, data, info, idr, callback) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
             if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + url.format(idr), "missing primary key value: "+JSON.stringify(object.obj));
+                localError(info.title + ' ' + url.format(idr), "missing primary key (" + mongoId + ") value: "+JSON.stringify(object.obj));
                 errs.push({"message":"no value for primary key", "obj": object.obj});
                 return cb();
             }
@@ -431,7 +436,10 @@ function addData (collection, mongoId, data, info, idr, callback) {
                 levents.fireEvent(url.format(r), 'delete');
                 datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
             } else {
-                datastore.addObject(collection, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
+                var source = r.pathname.substring(1);
+                var options = {timeStamp: object.timestamp};
+                if(info.strip && info.strip[source]) options.strip = info.strip[source];
+                datastore.addObject(collection, object.obj, options, function(err, type, doc) {
                     if (type === 'same') return cb();
                     levents.fireEvent(url.format(r), type, doc);
                     return cb();
@@ -496,55 +504,18 @@ function mapMetaData(file) {
 }
 
 function addUrls() {
-    var apiKeys;
-    var host = lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
-        try {
-            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
-        } catch(e) {
-            return logger.error('Error reading apikeys.json file - ' + e);
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
+        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
+        var host = lconfig.externalBase + "/";
+        for (var i in synclets.available) {
             var synclet = synclets.available[i];
-            if (synclet.provider === 'facebook') {
-                if (apiKeys.facebook)
-                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +
-                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" +
-                                        "&scope=email,offline_access,read_stream,user_photos,friends_photos,user_photo_video_tags";
-            } else if (synclet.provider === 'twitter') {
-                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
-            } else if (synclet.provider === 'flickr') {
-                if (apiKeys.flickr) synclet.authurl = host + "auth/flickr/auth";
-            } else if (synclet.provider === 'tumblr') {
-                if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
-            } else if (synclet.provider === 'foursquare') {
-                if (apiKeys.foursquare)
-                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
-                                                            "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
-            } else if (synclet.provider === 'gcontacts') {
-                if (apiKeys.gcontacts)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
-                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" +
-                                                    "&scope=https://www.google.com/m8/feeds/&response_type=code";
-            } else if (synclet.provider === 'gplus') {
-                if (apiKeys.gplus)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
-                                                    "&redirect_uri=" + host + "auth/gplus/auth" +
-                                                    "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
-            } else if (synclet.provider === 'instagram') {
-                if (apiKeys.instagram)
-                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
-                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
-            } else if (synclet.provider === 'glatitude') {
-                if (apiKeys.glatitude)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
-                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
-                                                    "&scope=" + synclet.provider_args.scope +
-                                                    "&response_type=code";
-            } else if (synclet.provider === 'github') {
-                if (apiKeys.github)
-                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
-                                                    '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            if(!apiKeys[synclet.provider]) continue;
+            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+            if(authModule.authUrl) {
+                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+            } else {
+                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
             }
         }
     }

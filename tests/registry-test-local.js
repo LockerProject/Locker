@@ -28,6 +28,7 @@ suite.addBatch({
             var self = this;
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({uri : 'http://registry.singly.com/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
+            fakeweb.registerUri({uri : 'http://registry.singly.com:80/-/all/since?stale=update_after&startkey=1', body:JSON.parse(fs.readFileSync(__dirname + '/fixtures/registry/sync.json')), contentType:"application/json"});
             registry.init(lconfig, lcrypto, function(i){
                 installed = i;
                 self.callback();

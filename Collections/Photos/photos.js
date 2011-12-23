@@ -29,7 +29,7 @@ app.get('/state', function(req, res) {
             if(err) return res.send(err, 500);
             var objId = "000000000000000000000000";
             if (lastObject) objId = lastObject._id.toHexString();
-            var updated = new Date().getTime();
+            var updated = Date.now();
             try {
                 var js = JSON.parse(fs.readFileSync('state.json'));
                 if(js && js.updated) updated = js.updated;
@@ -51,9 +51,19 @@ app.get('/', function(req, res) {
         if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
         if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
         if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        cursor.toArray(function(err, items) {
-            res.send(items);
-        });
+        if(req.query['stream'] == "true")
+        {
+            res.writeHead(200, {'content-type' : 'application/jsonstream'});
+            cursor.each(function(err, object){
+                if (err) logger.error(err); // only useful here for logging really
+                if (!object) return res.end();
+                res.write(JSON.stringify(object)+'\n');
+            });
+        }else{
+            cursor.toArray(function(err, items) {
+                res.send(items);
+            });
+        }
     });
 });
 
@@ -76,7 +86,7 @@ app.get("/image/:photoId", function(req, res) {
         res.end("No photo id supplied");
         return;
     }
-    dataStore.getOne(req.params.photoId, function(error, data) {
+    dataStore.get(req.params.photoId, function(error, data) {
         if (error || !data || !data.url) {
             res.writeHead(500);
             res.end(error);
@@ -126,10 +136,9 @@ app.post('/events', function(req, res) {
 });
 
 app.get('/id/:id', function(req, res, next) {
-    if (req.param('id').length != 24) return next(req, res, next);
     dataStore.get(req.param('id'), function(err, doc) {
-        res.writeHead(200, {'Content-Type': 'application/json'});
-        res.end(JSON.stringify(doc));
+        if(err) return res.send(err, 500);
+        res.send(doc);
     })
 });
 

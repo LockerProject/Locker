@@ -17,6 +17,7 @@ var request = require('request');
 var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
+var express = require('express');
 var logger;
 var lconfig;
 var lcrypto;
@@ -60,6 +61,11 @@ exports.init = function(config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
+    app.all('/registry/*', function(req, res, next) {
+        express.bodyParser();
+        next();
+    });
+
     app.get('/registry/added', function(req, res) {
         res.send(exports.getInstalled());
     });
@@ -87,21 +93,31 @@ exports.app = function(app)
         exports.sync(function(){res.send(true)});
     });
     // takes the local github id format, user-repo
-    app.get('/registry/publish/:id', function(req, res) {
-        logger.info("registry publishing "+req.params.id);
-        var id = req.params.id;
-        if(id.indexOf("-") <= 0) return res.send("not found", 404);
-        if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
-        id = id.replace("-","/");
-        var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
-        fs.stat(dir, function(err, stat){
-            if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
-            var args = req.query || {};
-            args.dir = dir;
-            exports.publish(args, function(err, doc){
-                if(err) res.send(err, 500);
-                res.send(doc);
-            });
+    app.get('/registry/publish/:id', publishPackage);
+
+    app.post('/registry/publish/:id', publishPackage);
+
+    app.get('/registry/myApps', exports.getMyApps);
+}
+
+function publishPackage(req, res) {
+    logger.info("registry publishing "+req.params.id);
+    var id = req.params.id;
+    if(id.indexOf("-") <= 0) return res.send("not found", 404);
+    if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
+    id = id.replace("-","/");
+    var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
+    fs.stat(dir, function(err, stat){
+        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
+        var args = req.query || {};
+        args.dir = dir;
+        if (req.body) {
+            args.body = req.body;
+        }
+        exports.publish(args, function(err, doc){
+            // npm publish always returns an error even though it works, so until that's fixed, commenting this out
+            //if(err) res.send(err, 500);
+            res.send(doc);
         });
     });
 }
@@ -142,7 +158,7 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.get({uri:lconfig.lockerBase+'/map/upsert?manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
+        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
              callback(null, installed[name]);
         });
     });
@@ -166,13 +182,15 @@ exports.sync = function(callback)
         if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
         // replace in-mem representation
         Object.keys(body).forEach(function(k){
-            logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
-            regIndex[k] = body[k];
-            // if installed and autoupdated and newer, do it!
-            if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
-            {
-                logger.verbose("auto-updating "+k);
-                exports.update({name:k}, function(){}); // lazy
+            if (body[k]["dist-tags"]) {
+                logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
+                regIndex[k] = body[k];
+                // if installed and autoupdated and newer, do it!
+                if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+                {
+                    logger.verbose("auto-updating "+k);
+                    exports.update({name:k}, function(){}); // lazy
+                }
             }
         });
         // cache to disk lazily
@@ -193,13 +211,26 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
     return apps;
+}
+exports.getMyApps = function(req, res) {
+    github(function(gh) {
+        var apps = {};
+        if (gh && gh.login) {
+            Object.keys(regIndex).forEach(function(k){
+                var thiz = regIndex[k];
+                if(thiz.repository && thiz.repository.is === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                    apps[k] = thiz;
+            });
+        }
+        res.send(apps);
+    });
 }
 
 // npm wrappers
 exports.install = function(arg, callback) {
-    
+
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.install([arg.name], function(err){
         if(err){
@@ -228,11 +259,11 @@ exports.publish = function(arg, callback) {
     github(function(gh){
         if(!gh) return callback("github account is required");
         // next, required registry auth
-        regUser(gh, function(err, auth){
+        regUser(function(err, auth){
             if(err ||!auth || !auth._auth) return callback(err);
             // saves for publish auth and maintainer
-            npm.config.set("username", gh.login);
-            npm.config.set("email", gh.email);
+            npm.config.set("username", auth.username);
+            npm.config.set("email", auth.email);
             npm.config.set("_auth", auth._auth);
             // make sure there's a package.json
             checkPackage(pjs, arg, gh, function(){
@@ -258,6 +289,7 @@ exports.publish = function(arg, callback) {
 function checkPackage(pjs, arg, gh, callback)
 {
     fs.stat(pjs, function(err, stat){
+        var js = {};
         if(err || !stat || !stat.isFile())
         {
             var pkg = path.basename(path.dirname(pjs));
@@ -270,36 +302,52 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "type": "app",
+                "is": "app",
                 "author": gh.name,
                 "static": "true",
                 "update": "auto",
-                "url": "http://github.com/"+gh.login+"/"+pkg
+                "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
               "devDependencies": {},
               "engines": {"node": "*"}
             };
-            lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
+        } else {
+            js = JSON.parse(fs.readFileSync(pjs));
         }
+        if (arg.body) {
+            js.repository.title = arg.body.title;
+            js.repository.desc = arg.body.desc;
+        }
+        lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });
 }
 
+var user;
+function getUser() {
+    if(user && user.username && user.email && user.pw) return user;
+    return user = {
+        username: lcrypto.encrypt('username'), // we just need something locally regenerable
+        email: lcrypto.encrypt('email') + '@singly.com', // we just need something locally regenerable
+        pw: lcrypto.encrypt('password'), // we just need something locally regenerable
+    }
+}
+
 // return authenticated user, or create/init them
-function regUser(gh, callback)
+function regUser(callback)
 {
     fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), 'utf8', function(err, auth){
         var js;
         try { js = JSON.parse(auth); }catch(E){}
         if(js) return callback(false, js);
-        var pw = lcrypto.encrypt(gh.email); // we just need something locally regenerable
+        var user = getUser();
         // try creating this user on the registry
-        adduser(gh.login, pw, gh.email, function(err, resp, body){
+        adduser(user.username, user.pw, user.email, function(err, resp, body){
             // TODO, is 200 and 409 both valid?
-            logger.error(err);
-            logger.error(resp);
-            js = {_auth:(new Buffer(gh.login+":"+pw,"ascii").toString("base64")), username:gh.login};
+            if(err) logger.error(err);
+            //logger.error(resp);
+            js = {_auth:(new Buffer(user.username+":"+user.pw,"ascii").toString("base64")), username:user.username, email:user.email};
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry_auth.json'), JSON.stringify(js));
             callback(false, js);
         });

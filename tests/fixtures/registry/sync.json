@@ -1,1 +1,206 @@
-{"mkdirp":{"name":"mkdirp","description":"Recursively mkdir, like `mkdir -p`","dist-tags":{"latest":"0.0.7"},"maintainers":[{"name":"jer","email":"jer@singly.com"}],"time":{"modified":"2011-11-17T00:54:04.204Z","created":"2011-11-04T17:18:32.243Z","0.0.6":"2011-11-04T17:18:34.135Z","0.0.7":"2011-11-17T00:54:04.204Z"},"author":{"name":"James Halliday","email":"mail@substack.net","url":"http://substack.net"},"repository":{"type":"git","url":"git://github.com/substack/node-mkdirp.git"},"versions":{"0.0.6":"http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/0.0.6","0.0.7":"http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/0.0.7"},"dist":{"0.0.6":{"shasum":"64d0e440c0f8f41ffccb06a4c20b8ef4ef514a37","tarball":"http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/-/mkdirp-0.0.6.tgz"},"0.0.7":{"shasum":"1832c03ae9b8a7b9144ac41aa9f5bb616b5f4fc2","tarball":"http://registry.singly.com/npm/mkdirp/-/mkdirp-0.0.7.tgz"}},"keywords":["mkdir","directory"],"url":"http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/"},"app-quartzjer-linkvid":{"name":"app-quartzjer-linkvid","description":"View the raw videos shared to you!","dist-tags":{"latest":"0.0.1"},"readme":"This is a simple viewer for lockerproject.org of videos shared to me.","maintainers":[{"name":"quartzjer","email":"jeremie@jabber.org"}],"time":{"modified":"2011-11-17T01:34:52.209Z","created":"2011-11-17T01:34:51.416Z","0.0.1":"2011-11-17T01:34:52.209Z"},"author":{"name":"Jeremie Miller"},"repository":{"title":"LinkVid","handle":"app-quartzjer-linkvid","type":"app","author":"Jeremie Miller","static":"true","update":"auto","url":"http://github.com/quartzjer/LinkVid"},"versions":{"0.0.1":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkvid/0.0.1"},"dist":{"0.0.1":{"shasum":"b209069ed0266d6050e3f50c61eaef4069342961","tarball":"http://registry.singly.com/npm/app-quartzjer-linkvid/-/app-quartzjer-linkvid-0.0.1.tgz"}},"url":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkvid/"},"app-quartzjer-snowstack":{"name":"app-quartzjer-snowstack","description":"Neat modern photo viewer based on the incredible work at http://www.satine.org/research/webkit/snowleopard/snowstack.html","dist-tags":{"latest":"0.0.1"},"readme":"Photo Viewer based on incredible work at http://www.satine.org/research/webkit/snowleopard/snowstack.html\u000a","maintainers":[{"name":"quartzjer","email":"jeremie@jabber.org"}],"time":{"modified":"2011-11-17T02:05:14.145Z","created":"2011-11-17T02:05:12.948Z","0.0.1":"2011-11-17T02:05:14.145Z"},"author":{"name":"Jeremie Miller"},"repository":{"title":"Snowstack","handle":"app-quartzjer-snowstack","type":"app","author":"Jeremie Miller","static":"true","update":"auto","url":"http://github.com/quartzjer/Snowstack"},"versions":{"0.0.1":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-snowstack/0.0.1"},"dist":{"0.0.1":{"shasum":"0c8c989196c6ae0fa8c1ceac5a6bb588d71c4ed7","tarball":"http://registry.singly.com/npm/app-quartzjer-snowstack/-/app-quartzjer-snowstack-0.0.1.tgz"}},"url":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-snowstack/"},"app-quartzjer-skeleton-viewer":{"name":"app-quartzjer-skeleton-viewer","description":"A rough skeleton for a viewer","dist-tags":{"latest":"0.0.1"},"readme":"This is a minimal skeleton viewer that will run inside your locker and let you easily build your own experiences of your data.","maintainers":[{"name":"quartzjer","email":"jeremie@jabber.org"}],"time":{"modified":"2011-11-17T02:09:46.977Z","created":"2011-11-17T02:09:46.284Z","0.0.1":"2011-11-17T02:09:46.977Z"},"author":{"name":"Jeremie Miller"},"repository":{"title":"Skeleton-Viewer","handle":"app-quartzjer-skeleton-viewer","type":"app","author":"Jeremie Miller","static":"true","update":"auto","url":"http://github.com/quartzjer/Skeleton-Viewer"},"versions":{"0.0.1":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-skeleton-viewer/0.0.1"},"dist":{"0.0.1":{"shasum":"db093461fcf7f91e8e3c2e32f53e84bfbe8a458c","tarball":"http://registry.singly.com/npm/app-quartzjer-skeleton-viewer/-/app-quartzjer-skeleton-viewer-0.0.1.tgz"}},"url":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-skeleton-viewer/"},"app-quartzjer-linkpic":{"name":"app-quartzjer-linkpic","description":"What pictures have your friends shared?","dist-tags":{"latest":"0.0.2"},"readme":"This is a minimal link photo viewer for the locker project.","maintainers":[{"name":"quartzjer","email":"jeremie@jabber.org"}],"time":{"modified":"2011-11-17T02:29:37.327Z","created":"2011-11-16T22:14:57.361Z","0.0.1":"2011-11-16T22:14:58.006Z","0.0.2":"2011-11-17T02:29:37.327Z"},"author":{"name":"Jeremie Miller"},"repository":{"title":"LinkPic","handle":"app-quartzjer-linkpic","type":"app","author":"Jeremie Miller","static":"true","update":"auto","url":"http://github.com/quartzjer/LinkPic"},"versions":{"0.0.1":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/0.0.1","0.0.2":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/0.0.2"},"dist":{"0.0.1":{"shasum":"d48d4c887b24edcc96b9702496f28350edfd0078","tarball":"http://registry.singly.com/npm/app-quartzjer-linkpic/-/app-quartzjer-linkpic-0.0.1.tgz"},"0.0.2":{"shasum":"7ad7c5306d9e9c44e3027ed7a58f0f9114dc1572","tarball":"http://registry.singly.com/npm/app-quartzjer-linkpic/-/app-quartzjer-linkpic-0.0.2.tgz"}},"url":"http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/"}}
+{
+    "mkdirp": {
+        "name": "mkdirp",
+        "description": "Recursively mkdir, like `mkdir -p`",
+        "dist-tags": {
+            "latest": "0.0.7"
+        },
+        "maintainers": [{
+            "name": "jer",
+            "email": "jer@singly.com"
+        }],
+        "time": {
+            "modified": "2011-11-17T00:54:04.204Z",
+            "created": "2011-11-04T17:18:32.243Z",
+            "0.0.6": "2011-11-04T17:18:34.135Z",
+            "0.0.7": "2011-11-17T00:54:04.204Z"
+        },
+        "author": {
+            "name": "James Halliday",
+            "email": "mail@substack.net",
+            "url": "http://substack.net"
+        },
+        "repository": {
+            "type": "git",
+            "url": "git://github.com/substack/node-mkdirp.git"
+        },
+        "versions": {
+            "0.0.6": "http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/0.0.6",
+            "0.0.7": "http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/0.0.7"
+        },
+        "dist": {
+            "0.0.6": {
+                "shasum": "64d0e440c0f8f41ffccb06a4c20b8ef4ef514a37",
+                "tarball": "http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/-/mkdirp-0.0.6.tgz"
+            },
+            "0.0.7": {
+                "shasum": "1832c03ae9b8a7b9144ac41aa9f5bb616b5f4fc2",
+                "tarball": "http://registry.singly.com/npm/mkdirp/-/mkdirp-0.0.7.tgz"
+            }
+        },
+        "keywords": ["mkdir", "directory"],
+        "url": "http://jer.iriscouch.com/registry/_design/app/_rewrite/mkdirp/"
+    },
+    "app-quartzjer-linkvid": {
+        "name": "app-quartzjer-linkvid",
+        "description": "View the raw videos shared to you!",
+        "dist-tags": {
+            "latest": "0.0.1"
+        },
+        "readme": "This is a simple viewer for lockerproject.org of videos shared to me.",
+        "maintainers": [{
+            "name": "quartzjer",
+            "email": "jeremie@jabber.org"
+        }],
+        "time": {
+            "modified": "2011-11-17T01:34:52.209Z",
+            "created": "2011-11-17T01:34:51.416Z",
+            "0.0.1": "2011-11-17T01:34:52.209Z"
+        },
+        "author": {
+            "name": "Jeremie Miller"
+        },
+        "repository": {
+            "title": "LinkVid",
+            "handle": "app-quartzjer-linkvid",
+            "is": "app",
+            "author": "Jeremie Miller",
+            "static": "true",
+            "update": "auto",
+            "url": "http://github.com/quartzjer/LinkVid"
+        },
+        "versions": {
+            "0.0.1": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkvid/0.0.1"
+        },
+        "dist": {
+            "0.0.1": {
+                "shasum": "b209069ed0266d6050e3f50c61eaef4069342961",
+                "tarball": "http://registry.singly.com/npm/app-quartzjer-linkvid/-/app-quartzjer-linkvid-0.0.1.tgz"
+            }
+        },
+        "url": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkvid/"
+    },
+    "app-quartzjer-snowstack": {
+        "name": "app-quartzjer-snowstack",
+        "description": "Neat modern photo viewer based on the incredible work at http://www.satine.org/research/webkit/snowleopard/snowstack.html",
+        "dist-tags": {
+            "latest": "0.0.1"
+        },
+        "readme": "Photo Viewer based on incredible work at http://www.satine.org/research/webkit/snowleopard/snowstack.html\u000a",
+        "maintainers": [{
+            "name": "quartzjer",
+            "email": "jeremie@jabber.org"
+        }],
+        "time": {
+            "modified": "2011-11-17T02:05:14.145Z",
+            "created": "2011-11-17T02:05:12.948Z",
+            "0.0.1": "2011-11-17T02:05:14.145Z"
+        },
+        "author": {
+            "name": "Jeremie Miller"
+        },
+        "repository": {
+            "title": "Snowstack",
+            "handle": "app-quartzjer-snowstack",
+            "is": "app",
+            "author": "Jeremie Miller",
+            "static": "true",
+            "update": "auto",
+            "url": "http://github.com/quartzjer/Snowstack"
+        },
+        "versions": {
+            "0.0.1": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-snowstack/0.0.1"
+        },
+        "dist": {
+            "0.0.1": {
+                "shasum": "0c8c989196c6ae0fa8c1ceac5a6bb588d71c4ed7",
+                "tarball": "http://registry.singly.com/npm/app-quartzjer-snowstack/-/app-quartzjer-snowstack-0.0.1.tgz"
+            }
+        },
+        "url": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-snowstack/"
+    },
+    "app-quartzjer-skeleton-viewer": {
+        "name": "app-quartzjer-skeleton-viewer",
+        "description": "A rough skeleton for a viewer",
+        "dist-tags": {
+            "latest": "0.0.1"
+        },
+        "readme": "This is a minimal skeleton viewer that will run inside your locker and let you easily build your own experiences of your data.",
+        "maintainers": [{
+            "name": "quartzjer",
+            "email": "jeremie@jabber.org"
+        }],
+        "time": {
+            "modified": "2011-11-17T02:09:46.977Z",
+            "created": "2011-11-17T02:09:46.284Z",
+            "0.0.1": "2011-11-17T02:09:46.977Z"
+        },
+        "author": {
+            "name": "Jeremie Miller"
+        },
+        "repository": {
+            "title": "Skeleton-Viewer",
+            "handle": "app-quartzjer-skeleton-viewer",
+            "is": "app",
+            "author": "Jeremie Miller",
+            "static": "true",
+            "update": "auto",
+            "url": "http://github.com/quartzjer/Skeleton-Viewer"
+        },
+        "versions": {
+            "0.0.1": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-skeleton-viewer/0.0.1"
+        },
+        "dist": {
+            "0.0.1": {
+                "shasum": "db093461fcf7f91e8e3c2e32f53e84bfbe8a458c",
+                "tarball": "http://registry.singly.com/npm/app-quartzjer-skeleton-viewer/-/app-quartzjer-skeleton-viewer-0.0.1.tgz"
+            }
+        },
+        "url": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-skeleton-viewer/"
+    },
+    "app-quartzjer-linkpic": {
+        "name": "app-quartzjer-linkpic",
+        "description": "What pictures have your friends shared?",
+        "dist-tags": {
+            "latest": "0.0.2"
+        },
+        "readme": "This is a minimal link photo viewer for the locker project.",
+        "maintainers": [{
+            "name": "quartzjer",
+            "email": "jeremie@jabber.org"
+        }],
+        "time": {
+            "modified": "2011-11-17T02:29:37.327Z",
+            "created": "2011-11-16T22:14:57.361Z",
+            "0.0.1": "2011-11-16T22:14:58.006Z",
+            "0.0.2": "2011-11-17T02:29:37.327Z"
+        },
+        "author": {
+            "name": "Jeremie Miller"
+        },
+        "repository": {
+            "title": "LinkPic",
+            "handle": "app-quartzjer-linkpic",
+            "is": "app",
+            "author": "Jeremie Miller",
+            "static": "true",
+            "update": "auto",
+            "url": "http://github.com/quartzjer/LinkPic"
+        },
+        "versions": {
+            "0.0.1": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/0.0.1",
+            "0.0.2": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/0.0.2"
+        },
+        "dist": {
+            "0.0.1": {
+                "shasum": "d48d4c887b24edcc96b9702496f28350edfd0078",
+                "tarball": "http://registry.singly.com/npm/app-quartzjer-linkpic/-/app-quartzjer-linkpic-0.0.1.tgz"
+            },
+            "0.0.2": {
+                "shasum": "7ad7c5306d9e9c44e3027ed7a58f0f9114dc1572",
+                "tarball": "http://registry.singly.com/npm/app-quartzjer-linkpic/-/app-quartzjer-linkpic-0.0.2.tgz"
+            }
+        },
+        "url": "http://jer.iriscouch.com/registry/_design/app/_rewrite/app-quartzjer-linkpic/"
+    }
+}

@@ -11,7 +11,6 @@ var lfs = require("lfs");
 var fs = require("fs");
 var serviceManager = require("lservicemanager");
 var url = require("url");
-var http = require("http");
 var request = require("request");
 var lconfig = require('lconfig');
 var path = require('path');

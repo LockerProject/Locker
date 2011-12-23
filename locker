@@ -1,0 +1,59 @@
+#!/bin/sh
+
+show_help() {
+    cat <<EOF
+Usage: locker [options]
+Options:
+    --production    Run in production mode (default: development mode)
+
+EOF
+}
+
+locker_mode=development
+
+# Parse command line options
+while true; do
+    case "$1" in
+      -h|--help|-\?) show_help; exit 0;;
+      --production) locker_mode=production; shift ;;
+      --development) shift ;;
+      --) shift; break;;
+      -*) echo "invalid option: $1" 1>&2; show_help; exit 1;;
+      *)  break;;
+    esac
+done
+
+# If we were installed via lockerbox, find our dependencies there
+lockerbox_env=../lockerbox_environment.sh
+if [ -f "$lockerbox_env" ]; then
+    . "$lockerbox_env"
+fi
+
+# Make sure we have some API keys, otherwise we can't do much
+apikeys=Config/apikeys.json
+if [ ! -f "$apikeys" ]; then
+    echo "No API keys found in $apikeys" >&2
+    echo "see https://github.com/LockerProject/Locker/wiki/GettingAPIKeys" >&2
+    exit 1
+fi
+
+locker_runtime=lockerd.js
+
+# Set defaults based on our runtime mode
+case "$locker_mode" in
+    production)
+        # Tell node to run in production mode
+        NODE_ENV=production
+        export NODE_ENV
+
+        # Use the forever wrapper
+        locker_runtime=lockerd.js
+        ;;
+    development|*)
+        # Don't use the forever wrapper
+        locker_runtime=_lockerd.js
+        ;;
+esac
+
+# Launch the locker
+exec node "$locker_runtime" "$@"

@@ -29,7 +29,7 @@ app.get('/state', function(req, res) {
             if(err) return res.send(err, 500);
             var objId = "000000000000000000000000";
             if (lastObject) objId = lastObject._id.toHexString();
-            var updated = new Date().getTime();
+            var updated = Date.now();
             try {
                 var js = JSON.parse(fs.readFileSync('state.json'));
                 if(js && js.updated) updated = js.updated;
@@ -60,9 +60,19 @@ app.get('/', function(req, res) {
             }
             cursor.sort(sorter);
         }
-        cursor.toArray(function(err, items) {
-            res.send(items);
-        });
+        if(req.query['stream'] == "true")
+        {
+            res.writeHead(200, {'content-type' : 'application/jsonstream'});
+            cursor.each(function(err, object){
+                if (err) logger.error(err); // only useful here for logging really
+                if (!object) return res.end();
+                res.write(JSON.stringify(object)+'\n');
+            });
+        }else{
+            cursor.toArray(function(err, items) {
+                res.send(items);
+            });
+        }
     });
 });
 

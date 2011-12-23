@@ -1,6 +1,4 @@
 var GitHubApi = require("github").GitHubApi
-  , lconfig = require('../../Common/node/lconfig')
-  , logger = require('../../Common/node/logger')
   , request = require('request')
   , github = new GitHubApi()
   , async = require('async')
@@ -11,8 +9,6 @@ var GitHubApi = require("github").GitHubApi
   , viewers = []
   ;
 
-lconfig.load('../../Config/config.json');
-
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
     auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
@@ -21,7 +17,7 @@ exports.sync = function(processInfo, cb) {
         cached = processInfo.config.cached;
     lockerUrl = processInfo.lockerUrl;
     exports.syncRepos(cached, function(err, repos) {
-        if (err) logger.error(err);
+        if (err) console.error(err);
         var responseObj = {data : {}, config: { cached: cached }};
         responseObj.data.repo = repos;
         responseObj.data.view = viewers;
@@ -62,14 +58,16 @@ exports.syncRepos = function(cached, callback) {
                             if(!js || js.static != "true") throw new Error("invalid manifest");
                             js.handle = repo.id.replace("/", "-");
                             js.author = auth.username;
+                            js.is = 'app';
+                            js.github = "https://www.github.com/" + repo.id;
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
                             // bail, no viewer for you
-                            logger.error("failed: "+err);
+                            console.error("failed: "+err);
                             return cb();
                         }
                         viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
-                        request.get({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest}, function(err, resp) {
+                        request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest+'&type=install'}, function(err, resp) {
                             cb();
                         });
                     });
@@ -112,7 +110,11 @@ function syncRepo(repo, callback)
                 request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
                     // logger.debug(resp.statusCode + " for "+ t.path);
                     if(err || !resp || resp.statusCode != 200) {t.sha = ""; return cb(); } // don't save the sha so it gets retried again
-                    fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
+                    if (body) {
+                        fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
+                    } else {
+                        cb();
+                    }
                 });
             },500);
         }, function(){

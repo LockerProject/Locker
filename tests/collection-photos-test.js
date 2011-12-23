@@ -64,6 +64,15 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
+    "by id" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/photos/id/24afb0f2c6969593c8877967a44ae69fd15e4eda"}, this.callback);
+        },
+        "is valid":function(topic) {
+            assert.include(topic.body, "53312381820");
+        }
+    }
+}).addBatch({
     "cleanup" : function() {
         process.chdir(cwd);
     }

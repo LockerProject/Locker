@@ -11,7 +11,7 @@ var collection;
 var db;
 var lconfig;
 var lutil = require('../../Common/node/lutil');
-var logger
+var logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
@@ -198,7 +198,7 @@ function updateState()
     }
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:new Date().getTime()}));
+            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }
@@ -266,21 +266,6 @@ exports.get = function(id, callback) {
     collection.findOne({$or:or}, callback);
 }
 
-exports.getOne = function(id, callback) {
-    collection.find({"id":id}, function(error, cursor) {
-        if (error) {
-            callback(error, null);
-        } else {
-            cursor.nextObject(function(err, doc) {
-                if (err)
-                    callback(err);
-                else
-                    callback(err, doc);
-            });
-        }
-    });
-}
-
 exports.addEvent = function(eventBody, callback) {
     // TODO:  Handle the other actions appropiately
     if (eventBody.action !== "new") {
@@ -294,7 +279,7 @@ exports.addEvent = function(eventBody, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     handler(svcId, eventBody.data, callback);
@@ -307,7 +292,7 @@ exports.addData = function(svcId, type, allData, callback) {
     var handler = dataHandlers[type];
     if(!handler)
     {
-        console.error("unhandled "+type);
+        logger.error("unhandled "+type);
         return callback();
     }
     async.forEachSeries(allData,function(data,cb) {

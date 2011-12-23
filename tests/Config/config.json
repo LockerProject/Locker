@@ -2,7 +2,7 @@
     "lockerHost" : "localhost",
     "lockerPort" : 8043,
     "me" : "Data",
-    "ui":"useui",
+    "ui":"dashboardv3",
     "scannedDirs" : ["Apps", "Connectors", "Collections", "Tests"],
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
@@ -19,19 +19,18 @@
                       "deepCompare-test.js",
                       "lpushmanager-test-local.js"],
         "client-api" : ["locker-client-test.js"],
-        "search" : ["collection-search-test.js",
-                    "lsearch-test-local.js"],
         "synclets" : ["synclet-local-foursquare.js",
                       "synclet-local-github.js",
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
                       "synclet-local-flickr.js",
+                      "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
         "collections" : ["collection-contacts-test.js",
                          "collection-photos-test.js",
+                         "collection-search-test.js",
                          "collection-places-test.js",
                          "collection-links-test.js"],
-        "apps" : ["app-useui-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
     "displayUnstable" : true,
@@ -39,12 +38,12 @@
         "connector-IMAP-test.js"
     ],
     "mongo" : {
+        "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020
     },
     "logging": {
-        "console":false,
         "file":"locker-tests.out",
         "level": "error"
     }
