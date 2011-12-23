@@ -40,7 +40,14 @@ module.exports = function(locker) {
     });
 
     locker.get('/synclets/:id/run', function(req, res) {
-        syncManager.syncNow(req.params.id, req.query.id, function() {
+        syncManager.syncNow(req.params.id, req.query.id, false, function() {
+            res.send(true);
+        });
+    });
+
+    // not sure /post is the right base here but needed it for easy bodyparser flag
+    locker.post('/post/:id/:synclet', function(req, res) {
+        syncManager.syncNow(req.params.id, req.params.synclet, req.body, function() {
             res.send(true);
         });
     });

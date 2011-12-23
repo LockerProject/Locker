@@ -37,7 +37,7 @@ var scheduler = lscheduler.masterScheduler;
 var locker = express.createServer(
             // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
             function(req, res, next) {
-                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/') {
+                if (req.url.substring(0, 6) == "/core/" || req.url.substring(0, 6) == '/push/' || req.url.substring(0, 6) == '/post/') {
                     connect.bodyParser()(req, res, next);
                 } else {
                     next();
@@ -54,9 +54,6 @@ var locker = express.createServer(
             connect.session({key:'locker.project.id', secret : "locker"})
         );
 
-var push = require('./webservice-push')(locker);
-var synclets = require('./webservice-synclets')(locker);
-var syncletAuth = require('./webservice-synclets-auth')(locker);
 var registry = require('./registry');
 registry.app(locker); // add it's endpoints
 
@@ -514,6 +511,11 @@ locker.use(express.static(__dirname + '/static'));
 locker.all('/dashboard*', function(req, res) {
     req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
+    // detect when coming back from idle, and flush any delayed synclets if configured to do so
+    if(locker.last && lconfig.tolerance.idle && (Date.now() - locker.last) > (lconfig.tolerance.idle * 1000)) syncManager.flushTolerance(function(err){
+        if(err) logger.error("got error when flushing synclets: "+err);
+    });
+    locker.last = Date.now();
 });
 
 locker.all("/socket.io*", function(req, res) {
@@ -525,9 +527,12 @@ locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
-var push = require('./webservice-push')(locker);
-var synclets = require('./webservice-synclets')(locker);
-var syncletAuth = require('./webservice-synclets-auth')(locker);
+// THESE MUST BE REQUIRED AFTER the /Me endpoints
+// since it calls a req.next() that depends on /synclet catching them!
+require('./webservice-push')(locker);
+require('./webservice-synclets')(locker);
+require('./webservice-synclets-auth')(locker);
+
 
 function proxied(method, svc, ppath, req, res, buffer) {
     svc.last = Date.now();

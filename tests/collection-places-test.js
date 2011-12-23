@@ -9,6 +9,7 @@ var fs = require('fs');
 var request = require('request');
 var foursquareEvent = JSON.parse(fs.readFileSync('fixtures/events/places/foursquare.json','utf8'));
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/places/twitter.json','utf8'));
+var igEvent = JSON.parse(fs.readFileSync('fixtures/events/places/instagram.json','utf8'));
 var twitterBBEvent = JSON.parse(fs.readFileSync('fixtures/events/places/twitterplaceonly.json','utf8'));
 
 process.setMaxListeners(0);
@@ -53,6 +54,17 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(response.at, 1303341763000);
             assert.equal(response.title, 'Singly Is Awesome');
+        }
+    }
+}).addBatch({
+    "Can process Instagram event" : {
+        topic: function() {
+            dataStore.addEvent(igEvent, this.callback);
+        },
+        "successfully" : function(err, response) {
+            assert.isNull(err);
+            assert.equal(response.at, 1319389551000);
+            assert.equal(response.title, 'Cascade, our namesake');
         }
     }
 }).addBatch({

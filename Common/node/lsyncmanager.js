@@ -144,7 +144,7 @@ exports.status = function(serviceId) {
     return synclets.installed[serviceId];
 };
 
-exports.syncNow = function(serviceId, syncletId, callback) {
+exports.syncNow = function(serviceId, syncletId, post, callback) {
     if(typeof syncletId == "function")
     {
         callback = syncletId;
@@ -153,7 +153,23 @@ exports.syncNow = function(serviceId, syncletId, callback) {
     if (!synclets.installed[serviceId]) return callback("no service like that installed");
     async.forEach(synclets.installed[serviceId].synclets, function(synclet, cb) {
         if(syncletId && synclet.name != syncletId) return cb();
+        if(post)
+        {
+            if(!Array.isArray(synclet.posts)) synclet.posts = [];
+            synclet.posts.push(post);
+        }
         executeSynclet(synclets.installed[serviceId], synclet, cb);
+    }, callback);
+};
+
+// run all synclets that have a tolerance and reset them
+exports.flushTolerance = function(callback) {
+    async.forEach(Object.keys(synclets.installed), function(service, cb){ // do all services in parallel
+        async.forEachSeries(synclets.installed[service].synclets, function(synclet, cb2) { // do each synclet in series
+            if(!synclet.tolAt || synclet.tolAt == 0) return cb2();
+            synclet.tolAt = 0;
+            executeSynclet(synclets.installed[service], synclet, cb2);
+        }, cb);
     }, callback);
 };
 
@@ -161,6 +177,8 @@ exports.syncNow = function(serviceId, syncletId, callback) {
 * Add a timeout to run a synclet
 */
 function scheduleRun(info, synclet) {
+    if (!synclet.frequency) return;
+
     var milliFreq = parseInt(synclet.frequency) * 1000;
 
     function run() {
@@ -217,22 +235,28 @@ function mergeManifest(js) {
 * Executes a synclet
 */
 function executeSynclet(info, synclet, callback) {
-    if (synclet.status === 'running') {
-        if (callback) {
-            callback('already running');
-        }
-        return;
-    }
+    if(!callback) callback = function(){};
+    if (synclet.status === 'running') return callback('already running');
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
     {
-        logger.info("Delaying execution of synclet "+synclet.name+" for "+info.id);
-        scheduleRun(info, synclet);
-        if (callback) {
-            callback();
-        }
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 1000);
         return;
+    }
+    if(!synclet.tolMax){
+        synclet.tolAt = 0;
+        synclet.tolMax = 0;
+    }
+    // if we can have tolerance, try again later
+    if(synclet.tolAt > 0)
+    {
+        synclet.tolAt--;
+        logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
+        scheduleRun(info, synclet);
+        return callback();
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
@@ -259,7 +283,9 @@ function executeSynclet(info, synclet, callback) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
+    var tstart;
     app.stdout.on('data',function (data) {
+        if(!tstart) tstart = Date.now();
         dataResponse += data;
     });
 
@@ -274,7 +300,7 @@ function executeSynclet(info, synclet, callback) {
             if (callback) callback(E);
             return;
         }
-        logger.info("Synclet "+synclet.name+" finished for "+info.id);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         var tempInfo = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, info.id, 'me.json')));
@@ -296,6 +322,7 @@ function executeSynclet(info, synclet, callback) {
         localError(info.title+" "+synclet.name, "stdin closed: "+err);
     });
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
+    if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
     delete info.syncletToRun;
 };
 
@@ -326,15 +353,29 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         return callback('bad data from synclet');
     }
     for (var i in response.data) {
+        if(!Array.isArray(response.data[i])) continue;
         dataKeys.push(i);
     }
     for (var i in deleteIDs) {
         if (!dataKeys[i]) dataKeys.push(i);
     }
-    if (dataKeys.length === 0) {
-        return callback();
-    }
-    async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, key, response.data[key], cb); }, callback);
+    synclet.deleted = synclet.added = synclet.updated = 0;
+    async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, synclet, key, response.data[key], cb); }, function(err){
+        if(err) logger.error("err processing data: "+err);
+        // here we roughly compromise a multiplier up or down based on the threshold being met
+        var threshold = synclet.threshold || lconfig.tolerance.threshold;
+        var total = synclet.deleted + synclet.added + synclet.updated;
+        if(total < threshold)
+        {
+            if(synclet.tolMax < lconfig.tolerance.maxstep) synclet.tolMax++; // max 10x scheduled
+            synclet.tolAt = synclet.tolMax;
+        }else{
+            if(synclet.tolMax > 0) synclet.tolMax--;
+            synclet.tolAt = synclet.tolMax;
+        }
+        logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
+        callback(err);
+    });
 };
 
 function checkStatus(info) {
@@ -348,6 +389,7 @@ function checkStatus(info) {
 
 }
 
+<<<<<<< HEAD
 // simple async friendly wrapper
 function getIJOD(id, key, create, callback) {
     var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
@@ -365,6 +407,9 @@ function getIJOD(id, key, create, callback) {
 exports.getIJOD = getIJOD;
 
 function processData (deleteIDs, info, key, data, callback) {
+=======
+function processData (deleteIDs, info, synclet, key, data, callback) {
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
     var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
@@ -403,20 +448,50 @@ function processData (deleteIDs, info, key, data, callback) {
         }
     })
 
+<<<<<<< HEAD
 }
 
 function deleteData (collection, mongoId, deleteIds, info, idr, ij, callback) {
+=======
+    if (deleteIDs && deleteIDs.length > 0 && data) {
+        addData(collection, mongoId, data, info, synclet, idr, function(err) {
+            if(err) {
+                callback(err);
+            } else {
+                deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
+            }
+        });
+    } else if (data && data.length > 0) {
+        addData(collection, mongoId, data, info, synclet, idr, callback);
+    } else if (deleteIDs && deleteIDs.length > 0) {
+        deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
+    } else {
+        callback();
+    }
+}
+
+function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callback) {
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     var q = async.queue(function(id, cb) {
         var r = url.parse(idr);
         r.hash = id.toString();
         levents.fireEvent(url.format(r), 'delete');
+<<<<<<< HEAD
         ij.delData({id:id}, cb);
+=======
+        synclet.deleted++;
+        datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
+<<<<<<< HEAD
 function addData (collection, mongoId, data, info, idr, ij, callback) {
+=======
+function addData (collection, mongoId, data, info, synclet, idr, callback) {
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
@@ -430,7 +505,12 @@ function addData (collection, mongoId, data, info, idr, ij, callback) {
             r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
                 levents.fireEvent(url.format(r), 'delete');
+<<<<<<< HEAD
                 ij.delData({id:object.obj[mongoId]}, cb);
+=======
+                synclet.deleted++;
+                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
             } else {
                 var source = r.pathname.substring(1);
                 if(info.strip && info.strip[source])
@@ -442,7 +522,13 @@ function addData (collection, mongoId, data, info, idr, ij, callback) {
                 }
                 ij.smartAdd({id:object.obj[mongoId], data:object.obj}, function(err, type) {
                     if (type === 'same') return cb();
+<<<<<<< HEAD
                     levents.fireEvent(url.format(r), type, object.obj);
+=======
+                    if (type === 'new') synclet.added++;
+                    if (type === 'update') synclet.updated++;
+                    levents.fireEvent(url.format(r), type, doc);
+>>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
                     return cb();
                 });
             }
@@ -505,63 +591,18 @@ function mapMetaData(file) {
 }
 
 function addUrls() {
-    var apiKeys;
-    var host = lconfig.externalBase + "/";
     if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
-        try {
-            apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
-        } catch(e) {
-            return logger.error('Error reading apikeys.json file - ' + e);
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
+        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
+        var host = lconfig.externalBase + "/";
+        for (var i in synclets.available) {
             var synclet = synclets.available[i];
-            if (synclet.provider === 'facebook') {
-                if (apiKeys.facebook)
-                    synclet.authurl = "https://graph.facebook.com/oauth/authorize?client_id=" + apiKeys.facebook.appKey +
-                                        '&response_type=code&redirect_uri=' + host + "auth/facebook/auth" +
-                                        "&scope=email,offline_access,read_stream,user_photos,friends_photos,user_photo_video_tags";
-            } else if (synclet.provider === 'twitter') {
-                if (apiKeys.twitter) synclet.authurl = host + "auth/twitter/auth";
-            } else if (synclet.provider === 'flickr') {
-                if (apiKeys.flickr) synclet.authurl = host + "auth/flickr/auth";
-            } else if (synclet.provider === 'tumblr') {
-                if (apiKeys.tumblr) synclet.authurl = host + "auth/tumblr/auth";
-            } else if (synclet.provider === 'foursquare') {
-                if (apiKeys.foursquare)
-                    synclet.authurl = "https://foursquare.com/oauth2/authenticate?client_id=" + apiKeys.foursquare.appKey +
-                                                            "&response_type=code&redirect_uri=" + host + "auth/foursquare/auth";
-            } else if (synclet.provider === 'gcontacts') {
-                if (apiKeys.gcontacts)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gcontacts.appKey +
-                                                    "&redirect_uri=" + host + "auth/gcontacts/auth" +
-                                                    "&scope=https://www.google.com/m8/feeds/&response_type=code";
-            } else if (synclet.provider === 'gplus') {
-                if (apiKeys.gplus)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.gplus.appKey +
-                                                    "&redirect_uri=" + host + "auth/gplus/auth" +
-                                                    "&scope=https://www.googleapis.com/auth/plus.me&response_type=code";
-            } else if (synclet.provider === 'instagram') {
-                if (apiKeys.instagram)
-                    synclet.authurl = "https://api.instagram.com/oauth/authorize/?client_id=" + apiKeys.instagram.appKey +
-                                                    "&redirect_uri=" + host + "auth/instagram/auth&response_type=code";
-            } else if (synclet.provider === 'soundcloud') {
-                if (apiKeys.soundcloud)
-                    synclet.authurl = "https://soundcloud.com/connect/?client_id=" + apiKeys.soundcloud.appKey +
-                                                    "&redirect_uri=" + host + "auth/soundcloud/auth&response_type=code";
-            } else if (synclet.provider === 'gowalla') {
-                if (apiKeys.gowalla)
-                    synclet.authurl = "https://gowalla.com/api/oauth/new?client_id=" + apiKeys.gowalla.appKey +
-                                                    "&redirect_uri=" + host + "auth/gowalla/auth";
-            } else if (synclet.provider === 'glatitude') {
-                if (apiKeys.glatitude)
-                    synclet.authurl = "https://accounts.google.com/o/oauth2/auth?client_id=" + apiKeys.glatitude.appKey +
-                                                    "&redirect_uri=" + host + "auth/glatitude/auth" +
-                                                    "&scope=" + synclet.provider_args.scope +
-                                                    "&response_type=code";
-            } else if (synclet.provider === 'github') {
-                if (apiKeys.github)
-                    synclet.authurl = "https://github.com/login/oauth/authorize?client_id=" + apiKeys.github.appKey +
-                                                    '&response_type=code&redirect_uri=' + host + 'auth/github/auth';
+            if(!apiKeys[synclet.provider]) continue;
+            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+            if(authModule.authUrl) {
+                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+            } else {
+                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
             }
         }
     }

@@ -8,7 +8,7 @@ setTimeout(function(){
  _kms('//i.kissmetrics.com/i.js');
 if (document.location.hostname === 'singly.com' || document.location.hostname === 'me.singly.com') {
   _kms('//doug1izaerwt3.cloudfront.net/de62fe44ea949f4bf216353f81377c37cfcc90dd.1.js');
-}
+} else {
   _kms('//doug1izaerwt3.cloudfront.net/09be6bff5c8937e342f601bae6ee004e1e7aab1e.1.js');
 }
 _kmq.push(['record', 'signed in']);

@@ -440,6 +440,7 @@ exports.spawn = function(serviceId, callback) {
     }
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
+    var tstart = Date.now();
     var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
     app.stderr.on('data', function (data) {
@@ -477,7 +478,7 @@ exports.spawn = function(serviceId, callback) {
                 // I'm confused why we have to use startingPid and app.pid is invalid here
                 svc.pid = svc.startingPid;
                 delete svc.startingPid;
-                logger.info(svc.id + " started at pid " + svc.pid + ", running startup callbacks.");
+                logger.info(svc.id + " started at pid " + svc.pid + ", running startup callbacks, timing "+(Date.now() - tstart));
                 if(svc.starting) svc.starting.forEach(function(cb) {
                     cb.call();
                     // See if it ended whilst running the callbacks
