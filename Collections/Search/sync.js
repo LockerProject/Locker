@@ -42,36 +42,13 @@ function gatherFromUrl(svcId, callback) {
     var url = path.join("Me", svcId, "?all=true&stream=true");
     url = lconfig.lockerBase + "/" + url;
     logger.info("updating from "+url);
-    var req = request.get({uri:url}, function(err){
-        if(err) logger.error(err);
-    });
     var total = 0;
-    var q = async.queue(function(chunk, cb){
-        if(chunk == "") return cb();
+    lutil.streamFromUrl(url, function(js, cb){
         total++;
-        try{
-            exports.add(svcId, JSON.parse(chunk), cb);
-        }catch(E){
-            logger.error("got "+E+" processing "+chunk);
-            return cb();
-        }
-    },1);
-    var buff = "";
-    req.on("data",function(data){
-        buff += data.toString();
-        var chunks = buff.split('\n');
-        buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
-        chunks.forEach(q.push);
-    });
-    var ended = false;
-    q.drain = function(){
-        if(!ended) return; // drain can be called many times, we only care when it's after data is done coming in
+        exports.add(svcId, js, cb);
+    }, function(){
         logger.info("indexed "+total+" items from "+svcId);
         callback();
-    };
-    req.on("end",function(){
-        ended = true;
-        q.push(""); // this triggers the drain if there was no data, GOTCHA
     });
 }
 
