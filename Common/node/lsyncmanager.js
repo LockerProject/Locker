@@ -389,7 +389,6 @@ function checkStatus(info) {
 
 }
 
-<<<<<<< HEAD
 // simple async friendly wrapper
 function getIJOD(id, key, create, callback) {
     var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
@@ -406,10 +405,7 @@ function getIJOD(id, key, create, callback) {
 
 exports.getIJOD = getIJOD;
 
-function processData (deleteIDs, info, key, data, callback) {
-=======
 function processData (deleteIDs, info, synclet, key, data, callback) {
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     // this extra (handy) log breaks the synclet tests somehow??
     var len = (data)?data.length:0;
     var type = (info.types && info.types[key]) ? info.types[key] : key; // try to map the key to a generic data type for the idr
@@ -447,51 +443,21 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
             callback();
         }
     })
-
-<<<<<<< HEAD
-}
-
-function deleteData (collection, mongoId, deleteIds, info, idr, ij, callback) {
-=======
-    if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(collection, mongoId, data, info, synclet, idr, function(err) {
-            if(err) {
-                callback(err);
-            } else {
-                deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
-            }
-        });
-    } else if (data && data.length > 0) {
-        addData(collection, mongoId, data, info, synclet, idr, callback);
-    } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
-    } else {
-        callback();
-    }
 }
 
 function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callback) {
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     var q = async.queue(function(id, cb) {
         var r = url.parse(idr);
         r.hash = id.toString();
         levents.fireEvent(url.format(r), 'delete');
-<<<<<<< HEAD
-        ij.delData({id:id}, cb);
-=======
         synclet.deleted++;
-        datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
+        ij.delData({id:id}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-<<<<<<< HEAD
-function addData (collection, mongoId, data, info, idr, ij, callback) {
-=======
 function addData (collection, mongoId, data, info, synclet, idr, callback) {
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
@@ -505,12 +471,8 @@ function addData (collection, mongoId, data, info, synclet, idr, callback) {
             r.hash = object.obj[mongoId].toString();
             if (object.type === 'delete') {
                 levents.fireEvent(url.format(r), 'delete');
-<<<<<<< HEAD
-                ij.delData({id:object.obj[mongoId]}, cb);
-=======
                 synclet.deleted++;
-                datastore.removeObject(collection, object.obj[mongoId], {timeStamp: object.timestamp}, cb);
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
+                ij.delData({id:object.obj[mongoId]}, cb);
             } else {
                 var source = r.pathname.substring(1);
                 if(info.strip && info.strip[source])
@@ -522,13 +484,9 @@ function addData (collection, mongoId, data, info, synclet, idr, callback) {
                 }
                 ij.smartAdd({id:object.obj[mongoId], data:object.obj}, function(err, type) {
                     if (type === 'same') return cb();
-<<<<<<< HEAD
-                    levents.fireEvent(url.format(r), type, object.obj);
-=======
                     if (type === 'new') synclet.added++;
                     if (type === 'update') synclet.updated++;
-                    levents.fireEvent(url.format(r), type, doc);
->>>>>>> 3ebadcc103139edc9242dcd0273a147a2681b375
+                    levents.fireEvent(url.format(r), type, object.obj);
                     return cb();
                 });
             }
