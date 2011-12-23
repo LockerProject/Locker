@@ -28,6 +28,7 @@ var httpProxy = require('http-proxy');
 var lpquery = require("lpquery");
 var lconfig = require("lconfig");
 var logger = require('logger');
+var async = require('async');
 
 var lcrypto = require("lcrypto");
 
@@ -431,6 +432,27 @@ locker.get('/core/revision', function(req, res) {
     fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), function(err, doc) {
         if (doc) res.send(JSON.parse(doc));
         else res.send("git cmd not available!");
+    });
+});
+
+locker.get('/core/selftest', function(req, res) {
+    async.series([
+        function(callback) {
+            fs.readdir(lconfig.me, function(err, files) {
+                if (err) {
+                    callback({ 'Me/*' : err}, null);
+                } else {
+                    callback(null, { 'Me/*' : files });
+                }
+            });
+        },
+    ],
+    function(err, results) {
+        if (err) {
+            res.send(err, 500);
+        } else {
+            res.send(JSON.stringify(results), 200);
+        }
     });
 });
 
