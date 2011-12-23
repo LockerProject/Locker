@@ -47,5 +47,5 @@ function reload(offset, limit, useJSON) {
 
 /* jQuery syntactic sugar for onDomReady */
 $(function() {
-    reload(0, 9000, true);
+    reload(0, null, true);
 });
