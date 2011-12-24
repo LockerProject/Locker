@@ -3,6 +3,10 @@ var sys = require("sys");
 var fs = require("fs");
 var lconfig = require(__dirname +"/../Common/node/lconfig");
 lconfig.load(__dirname+"/../Config/config.json");
+var IJOD = require(__dirname+"/../Common/node/ijod").IJOD;
+var async = require("async");
+var spawn = require('child_process').spawn;
+
 
 // Create gzip stream
 var gzip = new gzbz2.Gzip;
@@ -17,95 +21,95 @@ var db = new sqlite.Database();
 
 var mongodb = require("mongodb");
 
+bootMongo()
+
+var ijods = {};
 var mongo;
 function connect(){
-    var mongo = new mongodb.Db('locker', new mongodb.Server("127.0.0.1", 27018, {}));
+    mongo = new mongodb.Db('locker', new mongodb.Server("127.0.0.1", 27018, {}));
     mongo.open(function(err, p_client) {
         if(err) return console.error(err);
+        mongo.collectionNames(function(err, names){
+            scan(names, lconfig.lockerDir + '/' + lconfig.me, function(){
+                console.error("done");
+            });
+        });
 //      mongo.collection(name, setup);
     })
 
 }
 
-// open the database for reading if file exists
-// create new database file if not
-
-function setup(err, collection){
-    db.open(name+".db", function (error) {
-      if (error) {
-          console.log("Tonight. You.");
-          throw error;
-      }
-      db.executeScript("CREATE TABLE IF NOT EXISTS tab (id TEXT PRIMARY KEY, at INTEGER, len INTEGER);",function (error) {
-            if (error) throw error;
-            eacher(collection);
-          });
-    });
-
+function scan(names, dir, callback) {
+    console.error("scanning "+dir);
+    var files = fs.readdirSync(dir);
+    async.forEachSeries(files, function(file, cb){
+        var fullPath = dir + '/' + file;
+        var stats = fs.statSync(fullPath);
+        if(!stats.isDirectory()) return cb();
+        fs.stat(fullPath+"/me.json",function(err,stats){
+            if(!stats || !stats.isFile()) return cb();
+            var me = JSON.parse(fs.readFileSync(fullPath+"/me.json"));
+            if(!me) return cb();
+            async.forEachSeries(names, function(nameo, cb2){
+                var name = nameo.name;
+                var pfix = "locker.asynclets_"+me.id+"_";
+                if(name.indexOf(pfix) == -1) return cb2();
+                var dname = name.substr(pfix.length);
+                console.error(name);
+                ijods[name] = new IJOD({name:fullPath+"/"+dname}, function(err, ij){
+                    if(err) console.error(err);
+                    var id = "id";
+                    if(me.mongoId && me.mongoId[dname]) id = me.mongoId[dname];
+                    if(me.mongoId && me.mongoId[dname+"s"]) id = me.mongoId[dname+"s"];
+                    mongo.collection(name.substr(7), function(err, coll){
+                        if(err) console.error(err);
+                        eacher(coll, id, ij, cb2);
+                    })
+                });
+            }, cb);
+        });
+    },callback);
 }
 
-function eacher(collection) {
+
+
+function eacher(collection, id, ij, callback) {
     // Locate all the entries using find
     var arr = [];
     var at = Date.now();
     collection.find().each(function(err, item) {
         if(!item){
             console.error("loaded "+arr.length+" items in "+(Date.now() - at));
-            saver(arr);
-            return client.close();
+            at = Date.now();
+            async.forEachSeries(arr, function(data, cb){
+                ij.addData({id:data[id], data:data},cb)
+            }, function(){
+                console.error("saved in "+(Date.now() - at));
+                callback();
+            });
+            return;
         }
+        if(!item[id]) console.error("can't find "+id+" in "+JSON.stringify(item));
+        if(item[id]) arr.push(item);
         arr.push(item);
     });
 };
 
-var async = require("async");
-function saver(arr)
-{
-    var start = Date.now();
-    var datas = [];
-    var len = 0;
-    async.forEachSeries(arr,function(item,cb){
-        gzip.init();
-        var gzdata = gzip.deflate(new Buffer(JSON.stringify(item)+"\n"), enc);  // Do this as many times as required
-    //    sys.puts("Compressed chunk size : " + gzdata.length);
-        datas.push(gzdata);
-        var gzlast = gzip.end();
-    //    sys.puts("Compressed chunk size: " + gzlast.length);
-        datas.push(gzlast);
-        var at = len;
-        len += gzdata.length;
-        len += gzlast.length;
-        var sql = "INSERT INTO tab VALUES (?, ?, ?)";
-        db.execute(sql, [item[id], at, len-at], function(err){
-            cb();
-        });
-    },function(){
-        console.error("indexed in "+(Date.now()-start));
-        start = Date.now();
-        var fd = fs.openSync(name+".json.gz", "w", 0644);
-        datas.forEach(function(gzdata){
-            fs.writeSync(fd, gzdata, 0, gzdata.length, null);
-        })
-        fs.closeSync(fd);
-        console.error("written in "+(Date.now()-start));
-
-    })
-
-}
 
 function bootMongo()
 {
     var mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                     '--port', lconfig.mongo.port]);
     mongoProcess.stderr.on('data', function(data) {
-        logger.error('mongod err: ' + data);
+        console.error('mongod err: ' + data);
     });
 
     var mongoOutput = "";
 
     // watch for mongo startup
     var callback = function(data) {
-        mongoOutput += data;
+        mongoOutput += data.toString();
+        console.error(mongoOutput);
         if(mongoOutput.match(/ waiting for connections on port/g)) {
             mongoProcess.stdout.removeListener('data', callback);
             connect();

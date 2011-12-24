@@ -14,7 +14,7 @@
 
 var fs = require('fs');
 var path = require('path');
-var deepCompare = require('deepCompare');
+var deepCompare = require('./deepCompare');
 var sqlite = require('sqlite-fts');
 var gzbz2 = require("gzbz2");
 var gzip = new gzbz2.Gzip;
