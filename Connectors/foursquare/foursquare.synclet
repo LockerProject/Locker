@@ -3,7 +3,7 @@
     "title": "Foursquare",
     "synclets": [
         {
-            "frequency": 120,
+            "frequency": 600,
             "name": "checkins"
         },
         {
@@ -11,7 +11,8 @@
             "name": "friends"
         },
         {
-            "frequency": 60,
+            "frequency": 300,
+            "threshold": 2,
             "name": "recent"
         },
         {
