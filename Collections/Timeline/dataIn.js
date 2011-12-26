@@ -1,6 +1,6 @@
 var request = require('request');
 var async = require('async');
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var url = require('url');
 var crypto = require("crypto");
@@ -26,7 +26,7 @@ exports.init = function(l, dStore, callback){
 exports.update = function(locker, type, callback) {
     dataStore.clear(type, function(){
         callback();
-        var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'recents/foursquare', 'feed/instagram'];
+        var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'checkin/foursquare', 'feed/instagram'];
         locker.providers(types, function(err, services) {
             if (!services) return;
             async.forEachSeries(services, function(svc, cb) {
@@ -44,15 +44,12 @@ exports.update = function(locker, type, callback) {
                 }
             }, function(err){
                 // process links too
-                request.get({uri:locker.lockerBase+'/Me/links/?full=true&limit=100', json:true}, function(err, resp, links){
-                    if(err || !links) return;
-                    async.forEachSeries(links, function(link, cb){
-                        var evt = {obj:{data:link}};
-                        processLink(evt, cb);
-                    }, function(){
-                        logger.debug("done with update");
-                    });
-                })
+                lutil.streamFromUrl(locker.lockerBase+'/Me/links/?full=true&limit=100&stream=true', function(link, cb){
+                    processLink({data:link}, cb);
+                }, function(err){
+                    if(err) logger.error(err);
+                    logger.debug("done with update");
+                });
             });
         });
     });
@@ -62,16 +59,15 @@ exports.update = function(locker, type, callback) {
 function getData(type, svcId, callback)
 {
     var subtype = type.substr(0, type.indexOf('/'));
-    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100&sort=_id&order=-1";
-    request.get({uri:lurl, json:true}, function(err, resp, arr) {
-        if(err || !arr) return;
-        async.forEachSeries(arr,function(a,cb){
-            var idr = getIdr(type, svcId, a);
-            masterMaster(idr, a, cb);
-        },function(err){
-            logger.debug("processed "+arr.length+" items from "+lurl+" err("+err+")");
-            callback(err);
-        });
+    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100&sort=_id&order=-1&stream=true";
+    var tot = 0;
+    lutil.streamFromUrl(lurl, function(a, cb){
+        tot++;
+        var idr = getIdr(type, svcId, a);
+        masterMaster(idr, a, cb);
+    }, function(err){
+        logger.debug("processed "+tot+" items from "+lurl);
+        callback(err);
     });
 }
 
@@ -143,34 +139,24 @@ function getKey(network, data)
 // normalize events a bit
 exports.processEvent = function(event, callback)
 {
-    if(!callback) callback = function(err){if(err) console.error(err);};
+    if(!callback) callback = function(err){if(err) logger.error(err);};
     var idr = url.parse(event.idr, true);
+    if(!idr || !idr.protocol) return callback("don't understand this data");
     // handle links as a special case as we're using them for post-process-deduplication
     if(idr.protocol == 'link') return processLink(event, callback);
-
-    if(!idr.protocol) return callback("don't understand this data");
     masterMaster(idr, event.data, callback);
-}
-
-function isItMe(idr)
-{
-    if(idr.protocol == 'tweet:' && idr.pathname == '/tweets') return true;
-    if(idr.protocol == 'checkin:' && idr.pathname == '/checkin') return true;
-    if(idr.protocol == 'photo:' && idr.pathname == '/photo') return true;
-    return false;
 }
 
 // figure out what to do with any data
 function masterMaster(idr, data, callback)
 {
-    if(typeof data != 'object') return callback();
+    if(typeof data != 'object') return callback("missing or bad data");
 //    logger.debug("MM\t"+url.format(idr));
     var ref = url.format(idr);
     var item = {keys:{}, refs:[], froms:{}, from:{}, responses:[], first:new Date().getTime(), last:new Date().getTime()};
     item.ref = ref;
     item.refs.push(ref);
     item.keys[url.format(idr2key(idr, data))] = item.ref;
-    item.me = isItMe(idr);
     if(idr.protocol == 'tweet:'){
         if(data.user && data.text) itemTwitter(item, data);
         if(data.related) itemTwitterRelated(item, data.related);

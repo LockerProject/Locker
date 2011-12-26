@@ -12,7 +12,6 @@ var async = require('async');
 var lmongoutil = require("lmongoutil");
 
 
-// in the future we'll probably need a visitCollection too
 var itemCol, respCol;
 
 exports.init = function(iCollection, rCollection) {

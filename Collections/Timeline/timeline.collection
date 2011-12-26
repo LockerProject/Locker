@@ -7,9 +7,9 @@
     "provides":["item"],
     "mongoCollections": ["item","response"],
     "events":[["recents/foursquare","/events"]
-		,["timeline/twitter","/events"]
-		,["related/twitter","/events"]
-		,["home/facebook","/events"]
-		,["link","/events"]
-		]
+    ,["tweet/twitter","/events"]
+    ,["related/twitter","/events"]
+    ,["post/facebook","/events"]
+    ,["link","/events"]
+    ]
 }

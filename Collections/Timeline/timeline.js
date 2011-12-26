@@ -15,6 +15,7 @@ var fs = require('fs'),
     locker = require('../../Common/node/locker.js'),
     lconfig = require('../../Common/node/lconfig');
 lconfig.load('../../Config/config.json');
+var logger = require('logger');
 var async = require("async");
 var url = require("url");
 
@@ -110,7 +111,7 @@ app.get('/update', function(req, res) {
 
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data){
-        console.log('5 HUNDO bad data:',JSON.stringify(req.body));
+        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
         res.writeHead(500);
         res.end('bad data');
         return;
