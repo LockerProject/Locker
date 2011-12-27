@@ -1,20 +1,16 @@
 {
-    "type": "home/facebook",
-    "via": "synclet/facebook",
-    "timestamp": 1315976215195,
     "action": "update",
-    "obj":
-    {
-        "timeStamp": "2011-09-20T14:09:19.051Z",
-        "data": {
-            "id": "500012126_10150282386392127",
-            "from": {
-                "name": "Alex Rainert",
-                "id": "500012126"
-            },
-            "message": "Dan was the 1st to nail the Google/Motorola news and yesterday he nailed Netflix. Get on the @splatf analysis, people! http://t.co/ZMu8UkyK",
-            "icon": "http://photos-d.ak.fbcdn.net/photos-ak-snc1/v27562/23/2231777543/app_2_2231777543_9553.gif",
-            "actions": [{
+    "idr": "post://facebook/home?id=facebook#500012126_10150282386392127",
+    "data": {
+        "id": "500012126_10150282386392127",
+        "from": {
+            "name": "Alex Rainert",
+            "id": "500012126"
+        },
+        "message": "Dan was the 1st to nail the Google/Motorola news and yesterday he nailed Netflix. Get on the @splatf analysis, people! http://t.co/ZMu8UkyK",
+        "icon": "http://photos-d.ak.fbcdn.net/photos-ak-snc1/v27562/23/2231777543/app_2_2231777543_9553.gif",
+        "actions": [
+            {
                 "name": "Comment",
                 "link": "http://www.facebook.com/500012126/posts/10150282386392127"
             },
@@ -25,17 +21,17 @@
             {
                 "name": "@arainert on Twitter",
                 "link": "http://twitter.com/arainert?utm_source=fb&utm_medium=fb&utm_campaign=arainert&utm_content=116149996419682304"
-            }],
-            "type": "status",
-            "application": {
-                "name": "Twitter",
-                "id": "2231777543"
-            },
-            "created_time": 1316527292,
-            "updated_time": 1316527292,
-            "comments": {
-                "count": 0
             }
+        ],
+        "type": "status",
+        "application": {
+            "name": "Twitter",
+            "id": "2231777543"
+        },
+        "created_time": 1316527292,
+        "updated_time": 1316527292,
+        "comments": {
+            "count": 0
         }
     }
 }
