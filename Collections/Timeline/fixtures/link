@@ -1,10 +1,9 @@
 {
-    "type": "link",
-    "via": "links",
-    "timestamp": 1315976215195,
+    "idr": "link://links/#FOOOOOOOOO",
     "action": "new",
-    "obj": {
+    "data": {
         "at": 1320220061000,
+        "id": "FOOOOOOOOO",
         "favicon": "http://t.co/favicon.ico",
         "link": "http://t.co/QgLsBzHy",
         "encounters": [{

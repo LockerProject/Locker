@@ -6,20 +6,13 @@ var url = require('url');
 var crypto = require("crypto");
 var path = require('path');
 
-var dataStore, locker, profiles = {};
+var dataStore, locker;
 
 // internally we need these for happy fun stuff
 exports.init = function(l, dStore, callback){
     dataStore = dStore;
     locker = l;
-    // load our known profiles, require for foursquare checkins, and to tell "me" flag on everything
-    async.forEach(["foursquare", "instagram"], function(svc, cb){
-        var lurl = locker.lockerBase + '/Me/' + svc + '/getCurrent/profile';
-        request.get({uri:lurl, json:true}, function(err, resp, arr){
-            if(arr && arr.length > 0) profiles[svc] = arr[0];
-            return cb();
-        });
-    }, callback);
+    callback();
 }
 
 // manually walk and reindex all possible link sources
@@ -143,12 +136,39 @@ exports.processEvent = function(event, callback)
     var idr = url.parse(event.idr, true);
     if(!idr || !idr.protocol) return callback("don't understand this data");
     // handle links as a special case as we're using them for post-process-deduplication
-    if(idr.protocol == 'link') return processLink(event, callback);
+    if(idr.protocol == 'link:') return processLink(event, callback);
     masterMaster(idr, event.data, callback);
 }
 
-// figure out what to do with any data
+// some data is incomplete, stupid but WTF do you do!
+var profiles = {};
 function masterMaster(idr, data, callback)
+{
+    if(idr.protocol == 'checkin:' && idr.pathname.indexOf('checkin') != -1)
+    { // foursquare checkins api for a person is the same json format but missing the .user, which we need to store the correct contact idr, so we have to fetch/cache that
+        var svcId = idr.query.id;
+        if(profiles[svcId])
+        {
+            data.user = profiles[svcId];
+            return masterBlaster(idr, data, callback);
+        }
+        var lurl = locker.lockerBase + '/Me/'+svcId+'/getCurrent/profile';
+        request.get({uri:lurl, json:true}, function(err, resp, arr){
+            if(err || !arr || arr.length == 0)
+            {
+                logger.error("couldn't fetch profile for "+svcId+" so have to skip "+url.format(idr));
+                return callback();
+            }
+            logger.debug("caching profile for "+svcId);
+            data.user = profiles[svcId] = arr[0];
+            return masterBlaster(idr, data, callback);
+        });
+    }
+    masterBlaster(idr, data, callback);
+}
+
+// figure out what to do with any data
+function masterBlaster(idr, data, callback)
 {
     if(typeof data != 'object') return callback("missing or bad data");
 //    logger.debug("MM\t"+url.format(idr));
@@ -230,6 +250,7 @@ function itemMerge(older, newer)
 // merge existing with delete!
 function itemMergeHard(a, b, cb)
 {
+    logger.debug("hard merge of "+a.ref+" to "+b.ref);
     var item = itemMerge(a, b);
     if(!item.responses) item.responses = [];
     // gather old responses
@@ -246,17 +267,15 @@ function itemMergeHard(a, b, cb)
 // when a processed link event comes in, check to see if it's a long url that could help us de-dup
 function processLink(event, callback)
 {
-    if(!event || !event.obj || !event.obj.encounters) return callback("no encounter");
+    if(!event || !event.data || !event.data.encounters) return callback("no encounter");
     // process each encounter if there's multiple
-    async.forEach(event.obj.encounters, function(encounter, cb){
+    async.forEach(event.data.encounters, function(encounter, cb){
         // first, look up event via/orig key and see if we've processed it yet, if not (for some reason) ignore
         var key = url.format(getKey(encounter.network, encounter.via));
         dataStore.getItemByKey(key,function(err, item){
             if(err || !item) return cb(err);
             // we tag this item with a ref to the link, super handy for cross-collection mashups
-            var hash = crypto.createHash('md5');
-            hash.update(encounter.link); // turn link into hash as an id
-            itemRef(item, "link://links/#"+hash.digest('hex'), function(err, item){
+            itemRef(item, event.idr, function(err, item){
                 if(err || !item) return cb(err);
                 var u = url.parse(encounter.link);
                 // if foursquare checkin and from a tweet, generate foursquare key and look for it
@@ -284,6 +303,16 @@ function newResponse(item, type)
         ref: item.ref,
         from: {}
     }
+}
+
+// sometimes links can be used as raw keys
+// using the hash value here because a ver of mongo will silently barf on some http based keys!!!
+function keyUrl(item, link)
+{
+    var u = url.parse(link);
+    if(!u || !u.host) return;
+    // all instagram links across all services seem to be preserved
+    if(u.host == 'instagr.am') item.keys["url:"+crypto.createHash('md5').update(link).digest('hex')] = item.ref;
 }
 
 // extract info from a tweet
@@ -322,6 +351,8 @@ function itemTwitter(item, tweet)
         hash.update(item.text.replace(/ http\:\/\/\S+$/,"")); // cut off appendege links that some apps add (like instagram)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
+    // check all links
+    if(tweet.entities && tweet.entities.urls) tweet.entities.urls.forEach(function(link){keyUrl(item, link.expanded_url);});
 
     // if this is also a reply
     if(tweet.in_reply_to_status_id_str)
@@ -362,6 +393,7 @@ function itemFacebook(item, post)
         hash.update(item.text.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
+    if(post.link) keyUrl(item, post.link);
 
     // process responses!
     if(post.comments && post.comments.data)
@@ -402,7 +434,7 @@ function itemFoursquare(item, checkin)
         hash.update(item.text.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
-    var profile = (checkin.user) ? checkin.user : profiles["foursquare"];
+    var profile = checkin.user;
     item.from.id = 'contact://foursquare/#'+profile.id;
     item.from.name = profile.firstName + " " + profile.lastName;
     item.from.icon = profile.photo;
@@ -460,6 +492,8 @@ function itemInstagram(item, pic)
     }else{
         item.text = "New Picture";
     }
+
+    if(pic.link) keyUrl(item, pic.link);
 
     // process responses!
     if(pic.comments && pic.comments.data)

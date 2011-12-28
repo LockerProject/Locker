@@ -6,7 +6,7 @@
 * Please see the LICENSE file for more information.
 *
 */
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var crypto = require("crypto");
 var async = require('async');
 var lmongoutil = require("lmongoutil");
@@ -32,7 +32,7 @@ exports.getTotalItems = function(callback) {
     itemCol.count(callback);
 }
 exports.getTotalResponses = function(callback) {
-    respColl.count(callback);
+    respCol.count(callback);
 }
 
 exports.getAll = function(fields, callback) {
@@ -66,7 +66,7 @@ exports.getResponses = function(arg, cbEach, cbDone) {
 
 exports.getSince = function(arg, cbEach, cbDone) {
     if(!arg || !arg.id) return cbDone("no id given");
-    findWrap({"_id":{"$gt":lmongoutil.ObjectID(arg.id)}}, {sort:{_id:-1}}, linkCollection, cbEach, cbDone);
+    findWrap({"_id":{"$gt":lmongoutil.ObjectID(arg.id)}}, {sort:{_id:-1}}, itemCol, cbEach, cbDone);
 }
 
 // arg takes sort/limit/offset/find
@@ -106,13 +106,12 @@ exports.addItem = function(item, callback) {
         for(var i in item.keys) hash.update(i);
         item.id = hash.digest('hex');
     }
-//    logger.debug("addItem: "+JSON.stringify(item));
     var responses = item.responses;
     if(responses) responses.forEach(function(r){ r.item = item.id; });
     delete item.responses; // store responses in their own table
     delete item._id; // mongo is miss pissypants
     itemCol.findAndModify({"id":item.id}, [['_id','asc']], {$set:item}, {safe:true, upsert:true, new: true}, function(err, doc){
-        if(err || !responses) return callback(err);
+        if(err || !responses) return callback(err, doc);
         async.forEach(responses, exports.addResponse, function(err){callback(err, doc);}); // orig caller wants saved item back
     });
 }
