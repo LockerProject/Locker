@@ -333,8 +333,9 @@ function itemFacebook(item, post)
     }
     if(post.name) item.title = post.name;
     if(post.message) item.text = post.message;
-    if(!post.message && post.caption) item.text = post.caption;
-    if(!post.message && !post.caption && post.story) item.text = post.story;
+    if(!item.text && post.description) item.text = post.description;
+    if(!item.text && post.caption) item.text = post.caption;
+    if(!item.text && post.story) item.text = post.story;
     // should we only add a text key if we can detect it's a tweet? we're de-duping any fb post essentially
     if(item.text)
     {
@@ -429,7 +430,7 @@ function itemInstagram(item, pic)
 {
     item.pri = 4; // the source
     item.first = item.last = pic.created_time * 1000;
-    if(pic.caption && pic.caption.length > 0) item.text = pic.caption.text;
+    if(pic.caption && pic.caption.text.length > 0) item.text = pic.caption.text;
     if(pic.user)
     {
         item.from.id = 'contact://instagram/#'+pic.user.id;
