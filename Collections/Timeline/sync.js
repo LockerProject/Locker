@@ -37,6 +37,7 @@ exports.update = function(locker, type, callback) {
                 if(type) return logger.debug("done with update for "+type);
                 // process links too
                 var tot = 0;
+                // this is experimental and not sure if it's useful yet
                 lutil.streamFromUrl(locker.lockerBase+'/Me/links/?full=true&limit=100&stream=true', function(link, cb){
                     tot++;
                     dataIn.processLink({data:link}, cb);
@@ -53,7 +54,7 @@ exports.update = function(locker, type, callback) {
 function getData(type, svcId, callback)
 {
     var subtype = type.substr(0, type.indexOf('/'));
-    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100&sort=_id&order=-1&stream=true";
+    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?all=true&stream=true";
     var tot = 0;
     lutil.streamFromUrl(lurl, function(a, cb){
         tot++;

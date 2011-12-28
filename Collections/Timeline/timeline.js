@@ -117,12 +117,10 @@ app.post('/events', function(req, res) {
         res.end('bad data');
         return;
     }
-
+    res.send('ok');
     // handle asyncadilly
     dataIn.processEvent(req.body, function(err){
         if(err) logger.error(err);
-        if(err) return res.send(err, 500);
-        res.send('ok');
     });
 });
 
