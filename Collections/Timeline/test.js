@@ -127,11 +127,14 @@ function testIG()
                     count(function(i2, r2){
                         dataIn.processEvent(fixture("ig.tweet"), function(err){
                             if(err) console.error(err);
-                            count(function(i3, r3){
-                                if(i3 - i0 != 1) return console.error("didn't dedup instagram properly");
-                                if(r3 - r0 != 0) return console.error("found responses and shouldn't have");
-                                console.error("instagram dedup OK");
-                            });
+                            dataIn.processEvent(fixture("ig.4sq"), function(err){
+                                if(err) console.error(err);
+                                count(function(i3, r3){
+                                    if(i3 - i0 != 1) return console.error("didn't dedup instagram properly");
+                                    if(r3 - r0 != 0) return console.error("found responses and shouldn't have");
+                                    console.error("instagram dedup OK");
+                                });
+                            })
                         })
                     });
                 })
@@ -146,7 +149,7 @@ function count(callback)
 {
     dataStore.getTotalItems(function(err, items){
         dataStore.getTotalResponses(function(err, resp){
-            console.error("Items: "+items+" Responses: "+resp);
+//            console.error("Items: "+items+" Responses: "+resp);
             callback(items, resp);
         })
     })

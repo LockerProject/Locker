@@ -15,74 +15,13 @@ exports.init = function(l, dStore, callback){
     callback();
 }
 
-// manually walk and reindex all possible link sources
-exports.update = function(locker, type, callback) {
-    dataStore.clear(type, function(){
-        callback();
-        var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'checkin/foursquare', 'feed/instagram'];
-        locker.providers(types, function(err, services) {
-            if (!services) return;
-            async.forEachSeries(services, function(svc, cb) {
-                logger.debug("processing "+svc.id);
-                if(svc.provides.indexOf('home/facebook') >= 0) {
-                    getData("home/facebook", svc.id, cb);
-                } else if(svc.provides.indexOf('tweets/twitter') >= 0) {
-                    async.forEachSeries(["tweets/twitter", "timeline/twitter", "mentions/twitter", "related/twitter"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
-                } else if(svc.provides.indexOf('checkin/foursquare') >= 0) {
-                    async.forEachSeries(["recents/foursquare", "checkin/foursquare"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
-                } else if(svc.provides.indexOf('feed/instagram') >= 0) {
-                    async.forEachSeries(["photo/instagram", "feed/instagram"], function(type, cb2){ getData(type, svc.id, cb2) }, cb);
-                } else {
-                    cb();
-                }
-            }, function(err){
-                // process links too
-                lutil.streamFromUrl(locker.lockerBase+'/Me/links/?full=true&limit=100&stream=true', function(link, cb){
-                    processLink({data:link}, cb);
-                }, function(err){
-                    if(err) logger.error(err);
-                    logger.debug("done with update");
-                });
-            });
-        });
-    });
-}
-
-// go fetch data from sources to bulk process
-function getData(type, svcId, callback)
+// take an idr and turn it into a generic network-global key
+// this could be network-specific transformation and need data
+function idr2key(idr, data)
 {
-    var subtype = type.substr(0, type.indexOf('/'));
-    var lurl = locker.lockerBase + '/Me/' + svcId + '/getCurrent/' + subtype + "?limit=100&sort=_id&order=-1&stream=true";
-    var tot = 0;
-    lutil.streamFromUrl(lurl, function(a, cb){
-        tot++;
-        var idr = getIdr(type, svcId, a);
-        masterMaster(idr, a, cb);
-    }, function(err){
-        logger.debug("processed "+tot+" items from "+lurl);
-        callback(err);
-    });
-}
-
-// generate unique id for any item based on it's event
-//> u.parse("type://network/context?id=account#46234623456",true);
-//{ protocol: 'type:',
-//  slashes: true,
-//  host: 'network',
-//  hostname: 'network',
-//  href: 'type://network/context?id=account#46234623456',
-//  hash: '#46234623456',
-//  search: '?id=account',
-//  query: { id: 'account' },
-//  pathname: '/context' }
-function getIdr(type, via, data)
-{
-    var r = {slashes:true};
-    r.host = type.substr(type.indexOf('/')+1);
-    r.pathname = type.substr(0, type.indexOf('/'));
-    r.query = {id: via}; // best proxy of account id right now
-    idrHost(r, data);
-    return url.parse(url.format(r)); // make sure it's consistent
+    delete idr.query; delete idr.search; // not account specific
+    idr.pathname = '/'; // ids are generic across any context
+    return url.parse(url.format(idr));
 }
 
 // internal util breakout
@@ -109,15 +48,7 @@ function idrHost(r, data)
         r.protocol = 'photo';
     }
 }
-
-// take an idr and turn it into a generic network-global key
-// this could be network-specific transformation and need data
-function idr2key(idr, data)
-{
-    delete idr.query; delete idr.search; // not account specific
-    idr.pathname = '/'; // ids are generic across any context
-    return url.parse(url.format(idr));
-}
+exports.idrHost = idrHost;
 
 // useful to get key from raw data directly (like from a via, not from an event)
 function getKey(network, data)
@@ -144,7 +75,7 @@ exports.processEvent = function(event, callback)
 var profiles = {};
 function masterMaster(idr, data, callback)
 {
-    if(idr.protocol == 'checkin:' && idr.pathname.indexOf('checkin') != -1)
+    if(idr.protocol == 'checkin:' && idr.pathname.indexOf('checkin') != -1 && idr.query.id)
     { // foursquare checkins api for a person is the same json format but missing the .user, which we need to store the correct contact idr, so we have to fetch/cache that
         var svcId = idr.query.id;
         if(profiles[svcId])
@@ -163,9 +94,11 @@ function masterMaster(idr, data, callback)
             data.user = profiles[svcId] = arr[0];
             return masterBlaster(idr, data, callback);
         });
+        return;
     }
     masterBlaster(idr, data, callback);
 }
+exports.masterMaster = masterMaster;
 
 // figure out what to do with any data
 function masterBlaster(idr, data, callback)
@@ -294,6 +227,7 @@ function processLink(event, callback)
         });
     }, callback);
 }
+exports.processLink = processLink;
 
 // give a bunch of sane defaults
 function newResponse(item, type)
@@ -313,6 +247,20 @@ function keyUrl(item, link)
     if(!u || !u.host) return;
     // all instagram links across all services seem to be preserved
     if(u.host == 'instagr.am') item.keys["url:"+crypto.createHash('md5').update(link).digest('hex')] = item.ref;
+}
+
+// add key(s) based on a timestamp+-window (all in seconds)
+function keyTime(item, at, window, prefix)
+{
+    var keys = {};
+    var wlen = window.toString().length;
+    var alen = at.toString().length;
+    keys[at.toString().substr(0,alen-wlen)]=true;
+    at += window;
+    keys[at.toString().substr(0,alen-wlen)]=true;
+    at -= (window*2);
+    keys[at.toString().substr(0,alen-wlen)]=true;
+    Object.keys(keys).forEach(function(key){ item.keys[prefix+key] = item.ref; });
 }
 
 // extract info from a tweet
@@ -352,7 +300,7 @@ function itemTwitter(item, tweet)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
     // check all links
-    if(tweet.entities && tweet.entities.urls) tweet.entities.urls.forEach(function(link){keyUrl(item, link.expanded_url);});
+    if(tweet.entities && tweet.entities.urls) tweet.entities.urls.forEach(function(link){if(link.expanded_url) keyUrl(item, link.expanded_url);});
 
     // if this is also a reply
     if(tweet.in_reply_to_status_id_str)
@@ -434,6 +382,11 @@ function itemFoursquare(item, checkin)
         hash.update(item.text.substr(0,130)); // ignore trimming variations
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
+    // foursquare preserves no other metadata than the shout in a cross-post, so we fall back to timestamp window :(
+    if(checkin.photos && checkin.photos.items) checkin.photos.items.forEach(function(photo){
+        if(!photo.source || photo.source.name != "Instagram") return;
+        keyTime(item, photo.createdAt, 5, "igts:");
+    });
     var profile = checkin.user;
     item.from.id = 'contact://foursquare/#'+profile.id;
     item.from.name = profile.firstName + " " + profile.lastName;
@@ -475,7 +428,7 @@ function itemInstagram(item, pic)
 {
     item.pri = 4; // the source
     item.first = item.last = pic.created_time * 1000;
-    if(pic.caption) item.text = pic.caption.text;
+    if(pic.caption && pic.caption.length > 0) item.text = pic.caption.text;
     if(pic.user)
     {
         item.from.id = 'contact://instagram/#'+pic.user.id;
@@ -491,6 +444,8 @@ function itemInstagram(item, pic)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }else{
         item.text = "New Picture";
+        // if there's no caption, we have to key the timestamp to catch foursquare cross-posting since it has no other metadata :(
+        keyTime(item, pic.created_time, 5, "igts:");
     }
 
     if(pic.link) keyUrl(item, pic.link);

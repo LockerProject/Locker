@@ -6,8 +6,9 @@
     "handle":"timeline",
     "provides":["item"],
     "mongoCollections": ["item","response"],
-    "events":[["recents/foursquare","/events"]
+    "events":[["checkin/foursquare","/events"]
     ,["tweet/twitter","/events"]
+    ,["photo/instagram","/events"]
     ,["related/twitter","/events"]
     ,["post/facebook","/events"]
     ,["link","/events"]

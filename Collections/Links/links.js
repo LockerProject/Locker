@@ -168,7 +168,6 @@ app.get('/', function(req, res) {
     if(req.query['stream'] == "true")
     {
         res.writeHead(200, {'content-type' : 'application/jsonstream'});
-        options = {}; // exclusive
     }
     dataStore.getLinks(options, function(item) {
         if(req.query['stream'] == "true") return res.write(JSON.stringify(item)+'\n');

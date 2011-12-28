@@ -21,6 +21,7 @@ var url = require("url");
 
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
 var dataStore = require("./dataStore"); // storage/retreival of raw items and responses
+var sync = require('./sync'); // for manual updating/resyncing of data from synclets
 
 var lockerInfo;
 var express = require('express'),
@@ -103,7 +104,7 @@ app.get('/ref', function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    dataIn.update(locker, req.query.type, function(){
+    sync.update(locker, req.query.type, function(){
         res.writeHead(200);
         res.end('Extra mince!');
     });
@@ -119,6 +120,7 @@ app.post('/events', function(req, res) {
 
     // handle asyncadilly
     dataIn.processEvent(req.body, function(err){
+        if(err) logger.error(err);
         if(err) return res.send(err, 500);
         res.send('ok');
     });
@@ -155,8 +157,10 @@ process.stdin.on('data', function(data) {
         // initialize all our libs
         dataStore.init(mongo.collections.item,mongo.collections.response);
         dataIn.init(locker, dataStore, function(){
-            app.listen(lockerInfo.port, 'localhost', function() {
-                process.stdout.write(data);
+            sync.init(locker, dataStore, dataIn, function(){
+                app.listen(lockerInfo.port, 'localhost', function() {
+                    process.stdout.write(data);
+                });
             });
         });
     });
