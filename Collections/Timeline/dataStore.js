@@ -7,14 +7,16 @@
 *
 */
 var logger = require(__dirname + "/../../Common/node/logger");
+var lutil = require(__dirname + "/../../Common/node/lutil");
 var crypto = require("crypto");
 var async = require('async');
 var lmongoutil = require("lmongoutil");
 
 
-var itemCol, respCol;
+var itemCol, respCol, locker;
 
-exports.init = function(iCollection, rCollection) {
+exports.init = function(iCollection, rCollection, l) {
+    locker = l;
     itemCol = iCollection;
     itemCol.ensureIndex({"id":1},{unique:true, background:true},function() {});
     itemCol.ensureIndex({"keys":1},{background:true},function() {});
@@ -100,17 +102,20 @@ function findWrap(a,b,c,cbEach,cbDone){
 
 // insert new (fully normalized) item, generate the id here and now
 exports.addItem = function(item, callback) {
+    var etype = "update";
     if(!item.id)
     { // first time an item comes in, make a unique id for it
         var hash = crypto.createHash('md5');
         for(var i in item.keys) hash.update(i);
         item.id = hash.digest('hex');
+        etype = "new";
     }
     var responses = item.responses;
     if(responses) responses.forEach(function(r){ r.item = item.id; });
     delete item.responses; // store responses in their own table
     delete item._id; // mongo is miss pissypants
     itemCol.findAndModify({"id":item.id}, [['_id','asc']], {$set:item}, {safe:true, upsert:true, new: true}, function(err, doc){
+        if(locker) locker.ievent(lutil.idrNew("item","timeline",doc.id),doc,etype); // let happen independently
         if(err || !responses) return callback(err, doc);
         async.forEach(responses, exports.addResponse, function(err){callback(err, doc);}); // orig caller wants saved item back
     });
@@ -134,6 +139,7 @@ exports.delItem = function(id, callback) {
     if(!id || id.length < 10) return callback("no or invalid id to del: "+id);
     itemCol.remove({id:id}, function(err){
         if(err) return callback(err);
+        if(locker) locker.ievent(lutil.idrNew("item","timeline",doc.id),doc,"delete"); // let happen independently
         respCol.remove({item:id}, callback);
     });
 }

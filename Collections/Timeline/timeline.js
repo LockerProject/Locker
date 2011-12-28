@@ -155,7 +155,7 @@ process.stdin.on('data', function(data) {
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.item,mongo.collections.response);
+        dataStore.init(mongo.collections.item,mongo.collections.response, locker);
         dataIn.init(locker, dataStore, function(){
             sync.init(locker, dataStore, dataIn, function(){
                 app.listen(lockerInfo.port, 'localhost', function() {
