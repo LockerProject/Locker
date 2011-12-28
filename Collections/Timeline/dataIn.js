@@ -334,6 +334,7 @@ function itemFacebook(item, post)
     if(post.name) item.title = post.name;
     if(post.message) item.text = post.message;
     if(!post.message && post.caption) item.text = post.caption;
+    if(!post.message && !post.caption && post.story) item.text = post.story;
     // should we only add a text key if we can detect it's a tweet? we're de-duping any fb post essentially
     if(item.text)
     {
