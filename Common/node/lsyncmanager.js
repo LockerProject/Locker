@@ -200,35 +200,31 @@ exports.flushTolerance = function(callback) {
 function scheduleRun(info, synclet) {
     if (!synclet.frequency) return;
 
-    var milliFreq = parseInt(synclet.frequency) * 1000;
-
+    // run from a clean state
     function run() {
         executeSynclet(info, synclet);
     }
-    if(info.config && info.config.nextRun === -1) {
-        // the synclet is paging and needs to run again immediately
-        synclet.nextRun = new Date();
-        process.nextTick(run);
-    } else {
-        if(info.config && info.config.nextRun > 0)
-            synclet.nextRun = new Date(info.config.nextRun);
-        else
-            synclet.nextRun = new Date(synclet.nextRun);
 
-        if(!(synclet.nextRun > 0)) //check to make sure it is a valid date
-            synclet.nextRun = new Date();
-
-        var timeout = (synclet.nextRun.getTime() - Date.now());
-        timeout = timeout % milliFreq;
-        if(timeout <= 0)
-            timeout += milliFreq;
-
-        // schedule a timeout with +- 5% randomness
-        timeout = timeout + (((Math.random() - 0.5) * 0.1) * milliFreq);
-        synclet.nextRun = new Date(Date.now() + timeout);
-
-        setTimeout(run, timeout);
+    // the synclet is paging and needs to run again immediately
+    if(info.config && info.config.nextRun === -1)
+    {
+        delete info.config.nextRun;
+        return process.nextTick(run);
     }
+
+    // validation check
+    if(synclet.nextRun && typeof synclet.nextRun != "number") delete synclet.nextRun;
+
+    // had a schedule and missed it, run it now
+    if(synclet.nextRun && synclet.nextRun <= Date.now()) return process.nextTick(run);
+
+    // if no schedule, in the future with 10% fuzz
+    if(!synclet.nextRun)
+    {
+        var milliFreq = parseInt(synclet.frequency) * 1000;
+        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
+    }
+    setTimeout(run, synclet.nextRun - Date.now());
 }
 
 function localError(base, err)
@@ -258,6 +254,7 @@ function mergeManifest(js) {
 function executeSynclet(info, synclet, callback) {
     if(!callback) callback = function(){};
     if (synclet.status === 'running') return callback('already running');
+    delete synclet.nextRun; // cancel any schedule
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!synclets.executeable)
