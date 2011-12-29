@@ -179,7 +179,7 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
             if(!Array.isArray(synclet.posts)) synclet.posts = [];
             synclet.posts.push(post);
         }
-        executeSynclet(synclets.installed[serviceId], synclet, cb);
+        executeSynclet(synclets.installed[serviceId], synclet, cb, true);
     }, callback);
 };
 
@@ -257,13 +257,13 @@ function mergeManifest(js) {
 /**
 * Executes a synclet
 */
-function executeSynclet(info, synclet, callback) {
+function executeSynclet(info, synclet, callback, force) {
     if(!callback) callback = function(){};
     if (synclet.status === 'running') return callback('already running');
     delete synclet.nextRun; // cancel any schedule
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
-    if (!synclets.executeable)
+    if (!force && !synclets.executeable)
     {
         setTimeout(function() {
             executeSynclet(info, synclet, callback);
@@ -275,7 +275,7 @@ function executeSynclet(info, synclet, callback) {
         synclet.tolMax = 0;
     }
     // if we can have tolerance, try again later
-    if(synclet.tolAt > 0)
+    if(!force && synclet.tolAt > 0)
     {
         synclet.tolAt--;
         logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
