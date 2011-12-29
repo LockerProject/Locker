@@ -12,12 +12,17 @@
         },
         {
             "frequency": 3600,
+            "name": "events"
+        },
+        {
+            "frequency": 3600,
             "name": "profile"
         }
     ],
     "provides": [
         "contact/github",
         "repo/github",
+        "event/github",
         "view/github"
     ],
     "provider": "github",
