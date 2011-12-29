@@ -197,11 +197,16 @@ exports.flushTolerance = function(callback) {
 /**
 * Add a timeout to run a synclet
 */
+var scheduled = {};
 function scheduleRun(info, synclet) {
     if (!synclet.frequency) return;
 
+    var key = info.id + "-" + synclet.name;
+    if(scheduled[key]) return; // can't schedule multiple times
+
     // run from a clean state
     function run() {
+        delete scheduled[key];
         executeSynclet(info, synclet);
     }
 
@@ -224,6 +229,7 @@ function scheduleRun(info, synclet) {
         var milliFreq = parseInt(synclet.frequency) * 1000;
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
     }
+    scheduled[key] = true;
     setTimeout(run, synclet.nextRun - Date.now());
 }
 
