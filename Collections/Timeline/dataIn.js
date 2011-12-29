@@ -73,6 +73,7 @@ exports.processEvent = function(event, callback)
 
 // some data is incomplete, stupid but WTF do you do!
 var profiles = {};
+var mbQ = async.queue(masterBlaster, 1); // only process in series
 function masterMaster(idr, data, callback)
 {
     if(idr.protocol == 'checkin:' && idr.pathname.indexOf('checkin') != -1 && idr.query.id)
@@ -81,7 +82,7 @@ function masterMaster(idr, data, callback)
         if(profiles[svcId])
         {
             data.user = profiles[svcId];
-            return masterBlaster(idr, data, callback);
+            return mbQ.push({idr:idr, data:data}, callback);
         }
         var lurl = locker.lockerBase + '/Me/'+svcId+'/getCurrent/profile';
         request.get({uri:lurl, json:true}, function(err, resp, arr){
@@ -92,17 +93,19 @@ function masterMaster(idr, data, callback)
             }
             logger.debug("caching profile for "+svcId);
             data.user = profiles[svcId] = arr[0];
-            return masterBlaster(idr, data, callback);
+            return mbQ.push({idr:idr, data:data}, callback);
         });
         return;
     }
-    masterBlaster(idr, data, callback);
+    mbQ.push({idr:idr, data:data}, callback);
 }
 exports.masterMaster = masterMaster;
 
 // figure out what to do with any data
-function masterBlaster(idr, data, callback)
+function masterBlaster(arg, callback)
 {
+    var idr = arg.idr;
+    var data = arg.data;
     if(typeof data != 'object') return callback("missing or bad data");
 //    logger.debug("MM\t"+url.format(idr));
     var ref = url.format(idr);
@@ -344,6 +347,7 @@ function itemFacebook(item, post)
         item.keys['text:'+hash.digest('hex')] = item.ref;
     }
     if(post.link) keyUrl(item, post.link);
+    if(!item.text && post.type == "photo") item.text = "New Photo";
 
     // process responses!
     if(post.comments && post.comments.data)
