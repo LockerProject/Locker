@@ -173,8 +173,8 @@ vows.describe("Synclet Manager").addBatch({
         "and services specifying a positive nextRun time in the past get rescheduled at the next interval time" : function(err, status) {
             //this is a bit racey
             var synclet = syncManager.synclets().installed.testSynclet.synclets[0];
-            assert.ok(synclet.nextRun.getTime() > (start + ((synclet.frequency*1000)) * 0.95));
-            assert.ok(synclet.nextRun.getTime() < (Date.now() + ((synclet.frequency*1000)) * 1.05));
+            assert.ok(synclet.nextRun > (start + ((synclet.frequency*1000)) * 0.95));
+            assert.ok(synclet.nextRun < (Date.now() + ((synclet.frequency*1000)) * 1.05));
         }
     }
 }).addBatch({

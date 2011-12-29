@@ -202,7 +202,7 @@ function scheduleRun(info, synclet) {
     if (!synclet.frequency) return;
 
     var key = info.id + "-" + synclet.name;
-    if(scheduled[key]) return; // can't schedule multiple times
+    if(scheduled[key]) clearTimeout(scheduled[key]); // remove any existing timer
 
     // run from a clean state
     function run() {
@@ -229,8 +229,7 @@ function scheduleRun(info, synclet) {
         var milliFreq = parseInt(synclet.frequency) * 1000;
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
     }
-    scheduled[key] = true;
-    setTimeout(run, synclet.nextRun - Date.now());
+    scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
 }
 
 function localError(base, err)
