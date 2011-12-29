@@ -184,10 +184,10 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
 };
 
 // run all synclets that have a tolerance and reset them
-exports.flushTolerance = function(callback) {
+exports.flushTolerance = function(callback, force) {
     async.forEach(Object.keys(synclets.installed), function(service, cb){ // do all services in parallel
         async.forEachSeries(synclets.installed[service].synclets, function(synclet, cb2) { // do each synclet in series
-            if(!synclet.tolAt || synclet.tolAt == 0) return cb2();
+            if(!force && (!synclet.tolAt || synclet.tolAt == 0)) return cb2();
             synclet.tolAt = 0;
             executeSynclet(synclets.installed[service], synclet, cb2);
         }, cb);

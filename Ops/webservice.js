@@ -522,9 +522,12 @@ locker.post('/core/:svcId/event', function(req, res) {
     res.end("OKTHXBI");
 });
 
-locker.get('/wildmode', function(req, res) {
-    lconfig.ui = 'dashboardv3';
-    res.redirect('/');
+// manually flush any waiting synclets, useful for debugging/testing
+locker.get('/flush', function(req, res) {
+    res.send(true);
+    syncManager.flushTolerance(function(err){
+        if(err) logger.error("got error when flushing synclets: "+err);
+    }, req.query.force);
 });
 
 locker.use(express.static(__dirname + '/static'));
