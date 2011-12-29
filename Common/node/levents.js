@@ -15,6 +15,8 @@ var serviceManager = require("lservicemanager");
 var logger = require("./logger.js");
 var syncManager = require('lsyncmanager');
 var url = require('url');
+var async = require('async');
+var path = require('path');
 
 var eventListeners = {};
 var processingQueue = []; // queue of events being processed
@@ -68,7 +70,7 @@ function fetchListeners(idr)
 }
 
 exports.fireEvent = function(idr, action, obj) {
-    logger.verbose("Firing an event for " + idr + " action(" + action + ")");
+    logger.verbose("received event for " + idr + " action(" + action + ")");
     // Short circuit when no one is listening
     var listeners = fetchListeners(idr);
     if (listeners.length == 0) return;
@@ -76,14 +78,11 @@ exports.fireEvent = function(idr, action, obj) {
         idr:idr,
         action:action,
         data:obj,
-        listeners:listeners
     };
-    processingQueue.push(newEventInfo);
-    // We bail out unless this is the first time into the queue
-    if (processingQueue.length == 1)
-        processEvents(processingQueue);
-    else
-        process.nextTick(function() { processEvents(processingQueue); });
+    listeners.forEach(function(listener){
+        var lurl = lconfig.lockerBase + path.join("/Me", listener.id, listener.cb);
+        lqueue(lurl).push(newEventInfo);
+    });
 }
 
 exports.displayListeners = function(type) {
@@ -98,43 +97,31 @@ function findListenerPosition(type, id, cb) {
     return -1;
 }
 
-function processEvents(queue) {
-    // Only the first one is started and it will continue until empty
-    if (!queue || queue.length > 1) {
-        //console.log("Bailing on the queue");
-        //console.dir(queue);
-        return;
-    }
-
-    //console.log("processing " + queue.length + " events for " + queue[0].via);
-    // We loop over all the pending events to fire from the service
-    do {
-        var curEvent = queue.pop();
-        //logger.log("Current event from " + curEvent.via + " " + curEvent.listeners.length + " listeners");
-        curEvent.listeners.forEach(function(listener) {
-            if (!serviceManager.isInstalled(listener.id)) return;
-            //console.log("Send to " + listener.id);
-            var serviceInfo = serviceManager.metaInfo(listener.id);
-            //console.log("Sevice info " + serviceInfo.url);
-            var cbUrl = url.parse(lconfig.lockerBase);
-            var httpOpts = {
-                url: "http://"+ cbUrl.hostname + ":" + cbUrl.port + "/Me/" + listener.id + listener.cb,
-                method:"POST",
-                headers: {
-                    "Content-Type":"application/json",
-                    "Connection":"keep-alive"
-                },
-                body: JSON.stringify({"idr":curEvent.idr, "action":curEvent.action, "data":curEvent.data})
-            };
-            logger.verbose("Firing event to " + listener.id + " to " + listener.cb);
-            // I tried to do this with a replacer array at first, but it didn't take the entire obj, seemed to match on subkeys too
-            request(httpOpts, function(err, res) {
-                if (err || res.statusCode != 200) {
-                    logger.error("There was an error sending an event to " + listener.id + " at " + listener.cb + " got " + (err || res.statusCode));
-                    // TODO: Need to evaluate the logic here, to see if we should retry or other options.
-                }
-            });
+// create a queue per listener url, maximum 1 concurrency
+var lqueues = {};
+function lqueue(lurl)
+{
+    if(lqueues[lurl]) return lqueues[lurl];
+    return lqueues[lurl] = async.queue(function(curEvent, callback){
+        var httpOpts = {
+            url: lurl,
+            method:"POST",
+            headers: {
+                "Content-Type":"application/json",
+                "Connection":"keep-alive"
+            },
+            body: JSON.stringify(curEvent)
+        };
+        logger.verbose(lqueues[lurl].length()+": sending "+curEvent.action+" event "+curEvent.idr+" to " + lurl);
+        request(httpOpts, function(err, res, body) {
+            if (err || res.statusCode != 200) {
+                logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + lurl + " got " + (err || res.statusCode));
+                logger.verbose(JSON.stringify(curEvent.data));
+                logger.verbose(body);
+                // TODO: Need to evaluate the logic here, to see if we should retry or other options.
+            }
+            callback();
         });
-    } while (queue.length > 0)
 
+    },1);
 }
