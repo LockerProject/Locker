@@ -205,14 +205,16 @@ function scheduleRun(info, synclet) {
     if(scheduled[key]) clearTimeout(scheduled[key]); // remove any existing timer
 
     // run from a clean state
+    var force = false;
     function run() {
         delete scheduled[key];
-        executeSynclet(info, synclet);
+        executeSynclet(info, synclet, function(){}, force);
     }
 
-    // the synclet is paging and needs to run again immediately
+    // the synclet is paging and needs to run again immediately, forcefully
     if(info.config && info.config.nextRun === -1)
     {
+        force = true;
         delete info.config.nextRun;
         return process.nextTick(run);
     }
