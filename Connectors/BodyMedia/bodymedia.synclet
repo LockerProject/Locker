@@ -1,0 +1,18 @@
+{
+    "title":"BodyMedia FIT",
+    "status":"stable",
+    "provider":"bodymedia",
+    "mongoId" : {
+        "burn":"date",
+        "minutes":"date",
+        "sleep":"date",
+        "periods":"date"
+    },
+    "provides":["burn/bodymedia"],
+    "synclets":[
+        {"name": "burn_year", "frequency": 86400, "threshold": 0},
+        {"name": "burn_day", "frequency": 43200, "threshold": 0},
+        {"name": "sleep_year", "frequency": 86400, "threshold": 0},
+        {"name": "sleep_day", "frequency": 43200, "threshold": 0}
+    ]
+}
