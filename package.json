@@ -45,7 +45,6 @@
         "airbrake": "=0.2.2",
         "node-fakeweb": "=0.0.5",
         "ejs": "=0.4.3",
-        "forever": "=0.6.7",
         "graceful-fs": "1.0.1",
         "node-fs": "=0.1.0",
         "nodemailer": "=0.2.3",

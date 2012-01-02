@@ -37,23 +37,33 @@ if [ ! -f "$apikeys" ]; then
     exit 1
 fi
 
-locker_runtime=lockerd.js
-
-# Set defaults based on our runtime mode
+# Start the locker
 case "$locker_mode" in
     production)
         # Tell node to run in production mode
         NODE_ENV=production
         export NODE_ENV
 
-        # Use the forever wrapper
-        locker_runtime=lockerd.js
+        # Monitor the locker and restart it if it dies
+        trap 'kill -TERM $lockerd_pid; wait $lockerd_pid; exit $?' TERM
+        while true; do
+            node lockerd.js "$@" &
+            lockerd_pid=$!
+
+            if wait $lockerd_pid; then
+                # Clean shutdown
+                exit 0
+            fi
+
+            echo "Locker exited unexpectedly, respawning..." >&2
+            # Limit respawning
+            sleep 1
+        done
         ;;
     development|*)
-        # Don't use the forever wrapper
-        locker_runtime=_lockerd.js
+        # Just run it
+        exec node lockerd.js "$@"
         ;;
 esac
 
-# Launch the locker
-exec node "$locker_runtime" "$@"
+exit 1
