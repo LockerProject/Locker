@@ -31,7 +31,6 @@ $(document).ready(function() {
     if (document.getElementById('appFrame').contentWindow.filterItems) {
       document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
     }
-    $('.sidenav-items input').attr('checked', false)
   });
 
   $('.sidenav-items input').click(function() {
@@ -76,6 +75,7 @@ var loadApp = function(callback) {
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
   $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
+  $('.sidenav-items input').attr('checked', false)
   if (params.indexOf('filter') === 0) {
     var boxes = params.split('&');
     for (var i = 0; i < boxes.length; i++) {
