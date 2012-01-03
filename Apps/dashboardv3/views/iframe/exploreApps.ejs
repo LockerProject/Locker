@@ -21,7 +21,7 @@
             <p class="title"><%= apps[i].repository.title %></p>
             <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
             <% if (apps[i].repository.uses.types) { %>
-              <p class="uses">Uses <%= apps[i].repository.uses.types.join(', ') %></p>
+              <p class="uses">Uses <%= apps[i].repository.uses.types.join('+ ') %></p>
             <% } %>
             <% if (apps[i].installed) { %>
               <input disabled type='button' value='added'>

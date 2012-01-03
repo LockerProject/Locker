@@ -178,7 +178,18 @@ input[type=button].install {
 .full-app-details .title {
   font-size: 20px;
   font-size: bold;
+  margin-bottom: 2px;
 }
+
+.full-app-details .author {
+  margin-bottom: 10px;
+}
+
+.full-app-details .description {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
 
 .full-app-details .version,.last-update {
   font-weight: bold;
