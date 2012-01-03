@@ -194,6 +194,7 @@ var submitPublish = function(req, res) {
             fields.lastUpdated = Date.now();
             if (fields['app-publish'] === 'true') {
                 var data = {
+                    uses: githubapps[fields.app].uses,
                     desc: fields['app-description']
                 }
                 if (fields['rename-app'] === 'on') {

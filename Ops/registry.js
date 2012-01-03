@@ -317,6 +317,9 @@ function checkPackage(pjs, arg, gh, callback)
             if (arg.body.desc) {
                 js.repository.desc = arg.body.desc;
             }
+            if (arg.body.uses) {
+                js.repository.uses = arg.body.uses;
+            }
         }
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
