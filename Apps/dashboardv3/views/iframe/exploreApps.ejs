@@ -21,10 +21,14 @@
             <p class="title"><%= apps[i].repository.title %></p>
             <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
             <% if (apps[i].repository.uses && apps[i].repository.uses.types) { %>
-              <% for (var j = 0; j < apps[i].repository.uses.types.length; j++) { %>
-                <% apps[i].repository.uses.types[j] = apps[i].repository.uses.types[j][0].toUpperCase() + apps[i].repository.uses.types[j].slice(1) %>
-              <% } %>
-              <p class="uses">Uses <span class="blue"><%= apps[i].repository.uses.types.join('+ ') %></span></p>
+              <p class="uses">Uses
+                <% for (var j = 0; j < apps[i].repository.uses.types.length; j++) { %>
+                  <% if (j > 0) { %>, <% } %>
+                  <a class='blue parentLink' href='explore#exploreApps&filter&types[]=<%= apps[i].repository.uses.types[j] %>'>
+                    <%= apps[i].repository.uses.types[j][0].toUpperCase() + apps[i].repository.uses.types[j].slice(1) %>
+                  </a>
+                <% } %>
+              </p>
             <% } %>
             <% if (apps[i].installed) { %>
               <input disabled type='button' value='added'>
