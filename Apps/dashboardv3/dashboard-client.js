@@ -133,20 +133,16 @@ var renderExploreApps = function(req, res) {
                     return res.send('No apps by that user!', 404);
                 }
             } else if (req.param('types') || req.param('services')) {
-                var bc = '';
+                data.breadcrumb = 'filter';
                 var types = {};
                 if (req.param('types')) {
-                    bc = req.param('types').join(' + ');
                     types.types = true;
+                    data.types = req.param('types');
                 }
                 if (req.param('services')) {
-                    if (bc.length > 0) {
-                        bc += " + ";
-                    }
-                    bc += req.param('services').join(' + ');
                     types.services = true;
+                    data.services = req.param('services');
                 }
-                data.breadcrumb = bc;
                 for (var i in apps) {
                     if (!apps[i].repository.uses) {
                         delete apps[i];
@@ -428,6 +424,7 @@ var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
         apps = JSON.parse(body);
         request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
+            added = JSON.parse(added);
             for (var i in added) {
                 if (apps[i]) {
                     apps[i].installed = true;

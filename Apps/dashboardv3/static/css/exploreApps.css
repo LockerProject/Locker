@@ -78,12 +78,16 @@ input[type=button].install {
   float: left;
 }
 
-.breadcrumb li a {
+.breadcrumb li p {
   padding: 7px 0px 7px 50px;
   background: #f4f4f4;
   position: relative;
   display: block;
   float: left;
+}
+
+.breadcrumb li a {
+  display: inline;
 }
 
 .breadcrumb li a:after {
