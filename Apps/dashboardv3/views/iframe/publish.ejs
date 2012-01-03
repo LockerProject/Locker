@@ -13,6 +13,7 @@
       <form method="POST" action="publish" enctype="multipart/form-data">
         <input type="hidden" name="app-publish" value="true">
         <input type="hidden" name="new-file" value="false">
+        <input type="hidden" class='old-name' name="old-name" value="<%=apps[0].title%>">
         <input type="hidden" name="x" id="x">
         <input type="hidden" name="y" id="y">
         <input type="hidden" name="w" id="w">

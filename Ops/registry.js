@@ -61,11 +61,6 @@ exports.init = function(config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
-    app.all('/registry/*', function(req, res, next) {
-        express.bodyParser();
-        next();
-    });
-
     app.get('/registry/added', function(req, res) {
         res.send(exports.getInstalled());
     });
@@ -95,7 +90,7 @@ exports.app = function(app)
     // takes the local github id format, user-repo
     app.get('/registry/publish/:id', publishPackage);
 
-    app.post('/registry/publish/:id', publishPackage);
+    app.post('/registry/publish/:id', express.bodyParser(), publishPackage);
 
     app.get('/registry/myApps', exports.getMyApps);
 }
@@ -295,7 +290,7 @@ function checkPackage(pjs, arg, gh, callback)
             var pkg = path.basename(path.dirname(pjs));
             var handle = ("app-" + gh.login + "-" + pkg).toLowerCase();
             var js = {
-              "author": { "name": gh.name },
+              "author": { "name": gh.login },
               "name": handle,
               "description": arg.description || "auto generated",
               "version": "0.0.0",
@@ -303,7 +298,7 @@ function checkPackage(pjs, arg, gh, callback)
                 "title": arg.title || pkg,
                 "handle": handle,
                 "is": "app",
-                "author": gh.name,
+                "author": gh.login,
                 "static": "true",
                 "update": "auto",
                 "github": "https://github.com/"+gh.login+"/"+pkg
@@ -316,8 +311,15 @@ function checkPackage(pjs, arg, gh, callback)
             js = JSON.parse(fs.readFileSync(pjs));
         }
         if (arg.body) {
-            js.repository.title = arg.body.title;
-            js.repository.desc = arg.body.desc;
+            if (arg.body.title) {
+                js.repository.title = arg.body.title;
+            }
+            if (arg.body.desc) {
+                js.repository.desc = arg.body.desc;
+            }
+            if (arg.body.uses) {
+                js.repository.uses = arg.body.uses;
+            }
         }
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();

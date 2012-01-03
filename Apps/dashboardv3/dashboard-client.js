@@ -97,9 +97,92 @@ var renderApps = function(req, res) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult,
-            dashboard: lconfig.dashboard
         });
     })
+}
+
+var renderExplore = function(req, res) {
+    page = 'explore';
+    locker.synclets(function(err, synclets) {
+        syncletSorted = [];
+        for (var i in synclets.available) {
+            if (synclets.available[i].authurl) {
+                syncletSorted.push({title: synclets.available[i].title, id: synclets.available[i].provider});
+            }
+        }
+        syncletSorted.sort(function(a, b) {
+            return (a.title > b.title);
+        });
+        res.render('explore', {synclets: syncletSorted});
+    });
+}
+
+var renderExploreApps = function(req, res) {
+    getAllRegistryApps(function(apps) {
+        getSynclets(function(err, synclets) {
+            var data = {layout: false, apps: apps, synclets: synclets}
+            if (req.param('author')) {
+                data.breadcrumb = req.param('author');
+                for (var i in apps) {
+                    // yes i know this is gross, i just make sure all the proper variables are present before checking them
+                    if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
+                        delete apps[i];
+                    }
+                }
+                if (Object.keys(apps).length === 0) {
+                    return res.send('No apps by that user!', 404);
+                }
+            } else if (req.param('types') || req.param('services')) {
+                data.breadcrumb = 'filter';
+                var types = {};
+                if (req.param('types')) {
+                    types.types = true;
+                    data.types = req.param('types');
+                }
+                if (req.param('services')) {
+                    types.services = true;
+                    data.services = {};
+                    for (var i = 0; i < req.param('services').length; i++) {
+                        if (synclets.installed[req.param('services')[i]]) {
+                            data.services[req.param('services')[i]] = synclets.installed[req.param('services')[i]].title;
+                        } else {
+                            synclets.available.some(function(info) {
+                                if (info.provider === req.param('services')[i]) {
+                                    data.services[req.param('services')[i]] = info.title;
+                                } else {
+                                    return false;
+                                }
+                            });
+                        }
+                    }
+                }
+                for (var i in apps) {
+                    if (!apps[i].repository.uses) {
+                        delete apps[i];
+                    } else if (req.param('types') && !apps[i].repository.uses.types) {
+                        delete apps[i];
+                    } else if (req.param('params') && !apps[i].repository.uses.services) {
+                        delete apps[i];
+                    } else {
+                        var valid = false;
+                        for (var key in types) {
+                            if (req.param(key)) {
+                                for (var j = 0; j < req.param(key).length; j++) {
+                                    if (apps[i].repository.uses[key].indexOf(req.param(key)[j]) > -1) {
+                                        valid = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (!valid) {
+                            delete apps[i];
+                        }
+                    }
+                }
+            }
+            res.render('iframe/exploreApps', data);
+        });
+    });
 }
 
 var renderCreate = function(req, res) {
@@ -170,12 +253,15 @@ var submitPublish = function(req, res) {
             fields.lastUpdated = Date.now();
             if (fields['app-publish'] === 'true') {
                 var data = {
+                    uses: githubapps[fields.app].uses,
                     desc: fields['app-description']
                 }
                 if (fields['rename-app'] === 'on') {
                     data.title = fields['app-newname'];
+                } else {
+                    data.title = fields['old-name'];
                 }
-                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data}, function(err, resp, body) {
+                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
                     res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
                 });
             } else {
@@ -240,22 +326,7 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
-        locker.synclets(function(err, synclets) {
-            for (var i in synclets.installed) {
-                if (i === 'github') { github = true; }
-                synclets.available.some(function(synclet) {
-                    if (synclet.provider === synclets.installed[i].provider) {
-                        synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                    }
-                });
-            }
-            for (var i = 0; i < synclets.available.length; i++) {
-                if (oauthPopupSizes[synclets.available[i].provider]) {
-                    synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-                } else {
-                    synclets.available[i].oauthSize = {width: 960, height: 600};
-                }
-            }
+        getSynclets(function(err, synclets) {
             page = 'you';
             res.render('you', {
                 synclets: synclets,
@@ -301,11 +372,25 @@ var croppingFinished = function(req, res) {
     res.send(!cropping[req.params.app]);
 }
 
+var registryApp = function(req, res) {
+    request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
+        var app = JSON.parse(body);
+        res.render('iframe/registryApp', {
+            layout: false,
+            breadcrumb: req.param('breadcrumb'),
+            app: app
+        });
+    });
+}
+
 app.get('/clickapp/:app', clickApp);
 app.get('/you', renderYou);
 app.get('/', renderYou);
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
+
+app.get('/explore', renderExplore);
+app.get('/exploreApps', renderExploreApps);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
@@ -317,6 +402,7 @@ app.get('/screenshot/:handle', renderScreenshot);
 app.post('/publishScreenshot', handleUpload);
 app.get('/tempScreenshot', renderTempScreenshot);
 app.get('/finishedCropping/:app', croppingFinished);
+app.get('/registryApp', registryApp);
 
 var getGithubApps = function(callback) {
     uistate.fetchState();
@@ -347,6 +433,21 @@ var getRegistryApps = function(callback) {
     });
 }
 
+var getAllRegistryApps = function(callback) {
+    request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
+        apps = JSON.parse(body);
+        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
+            added = JSON.parse(added);
+            for (var i in added) {
+                if (apps[i]) {
+                    apps[i].installed = true;
+                }
+            }
+            callback(apps);
+        });
+    });
+}
+
 var checkDraftState = function(appInfo) {
     if (uistate.state.draftApps[appInfo.handle]) {
         appInfo.draft = uistate.state.draftApps[appInfo.handle];
@@ -359,4 +460,25 @@ var checkDraftState = function(appInfo) {
     }
     appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
+}
+
+var getSynclets = function(callback) {
+    locker.synclets(function(err, synclets) {
+        for (var i in synclets.installed) {
+            if (i === 'github') { github = true; }
+            synclets.available.some(function(synclet) {
+                if (synclet.provider === synclets.installed[i].provider) {
+                    synclets.available.splice(synclets.available.indexOf(synclet), 1);
+                }
+            });
+        }
+        for (var i = 0; i < synclets.available.length; i++) {
+            if (oauthPopupSizes[synclets.available[i].provider]) {
+                synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
+            } else {
+                synclets.available[i].oauthSize = {width: 960, height: 600};
+            }
+        }
+        callback(err, synclets);
+    });
 }
