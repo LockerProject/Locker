@@ -19,14 +19,14 @@
           </div>
           <div class="app-info">
             <p class="title"><%= apps[i].repository.title %></p>
-            <p class="author"><a class="orange" data-id="exploreApps#author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
-            <% if (apps[i].uses) { %>
-              <p class="uses">Uses <%= apps[i].repository.uses.join(', ') %></p>
+            <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
+            <% if (apps[i].repository.uses.types) { %>
+              <p class="uses">Uses <%= apps[i].repository.uses.types.join(', ') %></p>
             <% } %>
             <% if (apps[i].installed) { %>
-              <input type='button' id='<%= apps[i].name %>' class='install' value='+ add to account'>
-            <% } else { %>
               <input disabled type='button' value='added'>
+            <% } else { %>
+              <input type='button' id='<%= apps[i].name %>' class='install' value='+ add to account'>
             <% } %>
           </div>
         </div>

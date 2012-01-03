@@ -25,8 +25,8 @@
           </div>
           <p class="title"><%= app.repository.title %></p>
           <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.repository.author %>'>by <%= app.repository.author %></a></p>
-          <% if (app.uses) { %>
-            <p class="uses">Uses <%= app.repository.uses.join(', ') %></p>
+          <% if (app.repository.uses && app.repository.uses.types) { %>
+            <p class="uses">Uses <%= app.repository.uses.types.join(', ') %></p>
           <% } %>
           <div class="description"><%= app.repository.desc %></div>
           <div class='version'>version <%= app['dist-tags'].latest %></div>
