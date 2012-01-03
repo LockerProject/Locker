@@ -6,7 +6,7 @@ module.exports = {
     authUrl : 'https://github.com/login/oauth/authorize?&response_type=code'
 };
 
-exports.authComplete = function(auth, callback) {
+module.exports.authComplete = function(auth, callback) {
     request.get({url:"https://github.com/api/v2/json/user/show?access_token=" + auth.accessToken}, function(err, resp, body) {
         if(err) return callback(err);
         try {
