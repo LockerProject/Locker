@@ -20,7 +20,7 @@
   <p class='sidenav-header-title'>FILTER BY TYPE</p>
 </div>
 <div class="sidenav-items synclets">
-  <ul>
+  <ul id='types'>
     <li><input name="photos" id="photos" type="checkbox"><label for="photos">Photos</label></li>
     <li><input name="links" id="links" type="checkbox"><label for="links">Links</label></li>
     <li><input name="contacts" id="contacts" type="checkbox"><label for="contacts">Contacts</label></li>
@@ -31,7 +31,9 @@
   <p class='sidenav-header-title'>FILTER BY SERVICES</p>
 </div>
 <div class="sidenav-items synclets">
-  <% for (var i in synclets) { %>
-    <input name="<%= synclets[i].id %>" id="<%= synclets[i].id %>" type="checkbox"><label for="<%= synclets[i].id %>"><%= synclets[i].title %></label><br/>
-  <% } %>
+  <ul id='services'>
+    <% for (var i in synclets) { %>
+      <li><input name="<%= synclets[i].id %>" id="<%= synclets[i].id %>" type="checkbox"><label for="<%= synclets[i].id %>"><%= synclets[i].title %></label></li>
+    <% } %>
+  </ul>
 </div>

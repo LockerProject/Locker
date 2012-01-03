@@ -105,7 +105,6 @@ var renderExplore = function(req, res) {
     page = 'explore';
     locker.synclets(function(err, synclets) {
         syncletSorted = [];
-        console.dir(synclets);
         for (var i in synclets.available) {
             if (synclets.available[i].authurl) {
                 syncletSorted.push({title: synclets.available[i].title, id: synclets.available[i].provider});
@@ -130,12 +129,49 @@ var renderExploreApps = function(req, res) {
                         delete apps[i];
                     }
                 }
+                if (Object.keys(apps).length === 0) {
+                    return res.send('No apps by that user!', 404);
+                }
+            } else if (req.param('types') || req.param('services')) {
+                var bc = '';
+                var types = {};
+                if (req.param('types')) {
+                    bc = req.param('types').join(' + ');
+                    types.types = true;
+                }
+                if (req.param('services')) {
+                    if (bc.length > 0) {
+                        bc += " + ";
+                    }
+                    bc += req.param('services').join(' + ');
+                    types.services = true;
+                }
+                data.breadcrumb = bc;
+                for (var i in apps) {
+                    if (!apps[i].repository.uses) {
+                        delete apps[i];
+                    } else if (req.param('types') && !apps[i].repository.uses.types) {
+                        delete apps[i];
+                    } else if (req.param('params') && !apps[i].repository.uses.services) {
+                        delete apps[i];
+                    } else {
+                        var valid = false;
+                        for (var key in types) {
+                            if (req.param(key)) {
+                                for (var j = 0; j < req.param(key).length; j++) {
+                                    if (apps[i].repository.uses[key].indexOf(req.param(key)[j]) > -1) {
+                                        valid = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (!valid) {
+                            delete apps[i];
+                        }
+                    }
+                }
             }
-            if (Object.keys(apps).length === 0) {
-                res.send('No apps by that user!', 404);
-            } else {
-                res.render('iframe/exploreApps', data);
-            }
+            res.render('iframe/exploreApps', data);
         });
     });
 }

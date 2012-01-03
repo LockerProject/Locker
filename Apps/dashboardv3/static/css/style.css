@@ -164,6 +164,14 @@ aside {
   display: none;
 }
 
+.sidenav-items li {
+  margin-top: 4px;
+}
+
+.sidenav-items label {
+  margin-left: 3px;
+}
+
 .sidenav-items .app-details a {
   margin-top: 2px;
   display: inline-block;

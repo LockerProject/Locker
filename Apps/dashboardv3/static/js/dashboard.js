@@ -28,7 +28,29 @@ $(document).ready(function() {
   $('.your-apps').click(function() {
     $('.blue').removeClass('blue');
     $(this).addClass('blue');
-    document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+    if (document.getElementById('appFrame').contentWindow.filterItems) {
+      document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+    }
+    $('.sidenav-items input').attr('checked', false)
+  });
+
+  $('.sidenav-items input').click(function() {
+    var checked = $('.sidenav-items input:checked');
+    if (checked.length == 0) {
+      $('.your-apps').click();
+    } else {
+      $('.your-apps').removeClass('blue');
+      app = "exploreApps&filter";
+      var types = [];
+      var services = [];
+      $('#types').find(checked).each(function(i, elem) {
+        app += "&types[]=" + $(elem).attr('id');
+      });
+      $('#services').find(checked).each(function(i, elem) {
+        app += "&services[]=" + $(elem).attr('id');
+      });
+      loadApp();
+    }
   });
 });
 
@@ -54,6 +76,15 @@ var loadApp = function(callback) {
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
   $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
+  if (params.indexOf('filter') === 0) {
+    var boxes = params.split('&');
+    for (var i = 0; i < boxes.length; i++) {
+      var item = boxes[i].split('=');
+      if (item.length > 1) {
+        $('#' + item[1]).attr('checked', true);
+      }
+    }
+  }
 };
 
 var syncletInstalled = function(provider) {
