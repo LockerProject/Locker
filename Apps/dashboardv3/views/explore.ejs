@@ -12,7 +12,7 @@
 <div class="installed-apps sidenav-items">
   <ul>
     <li>
-      <a href="exploreApps?featured" data-id='exploreApps&featured' class="your-apps iframeLink">Featured</a>
+      <a href="exploreApps?featured" data-id='exploreApps&featured' class="your-apps iframeLink">FEATURED</a>
     </li>
   </ul>
 </div>
@@ -31,5 +31,7 @@
   <p class='sidenav-header-title'>FILTER BY SERVICES</p>
 </div>
 <div class="sidenav-items synclets">
-  <input name="facebook" id="facebook" type="checkbox"><label for="facebook">Facebook</label>
+  <% for (var i in synclets) { %>
+    <input name="<%= synclets[i].id %>" id="<%= synclets[i].id %>" type="checkbox"><label for="<%= synclets[i].id %>"><%= synclets[i].title %></label><br/>
+  <% } %>
 </div>

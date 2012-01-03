@@ -103,26 +103,40 @@ var renderApps = function(req, res) {
 
 var renderExplore = function(req, res) {
     page = 'explore';
-    res.render('explore');
+    locker.synclets(function(err, synclets) {
+        syncletSorted = [];
+        console.dir(synclets);
+        for (var i in synclets.available) {
+            if (synclets.available[i].authurl) {
+                syncletSorted.push({title: synclets.available[i].title, id: synclets.available[i].provider});
+            }
+        }
+        syncletSorted.sort(function(a, b) {
+            return (a.title > b.title);
+        });
+        res.render('explore', {synclets: syncletSorted});
+    });
 }
 
 var renderExploreApps = function(req, res) {
     getAllRegistryApps(function(apps) {
-        var data = {layout: false, apps: apps}
-        if (req.param('author')) {
-            data.breadcrumb = req.param('author');
-            for (var i in apps) {
-                // yes i know this is gross, i just make sure all the proper variables are present before checking them
-                if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
-                    delete apps[i];
+        getSynclets(function(err, synclets) {
+            var data = {layout: false, apps: apps, synclets: synclets}
+            if (req.param('author')) {
+                data.breadcrumb = req.param('author');
+                for (var i in apps) {
+                    // yes i know this is gross, i just make sure all the proper variables are present before checking them
+                    if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
+                        delete apps[i];
+                    }
                 }
             }
-        }
-        if (Object.keys(apps).length === 0) {
-            res.send('No apps by that user!', 404);
-        } else {
-            res.render('iframe/exploreApps', data);
-        }
+            if (Object.keys(apps).length === 0) {
+                res.send('No apps by that user!', 404);
+            } else {
+                res.render('iframe/exploreApps', data);
+            }
+        });
     });
 }
 
@@ -267,22 +281,7 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
-        locker.synclets(function(err, synclets) {
-            for (var i in synclets.installed) {
-                if (i === 'github') { github = true; }
-                synclets.available.some(function(synclet) {
-                    if (synclet.provider === synclets.installed[i].provider) {
-                        synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                    }
-                });
-            }
-            for (var i = 0; i < synclets.available.length; i++) {
-                if (oauthPopupSizes[synclets.available[i].provider]) {
-                    synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-                } else {
-                    synclets.available[i].oauthSize = {width: 960, height: 600};
-                }
-            }
+        getSynclets(function(err, synclets) {
             page = 'you';
             res.render('you', {
                 synclets: synclets,
@@ -415,4 +414,25 @@ var checkDraftState = function(appInfo) {
     }
     appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
+}
+
+var getSynclets = function(callback) {
+    locker.synclets(function(err, synclets) {
+        for (var i in synclets.installed) {
+            if (i === 'github') { github = true; }
+            synclets.available.some(function(synclet) {
+                if (synclet.provider === synclets.installed[i].provider) {
+                    synclets.available.splice(synclets.available.indexOf(synclet), 1);
+                }
+            });
+        }
+        for (var i = 0; i < synclets.available.length; i++) {
+            if (oauthPopupSizes[synclets.available[i].provider]) {
+                synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
+            } else {
+                synclets.available[i].oauthSize = {width: 960, height: 600};
+            }
+        }
+        callback(err, synclets);
+    });
 }
