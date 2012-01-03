@@ -2,7 +2,9 @@ var app;
 var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
-    "viewAll" : "viewAll"
+    "viewAll" : "viewAll",
+    "exploreApps" : "exploreApps",
+    "registryApp" : "registryApp"
 };
 
 var iframeLoaded = function() {};
@@ -26,11 +28,38 @@ $(document).ready(function() {
   $('.your-apps').click(function() {
     $('.blue').removeClass('blue');
     $(this).addClass('blue');
-    document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+    if (document.getElementById('appFrame').contentWindow.filterItems) {
+      document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
+    }
+  });
+
+  $('.sidenav-items input').click(function() {
+    var checked = $('.sidenav-items input:checked');
+    if (checked.length == 0) {
+      $('.your-apps').click();
+    } else {
+      $('.your-apps').removeClass('blue');
+      app = "exploreApps&filter";
+      var types = [];
+      var services = [];
+      $('#types').find(checked).each(function(i, elem) {
+        app += "&types[]=" + $(elem).attr('id');
+      });
+      $('#services').find(checked).each(function(i, elem) {
+        app += "&services[]=" + $(elem).attr('id');
+      });
+      loadApp();
+    }
   });
 });
 
 var loadApp = function(callback) {
+  var appUrl = app;
+  var params = '';
+  if (app.indexOf('&') != -1) {
+    appUrl = app.substring(0, app.indexOf('&'));
+    params = app.substring(app.indexOf('&') + 1);
+  }
   if (callback) {
     iframeLoaded = callback;
   } else {
@@ -39,13 +68,23 @@ var loadApp = function(callback) {
   $('.app-details').hide();
   $('.iframeLink,.your-apps').removeClass('blue');
   window.location.hash = app;
-  if (specialApps[app]) {
-    $("#appFrame")[0].contentWindow.location.replace(specialApps[app]);
+  if (specialApps[appUrl]) {
+    $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl] + '?params=' + params);
   } else {
-    $.get('clickapp/' + app, function(e) {});
-    $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
+    $.get('clickapp/' + appUrl, function(e) {});
+    $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
   $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
+  $('.sidenav-items input').attr('checked', false)
+  if (params.indexOf('filter') === 0) {
+    var boxes = params.split('&');
+    for (var i = 0; i < boxes.length; i++) {
+      var item = boxes[i].split('=');
+      if (item.length > 1) {
+        $('#' + item[1]).attr('checked', true);
+      }
+    }
+  }
 };
 
 var syncletInstalled = function(provider) {

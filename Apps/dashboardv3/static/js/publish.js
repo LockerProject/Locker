@@ -14,6 +14,7 @@ $(document).ready(function() {
     var self = $('.app>option:selected');
     $('input[name=new-file]').attr('value', 'false');
     $('textarea[name=app-description]').text(self.data('description'));
+    $('.old-name').attr('value', $('.app>option:selected').text());
     $('.screenshot-url').attr('value', '');
     if (self.data('rename') == 'on') {
       $('.app-name').show();
