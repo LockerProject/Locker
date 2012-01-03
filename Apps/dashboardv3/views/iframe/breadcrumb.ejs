@@ -10,15 +10,15 @@
           <% if (count > 0) { %>
             +
           <% } count++ %>
-          <a class='blue parentLink' href='explore#exploreApps&filter&types[]=<%= types[i] %>'><%= types[i] %></a>
+          <a class='blue parentLink' href='explore#exploreApps&filter&types[]=<%= types[i] %>'><%= types[i][0].toUpperCase() + types[i].slice(1) %></a>
         <% } %>
       <% } %>
       <% if (typeof(services) !== 'undefined') { %>
-        <% for (var i = 0; i < services.length; i++) { %>
+        <% for (var i in services) { %>
           <% if (count > 0) { %>
             +
           <% } count++ %>
-         <a class='blue parentLink' href='explore#exploreApps&filter&services[]=<%= services[i] %>'><%= services[i] %></a>
+         <a class='blue parentLink' href='explore#exploreApps&filter&services[]=<%= i %>'><%= services[i] %></a>
         <% } %>
       <% } %>
     </li></p>

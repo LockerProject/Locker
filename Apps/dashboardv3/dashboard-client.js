@@ -141,7 +141,16 @@ var renderExploreApps = function(req, res) {
                 }
                 if (req.param('services')) {
                     types.services = true;
-                    data.services = req.param('services');
+                    data.services = {};
+                    for (var i = 0; i < req.param('services').length; i++) {
+                        synclets.available.some(function(info) {
+                            if (info.provider === req.param('services')[i]) {
+                                data.services[req.param('services')[i]] = info.title;
+                            } else {
+                                return false;
+                            }
+                        });
+                    }
                 }
                 for (var i in apps) {
                     if (!apps[i].repository.uses) {
