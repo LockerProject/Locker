@@ -31,7 +31,7 @@
           <div class="description"><%= app.repository.desc %></div>
           <div class='version'>version <%= app['dist-tags'].latest %></div>
           <% var date = new Date(app.time.modified) %>
-          <div class='last-update'>last updated <%= date.getMonth() + "." + date.getDate() + "." + date.getFullYear() %>
+          <div class='last-update'>last updated <%= (date.getMonth() + 1) + "." + date.getDate() + "." + date.getFullYear() %>
         </div>
       </div>
     </content>
