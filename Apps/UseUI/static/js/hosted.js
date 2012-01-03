@@ -11,7 +11,7 @@ function setUserGlobals(data) {
     externalHost = data.externalHost;
 
     $.cookie('optin', userOptin, {path: '/'});
-    
+
     $(".userEmail").text(userEmail);
     $(".user-name").text(userName);
 
@@ -63,7 +63,14 @@ $(document).ready(function() {
         closeUserMenu();
     });
 
-    if (userOptin === "true") {
-        $(".app-page").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
+    if (userOptin === true) {
+        setTimeout(function(){
+          var s = document.createElement('script');
+          var f = document.getElementsByTagName('script')[0];
+          s.type = 'text/javascript';
+          s.async = true;
+          s.src = "js/ga.js";
+          f.parentNode.insertBefore(s, f);
+        }, 1);
     }
 });
