@@ -27,7 +27,9 @@
             <div class="divider"></div>
             <div class="content">
               <p class="description"><%= apps[i].desc %></p>
-              <% if (apps[i].uses) { %>
+              <% if (apps[i].uses && apps[i].uses.types) { %>
+                <p class="bold">Uses <%= apps[i].uses.types.join(', ') %></p>
+              <% } else if (apps[i].uses) { %>
                 <p class="bold">Uses <%= apps[i].uses.join(', ') %></p>
               <% } %>
               <div class="authorship-history">Authorship History
