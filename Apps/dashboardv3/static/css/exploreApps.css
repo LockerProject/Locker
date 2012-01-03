@@ -197,3 +197,7 @@ input[type=button].install {
 .full-app-details .version,.last-update {
   font-weight: bold;
 }
+
+.full-app-details .uses a {
+  display: inline;
+}

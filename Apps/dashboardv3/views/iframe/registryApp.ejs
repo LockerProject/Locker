@@ -26,7 +26,14 @@
           <p class="title"><%= app.repository.title %></p>
           <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.repository.author %>'>by <%= app.repository.author %></a></p>
           <% if (app.repository.uses && app.repository.uses.types) { %>
-            <p class="uses">Uses <%= app.repository.uses.types.join('+ ') %></p>
+            <p class="uses">Uses
+              <% for (var j = 0; j < app.repository.uses.types.length; j++) { %>
+                <% if (j > 0) { %>, <% } %>
+                <a class='blue parentLink' href='explore#exploreApps&filter&types[]=<%= app.repository.uses.types[j] %>'>
+                  <%= app.repository.uses.types[j][0].toUpperCase() + app.repository.uses.types[j].slice(1) %>
+                </a>
+              <% } %>
+            </p>
           <% } %>
           <div class="description"><%= app.repository.desc %></div>
           <div class='version'>version <%= app['dist-tags'].latest %></div>
