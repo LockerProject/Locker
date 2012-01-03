@@ -143,13 +143,17 @@ var renderExploreApps = function(req, res) {
                     types.services = true;
                     data.services = {};
                     for (var i = 0; i < req.param('services').length; i++) {
-                        synclets.available.some(function(info) {
-                            if (info.provider === req.param('services')[i]) {
-                                data.services[req.param('services')[i]] = info.title;
-                            } else {
-                                return false;
-                            }
-                        });
+                        if (synclets.installed[req.param('services')[i]]) {
+                            data.services[req.param('services')[i]] = synclets.installed[req.param('services')[i]].title;
+                        } else {
+                            synclets.available.some(function(info) {
+                                if (info.provider === req.param('services')[i]) {
+                                    data.services[req.param('services')[i]] = info.title;
+                                } else {
+                                    return false;
+                                }
+                            });
+                        }
                     }
                 }
                 for (var i in apps) {
