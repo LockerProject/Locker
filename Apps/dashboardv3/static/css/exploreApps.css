@@ -201,3 +201,8 @@ input[type=button].install {
 .uses a {
   display: inline;
 }
+
+.connect a {
+  text-decoration: underline;
+  display: inline;
+}

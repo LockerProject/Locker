@@ -22,4 +22,11 @@ $(document).ready(function() {
     parent.window.loadApp();
     return false;
   });
+
+  $('.oauthLink').click(function() {
+    var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
+    popup.focus();
+    return false;
+  });
+
 });
