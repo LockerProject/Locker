@@ -67,11 +67,3 @@ if (lconfig.logging.file) {
 }
 
 module.exports = new (winston.Logger)({"transports":transports});
-var realLog = exports.log;
-exports.log = function(level, msg) {
-    try {
-        realLog.call(module.exports, level, msg.toString('utf8'));
-    } catch (E) {
-        realLog.call(module.logger, level, msg);
-    }
-}
