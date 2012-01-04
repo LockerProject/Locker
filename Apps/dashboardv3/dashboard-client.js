@@ -63,13 +63,22 @@ app.configure(function() {
 app.all('*', function(req, res, next) {
     // hackzzzzzzzzzzzzzzzzz
     // will replace when we have a reasonable notion of a user's profile
-    request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
-        try {
-            var body = JSON.parse(body);
-            if (body.username) {
-                profileImage = "http://graph.facebook.com/" + body.username + "/picture";
-            }
-        } catch (E) {}
+     request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
+         try {
+             var body = JSON.parse(body);
+             if (body.username) {
+                 profileImage = "http://graph.facebook.com/" + body.username + "/picture";
+             }
+         } catch (E) {
+             request.get({url:locker.lockerBase + "/synclets/twitter/get_profile"}, function(error, res, body) {
+                 try {
+                     var body = JSON.parse(body);
+                     if (body.profile_image_url_https) {
+                         profileImage = body.profile_image_url_https;
+                     }
+                 } catch (E) {}
+             });
+         }
     });
     request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
         try {
