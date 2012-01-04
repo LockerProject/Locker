@@ -143,7 +143,7 @@ exports.rtrim = function(stringToTrim) {
 exports.atomicWriteFileSync = function(dest, data) {
     var tmp = dest + '.tmp';
     var bkp = dest + '.bkp';
-    var stat = null;
+    var stat = undefined;
 
     try {
         stat = fs.statSync(dest);
