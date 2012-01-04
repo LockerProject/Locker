@@ -103,7 +103,7 @@ function processTwitter(svcId, type, data, cb) {
 function processInstagram(svcId, type, data, cb) {
     // Gotta have location/at at minimum
     if (!data || !data.created_time || !data.location || !data.location.latitude || !data.location.longitude) {
-        cb("The Instagram data did not have a location");
+        cb();
         return;
     }
 
