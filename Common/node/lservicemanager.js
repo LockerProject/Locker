@@ -294,8 +294,8 @@ exports.migrate = function(installedDir, metaData) {
                     }
                     process.chdir(cwd);
                 } catch (E) {
-                    logger.log("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
-                    process.chdir(cwd);
+                    logger.error("error running migration : " + migrations[i] + " for service " + metaData.title + " ---- " + E);
+                    process.exit(1);
                 }
             }
         }
