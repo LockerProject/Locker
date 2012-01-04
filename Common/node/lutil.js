@@ -143,14 +143,24 @@ exports.rtrim = function(stringToTrim) {
 exports.atomicWriteFileSync = function(dest, data) {
     var tmp = dest + '.tmp';
     var bkp = dest + '.bkp';
-    fs.writeFileSync(tmp, data);
-    if(data.length && fs.statSync(tmp).size !== Buffer.byteLength(data, 'utf8')) throw new Error('atomic write error! file size !== data.length');
+    var stat = null;
+
     try {
-        fs.renameSync(dest, bkp);
-    } catch(err) {
-        if(! err.code === 'ENOENT')
-            throw err;
+        stat = fs.statSync(dest);
+    } catch (err) {
     }
+
+    // make a backup iff the destination file already exists
+    if (stat)
+        fs.writeFileSync(bkp, fs.readFileSync(dest));
+
+    // write out the new contents to a temp file
+    fs.writeFileSync(tmp, data);
+
+    // check if it worked
+    if(data.length && fs.statSync(tmp).size !== Buffer.byteLength(data, 'utf8')) throw new Error('atomic write error! file size !== data.length');
+
+    // atomically rename the temp file into place
     fs.renameSync(tmp, dest);
 }
 
