@@ -322,7 +322,7 @@ function executeSynclet(info, synclet, callback, force) {
             response = JSON.parse(dataResponse);
         } catch (E) {
             if (info.status != 'failed : timeout') {
-                localError(info.title+" "+synclet.name, "response fail: "+E+" of "+dataResponse);
+                localError("Service : " + info.title + ", synclet: "+synclet.name, ". Failed to parse the response from the synclet.  Error was: '" + E + "' and the response from the synclet was '" + dataResponse + "'");
                 info.status = synclet.status = 'failed : ' + E;
             }
             if (callback) callback(E);
