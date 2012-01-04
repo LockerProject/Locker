@@ -301,6 +301,7 @@ function executeSynclet(info, synclet, callback, force) {
     // edge case backup, max 30 min runtime by default
     var timer = setTimeout(function(){
         logger.error("Having to kill long-running "+synclet.name+" synclet of "+info.id);
+        info.status = synclet.status = 'failed : timeout';
         process.kill(app.pid); // will fire exit event below and cleanup
     }, (synclet.timeout) ? synclet.timeout : 30*60*1000);
 
@@ -320,8 +321,10 @@ function executeSynclet(info, synclet, callback, force) {
         try {
             response = JSON.parse(dataResponse);
         } catch (E) {
-            localError(info.title+" "+synclet.name, "response fail: "+E+" of "+dataResponse);
-            info.status = synclet.status = 'failed : ' + E;
+            if (info.status != 'failed : timeout') {
+                localError(info.title+" "+synclet.name, "response fail: "+E+" of "+dataResponse);
+                info.status = synclet.status = 'failed : ' + E;
+            }
             if (callback) callback(E);
             return;
         }
