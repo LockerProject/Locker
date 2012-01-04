@@ -528,6 +528,12 @@
             "summary": "Push data in.",
             "parameters": [
             {
+                "name": "dataSet",
+                "description": "The name of the bucket to contain the data being pushed in.",
+                "dataType": "string",
+                "paramType": "query"
+            },
+            {
                 "name": "config",
                 "description": "This object contains config data for the dataset.  Currently the only thing supported here is 'ids' which is a list of ids that should exist in the system.  Any ID not specified in this list will be removed from the system.",
                 "dataType": "array",
@@ -537,7 +543,7 @@
                 "name": "data",
                 "description": "This an array of objects that should be added to the system.<h3>Syntax</h3>Each object in the array can have 3 top level properties.  The 3 accepted properties are: <ul><li>'<b>obj</b>': This contains a JSON representation of whatever data you're adding to the system.</li><li>'<b>timestamp</b>': This is the timestamp for the creation of the object.  If omitted, the time will be set to now.</li><li>'<b>type</b>': This is only really necessary if the type is 'delete', which will cause the system to remove whatever ID is specified in the object.",
                 "dataType": "array",
-                "paramType": "query"
+                "paramType": "post"
             }
             ]
         }
