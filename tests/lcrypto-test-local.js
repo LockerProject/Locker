@@ -11,7 +11,6 @@ var vows = require("vows");
 var assert = require("assert");
 var fs = require("fs");
 var events = require("events");
-require.paths.push(__dirname + "/../Common/node");
 var lcrypto = require("lcrypto");
 var request = require("request");
 var lconfig = require("lconfig");

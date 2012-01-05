@@ -18,7 +18,6 @@ var util = require("util");
 var events = require("events");
 var request = require("request");
 var testUtils = require(__dirname + "/test-utils.js");
-require.paths.push(__dirname + "/../Common/node");
 var serviceManager = require("lservicemanager.js");
 var lconfig = require("lconfig");
 lconfig.load("Config/config.json");
