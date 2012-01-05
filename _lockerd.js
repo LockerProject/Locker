@@ -25,7 +25,6 @@ exports.alive = false;
 // var npm = require('npm');
 //npm.load(conf, function(er) {
   //npm.commands.install([], function(err, data) {
-    require.paths.push(__dirname + "/Common/node");
     var spawn = require('child_process').spawn;
     var fs = require('fs');
     var path = require('path');
@@ -39,12 +38,12 @@ exports.alive = false;
     // This lconfig stuff has to come before any other locker modules are loaded!!
     var lconfig = require('lconfig');
     lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
-    
+
     if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
         console.error('You must have an apikeys.json file in the Config directory. See the Config/apikeys.json.example file');
         process.exit(1);
     }
-    
+
     fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
 
     var logger = require("logger");

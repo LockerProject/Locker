@@ -9,7 +9,6 @@
 
 var request = require("request");
 var url = require("url");
-require.paths.push(__dirname);
 var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js");

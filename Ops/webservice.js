@@ -18,7 +18,6 @@ var syncManager = require('lsyncmanager');
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
-var sys = require('sys');
 var path = require('path');
 var fs = require("fs");
 var url = require('url');
