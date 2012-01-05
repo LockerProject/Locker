@@ -271,7 +271,36 @@ var submitPublish = function(req, res) {
                     data.title = fields['old-name'];
                 }
                 request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
-                    res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
+                    if (!err) {
+                        var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
+                        // Send the screenshot
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
+                                            headers:{"Content-Type":"image/png"}, 
+                                            body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
+                        // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
+                        /*
+                        ssPut.on("data", function(body, result) {
+                            console.dir(ssPut);
+                            console.log("ssPut data body: " + body);
+                        });
+                        ssPut.on("error", function(error) {
+                            process.stderr.write("Error sending screenshot to registry " + error);
+                        });
+                        ssPut.on("end", function() {
+                            res.send(reloadScript);
+                        });
+                        var readStream = fs.createReadStream(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'));
+                        readStream.on("pause", function() {
+                            console.log("RS Paused");
+                        });
+                        readStream.on("data", function() {
+                            console.log("Did stuff on the RS");
+                        });
+                        readStream.pipe(ssPut);
+                        */
+                    } else {
+                        res.send(reloadScript);
+                    }
                 });
             } else {
                 res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');

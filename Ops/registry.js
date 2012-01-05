@@ -26,6 +26,7 @@ var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
+var burrowBase = "burrow.singly.com";
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(config, crypto, callback) {
@@ -92,6 +93,9 @@ exports.app = function(app)
 
     app.post('/registry/publish/:id', express.bodyParser(), publishPackage);
 
+    app.put("/registry/screenshot/:id", publishScreenshot);
+    app.get("/registry/screenshot/:id", getScreenshot);
+
     app.get('/registry/myApps', exports.getMyApps);
 }
 
@@ -115,6 +119,43 @@ function publishPackage(req, res) {
             res.send(doc);
         });
     });
+}
+
+function publishScreenshot(req, res) {
+    // first, required github
+    req.pause();
+    regUser(function(err, auth){
+        if(err ||!auth || !auth._auth) {
+            res.send(400, err);
+            return;
+        }
+        logger.log("info", "Publising the screenshot for " + req.params.id);
+        request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
+            if (err) {
+                logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
+                res.send(400, err);
+                return;
+            }
+
+            var putReq = request.put({uri:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth}});
+            putReq.on("error", function(err) {
+                console.log("error", "Error uploading the screenshot: " + err);
+                res.send(400, err);
+            });
+            putReq.on("end", function() {
+                res.send(200);
+            });
+            req.resume();
+            req.pipe(putReq);
+        });
+    })
+}
+
+function getScreenshot(req, res) {
+    if (!regIndex[req.params.id])
+        res.redirect("/Me/dashboardv3/img/batman.jpg");
+    else
+        res.redirect("https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png");
 }
 
 // verify the validity of a package
