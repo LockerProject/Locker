@@ -13,5 +13,6 @@
         ["contact/tumblr", "/events"],
         ["contact/instagram", "/events"],
         ["contact/gcontacts", "/events"],
-        ["contact/flickr", "/events"]]
+        ["contact/flickr", "/events"]],
+        ["connection://linkedin", "/events"]]
 }
