@@ -23,6 +23,7 @@ var conf = {};
 conf._exit = false;
 exports.alive = false;
 
+<<<<<<< HEAD
 require.paths.push(__dirname + "/Common/node");
 var spawn = require('child_process').spawn;
 var fs = require('fs');
@@ -77,7 +78,8 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         }
         fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
     }
-    mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
+    mongoProcess = spawn('mongod', ['--nohttpinterface',
+                                    '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                     '--port', lconfig.mongo.port]);
     mongoProcess.stderr.on('data', function(data) {
         logger.error('mongod err: ' + data);
