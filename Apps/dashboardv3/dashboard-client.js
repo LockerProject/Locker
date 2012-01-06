@@ -328,11 +328,23 @@ var renderYou = function(req, res) {
     getAppsInfo(8, function(sortedResult) {
         getSynclets(function(err, synclets) {
             page = 'you';
-            res.render('you', {
+            if (Object.keys(synclets.installed).length === 0) {
+                page += '-connect';
+            }
+            res.render(page, {
                 synclets: synclets,
                 github: github,
                 map: sortedResult
             });
+        });
+    });
+};
+
+var renderConnect = function(req, res) {
+    getSynclets(function(err, synclets) {
+        res.render('iframe/connect', {
+            layout: false,
+            synclets: synclets
         });
     });
 };
@@ -386,6 +398,9 @@ var registryApp = function(req, res) {
 app.get('/clickapp/:app', clickApp);
 app.get('/you', renderYou);
 app.get('/', renderYou);
+
+app.get('/connect', renderConnect);
+
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
 

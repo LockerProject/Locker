@@ -4,7 +4,8 @@ var specialApps = {
     "publish" : "publish",
     "viewAll" : "viewAll",
     "exploreApps" : "exploreApps",
-    "registryApp" : "registryApp"
+    "registryApp" : "registryApp",
+    "connect" : "connect"
 };
 
 var iframeLoaded = function() {};

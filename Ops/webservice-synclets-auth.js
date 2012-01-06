@@ -80,5 +80,5 @@ function finishAuth(provider, auth, res) {
     newSynclet.auth = auth;
     var svcInfo = syncManager.install(newSynclet);
     syncManager.syncNow(svcInfo.id, function() {});
-    res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + provider + "'); window.close(); </script>");
+    res.end("<script type='text/javascript'>  if (window.opener) {window.opener.syncletInstalled('" + provider + "');} window.close(); </script>");
 }

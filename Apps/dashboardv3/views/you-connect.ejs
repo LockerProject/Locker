@@ -1,0 +1,8 @@
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>YOUR SERVICES</p>
+</div>
+<div class="sidenav-items synclets">
+  <% for (var i in synclets.installed) { %>
+    <img class='installed' src="img/icons/32px/<%= synclets.installed[i].provider %>.png"></a>
+  <% } %>
+</div>
