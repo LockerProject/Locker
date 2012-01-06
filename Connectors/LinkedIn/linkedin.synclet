@@ -4,6 +4,7 @@
     "provider":"linkedin",
     "provides":["connection/linkedin"],
     "synclets":[
-        {"name": "connections", "frequency": 86400, "threshold": 0}
+        {"name": "connections", "frequency": 86400, "threshold": 0},
+        {"name": "profile", "frequency": 86400, "threshold": 0}
     ]
 }

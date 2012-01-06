@@ -420,7 +420,7 @@ exports.addLinkedInData = function(data, callback) {
     var query = {'accounts.linkedin.data.id':data.id};
     var set = {};
     var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.linkedi.$'] = baseObj;
+    set['accounts.linkedin.$'] = baseObj;
     //name
     setName(set, name);
     var addToSet = {};
