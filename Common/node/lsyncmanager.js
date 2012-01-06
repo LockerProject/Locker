@@ -33,11 +33,11 @@ datastore.addObject = function(collectionKey, obj, ts, callback) {
     ldatastore.addObject('synclets', collectionKey, obj, ts, callback);
 }
 
-var synclets = {
-    available:[],
-    installed:{},
-    executeable:true
-};
+var executeable = true;
+exports.setExecuteable = function(e)
+{
+    executeable = e;
+}
 
 exports.synclets = function() {
   return synclets;
