@@ -62,6 +62,10 @@ exports.gatherContacts = function(cb) {
                         exports.getContacts('github', 'following', svc.id, function() {
                             logger.info('github done!');
                         })
+                    } else if(svc.provides.indexOf('connection/linkedin') >= 0) {
+                        exports.getContacts('linkedin', 'connection', svc.id, function() {
+                            logger.info('linkedin done!');
+                        })
                     }
                 });
             });

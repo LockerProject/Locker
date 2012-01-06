@@ -3,7 +3,7 @@ module.exports = {
         var qs = require('querystring');
         var request = require('request');
         var url = require('url');
-        var callback = host+"auth/bodymedia/auth";
+        var callback = host+"auth/linkedin/auth";
         var OAlib = require('oauth').OAuth;
         var OA = new OAlib('https://api.linkedin.com/uas/oauth/requestToken'
          , 'https://api.linkedin.com/uas/oauth/accessToken'
