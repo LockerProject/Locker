@@ -18,12 +18,7 @@ var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
 var logger = require('logger');
 
-var serviceMap = {
-    available:[],
-    disabled:[],
-    installed:{},
-    migrations:[]
-};
+var serviceMap = {};
 
 var shuttingDown = null;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
