@@ -83,6 +83,8 @@ exports.addData = function(type, data, cb) {
         exports.addInstagramData(data, callback);
     } else if (type == 'github') {
         exports.addGithubData(data, callback);
+    } else if (type == 'linkedin') {
+        exports.addLinkedInData(data, callback);
     }
 }
 
@@ -411,6 +413,39 @@ exports.addInstagramData = function(data, callback) {
         }
     });
 }
+
+exports.addLinkedInData = function(data, callback) {
+    var name = data.firstName + ' ' + data.lastName;
+    var cleanedName = cleanName(name);
+    var query = {'accounts.linkedin.data.id':data.id};
+    var set = {};
+    var baseObj = {data:data, lastUpdated:Date.now()};
+    set['accounts.linkedi.$'] = baseObj;
+    //name
+    setName(set, name);
+    var addToSet = {};
+    if(cleanedName)
+        addToSet['_matching.cleanedNames'] = cleanedName;
+    if(data.pictureUrl)
+        addToSet.photos = data.pictureUrl;
+    collection.findAndModify(query, [['_id','asc']], {$set: set, $addToSet:addToSet},
+                        {safe:true, new: true}, function(err, doc) {
+        if(!doc) {
+            //match otherwise, first entry is just to ensure we never match on nothing
+            var or = [{'accounts.linkedin.data.id':data.id}];
+            if(cleanedName)
+                or.push({'_matching.cleanedNames':cleanedName});
+            var set = {};
+            setName(set, name);
+            collection.findAndModify({$or:or}, [['_id','asc']], {$push:{'accounts.linkedin':baseObj},
+                                         $addToSet:addToSet,
+                                         $set:set},
+                        {safe:true, upsert:true, new: true}, callback);
+        } else {
+            callback(err, doc);
+        }
+    });
+};
 
 exports.clear = function(callback) {
     collection.drop(callback);
