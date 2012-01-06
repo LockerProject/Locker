@@ -2,7 +2,7 @@
     "title":"LinkedIn",
     "status":"stable",
     "provider":"linkedin",
-    "provides":["connections/linkedin"],
+    "provides":["connection/linkedin"],
     "synclets":[
         {"name": "connections", "frequency": 86400, "threshold": 0}
     ]
