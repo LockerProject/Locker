@@ -18,13 +18,15 @@ var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
 var logger = require('logger');
 
-var serviceMap = {};
+var serviceMap = { }; // All of the immediately addressable services in the system
 
 var shuttingDown = null;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 exports.serviceMap = function() {
+    // TODO:  Reevaluate sterilization with regards to new service map
+    /*
     var sterilized = lutil.extend(true, {}, serviceMap);
     if (sterilized.installed) {
         for (var i in sterilized.installed) {
@@ -35,14 +37,18 @@ exports.serviceMap = function() {
         }
     }
     return sterilized;
-    //return serviceMap;
+    */
+    return serviceMap;
 }
 
+/**
+* Returns an array of the services that provide the specified types
+*/
 exports.providers = function(types) {
     var services = [];
-    for(var svcId in serviceMap.installed) {
-        if (!serviceMap.installed.hasOwnProperty(svcId))  continue;
-        var service = serviceMap.installed[svcId];
+    for(var svcId in serviceMap) {
+        if (!serviceMap.hasOwnProperty(svcId))  continue;
+        var service = serviceMap.[svcId];
         if (!service.hasOwnProperty("provides")) continue;
         if (service.provides.some(function(svcType, index, actualArray) {
             for (var i = 0; i < types.length; i++) {
