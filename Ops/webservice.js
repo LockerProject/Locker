@@ -55,8 +55,6 @@ var locker = express.createServer(
     connect.session({key:'locker.project.id', secret : "locker"})
 );
 
-var registry = require('./registry');
-registry.app(locker); // add it's endpoints
 
 var listeners = new Object(); // listeners for events
 
@@ -433,6 +431,7 @@ locker.use(express.static(__dirname + '/static'));
 
 // fallback everything to the dashboard
 locker.all('/dashboard*', function(req, res) {
+    if(!lconfig.ui || !serviceManager.map(lconfig.ui)) return res.send("no dashboard :(", 404);
     req.url = '/Me/' + lconfig.ui + '/' + req.url.substring(11);
     proxyRequest(req.method, req, res);
     // detect when coming back from idle, and flush any delayed synclets if configured to do so
@@ -443,6 +442,7 @@ locker.all('/dashboard*', function(req, res) {
 });
 
 locker.all("/socket.io*", function(req, res) {
+    if(!lconfig.ui || !serviceManager.map(lconfig.ui)) return res.send("no dashboard :(", 404);
     req.url = '/Me/' + lconfig.ui + req.url;
     proxyRequest(req.method, req, res);
 });
@@ -467,16 +467,7 @@ function proxied(method, svc, ppath, req, res, buffer) {
 }
 
 exports.startService = function(port, cb) {
-    if(!lconfig.ui || !serviceManager.map(lconfig.ui)) {
-        logger.error('you have missing or invalid "ui" setting in your Config/config.json file, *cries*');
-        process.exit();
-    }
-    // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
-    syncManager.init(serviceManager, function(){
-        serviceManager.init(syncManager);
-        locker.listen(port, function() {
-            registry.init(serviceManager, syncManager, lconfig, lcrypto, cb);
-            logger.info('init done');
-        });
+    locker.listen(port, function(){
+        cb(locker);
     });
 }
