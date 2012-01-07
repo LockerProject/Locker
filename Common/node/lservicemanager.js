@@ -71,7 +71,9 @@ exports.map = function(id) {
 exports.mapDirty = function(id) {
     if(!serviceMap[id]) return;
     // this could use a timer to just save once after a few second delay, if something is saving a lot quickly
-    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, id, 'me.json'), JSON.stringify(serviceMap[id], null, 4));
+    var dir = path.join(lconfig.lockerDir, lconfig.me, id)
+    if(!path.exists(dir)) fs.mkdirSync(dir,0755);
+    lutil.atomicWriteFileSync(path.join(dir, 'me.json'), JSON.stringify(serviceMap[id], null, 4));
 }
 
 /**
@@ -129,7 +131,7 @@ exports.mapUpsert = function (file) {
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
         serviceMap[js.handle] = lutil.extend(serviceMap[js.handle], js);
-        mapDirty(js.handle);
+        exports.mapDirty(js.handle);
         levents.fireEvent('service://me/#'+js.id, 'update', js);
         return serviceMap[js.handle];
     }
@@ -166,7 +168,7 @@ cleanLoad = function(js)
             syncletManager.scheduleRun(js, js.synclets[j]);
         }
     }
-    mapDirty(js.id);
+    exports.mapDirty(js.id);
 }
 
 

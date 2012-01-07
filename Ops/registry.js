@@ -203,7 +203,7 @@ function loadPackage(name, upsert, callback)
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.upsert(path.join('Me/node_modules',name,'package.json'));
+        if(upsert) serviceManager.mapUpsert(path.join('Me/node_modules',name,'package.json'));
         callback(null, installed[name]);
     });
 }

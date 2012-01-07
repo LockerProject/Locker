@@ -2,10 +2,13 @@ var commander = require('commander');
 var path = require('path');
 var npm = require('npm');
 var fs = require('fs');
+var request = require('request');
 
 var username = 'nerds';
 var email = 'nerds@singly.com';
 var regBase = 'http://registry.singly.com';
+var burrowBase = "burrow.singly.com";
+
 
 if(!path.existsSync('package.json')) return console.error("missing package.json, run npm init!");
 var js = JSON.parse(fs.readFileSync('package.json'));
@@ -27,6 +30,7 @@ if(js.repository.handle) {
     });
 }
 
+
 function publish()
 {
     commander.password("registry nerds password: ", "*", function(password){
@@ -47,8 +51,27 @@ function publish()
                     process.exit(1);
                 }
                 console.log("published!");
+                if(js.repository.type == 'app') return imager(js.repository.handle, "screenshot.png", auth);
+                if(js.repository.type == 'connector') return imager(js.repository.handle, "icon.png", auth);
                 process.exit(0);
             })
         });
     });
+}
+
+function imager(id, file, auth)
+{
+    request.get({uri:"https://" + burrowBase + "/registry/" + id, json:true}, function(err, result, body) {
+        if (err) return console.error("failed to get rev");
+        var uri = "https://" + burrowBase + "/registry/" + id + "/" + file + "?rev=" + body._rev;
+        console.log(uri);
+        var stat = fs.statSync(file);
+        fs.createReadStream(file).pipe(request.put({uri:uri, headers:{"Content-Type":"image/png", Authorization:"Basic " + auth, "Content-Length":stat.size}}, function(err, res){
+            if(err) console.error(err);
+            console.error(res);
+            console.log("done!");
+            process.exit(0);
+        }));
+    });
+
 }
