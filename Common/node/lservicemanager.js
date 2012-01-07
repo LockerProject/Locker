@@ -21,10 +21,35 @@ var logger = require('logger');
 var serviceMap = { }; // All of the immediately addressable services in the system
 
 var shuttingDown = null;
+var syncletManager;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
-exports.map = function() {
+/**
+* Scans the Me directory for instaled services
+*/
+exports.init = function (sman) {
+    syncletManager = sman;
+    var dirs = fs.readdirSync(lconfig.me);
+    for (var i = 0; i < dirs.length; i++) {
+        if(dirs[i] == "diary") continue;
+        var dir =  lconfig.me + '/' + dirs[i];
+        try {
+            if(!fs.statSync(dir).isDirectory()) continue;
+            if(!fs.statSync(dir+'/me.json').isFile()) continue;
+            var js = serviceMap[dirs[i]] = JSON.parse(fs.readFileSync(path.join(dir, 'me.json'), 'utf8'));
+            js.id = dirs[i]; // ensure symmetry
+            cleanLoad(js);
+            logger.info("Mapped /Me/" + js.id);
+        } catch (E) {
+            logger.error("Me/"+dirs[i]+" failed to load as a service (" +E+ ")");
+        }
+    }
+}
+
+// return whole map or just one service from it
+exports.map = function(id) {
+    if(id) return serviceMap[id];
     return serviceMap;
 }
 
@@ -91,6 +116,7 @@ exports.mapUpsert = function (file, type) {
     if(serviceMap[js.handle]) {
         serviceMap[js.handle] = lutil.extend(serviceMap[js.handle], js);
         mapDirty(js.handle);
+        levents.fireEvent('service://me/#'+js.id, 'update', js);
         return serviceMap[js.handle];
     }
 
@@ -101,28 +127,8 @@ exports.mapUpsert = function (file, type) {
     js.srcdir = path.dirname(file);
     js.installed = Date.now();
     cleanLoad(js);
+    levents.fireEvent('service://me/#'+js.id, 'new', js);
     return js;
-}
-
-/**
-* Scans the Me directory for instaled services
-*/
-exports.init = function () {
-    var dirs = fs.readdirSync(lconfig.me);
-    for (var i = 0; i < dirs.length; i++) {
-        if(dirs[i] == "diary") continue;
-        var dir =  lconfig.me + '/' + dirs[i];
-        try {
-            if(!fs.statSync(dir).isDirectory()) continue;
-            if(!fs.statSync(dir+'/me.json').isFile()) continue;
-            var js = serviceMap[dirs[i]] = JSON.parse(fs.readFileSync(path.join(dir, 'me.json'), 'utf8'));
-            js.id = dirs[i]; // ensure symmetry
-            cleanLoad(js);
-            logger.info("Mapped /Me/" + js.id);
-        } catch (E) {
-            logger.error("Me/"+dirs[i]+" failed to load as a service (" +E+ ")");
-        }
-    }
 }
 
 // clean up any me json before loading into map
@@ -138,6 +144,11 @@ cleanLoad = function(js)
         for (var i = 0; i < js.events.length; i++) {
             var ev = info.events[i];
             levents.addListener(ev[0], js.id, ev[1]);
+        }
+    }
+    if(js.synclets) {
+        for (var j = 0; j < js.synclets.length; j++) {
+            syncletManager.scheduleRun(js, js.synclets[j]);
         }
     }
     mapDirty(js.id);

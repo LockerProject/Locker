@@ -428,3 +428,24 @@ function adduser (username, password, email, cb) {
       logger.info("adding user "+JSON.stringify(userobj));
   request.put({uri:regBase+'/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
 }
+
+// given a connector package in the registry, install it, and get the auth url for it to return
+function authUrl() {
+    // TODO yet, just pasted in!!!
+    if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
+        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
+        var host = lconfig.externalBase + "/";
+        for (var i in synclets.available) {
+            var synclet = synclets.available[i];
+            if(!apiKeys[synclet.provider]) continue;
+            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
+            if(authModule.authUrl) {
+                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
+                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
+            } else {
+                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
+            }
+        }
+    }
+}
+
