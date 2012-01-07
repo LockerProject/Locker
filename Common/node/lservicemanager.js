@@ -21,15 +21,16 @@ var logger = require('logger');
 var serviceMap = { }; // All of the immediately addressable services in the system
 
 var shuttingDown = null;
-var syncletManager;
+var syncletManager, registry;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 /**
 * Scans the Me directory for instaled services
 */
-exports.init = function (sman) {
+exports.init = function (sman, reg) {
     syncletManager = sman;
+    registry = reg;
     var dirs = fs.readdirSync(lconfig.me);
     for (var i = 0; i < dirs.length; i++) {
         if(dirs[i] == "diary") continue;
@@ -45,10 +46,15 @@ exports.init = function (sman) {
             logger.error("Me/"+dirs[i]+" failed to load as a service (" +E+ ")");
         }
     }
-    // TODO: make sure defaults are all installed!
-    // lconfig.ui
-    // lconfig.apps
-    // lconfig.collections
+
+    // make sure default collections, ui, and apps are all installed!
+    if(lconfig.ui && !serviceMap[ui]) registry.install(ui);
+    if(lconfig.apps) lconfig.apps.forEach(function(app){
+        if(!serviceMap[app]) registry.install(app);
+    });
+    if(lconfig.collections) lconfig.collections.forEach(function(coll){
+        if(!serviceMap[coll]) exports.mapUpsert('Collections/'+coll);
+    });
 }
 
 // return whole map or just one service from it
@@ -97,7 +103,7 @@ exports.providers = function(types) {
 
 
 // update or install this file into the map
-exports.mapUpsert = function (file, type) {
+exports.mapUpsert = function (file) {
     var js;
     try {
         js = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir,file), 'utf8'));
@@ -150,7 +156,8 @@ cleanLoad = function(js)
             levents.addListener(ev[0], js.id, ev[1]);
         }
     }
-    if(js.synclets) {
+    // start em up if they're ready
+    if(js.synclets && js.auth) {
         for (var j = 0; j < js.synclets.length; j++) {
             syncletManager.scheduleRun(js, js.synclets[j]);
         }

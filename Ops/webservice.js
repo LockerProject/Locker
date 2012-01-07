@@ -472,10 +472,10 @@ exports.startService = function(port, cb) {
         process.exit();
     }
     // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
-    syncletManager.init(serviceManager, function(){
-        serviceManager.init(syncletManager);
+    syncManager.init(serviceManager, function(){
+        serviceManager.init(syncManager);
         locker.listen(port, function() {
-            registry.init(serviceManager, lconfig, lcrypto, cb);
+            registry.init(serviceManager, syncManager, lconfig, lcrypto, cb);
             logger.info('init done');
         });
     });

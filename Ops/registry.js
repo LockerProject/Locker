@@ -27,9 +27,12 @@ var syncInterval = 3600000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
 var burrowBase = "burrow.singly.com";
+var serviceManager, syncManager;
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
-exports.init = function(config, crypto, callback) {
+exports.init = function(serman, syncman, config, crypto, callback) {
+    serviceManager = serman;
+    syncManager = syncman;
     lconfig = config;
     logger = require('logger');
     lcrypto = crypto;
@@ -97,6 +100,9 @@ exports.app = function(app)
     app.get("/registry/screenshot/:id", getScreenshot);
 
     app.get('/registry/myApps', exports.getMyApps);
+
+    app.get('/auth/:id', authIsAwesome);
+    app.get('/auth/:id/auth', authIsAuth);
 }
 
 function publishPackage(req, res) {
@@ -176,13 +182,13 @@ function loadInstalled(callback)
         var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, function(){cb()}); // ignore individual errors
+            loadPackage(item, false, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
 
 // load an individual package
-function loadPackage(name, callback)
+function loadPackage(name, upsert, callback)
 {
     fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
         if(err || !data) return callback(err);
@@ -194,9 +200,9 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
-             callback(null, installed[name]);
-        });
+        // during install/update tell serviceManager about this as well
+        if(upsert) serviceManager.upsert(path.join('Me/node_modules',name,'package.json'));
+        callback(null, installed[name]);
     });
 }
 
@@ -266,23 +272,24 @@ exports.getMyApps = function(req, res) {
 
 // npm wrappers
 exports.install = function(arg, callback) {
-
+    if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
+    if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
     npm.commands.install([arg.name], function(err){
-        if(err){
+        if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
             logger.warn("retry "+arg.retry+": "+err);
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
         }
-        loadPackage(arg.name, callback); // once installed, load
+        loadPackage(arg.name, true, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
-        loadPackage(arg.name, callback); // once updated, re-load
+        loadPackage(arg.name, true, callback); // once updated, re-load
     });
 };
 
@@ -431,59 +438,65 @@ function adduser (username, password, email, cb) {
 
 // given a connector package in the registry, install it, and get the auth url for it to return
 var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
-function authUrl() {
-    // TODO yet, just pasted in!!!
-    if (path.existsSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"))) {
-        var apiKeys = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, "Config", "apikeys.json"), 'utf-8'));
-        var host = lconfig.externalBase + "/";
-        for (var i in synclets.available) {
-            var synclet = synclets.available[i];
-            if(!apiKeys[synclet.provider]) continue;
-            var authModule = require(path.join(lconfig.lockerDir, synclet.srcdir, 'auth.js'));
-            if(authModule.authUrl) {
-                synclet.authurl = authModule.authUrl + "&client_id=" + apiKeys[synclet.provider].appKey +
-                                    "&redirect_uri=" + host + "auth/" + synclet.provider + "/auth";
-            } else {
-                synclet.authurl = host + "auth/" + synclet.provider + "/auth";
-            }
+function authIsAwesome(req, res) {
+    var id = req.params.id;
+    exports.install(id, function(err){
+        if(err) return res.send(err, 500);
+        var js = serviceManager.map(id);
+        if(!js) return res.send("failed to install :(", 500);
+        try {
+            var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
+        }catch(E){
+            return res.send(E, 500);
         }
-    }
-    // MOAR PASTEAGE, ensure these are set before returning!
-    var thisConfig = config[avail[i].provider] = require(path.join(lconfig.lockerDir, avail[i].srcdir, 'auth.js'));
-    if(typeof thisConfig.handler == 'function') {
-        addCustom(locker, avail[i].provider);
-    } else if(thisConfig.handler && thisConfig.handler.oauth2) {
-        addOAuth2(locker, avail[i].provider);
-    }
+        // oauth2 types redirect
+        if(authModule.authUrl) {
+            var url = authModule.authUrl + "&client_id=" + apiKeys[id].appKey + "&redirect_uri=" + host + "auth/" + id + "/auth";
+            return res.redirect(url);
+        }
+        // everything else is pass-through (custom, oauth1, etc)
+        authIsAuth(req, res);
+    });
 }
 
-// PASTED MUST REVIEW!
-function addCustom(locker, provider) {
-    locker.get('/auth/' + provider + '/auth', function(req, res) {
-        config[provider].handler(host, apiKeys[provider], function(err, auth) {
-            finishAuth(provider, auth, res);
+// handle actual auth api requests or callbacks, much conflation to keep /auth/foo/auth consistent everywhere!
+function authIsAuth(req, res) {
+    var id = req.params.id;
+    var js = serviceManager.map(id);
+    if(!js) return res.send("missing", 404);
+    var host = lconfig.externalBase + "/";
+    try {
+        var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
+    }catch(E){
+        return res.send(E, 500);
+    }
+
+    // some custom code gets run for non-oauth2 options here, wear a tryondom
+    try {
+        if(authModule.direct) return authModule.direct(res);
+        // rest require apikeys
+        if(!apiKeys[id]) return res.send("missing required api keys", 500);
+        if(typeof authModule.handler == 'function') {} return authModule.handler(host, apiKeys[id], function(err, auth) {
+            if(err) return res.send(err, 500);
+            finishAuth(id, auth, res);
         }, req, res);
-    });
-}
+    } catch(E) {
+        return res.send(E, 500);
+    }
 
-function addOAuth2(locker, provider) {
-    locker.get('/auth/' + provider + '/auth', function(req, res) {
-        handleOAuth2(provider, req.param('code'), res)
-    });
-}
-
-function handleOAuth2(provider, code, res) {
-    var options = config[provider];
-    var method = options.handler.oauth2;
-    var theseKeys = apiKeys[provider];
+    // oauth2 callbacks from here on out
+    var code = req.param('code');
+    var theseKeys = apiKeys[id];
+    if(!code || !authModule.handler.oauth2) return res.send("very bad request", 500);
+    var method = authModule.handler.oauth2;
     var postData = {
         client_id: theseKeys.appKey,
         client_secret: theseKeys.appSecret,
-        redirect_uri: host + 'auth/' + provider + '/auth',
-        grant_type: options.grantType,
+        redirect_uri: host + 'auth/' + id + '/auth',
+        grant_type: authModule.grantType,
         code: code
     };
-    var req = {method: method, url: options.endPoint};
+    var req = {method: method, url: authModule.endPoint};
     if(method == 'POST') {
         req.body = querystring.stringify(postData);
         req.headers = {'Content-Type' : 'application/x-www-form-urlencoded'};
@@ -498,23 +511,19 @@ function handleOAuth2(provider, code, res) {
         }
         var auth = {accessToken: body.access_token};
         if(method == 'POST') auth = {token: body, clientID: theseKeys.appKey, clientSecret: theseKeys.appSecret};
-        if(typeof options.authComplete == 'function') {
-            return options.authComplete(auth, function(err, auth) {
-                finishAuth(provider, auth, res);
+        if(typeof authModule.authComplete == 'function') {
+            return authModule.authComplete(auth, function(err, auth) {
+                finishAuth(js, auth, res);
             });
         }
-        finishAuth(provider, auth, res);
+        finishAuth(js, auth, res);
     });
 }
 
-function finishAuth(provider, auth, res) {
-    var avail = syncManager.synclets().available;
-    var newSynclet;
-    for (var i = 0; i < avail.length; i++) {
-        if (avail[i].provider == provider) newSynclet = avail[i];
-    }
-    newSynclet.auth = auth;
-    var svcInfo = syncManager.install(newSynclet);
-    syncManager.syncNow(svcInfo.id, function() {});
-    res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + provider + "'); window.close(); </script>");
+// save out auth and kick-start synclets, plus respond
+function finishAuth(js, auth, res) {
+    js.auth = auth;
+    serviceManager.mapDirty(js.id);
+    syncManager.syncNow(js.id, function() {});
+    res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
