@@ -28,12 +28,14 @@ var syncTimer;
 var regBase = 'http://registry.singly.com';
 var burrowBase = "burrow.singly.com";
 var serviceManager, syncManager;
+var apiKeys;
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
 exports.init = function(serman, syncman, config, crypto, callback) {
     serviceManager = serman;
     syncManager = syncman;
     lconfig = config;
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
     logger = require('logger');
     lcrypto = crypto;
     try {
@@ -437,7 +439,6 @@ function adduser (username, password, email, cb) {
 }
 
 // given a connector package in the registry, install it, and get the auth url for it to return
-var apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 function authIsAwesome(req, res) {
     var id = req.params.id;
     exports.install(id, function(err){

@@ -53,10 +53,10 @@ var serviceManager = require("lservicemanager");
 var pushManager = require(__dirname + "/Common/node/lpushmanager");
 var mongodb = require('mongodb');
 var lcrypto = require("lcrypto");
-var thservice = require(__dirname + "/Ops/thservice.js");
+var registry = require(__dirname + "/Ops/registry.js");
 var lmongo = require('lmongo');
 
-if(process.argv.indexOf("offline") >= 0) syncManager.executeable(false);
+if(process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
 
 if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
     logger.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
@@ -143,9 +143,10 @@ function finishStartup() {
     webservice.startService(lconfig.lockerPort, function(locker){
         // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
         syncManager.init(serviceManager, function(){
-            serviceManager.init(syncManager); // this may trigger synclets to start!
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
                 registry.app(locker); // add it's endpoints
+                serviceManager.init(syncManager, registry); // this may trigger synclets to start!
+                runMigrations();
             });
         });
     });
