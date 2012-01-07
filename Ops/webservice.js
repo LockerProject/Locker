@@ -310,10 +310,27 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
     }
 });
 
+/* REVIEW
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.post('/Me/*', function(req,res, next){
     proxyRequest('POST', req, res, next);
 });
+
+locker.get('/synclets/:id/run', function(req, res) {
+    syncManager.syncNow(req.params.id, req.query.id, false, function() {
+        res.send(true);
+    });
+});
+
+// not sure /post is the right base here but needed it for easy bodyparser flag
+locker.post('/post/:id/:synclet', function(req, res) {
+    syncManager.syncNow(req.params.id, req.params.synclet, req.body, function() {
+        res.send(true);
+    });
+});
+
+require('synclet/dataaccess')(locker);
+*/
 
 function proxyRequest(method, req, res, next) {
     var slashIndex = req.url.indexOf("/", 4);
