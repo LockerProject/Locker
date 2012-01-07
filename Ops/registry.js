@@ -283,6 +283,7 @@ exports.install = function(arg, callback) {
             arg.retry++;
             logger.warn("retry "+arg.retry+": "+err);
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
+            return callback(err);
         }
         loadPackage(arg.name, true, callback); // once installed, load
     });

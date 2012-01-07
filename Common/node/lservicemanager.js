@@ -37,7 +37,7 @@ exports.init = function (sman, reg) {
         var dir =  lconfig.me + '/' + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
-            if(!fs.statSync(dir+'/me.json').isFile()) continue;
+            if(!path.existsSync(dir+'/me.json')) continue;
             var js = serviceMap[dirs[i]] = JSON.parse(fs.readFileSync(path.join(dir, 'me.json'), 'utf8'));
             js.id = dirs[i]; // ensure symmetry
             cleanLoad(js);
@@ -48,9 +48,13 @@ exports.init = function (sman, reg) {
     }
 
     // make sure default collections, ui, and apps are all installed!
-    if(lconfig.ui && !serviceMap[lconfig.ui]) registry.install(lconfig.ui);
+    if(lconfig.ui && !serviceMap[lconfig.ui]) registry.install(lconfig.ui, function(err){
+        if(err) logger.error("failed to install ui: "+err);
+    });
     if(lconfig.apps) lconfig.apps.forEach(function(app){
-        if(!serviceMap[app]) registry.install(app);
+        if(!serviceMap[app]) registry.install(app, function(err){
+            if(err) logger.error("failed to install "+app+": "+err);
+        });
     });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){
         if(!serviceMap[coll]) exports.mapUpsert('Collections/'+coll);
