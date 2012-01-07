@@ -45,6 +45,10 @@ exports.init = function (sman) {
             logger.error("Me/"+dirs[i]+" failed to load as a service (" +E+ ")");
         }
     }
+    // TODO: make sure defaults are all installed!
+    // lconfig.ui
+    // lconfig.apps
+    // lconfig.collections
 }
 
 // return whole map or just one service from it
@@ -317,10 +321,6 @@ function quiesce(svc)
     } catch(e) {
         logger.error("got error while quiescing: "+e);
     }
-}
-
-exports.isInstalled = function(serviceId) {
-    return serviceId in serviceMap;
 }
 
 /**
