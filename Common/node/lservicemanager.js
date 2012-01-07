@@ -48,7 +48,7 @@ exports.init = function (sman, reg) {
     }
 
     // make sure default collections, ui, and apps are all installed!
-    if(lconfig.ui && !serviceMap[ui]) registry.install(ui);
+    if(lconfig.ui && !serviceMap[lconfig.ui]) registry.install(lconfig.ui);
     if(lconfig.apps) lconfig.apps.forEach(function(app){
         if(!serviceMap[app]) registry.install(app);
     });
