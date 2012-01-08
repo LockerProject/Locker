@@ -51,6 +51,17 @@ $(document).ready(function() {
       loadApp();
     }
   });
+
+  $.getJSON("/registry/connectors", function(data, success) {
+      data.forEach(function(connector) {
+          console.log(connector);
+          var newE = $("div.synclets a.template").clone();
+          newE.attr("href", "/auth/" + connector.repository.handle + "/auth");
+          newE.removeClass("template");
+          newE.find("img").attr("src", "https://burrow.singly.com/registry/" + connector.repository.handle + "/icon.png");
+          newE.appendTo("div.synclets");
+      });
+  });
 });
 
 var loadApp = function(callback) {
