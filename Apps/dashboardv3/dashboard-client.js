@@ -127,6 +127,12 @@ var renderExplore = function(req, res) {
 }
 
 var renderExploreApps = function(req, res) {
+    locker.getType("connector", function(error, connectors) {
+        data = {"connectors":[]};
+        if (!error) data.connectors = connectors;
+        res.render('iframe/exploreApps', data);
+    });
+    /*
     getAllRegistryApps(function(apps) {
         getSynclets(function(err, synclets) {
             var data = {layout: false, apps: apps, synclets: synclets}
@@ -192,6 +198,7 @@ var renderExploreApps = function(req, res) {
             res.render('iframe/exploreApps', data);
         });
     });
+    */
 }
 
 var renderCreate = function(req, res) {
@@ -364,11 +371,10 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
-        getSynclets(function(err, synclets) {
+        locker.mapType("connector", function(err, connectors) {
             page = 'you';
             res.render('you', {
-                synclets: synclets,
-                github: github,
+                connectors: connectors,
                 map: sortedResult
             });
         });
@@ -500,8 +506,18 @@ var checkDraftState = function(appInfo) {
     return appInfo;
 }
 
-var getSynclets = function(callback) {
-    locker.synclets(function(err, synclets) {
+/*
+var getLocalConnectors = function(callback) {
+    var connectors = [];
+    locker.mapType(callback)(err, map) {;
+        callback(err, map)
+        Object.keys(map).forEach(function(key) {
+            var service = map[key];
+            if (service.type == "connector") {
+                connectors.push(service);
+            }
+        }
+        callback(err, connectors);
         for (var i in synclets.installed) {
             if (i === 'github') { github = true; }
             synclets.available.some(function(synclet) {
@@ -520,3 +536,4 @@ var getSynclets = function(callback) {
         callback(err, synclets);
     });
 }
+*/
