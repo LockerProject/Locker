@@ -37,7 +37,7 @@ exports.init = function (sman, reg) {
         var dir =  lconfig.me + '/' + dirs[i];
         try {
             if(!fs.statSync(dir).isDirectory()) continue;
-            if(!path.existsSync(dir+'/me.json')) continue;
+            if(!path.existsSync(path.join(dir, 'me.json'))) continue;
             var js = serviceMap[dirs[i]] = JSON.parse(fs.readFileSync(path.join(dir, 'me.json'), 'utf8'));
             js.id = dirs[i]; // ensure symmetry
             cleanLoad(js);
@@ -72,7 +72,7 @@ exports.mapDirty = function(id) {
     if(!serviceMap[id]) return;
     // this could use a timer to just save once after a few second delay, if something is saving a lot quickly
     var dir = path.join(lconfig.lockerDir, lconfig.me, id)
-    if(!path.exists(dir)) fs.mkdirSync(dir,0755);
+    if(!path.existsSync(dir)) fs.mkdirSync(dir,0755);
     lutil.atomicWriteFileSync(path.join(dir, 'me.json'), JSON.stringify(serviceMap[id], null, 4));
 }
 
@@ -198,6 +198,7 @@ cleanLoad = function(js)
 exports.spawn = function(serviceId, callback) {
     if(!callback) callback = function(){};
     var svc = serviceMap[serviceId];
+    console.dir(svc);
     if (!svc) {
         logger.error("Attempting to spawn an unknown service " + serviceId);
         return callback();
@@ -388,7 +389,7 @@ exports.uninstall = function(serviceId, callback) {
 * Return whether the service is running
 */
 exports.isRunning = function(serviceId) {
-    return exports.isInstalled(serviceId) && serviceMap[serviceId].pid;
+    return exports.hasOwnProperty(serviceId) && serviceMap[serviceId].pid;
 }
 
 function checkForShutdown() {

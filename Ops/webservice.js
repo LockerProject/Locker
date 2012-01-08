@@ -268,7 +268,7 @@ function proxyRequest(method, req, res, next) {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
             var buffer = httpProxy.buffer(req);
-            serviceManager.spawn(id,function(){
+            serviceManager.spawn(id, function(){
                 proxied(method, info, ppath, req, res, buffer);
             });
         } else {
