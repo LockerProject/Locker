@@ -5,11 +5,14 @@
     "status":"stable",
     "handle":"contacts",
     "provides":["contact"],
-    "mongoCollections": ["contacts"],
+    "mongoCollections": ["contact"],
     "events":[["contact/foursquare", "/events"],
         ["contact/facebook", "/events"],
         ["contact/twitter", "/events"],
-        ["contact/github", "/events"],
+        ["following/github", "/events"],
+        ["contact/tumblr", "/events"],
+        ["contact/instagram", "/events"],
         ["contact/gcontacts", "/events"],
-        ["contact/flickr", "/events"]]
+        ["contact/flickr", "/events"],
+        ["connection/linkedin", "/events"]]
 }

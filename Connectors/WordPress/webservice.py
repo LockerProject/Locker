@@ -1,7 +1,7 @@
 import sys
 import json
 import logging
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 
 sys.path.append("../../Common/python")
 import lockerfs
@@ -38,9 +38,9 @@ def start(secrets):
 def update():
     if app.client:
         app.client.update()
-        return json.dumps("updated")
+        return json.dumps("true")
     else:
-        return json.dumps("no login")
+        return json.dumps("false")
 
 @app.route("/")
 def index():
@@ -81,7 +81,7 @@ def posts():
     posts = app.client.posts
     for key, value in request.args.items():
         posts = [post for post in posts if matches_arg(post[key], json.loads(value))]
-    return json.dumps(posts)
+    return Response(response=json.dumps(posts), content_type="application/javascript")
 
 @app.route("/comments")
 def comments():
@@ -113,7 +113,16 @@ def uploadFile():
     data["bits"] = xmlrpclib.Binary(open(f).read())
     data["overwrite"] = 1
     app.client._server.wp.uploadFile('', app.client.user, app.client.password, data)
-    return "kthxbye"
+    return "true"
+
+@app.route("/newPost")
+def newPost():
+    f = request.args["title"]
+    data = {}
+    data["title"] = request.args["title"]
+    data["description"] = request.args["description"]
+    return json.dumps(app.client._server.metaWeblog.newPost(1, app.client.user, app.client.password, data, True))
+
 
 def runService(info):
     app.info = info

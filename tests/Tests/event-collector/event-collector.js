@@ -44,7 +44,6 @@ app.get('/getEvents/:type', function(req, res) {
 
 app.get('/listen/:type', function(req, res) {
     var type = unescape(req.params.type);
-    console.log('listening to events for ' + type);
     locker.listen(type, '/event', function(err) {
         res.writeHead(200);
         res.end('Listening to ' + type);

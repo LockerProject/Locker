@@ -9,7 +9,7 @@
 
 //just a place for lockerd.js to populate config info
 var fs = require('fs');
-
+var path = require('path');
 
 exports.load = function(filepath) {
     var config = {};
@@ -22,13 +22,20 @@ exports.load = function(filepath) {
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerPort = config.lockerPort || 8042;
-    exports.externalPort = config.externalPort || exports.lockerPort;
+    if(config.externalPort)
+        exports.externalPort = config.externalPort;
+    else if(config.externalSecure)
+        exports.externalPort = 443;
+    else
+        exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.externalPath = config.externalPath || '';
+    exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
     exports.scannedDirs = config.scannedDirs || [
-        "Apps", 
-        "Collections", 
+        "Apps",
+        "Collections",
+        "Me/github",
         "Connectors"
         ];
     exports.mongo = config.mongo || {
@@ -36,19 +43,36 @@ exports.load = function(filepath) {
         "host": "localhost",
         "port": 27018
     };
+    // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
-    exports.lockerDir = process.cwd();
-    exports.logFile = config.logFile || undefined;
-    exports.ui = config.ui || 'devdashboard';
+    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
+    // Right now it is ambiguous, we probably need two different vars
+    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
+    if(!config.logging) config.logging = {};
+    exports.logging =  {
+        file: config.logging.file || undefined,
+        level:config.logging.level || "info",
+        maxsize: config.logging.maxsize || 256 * 1024 * 1024, // default max log file size of 64MBB
+        console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
+    };
+    if(!config.tolerance) config.tolerance = {};
+    exports.tolerance =  {
+        threshold: config.tolerance.threshold || 50, // how many new/updated items
+        maxstep: config.tolerance.maxstep || 10, // what is the largest frequency multiplier
+        idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
+    };
+    exports.ui = config.ui || 'useui';
+    exports.quiesce = config.quiesce || 650000;
+    exports.dashboard = config.dashboard;
 }
 
 function setBase() {
-    exports.lockerBase = 'http://' + exports.lockerHost + 
+    exports.lockerBase = 'http://' + exports.lockerHost +
                          (exports.lockerPort && exports.lockerPort != 80 ? ':' + exports.lockerPort : '');
     exports.externalBase = 'http';
     if(exports.externalSecure === true || (exports.externalPort == 443 && exports.externalSecure !== false))
         exports.externalBase += 's';
-    exports.externalBase += '://' + exports.externalHost + 
+    exports.externalBase += '://' + exports.externalHost +
                          (exports.externalPort && exports.externalPort != 80 && exports.externalPort != 443 ? ':' + exports.externalPort : '');
     if(exports.externalPath)
         exports.externalBase += exports.externalPath;

@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var photos = require('../Connectors/Flickr/photos');
 var contacts = require('../Connectors/Flickr/contacts');
 var assert = require("assert");
@@ -15,15 +15,15 @@ process.on('uncaughtException',function(error){
 
 var mePath = '/Data/flickr';
 
-process.chdir(curDir + mePath);
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({
     "Can get contacts" : {
         topic: function() {
+            process.chdir(curDir + mePath);
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
-                uri : 'http://api.flickr.com:80/services/rest/?api_sig=fd77bba870ac5fff4a0f3543cb6fba83&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=1&per_page=3',
+                uri : 'http://api.flickr.com:80/services/rest/?api_sig=eb6c6301baa8ce6c94f0c55dd27f987b&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=1&per_page=1000',
                 file : __dirname + '/fixtures/flickr/contacts_1.json' });
             contacts.sync(pinfo, this.callback) },
         "successfully" : function(err, response) {
@@ -36,8 +36,8 @@ suite.next().suite.addBatch({
         "and handles paging": function(err, response) {
             assert.isNull(err);
             assert.equal(response.config.paging.lastPage, 1);
-            assert.ok(response.config.nextRun > 1314800000000);
-            
+            assert.equal(response.config.nextRun, -1);
+
         }
     }
 }).addBatch({
@@ -55,7 +55,7 @@ suite.next().suite.addBatch({
                     uri : 'http://farm5.static.flickr.com/4127/4922121188_3fc1ee8735_s.jpg',
                     file : __dirname + '/fixtures/flickr/img.png',
                     contentType: 'image/png' });
-                    
+
                 fakeweb.registerUri({
                     uri : 'http://farm5.static.flickr.com/4072/4921264930_022f68c6d9_b.jpg',
                     file : __dirname + '/fixtures/flickr/img.png',

@@ -8,7 +8,7 @@
 */
 
 /*
-* Tests the acutal implementation of the lservicemanager.  
+* Tests the acutal implementation of the lservicemanager.
 * See locker-core-ap-test.js for a test of the REST API interface to it.
 */
 var vows = require("vows");
@@ -25,7 +25,7 @@ lconfig.load("Config/config.json");
 var levents = require('levents');
 var path = require('path');
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, 'disabletest', ['thing1','thing2']);
+var lmongo = require('../Common/node/lmongo.js');
 
 var normalPort = lconfig.lockerPort;
 vows.describe("Service Manager").addBatch({
@@ -41,21 +41,18 @@ vows.describe("Service Manager").addBatch({
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
             "and can be installed" : {
-                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                topic:serviceManager.install({srcdir:"Connectors/IMAP"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
-                "setting a version number" : function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.version, undefined);
+                "setting a version number equivalent to the highest migration" : function(svcMetaInfo) {
+                    assert.equal(svcMetaInfo.version, 1309052268000);
                 },
                 "and by service map says it is installed" : function(svcMetaInfo) {
                     assert.isTrue(serviceManager.isInstalled(svcMetaInfo.id));
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
-                },
-                "and passes along the icon": function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
         }
@@ -73,7 +70,6 @@ vows.describe("Service Manager").addBatch({
                 assert.isTrue(serviceManager.isInstalled("testURLCallback"));
             },
             "manifest data is taken over me.json data" : function() {
-                console.dir(serviceManager.serviceMap().installed["event-collector"]);
                 assert.equal(serviceManager.serviceMap().installed["event-collector"].events[0][0], "configuration/listener");
             },
             "and can be spawned" : {
@@ -124,10 +120,10 @@ vows.describe("Service Manager").addBatch({
                 assert.ok(serviceManager.serviceMap().available.length > 10);
             },
             "can be looked up by handle from the available sections of the service map": function() {
-                assert.equal(serviceManager.getFromAvailable("facebook").handle, "facebook");
+                assert.equal(serviceManager.getFromAvailable("facebookconnector").handle, "facebookconnector");
             },
             "and can be installed" : {
-                topic:serviceManager.install({srcdir:"Connectors/Twitter"}),
+                topic:serviceManager.install({srcdir:"Connectors/IMAP"}),
                 "by giving a valid install instance" : function(svcMetaInfo) {
                     assert.include(svcMetaInfo, "id");
                 },
@@ -139,9 +135,6 @@ vows.describe("Service Manager").addBatch({
                 },
                 "and by creating a valid service instance directory" : function(svcMetaInfo) {
                     statInfo = fs.statSync(lconfig.me + "/" + svcMetaInfo.id);
-                },
-                "and passes along the icon": function(svcMetaInfo) {
-                    assert.notEqual(svcMetaInfo.icon, undefined);
                 }
             }
         }
@@ -188,7 +181,18 @@ vows.describe("Service Manager").addBatch({
         "passes the externalBase with the process info": function(err, resp, body) {
             var json = JSON.parse(body);
             assert.equal(json.externalBase, lconfig.externalBase + '/Me/echo-config/');
+        },
+        "doesn't include things like pid, uriLocal, and port in the serviceMap" : function(err, resp, body) {
+
         }
+    }
+}).addBatch({
+    "Running services don't include data like uriLocal, port, and pid in the map call" : function() {
+        assert.include(serviceManager.serviceMap().installed, 'search');
+        assert.equal(serviceManager.serviceMap().installed['search'].uriLocal, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].port, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].startingPid, undefined);
+        assert.equal(serviceManager.serviceMap().installed['search'].pid, undefined);
     }
 }).addBatch({
     "Disabling services " : {
@@ -203,10 +207,10 @@ vows.describe("Service Manager").addBatch({
             "have mongo " : {
                 topic : function() {
                     var self = this;
-                    lmongoclient.connect(function(theMongo) {
+                    lmongo.init('disabletest', ['thing1','thing2'], function(theMongo, colls) {
                         mongo = theMongo;
-                        mongo.collections.thing1.save({'one':1}, function(err, doc) {
-                            mongo.collections.thing1.count(self.callback);
+                        colls.thing1.save({'one':1}, function(err, doc) {
+                            colls.thing1.count(self.callback);
                         });
                     });
                 },
@@ -227,26 +231,34 @@ vows.describe("Service Manager").addBatch({
                     assert.equal(serviceManager.isInstalled('disabletest'), false);
                     assert.equal(resp.statusCode, 503);
                     assert.equal(body, "This service has been disabled.");
-                },
-                "but can be reenabled": {
-                    topic: function() {
-                        serviceManager.enable('disabletest');
-                        var that = this;
-                        request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
-                            request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
-                        })
-                    },
-                    "successfully": function(err, resp, body) {
-                        assert.equal(serviceManager.isInstalled('disabletest'), true);
-                        if (resp.statusCode === 500) {
-                            console.dir(body);
-                            console.dir(resp);
-                            console.dir(err);
-                        }
-                        assert.equal(resp.statusCode, 200);
-                        assert.equal(body, "ACTIVE");
-                    }
                 }
+            }
+        }
+    }
+}).addBatch({
+    "Reenabling services " : {
+        topic: function() {
+            serviceManager.enable('disabletest');
+            var that = this;
+            request({uri:lconfig.lockerBase + '/core/tests/enable', json:{serviceId:'disabletest'},method: 'POST'}, function(err, resp, body) {
+                if (err) {
+                    return that.callback(err, resp, body);
+                }
+                request({url:lconfig.lockerBase + '/Me/disabletest/'}, that.callback);
+            })
+        },
+        "works properly": function(err, resp, body) {
+            assert.equal(serviceManager.isInstalled('disabletest'), true);
+            if (!resp) {
+                console.dir(body);
+                console.dir(resp);
+                console.dir(err);
+                if (err.message === 'socket hang up') {
+                    console.error('i don\'t know man.  http://comments.gmane.org/gmane.comp.lang.javascript.nodejs/19987');
+                }
+            } else {
+                assert.equal(resp.statusCode, 200);
+                assert.equal(body, "ACTIVE");
             }
         }
     }
@@ -270,7 +282,7 @@ vows.describe("Service Manager").addBatch({
         },
         "and deletes" : {
             topic : function() {
-                mongo.collections.thing1.count(this.callback);
+                mongo.collections.disabletest.thing1.count(this.callback);
             },
             "mongo collections" : function(err, doc) {
                 assert.isNull(err);

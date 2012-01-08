@@ -1,4 +1,6 @@
 var config, auth, gdataClient;
+var lfs = require(__dirname + '/../../Common/node/lfs');
+var mkdirp = require('mkdirp');
 
 exports.sync = function(processInfo, callback) {
     config = processInfo.config;
@@ -6,56 +8,57 @@ exports.sync = function(processInfo, callback) {
     syncContacts(callback);
 }
 
+var MAX_RESULTS = 100;
+
 function syncContacts(callback) {
+    if(!config) config = {};
     var params = {'showdeleted':'true',
                   'sortorder':'ascending',
                   'orderby':'lastmodified',
-                  'max-results':3000
+                  'max-results':MAX_RESULTS
                  };
-    if(config.lastUpdate)
-        params['updated-min'] = getISODateString(new Date(config.lastUpdate));
-    var now = new Date().getTime();
-    getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params,
-        function(err, result) {
-            if(result && !(err && result.error)) {
-                var count = 0;
-                if(result.feed) {
-                    config.lastUpdate = now;
-                    var responseObj = {data : {}, config : {}};
-                    if(result.feed.entry) {
-                        count = result.feed.entry.length;
-                        processFeed(result.feed.entry, function(processedContacts) {
-                            responseObj.data.contact = processedContacts;
-                            responseObj.config.lastUpdate = now;
-                            responseObj.auth = auth;
-                            callback(null, responseObj);
-                        });
-                    } else {
-                        responseObj.config.lastUpdate = now;
-                        responseObj.auth = auth;
-                        callback(null, responseObj);
-                    }
-                } else {
-                    console.error('DEBUG: BARF! result=', result);
-                }
-            } else {
-                console.error('DEBUG: BARF2! err=', err, ', result=', result);
-                callback();
-            }
-        });
+    if(!config.lastUpdate)
+        config.lastUpdate = 1;
+    params['updated-min'] = getISODateString(new Date(config.lastUpdate));
+    if(!config.startIndex)
+        config.startIndex = 1;
+    params['start-index'] = config.startIndex;
+    var now = Date.now();
+    getClient().getFeed('https://www.google.com/m8/feeds/contacts/default/full', params, function(err, result) {
+        if(!(result && result.feed) || err || result.error) {
+            console.error('google contacts BARF! err=', err, ', result=', result);
+            return callback(err);
+        }
+        var responseObj = {data:{}, config:{startIndex: config.startIndex, lastUpdate:now}, auth:auth};
+        var entries = result.feed.entry;
+        if(entries && entries.length > 0) {
+            responseObj.config.lastUpdate = config.lastUpdate;
+            responseObj.config.startIndex += entries.length;
+            responseObj.config.nextRun = -1;
+            processFeed(entries, function(result) {
+                responseObj.data.contact = result;
+                return callback(null, responseObj);
+            });
+        } else {
+            responseObj.config.startIndex = 1;
+            responseObj.config.nextRun = 0;
+            return callback(null, responseObj);
+        }
+    });
 }
 
 
-function processFeed(entries, callback) {
-    var result = [];
-    for(var i in entries) {
-        var obj = convertEntry(entries[i]);
-        result.push({obj:obj, timestamp:obj.updated, type:'new'});
-    }
-    callback(result);
+function processFeed(entries, callback, result, i) {
+    if(!result) result = [];
+    if(!i) i = 0;
+    else if(i >= entries.length) return callback(result);
+    convertEntry(entries[i], function(obj) {            
+        result.push({obj:obj, timestamp:obj.updated, type:'new'});    
+        processFeed(entries, callback, result, i+1);
+    });
 }
 
-function convertEntry(entry) {
+function convertEntry(entry, callback) {
     var obj = {};
     obj.id = getID(entry);
     if(entry.title && entry.title.$t)
@@ -98,58 +101,39 @@ function convertEntry(entry) {
             obj.address.push(address);
         }
     }
-    for(var i in entry.link) {
-        if(entry.link[i].type === 'image/*' && entry.link[i].rel &&
-           entry.link[i].rel.lastIndexOf('#photo') === entry.link[i].rel.length - 6) {
-            // queuePhoto(obj.id, entry.link[i].href);
-            obj.photo = true;
-            break;
-        }
-    }
     if(entry.gContact$groupMembershipInfo) {
         obj.groups = [];
         entry.gContact$groupMembershipInfo.forEach(function(group) {
             obj.groups.push(group.href.substring(group.href.lastIndexOf('/') + 1));
         });
     }
-    return obj;
+    for(var i in entry.link) {
+        if(entry.link[i].type === 'image/*' && entry.link[i].rel &&
+           entry.link[i].rel.lastIndexOf('#photo') === entry.link[i].rel.length - 6) {
+            getPhoto({id:obj.id, href:entry.link[i].href}, function() {
+                obj.photo = true;
+                callback(obj);
+            });
+            return;
+        }
+    }
+    // didn't find a photo
+    return callback(obj);
 }
-
 
 
 function getID(entry) {
     return entry.id.$t.substring(entry.id.$t.lastIndexOf('/') + 1);
 }
-// 
-// var photosQueue = [];
-// var gettingPhotos = false;
-// 
-// function queuePhoto(id, href) {
-//     photosQueue.push({id:id, href:href});
-//     if(!gettingPhotos) {
-//         gettingPhotos = true;
-//         getPhotos();
-//     }
-// }
-// 
-// function getPhotos() {
-//     console.error('photosQueue', photosQueue.length);
-//     if(!photosQueue.length) {
-//         gettingPhotos = false;
-//         return;
-//     }
-//     var photo = photosQueue.shift();
-//     photo.href += '?oauth_token=' + auth.token.access_token;
-//     lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', function(err) {
-//         // console.error('wrote cont!');
-//         getPhotos();
-//         // var stat = fs.statSync('photos/' + photo.id + '.jpg');
-//         // console.error('stat', stat);
-//         if(err) {
-//             console.error('error downloading photo for id', id, 'and href', href, '\nerror:', err);
-//         }
-//     });
-// }
+
+function getPhoto(photo, callback) {
+    photo.href += '?oauth_token=' + auth.token.access_token;
+    mkdirp('photos', 0755, function(err) {
+        if(err) {throw err;}
+        // TODO: this might hit and need to handle a 401 (token refresh)
+        lfs.saveUrl(photo.href, 'photos/' + photo.id + '.jpg', callback);
+    });
+}
 
 function getClient() {
     if(auth && !gdataClient) {

@@ -1,16 +1,28 @@
 {
     "lockerHost" : "localhost",
     "lockerPort" : 8042,
-    "logFile": null,
     "me" : "Me",
     "scannedDirs" : [
-        "Apps", 
-        "Collections", 
+        "Apps",
+        "Collections",
         "Connectors"
         ],
     "mongo" : {
         "dataDir": "mongodata",
         "host": "localhost",
         "port": 27018
+    },
+    "logging": {
+        "level": "error",
+        "console": true,
+        "file": "locker.out",
+        "maxsize": 33554432
+    },
+    "dashboard" : {
+        "customLogo": "tlp_logo.png",
+        "customTitle": "the locker project",
+        "customLogout": "https://lvh.me:8443/logout",
+        "customHostedEndpoint":"https://lvh.me:8443/users/info",
+        "customHost":"https://lvh.me:8443"
     }
 }

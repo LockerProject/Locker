@@ -1,0 +1,54 @@
+<html>
+
+<head>
+<title></title>
+<script type="text/javascript" src='jquery-1.6.2.min.js'></script>
+<script type='text/javascript' src='pure_min.js'></script>
+<link rel="stylesheet" type="text/css" href="prettify/prettify.css" />
+<script type='text/javascript' src='prettify/prettify.js'></script>
+<link rel='stylesheet' type='text/css' href='css/pre.css' />
+</head>
+
+<body>
+  <h1>API Explorer</h1>
+<form onsubmit='$("#testButton").click(); return false;'>
+Choose an endpoint: <select id='curMethod'>
+</select>
+<div id='methodTemplate'>
+  <h1 class='path'>/api/path</h1>
+  <div class='operationDescription'></div>
+  <div class='description'>
+    <div class='notesBlock'><h3>Notes</h3><div class='notes'></div></div>
+    <div class='parameters'>
+      <h3>Parameters</h3>
+      <ul>
+        <li><span class='paramName'>param</span> - <span class='paramType'>type</span> - <span class='paramDescription'>some description</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class='resultModel'>
+    <h3>Results</h3>
+    <ul class='resultEntry'>
+      <li><span class='paramName'></span> - <span class='paramType'></span> - <span class='paramDescription'></span></li>
+    </ul>
+  </div>
+  <hr />
+  <div id='testParameters'>
+    <div class='testParam'><span class='paramName'>test</span><input type='text' name='q' /><span class='testExample'></span></div>
+  </div>
+  <div id='testParametersSelect'>
+    <div class='testParam'><span class='paramName'>test</span><select></select></div>
+  </div>
+  <input id='testButton' type='submit' name='testIt' value='Test It' />
+  <div id='testInfo'>
+    <a id='fullTestURL' target='_blank'></a>
+    <div id='limitedResults'></div>
+    <pre class='prettyprint'><code class='language-javascript'></code></pre>
+    <img id='testResultImage' />
+  </div>
+</div>
+</form>
+<script type="text/javascript" src="js/explorer.js"></script>
+</body>
+
+</html>

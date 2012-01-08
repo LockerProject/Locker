@@ -7,7 +7,10 @@
     "provides":["place"],
     "mongoCollections": ["place"],
     "events":[["checkin/foursquare","/events"]
-		,["status/twitter","/events"]
-		,["timeline/twitter","/events"]
-		]
+            ,["recents/foursquare","/events"]
+            ,["tweets/twitter","/events"]
+            ,["timeline/twitter","/events"]
+            ,["photo://instagram","/events"]
+            ,["location/glatitude","/events"]
+    ]
 }

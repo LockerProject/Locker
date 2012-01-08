@@ -45,7 +45,7 @@ function save(file, data) {
     stream.end();
 };
 
-fs.readFile("auth.token", "utf-8",
+fs.readFile("auth.token", "utf8",
 function(err, token) {
     console.log("loaded token " + token);
     get('gdata.youtube.com', '/feeds/api/users/default/uploads?alt=json&v=2', token,function(data){save('videos',data);});

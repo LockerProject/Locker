@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Developer Documentation</title>
+  <link rel="stylesheet" type="text/css" href="css/common.css">
+</head>
+
+<body>
+    <h3>Make your own viewer!</h3>
+    <ol>
+        <li id="connect"> <a id="connect-link"> Connect your GitHub account. </a></li>
+        <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a>. </li>
+        <li> Edit the <a id="edit-link"  target="_blank">index.html file on GitHub</a>. After line 11 of index.html add:<br>
+            <pre>body { background-color:black; }</pre>
+        </li>
+        <li> Manually <a id="sync-link" href="#">sync your viewer</a> back into your Singly account. </li>
+    </ol>
+    <p id="synced">
+        Great! Your viewer will now appear in the Photos drop down menu!<br>
+        <br>
+        Next, learn how to <a href="local.html">edit your viewer on your local machine</a>.
+    </p>
+  <h3>Play with the <a href="explorer.html">API Explorer</a></h3>
+  <h3>Try some of the <a href="https://github.com/LockerProject/Locker/wiki/Viewers" target="_blank">other viewers</a> and share your own :)</h3>
+<a href="regtest.html" style="float:right; font-size:12pt; text-decoration:none">&#960;</div>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+<script>
+$(document).ready(function() {
+    checkForToken(function(token) {
+        if(!token || !token.apiToken) return;
+        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+    });
+    waitForGitHubConnected(function() {
+        pollForGitHubProfile(function(profile) {
+            $("#edit-link").attr('href', "https://github.com/" + profile.login + "/Skeleton-Viewer/edit/master/index.html");
+        });
+    });
+    $("#sync-link").click(syncViewers);
+});
+</script>
+</html>

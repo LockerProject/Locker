@@ -1,13 +1,13 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var dataStore = require('../Collections/Links/dataStore');
 var dataIn = require('../Collections/Links/dataIn');
 var util = require('../Collections/Links/util');
-var search = require('../Collections/Links/search');
 var assert = require("assert");
 var RESTeasy = require('api-easy');
 var vows = require("vows");
 var suite = RESTeasy.describe("Links Collection");
 var fs = require('fs');
+var request = require('request');
 var twitterEvent = JSON.parse(fs.readFileSync('fixtures/events/links/twitter_event_2.json','ascii'));
 var facebookEvent = JSON.parse(fs.readFileSync('fixtures/events/links/facebook_event_1.json','ascii'));
 
@@ -19,31 +19,43 @@ process.on('uncaughtException',function(error){
 var mePath = '/Data/links';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
-var thecollections = ['link','encounter'];
+var thecollections = ['link','encounter','queue'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 var locker = {};
-locker.event = function(){};
+locker.ievent = function(){};
 util.expandUrl = function(a,b,c){b(a.url);c();} // fakeweb doesn't support HEAD reqs AFAICT :(
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, "links", thecollections);
-
+var lmongo = require('../Common/node/lmongo.js');
 
 suite.next().suite.addBatch({
+    "Says it isn't when ready" : {
+        topic: function() {
+            var self = this;
+            process.chdir("." + mePath);
+            lmongo.init("links", thecollections, function(mongo, colls) {
+                dataStore.init(colls.link, colls.encounter, colls.queue, mongo);
+                dataIn.init(locker, dataStore);
+
+                dataStore.clear(function() {
+                    request.get({uri:lconfig.lockerBase + "/Me/links/state", json:true}, self.callback);
+                });
+            });
+        },
+        "when it's not": function(err, resp, body) {
+            assert.isNull(err);
+            assert.equal(body.count, 0);
+        }
+    }
+}).addBatch({
     "Can process Tweet" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
             var self = this;
             fakeweb.registerUri({uri : 'http://bit.ly/jBrrAe', body:'', contentType:"text/html" });
             fakeweb.registerUri({uri : 'http://bit.ly/jO9Pfy', body:'', contentType:"text/html" });
-            
-            lmongoclient.connect(function(mongo) {
-                process.chdir("." + mePath);
-                dataStore.init(mongo.collections.link,mongo.collections.encounter);
-                search.init(dataStore);
-                dataIn.init(locker, dataStore, search);
-                dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});
-            });
+
+            dataIn.processEvent(twitterEvent, function(){dataStore.getTotalLinks(self.callback)});
         },
         "successfully" : function(err, response) {
             assert.equal(response, 2);
@@ -62,12 +74,12 @@ suite.next().suite.addBatch({
         }
     }
 }).addBatch({
-    "Can Search" : {
-        topic: function() {
-            search.search("gnome",this.callback);
+    "state" : {
+        topic:function() {
+            request.get({uri:lconfig.lockerBase + "/Me/links/state"}, this.callback);
         },
-        "successfully" : function(err, response) {
-            assert.equal(response.length, 2);
+        "contains lastId":function(topic) {
+            assert.include(topic.body, "lastId");
         }
     }
 });

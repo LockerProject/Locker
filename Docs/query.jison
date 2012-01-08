@@ -17,7 +17,8 @@ var grammar = {
       ["[0-9]+", "return 'NUMBER';"],
       ["\\[", "return '['"],
       ["\\]", "return ']'"],
-      ["[a-zA-z]+", "return 'KEY';" ],
+      ["(?:[a-eg-su-zA-Z_]|t(?!rue)|f(?!alse))[a-zA-Z_]*", "return 'KEY';"],
+      ["(?:true|false)", "return 'BOOLEAN';"],
       ["\\?", "return '?';" ],
       ["=", "return '=';" ],
       [",", "return ',';" ],
@@ -52,7 +53,15 @@ var grammar = {
     "literal" : [
         ["NUMBER", "$$ = Number(yytext);"],
         ["STRING", "$$ = $1;"],
-        ["literal literal_op", "$$ = [$2, $1];"]
+        ["BOOLEAN", "$$ = (yytext == 'true');"]
+    ],
+    "literal_expression" : [
+        ["literal", "$$ = $1;"],
+        ["literal literal_op", "$$ = [$2, $1];"],
+        ["literal LESSER literal", "$$ = ['range', $1, $3];"],
+        ["literal LESSER_EQUAL literal", "$$ = ['range_eq', $1, $3];"],
+        ["literal . LESSER literal", "$$ = ['eq_range', $1, $4];"],
+        ["literal . LESSER_EQUAL literal", "$$ = ['eq_range_eq', $1, $4];"]
     ],
     "member" : [
         ["KEY", "$$ = $1;"],
@@ -60,7 +69,7 @@ var grammar = {
     ],
     "expression": [ 
         ["literal", "$$ = ['literal', $1]"],
-        ["member colon literal", "$$ = ['keyValue', $1, $3];"],
+        ["member colon literal_expression", "$$ = ['keyValue', $1, $3];"],
         ["expression OR expression", "$$ = ['OR', [$1, $3]]"],
         ["expression AND expression", "$$ = ['AND', [$1, $3]]"],
         ["expressionSubset", "$$ = $1;"],

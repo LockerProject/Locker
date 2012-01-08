@@ -14,5 +14,6 @@ tests/output.xml
 lockerbox*
 Config/*
 !Config/*.example
+!Config/favicon.ico
 Logs/*
 !.gitignore

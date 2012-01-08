@@ -34,7 +34,7 @@ def push_event(url, service_id, event_type, event):
     headers = {"Content-type": "application/json"}
     url = url.rstrip("/").lstrip("http:/")
     conn = httplib.HTTPConnection(url)
-    conn.request("POST", "/event", data, headers)
+    conn.request("POST", "/core/" + service_id + "/event", data, headers)
     status = conn.getresponse().status
     if status != 200:
         logging.error("push_event failed with code %s" % status)
@@ -89,12 +89,12 @@ class Client(object):
         raw_user_info = self._server.blogger.getUserInfo('', self.user, self.password)
         return dict_to_json(raw_user_info)
 
-    @updater('blogs', event_type='blog/WordPress')
+    @updater('blogs', event_type='blog/wordpress')
     def updateBlogs(self):
         raw_blogs = self._server.blogger.getUsersBlogs('', self.user, self.password)
         return map(dict_to_json, raw_blogs)
 
-    @updater('categories', event_type='category/WordPress')
+    @updater('categories', event_type='category/wordpress')
     def updateCategories(self):
         categories = []
         for blog in self.blogs:
@@ -105,7 +105,7 @@ class Client(object):
             categories.extend(map(dict_to_json, raw_categories))
         return categories
 
-    @updater('posts', event_type='post/WordPress')
+    @updater('posts', event_type='post/wordpress')
     def updatePosts(self):
         posts = []
         for blog in self.blogs:
@@ -122,7 +122,7 @@ class Client(object):
             posts.extend(map(dict_to_json, raw_posts))
         return posts
 
-    @updater('comments', event_type='comment/WordPress')
+    @updater('comments', event_type='comment/wordpress')
     def updateComments(self):
         comments = []
         for post in self.posts:
@@ -133,7 +133,7 @@ class Client(object):
             comments.extend(map(dict_to_json, raw_comments))
         return comments
 
-    @updater('pingbacks', event_type='pingback/WordPress')
+    @updater('pingbacks', event_type='pingback/wordpress')
     def updatePingbacks(self):
         pingbacks = []
         for post in self.posts:
@@ -143,8 +143,8 @@ class Client(object):
                 raw_pingbacks = self._server.pingback.extensions.getPingbacks(postUrl)
             pingbacks.extend([{'url_to':postUrl, 'url_from':raw_pingback} for raw_pingback in raw_pingbacks])
         return pingbacks
-    
-    @updater('trackbacks', event_type='trackback/WordPress')
+
+    @updater('trackbacks', event_type='trackback/wordpress')
     def updateTrackbacks(self):
         trackbacks = []
         for post in self.posts:

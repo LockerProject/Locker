@@ -45,7 +45,7 @@ function getPhotoBinaries(photoObject, callback) {
     });
 }
 
-var PER_PAGE = 50;
+var PER_PAGE = 50; //maximum of 500, but rate limit ~ 1/sec, so no need to increase
 exports.sync = function(processInfo, callback) {
     try {
         fs.mkdirSync('photos', 0755);

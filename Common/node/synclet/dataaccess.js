@@ -1,7 +1,8 @@
-var dataStore = require('./datastore')
+var dataStore = require('../ldatastore')
   , fs = require('fs')
   , path = require('path')
   , lconfig = require('../lconfig')
+  , logger = require('../logger')
   , lfs = require('../lfs')
   ;
 
@@ -9,38 +10,49 @@ module.exports = function(app) {
     // In adherence with the contact/* provider API
     // Returns a list of the current set of friends or followers
     app.get('/synclets/:syncletId/getCurrent/:type', function(req, res) {
-        dataStore.init(function() {
+        dataStore.init('synclets', function() {
             var type = req.params.type;
             var options = {};
-            if(req.query['limit']) options.limit = req.query['limit'];
-            if(req.query['skip']) options.skip = req.query['skip'];
+            if(req.query['limit']) options.limit = parseInt(req.query['limit']);
+            if(req.query['offset']) options.skip = parseInt(req.query['offset']);
 
-            dataStore.getAllCurrent(req.params.syncletId + "_" + req.params.type, function(err, objects) {
-                if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
-                } else {
-                    res.writeHead(200, {'content-type' : 'application/json'});
-                    res.end(JSON.stringify(objects));
-                }
-            }, options);
+            if(req.query['stream'] == "true")
+            {
+                res.writeHead(200, {'content-type' : 'application/jsonstream'});
+                dataStore.getEachCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, object) {
+                    if (err) logger.error(err); // only useful here for logging really
+                    if (!object) return res.end();
+                    res.write(JSON.stringify(object)+'\n');
+                }, options);
+            }else{
+                dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
+                    if (err) {
+                        res.writeHead(500, {'content-type' : 'application/json'});
+                        res.end('{error : ' + err + '}')
+                    } else {
+                        res.send(objects);
+                    }
+                }, options);
+            }
         });
     });
 
     app.get('/synclets/:syncletId/get_profile', function(req, res) {
         lfs.readObjectFromFile(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'profile.json'), function(userInfo) {
             res.writeHead(200, {"Content-Type":"application/json"});
-            res.end(JSON.stringify(userInfo));        
+            res.end(JSON.stringify(userInfo));
         });
     });
 
     app.get('/synclets/:syncletId/getPhoto/:id', function(req, res) {
-        dataStore.init(function() {
+        var id = req.param('id');
+        dataStore.init('synclets', function() {
             fs.readdir(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'photos'), function(err, files) {
                 var file;
-                for (var i = 0; i < files.length; i++) {
-                    if (files[i].match(req.param('id'))) {
+                for (var i = 0; files && i < files.length; i++) {
+                    if (files[i].match('^' + id + '\\.[a-zA-Z0-9]+')) {
                         file = files[i];
+                        break;
                     }
                 }
                 if (file) {
@@ -67,13 +79,13 @@ module.exports = function(app) {
             });
         });
     });
-    
-    app.get('/synclets/:syncletId/:type/:id', function(req, res) {
-        dataStore.init(function() {
-            dataStore.getCurrent(req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
+
+    app.get('/synclets/:syncletId/:type/id/:id', function(req, res) {
+        dataStore.init('synclets', function() {
+            dataStore.getCurrent('synclets', req.params.syncletId + "_" + req.params.type, req.params.id, function(err, doc) {
                 if (err) {
-                    res.writeHead(500, {'content-type' : 'application/json'});
-                    res.end('{error : ' + err + '}')
+                    logger.error(err);
+                    res.end();
                 } else if (doc) {
                     res.writeHead(200, {'content-type' : 'application/json'});
                     res.end(JSON.stringify(doc));

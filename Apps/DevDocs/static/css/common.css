@@ -1,0 +1,28 @@
+body {
+    background-color: white;
+    margin: 40px;
+    font-size: 1.8em;
+
+}
+
+li {
+    margin: 0.8em;
+}
+
+.done {
+    color:#aaa;
+    text-decoration: line-through;
+}
+
+li pre {
+    display:inline-block;
+    background-color:#F8F8F8;
+    padding:10px;
+    border: 1px solid #CCC;
+    border-radius:3px;
+}
+
+#synced {
+    font-size:1.2em;
+    display:none;
+}

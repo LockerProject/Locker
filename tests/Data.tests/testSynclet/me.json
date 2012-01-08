@@ -2,7 +2,6 @@
     "title":"testSynclet",
     "action":"testSynclet",
     "desc":"testSynclet",
-    "frequency":120,
     "status":"stable",
     "srcdir":"Tests/testSynclet",
     "id":"testSynclet",
@@ -11,6 +10,6 @@
     "mongoCollections": ["testSynclet"],
     "icon" : "http://a2.twimg.com/a/1310750171/images/logos/twitter_newbird_boxed_whiteonblue.png",
     "provides":["testSync/testSynclet"],
-    "synclets":[{"name": "testSynclet", "frequency": 360000, "run" : "testSynclet.js", "status":"running"}],
+    "synclets":[{"name": "testSynclet", "frequency": 360000, "run" : "testSynclet.js", "nextRun": "2041-10-13T02:29:21.322Z", "status":"running" }],
     "provider":"testSynclet"
 }

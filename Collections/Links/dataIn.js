@@ -2,42 +2,44 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require(__dirname + "/../../Common/node/logger").logger;
+var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
+var oembed = require('./oembed');
+var crypto = require('crypto');
+var url = require('url');
+var debug = false;
 
-var dataStore, locker, search;
+var dataStore, locker;
 // internally we need these for happy fun stuff
 exports.init = function(l, dStore, s){
     dataStore = dStore;
     locker = l;
-    search = s;
 }
 
 // manually walk and reindex all possible link sources
 exports.reIndex = function(locker,cb) {
-    search.resetIndex();
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['link/facebook', 'status/twitter'], function(err, services) {
+        locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
                     getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/newsfeed', function() {
                         getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/wall', function() {
                             getLinks(getEncounterFB, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home', function() {
-                                console.error('facebook done!');
+                                logger.info('facebook done!');
                             });
                         });
                     });
-                } else if(svc.provides.indexOf('status/twitter') >= 0) {
+                } else if(svc.provides.indexOf('timeline/twitter') >= 0) {
                     getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/home_timeline', function() {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
-                            console.error('twitter done!');
+                            logger.info('twitter done!');
                         });
                     });
                 }
             });
-        });        
+        });
     });
 }
 
@@ -45,16 +47,17 @@ exports.reIndex = function(locker,cb) {
 exports.processEvent = function(event, callback)
 {
     if(!callback) callback = function(){};
-    // TODO: should we be only tracking event.action = new?
-    // what a mess
-    var item = (event.obj.data.sourceObject)?event.obj.data.sourceObject:event.obj.data;
-    if(event.type.indexOf("facebook") > 0)
+    // TODO: what should we be doing with other action types?
+    if(event.action != "new") return callback();
+    var idr = url.parse(event.idr);
+    if(idr.host === "facebook")
     {
-        processEncounter(getEncounterFB(item),callback);
-    }
-    if(event.type.indexOf("twitter") > 0)
-    {
-        processEncounter(getEncounterTwitter(item),callback);
+        processEncounter(getEncounterFB(event.data),callback);
+    }else if(idr.host === "twitter") {
+        processEncounter(getEncounterTwitter(event.data),callback);
+    }else{
+        console.error("unhandled event, shouldn't happen");
+        callback();
     }
 }
 
@@ -63,28 +66,33 @@ function getLinks(getter, lurl, callback) {
     request.get({uri:lurl}, function(err, resp, body) {
         var arr;
         try{
-            arr = JSON.parse(body);            
+            arr = JSON.parse(body);
         }catch(E){
             return callback();
         }
         async.forEachSeries(arr,function(a,cb){
             var e = getter(a);
             if(!e.text) return cb();
-            processEncounter(e,function(err){if(err) console.log("getLinks error:"+err);});
+            processEncounter(e,function(err){if(err) logger.error("getLinks error:"+err);});
             cb(); // run pE() async as it queues
         },callback);
     });
 }
 
-function processEncounter(e, cb) 
+function processEncounter(e, cb)
 {
-    encounterQueue.push(e, function(arg){
-        console.error("QUEUE SIZE: "+encounterQueue.length());        
-        cb(arg);
+    dataStore.enqueue(e, function() {
+        encounterQueue.push(e, function(arg){
+            logger.verbose("QUEUE SIZE: "+encounterQueue.length());
+            cb();
+        });
     });
-    console.error("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
 }
+
 var encounterQueue = async.queue(function(e, callback) {
+    // immediately dequeue in case processing makes something go wrong
+    dataStore.dequeue(e);
     // do all the dirty work to store a new encounter
     var urls = [];
     // extract all links
@@ -97,16 +105,27 @@ var encounterQueue = async.queue(function(e, callback) {
                 // make sure to pass in a new object, asyncutu
                 dataStore.addEncounter(lutil.extend(true,{orig:u,link:link},e), function(err,doc){
                     if(err) return cb(err);
-                    dataStore.updateLinkAt(doc.link, doc.at, function() {
-                        search.index(doc.link, function() {
-                            cb()
-                        });
+                    dataStore.updateLinkAt(doc.link, doc.at, function(err, obj){
+                        if(err) return cb(err);
+                        locker.ievent(lutil.idrNew("link","links",obj.id),obj,"update"); // let happen independently
+                        cb();
                     });
                 }); // once resolved, store the encounter
             });
         }, callback);
     });
 }, 5);
+
+exports.loadQueue = function() {
+    dataStore.fetchQueue(function(err, docs) {
+        if(!docs) return;
+        for (var i = 0; i < docs.length; i++) {
+            encounterQueue.push(docs[i].obj, function(arg) {
+                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
+            });
+        }
+    });
+}
 
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
@@ -127,15 +146,23 @@ function linkMagic(origUrl, callback){
               }
               // new link!!!
               link = {link:linkUrl};
+              link.id = crypto.createHash('md5').update(linkUrl).digest('hex');
               util.fetchHTML({url:linkUrl},function(html){link.html = html},function(){
-                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text},function(){
+                  // TODO: should we support link rel canonical here and change it?
+                  util.extractText(link,function(rtxt){link.title=rtxt.title;link.text = rtxt.text.substr(0,10000)},function(){
                       util.extractFavicon({url:linkUrl,html:link.html},function(fav){link.favicon=fav},function(){
                           // *pfew*, callback nausea, sometimes I wonder...
+                          var html = link.html; // cache for oembed module later
                           delete link.html; // don't want that stored
                           if (!link.at) link.at = Date.now();
-                          dataStore.addLink(link,function(){
-                              locker.event("link",link); // let happen independently
+                          dataStore.addLink(link,function(err, obj){
+                              locker.ievent(lutil.idrNew("link","links",obj.id),obj); // let happen independently
                               callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
+                              // background fetch oembed and save it on the link if found
+                              oembed.fetch({url:link.link, html:html}, function(e){
+                                  if(!e) return;
+                                  dataStore.updateLinkEmbed(link.link, e, function(){});
+                              });
                           });
                       });
                   });
@@ -167,9 +194,10 @@ function getEncounterFB(post)
 
 function getEncounterTwitter(tweet)
 {
+    var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
     var e = {id:tweet.id
         , network:"twitter"
-        , text: tweet.text + " " + tweet.user.screen_name
+        , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()

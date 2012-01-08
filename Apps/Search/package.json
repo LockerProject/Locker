@@ -1,9 +1,0 @@
-{
-    "name": "app-search",
-    "version": "0.1.0",
-    "dependencies": {
-        "connect": ">= 1.1.4",
-        "express": "=2.4.0",
-        "jade": ">= 0.0.1"
-    }
-}

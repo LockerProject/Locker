@@ -1,4 +1,4 @@
-var fakeweb = require(__dirname + '/fakeweb.js');
+var fakeweb = require('node-fakeweb');
 var friends = require('../Connectors/Facebook/friends');
 var home = require('../Connectors/Facebook/home');
 var photos = require('../Connectors/Facebook/photos');
@@ -32,8 +32,6 @@ suite.next().suite.addBatch({
             friends.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.contact[0].obj.id, '1234');
         }
     }
@@ -41,33 +39,32 @@ suite.next().suite.addBatch({
     "Can get newsfeed" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/home?access_token=foo&date_format=U',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/home?access_token=foo&date_format=U&limit=100',
                 file : __dirname + '/fixtures/facebook/home.json' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
                 body :'{"data":[]}' });
-            
+
             home.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.home[0].obj.id, '100002438955325_224550747571079');
         }
-    }    
+    }
 }).addBatch({
     "Can get photos" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me?access_token=foo&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
+                file : __dirname + '/fixtures/facebook/1234.json' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/me/albums?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/albums.js' });
             fakeweb.registerUri({uri : 'https://graph.facebook.com/427822997594/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
+            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
             photos.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {
-            // console.error('DEBUG: err', err);
-            // console.error('DEBUG: response', response.data);
             assert.equal(response.data.photo[0].obj.id, '214713967594');
         }
-    }    
+    }
 }).addBatch({
     "cleanup" : {
         topic: [],
