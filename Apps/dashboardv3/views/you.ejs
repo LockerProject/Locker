@@ -20,8 +20,9 @@
   <p class='sidenav-header-title'>YOUR SERVICES</p>
 </div>
 <div class="sidenav-items synclets">
-  <a class='template' href="#authurl" class="oauthLink"><img src="img/icons/32px/provider.png" /></a>
   <% for (var i = 0; i < connectors.length; i++) { %>
-    <img class='installed' src="img/icons/32px/<%= connectors[i].provider %>.png"></a>
+    <% if (!connectors[i].auth) { %><a href="/auth/<%=connectors[i].provider%>" class="oauthLink"><% } %>
+    <img class='<%=(connectors[i].auth ? "installed" : "")%>' src="img/icons/32px/<%= connectors[i].provider %>.png">
+    <% if (!connectors[i].auth) { %></a><% } %>
   <% } %>
 </div>

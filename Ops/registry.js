@@ -287,6 +287,7 @@ exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    console.log("Install is being ran!");
     npm.commands.install([arg.name], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
@@ -300,6 +301,7 @@ exports.install = function(arg, callback) {
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
+    console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
         loadPackage(arg.name, true, callback); // once updated, re-load
