@@ -32,12 +32,13 @@ module.exports = {
                       , {method : 'currentUser'}
                       , null
                       , function (err, body) {
-                            var js;
+                            if (err) return cb(err);
 
+                            var js;
                             try {
                                 js = JSON.parse(body);
                             }
-                            catch (E) { return cb(err); }
+                            catch (exc) { return cb(exc); }
 
                             cb(err
                              , {consumerKey    : apiKeys.appKey
