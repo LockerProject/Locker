@@ -34,7 +34,8 @@
               <% var count = 0; %>
               <% for (var j = 0; j < apps[i].repository.uses.services.length; j++) { %>
                 <% var service = connectors.filter(function(connector) { return connector.handle == apps[i].repository.uses.services[j]; });
-                   if (service.length > 0) { %>
+                if (service.length > 0) { 
+                    service = service[0]; %>
                     <% if (count > 0) { %>+ <% } else { %>
                       <p class="connect">Connect
                     <% } %>

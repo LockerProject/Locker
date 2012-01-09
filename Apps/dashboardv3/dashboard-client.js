@@ -11,7 +11,8 @@ var express = require('express')
   , connect = require('connect')
   , locker
   , request = require('request')
-  , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
+  // TODO:  This should not be used in an app
+  , lconfig = require('lconfig.js')
   , github = false
   , githubLogin = ''
   , githubapps = {}
@@ -33,7 +34,7 @@ var express = require('express')
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
-    lconfig.load('../../Config/config.json');
+    lconfig.load('../Config/config.json');
     locker = passedLocker;
     app.listen(listenPort, callback);
 };
@@ -133,6 +134,9 @@ var renderExplore = function(req, res) {
 var renderExploreApps = function(req, res) {
     getAllRegistryApps(function(apps) {
         locker.mapType("connector", function(error, connectors) {
+            for (var i = 0; i < connectors.length; i++) {
+                connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
+            }
             var data = {layout: false, apps: apps, connectors: connectors}
             if (req.param('author')) {
                 data.breadcrumb = req.param('author');
@@ -163,7 +167,6 @@ var renderExploreApps = function(req, res) {
                             data.services[req.param('services')[i]] = actualConnector.title;
                         }
                     }
-                    console.dir(data.services);
                 }
                 for (var i in apps) {
                     if (!apps[i].repository.uses) {
@@ -274,13 +277,13 @@ var submitPublish = function(req, res) {
                     if (!err) {
                         var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
                         // Send the screenshot
+                        // TODO:  See if jer's fix in publish.js of predetermining Content-Size allows the pipe to work
                         var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
                                             headers:{"Content-Type":"image/png"}, 
                                             body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
                         // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
                         /*
                         ssPut.on("data", function(body, result) {
-                            console.dir(ssPut);
                             console.log("ssPut data body: " + body);
                         });
                         ssPut.on("error", function(error) {
@@ -337,9 +340,9 @@ var getAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
         var result = [];
         var sortedResult = [];
-        for (var i in map.installed) {
-            if ((map.installed[i].is === 'app' || map.installed[i].type === 'app') && !map.installed[i].hidden) {
-                result.push(map.installed[i]);
+        for (var i in map) {
+            if ((map[i].is === 'app' || map[i].type === 'app') && !map[i].hidden) {
+                result.push(map[i]);
             }
         }
         var recentApps = uistate.getNLastUsedApps(count);
