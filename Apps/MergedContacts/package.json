@@ -1,0 +1,21 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "contactsviewer",
+  "description": "Merged Contacts Viewer",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Merged Contacts Viewer",
+    "handle": "contactsviewer",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "app",
+    "static": "false",
+    "run": "node contacts.js"
+  },
+  "engines": {
+    "node": "~0.4.10"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
