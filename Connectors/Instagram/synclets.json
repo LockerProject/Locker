@@ -1,7 +1,4 @@
 {
-    "title":"Instagram",
-    "status":"stable",
-    "provider":"instagram",
     "types" : {
         "feed":"photo"
     },
