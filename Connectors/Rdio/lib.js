@@ -1,85 +1,83 @@
-function pagedApiCall(params, offset_fn, data_fn) {
-    return function (pi, cb) {
-        var OAuth = require('oauth').OAuth;
-        var oa = new OAuth(null
-                         , null
-                         , pi.auth.consumerKey
-                         , pi.auth.consumerSecret
-                         , '1.0'
-                         , null
-                         , 'HMAC-SHA1'
-                         , null
-                         , {'Accept'     : '*/*'
-                          , 'Connection' : 'close'}
-        );
+function api(auth, params, cb) {
+    var OAuth = require('oauth').OAuth;
+    var oa = new OAuth(null
+                     , null
+                     , auth.consumerKey
+                     , auth.consumerSecret
+                     , '1.0'
+                     , null
+                     , 'HMAC-SHA1'
+                     , null
+                     , {'Accept'     : '*/*'
+                      , 'Connection' : 'close'}
+    );
 
-        var offset = offset_fn(pi);
-        if (!offset) {
-            return cb(null, {config : pi.config, data : {}}); // nothing to do
-        }
-        else {
-            params.start = pi.config.connStart;
-        }
-
-        oa.post('http://api.rdio.com/1/'
-              , pi.auth.token
-              , pi.auth.tokenSecret
-              , params
-              , null
-              , function (err, body) {
-                    var js;
-
-                    try {
-                        js = JSON.parse(body);
-                    }
-                    catch (E) { return cb(err); }
-
-                    var data = {};
-                    data[params.type] = data_fn(pi, js);
-                    cb(err, {config : pi.config, data : data});
-                }
-        );
-    };
+    oa.post('http://api.rdio.com/1/'
+          , auth.token
+          , auth.tokenSecret
+          , params
+          , null
+          , cb
+    );
 };
 
-function apiCall(params, data_fn) {
-    return function (pi, cb) {
-        var OAuth = require('oauth').OAuth;
-        var oa = new OAuth(null
-                         , null
-                         , pi.auth.consumerKey
-                         , pi.auth.consumerSecret
-                         , '1.0'
-                         , null
-                         , 'HMAC-SHA1'
-                         , null
-                         , {'Accept'     : '*/*'
-                          , 'Connection' : 'close'}
-        );
+exports.getSelf = function (auth, data_fn, done_fn) {
+    var params = {method : 'currentUser'};
+    api(auth
+      , params
+      , function (err, body) {
+            if (err) return done_fn(err);
 
-        oa.post('http://api.rdio.com/1/'
-              , pi.auth.token
-              , pi.auth.tokenSecret
-              , params
-              , null
-              , function (err, body) {
-                    var js;
+            var js;
+            try {
+                js = JSON.parse(body);
+            }
+            catch (E) { return done_fn(err); }
 
-                    try {
-                        js = JSON.parse(body);
-                    }
-                    catch (E) { return cb(err); }
+            if ('error' === js.status) done_fn(js.message);
 
-                    var data = {};
-                    data[params.method] = data_fn(pi, js);
-                    cb(err, {config : pi.config, data : data});
-                }
-        );
-    };
+            data_fn(js.result);
+            done_fn();
+        }
+    );
 };
 
-exports.getSelf = function (pi, cb) {
-    apiCall({method : 'currentUser'}
-          , function (pi, js) { return js; }
-    )(pi, cb);
+exports.getFollowing = function (offset, auth, data_fn, done_fn) {
+    var PAGESIZE = 50;
+    var params = {method : 'userFollowing'
+                , user   : auth.rdioId
+                , count  : PAGESIZE};
+
+    // For some reason, the Rdio API has a hernia if you tell it to start from 0.
+    // It helpfully expresses this as a "401 Invalid Signature" error -- thanks, Ian!
+    if (0 < offset) params.start = offset;
+
+    api(auth
+      , params
+      , function (err, body) {
+            if (err) return done_fn(err);
+
+            var js;
+            try {
+                js = JSON.parse(body);
+            }
+            catch (exc) { return done_fn(exc); }
+
+            if ('error' === js.status) done_fn(js.message);
+
+            var following = js.result;
+            if (0 < following.length) {
+                for (var i = 0; i < following.length; i += 1) data_fn(following[i]);
+                if (PAGESIZE > following.length) {
+                    exports.getFollowing(offset + PAGESIZE, auth, data_fn, done_fn);
+                }
+                else {
+                    done_fn();
+                }
+            }
+            else {
+                done_fn();
+            }
+        }
+    );
 }

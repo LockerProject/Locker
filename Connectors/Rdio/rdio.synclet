@@ -2,8 +2,12 @@
     "title"    : "Rdio"
   , "status"   : "stable"
   , "provider" : "rdio"
-  , "provides" : ["following/rdio"]
+  , "provides" : ["profile/rdio"
+                , "following/rdio"]
   , "synclets" : [{"name"      : "self"
                  , "frequency" : 3600
+                 , "threshold" : 0}
+                , {"name"      : "following"
+                 , "frequency" : 600
                  , "threshold" : 0}]
 }
