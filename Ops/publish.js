@@ -15,7 +15,8 @@ var js = JSON.parse(fs.readFileSync('package.json'));
 if(js.repository.handle) {
     publish();
 }else{
-    var repo = {title: js.description, handle: js.name, author:'nerds', update:'auto', github:'https://github.com/LockerProject/Locker'};
+    var repo = {title: js.description, author:'nerds', update:'auto', github:'https://github.com/LockerProject/Locker'};
+    repo.handle = js.name.toLowerCase();
     commander.prompt("type? (app or connector): ", function(type){
         type = type.replace('\n','');
         repo.type = type;

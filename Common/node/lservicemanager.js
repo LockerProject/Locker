@@ -121,6 +121,7 @@ exports.mapUpsert = function (file) {
             js.version = version; // at least preserve native package version
         }
         if(!js.handle) throw new Error("no handle");
+        js.handle = js.handle.toLowerCase(); // sanity
         // synclets are in their own file, extend them in too
         var sync = path.join(lconfig.lockerDir, path.dirname(file),"synclets.json");
         if(path.existsSync(sync))
