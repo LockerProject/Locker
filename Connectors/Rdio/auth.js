@@ -24,11 +24,29 @@ module.exports = {
                                  , qs.oauth_verifier
                                  , function (error, oauth_token, oauth_token_secret, additionalParameters) {
                 if (error || !oauth_token) return cb(new Error("OAuth failed to get access token"));
-                cb(null
-                 , {consumerKey    : apiKeys.appKey
-                  , consumerSecret : apiKeys.appSecret
-                  , token          : oauth_token
-                  , tokenSecret    : oauth_token_secret});
+
+                // Almost every method in the Rdio API requires a user's key, so get it.
+                oa.post('http://api.rdio.com/1/'
+                      , oauth_token
+                      , oauth_token_secret
+                      , {method : 'currentUser'}
+                      , null
+                      , function (err, body) {
+                            var js;
+
+                            try {
+                                js = JSON.parse(body);
+                            }
+                            catch (E) { return cb(err); }
+
+                            cb(err
+                             , {consumerKey    : apiKeys.appKey
+                              , consumerSecret : apiKeys.appSecret
+                              , token          : oauth_token
+                              , tokenSecret    : oauth_token_secret
+                              , rdioId         : js.result.key});
+                        }
+                );
             });
 
             return;
