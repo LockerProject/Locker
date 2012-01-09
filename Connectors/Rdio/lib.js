@@ -68,7 +68,7 @@ exports.getFollowing = function (offset, auth, data_fn, done_fn) {
             var following = js.result;
             if (0 < following.length) {
                 for (var i = 0; i < following.length; i += 1) data_fn(following[i]);
-                if (PAGESIZE > following.length) {
+                if (PAGESIZE >= following.length) {
                     exports.getFollowing(offset + PAGESIZE, auth, data_fn, done_fn);
                 }
                 else {
