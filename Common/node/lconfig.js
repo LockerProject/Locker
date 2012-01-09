@@ -33,7 +33,7 @@ exports.load = function(filepath) {
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
     exports.collections = config.collections || ['Contacts', 'Links', 'Photos', 'Places'];
-    exports.apps = config.apps || ["contactsviewer"];
+    exports.apps = config.apps || ["contactsviewer", "photosv0.9"];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
         "host": "localhost",

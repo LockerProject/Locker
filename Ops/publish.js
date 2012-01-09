@@ -13,7 +13,16 @@ var burrowBase = "burrow.singly.com";
 if(!path.existsSync('package.json')) return console.error("missing package.json, run npm init!");
 var js = JSON.parse(fs.readFileSync('package.json'));
 if(js.repository.handle) {
-    publish();
+    if (process.argv.indexOf("-i") > -1) {
+        commander.password("registry nerds password: ", "*", function(password){
+            console.log("publishing image...");
+            var auth = (new Buffer(username+":"+password,"ascii").toString("base64"));
+            if(js.repository.type == 'app') return imager(js.repository.handle, "screenshot.png", auth);
+            if(js.repository.type == 'connector') return imager(js.repository.handle, "icon.png", auth);
+        })
+    } else {
+        publish();
+    }
 }else{
     var repo = {title: js.description, author:'nerds', update:'auto', github:'https://github.com/LockerProject/Locker'};
     repo.handle = js.name.toLowerCase();
@@ -70,8 +79,10 @@ function imager(id, file, auth)
         var uri = "https://" + burrowBase + "/registry/" + id + "/" + file + "?rev=" + body._rev;
         var stat = fs.statSync(file);
         fs.createReadStream(file).pipe(request.put({uri:uri, headers:{"Content-Type":"image/png", Authorization:"Basic " + auth, "Content-Length":stat.size}}, function(err, res){
-            if(err) console.error(err);
-            console.log("done!");
+            if(err) {
+                console.error("Oh no! Error:");
+                console.error(err);
+            }
             process.exit(0);
         }));
     });

@@ -367,11 +367,23 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
-        locker.mapType("connector", function(err, connectors) {
-            page = 'you';
-            res.render('you', {
-                connectors: connectors,
-                map: sortedResult
+        locker.mapType("connector", function(err, installedConnectors) {
+            request.get({uri:locker.lockerBase + "/registry/all", json:true}, function(err, regRes, body) {
+                var connectors = [];
+                Object.keys(body).map(function(key) { 
+                    if (body[key].repository.type == "connector") {
+                        var connector = body[key];
+                        for (var i = 0; i < installedConnectors.length; ++i) {
+                            if (installedConnectors[i].id == connector.repository.id && installedConnectors[i].auth) connector.authed = true;
+                        }
+                        connectors.push(connector); 
+                    }
+                });
+                page = 'you';
+                res.render('you', {
+                    connectors: connectors,
+                    map: sortedResult
+                });
             });
         });
     });
