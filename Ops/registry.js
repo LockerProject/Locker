@@ -537,6 +537,7 @@ function authIsAuth(req, res) {
 function finishAuth(js, auth, res) {
     logger.info("authorized "+js.id);
     js.auth = auth;
+    js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
     serviceManager.mapUpsert(path.join('Me/node_modules',js.id,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
