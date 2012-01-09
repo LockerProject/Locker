@@ -57,7 +57,7 @@ exports.init = function (sman, reg) {
         });
     });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){
-        if(!serviceMap[coll]) exports.mapUpsert('Collections/'+coll);
+        if(!serviceMap[coll.toLowerCase()]) exports.mapUpsert('Collections/'+coll+'/'+coll.toLowerCase()+'.collection');
     });
 }
 
@@ -121,6 +121,12 @@ exports.mapUpsert = function (file) {
             js.version = version; // at least preserve native package version
         }
         if(!js.handle) throw new Error("no handle");
+        // synclets are in their own file, extend them in too
+        var sync = path.join(lconfig.lockerDir, path.dirname(file),"synclets.json");
+        if(path.existsSync(sync))
+        {
+            js = lutil.extend(js, JSON.parse(fs.readFileSync(sync, 'utf8')));
+        }
     } catch (E) {
         logger.error("failed to upsert "+file+" due to "+E);
         return;
@@ -130,14 +136,17 @@ exports.mapUpsert = function (file) {
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
+        logger.verbose("updating "+js.handle);
         serviceMap[js.handle] = lutil.extend(serviceMap[js.handle], js);
-        exports.mapDirty(js.handle);
-        levents.fireEvent('service://me/#'+js.id, 'update', js);
+        exports.mapReload(js.handle);
+        // worth detecting if it changed here first?
+        levents.fireEvent('service://me/#'+js.handle, 'update', serviceMap[js.handle]);
         return serviceMap[js.handle];
     }
 
     // creating from scratch
-    js.id = js.handle; // kinda legacy where they could differ
+    logger.verbose("creating "+js.handle);
+    js.id = js.provider = js.handle; // kinda legacy where they could differ
     serviceMap[js.id] = js;
     js.manifest = file;
     js.srcdir = path.dirname(file);
@@ -156,9 +165,18 @@ cleanLoad = function(js)
     js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
     if(!js.version) js.version = 1;
     js.loaded = Date.now();
+    exports.mapReload(js.id);
+}
+
+// make sure this service's necessaries are loaded into the rest of the system
+exports.mapReload = function(id)
+{
+    var js = serviceMap[id];
+    if(!js) return;
+    // load any events
     if(js.events) {
         for (var i = 0; i < js.events.length; i++) {
-            var ev = info.events[i];
+            var ev = js.events[i];
             levents.addListener(ev[0], js.id, ev[1]);
         }
     }
@@ -198,7 +216,6 @@ cleanLoad = function(js)
 exports.spawn = function(serviceId, callback) {
     if(!callback) callback = function(){};
     var svc = serviceMap[serviceId];
-    console.dir(svc);
     if (!svc) {
         logger.error("Attempting to spawn an unknown service " + serviceId);
         return callback();
@@ -389,7 +406,7 @@ exports.uninstall = function(serviceId, callback) {
 * Return whether the service is running
 */
 exports.isRunning = function(serviceId) {
-    return exports.hasOwnProperty(serviceId) && serviceMap[serviceId].pid;
+    return serviceMap[serviceId] && serviceMap[serviceId].pid;
 }
 
 function checkForShutdown() {

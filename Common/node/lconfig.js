@@ -32,12 +32,8 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.scannedDirs = config.scannedDirs || [
-        "Apps",
-        "Collections",
-        "Me/github",
-        "Connectors"
-        ];
+    exports.collections = config.collections || ['Contacts', 'Links', 'Photos', 'Places'];
+    exports.apps = config.apps || [];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
         "host": "localhost",

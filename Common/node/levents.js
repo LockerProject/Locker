@@ -22,7 +22,7 @@ var eventListeners = {};
 var processingQueue = []; // queue of events being processed
 
 exports.addListener = function(type, id, cb) {
-    logger.info("Adding a listener for " + id + cb + " to " + type);
+    logger.verbose("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     // Remove the previous listener for the id
     eventListeners[type] = eventListeners[type].filter(function(entry) {

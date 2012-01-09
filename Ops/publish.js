@@ -21,6 +21,7 @@ if(js.repository.handle) {
         repo.type = type;
         if(type == 'app' && !path.existsSync('screenshot.png')) { console.error("missing screenshot.png"); process.exit(1)};
         if(type == 'connector' && !path.existsSync('icon.png')) { console.error("missing icon.png"); process.exit(1)};
+        if(type == 'connector' && !path.existsSync('synclets.json')) { console.error("missing synclets.json"); process.exit(1)};
         commander.prompt("static? (true or false): ", function(s){
             repo.static = s.replace('\n','');
             js.repository = repo;
@@ -64,11 +65,9 @@ function imager(id, file, auth)
     request.get({uri:"https://" + burrowBase + "/registry/" + id, json:true}, function(err, result, body) {
         if (err) return console.error("failed to get rev");
         var uri = "https://" + burrowBase + "/registry/" + id + "/" + file + "?rev=" + body._rev;
-        console.log(uri);
         var stat = fs.statSync(file);
         fs.createReadStream(file).pipe(request.put({uri:uri, headers:{"Content-Type":"image/png", Authorization:"Basic " + auth, "Content-Length":stat.size}}, function(err, res){
             if(err) console.error(err);
-            console.error(res);
             console.log("done!");
             process.exit(0);
         }));

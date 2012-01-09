@@ -475,6 +475,7 @@ function authIsAwesome(req, res) {
 // handle actual auth api requests or callbacks, much conflation to keep /auth/foo/auth consistent everywhere!
 function authIsAuth(req, res) {
     var id = req.params.id;
+    logger.verbose("processing auth for "+id);
     var js = serviceManager.map(id);
     if(!js) return res.send("missing", 404);
     var host = lconfig.externalBase + "/";
@@ -491,7 +492,7 @@ function authIsAuth(req, res) {
         if(!apiKeys[id]) return res.send("missing required api keys", 500);
         if(typeof authModule.handler == 'function') {} return authModule.handler(host, apiKeys[id], function(err, auth) {
             if(err) return res.send(err, 500);
-            finishAuth(id, auth, res);
+            finishAuth(js, auth, res);
         }, req, res);
     } catch(E) {
         return res.send(E, 500);
@@ -535,8 +536,10 @@ function authIsAuth(req, res) {
 
 // save out auth and kick-start synclets, plus respond
 function finishAuth(js, auth, res) {
+    logger.info("authorized "+js.id);
     js.auth = auth;
-    serviceManager.mapDirty(js.id);
-    syncManager.syncNow(js.id, function() {});
+    // upsert it again now that it's auth'd, significant!
+    serviceManager.mapUpsert(path.join('Me/node_modules',js.id,'package.json'));
+    syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
