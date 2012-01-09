@@ -81,3 +81,43 @@ exports.getFollowing = function (offset, auth, data_fn, done_fn) {
         }
     );
 }
+
+exports.getTracksInCollection = function (offset, auth, data_fn, done_fn) {
+    var PAGESIZE = 200; // Make this page larger just because the set is so large.
+    var params = {method : 'getTracksInCollection'
+                , user   : auth.rdioId
+                , count  : PAGESIZE};
+
+    // For some reason, the Rdio API has a hernia if you tell it to start from 0.
+    // It helpfully expresses this as a "401 Invalid Signature" error -- thanks, Ian!
+    if (0 < offset) params.start = offset;
+
+    api(auth
+      , params
+      , function (err, body) {
+            if (err) return done_fn(err);
+
+            var js;
+            try {
+                js = JSON.parse(body);
+            }
+            catch (exc) { return done_fn(exc); }
+
+            if ('error' === js.status) done_fn(js.message);
+
+            var tracks = js.result;
+            if (0 < tracks.length) {
+                for (var i = 0; i < tracks.length; i += 1) data_fn(tracks[i]);
+                if (PAGESIZE >= tracks.length) {
+                    exports.getTracksInCollection(offset + PAGESIZE, auth, data_fn, done_fn);
+                }
+                else {
+                    done_fn();
+                }
+            }
+            else {
+                done_fn();
+            }
+        }
+    );
+}

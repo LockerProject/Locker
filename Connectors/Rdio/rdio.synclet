@@ -3,11 +3,15 @@
   , "status"   : "stable"
   , "provider" : "rdio"
   , "provides" : ["profile/rdio"
-                , "following/rdio"]
+                , "following/rdio"
+                , "tracks/rdio"]
   , "synclets" : [{"name"      : "self"
                  , "frequency" : 3600
                  , "threshold" : 0}
                 , {"name"      : "following"
                  , "frequency" : 600
+                 , "threshold" : 0}
+                , {"name"      : "collection"
+                 , "frequency" : 3600
                  , "threshold" : 0}]
 }
