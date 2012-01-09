@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "twitter",
   "description": "Twitter Connector",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "repository": {
     "title": "Twitter Connector",
     "handle": "twitter",

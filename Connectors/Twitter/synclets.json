@@ -1,7 +1,4 @@
 {
-    "title":"Twitter",
-    "status":"stable",
-    "provider":"twitter",
     "provides":["contact/twitter", "mentions/twitter", "related/twitter", "timeline/twitter", "tweets/twitter"],
     "mongoId" : {
         "timeline":"id_str",
@@ -21,6 +18,5 @@
                 {"name": "timeline", "frequency": 120},
                 {"name": "tweets", "frequency": 600},
                 {"name": "tweet"},
-                {"name": "mentions", "frequency": 600}],
-    "info":"Syncs your status updates, information about the people you're following and their status updates, as well as tweets that mention you."
+                {"name": "mentions", "frequency": 600}]
 }
