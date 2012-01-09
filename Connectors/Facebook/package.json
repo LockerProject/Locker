@@ -1,10 +1,10 @@
 {
   "author": "Singly <nerds@singly.com>",
-  "name": "Facebook",
+  "name": "facebook",
   "description": "Facebook Connector",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
-    "title": "Facebook Connector",
+    "title": "Facebook",
     "handle": "facebook",
     "author": "nerds",
     "update": "auto",
