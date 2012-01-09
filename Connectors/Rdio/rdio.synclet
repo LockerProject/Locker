@@ -1,0 +1,9 @@
+{
+    "title"    : "Rdio"
+  , "status"   : "stable"
+  , "provider" : "rdio"
+  , "provides" : ["following/rdio"]
+  , "synclets" : [{"name"      : "self"
+                 , "frequency" : 3600
+                 , "threshold" : 0}]
+}
