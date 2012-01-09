@@ -48,6 +48,7 @@ function publish()
             npm.config.set("_auth", auth);
             npm.commands.publish(["."], function(err){
                 if(err) {
+                    console.log("Oh no, errors!");
                     return console.error(err);
                     process.exit(1);
                 }
@@ -62,6 +63,7 @@ function publish()
 
 function imager(id, file, auth)
 {
+    console.log("Sending the image...");
     request.get({uri:"https://" + burrowBase + "/registry/" + id, json:true}, function(err, result, body) {
         if (err) return console.error("failed to get rev");
         var uri = "https://" + burrowBase + "/registry/" + id + "/" + file + "?rev=" + body._rev;
@@ -74,3 +76,8 @@ function imager(id, file, auth)
     });
 
 }
+
+process.on("uncaughtException", function(err) {
+    console.log("Uncaught exception: ");
+    console.error(err);
+});

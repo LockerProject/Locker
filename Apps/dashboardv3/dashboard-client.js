@@ -112,6 +112,10 @@ var renderApps = function(req, res) {
 
 var renderExplore = function(req, res) {
     page = 'explore';
+    locker.mapType("connector", function(error, connectors) {
+        res.render('explore', {synclets:connectors});
+    });
+    /*
     locker.synclets(function(err, synclets) {
         syncletSorted = [];
         for (var i in synclets.available) {
@@ -122,20 +126,14 @@ var renderExplore = function(req, res) {
         syncletSorted.sort(function(a, b) {
             return (a.title > b.title);
         });
-        res.render('explore', {synclets: syncletSorted});
     });
+    */
 }
 
 var renderExploreApps = function(req, res) {
-    locker.getType("connector", function(error, connectors) {
-        data = {"connectors":[]};
-        if (!error) data.connectors = connectors;
-        res.render('iframe/exploreApps', data);
-    });
-    /*
     getAllRegistryApps(function(apps) {
-        getSynclets(function(err, synclets) {
-            var data = {layout: false, apps: apps, synclets: synclets}
+        locker.mapType("connector", function(error, connectors) {
+            var data = {layout: false, apps: apps, connectors: connectors}
             if (req.param('author')) {
                 data.breadcrumb = req.param('author');
                 for (var i in apps) {
@@ -158,18 +156,14 @@ var renderExploreApps = function(req, res) {
                     types.services = true;
                     data.services = {};
                     for (var i = 0; i < req.param('services').length; i++) {
-                        if (synclets.installed[req.param('services')[i]]) {
-                            data.services[req.param('services')[i]] = synclets.installed[req.param('services')[i]].title;
-                        } else {
-                            synclets.available.some(function(info) {
-                                if (info.provider === req.param('services')[i]) {
-                                    data.services[req.param('services')[i]] = info.title;
-                                } else {
-                                    return false;
-                                }
-                            });
+                        console.log("Checking " + req.param('services')[i]);
+                        var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
+                        if (actualConnector.length > 0) {
+                            actualConnector = actualConnector[0];
+                            data.services[req.param('services')[i]] = actualConnector.title;
                         }
                     }
+                    console.dir(data.services);
                 }
                 for (var i in apps) {
                     if (!apps[i].repository.uses) {
@@ -198,7 +192,6 @@ var renderExploreApps = function(req, res) {
             res.render('iframe/exploreApps', data);
         });
     });
-    */
 }
 
 var renderCreate = function(req, res) {

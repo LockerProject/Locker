@@ -82,7 +82,6 @@ exports.app = function(app)
     app.get("/registry/connectors", function(req, res) {
         var connectors = [];
         Object.keys(regIndex).forEach(function(key) {
-            logger.info("Checking " + key + ":" + require("util").inspect(regIndex[key]));
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
                 connectors.push(regIndex[key]);
             }

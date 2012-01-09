@@ -234,7 +234,10 @@ function proxyRequest(method, req, res, next) {
     var id = req.url.substring(4, slashIndex);
     var ppath = req.url.substring(slashIndex);
     var info = serviceManager.map(id);
-    if (!info) return res.send(404);
+    if (!info) {
+        logger.error(id + " not found in service map");
+        return res.send(404);
+    }
     // if there's synclets, handled by their own built-ins
     if (info.synclets) {
         req.url = req.url.replace('Me', 'synclets');
@@ -268,7 +271,7 @@ function proxyRequest(method, req, res, next) {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
             var buffer = httpProxy.buffer(req);
-            serviceManager.spawn(id, function(){
+            serviceManager.spawn(id,function(){
                 proxied(method, info, ppath, req, res, buffer);
             });
         } else {
