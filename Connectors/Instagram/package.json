@@ -1,20 +1,21 @@
 {
-    "author": "Singly <nerds@singly.com>",
-    "name": "instagram",
-    "description": "Instagram",
-    "version": "0.0.1",
-    "repository": {
-        "title": "Instagram",
-        "handle": "instagram",
-        "author": "nerds",
-        "update": "auto",
-        "github": "https://github.com/LockerProject/Locker",
-        "type": "connector",
-        "static": "false"
-    },
-    "engines": {
-        "node": "~0.4.10"
-    },
-    "dependencies": {},
-    "devDependencies": {}
+  "author": "Singly <nerds@singly.com>",
+  "name": "instagram",
+  "description": "Instagram",
+  "version": "0.0.3",
+  "repository": {
+    "title": "Instagram",
+    "handle": "instagram",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": "~0.4.10"
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }
