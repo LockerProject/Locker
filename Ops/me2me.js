@@ -48,7 +48,19 @@ function meScan()
             }
             // dir name must match registry name
             js.handle = dir;
+            // GITHUB IS SPECIAL
+            if(js.srcdir && js.srcdir.indexOf("Me/github/") == 0)
+            {
+                console.log("merging github "+dir);
+                var app = getapp(js.srcdir.substr(3)); // we're in Me/ already
+                var js2 = JSON.parse(fs.readFileSync(app, 'utf8'));
+                js = extend(js, js2);
+                js.manifest = "Me/"+app;
+                saver(js);
+                continue;
+            }
             // this happens async from here on out
+            console.log("installing from registry "+js.handle);
             install(js);
         } catch (E) {
             console.error(dirs[i]+" failed (" +E+ ")");
@@ -59,7 +71,6 @@ function meScan()
 
 function install(js)
 {
-    console.log("installing from registry "+js.handle);
     npm.commands.install([js.handle], function(err){
         if(err){ // only warn here cuz we can re-run if install fails
             console.log("failed to install "+js.handle+": "+err);
@@ -82,6 +93,15 @@ function saver(js)
 
 }
 
+// UGH
+function getapp(dir)
+{
+    var dirs = fs.readdirSync(dir);
+    for (var i = 0; i < dirs.length; i++) {
+        if(dirs[i].indexOf(".app") > 0) return path.join(dir, dirs[i]);
+    }
+    return false;
+}
 
 // copied from lutil
 function extend() {
