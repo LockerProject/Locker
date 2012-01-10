@@ -18,6 +18,7 @@ var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
 var express = require('express');
+var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
@@ -494,7 +495,7 @@ function authIsAuth(req, res) {
         if(authModule.direct) return authModule.direct(res);
         // rest require apikeys
         if(!apiKeys[id]) return res.send("missing required api keys", 500);
-        if(typeof authModule.handler == 'function') {} return authModule.handler(host, apiKeys[id], function(err, auth) {
+        if(typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function(err, auth) {
             if(err) return res.send(err, 500);
             finishAuth(js, auth, res);
         }, req, res);
