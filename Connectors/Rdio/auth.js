@@ -40,12 +40,17 @@ module.exports = {
                             }
                             catch (exc) { return cb(exc); }
 
-                            cb(err
-                             , {consumerKey    : apiKeys.appKey
-                              , consumerSecret : apiKeys.appSecret
-                              , token          : oauth_token
-                              , tokenSecret    : oauth_token_secret
-                              , rdioId         : js.result.key});
+                            if ('error' === js.status) {
+                                cb(js.message);
+                            }
+                            else {
+                                cb(err
+                                 , {consumerKey    : apiKeys.appKey
+                                  , consumerSecret : apiKeys.appSecret
+                                  , token          : oauth_token
+                                  , tokenSecret    : oauth_token_secret
+                                  , rdioId         : js.result.key});
+                            }
                         }
                 );
             });
