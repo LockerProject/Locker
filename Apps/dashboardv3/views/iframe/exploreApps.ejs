@@ -14,12 +14,12 @@
       <% for (var i in apps) { %>
         <div class="app-card" id="<%= i %>&breadcrumb=featured">
           <div class="left-side">
-            <div class="description"><%= apps[i].repository.desc %></div>
+            <div class="description"><%= apps[i].description %></div>
             <div class="screenshot"><img src="/registry/screenshot/<%= apps[i].repository.handle %>"></div>
           </div>
           <div class="app-info">
             <p class="title"><%= apps[i].repository.title %></p>
-            <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
+            <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].author.name %>">by <%= apps[i].author.name %></a></p>
             <% if (apps[i].repository.uses && apps[i].repository.uses.types) { %>
               <p class="uses">Uses
                 <% for (var j = 0; j < apps[i].repository.uses.types.length; j++) { %>

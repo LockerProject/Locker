@@ -265,7 +265,7 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 exports.getMyApps = function(req, res) {
@@ -274,7 +274,7 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.is === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
                     apps[k] = thiz;
             });
         }
