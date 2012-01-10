@@ -1,0 +1,21 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "linkedin",
+  "description": "LinkedIn Connector",
+  "version": "0.0.1",
+  "repository": {
+    "title": "LinkedIn",
+    "handle": "linkedin",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": "~0.4.10"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
