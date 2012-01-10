@@ -47,19 +47,9 @@ function meScan()
                 continue;
             }
             // dir name must match registry name
-            console.log("installing from registry "+dir);
+            js.handle = dir;
             // this happens async from here on out
-            npm.commands.install([dir], function(err){
-                if(err){ // only warn here cuz we can re-run if install fails
-                    console.log("failed to install "+dir+": "+err);
-                    return;
-                }
-                var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", dir, 'package.json'), 'utf8'));
-                js = extend(js, js2.repository);
-                js.manifest = path.join("Me/node_modules", dir, 'package.json');
-                js.handle = dir;
-                saver(js);
-            });
+            install(js);
         } catch (E) {
             console.error(dirs[i]+" failed (" +E+ ")");
         }
@@ -67,6 +57,21 @@ function meScan()
 
 }
 
+function install(js)
+{
+    console.log("installing from registry "+js.handle);
+    npm.commands.install([js.handle], function(err){
+        if(err){ // only warn here cuz we can re-run if install fails
+            console.log("failed to install "+js.handle+": "+err);
+            return;
+        }
+        var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", js.handle, 'package.json'), 'utf8'));
+        js = extend(js, js2.repository);
+        js.manifest = path.join("Me/node_modules", js.handle, 'package.json');
+        saver(js);
+    });
+
+}
 
 function saver(js)
 {
