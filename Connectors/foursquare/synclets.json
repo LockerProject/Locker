@@ -1,6 +1,4 @@
 {
-    "status": "stable",
-    "title": "Foursquare",
     "synclets": [
         {
             "frequency": 600,
@@ -33,9 +31,5 @@
         "recents/foursquare",
         "checkin/foursquare",
         "badges/foursquare"
-    ],
-    "provider": "foursquare",
-    "action": "Connect to a Foursquare account",
-    "desc": "Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself.",
-    "info": "Syncs your checkins, your friends, and your friends' recent checkins."
+    ]
 }
