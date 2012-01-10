@@ -1,13 +1,17 @@
+$.cookie("firstvisit", true);
+
+var profileTimeout;
+
 $(function() {
     $(".connect-button-link").click(function(e) {
         e.preventDefault();
         showAllConnectors();
     });
     
-    $('.oauthLink').click(function() {
+    $('.oauthLink').click(function(e) {
+        e.preventDefault();
         var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
         popup.focus();
-        return false;
       });
 });
 
@@ -18,11 +22,10 @@ var syncletInstalled = function(provider) {
             $(this).attr('src', 'img/connected.png');
         }
     });
+
     $('.sidenav-items.synclets', window.parent.document).append("<img class='installed' src='img/icons/32px/"+provider+".png'>");
     showAllConnectors();
-    //var link = $('.oauthLink[data-provider="' + provider + '"]');
-    //link.children('img').addClass('installed').appendTo('.sidenav-items.synclets', window.parent.document);
-    //link.remove();
+    updateUserProfile();
 };
 
 var showAllConnectors = function() {
@@ -30,3 +33,35 @@ var showAllConnectors = function() {
     $("#main-header-2").show();
     $(".hideable").fadeIn();
 };
+
+var updateUserProfile = function() {
+    
+    var username = null;
+    var avatar = null;
+    
+    var fetchUserProfile = function() {
+        $.get('/synclets/facebook/get_profile', function(body) {
+            if (body.username) {
+                 avatar = "http://graph.facebook.com/" + body.username + "/picture";
+                 username = body.name;
+            } else {
+                $.get('/synclets/twitter/get_profile', function(body) {
+                    if (body.profile_image_url_https) {
+                        avatar = body.profile_image_url_https;
+                        username = body.name;
+                    }
+                });
+            }
+        });
+    };
+    
+    profileTimeout = setInterval(function() {
+        fetchUserProfile();
+        if (username !== null) {
+            clearInterval(profileTimeout);
+            $('.avatar', window.parent.document).attr('src', avatar);
+            $('.user-info-name-link', window.parent.document).text(username);
+        }
+    }, 500);
+};
+

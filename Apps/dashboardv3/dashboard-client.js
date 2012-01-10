@@ -364,8 +364,10 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     var firstVisit = false;
-    if (req.query.hasOwnProperty('new')) {
+    console.log(req.cookies);
+    if (req.cookies.firstvisit === true) {
         firstVisit = true;
+        req.cookies.firstvisit = false;
     }
     getAppsInfo(8, function(sortedResult) {
         getSynclets(function(err, synclets) {
