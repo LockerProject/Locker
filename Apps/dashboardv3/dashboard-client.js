@@ -357,9 +357,13 @@ var getAppsInfo = function(count, callback) {
                 }
             }
         }
+        /*
+        console.dir(added);
         for (var i in result) {
-            if(!added[result[i].id] && result[i].title.length > 0) sortedResult.push(result[i]);
+            console.dir(result);
+            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
+        */
         callback(sortedResult);
     });
 }
@@ -464,9 +468,9 @@ var getGithubApps = function(callback) {
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
         locker.map(function(err, map) {
-            for (var i in map.installed) {
-                if (pattern.exec(map.installed[i].srcdir)) {
-                    var appInfo = checkDraftState(map.installed[i]);
+            for (var i in map) {
+                if (pattern.exec(map[i].srcdir)) {
+                    var appInfo = checkDraftState(map[i]);
                     var appId = 'app-' + appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];
