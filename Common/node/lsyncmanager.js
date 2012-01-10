@@ -172,8 +172,9 @@ function executeSynclet(info, synclet, callback, force) {
     }
 
     var dataResponse = '';
-
-    var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir)});
+    var env = process.env;
+    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
+    var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir), env:env});
 
     // edge case backup, max 30 min runtime by default
     var timer = setTimeout(function(){
