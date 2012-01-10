@@ -3,6 +3,7 @@
     "desc":"A collection of geographic locations.",
     "run":"node places.js",
     "status":"stable",
+    "type":"collection",
     "handle":"places",
     "provides":["place"],
     "mongoCollections": ["place"],
