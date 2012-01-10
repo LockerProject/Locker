@@ -363,6 +363,10 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
+    var firstVisit = false;
+    if (req.query.hasOwnProperty('new')) {
+        firstVisit = true;
+    }
     getAppsInfo(8, function(sortedResult) {
         getSynclets(function(err, synclets) {
             page = 'you';
@@ -372,7 +376,8 @@ var renderYou = function(req, res) {
             res.render(page, {
                 synclets: synclets,
                 github: github,
-                map: sortedResult
+                map: sortedResult,
+                firstVisit: firstVisit
             });
         });
     });
