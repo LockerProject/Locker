@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "gplus",
   "description": "Google+ Connector",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "title": "Google+",
     "handle": "gplus",
@@ -13,7 +13,7 @@
     "static": "false"
   },
   "engines": {
-    "node": "~0.4.10"
+    "node": "~0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

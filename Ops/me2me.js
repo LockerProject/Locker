@@ -8,6 +8,8 @@ var fs = require('fs');
 var regBase = 'http://registry.singly.com';
 var npmConfig = {registry:regBase, cache:'.npm'};
 
+var lockerBase = process.argv.length > 2 ? process.argv[2] : ".."
+
 // make sure node_modules and set npm to run locally here
 try {
     fs.mkdirSync("node_modules", 0755); // ensure a local home for npm to use
@@ -39,7 +41,7 @@ function meScan()
             {
                 console.log("merging collection "+dir);
                 var uc = dir.charAt(0).toUpperCase() + dir.substr(1);
-                var js2 = JSON.parse(fs.readFileSync(path.join("../Collections", uc, dir+'.collection'), 'utf8'));
+                var js2 = JSON.parse(fs.readFileSync(path.join(lockerBase, "Collections", uc, dir+'.collection'), 'utf8'));
                 js = extend(js, js2);
                 js.manifest = path.join("Collections", uc, dir+'.collection');
                 js.handle = dir;

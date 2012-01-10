@@ -2,7 +2,7 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "helloplaces",
   "description": "A simple way to view your places",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/LockerProject/photosv0.9",
   "repository": {
     "type": "app",
@@ -15,7 +15,7 @@
     "github":"https://github.com/LockerProject/locker"
   },
   "engines": {
-    "node": "~0.4.10"
+    "node": "~0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

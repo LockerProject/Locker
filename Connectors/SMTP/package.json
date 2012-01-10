@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "smtp",
   "description": "Email Sender",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Email Sender",
     "handle": "smtp",
@@ -17,7 +17,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.10"
+    "node": "~0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

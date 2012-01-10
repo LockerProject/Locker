@@ -2,7 +2,7 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "photosv09",
   "description": "A fancy mobile interface to view your links by service (Flickr, Twitter, etc).",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
@@ -15,7 +15,7 @@
     "github":"https://github.com/LockerProject/locker"
   },
   "engines": {
-    "node": "~0.4.10"
+    "node": "~0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

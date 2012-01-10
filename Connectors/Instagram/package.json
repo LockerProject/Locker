@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "instagram",
   "description": "Instagram",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": {
     "title": "Instagram",
     "handle": "instagram",
@@ -14,7 +14,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.10"
+    "node": "~0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}
