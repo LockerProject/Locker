@@ -358,7 +358,7 @@ var getAppsInfo = function(count, callback) {
             }
         }
         for (var i in result) {
-            if(result[i].static && !added[i]) sortedResult.push(result[i]);
+            if(!added[i]) sortedResult.push(result[i]);
         }
         callback(sortedResult);
     });
@@ -368,14 +368,15 @@ var renderYou = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
         locker.mapType("connector", function(err, installedConnectors) {
-            request.get({uri:locker.lockerBase + "/registry/all", json:true}, function(err, regRes, body) {
+            request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
                 var connectors = [];
                 Object.keys(body).map(function(key) { 
                     if (body[key].repository.type == "connector") {
                         var connector = body[key];
                         for (var i = 0; i < installedConnectors.length; ++i) {
-                            if (installedConnectors[i].id == connector.repository.id && installedConnectors[i].auth) connector.authed = true;
+                            if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
                         }
+                        connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
                         connectors.push(connector); 
                     }
                 });

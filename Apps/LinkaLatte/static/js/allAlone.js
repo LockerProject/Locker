@@ -123,7 +123,7 @@ function findLinksCollection() {
       dataType: "json",
       success: function(data) {
           for (var i = 0; i < data.length; ++i) {
-              if (data[i].provides.indexOf("link") > -1 && data[i].is === "collection") {
+              if (data[i].provides.indexOf("link") > -1 && data[i].type === "collection") {
                   collectionHandle = data[i].id;
                   $("#loading").hide();
                   $("header").show();

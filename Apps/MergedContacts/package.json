@@ -6,12 +6,12 @@
   "repository": {
     "title": "Merged Contacts Viewer",
     "handle": "contactsviewer",
-    "author": "nerds",
-    "update": "auto",
+    "update": true,
     "github": "https://github.com/LockerProject/Locker",
     "type": "app",
     "static": false,
-    "run": "node contacts.js"
+    "run": "node contacts.js",
+    "uses":{"services":["facebook", "twitter", "gcontacts", "foursquare"], "types":["contacts"]}
   },
   "engines": {
     "node": "~0.4.10"

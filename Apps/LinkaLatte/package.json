@@ -2,17 +2,26 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "linkalatte",
   "description": "View all the links your locker has collected",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
-    "title":"LinkaLatte",
-    "status":"stable",
-    "static":true,
-    "handle":"linkalatte",
-    "uses":{"services":["facebook", "twitter"], "types":["links"]},
-    "update":true,
-    "github":"https://github.com/LockerProject/locker"
+    "title": "LinkaLatte",
+    "status": "stable",
+    "static": true,
+    "handle": "linkalatte",
+    "uses": {
+      "services": [
+        "facebook",
+        "twitter"
+      ],
+      "types": [
+        "links"
+      ]
+    },
+    "update": true,
+    "github": "https://github.com/LockerProject/locker",
+    "url": ""
   },
   "engines": {
     "node": "~0.4.10"
