@@ -2,14 +2,14 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "hellolinks",
   "description": "A simple way to view your links.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
     "title":"Hello Links",
     "status":"stable",
     "static":true,
-    "handle":"devdocs",
+    "handle":"hellolinks",
     "update":true,
     "uses":{"services":["facebook", "twitter"], "types":["links"]},
     "github":"https://github.com/LockerProject/locker"
