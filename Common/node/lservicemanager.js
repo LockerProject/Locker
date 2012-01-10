@@ -257,7 +257,7 @@ exports.spawn = function(serviceId, callback) {
         processInformation.mongo.collections = svc.mongoCollections;
     }
     var env = process.env;
-    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node');
+    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
     var tstart = Date.now();
     var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
     app.stdout.setEncoding("utf8");
