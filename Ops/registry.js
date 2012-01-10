@@ -83,7 +83,10 @@ exports.app = function(app)
         var connectors = [];
         Object.keys(regIndex).forEach(function(key) {
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
-                connectors.push(regIndex[key]);
+                // not all connectors need auth keys!
+                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") connectors.push(regIndex[key]);
+                // require keys now
+                if(apiKeys[key]) connectors.push(regIndex[key]);
             }
         });
         // TODO: STREAM!
@@ -240,7 +243,7 @@ exports.sync = function(callback)
                 logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
                 regIndex[k] = body[k];
                 // if installed and autoupdated and newer, do it!
-                if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+                if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
                 {
                     logger.verbose("auto-updating "+k);
                     exports.update({name:k}, function(){}); // lazy
