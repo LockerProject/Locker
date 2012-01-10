@@ -331,7 +331,7 @@ exports.spawn = function(serviceId, callback) {
     });
     logger.verbose("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
     app.stdin.on('error',function(err){
-        logger.error("STDIN error:" + util.inspec(err));
+        logger.error("STDIN error:" + util.inspect(err));
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
     // We track this here because app.pid doesn't seem to work inside the next context
