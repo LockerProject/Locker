@@ -78,6 +78,7 @@ function install(js)
         }
         var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", js.handle, 'package.json'), 'utf8'));
         js = extend(js, js2.repository);
+        if(js.auth) js.authed = Date.now();
         js.manifest = path.join("Me/node_modules", js.handle, 'package.json');
         saver(js);
     });
