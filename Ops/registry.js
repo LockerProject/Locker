@@ -468,7 +468,7 @@ function authIsAwesome(req, res) {
         }
         // oauth2 types redirect
         if(authModule.authUrl) {
-            var url = authModule.authUrl + "&client_id=" + apiKeys[id].appKey + "&redirect_uri=" + host + "auth/" + id + "/auth";
+            var url = authModule.authUrl + "&client_id=" + apiKeys[id].appKey + "&redirect_uri=" + lconfig.externalBase + "/auth/" + id + "/auth";
             return res.redirect(url);
         }
         // everything else is pass-through (custom, oauth1, etc)
