@@ -341,7 +341,7 @@ var getAppsInfo = function(count, callback) {
         var result = [];
         var sortedResult = [];
         for (var i in map) {
-            if ((map[i].is === 'app' || map[i].type === 'app') && !map[i].hidden) {
+            if ((map[i].type === 'app' || map[i].type === 'app') && !map[i].hidden) {
                 result.push(map[i]);
             }
         }
@@ -352,13 +352,13 @@ var getAppsInfo = function(count, callback) {
                 if (result[j].id === recentApps[i].name && result[j].static) {
                     result[j].lastUsed = recentApps[i].lastUsed;
                     sortedResult.push(result[j]);
-                    added[j] = true;
+                    added[j.id] = true;
                     break;
                 }
             }
         }
         for (var i in result) {
-            if(!added[i]) sortedResult.push(result[i]);
+            if(!added[result[i].id] && result[i].title.length > 0) sortedResult.push(result[i]);
         }
         callback(sortedResult);
     });
