@@ -1,11 +1,11 @@
 /*
-*
-* Copyright (C) 2012, The Locker Project
-* All rights reserved.
-*
-* Please see the LICENSE file for more information.
-*
-*/
+ *
+ * Copyright (C) 2012, The Locker Project
+ * All rights reserved.
+ *
+ * Please see the LICENSE file for more information.
+ *
+ */
 
 var path = require('path')
   , rdio = require(path.join(__dirname, 'lib.js'));
@@ -13,17 +13,21 @@ var path = require('path')
 var tracks = [];
 
 exports.sync = function (processInfo, cb) {
-    rdio.getTracksInCollection(0
-                             , processInfo.auth
+    rdio.getTracksInCollection(processInfo
                              , function (track) {
                                    track.id = track.key;
                                    tracks.push({obj : track
-                                              , timestamp : new Date()
+                                              , timestamp : Date.now()
                                               , type : 'new'});
                                }
-                             , function (err) {
-                                   if (err) console.error(err);
-                                   cb(err, {data : {track : tracks}});
+                             , function (err, config) {
+                                   if (err) {
+                                       console.error(err);
+                                       cb(err);
+                                   }
+                                   else {
+                                       cb(null, {config : config, data : {track : tracks}});
+                                   }
                                }
     );
 };

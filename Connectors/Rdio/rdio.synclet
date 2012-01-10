@@ -4,7 +4,8 @@
   , "provider" : "rdio"
   , "provides" : ["profile/rdio"
                 , "following/rdio"
-                , "tracks/rdio"]
+                , "tracks/rdio"
+                , "activity/rdio"]
   , "synclets" : [{"name"      : "self"
                  , "frequency" : 3600
                  , "threshold" : 0}
@@ -12,6 +13,9 @@
                  , "frequency" : 600
                  , "threshold" : 0}
                 , {"name"      : "collection"
+                 , "frequency" : 3600
+                 , "threshold" : 0}
+                , {"name"      : "activity"
                  , "frequency" : 3600
                  , "threshold" : 0}]
 }

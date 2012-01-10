@@ -13,17 +13,21 @@ var path = require('path')
 var contacts = [];
 
 exports.sync = function (processInfo, cb) {
-    rdio.getFollowing(0
-                    , processInfo.auth
+    rdio.getFollowing(processInfo
                     , function (following) {
                           following.id = following.key;
                           contacts.push({obj : following
-                                       , timestamp : new Date()
+                                       , timestamp : Date.now()
                                        , type : 'new'});
                       }
-                    , function (err) {
-                          if (err) console.error(err);
-                          cb(err, {data : {contact : contacts}});
+                    , function (err, config) {
+                          if (err) {
+                              console.error(err);
+                              cb(err);
+                          }
+                          else {
+                              cb(null, {config: config, data : {contact : contacts}});
+                          }
                       }
     );
 };

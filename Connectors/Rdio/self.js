@@ -19,8 +19,13 @@ exports.sync = function (processInfo, cb) {
                      self.id = self.key;
                  }
                , function (err) {
-                     if (err) console.error(err);
-                     cb(err, {data : {profile : [{obj : self}]}});
+                     if (err) {
+                         console.error(err);
+                         cb(err);
+                     }
+                     else {
+                         cb(null, {data : {profile : [{obj : self}]}});
+                     }
                  }
     );
 };
