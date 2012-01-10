@@ -1,17 +1,17 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
-  "name": "photosv09",
-  "description": "A fancy mobile interface to view your links by service (Flickr, Twitter, etc).",
-  "version": "0.9.0",
+  "name": "hellolinks",
+  "description": "A simple way to view your links.",
+  "version": "0.0.1",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
-    "title":"Timeline",
+    "title":"Hello Links",
     "status":"stable",
     "static":true,
-    "handle":"photosv09",
-    "uses":{"services":["facebook", "twitter", "foursquare", "flickr", "instagram"], "types":["photos"]},
+    "handle":"devdocs",
     "update":true,
+    "uses":{"services":["facebook", "twitter"], "types":["links"]},
     "github":"https://github.com/LockerProject/locker"
   },
   "engines": {
