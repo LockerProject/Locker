@@ -54,9 +54,8 @@ body {
 
 .header-row .back-button p {
     float: right;
-    text-align: center;
-    width: 80px;
-    margin-right: 10px;
+    text-align: right;
+    margin-right: 13px;
     color: #444;
     margin-top: 6px;
     font-weight: bold;
