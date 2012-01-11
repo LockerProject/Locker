@@ -52,11 +52,10 @@ app.get('/', function(req, res) {
         } catch(E) {}
     }
     dataStore.getAll(fields, function(err, cursor) {
-        if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
-        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
-        if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        if(req.query['stream'] == "true")
-        {
+        if(!req.query.all) cursor.limit(20); // default 20 unless all is set
+        if(req.query.limit) cursor.limit(parseInt(req.query.limit));
+        if(req.query.offset) cursor.skip(parseInt(req.query.offset));
+        if(req.query.stream == "true") {
             res.writeHead(200, {'content-type' : 'application/jsonstream'});
             cursor.each(function(err, object){
                 if (err) logger.error(err); // only useful here for logging really
@@ -86,8 +85,7 @@ app.post('/events', function(req, res) {
         return;
     }
     // we don't support these yet
-    if(req.body.action == "delete")
-    {
+    if(req.body.action == "delete") {
         return res.send("skipping");
     }
     var idr = url.parse(req.body.idr);
