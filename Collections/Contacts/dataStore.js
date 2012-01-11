@@ -82,18 +82,24 @@ var maps = {
         }
     },
     github: {
-        
+        nickname: 'login',
+        email: 'email',
+        photo: function(data) {
+            if(data.gravatar_id) return 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
+        }
     }
 };
 
 inserters.generic = function(data, svcName, callback) {
     var map = maps[svcName];
-    var idKey = map['id'] || 'id';
+    var idKey = map.id || 'id';
     var id = data[idKey];
-    var name = data[map['name'] || 'name'];
+    var name = data[map.name || 'name'];
     var cleanedName = cleanName(name);
     var baseObj = createBaseObj(data);
-    var photo = data[map['photo'] || 'photo'];
+    var photo;
+    if(typeof map.photo === 'function') photo = map.photo(data);
+    else photo = data[map.photo || 'photo'];
     
     var query = createQuery(data, svcName);
     var set = createSet(baseObj, svcName, name);
@@ -104,6 +110,11 @@ inserters.generic = function(data, svcName, callback) {
     //nicknames
     if(map.nickname && data[map.nickname]) addToSet.nicknames = data[map.nickname];
     
+    //email
+    if(map.email && data[map.email]) {
+        addToSet.emails = {value:data[map.email]};
+        set.emailsort = data[map.email];
+    }
     firstFaM(query, set, addToSet, callback, function() {
         genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback);
     });
@@ -128,56 +139,7 @@ function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addTo
 }
 
 inserters.twitter = inserters.generic;
-// inserters.twitter = function(data, svcName, callback) {
-//     var name = data.name;
-//     var cleanedName = cleanName(data.name);
-//     var query = createQuery(data, svcName);
-//     var baseObj = createBaseObj(data);
-//     var set = createSet(baseObj, svcName, name);
-//     var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.profile_image_url});
-//     //addresses
-//     if(data.location) addToSet.addresses = {type:'location', value:data.location};
-//     //nicknames
-//     if(data.location) addToSet.nicknames = data.screen_name;
-//     firstFaM(query, set, addToSet, callback, function() {
-//         //match otherwise
-//         var or = [{'accounts.foursquare.data.contact.twitter':data.screen_name}];
-//         if(cleanedName)
-//             or.push({'_matching.cleanedNames':cleanedName});
-//         var set = setName(data.name);
-//         var push = {'accounts.twitter':baseObj};
-//         secondFaM(or, push, addToSet, set, callback);
-//     });
-// }
-
-inserters.github = function(data, svcName, callback) {
-    var name = data.name;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName});
-    //nicknames
-    if(data.login) addToSet.nicknames = data.login;
-    //email
-    if(data.email) {
-        addToSet.emails = {value:data.email};
-        set.emailsort = data.email;
-    }
-    if(data.gravatar_id) addToSet.photos = 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise, first entry is just to ensure we never match on nothing
-        var or = [{'accounts.github.data.id':data.id}];
-        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(name);
-        if (data.email) {
-            or.push({'emails.value' : data.email});
-            set.emailsort = data.email;
-        }
-        var push = {'accounts.github':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
+inserters.github = inserters.generic;
 
 inserters.foursquare = function(data, svcName, callback) {
     var name = data.firstName;
