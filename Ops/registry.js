@@ -225,6 +225,9 @@ function loadPackage(name, upsert, callback)
 // background sync process to fetch/maintain the full package list
 exports.sync = function(callback)
 {
+    // always good to refresh this too!
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
+
     var startkey = 0;
     // get the newest
     Object.keys(regIndex).forEach(function(k){
