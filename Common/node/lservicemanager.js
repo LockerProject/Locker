@@ -141,6 +141,11 @@ exports.mapUpsert = function (file) {
         logger.verbose("updating "+js.handle);
         serviceMap[js.handle] = lutil.extend(serviceMap[js.handle], js);
         exports.mapReload(js.handle);
+        // if it's running and updated, signal it to shutdown so new code/config is run at next request
+        if(js.pid) try {
+            logger.info("restarting " + js.id + " running at pid " + js.pid);
+            process.kill(js.pid, "SIGTERM");
+        } catch(e) {}
         // worth detecting if it changed here first?
         levents.fireEvent('service://me/#'+js.handle, 'update', serviceMap[js.handle]);
         return serviceMap[js.handle];
