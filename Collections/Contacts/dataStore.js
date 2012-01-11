@@ -57,7 +57,7 @@ function updateState() {
 
 exports.addData = function(type, data, cb) {
     // shim to send events, post-add stuff
-    if(typeof inserters[type] === 'function') inserters[type](data, function(err, doc) {
+    if(typeof inserters[type] === 'function') inserters[type](data, type, function(err, doc) {
         if(doc && doc._id) {
             var idr = lutil.idrNew("contact", "contacts", doc._id);
             locker.ievent(idr, doc);
@@ -68,44 +68,95 @@ exports.addData = function(type, data, cb) {
 
 var inserters = {};
 
-inserters.twitter = function(data, callback) {
-    var twID  = data.id;
-    var cleanedName = cleanName(data.name);
-    var query = {'accounts.twitter.data.id':twID};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.twitter.$'] = baseObj;
-    //name
-    setName(set, data.name);
-    var addToSet = {'_matching.cleanedNames':cleanedName};
-    //photos
-    if(data.profile_image_url) addToSet.photos = data.profile_image_url;
+
+var maps = {
+    twitter: {
+        photo: 'profile_image_url',
+        address: {
+            type:'location',
+            key:'location'
+        },
+        nickname: 'screen_name',
+        or: {
+            'accounts.foursquare.data.contacts.twitter':'screen_name'
+        }
+    },
+    github: {
+        
+    }
+};
+
+inserters.generic = function(data, svcName, callback) {
+    var map = maps[svcName];
+    var idKey = map['id'] || 'id';
+    var id = data[idKey];
+    var name = data[map['name'] || 'name'];
+    var cleanedName = cleanName(name);
+    var baseObj = createBaseObj(data);
+    var photo = data[map['photo'] || 'photo'];
+    
+    var query = createQuery(data, svcName);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName, photo:photo});
     //addresses
-    if(data.location) addToSet.addresses = {type:'location', value:data.location};
+    if(map.addresses && map.addresses.key && data[map.addresses.key]) addToSet.addresses = {type:map.addresses.type, value:data[map.addresses.key]};
+    
     //nicknames
-    if(data.location) addToSet.nicknames = data.screen_name;
+    if(map.nickname && data[map.nickname]) addToSet.nicknames = data[map.nickname];
+    
     firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise
-        var or = [{'accounts.foursquare.data.contact.twitter':data.screen_name}];
-        if(cleanedName)
-            or.push({'_matching.cleanedNames':cleanedName});
-        var set = {};
-        setName(set, data.name);
-        var push = {'accounts.twitter':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
+        genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback);
     });
 }
 
-inserters.github = function(data, callback) {
-    var cleanedName = cleanName(data.name);
-    var query = {'accounts.github.data.id':data.id};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.github.$'] = baseObj;
-    //name
-    setName(set, data.name);
-    var addToSet = {};
-    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
+function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback) {
+    var map = maps[svcName];
+    //match otherwise
+    var obj = {};
+    obj['accounts.' + svcName + '.data.' + idKey] = data[idKey];
+    var or = [obj];
+    for(var i in map.or) {
+        obj = {};
+        obj[i] = data[map.or[i]];
+    }
+    if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
+    var set = setName(name);
+    var push = {};
+    push['accounts.' + svcName] = baseObj;
+    
+    secondFaM(or, push, addToSet, set, callback);
+}
+
+inserters.twitter = inserters.generic;
+// inserters.twitter = function(data, svcName, callback) {
+//     var name = data.name;
+//     var cleanedName = cleanName(data.name);
+//     var query = createQuery(data, svcName);
+//     var baseObj = createBaseObj(data);
+//     var set = createSet(baseObj, svcName, name);
+//     var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.profile_image_url});
+//     //addresses
+//     if(data.location) addToSet.addresses = {type:'location', value:data.location};
+//     //nicknames
+//     if(data.location) addToSet.nicknames = data.screen_name;
+//     firstFaM(query, set, addToSet, callback, function() {
+//         //match otherwise
+//         var or = [{'accounts.foursquare.data.contact.twitter':data.screen_name}];
+//         if(cleanedName)
+//             or.push({'_matching.cleanedNames':cleanedName});
+//         var set = setName(data.name);
+//         var push = {'accounts.twitter':baseObj};
+//         secondFaM(or, push, addToSet, set, callback);
+//     });
+// }
+
+inserters.github = function(data, svcName, callback) {
+    var name = data.name;
+    var cleanedName = cleanName(name);
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName});
     //nicknames
     if(data.login) addToSet.nicknames = data.login;
     //email
@@ -118,35 +169,27 @@ inserters.github = function(data, callback) {
         //match otherwise, first entry is just to ensure we never match on nothing
         var or = [{'accounts.github.data.id':data.id}];
         if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = {};
+        var set = setName(name);
         if (data.email) {
             or.push({'emails.value' : data.email});
             set.emailsort = data.email;
         }
-        setName(set, data.name);
         var push = {'accounts.github':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.foursquare = function(data, callback) {
-    var id = data.id;
+inserters.foursquare = function(data, svcName, callback) {
     var name = data.firstName;
     if(data.lastName) name += ' ' + data.lastName;
     var cleanedName = cleanName(name);
-    var query = {'accounts.foursquare.data.id':id};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.foursquare.$'] = baseObj;
-    //name
-    setName(set, name);
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
     //gender
     if(data.gender)
         set.gender = data.gender;
-    var addToSet = {};
-    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
-    //photos
-    if(data.photo) addToSet.photos = data.photo;
+    var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.photo});
     //phoneNumbers
     if(data.contact.phone) addToSet.phoneNumbers = {value:data.contact.phone, type:'mobile'};
     //email
@@ -157,58 +200,46 @@ inserters.foursquare = function(data, callback) {
     //addresses
     if(data.homeCity) addToSet.addresses = {type:'location', value:data.homeCity};
     firstFaM(query, set, addToSet, callback, function() {
-        var or = [{'accounts.foursquare.data.id':id}];
+        var or = [{'accounts.foursquare.data.id':data.id}];
         if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
         if(data.contact.twitter) or.push({'accounts.twitter.data.screen_name':data.contact.twitter});
         if(data.contact.facebook) or.push({'accounts.facebook.data.id':data.contact.facebook});
-        var set = {};
+        var set = setName(name);
         if (data.contact.email) {
             or.push({'emails.value' : data.contact.email});
             set.emailsort = data.contact.email;
         }
-        setName(set, name);
         if(data.gender) set.gender = data.gender;
         var push = {'accounts.foursquare':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.facebook = function(data, callback) {
-    var fbID  = data.id;
-    var cleanedName = cleanName(data.name);
-    var query = {'accounts.facebook.data.id':fbID};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.facebook.$'] = baseObj;
-    //name
-    setName(set, data.name);
-
-    var addToSet = {};
-    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
-    //photos
-    if(data.id) addToSet.photos = 'https://graph.facebook.com/' + data.id + '/picture';
+inserters.facebook = function(data, svcName, callback) {
+    var name = data.name;
+    var cleanedName = cleanName(name);
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName, photo:'https://graph.facebook.com/' + data.id + '/picture'});
     firstFaM(query, set, addToSet, callback, function() {
         //match otherwise
-        var or = [{'accounts.foursquare.data.contact.facebook':fbID}];
+        var or = [{'accounts.foursquare.data.contact.facebook':data.id}];
         if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = {};
-        setName(set, data.name);
+        var set = setName(data.name);
         var push = {'accounts.facebook':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.gcontacts = function(data, callback) {
-    var gcID  = data.id;
-    var cleanedName = cleanName(data.name);
-    var query = {'accounts.googleContacts.data.id':gcID};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.googleContacts.$'] = baseObj;
-    setName(set, data.name);
-
-    var addToSet = {};
-    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
+inserters.gcontacts = function(data, svcName, callback) {
+    svcName = 'googleContacts';
+    var name = data.name;
+    var cleanedName = cleanName(name);
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName});
     //photos
     if(data.id && data.photo) addToSet.photos = '/synclets/gcontacts/getPhoto/' + data.id;
     //addresses
@@ -242,90 +273,66 @@ inserters.gcontacts = function(data, callback) {
     }
     firstFaM(query, set, addToSet, callback, function() {
         //match otherwise
-        var or = [{'accounts.googleContacts.data.id':gcID}];
+        var or = [{'accounts.googleContacts.data.id':data.id}];
         if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = {};
+        var set = setName(data.name);;
         if (emails) {
             for (var i in emails) {
                 or.push({'emails.value' : emails[i].value});
                 if(!set.emailsort) set.emailsort = emails[i].value;
             }
         }
-        setName(set, data.name);
+        
         var push = {'accounts.googleContacts':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.flickr = function(data, callback) {
-    var flID  = data.nsid;
-    var cleanedName = cleanName(data.realname);
-    var query = {'accounts.flickr.data.nsid':flID};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.flickr.$'] = baseObj;
-    //name
-    setName(set, data.realname);
-
-    var addToSet = {};
-    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
+inserters.flickr = function(data, svcName, callback) {
+    var id = data.nsid;
+    var name = data.realname;
+    var cleanedName = cleanName(name);
+    var query = createQuery(data, svcName, 'nsid');
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName});
     //photos
-    if(flID && data.iconfarm && data.iconserver) addToSet.photos = 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + flID + '.jpg';
+    if(id && data.iconfarm && data.iconserver) addToSet.photos = 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + id + '.jpg';
     firstFaM(query, set, addToSet, callback, function() {
         //match otherwise
-        var or = [{'accounts.foursquare.data.contact.flickr':flID}];
-        // var or = [];
+        var or = [{'accounts.foursquare.data.contact.flickr':id}];
         if(cleanedName)
             or.push({'_matching.cleanedNames':cleanedName});
-
-        var set = {};
-        setName(set, data.realname);
+        var set = setName(name);
         var push = {'accounts.flickr':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.instagram = function(data, callback) {
-    var cleanedName = cleanName(data.full_name);
-    var query = {'accounts.instagram.data.id':data.id};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.instagram.$'] = baseObj;
-    //name
-    setName(set, data.full_name);
-
-    var addToSet = {};
-    if(cleanedName)
-        addToSet['_matching.cleanedNames'] = cleanedName;
-    //photos
-    if(data.profile_picture)
-        addToSet.photos = data.profile_picture;
+inserters.instagram = function(data, svcName, callback) {
+    var name = data.full_name;
+    var cleanedName = cleanName(name);
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.profile_picture});
     firstFaM(query, set, addToSet, callback, function() {
         //match otherwise
-        var or = [{'accounts.instagram.data.contact.id':data.id}];
-        // var or = [];
-        if(cleanedName)
-            or.push({'_matching.cleanedNames':cleanedName});
-
-        var set = {};
-        setName(set, data.full_name);
+        var or = [{'accounts.instagram.data.id':data.id}];
+        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
+        var set = setName(name);
         var push = {'accounts.instagram':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
 
-inserters.linkedin = function(data, callback) {
+inserters.linkedin = function(data, svcName, callback) {
     var name = data.firstName + ' ' + data.lastName;
     var cleanedName = cleanName(name);
-    var query = {'accounts.linkedin.data.id':data.id};
-    var set = {};
-    var baseObj = {data:data, lastUpdated:Date.now()};
-    set['accounts.linkedin.$'] = baseObj;
-    //name
-    setName(set, name);
-    var addToSet = {};
-    if(cleanedName)
-        addToSet['_matching.cleanedNames'] = cleanedName;
+    var query = createQuery(data, svcName);
+    var baseObj = createBaseObj(data);
+    var set = createSet(baseObj, svcName, name);
+    var addToSet = createAddToSet({cleanedName:cleanedName});
     if(data.pictureUrl)
         addToSet.photos = data.pictureUrl;
     firstFaM(query, set, addToSet, callback, function() {
@@ -333,12 +340,36 @@ inserters.linkedin = function(data, callback) {
         var or = [{'accounts.linkedin.data.id':data.id}];
         if(cleanedName)
             or.push({'_matching.cleanedNames':cleanedName});
-        var set = {};
-        setName(set, name);
+        var set = setName(name);
         var push = {'accounts.linkedin':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
-};
+}
+
+
+function createSet(baseObj, svcName, name) {
+    var set = setName(name);
+    set['accounts.' + svcName + '.$'] = baseObj;
+    return set;
+}
+
+function createAddToSet(info) {
+    var addToSet = {};
+    if(info.cleanedName) addToSet['_matching.cleanedNames'] = info.cleanedName;
+    if(info.photo) addToSet.photos = info.photo;
+    return addToSet;
+}
+
+function createBaseObj(data, lastUpdated) {
+    return {data:data, lastUpdated : lastUpdated || Date.now()};
+}
+
+function createQuery(data, svcName, idFieldName) {
+    idFieldName = idFieldName || 'id';
+    var obj = {};
+    obj['accounts.' + svcName + '.data.' + idFieldName] = data[idFieldName];
+    return obj;
+}
 
 function firstFaM(query, set, addToSet, done, noDoc) {
     collection.findAndModify(query, [['_id','asc']], 
@@ -364,9 +395,15 @@ function cleanName(name) {
 }
 
 function setName(set, name) {
-    if(!name || typeof name != 'string') return;
+    if(typeof set !== 'object' && name === undefined) {
+        name = set;
+        set = {};
+    }
+    
+    if(!name || typeof name != 'string') return set;
     set.name = name;
     set.firstnamesort = name.toLowerCase();
     var space = name.lastIndexOf(' ');
     if(space > 1) set.lastnamesort = name.substr(space+1).toLowerCase();
+    return set;
 }

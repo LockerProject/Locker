@@ -10,18 +10,18 @@
 // merge contacts from connectors
 require.paths.push(__dirname + "/../../Common/node");
 
-var fs = require('fs'),
-    locker = require('locker.js'),
-    logger;
-var lutil = require('lutil');
-var url = require('url');
+var fs = require('fs')
+  , locker = require('locker.js')
+  , express = require('express')
+  , connect = require('connect')
+  , lutil = require('lutil')
+  , url = require('url')
+  , sync = require('./sync')
+  , dataStore = require("./dataStore")
+  , logger
+  , lockerInfo
+  ;
 
-var sync = require('./sync');
-var dataStore = require("./dataStore");
-
-var lockerInfo;
-var express = require('express'),
-    connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
@@ -62,7 +62,7 @@ app.get('/', function(req, res) {
                 if (!object) return res.end();
                 res.write(JSON.stringify(object)+'\n');
             });
-        }else{
+        } else {
             cursor.toArray(function(err, items) {
                 res.send(items);
             });
@@ -71,39 +71,28 @@ app.get('/', function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherContacts(function(){
-        res.writeHead(200);
-        res.end('Updating');
+    sync.gatherContacts(function() {
+        res.send('Updating');
     });
 });
 
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
         logger.error('5 HUNDO');
-        res.writeHead(500);
-        res.end('bad data');
+        res.send('bad data', 500);
         return;
     }
     // we don't support these yet
-    if(req.body.action == "delete") {
-        return res.send("skipping");
-    }
+    if(req.body.action == "delete") return res.send("skipping");
     var idr = url.parse(req.body.idr);
     dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
-        if (err) {
-            res.writeHead(500);
-            res.end(err);
-        } else {
-            res.writeHead(200);
-            res.end('processed event');
-        }
+        if (err) res.send(err, 500);
+        else res.send('processed event');
     });
 });
 
 app.get("/since", function(req, res) {
-    if (!req.query.id) {
-        return res.send([]);
-    }
+    if (!req.query.id) return res.send([]);
 
     var results = [];
     dataStore.getSince(req.query.id, function(item) {
@@ -131,7 +120,6 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
-    
 
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');

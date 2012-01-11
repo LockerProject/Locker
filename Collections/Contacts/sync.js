@@ -24,6 +24,17 @@ exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
     exports.eventEmitter = new EventEmitter();
 }
 
+var acceptedServices = {
+    'contact/facebook':1,
+    'contact/twitter':1,
+    'contact/flickr':1,
+    'contact/gcontacts':1,
+    'contact/foursquare':1,
+    'contact/instagram':1,
+    'connection/linkedin':1,
+    'contact/github':'following'
+}
+
 exports.gatherContacts = function(cb) {
     lconfig.load('../../Config/config.json');
     dataStore.clear(function(err) {
@@ -34,45 +45,22 @@ exports.gatherContacts = function(cb) {
             locker.providers(['contact'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
-                    if(svc.provides.indexOf('contact/facebook') >= 0) {
-                        exports.getContacts("facebook", "contact", svc.id, function() {
-                            logger.info('facebook done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/twitter') >= 0) {
-                        exports.getContacts("twitter", "contact", svc.id, function() {
-                            logger.info('twitter done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/flickr') >= 0) {
-                        exports.getContacts("flickr", "contact", svc.id, function() {
-                            logger.info('flickr done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/gcontacts') >= 0) {
-                        exports.getContacts("gcontacts", "contact", svc.id, function() {
-                            logger.info('gcontacts done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
-                        exports.getContacts('foursquare', "contact", svc.id, function() {
-                            logger.info('foursquare done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/instagram') >= 0) {
-                        exports.getContacts('instagram', "contact", svc.id, function() {
-                            logger.info('instagram done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/github') >= 0) {
-                        exports.getContacts('github', 'following', svc.id, function() {
-                            logger.info('github done!');
-                        })
-                    } else if(svc.provides.indexOf('connection/linkedin') >= 0) {
-                        exports.getContacts('linkedin', 'connection', svc.id, function() {
-                            logger.info('linkedin done!');
-                        })
+                    for(var i in svc.provides) {
+                        var provides = svc.provides[i];
+                        if(acceptedServices[provides]) {
+                            var endpoint = acceptedServices[provides];
+                            if(endpoint === 1) endpoint = provides.substring(0, provides.indexOf('/'));
+                            exports.getContacts(svc.provider, endpoint , svc.id, function() {
+                                logger.info(svc.provider + ' done!');
+                            });
+                            return;
+                        }
                     }
                 });
             });
         });
     });
 }
-
 
 exports.getContacts = function(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
