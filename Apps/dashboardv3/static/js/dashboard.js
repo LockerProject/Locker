@@ -57,6 +57,10 @@ $(document).ready(function() {
       e.preventDefault();
       $(this).parent().parent().hide();
   });
+  
+  if (window.location.hash === "#connect") {
+      $('#firstvisit-overlay').hide();
+  }
 });
 
 var loadApp = function(callback) {

@@ -11,17 +11,22 @@
       <h1 id="main-header-1">Welcome! Connect services to begin.</h1>
       <h1 id="main-header-2">Great! Connect a few more or <a target="_top" href="/dashboard/you#contactsviewer" class="orange">start exploring</a>.</h1>
       <ul class="synclets-list">
-        <% for (var i = 0; i < synclets.available.length; i++) { %>
+        <% for (var i = 0; i < synclets.installed.length; i++) { %>
           <% if (synclets.available[i].authurl && (synclets.available[i].provider === 'twitter' || synclets.available[i].provider === 'facebook')) { %>
-            <li><img class="synclet-logo" src="img/icons/32px/<%= synclets.available[i].provider %>.png" /><span class="synclet-name"><%=: synclets.available[i].provider | capitalize %></span> 
+            <li class="featured"><img class="synclet-logo" src="img/icons/32px/<%= synclets.available[i].provider %>.png" /><span class="synclet-name"><%=: synclets.available[i].provider | capitalize %></span> 
             <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
                data-width="<%= synclets.available[i].oauthSize.width %>"
                data-height="<%= synclets.available[i].oauthSize.height %>"><img class="connect-button" src="img/connect.png" /></a>
           <% } %>
         <% } %>
-
         <% for (var i = 0; i < synclets.available.length; i++) { %>
-          <% if (synclets.available[i].authurl && (synclets.available[i].provider !== 'twitter' && synclets.available[i].provider !== 'facebook')) { %>
+          <% if (synclets.available[i].authurl && (synclets.available[i].provider === 'twitter' || synclets.available[i].provider === 'facebook')) { %>
+            <li class="featured"><img class="synclet-logo" src="img/icons/32px/<%= synclets.available[i].provider %>.png" /><span class="synclet-name"><%=: synclets.available[i].provider | capitalize %></span> 
+            <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
+               data-width="<%= synclets.available[i].oauthSize.width %>"
+               data-height="<%= synclets.available[i].oauthSize.height %>"><img class="connect-button" src="img/connect.png" /></a>
+          <% } 
+             if (synclets.available[i].authurl && (synclets.available[i].provider !== 'twitter' && synclets.available[i].provider !== 'facebook')) { %>
             <li class="hideable"><img class="synclet-logo" src="img/icons/32px/<%= synclets.available[i].provider %>.png" /><span class="synclet-name"><%=: synclets.available[i].provider | capitalize %></span> 
             <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
                data-width="<%= synclets.available[i].oauthSize.width %>"

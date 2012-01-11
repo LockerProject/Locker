@@ -5,7 +5,7 @@ var profileTimeout;
 $(function() {
     $(".connect-button-link").click(function(e) {
         e.preventDefault();
-        showAllConnectors();
+        showHiddenConnectors();
     });
     
     $('.oauthLink').click(function(e) {
@@ -13,6 +13,10 @@ $(function() {
         var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
         popup.focus();
     });
+    
+    if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
+        showAllConnectors();
+    }
 });
 
 // this one is called only when going through a first-time connection
@@ -28,10 +32,20 @@ var syncletInstalled = function(provider) {
     updateUserProfile();
 };
 
+var showHiddenConnectors = function() {
+    if ($("#main-header-1").is(":visible")) {
+        $("#main-header-1").hide();
+        $("#main-header-2").show();
+        $(".hideable").fadeIn();
+    }
+};
+
 var showAllConnectors = function() {
-    $("#main-header-1").hide();
-    $("#main-header-2").show();
-    $(".hideable").fadeIn();
+    if ($("#main-header-1").is(":visible")) {
+        $("#main-header-1").hide();
+        $("#main-header-2").show();
+        $(".synclets-list li").fadeIn();
+    }
 };
 
 var updateUserProfile = function() {

@@ -274,8 +274,8 @@ var submitPublish = function(req, res) {
                     if (!err) {
                         var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
                         // Send the screenshot
-                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
-                                            headers:{"Content-Type":"image/png"}, 
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
+                                            headers:{"Content-Type":"image/png"},
                                             body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
                         // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
                         /*
@@ -363,14 +363,18 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-    var firstVisit = false;
-    if (req.cookies.firstvisit === 'true') {
-        firstVisit = true;
-        res.clearCookie('firstvisit');
-    }
+
     getAppsInfo(8, function(sortedResult) {
         getSynclets(function(err, synclets) {
-            page = 'you';
+            var firstVisit = false;
+            var page = 'you';
+
+            if (req.cookies.firstvisit === 'true' &&
+                Object.keys(synclets.installed).length === 0) {
+                firstVisit = true;
+                res.clearCookie('firstvisit');
+            }
+
             if (Object.keys(synclets.installed).length === 0) {
                 page += '-connect';
             }
