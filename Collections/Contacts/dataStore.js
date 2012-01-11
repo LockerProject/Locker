@@ -95,6 +95,13 @@ var maps = {
         or: {
             'accounts.foursquare.data.contacts.facebook':'id'
         }
+    },
+    flickr: {
+        id: 'nsid',
+        name: 'realname',
+        photo: function(data) {
+            if(data.nsid && data.iconfarm && data.iconserver) return 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + data.nsid + '.jpg';
+        }
     }
 };
 
@@ -149,6 +156,7 @@ function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addTo
 inserters.twitter = inserters.generic;
 inserters.github = inserters.generic;
 inserters.facebook = inserters.generic;
+inserters.flickr = inserters.generic;
 
 inserters.foursquare = function(data, svcName, callback) {
     var name = data.firstName;
@@ -238,27 +246,6 @@ inserters.gcontacts = function(data, svcName, callback) {
         }
         
         var push = {'accounts.googleContacts':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
-
-inserters.flickr = function(data, svcName, callback) {
-    var id = data.nsid;
-    var name = data.realname;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName, 'nsid');
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName});
-    //photos
-    if(id && data.iconfarm && data.iconserver) addToSet.photos = 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + id + '.jpg';
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise
-        var or = [{'accounts.foursquare.data.contact.flickr':id}];
-        if(cleanedName)
-            or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(name);
-        var push = {'accounts.flickr':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
