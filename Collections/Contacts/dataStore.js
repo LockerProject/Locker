@@ -87,6 +87,14 @@ var maps = {
         photo: function(data) {
             if(data.gravatar_id) return 'https://secure.gravatar.com/avatar/' + data.gravatar_id;
         }
+    },
+    facebook: {
+        photo: function(data) {
+            return 'https://graph.facebook.com/' + data.id + '/picture';
+        },
+        or: {
+            'accounts.foursquare.data.contacts.facebook':'id'
+        }
     }
 };
 
@@ -140,6 +148,7 @@ function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addTo
 
 inserters.twitter = inserters.generic;
 inserters.github = inserters.generic;
+inserters.facebook = inserters.generic;
 
 inserters.foursquare = function(data, svcName, callback) {
     var name = data.firstName;
@@ -173,23 +182,6 @@ inserters.foursquare = function(data, svcName, callback) {
         }
         if(data.gender) set.gender = data.gender;
         var push = {'accounts.foursquare':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
-
-inserters.facebook = function(data, svcName, callback) {
-    var name = data.name;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName, photo:'https://graph.facebook.com/' + data.id + '/picture'});
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise
-        var or = [{'accounts.foursquare.data.contact.facebook':data.id}];
-        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(data.name);
-        var push = {'accounts.facebook':baseObj};
         secondFaM(or, push, addToSet, set, callback);
     });
 }
