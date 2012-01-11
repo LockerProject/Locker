@@ -12,6 +12,7 @@ var burrowBase = "burrow.singly.com";
 
 if(!path.existsSync('package.json')) return console.error("missing package.json, run npm init!");
 var js = JSON.parse(fs.readFileSync('package.json'));
+
 if(js.repository.handle) {
     if (process.argv.indexOf("-i") > -1) {
         commander.password("registry nerds password: ", "*", function(password){
@@ -29,9 +30,6 @@ if(js.repository.handle) {
     commander.prompt("type? (app or connector): ", function(type){
         type = type.replace('\n','');
         repo.type = type;
-        if(type == 'app' && !path.existsSync('screenshot.png')) { console.error("missing screenshot.png"); process.exit(1)};
-        if(type == 'connector' && !path.existsSync('icon.png')) { console.error("missing icon.png"); process.exit(1)};
-        if(type == 'connector' && !path.existsSync('synclets.json')) { console.error("missing synclets.json"); process.exit(1)};
         commander.prompt("static? (true or false): ", function(s){
             repo.static = s.replace('\n','');
             js.repository = repo;
@@ -44,6 +42,17 @@ if(js.repository.handle) {
 
 function publish()
 {
+    var type = js.repository.type;
+    if(type == 'connector' && path.existsSync('synclets.json')) {
+        try {
+            JSON.parse(fs.readFileSync('synclets.json'));
+        } catch(e){
+            console.log("invalid synclets.json");
+            process.exit(1);
+        }
+    };
+    if(type == 'app' && !path.existsSync('screenshot.png')) { console.error("missing screenshot.png"); process.exit(1)};
+    if(type == 'connector' && !path.existsSync('icon.png')) { console.error("missing icon.png"); process.exit(1)};
     commander.password("registry nerds password: ", "*", function(password){
         console.log("publishing...");
         var auth = (new Buffer(username+":"+password,"ascii").toString("base64"));
