@@ -1,0 +1,25 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "links",
+  "description": "Links Collection",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Links",
+    "run":"node links.js",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "handle":"links",
+    "provides":["link"],
+    "mongoCollections": ["link","encounter","queue"],
+    "events":[["post/facebook","/events"]
+        ,["tweet/twitter","/events"]
+    ]
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -32,7 +32,7 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.collections = config.collections || ['Contacts', 'Links', 'Photos', 'Places'];
+    exports.collections = config.collections || ['Contacts', 'Links', 'Photos', 'Places', 'Search'];
     exports.apps = config.apps || ["contactsviewer", "photosv09", "photosviewer", "linkalatte", "helloplaces", "devdocs"];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
