@@ -66,9 +66,6 @@ exports.addData = function(type, data, cb) {
     });
 }
 
-var inserters = {};
-
-
 var maps = {
     twitter: {
         photo: 'profile_image_url',
@@ -99,17 +96,53 @@ var maps = {
     flickr: {
         id: 'nsid',
         name: 'realname',
+        nickname: 'username',
         photo: function(data) {
             if(data.nsid && data.iconfarm && data.iconserver) return 'http://farm' + data.iconfarm + '.static.flickr.com/' + data.iconserver + '/buddyicons/' + data.nsid + '.jpg';
+        }
+    },
+    instagram: {
+        name: 'full_name',
+        photo: 'profile_picture',
+        nickname: 'username'
+    },
+    linkedin: {
+        name: function(data) {
+            return data.firstName + ' ' + data.lastName;
+        },
+        photo: 'pictureUrl'
+    },
+    foursquare: {
+        name: function(data) {
+            return data.firstName + (data.lastName? ' ' + data.lastName: '');
+        },
+        gender: 'gender',
+        email : 'contact.email',
+        phoneNumber : {
+            key: 'contact.phone',
+            type: 'mobile'
+        },
+        address: {
+            type: 'location',
+            key: 'homeCity'
+        },
+        or: {
+            'accounts.twitter.data.screen_name':'contact.twitter',
+            'accounts.facebook.data.id':'contact.facebook'
         }
     }
 };
 
+var inserters = {};
 inserters.generic = function(data, svcName, callback) {
     var map = maps[svcName];
     var idKey = map.id || 'id';
     var id = data[idKey];
-    var name = data[map.name || 'name'];
+    
+    var name;
+    if(typeof map.name === 'function') name = map.name(data);
+    else name = data[map.name || 'name'];
+    
     var cleanedName = cleanName(name);
     var baseObj = createBaseObj(data);
     var photo;
@@ -117,23 +150,45 @@ inserters.generic = function(data, svcName, callback) {
     else photo = data[map.photo || 'photo'];
     
     var query = createQuery(data, svcName);
+    
     var set = createSet(baseObj, svcName, name);
+    //gender
+    var gender = getNested(data, map.gender);
+    if(gender) set.gender = gender;
+    
     var addToSet = createAddToSet({cleanedName:cleanedName, photo:photo});
     //addresses
-    if(map.addresses && map.addresses.key && data[map.addresses.key]) addToSet.addresses = {type:map.addresses.type, value:data[map.addresses.key]};
+    var address = getNested(data, map.address);
+    if(address) addToSet.addresses = {type:map.address.type, value:address};
     
     //nicknames
-    if(map.nickname && data[map.nickname]) addToSet.nicknames = data[map.nickname];
+    var nickname = getNested(data, map.nickname);
+    if(nickname) addToSet.nicknames = nickname;
     
     //email
-    if(map.email && data[map.email]) {
-        addToSet.emails = {value:data[map.email]};
-        set.emailsort = data[map.email];
+    var email = getNested(data, map.email);
+    if(email) {
+        addToSet.emails = {value:email};
+        set.emailsort = email;
     }
+    
+    //phoneNumber
+    var phoneNumber = getNested(data, map.phoneNumber);
+    if(phoneNumber) addToSet.phoneNumber = {type:map.phoneNumber.type, value:phoneNumber};
+    
     firstFaM(query, set, addToSet, callback, function() {
         genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback);
     });
 }
+
+inserters.twitter = inserters.generic;
+inserters.github = inserters.generic;
+inserters.facebook = inserters.generic;
+inserters.flickr = inserters.generic;
+inserters.instagram = inserters.generic;
+inserters.linkedin = inserters.generic;
+inserters.foursquare = inserters.generic;
+
 
 function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback) {
     var map = maps[svcName];
@@ -143,56 +198,36 @@ function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addTo
     var or = [obj];
     for(var i in map.or) {
         obj = {};
-        obj[i] = data[map.or[i]];
+        obj[i] = getNested(data, map.or[i]);
+        or.push(obj);
     }
     if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
     var set = setName(name);
+    
+    //gender
+    var gender = getNested(data, map.gender);
+    if(gender) set.gender = gender;
+    
     var push = {};
     push['accounts.' + svcName] = baseObj;
     
     secondFaM(or, push, addToSet, set, callback);
 }
 
-inserters.twitter = inserters.generic;
-inserters.github = inserters.generic;
-inserters.facebook = inserters.generic;
-inserters.flickr = inserters.generic;
 
-inserters.foursquare = function(data, svcName, callback) {
-    var name = data.firstName;
-    if(data.lastName) name += ' ' + data.lastName;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    //gender
-    if(data.gender)
-        set.gender = data.gender;
-    var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.photo});
-    //phoneNumbers
-    if(data.contact.phone) addToSet.phoneNumbers = {value:data.contact.phone, type:'mobile'};
-    //email
-    if(data.contact.email) {
-        addToSet.emails = {value:data.contact.email};
-        set.emailsort = data.contact.email;
+function getNested(data, key) {
+    if(!key) return;
+    if(typeof key === 'object') key = key.key;
+    if(key.indexOf('.') === -1) return data[key];
+    var keys = key.split('.');
+    var value = data;
+    for(var i in keys) {
+        value = value[keys[i]]
+        if(value === undefined || value === null) return value;
     }
-    //addresses
-    if(data.homeCity) addToSet.addresses = {type:'location', value:data.homeCity};
-    firstFaM(query, set, addToSet, callback, function() {
-        var or = [{'accounts.foursquare.data.id':data.id}];
-        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        if(data.contact.twitter) or.push({'accounts.twitter.data.screen_name':data.contact.twitter});
-        if(data.contact.facebook) or.push({'accounts.facebook.data.id':data.contact.facebook});
-        var set = setName(name);
-        if (data.contact.email) {
-            or.push({'emails.value' : data.contact.email});
-            set.emailsort = data.contact.email;
-        }
-        if(data.gender) set.gender = data.gender;
-        var push = {'accounts.foursquare':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
+    return value;
 }
+
 
 inserters.gcontacts = function(data, svcName, callback) {
     svcName = 'googleContacts';
@@ -249,44 +284,6 @@ inserters.gcontacts = function(data, svcName, callback) {
         secondFaM(or, push, addToSet, set, callback);
     });
 }
-
-inserters.instagram = function(data, svcName, callback) {
-    var name = data.full_name;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName, photo:data.profile_picture});
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise
-        var or = [{'accounts.instagram.data.id':data.id}];
-        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(name);
-        var push = {'accounts.instagram':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
-
-inserters.linkedin = function(data, svcName, callback) {
-    var name = data.firstName + ' ' + data.lastName;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName});
-    if(data.pictureUrl)
-        addToSet.photos = data.pictureUrl;
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise, first entry is just to ensure we never match on nothing
-        var or = [{'accounts.linkedin.data.id':data.id}];
-        if(cleanedName)
-            or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(name);
-        var push = {'accounts.linkedin':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
-
 
 function createSet(baseObj, svcName, name) {
     var set = setName(name);

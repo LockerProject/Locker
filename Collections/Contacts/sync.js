@@ -43,19 +43,23 @@ exports.gatherContacts = function(cb) {
             cb(); // synchro delete, async/background reindex
             // This should really be timered, triggered, something else
             locker.providers(['contact'], function(err, services) {
-                if (!services) return;
-                services.forEach(function(svc) {
-                    for(var i in svc.provides) {
-                        var provides = svc.provides[i];
-                        if(acceptedServices[provides]) {
-                            var endpoint = acceptedServices[provides];
-                            if(endpoint === 1) endpoint = provides.substring(0, provides.indexOf('/'));
-                            exports.getContacts(svc.provider, endpoint , svc.id, function() {
-                                logger.info(svc.provider + ' done!');
-                            });
-                            return;
+                locker.providers(['connection'], function(err, connectionServices) {
+                    if (!(services || connectionServices)) return;
+                    services = services || [];
+                    for(var i in connectionServices) services.push(connectionServices[i]);
+                    services.forEach(function(svc) {
+                        for(var i in svc.provides) {
+                            var provides = svc.provides[i];
+                            if(acceptedServices[provides]) {
+                                var endpoint = acceptedServices[provides];
+                                if(endpoint === 1) endpoint = provides.substring(0, provides.indexOf('/'));
+                                exports.getContacts(svc.provider, endpoint , svc.id, function() {
+                                    logger.info(svc.provider + ' done!');
+                                });
+                                return;
+                            }
                         }
-                    }
+                    });
                 });
             });
         });
