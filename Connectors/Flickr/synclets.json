@@ -4,5 +4,5 @@
         "contacts":"nsid"
     },
     "synclets":[{"name":"contacts", "frequency":3600},
-                {"name":"photos", "frequency": 3600}],
+                {"name":"photos", "frequency": 3600}]
 }
