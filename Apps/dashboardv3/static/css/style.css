@@ -306,3 +306,26 @@ button.publish {
   padding: 5px 10px;
   cursor: pointer;
 }
+
+#firstvisit-overlay {
+  border: solid 1px #AAA;
+  position: fixed;
+  width: 800px;
+  height: 315px;
+  top: 100px;
+  left: 226px;
+  background: white;
+}
+
+#firstvisit-overlay .content {
+  font-size: 36px;
+  font-weight: 200;
+  margin: 40px;
+  line-height: 1.2em;
+  width: 600px;
+}
+
+#firstvisit-overlay .action {
+  float: right;
+  margin: 0 30px;
+}

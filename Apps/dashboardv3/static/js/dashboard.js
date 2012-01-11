@@ -52,6 +52,11 @@ $(document).ready(function() {
       loadApp();
     }
   });
+  
+  $('.gotit-button').click(function(e) {
+      e.preventDefault();
+      $(this).parent().parent().hide();
+  });
 });
 
 var loadApp = function(callback) {

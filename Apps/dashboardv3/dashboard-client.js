@@ -364,10 +364,9 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
     var firstVisit = false;
-    console.log(req.cookies);
-    if (req.cookies.firstvisit === true) {
+    if (req.cookies.firstvisit === 'true') {
         firstVisit = true;
-        req.cookies.firstvisit = false;
+        res.clearCookie('firstvisit');
     }
     getAppsInfo(8, function(sortedResult) {
         getSynclets(function(err, synclets) {

@@ -1,4 +1,4 @@
-$.cookie("firstvisit", true);
+$.cookie("firstvisit", true, {path: '/' });
 
 var profileTimeout;
 
@@ -12,7 +12,7 @@ $(function() {
         e.preventDefault();
         var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
         popup.focus();
-      });
+    });
 });
 
 // this one is called only when going through a first-time connection

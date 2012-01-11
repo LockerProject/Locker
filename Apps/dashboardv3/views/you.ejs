@@ -31,6 +31,14 @@
     <img class='installed' src="img/icons/32px/<%= synclets.installed[i].provider %>.png"></a>
   <% } %>
 </div>
-<% if (firstVisit === true) { %>
-  alert('hi');
+<% if (firstVisit === false) { %>
+  <div id="firstvisit-overlay">
+    <div class="content">
+      When you want to connect more services, click on the logo under "Your Services", or go to your "Account Settings" page.
+    </div>
+    <div class="action">
+      <span><a href="/dashboard/you#connect">Oops, take me back</a></span>
+      <img class="gotit-button" src="img/got-it.png" />
+    </div>
+  </div>
 <% } %>
