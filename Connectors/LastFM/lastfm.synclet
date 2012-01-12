@@ -1,0 +1,10 @@
+{
+    "title"    : "Last.fm"
+  , "status"   : "stable"
+  , "provider" : "lastfm"
+  , "provides" : ["friends/lastfm"]
+  , "synclets" : [{"name"      : "friends"
+                  ,"frequency" : 3600}
+                 ,{"name"      : "scrobbles"
+                  ,"frequency" : 600}]
+}
