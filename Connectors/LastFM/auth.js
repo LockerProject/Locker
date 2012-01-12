@@ -1,28 +1,17 @@
 var request = require('request')
   , url     = require('url')
-  , crypto  = require('crypto');
+  , path    = require('path')
+  , lastfm  = require(path.join(__dirname, 'lib.js'));
 
 /*
- * http://www.last.fm/api/webauth
+ * This function is a one-off because it's neither unauthenticated nor fully authenticated.
  */
-function sign(query, apiKeys) {
-    md5 = crypto.createHash('md5');
-
-    sortStr = ""
-    Object.keys(query).sort().forEach(function (key) {
-        sortStr += key + query[key];
-    });
-    sortStr += apiKeys.appSecret;
-    md5.update(sortStr);
-
-    return md5.digest('hex');
-};
-
 function api(method, params, apiKeys, cb) {
     params.method  = method;
     params.api_key = apiKeys.appKey;
-    params.api_sig = sign(params, apiKeys);
-    // this HAS to go onto the query outside the signing, or signature verification fails
+    params.api_sig = lastfm.sign(params, apiKeys);
+    /* This HAS to go onto the query after it's signed, or signature
+       verification will fail. */
     params.format  = 'json';
 
     // http://ws.audioscrobbler.com/2.0/
