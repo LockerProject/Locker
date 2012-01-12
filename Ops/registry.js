@@ -293,6 +293,7 @@ exports.getMyApps = function(req, res) {
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
+    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
     console.log("Install is being ran!");
     npm.commands.install([arg.name], function(err){
@@ -497,7 +498,7 @@ function authIsAuth(req, res) {
     try {
         if(authModule.direct) return authModule.direct(res);
         // rest require apikeys
-        if(!apiKeys[id]) return res.send("missing required api keys", 500);
+        if(!apiKeys[id] && js.keys !== false && js.keys != "false") return res.send("missing required api keys", 500);
         if(typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function(err, auth) {
             if(err) return res.send(err, 500);
             finishAuth(js, auth, res);
@@ -535,6 +536,7 @@ function authIsAuth(req, res) {
         if(method == 'POST') auth = {token: body, clientID: theseKeys.appKey, clientSecret: theseKeys.appSecret};
         if(typeof authModule.authComplete == 'function') {
             return authModule.authComplete(auth, function(err, auth) {
+                if(err) return res.send(err, 500);
                 finishAuth(js, auth, res);
             });
         }
@@ -548,7 +550,7 @@ function finishAuth(js, auth, res) {
     js.auth = auth;
     js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
-    serviceManager.mapUpsert(path.join('Me/node_modules',js.id,'package.json'));
+    serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
