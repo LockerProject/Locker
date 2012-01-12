@@ -10,12 +10,12 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var info = {};
+var info = [];
 
 exports.sync = function (processInfo, cb) {
     lastfm.getInfo(processInfo
                  , function (me) {
-                       info = me;
+                       info = [me];
                    }
                  , function (err) {
                        if (err) {
@@ -23,7 +23,7 @@ exports.sync = function (processInfo, cb) {
                            cb(err);
                        }
                        else {
-                           cb(null, {data : {info : [info]}});
+                           cb(null, {data : {info : info}});
                        }
                    }
     );
