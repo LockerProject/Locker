@@ -318,31 +318,3 @@ function setName(set, name) {
     if(space > 1) set.lastnamesort = name.substr(space+1).toLowerCase();
     return set;
 }
-
-var jl = {
-id: "5301205",
-name: "Josh Lasky",
-first_name: "Josh",
-last_name: "Lasky",
-gender: "male",
-locale: "en_US",
-link: "http://www.facebook.com/joshua.lasky",
-username: "joshua.lasky",
-third_party_id: "Hi7_50vEi3GA6WnKY6fY5TfAq9U",
-updated_time: 1325568929
-}
-
-var bd = {
-id: "5302558",
-name: "Ben Detofsky",
-first_name: "Ben",
-last_name: "Detofsky",
-gender: "male",
-locale: "en_US",
-link: "http://www.facebook.com/ben.detofsky",
-username: "ben.detofsky",
-third_party_id: "51wtaQOUc3kcgpuXDTmw51Xjz5g",
-updated_time: 1323020371
-}
-
-inserters.generic
