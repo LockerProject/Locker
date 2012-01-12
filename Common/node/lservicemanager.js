@@ -322,7 +322,7 @@ exports.spawn = function(serviceId, callback) {
 
     });
     app.on('exit', function (code,signal) {
-        logger.info(svc.id + " process has ended. (" + code + ":" + signal + ")");
+        logger.info(svc.id + " exited with status " + code + ", signal " + signal);
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
@@ -371,7 +371,7 @@ exports.shutdown = function(cb) {
         var svc = serviceMap[mapEntry];
         if (svc.pid) {
             try {
-                logger.info("Killing running service " + svc.id + " at pid " + svc.pid);
+                logger.info("Signalling " + svc.id + " to shut down (pid " + svc.pid + ")");
                 process.kill(svc.pid, "SIGINT");
             } catch(e) {
             }
@@ -420,7 +420,7 @@ function checkForShutdown() {
     for(var mapEntry in serviceMap) {
         var svc = serviceMap[mapEntry];
         if (svc.pid)  {
-            logger.info(svc.id + " is still running, cannot complete shutdown.");
+            logger.info("Waiting for "+svc.id+" to exit.");
             return;
         }
     }
