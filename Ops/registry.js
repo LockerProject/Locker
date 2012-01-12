@@ -295,7 +295,7 @@ exports.install = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-    console.log("Install is being ran!");
+    logger.info("installing "+arg.name);
     npm.commands.install([arg.name], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
