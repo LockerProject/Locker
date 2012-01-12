@@ -31,8 +31,7 @@ exports.api = function (method, params, auth, cb) {
                           , pathname : '/2.0/'
                           , query    : params})
               , cb);
-}
-
+};
 
 exports.paged = function (synclet, method, params, processInfo, perPage, extractor, cb) {
     // Using config as a shared namespace requires care -- grab *only* the namespace you
@@ -83,6 +82,21 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
     );
 };
 
+/*
+ * This is pretty bullshitty, but we need *something*, and every track is
+ * guaranteed to have a URL.
+ */
+exports.createId = function (track) {
+    if (track.mbid) {
+        return track.mbid;
+    }
+    else {
+        var md5 = crypto.createHash('md5');
+        md5.update(track.url);
+        return md5.digest('hex');
+    }
+};
+
 exports.getFriends = function (processInfo, friendHandler, cb) {
     var PAGESIZE = 50;
 
@@ -102,7 +116,28 @@ exports.getFriends = function (processInfo, friendHandler, cb) {
                       cb(null, config);
                   }
     );
-}
+};
+
+exports.getLibrary = function (processInfo, trackHandler, cb) {
+    var PAGESIZE = 200;
+
+    exports.paged('tracks'
+                , 'library.getTracks'
+                , {}
+                , processInfo
+                , PAGESIZE
+                , function (js) {
+                      return (js && js.tracks) ? js.tracks.track : [];
+                  }
+                , function (err, config, tracks) {
+                      if (err)  return cb(err);
+
+                      for (var i = 0; i < tracks.length; i += 1) trackHandler(tracks[i]);
+
+                      cb(null, config);
+                  }
+    );
+};
 
 exports.getScrobbles = function (processInfo, scrobbler, cb) {
     var PAGESIZE = 200;
@@ -123,7 +158,7 @@ exports.getScrobbles = function (processInfo, scrobbler, cb) {
                       cb(null, config);
                   }
     );
-}
+};
 
 exports.getLovedTracks = function (processInfo, loveHandles, cb) {
     var PAGESIZE = 200;
@@ -144,7 +179,7 @@ exports.getLovedTracks = function (processInfo, loveHandles, cb) {
                       cb(null, config);
                   }
     );
-}
+};
 
 exports.getBannedTracks = function (processInfo, hateBreeder, cb) {
     var PAGESIZE = 200;
@@ -165,7 +200,7 @@ exports.getBannedTracks = function (processInfo, hateBreeder, cb) {
                       cb(null, config);
                   }
     );
-}
+};
 
 exports.getInfo = function (processInfo, infoHandler, cb) {
     exports.api('user.getInfo'
@@ -186,4 +221,25 @@ exports.getInfo = function (processInfo, infoHandler, cb) {
                     cb();
                 }
     );
-}
+};
+
+exports.getShouts = function (processInfo, shoutListener, cb) {
+    var PAGESIZE = 200;
+
+    exports.paged('shouts'
+                , 'user.getShouts'
+                , {}
+                , processInfo
+                , PAGESIZE
+                , function (js) {
+                      return (js && js.shouts) ? js.shouts.shout : [];
+                  }
+                , function (err, config, shouts) {
+                      if (err)  return cb(err);
+
+                      for (var i = 0; i < shouts.length; i += 1) shoutListener(shouts[i]);
+
+                      cb(null, config);
+                  }
+    );
+};
