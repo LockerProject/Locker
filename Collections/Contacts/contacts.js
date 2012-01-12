@@ -72,7 +72,7 @@ app.get('/', function(req, res) {
 
 app.get('/update', function(req, res) {
     sync.gatherContacts(function() {
-        res.send('Updating');
+        res.send('updated');
     });
 });
 

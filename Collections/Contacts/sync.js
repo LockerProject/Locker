@@ -35,10 +35,10 @@ var acceptedServices = {
 
 exports.gatherContacts = function(cb) {
     clearAll(function() {
-        cb(); // synchro delete, async/background reindex
         getServices(function(services) {
             // do them in series so as not to pin the box
             async.forEachSeries(services, processService, function() {
+                cb(); // synchro delete, async/background reindex
                 logger.info('finished processing data from all services');
             });
         });
