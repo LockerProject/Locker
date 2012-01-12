@@ -130,6 +130,18 @@ var maps = {
             'accounts.twitter.data.screen_name':'contact.twitter',
             'accounts.facebook.data.id':'contact.facebook'
         }
+    },
+    gcontacts: {
+        photo: function(data) {
+            if(data.id && data.photo) return '/synclets/gcontacts/getPhoto/' + data.id;
+        },
+        address: {
+            key: 'address'
+        },
+        phoneNumber: {
+            key: 'phone'
+        },
+        email: 'email'
     }
 };
 
@@ -157,9 +169,13 @@ inserters.generic = function(data, svcName, callback) {
     if(gender) set.gender = gender;
     
     var addToSet = createAddToSet({cleanedName:cleanedName, photo:photo});
+    
     //addresses
     var address = getNested(data, map.address);
-    if(address) addToSet.addresses = {type:map.address.type, value:address};
+    if(address) {
+        if(address instanceof Array) addToSet.addresses = {$each:address};
+        else addToSet.addresses = {type:map.address.type, value:address};
+    }
     
     //nicknames
     var nickname = getNested(data, map.nickname);
@@ -168,13 +184,26 @@ inserters.generic = function(data, svcName, callback) {
     //email
     var email = getNested(data, map.email);
     if(email) {
-        addToSet.emails = {value:email};
+        if(email instanceof Array) {
+            for(var i in email) {
+                var eml = email[i];
+                for(var i in eml) {
+                    if(typeof eml[i] === 'string') eml[i] = eml[i].toLowerCase();
+                }
+            }
+            addToSet.emails = {$each:email};
+        } else {
+            addToSet.emails = {value:email.toLowerCase()};
+        }
         set.emailsort = email;
     }
     
     //phoneNumber
     var phoneNumber = getNested(data, map.phoneNumber);
-    if(phoneNumber) addToSet.phoneNumber = {type:map.phoneNumber.type, value:phoneNumber};
+    if(phoneNumber) {
+        if(phoneNumber instanceof Array) addToSet.phoneNumber = {$each:phoneNumber};
+        else addToSet.phoneNumber = {type:map.phoneNumber.type, value:phoneNumber};
+    }
     
     firstFaM(query, set, addToSet, callback, function() {
         genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback);
@@ -188,6 +217,7 @@ inserters.flickr = inserters.generic;
 inserters.instagram = inserters.generic;
 inserters.linkedin = inserters.generic;
 inserters.foursquare = inserters.generic;
+inserters.gcontacts = inserters.generic;
 
 
 function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addToSet, callback) {
@@ -228,63 +258,6 @@ function getNested(data, key) {
     return value;
 }
 
-
-inserters.gcontacts = function(data, svcName, callback) {
-    svcName = 'googleContacts';
-    var name = data.name;
-    var cleanedName = cleanName(name);
-    var query = createQuery(data, svcName);
-    var baseObj = createBaseObj(data);
-    var set = createSet(baseObj, svcName, name);
-    var addToSet = createAddToSet({cleanedName:cleanedName});
-    //photos
-    if(data.id && data.photo) addToSet.photos = '/synclets/gcontacts/getPhoto/' + data.id;
-    //addresses
-    if(data.address) {
-        var addresses = [];
-        for(var i in data.address) {
-            if(!(data.address[i] && data.address[i].value)) continue;
-            addresses.push(data.address[i]);
-        }
-        addToSet.addresses = {$each:addresses};
-    }
-    //phones
-    if(data.phone) {
-        var phones = [];
-        for(var i in data.phone) {
-            if(!(data.phone[i] && data.phone[i].value)) continue;
-            phones.push(data.phone[i]);
-        }
-        addToSet.phoneNumbers = {$each:phones};
-    }
-    var emails = [];
-    //emails
-    if(data.email) {
-        for(var i in data.email) {
-            if(!(data.email[i] && data.email[i].value)) continue;
-            data.email[i].value = data.email[i].value.toLowerCase();
-            if(!set.emailsort) set.emailsort = data.email[i].value.toLowerCase();
-            emails.push(data.email[i]);
-        }
-        addToSet.emails = {$each:emails};
-    }
-    firstFaM(query, set, addToSet, callback, function() {
-        //match otherwise
-        var or = [{'accounts.googleContacts.data.id':data.id}];
-        if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
-        var set = setName(data.name);;
-        if (emails) {
-            for (var i in emails) {
-                or.push({'emails.value' : emails[i].value});
-                if(!set.emailsort) set.emailsort = emails[i].value;
-            }
-        }
-        
-        var push = {'accounts.googleContacts':baseObj};
-        secondFaM(or, push, addToSet, set, callback);
-    });
-}
-
 function createSet(baseObj, svcName, name) {
     var set = setName(name);
     set['accounts.' + svcName + '.$'] = baseObj;
@@ -310,6 +283,7 @@ function createQuery(data, svcName, idFieldName) {
 }
 
 function firstFaM(query, set, addToSet, done, noDoc) {
+    console.error("DEBUG: query", query);
     collection.findAndModify(query, [['_id','asc']], 
                             {$set: set, $addToSet:addToSet},
                             {safe:true, new: true}, function(err, doc) {
@@ -320,6 +294,7 @@ function firstFaM(query, set, addToSet, done, noDoc) {
 
 
 function secondFaM(or, push, addToSet, set, callback) {
+    console.error("DEBUG: or", or);
     collection.findAndModify({$or:or}, [['_id','asc']], 
                              {$push:push,
                               $addToSet:addToSet,
@@ -345,3 +320,31 @@ function setName(set, name) {
     if(space > 1) set.lastnamesort = name.substr(space+1).toLowerCase();
     return set;
 }
+
+var jl = {
+id: "5301205",
+name: "Josh Lasky",
+first_name: "Josh",
+last_name: "Lasky",
+gender: "male",
+locale: "en_US",
+link: "http://www.facebook.com/joshua.lasky",
+username: "joshua.lasky",
+third_party_id: "Hi7_50vEi3GA6WnKY6fY5TfAq9U",
+updated_time: 1325568929
+}
+
+var bd = {
+id: "5302558",
+name: "Ben Detofsky",
+first_name: "Ben",
+last_name: "Detofsky",
+gender: "male",
+locale: "en_US",
+link: "http://www.facebook.com/ben.detofsky",
+username: "ben.detofsky",
+third_party_id: "51wtaQOUc3kcgpuXDTmw51Xjz5g",
+updated_time: 1323020371
+}
+
+inserters.generic
