@@ -10,9 +10,9 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var banned = [];
-
 exports.sync = function (processInfo, cb) {
+    var banned = [];
+
     lastfm.getBannedTracks(processInfo
                          , function (track) {
                                track.id = track.date.uts;

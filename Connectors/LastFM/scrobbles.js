@@ -10,9 +10,9 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var scrobbles = [];
-
 exports.sync = function (processInfo, cb) {
+    var scrobbles = [];
+
     lastfm.getScrobbles(processInfo
                       , function (play) {
                             play.id = play.date.uts;

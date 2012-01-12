@@ -10,12 +10,11 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var shouts = [];
-
 exports.sync = function (processInfo, cb) {
+    var shouts = [];
+
     lastfm.getShouts(processInfo
                    , function (shout) {
-                         shout.id = shout.date;
                          shouts.push(shout);
                      }
                    , function (err, config) {

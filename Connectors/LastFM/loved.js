@@ -10,9 +10,9 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var loved = [];
-
 exports.sync = function (processInfo, cb) {
+    var loved = [];
+
     lastfm.getLovedTracks(processInfo
                         , function (track) {
                               track.id = track.date.uts;

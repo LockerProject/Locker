@@ -10,9 +10,9 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var tracks = [];
-
 exports.sync = function (processInfo, cb) {
+    var tracks = [];
+
     lastfm.getLibrary(processInfo
                     , function (track) {
                           track.id = lastfm.createId(track);

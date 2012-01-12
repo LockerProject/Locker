@@ -23,5 +23,5 @@
                   ,"frequency" : 86400}
                  ,{"name"      : "shouts"
                   ,"frequency" : 3600}]
-  , "mongoId" : {"shouts" : "date"}
+  , "mongoId" : {"shout" : "date"}
 }

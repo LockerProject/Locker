@@ -10,9 +10,9 @@
 var path   = require('path')
   , lastfm = require(path.join(__dirname, 'lib.js'));
 
-var friends = [];
-
 exports.sync = function (processInfo, cb) {
+    var friends = [];
+
     lastfm.getFriends(processInfo
                     , function (friend) {
                           friends.push(friend);
