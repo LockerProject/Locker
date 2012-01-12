@@ -241,12 +241,14 @@ exports.alive = false;
     }
 
     function shutdown(returnCode) {
-        process.stdout.write("\n");
         shuttingDown_ = true;
+        process.stdout.write("\n");
+        logger.info("Shutting down...");
         serviceManager.shutdown(function() {
             mongoProcess.kill();
-            logger.info("Shutdown complete.");
-            process.exit(returnCode);
+            logger.info("Shutdown complete.", {}, function (err, level, msg, meta) {
+                process.exit(returnCode);
+            });
         });
     }
 
