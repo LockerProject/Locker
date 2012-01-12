@@ -249,7 +249,7 @@ exports.spawn = function(serviceId, callback) {
     logger.info('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        sourceDirectory: path.join(lconfig.lockerDir, svc.srcdir),
+        sourceDirectory: ((svc.srcdir.charAt(0) == '/') ? svc.srcdir : path.join(lconfig.lockerDir, svc.srcdir)),
         workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
         lockerUrl:lconfig.lockerBase,
         externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
