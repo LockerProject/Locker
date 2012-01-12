@@ -155,7 +155,7 @@ inserters.generic = function(data, svcName, callback) {
     if(typeof map.name === 'function') name = map.name(data);
     else name = data[map.name || 'name'];
     
-    var baseObj = {data:data, lastUpdated : lastUpdated || Date.now()};
+    var baseObj = {data:data, lastUpdated : Date.now()};
     
     var query = {};
     query['accounts.' + svcName + '.data.' + idKey] = id;
