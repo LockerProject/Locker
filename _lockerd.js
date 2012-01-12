@@ -146,8 +146,7 @@ function finishStartup() {
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
                 registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry); // this may trigger synclets to start!
-                runMigrations();
+                serviceManager.init(syncManager, registry, runMigrations); // this may trigger synclets to start!
             });
         });
     });
