@@ -297,6 +297,14 @@ aside {
   border-bottom: solid 1px #F7931E;
 }
 
+.connect .installed {
+  margin: 0 5px 0 0;
+}
+
+.gotit-button {
+  cursor: pointer;
+}
+
 button.publish {
   background-color: #F7931E;
   color: white;

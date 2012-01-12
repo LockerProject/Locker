@@ -17,6 +17,12 @@ $(function() {
     if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
         showAllConnectors();
     }
+    
+    $('#start-exploring-link').click(function(e) {
+        e.preventDefault();
+        window.parent.location.hash = "#contactsviewer";
+        window.parent.location.reload();
+    });
 });
 
 // this one is called only when going through a first-time connection
