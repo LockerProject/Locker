@@ -155,20 +155,24 @@ inserters.generic = function(data, svcName, callback) {
     if(typeof map.name === 'function') name = map.name(data);
     else name = data[map.name || 'name'];
     
-    var cleanedName = cleanName(name);
-    var baseObj = createBaseObj(data);
-    var photo;
-    if(typeof map.photo === 'function') photo = map.photo(data);
-    else photo = data[map.photo || 'photo'];
+    var baseObj = {data:data, lastUpdated : lastUpdated || Date.now()};
     
-    var query = createQuery(data, svcName);
+    var query = {};
+    query['accounts.' + svcName + '.data.' + idKey] = id;
     
-    var set = createSet(baseObj, svcName, name);
+    var set = setName(name);
+    set['accounts.' + svcName + '.$'] = baseObj;
+    
     //gender
     var gender = getNested(data, map.gender);
     if(gender) set.gender = gender;
     
-    var addToSet = createAddToSet({cleanedName:cleanedName, photo:photo});
+    var addToSet = {};
+    var cleanedName = cleanName(name);
+    if(cleanedName) addToSet['_matching.cleanedNames'] = cleanedName;
+    
+    if(typeof map.photo === 'function') addToSet.photos = map.photo(data);
+    else addToSet.photos = data[map.photo || 'photo'];
     
     //addresses
     var address = getNested(data, map.address);
@@ -258,30 +262,6 @@ function getNested(data, key) {
     return value;
 }
 
-function createSet(baseObj, svcName, name) {
-    var set = setName(name);
-    set['accounts.' + svcName + '.$'] = baseObj;
-    return set;
-}
-
-function createAddToSet(info) {
-    var addToSet = {};
-    if(info.cleanedName) addToSet['_matching.cleanedNames'] = info.cleanedName;
-    if(info.photo) addToSet.photos = info.photo;
-    return addToSet;
-}
-
-function createBaseObj(data, lastUpdated) {
-    return {data:data, lastUpdated : lastUpdated || Date.now()};
-}
-
-function createQuery(data, svcName, idFieldName) {
-    idFieldName = idFieldName || 'id';
-    var obj = {};
-    obj['accounts.' + svcName + '.data.' + idFieldName] = data[idFieldName];
-    return obj;
-}
-
 function firstFaM(query, set, addToSet, done, noDoc) {
     collection.findAndModify(query, [['_id','asc']], 
                             {$set: set, $addToSet:addToSet},
@@ -314,7 +294,5 @@ function setName(set, name) {
     if(!name || typeof name != 'string') return set;
     set.name = name;
     set.firstnamesort = name.toLowerCase();
-    var space = name.lastIndexOf(' ');
-    if(space > 1) set.lastnamesort = name.substr(space+1).toLowerCase();
     return set;
 }
