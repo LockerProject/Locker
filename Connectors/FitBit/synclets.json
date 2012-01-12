@@ -5,6 +5,6 @@
     "activity":"date"
     },
     "synclets":[{"name":"profile", "frequency":7200},
-                {"name":"device", "frequency": 3600, tolerance: 0},
+                {"name":"device", "frequency": 3600, "tolerance": 0},
                 {"name":"activity", "frequency": 7200}]
 }
