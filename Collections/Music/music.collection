@@ -1,0 +1,10 @@
+{
+    "title"            : "Music"
+  , "desc"             : "A collection of playable tracks."
+  , "run"              : "node music.js"
+  , "status"           : "unstable"
+  , "handle"           : "tracks"
+  , "provides"         : ["music"]
+  , "mongoCollections" : ["track"]
+  , "events"           : [["tracks/rdio", "/events"]]
+}
