@@ -1,9 +1,15 @@
 {
-    "title":"Contacts Collection",
-    "desc":"A collection of contacts from many places.",
+  "author": "Singly <nerds@singly.com>",
+  "name": "contacts",
+  "description": "Contacts Collection",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Contacts",
     "run":"node contacts.js",
-    "type":"collection",
-    "status":"stable",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
     "handle":"contacts",
     "provides":["contact"],
     "mongoCollections": ["contact"],
@@ -16,4 +22,10 @@
         ["contact/gcontacts", "/events"],
         ["contact/flickr", "/events"],
         ["connection/linkedin", "/events"]]
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }

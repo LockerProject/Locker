@@ -4,12 +4,13 @@ var request = require('request');
 var lconfig = require(path.join(__dirname, "../Common/node/lconfig.js"));
 lconfig.load(path.join(__dirname, "../Config/config.json"));
 
-if(!path.exists("./package.json"))
-{
-    console.error("missing ./package.json?");
+try {
+    var js = JSON.parse(fs.readFileSync('./package.json'));
+} catch(e) {
+    console.error("missing or invalid ./package.json?");
     process.exit(1);
-}
 
+}
 var base = path.dirname(__dirname) + "/"; // parent of Ops and trailing slash
 var full = path.join(process.cwd(),"package.json");
 var local = full.replace(base, "");

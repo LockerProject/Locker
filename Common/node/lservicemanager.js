@@ -58,7 +58,7 @@ exports.init = function (sman, reg) {
     });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){
         // always upsert in case the .collection data changed (TODO be smarter using stat+timestamp?)
-        exports.mapUpsert('Collections/'+coll+'/'+coll.toLowerCase()+'.collection');
+        exports.mapUpsert('Collections/'+coll+'/package.json');
     });
 }
 
