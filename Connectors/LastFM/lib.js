@@ -65,7 +65,7 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
                         }
                         catch (exc) { return cb(exc); }
 
-                        if ('error' === js.status) return cb(js.message);
+                        if (js.error) return cb(js.message);
 
                         var objList = extractor(js);
                         if (objList.length < perPage) {
@@ -113,7 +113,7 @@ exports.getScrobbles = function (processInfo, scrobbler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      return js.recenttracks.track;
+                      return (js && js.recenttracks) ? js.recenttracks.track : [];
                   }
                 , function (err, config, scrobbles) {
                       if (err)  return cb(err);
@@ -122,5 +122,68 @@ exports.getScrobbles = function (processInfo, scrobbler, cb) {
 
                       cb(null, config);
                   }
+    );
+}
+
+exports.getLovedTracks = function (processInfo, loveHandles, cb) {
+    var PAGESIZE = 200;
+
+    exports.paged('lovedTracks'
+                , 'user.getLovedTracks'
+                , {}
+                , processInfo
+                , PAGESIZE
+                , function (js) {
+                      return (js && js.lovedtracks) ? js.lovedtracks.track : [];
+                  }
+                , function (err, config, loved) {
+                      if (err)  return cb(err);
+
+                      for (var i = 0; i < loved.length; i += 1) loveHandles(loved[i]);
+
+                      cb(null, config);
+                  }
+    );
+}
+
+exports.getBannedTracks = function (processInfo, hateBreeder, cb) {
+    var PAGESIZE = 200;
+
+    exports.paged('bannedTracks'
+                , 'user.getBannedTracks'
+                , {}
+                , processInfo
+                , PAGESIZE
+                , function (js) {
+                      return (js && js.bannedtracks) ? js.bannedtracks.track : [];
+                  }
+                , function (err, config, banned) {
+                      if (err)  return cb(err);
+
+                      for (var i = 0; i < banned.length; i += 1) hateBreeder(banned[i]);
+
+                      cb(null, config);
+                  }
+    );
+}
+
+exports.getInfo = function (processInfo, infoHandler, cb) {
+    exports.api('user.getInfo'
+              , {}
+              , processInfo.auth
+              , function (err, resp, body) {
+                    if (err)  return cb(err);
+
+                    var js;
+                    try {
+                        js = JSON.parse(body);
+                    }
+                    catch (exc) { return cb(exc); }
+
+                    if (js.error) return cb(js.message);
+
+                    infoHandler(js.user);
+                    cb();
+                }
     );
 }
