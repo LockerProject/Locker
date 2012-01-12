@@ -15,10 +15,7 @@ var tracks = [];
 exports.sync = function (processInfo, cb) {
     rdio.getTracksInCollection(processInfo
                              , function (track) {
-                                   track.id = track.key;
-                                   tracks.push({obj : track
-                                              , timestamp : Date.now()
-                                              , type : 'new'});
+                                   tracks.push(track);
                                }
                              , function (err, config) {
                                    if (err) {

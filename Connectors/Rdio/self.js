@@ -10,13 +10,12 @@
 var path = require('path')
   , rdio = require(path.join(__dirname, 'lib.js'));
 
-var self = {};
+var self = [];
 
 exports.sync = function (processInfo, cb) {
     rdio.getSelf(processInfo.auth
                , function (me) {
-                     self = me;
-                     self.id = self.key;
+                     self = [me];
                  }
                , function (err) {
                      if (err) {
@@ -24,7 +23,7 @@ exports.sync = function (processInfo, cb) {
                          cb(err);
                      }
                      else {
-                         cb(null, {data : {profile : [{obj : self}]}});
+                         cb(null, {data : {profile : self}});
                      }
                  }
     );

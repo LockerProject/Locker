@@ -15,10 +15,7 @@ var contacts = [];
 exports.sync = function (processInfo, cb) {
     rdio.getFollowing(processInfo
                     , function (following) {
-                          following.id = following.key;
-                          contacts.push({obj : following
-                                       , timestamp : Date.now()
-                                       , type : 'new'});
+                          contacts.push(following);
                       }
                     , function (err, config) {
                           if (err) {

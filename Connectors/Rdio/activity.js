@@ -15,10 +15,7 @@ var updates = [];
 exports.sync = function (processInfo, cb) {
     rdio.getActivityStream(processInfo
                          , function (update) {
-                               update.id = update.date;
-                               updates.push({obj : update
-                                          , timestamp : Date.now()
-                                          , type : 'new'});
+                               updates.push(update);
                            }
                          , function (err, config) {
                                if (err) {

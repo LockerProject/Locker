@@ -6,6 +6,10 @@
                 , "following/rdio"
                 , "tracks/rdio"
                 , "activity/rdio"]
+  , "mongoId" : {"update"  : "date"
+               , "contact" : "key"
+               , "track"   : "key"
+               , "profile" : "key"}
   , "synclets" : [{"name"      : "self"
                  , "frequency" : 3600
                  , "threshold" : 0}
