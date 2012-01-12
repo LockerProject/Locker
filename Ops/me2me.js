@@ -41,9 +41,9 @@ function meScan()
             {
                 console.log("merging collection "+dir);
                 var uc = dir.charAt(0).toUpperCase() + dir.substr(1);
-                var js2 = JSON.parse(fs.readFileSync(path.join(lockerBase, "Collections", uc, dir+'.collection'), 'utf8'));
+                var js2 = JSON.parse(fs.readFileSync(path.join(lockerBase, "Collections", uc, 'package.json'), 'utf8'));
                 js = extend(js, js2);
-                js.manifest = path.join("Collections", uc, dir+'.collection');
+                js.manifest = path.join("Collections", uc, 'package.json');
                 js.handle = dir;
                 saver(js);
                 continue;
