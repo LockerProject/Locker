@@ -229,7 +229,7 @@ function genericComplete(svcName, idKey, data, cleanedName, name, baseObj, addTo
     for(var i in map.or) {
         obj = {};
         obj[i] = getNested(data, map.or[i]);
-        or.push(obj);
+        if(obj[i]) or.push(obj);
     }
     if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
     var set = setName(name);
@@ -283,7 +283,6 @@ function createQuery(data, svcName, idFieldName) {
 }
 
 function firstFaM(query, set, addToSet, done, noDoc) {
-    console.error("DEBUG: query", query);
     collection.findAndModify(query, [['_id','asc']], 
                             {$set: set, $addToSet:addToSet},
                             {safe:true, new: true}, function(err, doc) {
@@ -294,7 +293,6 @@ function firstFaM(query, set, addToSet, done, noDoc) {
 
 
 function secondFaM(or, push, addToSet, set, callback) {
-    console.error("DEBUG: or", or);
     collection.findAndModify({$or:or}, [['_id','asc']], 
                              {$push:push,
                               $addToSet:addToSet,
