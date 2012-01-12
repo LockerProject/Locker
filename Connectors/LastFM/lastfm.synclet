@@ -2,9 +2,19 @@
     "title"    : "Last.fm"
   , "status"   : "stable"
   , "provider" : "lastfm"
-  , "provides" : ["friends/lastfm"]
+  , "provides" : ["friends/lastfm"
+                , "scrobbles/lastfm"
+                , "loved/lastfm"
+                , "banned/lastfm"
+                , "info/lastfm"]
   , "synclets" : [{"name"      : "friends"
                   ,"frequency" : 3600}
                  ,{"name"      : "scrobbles"
-                  ,"frequency" : 600}]
+                  ,"frequency" : 600}
+                 ,{"name"      : "loved"
+                  ,"frequency" : 7200}
+                 ,{"name"      : "banned"
+                  ,"frequency" : 7200}
+                 ,{"name"      : "info"
+                  ,"frequency" : 86400}]
 }
