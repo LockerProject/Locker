@@ -1,8 +1,5 @@
 {
-    "title"    : "Rdio"
-  , "status"   : "stable"
-  , "provider" : "rdio"
-  , "provides" : ["profile/rdio"
+    "provides" : ["profile/rdio"
                 , "following/rdio"
                 , "tracks/rdio"
                 , "activity/rdio"]
