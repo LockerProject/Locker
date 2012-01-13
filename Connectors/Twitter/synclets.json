@@ -8,15 +8,19 @@
     "types" : {
         "timeline":"tweet",
         "tweets":"tweet",
+        "self":"contact",
         "mentions":"tweet"
     },
+    "profileIds" : ["id_str", "screen_name"],
     "strip" : {
         "contact":["status"]
     },
-    "synclets":[{"name": "related", "frequency": 3600},
-                {"name": "friends", "frequency": 3600},
-                {"name": "timeline", "frequency": 120},
-                {"name": "tweets", "frequency": 600},
-                {"name": "tweet"},
-                {"name": "mentions", "frequency": 600}]
+    "synclets":[
+        {"name": "self", "frequency": 7200},
+        {"name": "friends", "frequency": 3600},
+        {"name": "tweets", "frequency": 600},
+        {"name": "timeline", "frequency": 120},
+        {"name": "mentions", "frequency": 600},
+        {"name": "related", "frequency": 3600},
+        {"name": "tweet"}]
 }

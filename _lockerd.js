@@ -31,6 +31,7 @@ var request = require('request');
 var async = require('async');
 var util = require('util');
 var lutil = require('lutil');
+var carrier = require('carrier');
 require('graceful-fs');
 
 
@@ -80,18 +81,26 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess = spawn('mongod', ['--nohttpinterface',
                                     '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                     '--port', lconfig.mongo.port]);
-    mongoProcess.stderr.on('data', function(data) {
-        logger.error('mongod err: ' + data);
+
+    var mongoStdout = carrier.carry(mongoProcess.stdout);
+    mongoStdout.on('line', function (line) {
+        logger.info('[mongo] ' + line);
+        if(line.match(/ waiting for connections on port/g)) {
+            lmongo.connect(checkKeys);
+        }
+    });
+    var mongoStderr = carrier.carry(mongoProcess.stderr);
+    mongoStderr.on('line', function (line) {
+        logger.error('[mongo] ' + line);
     });
 
-    var mongoOutput = "";
     var mongodExit = function(errorCode) {
         if(shuttingDown_) return;
         if(errorCode !== 0) {
             var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
             db.open(function(error, client) {
                 if(error) {
-                    logger.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
+                    logger.error('Could not connect to mongo: '+errorCode);
                     shutdown(1);
                 } else {
                     logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
@@ -102,16 +111,6 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         }
     };
     mongoProcess.on('exit', mongodExit);
-
-    // watch for mongo startup
-    var callback = function(data) {
-        mongoOutput += data;
-        if(mongoOutput.match(/ waiting for connections on port/g)) {
-            mongoProcess.stdout.removeListener('data', callback);
-            lmongo.connect(checkKeys);
-       }
-    };
-    mongoProcess.stdout.on('data', callback);
 });
 
 
@@ -146,8 +145,7 @@ function finishStartup() {
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
                 registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry); // this may trigger synclets to start!
-                runMigrations();
+                serviceManager.init(syncManager, registry, runMigrations); // this may trigger synclets to start!
             });
         });
     });
@@ -179,9 +177,8 @@ function runMigrations() {
                     curMe.version = metaData.version;
                     lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
                 } else {
-                    // this isn't clean but we have to do something drastic!!!
                     logger.error("failed to run global migration!");
-                    process.exit(1);
+                    shutdown(1);
                 }
                 // if they returned a string, it's a post-startup callback!
                 if (typeof ret == 'string')
@@ -189,8 +186,8 @@ function runMigrations() {
                     serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                 }
             } catch (E) {
-                // TODO: do we need to exit here?!?
                 logger.error("error running global migration : " + migrations[i] + " ---- " + E);
+                shutdown(1);
             }
         }
     }
@@ -205,12 +202,14 @@ function postStartup() {
 }
 
 function shutdown(returnCode) {
-    process.stdout.write("\n");
     shuttingDown_ = true;
+    process.stdout.write("\n");
+    logger.info("Shutting down...");
     serviceManager.shutdown(function() {
         mongoProcess.kill();
-        logger.info("Shutdown complete.");
-        process.exit(returnCode);
+        logger.info("Shutdown complete.", {}, function (err, level, msg, meta) {
+            process.exit(returnCode);
+        });
     });
 }
 

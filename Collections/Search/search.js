@@ -8,12 +8,11 @@
 */
 
 var fs = require('fs'),
-    locker = require('../../Common/node/locker.js');
+    locker = require('locker.js');
 
-var lutil = require('../../Common/node/lutil');
+var lutil = require('lutil');
 var lconfig = require('lconfig');
-lconfig.load('../../Config/config.json');
-var logger = require('logger');
+var logger;
 
 var lockerInfo = {};
 exports.lockerInfo = lockerInfo;
@@ -119,6 +118,8 @@ process.stdin.on('data', function(data) {
             process.exit(1);
         }
         process.chdir(lockerInfo.workingDirectory);
+        lconfig.load('../../Config/config.json');
+        logger = require("logger");
         index.init("index.db", function(err){
             if(err) logger.error(err);
             sync.init(lconfig, index, logger);
