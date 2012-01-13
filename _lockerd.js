@@ -178,9 +178,8 @@ function runMigrations() {
                     curMe.version = metaData.version;
                     lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
                 } else {
-                    // this isn't clean but we have to do something drastic!!!
                     logger.error("failed to run global migration!");
-                    process.exit(1);
+                    shutdown(1);
                 }
                 // if they returned a string, it's a post-startup callback!
                 if (typeof ret == 'string')
@@ -188,8 +187,8 @@ function runMigrations() {
                     serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                 }
             } catch (E) {
-                // TODO: do we need to exit here?!?
                 logger.error("error running global migration : " + migrations[i] + " ---- " + E);
+                shutdown(1);
             }
         }
     }
