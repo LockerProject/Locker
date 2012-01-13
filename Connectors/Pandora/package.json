@@ -1,0 +1,20 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "pandora",
+  "description": "Pandora Connector",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Pandora",
+    "handle": "pandora",
+    "author": "nerds",
+    "update": "auto",
+    "keys": false,
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector"
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

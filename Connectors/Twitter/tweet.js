@@ -7,7 +7,7 @@
 *
 */
 
-var tw = require('../../Connectors/Twitter/lib.js');
+var tw = require('./lib.js');
 var async = require('async');
 
 exports.sync = function(processInfo, cb) {
