@@ -6,7 +6,7 @@
 * Please see the LICENSE file for more information.
 *
 */
-var logger = require(__dirname + "/../../Common/node/logger");
+var logger = require("logger");
 var fs = require('fs');
 var lutil = require('lutil');
 var lmongoutil = require("lmongoutil");

@@ -4,7 +4,7 @@ var longus = require('./longus');
 var sax =  require("sax");
 var readability = require("readabilitySAX");
 var request = require('request');
-var logger = require(__dirname + "/../../Common/node/logger");
+var logger = require("logger");
 
 // simply expand a given url
 exports.expandUrl = function(arg, cbEach, cbDone) {

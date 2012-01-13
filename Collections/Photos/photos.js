@@ -9,7 +9,7 @@
 
 // merge contacts from connectors
 
-var locker = require('../../Common/node/locker.js');
+var locker = require('locker.js');
 var logger;
 
 var fs = require('fs');
@@ -156,7 +156,7 @@ process.stdin.on('data', function(data) {
 
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
-    logger = require(__dirname + "/../../Common/node/logger.js");
+    logger = require("logger.js");
     locker.connectToMongo(function(mongo) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.photo, mongo, locker, lconfig);
         app.listen(0, function() {
