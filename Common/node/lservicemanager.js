@@ -132,6 +132,8 @@ exports.mapUpsert = function (file) {
     }
 
     js.upserted = Date.now();
+    js.manifest = file;
+    js.srcdir = path.dirname(file);
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
@@ -152,8 +154,6 @@ exports.mapUpsert = function (file) {
     logger.verbose("creating "+js.handle);
     js.id = js.provider = js.handle; // kinda legacy where they could differ
     serviceMap[js.id] = js;
-    js.manifest = file;
-    js.srcdir = path.dirname(file);
     js.installed = Date.now();
     cleanLoad(js);
     levents.fireEvent('service://me/#'+js.id, 'new', js);
