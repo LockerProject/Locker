@@ -4,14 +4,12 @@ var longus = require('./longus');
 var sax =  require("sax");
 var readability = require("readabilitySAX");
 var request = require('request');
-var logger = require("logger");
 
 // simply expand a given url
 exports.expandUrl = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
     longus.expand(arg, function(a){
         if(!a || !a.url) return cbDone("invalid url")
-        if(a.err) logger.verbose("error unshortening url: "+a.err);
         cbEach(a.url);
         cbDone();
     });

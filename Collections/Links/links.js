@@ -261,8 +261,8 @@ process.stdin.on('data', function(data) {
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo);
-        dataIn.init(locker, dataStore);
+        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo, logger);
+        dataIn.init(locker, dataStore, logger);
         app.listen(0, 'localhost', function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

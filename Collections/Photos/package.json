@@ -2,25 +2,48 @@
   "author": "Singly <nerds@singly.com>",
   "name": "photos",
   "description": "Photos Collection",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "title": "Photos",
-    "run":"node photos.js",
+    "run": "node photos.js",
     "author": "nerds",
     "update": "auto",
     "github": "https://github.com/LockerProject/Locker",
     "type": "collection",
-    "handle":"photos",
-    "provides":["photo"],
-    "mongoCollections":["photo"],
-    "events":[
-        ["tweets/twitter", "/events"],
-        ["checkin/foursquare", "/events"],
-        ["photo/facebook", "/events"],
-        ["photo/twitpic", "/events"],
-        ["photo/instagram", "/events"],
-        ["photo/flickr", "/events"]
-    ]
+    "handle": "photos",
+    "provides": [
+      "photo"
+    ],
+    "mongoCollections": [
+      "photo"
+    ],
+    "events": [
+      [
+        "tweets/twitter",
+        "/events"
+      ],
+      [
+        "checkin/foursquare",
+        "/events"
+      ],
+      [
+        "photo/facebook",
+        "/events"
+      ],
+      [
+        "photo/twitpic",
+        "/events"
+      ],
+      [
+        "photo/instagram",
+        "/events"
+      ],
+      [
+        "photo/flickr",
+        "/events"
+      ]
+    ],
+    "url": ""
   },
   "engines": {
     "node": "~0.4.9"

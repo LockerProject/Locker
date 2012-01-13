@@ -2,18 +2,18 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require("logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
 var crypto = require('crypto');
 var url = require('url');
 var debug = false;
 
-var dataStore, locker;
+var dataStore, locker, logger;
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore, s){
+exports.init = function(l, dStore, s, log){
     dataStore = dStore;
     locker = l;
+    logger = log;
 }
 
 // manually walk and reindex all possible link sources

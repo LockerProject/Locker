@@ -6,7 +6,7 @@
 * Please see the LICENSE file for more information.
 *
 */
-var logger = require("logger");
+var logger;
 var fs = require('fs');
 var lutil = require('lutil');
 var lmongoutil = require("lmongoutil");
@@ -14,7 +14,7 @@ var lmongoutil = require("lmongoutil");
 // in the future we'll probably need a visitCollection too
 var linkCollection, encounterCollection, queueCollection, db;
 
-exports.init = function(lCollection, eCollection, qCollection, mongo) {
+exports.init = function(lCollection, eCollection, qCollection, mongo, logger) {
     db = mongo.dbClient;
     linkCollection = lCollection;
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
