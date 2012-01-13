@@ -1,0 +1,20 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "fitbit",
+  "description": "Fitbit Connector",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Fitbit",
+    "handle": "fitbit",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false"
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

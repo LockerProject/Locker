@@ -1,5 +1,5 @@
 var config, auth, gdataClient;
-var lfs = require(__dirname + '/../../Common/node/lfs');
+var lfs = require('lfs');
 var mkdirp = require('mkdirp');
 
 exports.sync = function(processInfo, callback) {

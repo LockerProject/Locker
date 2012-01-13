@@ -1,0 +1,43 @@
+body {
+	font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+	font-size: .8em;
+}
+#mapcanvas {
+	border: 6px solid #ccc;
+	float: left;
+}
+
+#placeslist {
+	margin: 0px;
+	padding: 0;
+	height: 100%;
+	border: 6px solid #ccc;
+	border-left: none;
+	overflow: auto;
+}
+
+#placeslist li {
+	list-style-image: none;
+	list-style-type: none;
+	border-bottom: 1px solid #ccc;
+}
+
+#placeslist li .date {
+	font-size: 80%;
+}
+
+#placeslist li .network {
+	float: left;
+	padding: 0 5px 0 0;
+}
+
+#placeslist li .filler {
+	width: auto;
+	height: 40px;
+	padding: 15px 5px 12px;
+}
+
+#placeslist li a {
+	text-decoration: none;
+	color: #000;
+}
