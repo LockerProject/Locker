@@ -48,17 +48,15 @@ exports.init = function (sman, reg, callback) {
         }
     }
 
-    // make sure default *local* collections are here and up to date
-    if(lconfig.collections) lconfig.collections.forEach(function(coll){
-        // always upsert in case the .collection data changed (TODO be smarter using stat+timestamp?)
-        exports.mapUpsert('Collections/'+coll+'/package.json');
-    });
-
-    // make sure default ui, and apps are all installed!
+    // make sure default collections, ui, and apps are all installed!
     var installs = [];
-    if(lconfig.ui && !serviceMap[lconfig.ui]) installs.push(lconfig.ui);
-    if(lconfig.apps) lconfig.apps.forEach(function(app){ if(!serviceMap[app]) installs.push(app) });
-    async.forEachSeries(installs, function(id, cb){ registry.install({name:id}, cb); }, callback);
+    if(lconfig.ui) installs.push(lconfig.ui);
+    if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
+    if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
+    async.forEachSeries(installs, function(id, cb){
+        if(serviceMap[id]) return cb();
+        registry.install({name:id}, cb);
+    }, callback);
 }
 
 // return whole map or just one service from it
