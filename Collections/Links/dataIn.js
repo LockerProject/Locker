@@ -10,7 +10,7 @@ var debug = false;
 
 var dataStore, locker, logger;
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore, s, log){
+exports.init = function(l, dStore, log){
     dataStore = dStore;
     locker = l;
     logger = log;
