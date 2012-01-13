@@ -13,7 +13,7 @@ var lmongo = require("lmongo");
 
 var locker_config;
 
-module.exports = function(config, cb) {
+module.exports.preServices = function(config, cb) {
     locker_config = config;
     logger.info("Migrating to imthemap and registry experience");
     fixNumberDirs(function(ret) {
