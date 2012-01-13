@@ -158,40 +158,48 @@ function runMigrations() {
     var metaData = {version: 1};
     try {
         migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
-        logger.verbose(migrations);
         metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
-        logger.verbose(metaData);
     } catch (E) {}
+
+    // Make sure we havea  valid version
+    metaData.version = metaData.version || "0";
+
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
     // TODO do these using async serially and pass callbacks!
-    for (var i = 0; i < migrations.length; i++) {
-        if (migrations[i].substring(0, 13) > metaData.version) {
-            try {
-                logger.info("running global migration : " + migrations[i]);
-                migrate = require(path.join(lconfig.lockerDir, "migrations", migrations[i]));
-                var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
-                if (ret) {
-                    // load new file in case it changed, then save version back out
-                    var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
-                    metaData.version = migrations[i].substring(0, 13);
-                    curMe.version = metaData.version;
-                    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
-                } else {
+    async.forEach(migrations, function(migration, cb) {
+        if (migration.substring(0, 13) <= metaData.version) {
+            return cb();
+        }
+
+        try {
+            logger.info("running global migration : " + migration);
+            migrate = require(path.join(lconfig.lockerDir, "migrations", migration));
+            migrate(lconfig, function(ret) {
+                if (!ret) {
                     logger.error("failed to run global migration!");
-                    shutdown(1);
+                    return shutdown(1);
                 }
+                metaData.version = migration.substring(0, 13);
+                lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+                cb();
+
+                /*
+                // XXX: These are synchronous only right now, until we can find a less destructive way to do post startup
                 // if they returned a string, it's a post-startup callback!
                 if (typeof ret == 'string')
                 {
                     serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                 }
-            } catch (E) {
-                logger.error("error running global migration : " + migrations[i] + " ---- " + E);
-                shutdown(1);
-            }
+                */
+            }); 
+        } catch (E) {
+            // TODO: do we need to exit here?!?
+            logger.error("error running global migration : " + migrations[i] + " ---- " + E);
+            shutdown(1);
         }
-    }
-    postStartup();
+    }, function() {
+        postStartup();
+    });
 }
 
 // scheduling and misc things
