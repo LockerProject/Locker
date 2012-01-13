@@ -10,7 +10,7 @@
 var collection;
 var db;
 var lconfig;
-var lutil = require('../../Common/node/lutil');
+var lutil = require('lutil');
 var logger;
 var request = require("request");
 var crypto = require("crypto");

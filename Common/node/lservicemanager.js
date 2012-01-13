@@ -48,17 +48,15 @@ exports.init = function (sman, reg, callback) {
         }
     }
 
-    // make sure default *local* collections are here and up to date
-    if(lconfig.collections) lconfig.collections.forEach(function(coll){
-        // always upsert in case the .collection data changed (TODO be smarter using stat+timestamp?)
-        exports.mapUpsert('Collections/'+coll+'/package.json');
-    });
-
-    // make sure default ui, and apps are all installed!
+    // make sure default collections, ui, and apps are all installed!
     var installs = [];
-    if(lconfig.ui && !serviceMap[lconfig.ui]) installs.push(lconfig.ui);
-    if(lconfig.apps) lconfig.apps.forEach(function(app){ if(!serviceMap[app]) installs.push(app) });
-    async.forEachSeries(installs, function(id, cb){ registry.install({name:id}, cb); }, callback);
+    if(lconfig.ui) installs.push(lconfig.ui);
+    if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
+    if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
+    async.forEachSeries(installs, function(id, cb){
+        if(serviceMap[id]) return cb();
+        registry.install({name:id}, cb);
+    }, callback);
 }
 
 // return whole map or just one service from it
@@ -134,6 +132,8 @@ exports.mapUpsert = function (file) {
     }
 
     js.upserted = Date.now();
+    js.manifest = file;
+    js.srcdir = path.dirname(file);
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
@@ -154,8 +154,6 @@ exports.mapUpsert = function (file) {
     logger.verbose("creating "+js.handle);
     js.id = js.provider = js.handle; // kinda legacy where they could differ
     serviceMap[js.id] = js;
-    js.manifest = file;
-    js.srcdir = path.dirname(file);
     js.installed = Date.now();
     cleanLoad(js);
     levents.fireEvent('service://me/#'+js.id, 'new', js);

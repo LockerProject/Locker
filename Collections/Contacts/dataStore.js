@@ -9,7 +9,7 @@
 
 var collection;
 var db;
-var lconfig = require('../../Common/node/lconfig');
+var lconfig = require('lconfig');
 var fs = require('fs');
 var lutil = require('lutil');
 var locker = require('locker');

@@ -8,7 +8,7 @@
 */
 
 var request = require('request');
-var locker = require('../../Common/node/locker.js');
+var locker = require('locker.js');
 var lconfig;
 var dataStore = require('./dataStore');
 var lockerUrl;
@@ -18,7 +18,7 @@ var logger;
 exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
-    logger = require("../../Common/node/logger.js");
+    logger = require("logger.js");
     dataStore.init(mongoCollection, mongo, locker, lconfig);
     exports.eventEmitter = new EventEmitter();
 }
