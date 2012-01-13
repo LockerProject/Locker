@@ -305,3 +305,7 @@ button.publish {
   padding: 5px 10px;
   cursor: pointer;
 }
+
+.template {
+    display:none;
+}

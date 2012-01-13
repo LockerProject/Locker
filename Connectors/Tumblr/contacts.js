@@ -7,7 +7,7 @@
 *
 */
 
-var tumblr = require('../../Connectors/Tumblr/lib.js')
+var tumblr = require('./lib.js')
   , contacts = []
   ;
 

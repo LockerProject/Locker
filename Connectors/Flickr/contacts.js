@@ -7,7 +7,7 @@
 *
 */
 
-var paging = require(__dirname + '/lib/paging');
+var paging = require('./lib/paging');
 
 var PER_PAGE = 1000;
 exports.sync = function(processInfo, callback) {

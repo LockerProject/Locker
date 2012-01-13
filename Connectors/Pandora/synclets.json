@@ -1,0 +1,7 @@
+{
+    "provides":["friends/pandora", "newsfeed/pandora", "likes/pandora", "stations/pandora"],
+    "synclets":[{"name":"friends", "frequency":7200},
+                {"name":"newsfeed", "frequency": 7200},
+                {"name":"stations", "frequency": 7200},
+                {"name":"likes", "frequency": 7200}]
+}

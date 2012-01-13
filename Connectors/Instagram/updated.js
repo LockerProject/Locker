@@ -7,7 +7,7 @@
 *
 */
 
-var instagram = require('../../Connectors/Instagram/lib.js');
+var instagram = require('./lib.js');
 
 // really dumb, just get the last 50 photos posted and received and process them, any new comments/likes will generate updated events
 exports.sync = function(processInfo, cb) {

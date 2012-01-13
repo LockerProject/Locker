@@ -1,0 +1,22 @@
+{
+  "author": "Singly, Inc. <nerds@singly.com>",
+  "name": "photosviewer",
+  "description": "A simple way to view your photos.",
+  "version": "0.0.2",
+  "homepage": "https://github.com/LockerProject/locker",
+  "repository": {
+    "type": "app",
+    "title":"Masonry",
+    "status":"stable",
+    "static":true,
+    "handle":"photosviewer",
+    "uses":{"services":["facebook", "twitter", "foursquare", "flickr", "instagram"], "types":["photos"]},
+    "update":true,
+    "github":"https://github.com/LockerProject/locker"
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

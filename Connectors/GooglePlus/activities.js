@@ -7,7 +7,7 @@
 *
 */
 
-var gplus = require('../../Connectors/GooglePlus/lib.js');
+var gplus = require('./lib.js');
 var fs = require('fs');
 
 exports.sync = function(processInfo, cb) {

@@ -1,0 +1,20 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "glatitude",
+  "description": "Google Latitude Connector",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Google Latitude",
+    "handle": "glatitude",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false"
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

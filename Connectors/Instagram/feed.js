@@ -7,7 +7,7 @@
 *
 */
 
-var instagram = require('../../Connectors/Instagram/lib.js');
+var instagram = require('./lib.js');
 
 exports.sync = function(processInfo, cb) {
     instagram.init(processInfo.auth);
