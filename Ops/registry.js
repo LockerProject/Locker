@@ -281,8 +281,10 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                    console.dir(thiz);
                     apps[k] = thiz;
+                }
             });
         }
         res.send(apps);
@@ -368,10 +370,10 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "is": "app",
+                "type": "app",
                 "author": gh.login,
-                "static": "true",
-                "update": "auto",
+                "static": true,
+                "update": true,
                 "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
