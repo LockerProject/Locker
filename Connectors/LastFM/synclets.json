@@ -1,8 +1,5 @@
 {
-    "title"    : "Last.fm"
-  , "status"   : "stable"
-  , "provider" : "lastfm"
-  , "provides" : ["friends/lastfm"
+    "provides" : ["friends/lastfm"
                 , "scrobbles/lastfm"
                 , "loved/lastfm"
                 , "banned/lastfm"
