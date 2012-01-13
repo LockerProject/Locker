@@ -31,6 +31,7 @@ var request = require('request');
 var async = require('async');
 var util = require('util');
 var lutil = require('lutil');
+var carrier = require('carrier');
 require('graceful-fs');
 
 
@@ -80,18 +81,26 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess = spawn('mongod', ['--nohttpinterface',
                                     '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                     '--port', lconfig.mongo.port]);
-    mongoProcess.stderr.on('data', function(data) {
-        logger.error('mongod err: ' + data);
+
+    var mongoStdout = carrier.carry(mongoProcess.stdout);
+    mongoStdout.on('line', function (line) {
+        logger.info('[mongo] ' + line);
+        if(line.match(/ waiting for connections on port/g)) {
+            lmongo.connect(checkKeys);
+        }
+    });
+    var mongoStderr = carrier.carry(mongoProcess.stderr);
+    mongoStderr.on('line', function (line) {
+        logger.error('[mongo] ' + line);
     });
 
-    var mongoOutput = "";
     var mongodExit = function(errorCode) {
         if(shuttingDown_) return;
         if(errorCode !== 0) {
             var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
             db.open(function(error, client) {
                 if(error) {
-                    logger.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
+                    logger.error('Could not connect to mongo: '+errorCode);
                     shutdown(1);
                 } else {
                     logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
@@ -102,16 +111,6 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         }
     };
     mongoProcess.on('exit', mongodExit);
-
-    // watch for mongo startup
-    var callback = function(data) {
-        mongoOutput += data;
-        if(mongoOutput.match(/ waiting for connections on port/g)) {
-            mongoProcess.stdout.removeListener('data', callback);
-            lmongo.connect(checkKeys);
-       }
-    };
-    mongoProcess.stdout.on('data', callback);
 });
 
 
