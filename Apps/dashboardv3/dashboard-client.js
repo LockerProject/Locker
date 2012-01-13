@@ -22,6 +22,7 @@ var express = require('express')
   , fs = require('fs')
   , im = require('imagemagick')
   , page = ''
+  , connectPage = false
   , cropping = {}
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
@@ -59,6 +60,25 @@ app.configure(function() {
         }
     });
 });
+
+function checkInstalled(req, res, next) {
+    if (connectPage === false) {
+        request.get({url:locker.lockerBase + "/synclets"}, function(error, response, js) {
+            var body = JSON.parse(js);
+            if (!body.hasOwnProperty('installed') || 
+                 Object.keys(body.installed).length === 0 || 
+                 body.installed.length === 0) {
+                     connectPage = true;
+                     return res.redirect('/dashboard/you#connect');
+            } else {
+                next();
+            }
+        });
+    } else {
+        next();
+        connectPage = false;
+    }
+}
 
 app.all('*', function(req, res, next) {
     // hackzzzzzzzzzzzzzzzzz
@@ -444,8 +464,8 @@ var registryApp = function(req, res) {
 }
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', renderYou);
-app.get('/', renderYou);
+app.get('/you', checkInstalled, renderYou);
+app.get('/', checkInstalled, renderYou);
 
 app.get('/connect', renderConnect);
 
