@@ -137,6 +137,8 @@ var renderExploreApps = function(req, res) {
             for (var i = 0; i < connectors.length; i++) {
                 connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
             }
+            Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
+            // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
             var data = {layout: false, apps: apps, connectors: connectors}
             if (req.param('author')) {
                 data.breadcrumb = req.param('author');
