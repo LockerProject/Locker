@@ -9,8 +9,8 @@
 
 var request = require("request");
 var url = require("url");
-require.paths.push(__dirname);
 var lconfig = require("lconfig");
+lconfig.load(__dirname + '/../../Config/config.json');
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js");
 var syncManager = require('lsyncmanager');
