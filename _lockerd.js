@@ -125,7 +125,7 @@ function checkKeys() {
                 shutdown(1);
                 return;
             }
-            finishStartup();
+            runMigrations("preServices", finishStartup);
         });
     });
 }
@@ -145,7 +145,7 @@ function finishStartup() {
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
                 registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry, runMigrations); // this may trigger synclets to start!
+                serviceManager.init(syncManager, registry, function() {runMigrations("postServices", postStartup);}); // this may trigger synclets to start!
             });
         });
     });
@@ -153,7 +153,7 @@ function finishStartup() {
     lockerPortNext++;
 }
 
-function runMigrations() {
+function runMigrations(phase, migrationCB) {
     var migrations = [];
     var metaData = {version: 0};
     try {
@@ -170,7 +170,7 @@ function runMigrations() {
 
         try {
             logger.info("running global migration : " + migration);
-            migrate = require(path.join(lconfig.lockerDir, "migrations", migration));
+            migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
             migrate(lconfig, function(ret) {
                 if (!ret) {
                     logger.error("failed to run global migration!");
@@ -195,7 +195,7 @@ function runMigrations() {
             shutdown(1);
         }
     }, function() {
-        postStartup();
+        migrationCB();
     });
 }
 

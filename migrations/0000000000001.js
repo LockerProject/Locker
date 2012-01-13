@@ -13,7 +13,7 @@ var lmongo = require("lmongo");
 
 var locker_config;
 
-module.exports = function(config, cb) {
+module.exports.preServices = function(config, cb) {
     locker_config = config;
     logger.info("Migrating to imthemap and registry experience");
     fixNumberDirs(function(ret) {
@@ -182,7 +182,7 @@ function deleteStatics(dirs, deleteCB) {
 
 function me2me(cb) {
     logger.info("***************************************** me2me");
-    var child = spawn("node", ["../Ops/me2me.js"], {cwd:path.join(locker_config.lockerDir, locker_config.me)});
+    var child = spawn("node", [path.join(locker_config.lockerDir, "Ops", "me2me.js"), locker_config.lockerDir], {cwd:path.join(locker_config.lockerDir, locker_config.me)});
     child.stdout.on("data", logger.info);
     child.stderr.on("data", logger.error);
     child.on("exit", function(code) {
