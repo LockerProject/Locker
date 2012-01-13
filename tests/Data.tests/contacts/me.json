@@ -1,7 +1,73 @@
 {
     "id": "contacts",
     "srcdir": "Collections/Contacts",
-    "version": "1321475149000",
+    "version": "0.0.2",
     "is": "collection",
-    "uri": "http://localhost:8043/Me/contacts/"
+    "uri": "http://localhost:8043/Me/contacts/",
+    "author": "Singly <nerds@singly.com>",
+    "name": "contacts",
+    "description": "Contacts Collection",
+    "repository": {
+        "title": "Contacts",
+        "run": "node contacts.js",
+        "author": "nerds",
+        "update": "auto",
+        "github": "https://github.com/LockerProject/Locker",
+        "type": "collection",
+        "handle": "contacts",
+        "provides": [
+            "contact"
+        ],
+        "mongoCollections": [
+            "contact"
+        ],
+        "events": [
+            [
+                "contact/foursquare",
+                "/events"
+            ],
+            [
+                "contact/facebook",
+                "/events"
+            ],
+            [
+                "contact/twitter",
+                "/events"
+            ],
+            [
+                "following/github",
+                "/events"
+            ],
+            [
+                "contact/tumblr",
+                "/events"
+            ],
+            [
+                "contact/instagram",
+                "/events"
+            ],
+            [
+                "contact/gcontacts",
+                "/events"
+            ],
+            [
+                "contact/flickr",
+                "/events"
+            ],
+            [
+                "connection/linkedin",
+                "/events"
+            ]
+        ],
+        "url": ""
+    },
+    "engines": {
+        "node": "~0.4.9"
+    },
+    "dependencies": {},
+    "devDependencies": {},
+    "manifest": "Collections/Contacts/package.json",
+    "handle": "contacts",
+    "provider": "contacts",
+    "installed": 1326483189361
 }

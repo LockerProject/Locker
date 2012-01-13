@@ -1,0 +1,21 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "facebook",
+  "description": "Facebook Connector",
+  "version": "0.0.6",
+  "repository": {
+    "title": "Facebook",
+    "handle": "facebook",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

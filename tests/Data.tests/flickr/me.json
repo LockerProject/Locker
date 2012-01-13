@@ -1,6 +1,6 @@
 {
     "status": "stable",
-    "title": "Flickr Account",
+    "title": "Flickr",
     "synclets": [
         {
             "frequency": 3600,
@@ -31,7 +31,17 @@
         "apiKey": "sdf",
         "apiSecret": "asf"
     },
-    "srcdir" : "Connectors/Flickr",
+    "srcdir": "Me/node_modules/flickr",
     "id": "flickr",
-    "provider": "flickr"
+    "provider": "flickr",
+    "handle": "flickr",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": "",
+    "authed": 1326483199290,
+    "manifest": "Me/node_modules/flickr/package.json",
+    "installed": 1326483199290
 }

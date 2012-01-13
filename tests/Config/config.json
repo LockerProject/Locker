@@ -33,6 +33,7 @@
                          "collection-links-test.js"],
         "issues" : ["locker-issues-test.js"]
     },
+    "apps" : [],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
@@ -44,7 +45,7 @@
         "port": 27020
     },
     "logging": {
-        "file":"locker-tests.out",
-        "level": "error"
+        "level": "silly",
+        "console": true
     }
 }
