@@ -155,19 +155,16 @@ function finishStartup() {
 
 function runMigrations() {
     var migrations = [];
-    var metaData = {version: 1};
+    var metaData = {version: 0};
     try {
         migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
         metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
     } catch (E) {}
 
-    // Make sure we havea  valid version
-    metaData.version = metaData.version || "0";
-
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
     // TODO do these using async serially and pass callbacks!
     async.forEach(migrations, function(migration, cb) {
-        if (migration.substring(0, 13) <= metaData.version) {
+        if (Number(migration.substring(0, 13)) <= metaData.version) {
             return cb();
         }
 
@@ -179,7 +176,7 @@ function runMigrations() {
                     logger.error("failed to run global migration!");
                     return shutdown(1);
                 }
-                metaData.version = migration.substring(0, 13);
+                metaData.version = Number(migration.substring(0, 13));
                 lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
                 cb();
 
