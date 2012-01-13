@@ -191,7 +191,7 @@ function runMigrations(phase, migrationCB) {
             }); 
         } catch (E) {
             // TODO: do we need to exit here?!?
-            logger.error("error running global migration : " + migrations[i] + " ---- " + E);
+            logger.error("error running global migration : " + migration + " ---- " + E);
             shutdown(1);
         }
     }, function() {
