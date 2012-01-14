@@ -29,6 +29,7 @@ exports.load = function(filepath) {
     else
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
+    exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();

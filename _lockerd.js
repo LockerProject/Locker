@@ -188,7 +188,7 @@ function runMigrations(phase, migrationCB) {
                     serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                 }
                 */
-            }); 
+            });
         } catch (E) {
             // TODO: do we need to exit here?!?
             logger.error("error running global migration : " + migration + " ---- " + E);

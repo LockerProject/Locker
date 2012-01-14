@@ -1,0 +1,55 @@
+{
+    "title": "Places",
+    "handle": "places",
+    "run": "node places.js",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "provides": [
+        "place"
+    ],
+    "mongoCollections": [
+        "place"
+    ],
+    "events": [
+        [
+            "checkin/foursquare",
+            "/events"
+        ],
+        [
+            "recents/foursquare",
+            "/events"
+        ],
+        [
+            "tweets/twitter",
+            "/events"
+        ],
+        [
+            "timeline/twitter",
+            "/events"
+        ],
+        [
+            "photo://instagram",
+            "/events"
+        ],
+        [
+            "location/glatitude",
+            "/events"
+        ]
+    ],
+    "version": "0.0.2",
+    "upserted": 1326430382096,
+    "provider": "places",
+    "id": "places",
+    "manifest": "Me/node_modules/places/package.json",
+    "srcdir": "Me/node_modules/places",
+    "installed": 1326419016160,
+    "uri": "http://localhost:8042/Me/places/",
+    "externalUri": "http://localhost:8042/Me/places/",
+    "loaded": 1326504594929,
+    "startingPid": 44187,
+    "last": 1326430380545,
+    "ended": 1326430380854,
+    "url": ""
+}

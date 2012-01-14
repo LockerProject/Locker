@@ -8,16 +8,18 @@
         "link"
     ],
     "mongoCollections": [
-        "links"
+        "link",
+        "encounter",
+        "queue"
     ],
-    "srcdir": "Collections/Links",
+    "srcdir": "Me/node_modules/links",
     "is": "collection",
     "installable": false,
     "externalUri": "http://localhost:8043/Me/links/",
     "id": "links",
     "uri": "http://localhost:8043/Me/links/",
     "version": "0.0.4",
-    "author": "Singly <nerds@singly.com>",
+    "author": "nerds",
     "name": "links",
     "description": "Links Collection",
     "repository": {
@@ -53,7 +55,21 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "manifest": "Collections/Links/package.json",
+    "manifest": "Me/node_modules/links/package.json",
     "provider": "links",
-    "installed": 1326483189389
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "events": [
+        [
+            "post/facebook",
+            "/events"
+        ],
+        [
+            "tweet/twitter",
+            "/events"
+        ]
+    ],
+    "url": "",
+    "installed": 1326505232281
 }

@@ -7,8 +7,25 @@
     "provides": [
         "search"
     ],
-    "events": [],
-    "srcdir": "Collections/Search",
+    "events": [
+        [
+            "contact/contacts",
+            "/events"
+        ],
+        [
+            "photo/photos",
+            "/events"
+        ],
+        [
+            "link/links",
+            "/events"
+        ],
+        [
+            "place/places",
+            "/events"
+        ]
+    ],
+    "srcdir": "Me/node_modules/search",
     "is": "collection",
     "installable": false,
     "externalUri": "http://localhost:8043/Me/search/",
@@ -21,7 +38,7 @@
     "port": 18045,
     "startingPid": 25427,
     "uriLocal": "http://localhost:18045/",
-    "author": "Singly <nerds@singly.com>",
+    "author": "nerds",
     "name": "search",
     "description": "Search Collection",
     "repository": {
@@ -60,7 +77,11 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "manifest": "Collections/Search/package.json",
+    "manifest": "Me/node_modules/search/package.json",
     "provider": "search",
-    "installed": 1326483189432
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "url": "",
+    "installed": 1326505232331
 }
