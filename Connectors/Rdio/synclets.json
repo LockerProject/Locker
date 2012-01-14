@@ -7,8 +7,9 @@
                , "contact" : "key"
                , "track"   : "key"
                , "profile" : "key"}
+  , "profileIds" : ["key", "username"]
   , "synclets" : [{"name"      : "self"
-                 , "frequency" : 3600
+                 , "frequency" : 86400
                  , "threshold" : 0}
                 , {"name"      : "following"
                  , "frequency" : 600
