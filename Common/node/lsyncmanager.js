@@ -219,7 +219,7 @@ function executeSynclet(info, synclet, callback, force) {
         logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
-        info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens
+        info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
         info.config = lutil.extend(true, info.config, response.config);
         exports.scheduleRun(info, synclet);
         serviceManager.mapDirty(info.id); // save out to disk

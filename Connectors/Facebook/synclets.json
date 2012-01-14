@@ -1,12 +1,15 @@
 {
     "provides":["contact/facebook", "photo/facebook", "link/facebook", "home/facebook"],
     "types" : {
-        "home":"post"
+        "home":"post",
+        "self":"contact"
     },
+    "profileIds" : ["id", "username"],
     "synclets":[
-        {"name": "home", "frequency": 120},
-        {"name": "home_update", "frequency": 7000},
+        {"name": "self", "frequency": 7200},
         {"name": "friends", "frequency": 3600},
+        {"name": "home", "frequency": 600},
+        {"name": "home_update", "frequency": 7000},
         {"name": "photos", "frequency": 86400}
     ]
 }
