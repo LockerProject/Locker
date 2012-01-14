@@ -31,6 +31,8 @@ var foursquareEvent1 = fs.readFileSync('fixtures/events/contacts/foursquare_cont
 var foursquareEvent2 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_2.json');
 var foursquareEvent3 = fs.readFileSync('fixtures/events/contacts/foursquare_contact_3.json');
 
+console.log("************* HERE");
+
 suite.next().suite.addBatch({
     "Can pull in the contacts from foursquare" : {
         topic: function() {

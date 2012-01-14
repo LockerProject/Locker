@@ -1,6 +1,6 @@
 {
     "id": "contacts",
-    "srcdir": "Me/node_modules/contacts",
+    "srcdir": "Data/node_modules/contacts",
     "version": "0.0.2",
     "is": "collection",
     "uri": "http://localhost:8043/Me/contacts/",
@@ -66,7 +66,7 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "manifest": "Me/node_modules/contacts/package.json",
+    "manifest": "Data/node_modules/contacts/package.json",
     "handle": "contacts",
     "provider": "contacts",
     "title": "Contacts",

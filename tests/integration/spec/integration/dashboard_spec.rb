@@ -4,7 +4,8 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 describe 'dashboard' do
   it 'allows people to switch between 4 views' do
     visit '/'
-    page.should have_css('.iframeLink.blue[data-id="contactsviewer"]')
+    page.should have_css('.iframeLink[data-id="contactsviewer"]')
+    page.execute_script("$('.iframeLink[data-id=\"contactsviewer\"]').click()")
     within_frame 'appFrame' do
       page.should have_content('Jeremie')
     end

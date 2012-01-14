@@ -16,9 +16,11 @@
                       "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
         "issues" : ["locker-issues-test.js"],
-        "collections" : []
+        "collections" : [
+          "collection-contacts-test.js"
+        ]
     },
-    "apps" : [],
+    "apps" : ["dashboardv3", "photosv09", "helloplaces", "linkalatte", "hellolinks", "contactsviewer", "devdocs"],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
