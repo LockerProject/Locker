@@ -354,18 +354,16 @@ var getAppsInfo = function(count, callback) {
                 if (result[j].id === recentApps[i].name && result[j].static) {
                     result[j].lastUsed = recentApps[i].lastUsed;
                     sortedResult.push(result[j]);
-                    added[j.id] = true;
+                    added[result[j].id] = true;
                     break;
                 }
             }
         }
-        /*
-        console.dir(added);
         for (var i in result) {
             console.dir(result);
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
-        */
+
         callback(sortedResult);
     });
 }
@@ -469,10 +467,12 @@ var getGithubApps = function(callback) {
     githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
+        console.log("my apps:" + require("util").inspect(myPublishedApps));
         locker.map(function(err, map) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
                     var appInfo = checkDraftState(map[i]);
+                    if (!appInfo.title) continue
                     var appId = 'app-' + appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];

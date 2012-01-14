@@ -1,12 +1,12 @@
 {
     "synclets": [
         {
-            "frequency": 600,
-            "name": "checkins"
-        },
-        {
             "frequency": 3600,
             "name": "friends"
+        },
+        {
+            "frequency": 600,
+            "name": "checkins"
         },
         {
             "frequency": 300,
@@ -17,7 +17,6 @@
             "frequency": 3600,
             "name": "badges"
         }
-
     ],
     "mongoId" : {
         "photos": "photoID"

@@ -16,7 +16,7 @@ var spawn = require('child_process').spawn;
 var levents = require('levents');
 var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
-var logger = require('logger');
+var logger;
 var async = require('async');
 
 var serviceMap = { }; // All of the immediately addressable services in the system
@@ -24,12 +24,13 @@ var serviceMap = { }; // All of the immediately addressable services in the syst
 var shuttingDown = null;
 var syncletManager, registry;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
-logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 /**
 * Scans the Me directory for instaled services
 */
 exports.init = function (sman, reg, callback) {
+    logger = require('logger');
+    logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
     syncletManager = sman;
     registry = reg;
     var dirs = fs.readdirSync(lconfig.me);

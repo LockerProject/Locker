@@ -56,8 +56,10 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                 }catch(E){
                     logger.error("couldn't parse registry.json: "+E);
                 }
-                syncTimer = setInterval(exports.sync, syncInterval);
-                exports.sync();
+                if(lconfig.registryUpdate === true) {
+                    syncTimer = setInterval(exports.sync, syncInterval);
+                    exports.sync();
+                }
                 process.chdir(lconfig.lockerDir);
                 callback(installed);
             });
@@ -217,7 +219,7 @@ function loadPackage(name, upsert, callback)
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(path.join('Me/node_modules',name,'package.json'));
+        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
         callback(null, installed[name]);
     });
 }
@@ -281,8 +283,10 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                    console.dir(thiz);
                     apps[k] = thiz;
+                }
             });
         }
         res.send(apps);
@@ -368,10 +372,10 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "is": "app",
+                "type": "app",
                 "author": gh.login,
-                "static": "true",
-                "update": "auto",
+                "static": true,
+                "update": true,
                 "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
