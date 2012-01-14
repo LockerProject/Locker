@@ -56,8 +56,10 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                 }catch(E){
                     logger.error("couldn't parse registry.json: "+E);
                 }
-                syncTimer = setInterval(exports.sync, syncInterval);
-                exports.sync();
+                if(lconfig.registryUpdate === true) {
+                    syncTimer = setInterval(exports.sync, syncInterval);
+                    exports.sync();
+                }
                 process.chdir(lconfig.lockerDir);
                 callback(installed);
             });

@@ -6,7 +6,17 @@
     "ui":"dashboardv3",
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
-        "core-lib" : [
+        "core-lib" : ["lservicemanager-test-local.js",
+                      "lsyncmanager-test-local.js",
+                      "lconfig-test-local.js",
+                      "lcrypto-test-local.js",
+                      "lutil-test-local.js",
+                      "ijod-test-local.js",
+                      "registry-test-local.js",
+                      "lpquery-test-local.js",
+                      "mongo-test.js",
+                      "lscheduler-test-local.js",
+                      "deepCompare-test.js",
                       "lpushmanager-test-local.js"],
         "synclets" : ["synclet-local-foursquare.js",
                       "synclet-local-github.js",
@@ -16,7 +26,11 @@
                       "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
         "issues" : ["locker-issues-test.js"],
-        "collections" : []
+        "collections" : ["collection-contacts-test.js",
+                         "collection-photos-test.js",
+                         "collection-search-test.js",
+                         "collection-places-test.js",
+                         "collection-links-test.js"]
     },
     "apps" : [],
     "displayUnstable" : true,

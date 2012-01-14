@@ -1,10 +1,10 @@
 {
     "id": "photos",
-    "srcdir": "Collections/Photos",
+    "srcdir": "Me/node_modules/photos",
     "version": "0.0.2",
     "is": "collection",
     "uri": "http://localhost:8043/Me/photos/",
-    "author": "Singly <nerds@singly.com>",
+    "author": "nerds",
     "name": "photos",
     "description": "Photos Collection",
     "repository": {
@@ -54,8 +54,46 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "manifest": "Collections/Photos/package.json",
+    "manifest": "Me/node_modules/photos/package.json",
     "handle": "photos",
     "provider": "photos",
-    "installed": 1326483189401
+    "title": "Photos",
+    "run": "node photos.js",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "provides": [
+        "photo"
+    ],
+    "mongoCollections": [
+        "photo"
+    ],
+    "events": [
+        [
+            "tweets/twitter",
+            "/events"
+        ],
+        [
+            "checkin/foursquare",
+            "/events"
+        ],
+        [
+            "photo/facebook",
+            "/events"
+        ],
+        [
+            "photo/twitpic",
+            "/events"
+        ],
+        [
+            "photo/instagram",
+            "/events"
+        ],
+        [
+            "photo/flickr",
+            "/events"
+        ]
+    ],
+    "url": "",
+    "installed": 1326505232072
 }
