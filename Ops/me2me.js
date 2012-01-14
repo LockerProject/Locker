@@ -37,17 +37,6 @@ function meScan()
                 console.log("already did "+dir);
                 continue;
             };
-            if(js.srcdir.indexOf("Collections") == 0)
-            {
-                console.log("merging collection "+dir);
-                var uc = dir.charAt(0).toUpperCase() + dir.substr(1);
-                var js2 = JSON.parse(fs.readFileSync(path.join(lockerBase, "Collections", uc, 'package.json'), 'utf8'));
-                js = extend(js, js2);
-                js.manifest = path.join("Collections", uc, 'package.json');
-                js.handle = dir;
-                saver(js);
-                continue;
-            }
             // dir name must match registry name
             js.handle = dir;
             // GITHUB IS SPECIAL

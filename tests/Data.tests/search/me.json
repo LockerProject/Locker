@@ -8,18 +8,80 @@
         "search"
     ],
     "events": [
+        [
+            "contact/contacts",
+            "/events"
+        ],
+        [
+            "photo/photos",
+            "/events"
+        ],
+        [
+            "link/links",
+            "/events"
+        ],
+        [
+            "place/places",
+            "/events"
+        ]
     ],
-    "srcdir": "Collections/Search",
+    "srcdir": "Me/node_modules/search",
     "is": "collection",
     "installable": false,
     "externalUri": "http://localhost:8043/Me/search/",
     "id": "search",
     "uri": "http://localhost:8043/Me/search/",
-    "version": 1,
+    "version": "0.0.2",
     "starting": [
         null
     ],
     "port": 18045,
     "startingPid": 25427,
-    "uriLocal": "http://localhost:18045/"
+    "uriLocal": "http://localhost:18045/",
+    "author": "nerds",
+    "name": "search",
+    "description": "Search Collection",
+    "repository": {
+        "title": "Search",
+        "run": "node search.js",
+        "author": "nerds",
+        "update": "auto",
+        "github": "https://github.com/LockerProject/Locker",
+        "type": "collection",
+        "handle": "search",
+        "provides": [
+            "search"
+        ],
+        "events": [
+            [
+                "contact/contacts",
+                "/events"
+            ],
+            [
+                "photo/photos",
+                "/events"
+            ],
+            [
+                "link/links",
+                "/events"
+            ],
+            [
+                "place/places",
+                "/events"
+            ]
+        ],
+        "url": ""
+    },
+    "engines": {
+        "node": "~0.4.9"
+    },
+    "dependencies": {},
+    "devDependencies": {},
+    "manifest": "Me/node_modules/search/package.json",
+    "provider": "search",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "url": "",
+    "installed": 1326505232331
 }

@@ -58,7 +58,7 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
     }
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
-    async.forEach(js.synclets, function(synclet, cb) {
+    async.forEachSeries(js.synclets, function(synclet, cb) {
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -160,6 +160,15 @@ function executeSynclet(info, synclet, callback, force) {
         exports.scheduleRun(info, synclet);
         return callback();
     }
+    // if another synclet is running, come back a little later, don't overlap!
+    if (info.status == 'running')
+    {
+        logger.verbose("delaying "+synclet.name);
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 10000);
+        return;
+    }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
@@ -214,7 +223,10 @@ function executeSynclet(info, synclet, callback, force) {
         info.config = lutil.extend(true, info.config, response.config);
         exports.scheduleRun(info, synclet);
         serviceManager.mapDirty(info.id); // save out to disk
-        processResponse(deleteIDs, info, synclet, response, callback);
+        processResponse(deleteIDs, info, synclet, response, function(err){
+            info.status = 'waiting';
+            callback(err);
+        });
     });
     if (!info.config) info.config = {};
 
