@@ -354,18 +354,16 @@ var getAppsInfo = function(count, callback) {
                 if (result[j].id === recentApps[i].name && result[j].static) {
                     result[j].lastUsed = recentApps[i].lastUsed;
                     sortedResult.push(result[j]);
-                    added[j.id] = true;
+                    added[result[j].id] = true;
                     break;
                 }
             }
         }
-        /*
-        console.dir(added);
         for (var i in result) {
             console.dir(result);
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
-        */
+
         callback(sortedResult);
     });
 }
