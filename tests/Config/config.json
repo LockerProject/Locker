@@ -20,7 +20,7 @@
           "collection-contacts-test.js"
         ]
     },
-    "apps" : ["dashboardv3", "photosv09", "helloplaces", "linkalatte", "hellolinks", "contactsviewer", "devdocs"],
+    "apps" : ["dashboardv3", "photosv09", "helloplaces", "linkalatte", "hellolinks", "contactsviewer", "devdocs", "foursquare"],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
