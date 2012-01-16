@@ -33,6 +33,6 @@
     },
     "logging": {
         "level": "silly",
-        "console": true
+        "config": true
     }
 }
