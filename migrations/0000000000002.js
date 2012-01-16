@@ -72,8 +72,7 @@ function fixNumberDirs(migrationCB) {
             if (me.static && (me.static === true || me.static === "true")) {
                 // These are handled too differently in the new experience, reinstall
                 return deleteStatics(curDirs, whilstCB);
-            }
-            else if (me.is && me.is != "connector") {
+            } else if (!me.is || me.is != "connector") {
                 // These have valid me.json files but are not connectors, we shouldn't touch them
                 logger.warn("Migration skipping unknown directories: " + util.inspect(curDirs));
                 return whilstCB();
