@@ -150,7 +150,7 @@ function selectConnectorDir(basename, validDir, allDirs, cbDone) {
             });
         }, function(err) {
             // If it's already valid, we're done cleaning up
-            if (validDir == basename) return;
+            if (validDir == basename) return cbDone();
             // Otherwise we move the validDir to basename Now
             var svcDir = path.join(meDir, validDir);
             var meData = jsonFileSync(path.join(svcDir, "me.json")) || {synclets:[]};

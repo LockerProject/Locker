@@ -65,6 +65,7 @@ function install(js)
     npm.commands.install([js.handle], function(err){
         if(err){ // only warn here cuz we can re-run if install fails
             console.log("failed to install "+js.handle+": "+err);
+            console.log(err.stack);
             return;
         }
         var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", js.handle, 'package.json'), 'utf8'));
