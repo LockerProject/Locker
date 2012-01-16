@@ -1,5 +1,5 @@
 {
-    "title": "Instagram Account",
+    "title": "Instagram",
     "status": "stable",
     "provider": "instagram",
     "provides": [
@@ -14,7 +14,7 @@
             "frequency": 3600
         }
     ],
-    "srcdir": "Connectors/Instagram",
+    "srcdir": "Me/node_modules/instagram",
     "authurl": "https://api.instagram.com/oauth/authorize/?client_id=7caa1b79465d48dfa375edbbe391ce82&redirect_uri=http://localhost:8042/auth/instagram/auth&response_type=code",
     "auth": {
         "token": {
@@ -30,5 +30,15 @@
         }
     },
     "id": "instagram",
-    "version": 1319637741123
+    "version": 1319637741123,
+    "handle": "instagram",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": "",
+    "authed": 1326483199749,
+    "manifest": "Me/node_modules/instagram/package.json",
+    "installed": 1326483199749
 }

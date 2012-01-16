@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <title>Photo Viewer</title>
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <link rel="apple-touch-startup-image" href="./img/loading.png">
+
+  <style type="text/css">
+    @import url("css/reset.css");
+    @import url("css/style.css");
+  </style>
+
+
+
+</head>
+
+<body>
+    <div id="galleria"></div>
+
+    <div id="page_wrapper">
+
+        <div class="header-row gradient">
+            <div class="back-button"><p>2011</p></div>
+            <p class="header-text">Photos</p>
+        </div>
+
+        <ul class="gallery-row template">
+            <li class="title gradient"><p class="gallery-header"></p></li>
+            <div class="hoverstate"><p></p></div>
+        </ul>
+
+    </div> <!--end page wrapper-->
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/galleria-1.2.5.min.js"></script>
+<script src='js/config.js'></script>
+</html>

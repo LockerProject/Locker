@@ -7,7 +7,7 @@
 *
 */
 
-var tw = require('../../Connectors/Twitter/lib.js');
+var tw = require('./lib.js');
 
 exports.sync = function(processInfo, cb) {
     tw.init(processInfo.auth);
@@ -20,7 +20,7 @@ exports.sync = function(processInfo, cb) {
     tw.getMe({},function(js){me=js}, function(err){
         if(err) return cb(err, responseObj);
         var statuses = [];
-        tw.getTweets({screen_name:me.screen_name,since_id:since},function(js){ 
+        tw.getTweets({screen_name:me.screen_name,since_id:since},function(js){
             statuses.push({'obj' : js, timestamp: new Date(), type : 'new'});
             if(js.id > since) since = js.id+10;// their api sometimes returns the last one repeatedly, L4M30
         },function(err){

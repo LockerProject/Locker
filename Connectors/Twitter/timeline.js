@@ -7,7 +7,7 @@
 *
 */
 
-var tw = require('../../Connectors/Twitter/lib.js');
+var tw = require('./lib.js');
 
 exports.sync = function(processInfo, cb) {
     tw.init(processInfo.auth);
@@ -25,7 +25,7 @@ exports.sync = function(processInfo, cb) {
             if(js.id > since) since = js.id;
         },function(err){
             responseObj.data.timeline = statuses;
-            responseObj.config.updateState = {timeline:{since:since}};            
+            responseObj.config.updateState = {timeline:{since:since}};
             cb(err, responseObj);
         });
     });

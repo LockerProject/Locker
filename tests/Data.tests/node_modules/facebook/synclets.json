@@ -1,0 +1,12 @@
+{
+    "provides":["contact/facebook", "photo/facebook", "link/facebook", "home/facebook"],
+    "types" : {
+        "home":"post"
+    },
+    "synclets":[
+        {"name": "home", "frequency": 120},
+        {"name": "home_update", "frequency": 7000},
+        {"name": "friends", "frequency": 3600},
+        {"name": "photos", "frequency": 86400}
+    ]
+}

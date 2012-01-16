@@ -18,6 +18,7 @@ var semver = require('semver');
 var crypto = require("crypto");
 var lutil = require('lutil');
 var express = require('express');
+var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
@@ -27,10 +28,15 @@ var syncInterval = 3600000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
 var burrowBase = "burrow.singly.com";
+var serviceManager, syncManager;
+var apiKeys;
 
 // make sure stuff is ready/setup locally, load registry, start sync check, etc
-exports.init = function(config, crypto, callback) {
+exports.init = function(serman, syncman, config, crypto, callback) {
+    serviceManager = serman;
+    syncManager = syncman;
     lconfig = config;
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
     logger = require('logger');
     lcrypto = crypto;
     try {
@@ -50,8 +56,10 @@ exports.init = function(config, crypto, callback) {
                 }catch(E){
                     logger.error("couldn't parse registry.json: "+E);
                 }
-                syncTimer = setInterval(exports.sync, syncInterval);
-                exports.sync();
+                if(lconfig.registryUpdate === true) {
+                    syncTimer = setInterval(exports.sync, syncInterval);
+                    exports.sync();
+                }
                 process.chdir(lconfig.lockerDir);
                 callback(installed);
             });
@@ -73,6 +81,19 @@ exports.app = function(app)
     });
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
+    });
+    app.get("/registry/connectors", function(req, res) {
+        var connectors = [];
+        Object.keys(regIndex).forEach(function(key) {
+            if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
+                // not all connectors need auth keys!
+                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") connectors.push(regIndex[key]);
+                // require keys now
+                if(apiKeys[key]) connectors.push(regIndex[key]);
+            }
+        });
+        // TODO: STREAM!
+        res.send(connectors);
     });
     app.get('/registry/all', function(req, res) {
         res.send(exports.getRegistry());
@@ -97,6 +118,9 @@ exports.app = function(app)
     app.get("/registry/screenshot/:id", getScreenshot);
 
     app.get('/registry/myApps', exports.getMyApps);
+
+    app.get('/auth/:id', authIsAwesome);
+    app.get('/auth/:id/auth', authIsAuth);
 }
 
 function publishPackage(req, res) {
@@ -176,13 +200,13 @@ function loadInstalled(callback)
         var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, function(){cb()}); // ignore individual errors
+            loadPackage(item, false, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
 
 // load an individual package
-function loadPackage(name, callback)
+function loadPackage(name, upsert, callback)
 {
     fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
         if(err || !data) return callback(err);
@@ -194,15 +218,18 @@ function loadPackage(name, callback)
             logger.error("couldn't parse "+name+"'s package.json: "+E);
             return callback(E);
         }
-        request.post({uri:lconfig.lockerBase+'/map/upsert?type=install&manifest='+path.join('Me/node_modules',name,'package.json')}, function(){
-             callback(null, installed[name]);
-        });
+        // during install/update tell serviceManager about this as well
+        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
+        callback(null, installed[name]);
     });
 }
 
 // background sync process to fetch/maintain the full package list
 exports.sync = function(callback)
 {
+    // always good to refresh this too!
+    apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
+
     var startkey = 0;
     // get the newest
     Object.keys(regIndex).forEach(function(k){
@@ -222,7 +249,7 @@ exports.sync = function(callback)
                 logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
                 regIndex[k] = body[k];
                 // if installed and autoupdated and newer, do it!
-                if(installed[k] && body[k].repository && body[k].repository.update == 'auto' && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+                if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
                 {
                     logger.verbose("auto-updating "+k);
                     exports.update({name:k}, function(){}); // lazy
@@ -247,7 +274,7 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.is === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
     return apps;
 }
 exports.getMyApps = function(req, res) {
@@ -256,8 +283,10 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.is === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                    console.dir(thiz);
                     apps[k] = thiz;
+                }
             });
         }
         res.send(apps);
@@ -266,23 +295,28 @@ exports.getMyApps = function(req, res) {
 
 // npm wrappers
 exports.install = function(arg, callback) {
-
+    if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
+    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+    if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    logger.info("installing "+arg.name);
     npm.commands.install([arg.name], function(err){
-        if(err){
+        if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
             logger.warn("retry "+arg.retry+": "+err);
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
+            return callback(err);
         }
-        loadPackage(arg.name, callback); // once installed, load
+        loadPackage(arg.name, true, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
+    console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
-        loadPackage(arg.name, callback); // once updated, re-load
+        loadPackage(arg.name, true, callback); // once updated, re-load
     });
 };
 
@@ -338,10 +372,10 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "is": "app",
+                "type": "app",
                 "author": gh.login,
-                "static": "true",
-                "update": "auto",
+                "static": true,
+                "update": true,
                 "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
@@ -427,4 +461,100 @@ function adduser (username, password, email, cb) {
       }
       logger.info("adding user "+JSON.stringify(userobj));
   request.put({uri:regBase+'/-/user/org.couchdb.user:'+encodeURIComponent(username), json:true, body:userobj}, cb);
+}
+
+// given a connector package in the registry, install it, and get the auth url for it to return
+function authIsAwesome(req, res) {
+    var id = req.params.id;
+    exports.install(id, function(err){
+        if(err) return res.send(err, 500);
+        var js = serviceManager.map(id);
+        if(!js) return res.send("failed to install :(", 500);
+        try {
+            var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
+        }catch(E){
+            return res.send(E, 500);
+        }
+        // oauth2 types redirect
+        if(authModule.authUrl) {
+            var url = authModule.authUrl + "&client_id=" + apiKeys[id].appKey + "&redirect_uri=" + lconfig.externalBase + "/auth/" + id + "/auth";
+            return res.redirect(url);
+        }
+        // everything else is pass-through (custom, oauth1, etc)
+        authIsAuth(req, res);
+    });
+}
+
+// handle actual auth api requests or callbacks, much conflation to keep /auth/foo/auth consistent everywhere!
+function authIsAuth(req, res) {
+    var id = req.params.id;
+    logger.verbose("processing auth for "+id);
+    var js = serviceManager.map(id);
+    if(!js) return res.send("missing", 404);
+    var host = lconfig.externalBase + "/";
+    try {
+        var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
+    }catch(E){
+        return res.send(E, 500);
+    }
+
+    // some custom code gets run for non-oauth2 options here, wear a tryondom
+    try {
+        if(authModule.direct) return authModule.direct(res);
+        // rest require apikeys
+        if(!apiKeys[id] && js.keys !== false && js.keys != "false") return res.send("missing required api keys", 500);
+        if(typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function(err, auth) {
+            if(err) return res.send(err, 500);
+            finishAuth(js, auth, res);
+        }, req, res);
+    } catch(E) {
+        return res.send(E, 500);
+    }
+
+    // oauth2 callbacks from here on out
+    var code = req.param('code');
+    var theseKeys = apiKeys[id];
+    if(!code || !authModule.handler.oauth2) return res.send("very bad request", 500);
+    var method = authModule.handler.oauth2;
+    var postData = {
+        client_id: theseKeys.appKey,
+        client_secret: theseKeys.appSecret,
+        redirect_uri: host + 'auth/' + id + '/auth',
+        grant_type: authModule.grantType,
+        code: code
+    };
+    var req = {method: method, url: authModule.endPoint};
+    if(method == 'POST') {
+        req.body = querystring.stringify(postData);
+        req.headers = {'Content-Type' : 'application/x-www-form-urlencoded'};
+    } else {
+        req.url += '/access_token?' + querystring.stringify(postData);
+    }
+    request(req, function(err, resp, body) {
+        try {
+            body = JSON.parse(body);
+        } catch(err) {
+            body = querystring.parse(body);
+        }
+        var auth = {accessToken: body.access_token};
+        if(method == 'POST') auth = {token: body, clientID: theseKeys.appKey, clientSecret: theseKeys.appSecret};
+        if(typeof authModule.authComplete == 'function') {
+            return authModule.authComplete(auth, function(err, auth) {
+                if(err) return res.send(err, 500);
+                finishAuth(js, auth, res);
+            });
+        }
+        finishAuth(js, auth, res);
+    });
+}
+
+// save out auth and kick-start synclets, plus respond
+function finishAuth(js, auth, res) {
+    logger.info("authorized "+js.id);
+    js.auth = auth;
+    js.authed = Date.now();
+    // upsert it again now that it's auth'd, significant!
+    serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
+    syncManager.syncNow(js.id, function(){}); // force immediate sync too
+    res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
