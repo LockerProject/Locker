@@ -68,6 +68,7 @@ function install(js)
             console.log(err.stack);
             return;
         }
+        console.log("extending and saving a me.json for " + js.handle);
         var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", js.handle, 'package.json'), 'utf8'));
         js = extend(js, js2.repository);
         if(js.auth) js.authed = Date.now();
