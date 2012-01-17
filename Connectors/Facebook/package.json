@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "facebook",
   "description": "Facebook Connector",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "repository": {
     "title": "Facebook",
     "handle": "facebook",
