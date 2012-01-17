@@ -62,13 +62,32 @@ var DEFAULT_QUERY_LIMIT = 20;
 
 // return the known map of our world
 locker.get('/map', function(req, res) {
-    res.writeHead(200, {
-        'Content-Type': 'text/javascript',
-        "Access-Control-Allow-Origin" : "*"
+    var copy = {};
+    lutil.extend(true, copy, serviceManager.map());
+    Object.keys(copy).forEach(function(key){
+        if(copy[key].auth) copy[key].auth = {}; // silenced
     });
-    res.end(JSON.stringify(serviceManager.map()));
+    res.send(copy);
 });
 
+locker.get('/map/profiles', function(req, res) {
+    var profiles = {};
+    var map = serviceManager.map();
+    Object.keys(map).forEach(function(key){
+        if(!map[key].auth || !map[key].auth.profile) return;
+        var idr = { slashes: true, pathname: '/', host: key };
+        // the type could be named something service-specific, usually 'contact' tho
+        idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
+        // generate idrs from profiles, some services have both numeric and username (or more?)!
+        var ids = map[key].profileIds || ['id'];
+        ids.forEach(function(id){
+            if(!map[key].auth.profile[id]) return;
+            idr.hash = map[key].auth.profile[id];
+            profiles[url.format(idr)] = map[key].auth.profile;
+        });
+    });
+    res.send(profiles);
+});
 
 locker.post('/map/upsert', function(req, res) {
     logger.info("Upserting " + req.param("manifest"));
