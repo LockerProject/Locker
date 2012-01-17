@@ -10,7 +10,7 @@ exports.genericSync = function(type, pather, arrayer) {
             try{ js = JSON.parse(body); }catch(E){ return cb(err); }
             var data = {};
             data[type] = arrayer(pi, js);
-            cb(err, {config:pi.config, data: data});
+            cb(err, {auth:pi.auth, config:pi.config, data: data});
         });
     };
 };
