@@ -51,9 +51,9 @@ func stateHandler(w http.ResponseWriter, req *http.Request) {
 	last := struct {
 		Id bson.ObjectId `bson:"_id"`
 	}{}
-	querr := scrobbles.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
-	if querr != nil {
-		panic(querr)
+	err = scrobbles.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
+	if err != nil {
+		panic(err)
 	}
 
 	state := CollectionState{1, count, time.Seconds(), last.Id.Hex()}
