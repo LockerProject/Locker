@@ -322,6 +322,7 @@ button.publish {
   top: 100px;
   left: 226px;
   background: white;
+  display: none;
 }
 
 #firstvisit-overlay .content {

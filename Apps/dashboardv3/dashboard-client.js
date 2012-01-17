@@ -66,7 +66,16 @@ function checkInstalled(req, res, next) {
     if (connectPage === false) {
         // TODO: fix this to redirect upon new locker w/ no services connected
         locker.mapType("connector", function(err, installedConnectors) {
+            var authedApp = false;
             if (installedConnectors.length === 0) {
+            
+            }
+            for (var i=0; i<installedConnectors; i++) {
+                if (installedConnectors[i].hasOwnProperty('authed')) {
+                    authedApp = true;
+                }
+            }
+            if (authedApp === false) {
                 connectPage = true;
                 return res.redirect('/dashboard/you#connect');
             } else {
@@ -134,19 +143,6 @@ var renderExplore = function(req, res) {
     locker.mapType("connector", function(error, connectors) {
         res.render('explore', {synclets:connectors});
     });
-    /*
-    locker.synclets(function(err, synclets) {
-        syncletSorted = [];
-        for (var i in synclets.available) {
-            if (synclets.available[i].authurl) {
-                syncletSorted.push({title: synclets.available[i].title, id: synclets.available[i].provider});
-            }
-        }
-        syncletSorted.sort(function(a, b) {
-            return (a.title > b.title);
-        });
-    });
-    */
 }
 
 var renderExploreApps = function(req, res) {
@@ -180,7 +176,6 @@ var renderExploreApps = function(req, res) {
                     types.services = true;
                     data.services = {};
                     for (var i = 0; i < req.param('services').length; i++) {
-                        console.log("Checking " + req.param('services')[i]);
                         var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
                         if (actualConnector.length > 0) {
                             actualConnector = actualConnector[0];
@@ -378,7 +373,6 @@ var getAppsInfo = function(count, callback) {
             }
         }
         for (var i in result) {
-            console.dir(result);
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
 
@@ -428,10 +422,17 @@ var renderYou = function(req, res) {
 };
 
 var renderConnect = function(req, res) {
-    getSynclets(function(err, synclets) {
+    getConnectors(function(err, connectors) {
+        var numInstalled = 0;
+        for (var i=0; i<connectors.length; i++) {
+            if (connectors[i].hasOwnProperty('authed')) {
+                numInstalled++;
+            }
+        }
         res.render('iframe/connect', {
             layout: false,
-            synclets: synclets
+            numInstalled: numInstalled,
+            connectors: connectors
         });
     });
 };
@@ -512,7 +513,6 @@ var getGithubApps = function(callback) {
     githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
-        console.log("my apps:" + require("util").inspect(myPublishedApps));
         locker.map(function(err, map) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
@@ -564,6 +564,25 @@ var checkDraftState = function(appInfo) {
     }
     appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
+}
+
+var getConnectors = function(callback) {
+    locker.mapType("connector", function(err, installedConnectors) {
+        request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
+            var connectors = [];
+            Object.keys(body).map(function(key) { 
+                if (body[key].repository.type == "connector") {
+                    var connector = body[key];
+                    for (var i = 0; i < installedConnectors.length; ++i) {
+                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
+                    }
+                    connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
+                    connectors.push(connector); 
+                }
+            });
+            callback(err, connectors);
+        });
+    });
 }
 
 /*
