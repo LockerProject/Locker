@@ -76,8 +76,11 @@ exports.app = function(app)
     app.get('/registry/add/:id', function(req, res) {
         logger.info("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
-        if(!verify(regIndex[req.params.id])) return res.send("invalid app", 500);
-        exports.install({name:req.params.id}, function(){ res.send(true); });
+        if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
+        exports.install({name:req.params.id}, function(err){
+            if(err) return res.send(err, 500);
+            res.send(true);
+        });
     });
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
@@ -187,8 +190,9 @@ function verify(pkg)
 {
     if(!pkg) return false;
     if(!pkg.repository) return false;
-    if(!pkg.repository.static) return false;
-    if(pkg.repository.static === true || pkg.repository.static === "true") return true;
+    if(pkg.repository.type == 'app') return true;
+    if(pkg.repository.type == 'connector') return true;
+    if(pkg.repository.type == 'collection') return true;
     return false;
 }
 
