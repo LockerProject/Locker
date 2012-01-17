@@ -72,8 +72,7 @@ function fixNumberDirs(migrationCB) {
             if (me.static && (me.static === true || me.static === "true")) {
                 // These are handled too differently in the new experience, reinstall
                 return deleteStatics(curDirs, whilstCB);
-            }
-            else if (me.is && me.is != "connector") {
+            } else if ((!me.is || me.is != "connector") && !me.synclets) {
                 // These have valid me.json files but are not connectors, we shouldn't touch them
                 logger.warn("Migration skipping unknown directories: " + util.inspect(curDirs));
                 return whilstCB();
@@ -151,7 +150,7 @@ function selectConnectorDir(basename, validDir, allDirs, cbDone) {
             });
         }, function(err) {
             // If it's already valid, we're done cleaning up
-            if (validDir == basename) return;
+            if (validDir == basename) return cbDone();
             // Otherwise we move the validDir to basename Now
             var svcDir = path.join(meDir, validDir);
             var meData = jsonFileSync(path.join(svcDir, "me.json")) || {synclets:[]};
