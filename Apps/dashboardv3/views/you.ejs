@@ -20,15 +20,12 @@
   <p class='sidenav-header-title'>YOUR SERVICES</p>
 </div>
 <div class="sidenav-items synclets">
-  <% for (var i = 0; i < synclets.available.length; i++) { %>
-    <% if (synclets.available[i].authurl) { %>
-      <a href="<%= synclets.available[i].authurl %>" class="oauthLink" data-provider="<%= synclets.available[i].provider %>"
-         data-width="<%= synclets.available[i].oauthSize.width %>"
-         data-height="<%= synclets.available[i].oauthSize.height %>"><img src="img/icons/32px/<%= synclets.available[i].provider %>.png"></a>
-    <% } %>
-  <% } %>
-  <% for (var i in synclets.installed) { %>
-    <img class='installed' src="img/icons/32px/<%= synclets.installed[i].provider %>.png"></a>
+  <% for (var i = 0; i < connectors.length; i++) { %>
+    <% if (connectors[i].repository.hidden) continue; %>
+    <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%=connectors[i].repository.provider%>'
+        data-width='<%=connectors[i].oauthSize.width%>' data-height='<%=connectors[i].oauthSize.height%>' class="oauthLink"><% } %>
+    <img class='<%=(connectors[i].authed ? "installed" : "")%>' src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
+    <% if (!connectors[i].authed) { %></a><% } %>
   <% } %>
 </div>
 <% if (firstVisit === false) { %>

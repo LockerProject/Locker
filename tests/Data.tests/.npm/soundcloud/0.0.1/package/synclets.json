@@ -1,0 +1,23 @@
+{
+    "title":"SoundCloud",
+    "status":"stable",
+    "provides":["track/soundcloud", "contact/soundcloud"],
+    "provider":"soundcloud",
+    "types" : {
+        "followings":"contact",
+        "favorites":"track",
+        "tracks":"track",
+        "playlists":"playlist",
+        "groups":"group",
+        "comments":"comment"
+    },
+    "synclets":[
+        {"name": "tracks", "frequency": 3600},
+        {"name": "followings", "frequency": 3600},
+        {"name": "favorites", "frequency": 3600},
+        {"name": "playlists", "frequency": 3600},
+        {"name": "groups", "frequency": 3600},
+        {"name": "comments", "frequency": 3600}
+    ],
+    "info":"Syncs tracks, followings, and favorites."
+}

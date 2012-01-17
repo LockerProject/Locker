@@ -2,23 +2,12 @@
     "lockerHost" : "localhost",
     "lockerPort" : 8043,
     "me" : "Data",
+    "registryUpdate" : false,
     "ui":"dashboardv3",
-    "scannedDirs" : ["Apps", "Connectors", "Collections", "Tests"],
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
-        "core-lib" : ["lservicemanager-test-local.js",
-                      "lsyncmanager-test-local.js",
-                      "lconfig-test-local.js",
-                      "lcrypto-test-local.js",
-                      "lutil-test-local.js",
-                      "ijod-test-local.js",
-                      "registry-test-local.js",
-                      "lpquery-test-local.js",
-                      "mongo-test.js",
-                      "lscheduler-test-local.js",
-                      "deepCompare-test.js",
+        "core-lib" : [
                       "lpushmanager-test-local.js"],
-        "client-api" : ["locker-client-test.js"],
         "synclets" : ["synclet-local-foursquare.js",
                       "synclet-local-github.js",
                       "synclet-local-twitter.js",
@@ -26,13 +15,12 @@
                       "synclet-local-flickr.js",
                       "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
-        "collections" : ["collection-contacts-test.js",
-                         "collection-photos-test.js",
-                         "collection-search-test.js",
-                         "collection-places-test.js",
-                         "collection-links-test.js"],
-        "issues" : ["locker-issues-test.js"]
+        "issues" : ["locker-issues-test.js"],
+        "collections" : [
+          "collection-contacts-test.js"
+        ]
     },
+    "apps" : ["dashboardv3", "photosv09", "helloplaces", "linkalatte", "hellolinks", "contactsviewer", "devdocs", "foursquare"],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
@@ -44,7 +32,7 @@
         "port": 27020
     },
     "logging": {
-        "file":"locker-tests.out",
-        "level": "error"
+        "level": "silly",
+        "config": true
     }
 }

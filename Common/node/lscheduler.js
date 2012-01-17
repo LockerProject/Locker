@@ -67,7 +67,7 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
         });
     }
     setTimeout(function() {
-        if (!serviceManager.isInstalled(serviceID)) {
+        if (!serviceManager.map(serviceID)) {
             self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
             self.savePending();
         } else {

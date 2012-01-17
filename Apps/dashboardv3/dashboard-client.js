@@ -11,7 +11,8 @@ var express = require('express')
   , connect = require('connect')
   , locker
   , request = require('request')
-  , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
+  // TODO:  This should not be used in an app
+  , lconfig = require('lconfig.js')
   , github = false
   , githubLogin = ''
   , githubapps = {}
@@ -34,7 +35,7 @@ var express = require('express')
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
-    lconfig.load('../../Config/config.json');
+    lconfig.load('../Config/config.json');
     locker = passedLocker;
     app.listen(listenPort, callback);
 };
@@ -132,6 +133,10 @@ var renderApps = function(req, res) {
 
 var renderExplore = function(req, res) {
     page = 'explore';
+    locker.mapType("connector", function(error, connectors) {
+        res.render('explore', {synclets:connectors});
+    });
+    /*
     locker.synclets(function(err, synclets) {
         syncletSorted = [];
         for (var i in synclets.available) {
@@ -142,14 +147,19 @@ var renderExplore = function(req, res) {
         syncletSorted.sort(function(a, b) {
             return (a.title > b.title);
         });
-        res.render('explore', {synclets: syncletSorted});
     });
+    */
 }
 
 var renderExploreApps = function(req, res) {
     getAllRegistryApps(function(apps) {
-        getSynclets(function(err, synclets) {
-            var data = {layout: false, apps: apps, synclets: synclets}
+        locker.mapType("connector", function(error, connectors) {
+            for (var i = 0; i < connectors.length; i++) {
+                connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
+            }
+            Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
+            // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
+            var data = {layout: false, apps: apps, connectors: connectors}
             if (req.param('author')) {
                 data.breadcrumb = req.param('author');
                 for (var i in apps) {
@@ -172,16 +182,11 @@ var renderExploreApps = function(req, res) {
                     types.services = true;
                     data.services = {};
                     for (var i = 0; i < req.param('services').length; i++) {
-                        if (synclets.installed[req.param('services')[i]]) {
-                            data.services[req.param('services')[i]] = synclets.installed[req.param('services')[i]].title;
-                        } else {
-                            synclets.available.some(function(info) {
-                                if (info.provider === req.param('services')[i]) {
-                                    data.services[req.param('services')[i]] = info.title;
-                                } else {
-                                    return false;
-                                }
-                            });
+                        console.log("Checking " + req.param('services')[i]);
+                        var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
+                        if (actualConnector.length > 0) {
+                            actualConnector = actualConnector[0];
+                            data.services[req.param('services')[i]] = actualConnector.title;
                         }
                     }
                 }
@@ -294,13 +299,13 @@ var submitPublish = function(req, res) {
                     if (!err) {
                         var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
                         // Send the screenshot
-                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
-                                            headers:{"Content-Type":"image/png"},
+                        // TODO:  See if jer's fix in publish.js of predetermining Content-Size allows the pipe to work
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
+                                            headers:{"Content-Type":"image/png"}, 
                                             body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
                         // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
                         /*
                         ssPut.on("data", function(body, result) {
-                            console.dir(ssPut);
                             console.log("ssPut data body: " + body);
                         });
                         ssPut.on("error", function(error) {
@@ -357,9 +362,9 @@ var getAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
         var result = [];
         var sortedResult = [];
-        for (var i in map.installed) {
-            if ((map.installed[i].is === 'app' || map.installed[i].type === 'app') && !map.installed[i].hidden) {
-                result.push(map.installed[i]);
+        for (var i in map) {
+            if ((map[i].type === 'app' || map[i].type === 'app') && !map[i].hidden) {
+                result.push(map[i]);
             }
         }
         var recentApps = uistate.getNLastUsedApps(count);
@@ -369,14 +374,16 @@ var getAppsInfo = function(count, callback) {
                 if (result[j].id === recentApps[i].name && result[j].static) {
                     result[j].lastUsed = recentApps[i].lastUsed;
                     sortedResult.push(result[j]);
-                    added[j] = true;
+                    added[result[j].id] = true;
                     break;
                 }
             }
         }
         for (var i in result) {
-            if(result[i].static && !added[i]) sortedResult.push(result[i]);
+            console.dir(result);
+            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
+
         callback(sortedResult);
     });
 }
@@ -385,24 +392,38 @@ var renderYou = function(req, res) {
     uistate.fetchState();
 
     getAppsInfo(8, function(sortedResult) {
-        getSynclets(function(err, synclets) {
-            var firstVisit = false;
-            var page = 'you';
+        locker.mapType("connector", function(err, installedConnectors) {
+            request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
+                var connectors = [];
+                Object.keys(body).map(function(key) { 
+                    if (body[key].repository.type == "connector") {
+                        var connector = body[key];
+                        for (var i = 0; i < installedConnectors.length; ++i) {
+                            if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
+                        }
+                        connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
+                        connectors.push(connector); 
+                    }
+                });
+                
+                var firstVisit = false;
+                var page = 'you';
 
-            if (req.cookies.firstvisit === 'true' &&
-                Object.keys(synclets.installed).length === 0) {
-                firstVisit = true;
-                res.clearCookie('firstvisit');
-            }
+                if (req.cookies.firstvisit === 'true' &&
+                    connectors.length === 0) {
+                    firstVisit = true;
+                    res.clearCookie('firstvisit');
+                }
 
-            if (Object.keys(synclets.installed).length === 0) {
-                page += '-connect';
-            }
-            res.render(page, {
-                synclets: synclets,
-                github: github,
-                map: sortedResult,
-                firstVisit: firstVisit
+                if (connectors.length === 0) {
+                    page += '-connect';
+                }
+
+                res.render(page, {
+                    connectors: connectors,
+                    map: sortedResult,
+                    firstVisit: firstVisit
+                });
             });
         });
     });
@@ -493,10 +514,12 @@ var getGithubApps = function(callback) {
     githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
+        console.log("my apps:" + require("util").inspect(myPublishedApps));
         locker.map(function(err, map) {
-            for (var i in map.installed) {
-                if (pattern.exec(map.installed[i].srcdir)) {
-                    var appInfo = checkDraftState(map.installed[i]);
+            for (var i in map) {
+                if (pattern.exec(map[i].srcdir)) {
+                    var appInfo = checkDraftState(map[i]);
+                    if (!appInfo.title) continue
                     var appId = 'app-' + appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];
@@ -545,8 +568,18 @@ var checkDraftState = function(appInfo) {
     return appInfo;
 }
 
-var getSynclets = function(callback) {
-    locker.synclets(function(err, synclets) {
+/*
+var getLocalConnectors = function(callback) {
+    var connectors = [];
+    locker.mapType(callback)(err, map) {;
+        callback(err, map)
+        Object.keys(map).forEach(function(key) {
+            var service = map[key];
+            if (service.type == "connector") {
+                connectors.push(service);
+            }
+        }
+        callback(err, connectors);
         for (var i in synclets.installed) {
             if (i === 'github') { github = true; }
             synclets.available.some(function(synclet) {
@@ -565,3 +598,4 @@ var getSynclets = function(callback) {
         callback(err, synclets);
     });
 }
+*/

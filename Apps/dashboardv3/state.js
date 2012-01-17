@@ -1,4 +1,4 @@
-var lutil = require(__dirname + '/../../Common/node/lutil.js')
+var lutil = require('lutil.js')
   , fs = require('fs')
   ;
 

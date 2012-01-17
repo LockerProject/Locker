@@ -1,0 +1,35 @@
+{
+    "synclets": [
+        {
+            "frequency": 600,
+            "name": "checkins"
+        },
+        {
+            "frequency": 3600,
+            "name": "friends"
+        },
+        {
+            "frequency": 300,
+            "threshold": 2,
+            "name": "recent"
+        },
+        {
+            "frequency": 3600,
+            "name": "badges"
+        }
+
+    ],
+    "mongoId" : {
+        "photos": "photoID"
+    },
+    "types" : {
+        "recents":"checkin"
+    },
+    "provides": [
+        "contact/foursquare",
+        "profile/foursquare",
+        "recents/foursquare",
+        "checkin/foursquare",
+        "badges/foursquare"
+    ]
+}

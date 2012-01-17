@@ -29,15 +29,12 @@ exports.load = function(filepath) {
     else
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
+    exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.scannedDirs = config.scannedDirs || [
-        "Apps",
-        "Collections",
-        "Me/github",
-        "Connectors"
-        ];
+    exports.collections = config.collections || ['contacts', 'links', 'photos', 'places', 'search'];
+    exports.apps = config.apps || ["contactsviewer", "photosv09", "photosviewer", "linkalatte", "helloplaces", "devdocs"];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
         "host": "localhost",
@@ -61,7 +58,7 @@ exports.load = function(filepath) {
         maxstep: config.tolerance.maxstep || 10, // what is the largest frequency multiplier
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
-    exports.ui = config.ui || 'useui';
+    exports.ui = config.ui || 'dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
 }
