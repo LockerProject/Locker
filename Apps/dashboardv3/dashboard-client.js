@@ -64,13 +64,11 @@ app.configure(function() {
 
 function checkInstalled(req, res, next) {
     if (connectPage === false) {
-        request.get({url:locker.lockerBase + "/synclets"}, function(error, response, js) {
-            var body = JSON.parse(js);
-            if (!body.hasOwnProperty('installed') || 
-                 Object.keys(body.installed).length === 0 || 
-                 body.installed.length === 0) {
-                     connectPage = true;
-                     return res.redirect('/dashboard/you#connect');
+        // TODO: fix this to redirect upon new locker w/ no services connected
+        locker.mapType("connector", function(err, installedConnectors) {
+            if (installedConnectors.length === 0) {
+                connectPage = true;
+                return res.redirect('/dashboard/you#connect');
             } else {
                 next();
             }
