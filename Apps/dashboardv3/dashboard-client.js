@@ -31,7 +31,8 @@ var express = require('express')
                  tumblr: {width: 630, height: 500},
                  facebook: {width: 980, height: 705},
                  instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877}
+                 flickr: {width: 1000, height: 877},
+                 linkedin: {width: 491, height: 163}
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
