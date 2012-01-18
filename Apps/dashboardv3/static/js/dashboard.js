@@ -86,7 +86,7 @@ var loadApp = function(callback) {
   window.location.hash = app;
   if (specialApps[appUrl]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl] + '?params=' + params);
-  } else if (app === "#connect") {
+  } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
     $.get('clickapp/' + appUrl, function(e) {});

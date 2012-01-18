@@ -64,7 +64,6 @@ app.configure(function() {
 
 function checkInstalled(req, res, next) {
     if (connectPage === false) {
-        // TODO: fix this to redirect upon new locker w/ no services connected
         locker.mapType("connector", function(err, installedConnectors) {
             var authedApp = false;
             if (installedConnectors.length === 0) {
@@ -384,38 +383,25 @@ var renderYou = function(req, res) {
     uistate.fetchState();
 
     getAppsInfo(8, function(sortedResult) {
-        locker.mapType("connector", function(err, installedConnectors) {
-            request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
-                var connectors = [];
-                Object.keys(body).map(function(key) { 
-                    if (body[key].repository.type == "connector") {
-                        var connector = body[key];
-                        for (var i = 0; i < installedConnectors.length; ++i) {
-                            if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
-                        }
-                        connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
-                        connectors.push(connector); 
-                    }
-                });
-                
-                var firstVisit = false;
-                var page = 'you';
+        
+        getConnectors(function(err, connectors) {
+            var firstVisit = false;
+            var page = 'you';
 
-                if (req.cookies.firstvisit === 'true' &&
-                    connectors.length === 0) {
-                    firstVisit = true;
-                    res.clearCookie('firstvisit');
-                }
+            if (req.cookies.firstvisit === 'true' &&
+                connectors.length === 0) {
+                firstVisit = true;
+                res.clearCookie('firstvisit');
+            }
 
-                if (connectors.length === 0) {
-                    page += '-connect';
-                }
+            if (connectors.length === 0) {
+                page += '-connect';
+            }
 
-                res.render(page, {
-                    connectors: connectors,
-                    map: sortedResult,
-                    firstVisit: firstVisit
-                });
+            res.render(page, {
+                connectors: connectors,
+                map: sortedResult,
+                firstVisit: firstVisit
             });
         });
     });

@@ -13,7 +13,7 @@
       <ul class="synclets-list">
         <% if (numInstalled === 0) { %>
           <% for (var i = 0; i < connectors.length; i++) { %>
-            <% if (connectors[i].name === 'twitter' || connectors[i].name === 'facebook') { %>
+            <% if ((connectors[i].name === 'twitter' || connectors[i].name === 'facebook') && (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true')) { %>
               <li class="featured"><img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" /><span class="synclet-name"><%= connectors[i].repository.title %></span> 
               <a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink" 
                  data-provider="<%=connectors[i].repository.provider%>"
@@ -24,11 +24,12 @@
                  <% } else { %>
                    <img class="connect-button" src="img/connect.png" />
                  <% } %>
-              </a>
+              </a></li>
             <% } %>
           <% } %>
         <% } else { %>
           <% for (var i = 0; i < connectors.length; i++) { %>
+            <% if (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true') { %>
               <li class="featured"><img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" /><span class="synclet-name"><%= connectors[i].repository.title %></span> 
               <a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink" 
                  data-provider="<%=connectors[i].repository.provider%>"
@@ -39,7 +40,8 @@
                   <% } else { %>
                     <img class="connect-button" src="img/connect.png" />
                   <% } %>
-                 </a>
+                 </a></li>
+            <% } %>
           <% } %>
         <% } %>
       </ul>
