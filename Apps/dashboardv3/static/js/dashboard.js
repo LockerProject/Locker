@@ -59,11 +59,6 @@ $(document).ready(function() {
       $(this).parent().parent().hide();
   });
   
-  // $('#takemeback-link').click(function(e) {
-  //    e.preventDefault();
-  //    window.location.reload('/dashboard/you#connect'); 
-  // });
-  
   if (window.location.hash !== '#connect' && $.cookie("firstvisit") === 'true') {
       $('#firstvisit-overlay').fadeIn();
   }
