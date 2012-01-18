@@ -1,0 +1,34 @@
+{
+    "status": "stable",
+    "title": "Foursquare Account",
+    "synclets": [
+        {
+            "frequency": 360000,
+            "name": "checkins"
+        },
+        {
+            "frequency": 360000,
+            "name": "friends"
+        },
+        {
+            "frequency": 360000,
+            "name": "recent"
+        }
+    ],
+    "provides": [
+        "contact/foursquare",
+        "checkin/foursquare"
+    ],
+    "auth": {
+        "username": "",
+        "appKey": "sdf",
+        "appSecret": "asf",
+        "accessToken": "abc"
+    },
+    "srcdir" : "Connectors/foursquare",
+    "id": "foursquare",
+    "handle":"foursquare",
+    "provider": "foursquare",
+    "action": "Connect to a Foursquare account",
+    "desc": "Collect and sync my data from my Foursquare account using the Foursquare API and a Foursquare 'app' that I create just for myself."
+}

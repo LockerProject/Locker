@@ -14,7 +14,7 @@ process.on('uncaughtException',function(error){
     console.dir(error.stack);
 });
 
-var mePath = '/Data/foursquare-1';
+var mePath = '/Data/foursquare';
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
 
 suite.next().suite.addBatch({

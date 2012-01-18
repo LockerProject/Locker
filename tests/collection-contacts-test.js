@@ -58,7 +58,6 @@ suite.next().suite.addBatch({
             });
         },
         "successfully" : function(err, resp) {
-            console.dir(resp);
             assert.isNull(err);
             assert.equal(resp, 2);
         }

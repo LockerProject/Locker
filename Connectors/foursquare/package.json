@@ -1,0 +1,21 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "foursquare",
+  "description": "Foursquare Connector",
+  "version": "0.0.2",
+  "repository": {
+    "title": "foursquare",
+    "handle": "foursquare",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": "~0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
