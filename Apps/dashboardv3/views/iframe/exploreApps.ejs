@@ -2,9 +2,9 @@
 
 <html>
   <head>
+    <link rel="stylesheet/less" href="css/exploreApps.less" />
     <%- partial('header_partial') %>
     <script src="js/exploreApps.js"></script>
-    <link rel="stylesheet" href="css/exploreApps.css" />
   </head>
   <body>
     <content class="body">
@@ -12,7 +12,7 @@
         <%- partial('iframe/breadcrumb') %>
       <% } %>
       <% for (var i in apps) { %>
-        <div class="app-card" id="<%= i %>&breadcrumb=featured">
+        <div class="app-card gradient" id="<%= i %>&breadcrumb=featured">
           <div class="left-side">
             <div class="description"><%= apps[i].description %></div>
             <div class="screenshot"><img src="/registry/screenshot/<%= apps[i].repository.handle %>"></div>

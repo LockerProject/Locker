@@ -2,14 +2,14 @@
 
 <html>
   <head>
+  <link rel="stylesheet/less" href="css/exploreApps.less" />
     <%- partial('header_partial') %>
     <script src="js/exploreApps.js"></script>
-    <link rel="stylesheet" href="css/exploreApps.css" />
   </head>
   <body>
     <content class="body">
       <%- partial('iframe/breadcrumb') %>
-      <div class='full-app-details'>
+      <div class='full-app-details gradient'>
         <div class='screenshot-container'>
           <img src='https://burrow.singly.com/registry/<%=app.name%>/screenshot.png'>
         </div>
@@ -20,8 +20,8 @@
             <% } else { %>
               <input type='button' id='<%= app.name %>' class='install' value='+ add to account'>
             <% } %>
-            <a href='#' class='orange twitter'>Share to Twitter!</a>
-            <a href='#' class='orange facebook'>Share to Facebook!</a>
+            <!-- <a href='#' class='orange twitter'>Share to Twitter!</a>
+            <a href='#' class='orange facebook'>Share to Facebook!</a> -->
           </div>
           <p class="title"><%= app.repository.title %></p>
           <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.author.name %>'>by <%= app.author.name %></a></p>
@@ -36,7 +36,6 @@
             </p>
           <% } %>
           <div class="description"><%= app.description %></div>
-          <div class='version'>version <%= app['dist-tags'].latest %></div>
           <% var date = new Date(app.time.modified) %>
           <div class='last-update'>last updated <%= (date.getMonth() + 1) + "." + date.getDate() + "." + date.getFullYear() %>
         </div>
