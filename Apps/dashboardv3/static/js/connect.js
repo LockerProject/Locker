@@ -20,12 +20,10 @@ $(function() {
     
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
-        window.parent.location.hash = "#contactsviewer";
-        window.parent.location.reload();
+        parent.$(".installed-apps. a[data-id='contactsviewer']", window.parent.document).click();
     });
     
-    $('.synclets-list li a').each(function(index, item) {
-        
+    $('.synclets-list li a').each(function(index, item) {  
        if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
            $(this).parent().fadeIn();
        } 
