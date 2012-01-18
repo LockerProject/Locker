@@ -1,22 +1,33 @@
 {
-    "title": "SoundCloud Account",
-    "status":"stable",
+    "title": "Soundcloud",
+    "status": "stable",
     "provides": [
         "contact/soundcloud",
         "track/soundcloud"
     ],
-    "srcdir": "Connectors/Facebook",
+    "srcdir": "Me/node_modules/soundcloud",
     "id": "soundcloud",
     "provider": "soundcloud",
     "auth": {
         "appKey": "67",
         "appSecret": "42",
-        "token": {"access_token": "foo"}
+        "token": {
+            "access_token": "foo"
+        }
     },
     "synclets": [
         {
             "name": "tracks",
             "frequency": 3600
         }
-    ]
+    ],
+    "handle": "soundcloud",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "authed": 1326483199653,
+    "manifest": "Me/node_modules/soundcloud/package.json",
+    "installed": 1326483199653
 }

@@ -1,0 +1,26 @@
+{
+    "synclets": [
+        {
+            "frequency": 3600,
+            "name": "users"
+        },
+        {
+            "frequency": 3600,
+            "name": "repos"
+        },
+        {
+            "frequency": 3600,
+            "name": "events"
+        },
+        {
+            "frequency": 3600,
+            "name": "profile"
+        }
+    ],
+    "provides": [
+        "contact/github",
+        "repo/github",
+        "event/github",
+        "view/github"
+    ]
+}

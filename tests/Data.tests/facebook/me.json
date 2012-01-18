@@ -1,13 +1,25 @@
-
 {
-	"title":"Facebook Account",
-	"action":"Connect to a Facebook account",
-	"desc":"Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
-	"run":"node facebook.js",
-	"status":"unstable",
-	"provides":["contact/facebook", "status/facebook"],
-    "is":"connector",
-    "srcdir":"Connectors/Facebook",
-    "id":"facebook",
-    "uri":"http://localhost:8043/Me/facebook"
+    "title": "Facebook",
+    "action": "Connect to a Facebook account",
+    "desc": "Collect and sync my data from my Facebook account using the Facebook API and a Facebook 'app' that I create just for myself.",
+    "run": "node facebook.js",
+    "status": "unstable",
+    "provides": [
+        "contact/facebook",
+        "status/facebook"
+    ],
+    "is": "connector",
+    "srcdir": "Me/node_modules/facebook",
+    "id": "facebook",
+    "uri": "http://localhost:8043/Me/facebook",
+    "handle": "facebook",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": "",
+    "manifest": "Me/node_modules/facebook/package.json",
+    "provider": "facebook",
+    "installed": 1326483199668
 }

@@ -62,12 +62,11 @@ header .user-info-name {
 
 header .nav-section {
   margin-left: 220px;
-  border-bottom: solid 1px #4d4d4d;
   height: 82px;
 }
 
 header .nav {
-  margin-top: 39px;
+  margin-top: 59px;
   float: left;
 }
 
@@ -107,7 +106,7 @@ aside {
   position: absolute;
   width: 100%;
   height: 100%;
-  padding-top: 83px;
+  padding-top: 123px;
   padding-left: 220px;
   top: 0;
   left: 0;
@@ -305,4 +304,8 @@ button.publish {
   border: 0px;
   padding: 5px 10px;
   cursor: pointer;
+}
+
+.template {
+    display:none;
 }

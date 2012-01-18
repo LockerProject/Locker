@@ -11,7 +11,7 @@
       <%- partial('iframe/breadcrumb') %>
       <div class='full-app-details'>
         <div class='screenshot-container'>
-          <img src='img/batman.jpg'>
+          <img src='https://burrow.singly.com/registry/<%=app.name%>/screenshot.png'>
         </div>
         <div class='full-app-info'>
           <div class='action-buttons'>
@@ -24,7 +24,7 @@
             <a href='#' class='orange facebook'>Share to Facebook!</a>
           </div>
           <p class="title"><%= app.repository.title %></p>
-          <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.repository.author %>'>by <%= app.repository.author %></a></p>
+          <p class="author"><a class="orange parentLink" href='explore#exploreApps&author&author=<%= app.author.name %>'>by <%= app.author.name %></a></p>
           <% if (app.repository.uses && app.repository.uses.types) { %>
             <p class="uses">Uses
               <% for (var j = 0; j < app.repository.uses.types.length; j++) { %>
@@ -35,7 +35,7 @@
               <% } %>
             </p>
           <% } %>
-          <div class="description"><%= app.repository.desc %></div>
+          <div class="description"><%= app.description %></div>
           <div class='version'>version <%= app['dist-tags'].latest %></div>
           <% var date = new Date(app.time.modified) %>
           <div class='last-update'>last updated <%= (date.getMonth() + 1) + "." + date.getDate() + "." + date.getFullYear() %>

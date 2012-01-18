@@ -14,12 +14,12 @@
       <% for (var i in apps) { %>
         <div class="app-card" id="<%= i %>&breadcrumb=featured">
           <div class="left-side">
-            <div class="description"><%= apps[i].repository.desc %></div>
-            <div class="screenshot"><img src="img/batman.jpg"></div>
+            <div class="description"><%= apps[i].description %></div>
+            <div class="screenshot"><img src="/registry/screenshot/<%= apps[i].repository.handle %>"></div>
           </div>
           <div class="app-info">
             <p class="title"><%= apps[i].repository.title %></p>
-            <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].repository.author %>">by <%= apps[i].repository.author %></a></p>
+            <p class="author"><a class="orange parentLink" href="explore#exploreApps&author&author=<%= apps[i].author.name %>">by <%= apps[i].author.name %></a></p>
             <% if (apps[i].repository.uses && apps[i].repository.uses.types) { %>
               <p class="uses">Uses
                 <% for (var j = 0; j < apps[i].repository.uses.types.length; j++) { %>
@@ -33,24 +33,22 @@
             <% if (apps[i].repository.uses && apps[i].repository.uses.services) { %>
               <% var count = 0; %>
               <% for (var j = 0; j < apps[i].repository.uses.services.length; j++) { %>
-                <% if (!synclets.installed[j]) { %>
-                  <% for (var k = 0; k < synclets.available.length; k++) { %>
-                    <% if (synclets.available[k].provider === apps[i].repository.uses.services[j]) { %>
-                      <% if (count > 0) { %>+ <% } else { %>
-                        <p class="connect">Connect
-                      <% } %>
-                      <a href="<%= synclets.available[k].authurl %>" class="oauthLink orange" data-provider="<%= synclets.available[k].provider %>"
-                        data-width="<%= synclets.available[k].oauthSize.width %>"
-                        data-height="<%= synclets.available[k].oauthSize.height %>"><%= synclets.available[k].title %></a>
-                      <% count++ %>
+                <% var service = connectors.filter(function(connector) { return connector.handle == apps[i].repository.uses.services[j]; });
+                if (service.length > 0) { 
+                    service = service[0]; %>
+                    <% if (count > 0) { %>+ <% } else { %>
+                      <p class="connect">Connect
+                    <% } %>
+                    <a href="<%= service.authurl %>" class="oauthLink orange" data-provider="<%= service.provider %>"
+                      data-width="<%= service.oauthSize.width %>"
+                      data-height="<%= service.oauthSize.height %>"><%= service.title %></a>
+                    <% count++ %>
                     <% } %>
                   <% } %>
-                <% } %>
                 <% if (count > 0) { %>
                   </p>
                 <% } %>
               <% } %>
-            <% } %>
             <% if (apps[i].installed) { %>
               <input disabled type='button' value='added'>
             <% } else { %>
