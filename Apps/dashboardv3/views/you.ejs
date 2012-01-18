@@ -22,7 +22,7 @@
 <div class="sidenav-items synclets">
   <% for (var i = 0; i < connectors.length; i++) { %>
     <% if (connectors[i].repository.hidden) continue; %>
-    <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%=connectors[i].repository.provider%>'
+    <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%= connectors[i].repository.handle %>'
         data-width='<%=connectors[i].oauthSize.width%>' data-height='<%=connectors[i].oauthSize.height%>' class="oauthLink"><% } %>
     <img class='<%=(connectors[i].authed ? "installed" : "")%>' src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
     <% if (!connectors[i].authed) { %></a><% } %>

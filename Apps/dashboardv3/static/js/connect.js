@@ -23,6 +23,13 @@ $(function() {
         window.parent.location.hash = "#contactsviewer";
         window.parent.location.reload();
     });
+    
+    $('.synclets-list li a').each(function(index, item) {
+        
+       if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
+           $(this).parent().fadeIn();
+       } 
+    });
 });
 
 // this one is called only when going through a first-time connection

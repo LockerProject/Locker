@@ -387,21 +387,25 @@ var renderYou = function(req, res) {
         getConnectors(function(err, connectors) {
             var firstVisit = false;
             var page = 'you';
+            
+            getInstalledConnectors(function(err, installedConnectors) {
+                
+                if (req.cookies.firstvisit === 'true' &&
+                    installedConnectors.length === 0) {
+                    firstVisit = true;
+                    res.clearCookie('firstvisit');
+                }
 
-            if (req.cookies.firstvisit === 'true' &&
-                connectors.length === 0) {
-                firstVisit = true;
-                res.clearCookie('firstvisit');
-            }
+                if (installedConnectors.length === 0) {
+                    page += '-connect';
+                }
 
-            if (connectors.length === 0) {
-                page += '-connect';
-            }
-
-            res.render(page, {
-                connectors: connectors,
-                map: sortedResult,
-                firstVisit: firstVisit
+                res.render(page, {
+                    connectors: connectors,
+                    installedConnectors: installedConnectors,
+                    map: sortedResult,
+                    firstVisit: firstVisit
+                });
             });
         });
     });
@@ -570,6 +574,19 @@ var getConnectors = function(callback) {
         });
     });
 }
+
+var getInstalledConnectors = function(callback) {
+    getConnectors(function(err, connectors) {
+       var installedConnectors = [];
+       for (var i=0; i<connectors.length; i++) {
+           if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
+               installedConnectors.push(connectors[i]);
+           }
+       } 
+       callback(err, installedConnectors);
+    });
+}
+
 
 /*
 var getLocalConnectors = function(callback) {
