@@ -162,7 +162,7 @@ var runTests = function() {
     }
 
     var output = '';
-
+    process.chdir(__dirname);
     var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
         if (xunit) output += data;

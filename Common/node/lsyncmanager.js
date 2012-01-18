@@ -58,7 +58,7 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
     }
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
-    async.forEach(js.synclets, function(synclet, cb) {
+    async.forEachSeries(js.synclets, function(synclet, cb) {
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -160,6 +160,15 @@ function executeSynclet(info, synclet, callback, force) {
         exports.scheduleRun(info, synclet);
         return callback();
     }
+    // if another synclet is running, come back a little later, don't overlap!
+    if (info.status == 'running')
+    {
+        logger.verbose("delaying "+synclet.name);
+        setTimeout(function() {
+            executeSynclet(info, synclet, callback);
+        }, 10000);
+        return;
+    }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
@@ -174,7 +183,8 @@ function executeSynclet(info, synclet, callback, force) {
     var dataResponse = '';
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
-    var app = spawn(run.shift(), run, {cwd: path.join(lconfig.lockerDir, info.srcdir), env:env});
+    var cwd = (info.srcdir.charAt(0) == '/') ? info.srcdir : path.join(lconfig.lockerDir, info.srcdir);
+    var app = spawn(run.shift(), run, {cwd: cwd, env:env});
 
     // edge case backup, max 30 min runtime by default
     var timer = setTimeout(function(){
@@ -209,11 +219,14 @@ function executeSynclet(info, synclet, callback, force) {
         logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
-        info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens
+        info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
         info.config = lutil.extend(true, info.config, response.config);
         exports.scheduleRun(info, synclet);
         serviceManager.mapDirty(info.id); // save out to disk
-        processResponse(deleteIDs, info, synclet, response, callback);
+        processResponse(deleteIDs, info, synclet, response, function(err){
+            info.status = 'waiting';
+            callback(err);
+        });
     });
     if (!info.config) info.config = {};
 

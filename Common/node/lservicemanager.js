@@ -16,19 +16,21 @@ var spawn = require('child_process').spawn;
 var levents = require('levents');
 var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
-var logger = require('logger');
+var logger;
+var async = require('async');
 
 var serviceMap = { }; // All of the immediately addressable services in the system
 
 var shuttingDown = null;
 var syncletManager, registry;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
-logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
 /**
 * Scans the Me directory for instaled services
 */
-exports.init = function (sman, reg) {
+exports.init = function (sman, reg, callback) {
+    logger = require('logger');
+    logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
     syncletManager = sman;
     registry = reg;
     var dirs = fs.readdirSync(lconfig.me);
@@ -48,18 +50,14 @@ exports.init = function (sman, reg) {
     }
 
     // make sure default collections, ui, and apps are all installed!
-    if(lconfig.ui && !serviceMap[lconfig.ui]) registry.install(lconfig.ui, function(err){
-        if(err) logger.error("failed to install ui: "+err);
-    });
-    if(lconfig.apps) lconfig.apps.forEach(function(app){
-        if(!serviceMap[app]) registry.install(app, function(err){
-            if(err) logger.error("failed to install "+app+": "+err);
-        });
-    });
-    if(lconfig.collections) lconfig.collections.forEach(function(coll){
-        // always upsert in case the .collection data changed (TODO be smarter using stat+timestamp?)
-        exports.mapUpsert('Collections/'+coll+'/package.json');
-    });
+    var installs = [];
+    if(lconfig.ui) installs.push(lconfig.ui);
+    if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
+    if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
+    async.forEachSeries(installs, function(id, cb){
+        if(serviceMap[id]) return cb();
+        registry.install({name:id}, cb);
+    }, callback);
 }
 
 // return whole map or just one service from it
@@ -135,6 +133,8 @@ exports.mapUpsert = function (file) {
     }
 
     js.upserted = Date.now();
+    js.manifest = file;
+    js.srcdir = path.dirname(file);
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
@@ -155,8 +155,6 @@ exports.mapUpsert = function (file) {
     logger.verbose("creating "+js.handle);
     js.id = js.provider = js.handle; // kinda legacy where they could differ
     serviceMap[js.id] = js;
-    js.manifest = file;
-    js.srcdir = path.dirname(file);
     js.installed = Date.now();
     cleanLoad(js);
     levents.fireEvent('service://me/#'+js.id, 'new', js);
@@ -249,7 +247,7 @@ exports.spawn = function(serviceId, callback) {
     logger.info('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = {
         port: svc.port, // This is just a suggested port
-        sourceDirectory: path.join(lconfig.lockerDir, svc.srcdir),
+        sourceDirectory: ((svc.srcdir.charAt(0) == '/') ? svc.srcdir : path.join(lconfig.lockerDir, svc.srcdir)),
         workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
         lockerUrl:lconfig.lockerBase,
         externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
@@ -323,7 +321,7 @@ exports.spawn = function(serviceId, callback) {
 
     });
     app.on('exit', function (code,signal) {
-        logger.info(svc.id + " process has ended. (" + code + ":" + signal + ")");
+        logger.info(svc.id + " exited with status " + code + ", signal " + signal);
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
@@ -372,7 +370,7 @@ exports.shutdown = function(cb) {
         var svc = serviceMap[mapEntry];
         if (svc.pid) {
             try {
-                logger.info("Killing running service " + svc.id + " at pid " + svc.pid);
+                logger.info("Signalling " + svc.id + " to shut down (pid " + svc.pid + ")");
                 process.kill(svc.pid, "SIGINT");
             } catch(e) {
             }
@@ -421,7 +419,7 @@ function checkForShutdown() {
     for(var mapEntry in serviceMap) {
         var svc = serviceMap[mapEntry];
         if (svc.pid)  {
-            logger.info(svc.id + " is still running, cannot complete shutdown.");
+            logger.info("Waiting for "+svc.id+" to exit.");
             return;
         }
     }

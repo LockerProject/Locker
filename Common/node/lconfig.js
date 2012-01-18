@@ -29,10 +29,11 @@ exports.load = function(filepath) {
     else
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
+    exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.collections = config.collections || ['Contacts', 'Links', 'Photos', 'Places', 'Search'];
+    exports.collections = config.collections || ['contacts', 'links', 'photos', 'places', 'search'];
     exports.apps = config.apps || ["contactsviewer", "photosv09", "photosviewer", "linkalatte", "helloplaces", "devdocs"];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",

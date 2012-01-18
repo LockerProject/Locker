@@ -34,7 +34,7 @@ var express = require('express')
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
-    lconfig.load('../Config/config.json');
+    lconfig.load('../../Config/config.json');
     locker = passedLocker;
     app.listen(listenPort, callback);
 };
@@ -137,6 +137,8 @@ var renderExploreApps = function(req, res) {
             for (var i = 0; i < connectors.length; i++) {
                 connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
             }
+            Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
+            // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
             var data = {layout: false, apps: apps, connectors: connectors}
             if (req.param('author')) {
                 data.breadcrumb = req.param('author');
@@ -278,8 +280,8 @@ var submitPublish = function(req, res) {
                         var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
                         // Send the screenshot
                         // TODO:  See if jer's fix in publish.js of predetermining Content-Size allows the pipe to work
-                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
-                                            headers:{"Content-Type":"image/png"}, 
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
+                                            headers:{"Content-Type":"image/png"},
                                             body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
                         // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
                         /*
@@ -352,18 +354,15 @@ var getAppsInfo = function(count, callback) {
                 if (result[j].id === recentApps[i].name && result[j].static) {
                     result[j].lastUsed = recentApps[i].lastUsed;
                     sortedResult.push(result[j]);
-                    added[j.id] = true;
+                    added[result[j].id] = true;
                     break;
                 }
             }
         }
-        /*
-        console.dir(added);
         for (var i in result) {
-            console.dir(result);
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
-        */
+
         callback(sortedResult);
     });
 }
@@ -374,14 +373,14 @@ var renderYou = function(req, res) {
         locker.mapType("connector", function(err, installedConnectors) {
             request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
                 var connectors = [];
-                Object.keys(body).map(function(key) { 
+                Object.keys(body).map(function(key) {
                     if (body[key].repository.type == "connector") {
                         var connector = body[key];
                         for (var i = 0; i < installedConnectors.length; ++i) {
                             if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
                         }
                         connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
-                        connectors.push(connector); 
+                        connectors.push(connector);
                     }
                 });
                 page = 'you';
@@ -467,10 +466,12 @@ var getGithubApps = function(callback) {
     githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
+        console.log("my apps:" + require("util").inspect(myPublishedApps));
         locker.map(function(err, map) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
                     var appInfo = checkDraftState(map[i]);
+                    if (!appInfo.title) continue
                     var appId = 'app-' + appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];

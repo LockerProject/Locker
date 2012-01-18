@@ -37,17 +37,6 @@ function meScan()
                 console.log("already did "+dir);
                 continue;
             };
-            if(js.srcdir.indexOf("Collections") == 0)
-            {
-                console.log("merging collection "+dir);
-                var uc = dir.charAt(0).toUpperCase() + dir.substr(1);
-                var js2 = JSON.parse(fs.readFileSync(path.join(lockerBase, "Collections", uc, dir+'.collection'), 'utf8'));
-                js = extend(js, js2);
-                js.manifest = path.join("Collections", uc, dir+'.collection');
-                js.handle = dir;
-                saver(js);
-                continue;
-            }
             // dir name must match registry name
             js.handle = dir;
             // GITHUB IS SPECIAL
@@ -76,8 +65,10 @@ function install(js)
     npm.commands.install([js.handle], function(err){
         if(err){ // only warn here cuz we can re-run if install fails
             console.log("failed to install "+js.handle+": "+err);
+            console.log(err.stack);
             return;
         }
+        console.log("extending and saving a me.json for " + js.handle);
         var js2 = JSON.parse(fs.readFileSync(path.join("node_modules", js.handle, 'package.json'), 'utf8'));
         js = extend(js, js2.repository);
         if(js.auth) js.authed = Date.now();

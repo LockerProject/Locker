@@ -31,6 +31,7 @@ var request = require('request');
 var async = require('async');
 var util = require('util');
 var lutil = require('lutil');
+var carrier = require('carrier');
 require('graceful-fs');
 
 
@@ -80,18 +81,26 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess = spawn('mongod', ['--nohttpinterface',
                                     '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
                                     '--port', lconfig.mongo.port]);
-    mongoProcess.stderr.on('data', function(data) {
-        logger.error('mongod err: ' + data);
+
+    var mongoStdout = carrier.carry(mongoProcess.stdout);
+    mongoStdout.on('line', function (line) {
+        logger.info('[mongo] ' + line);
+        if(line.match(/ waiting for connections on port/g)) {
+            lmongo.connect(checkKeys);
+        }
+    });
+    var mongoStderr = carrier.carry(mongoProcess.stderr);
+    mongoStderr.on('line', function (line) {
+        logger.error('[mongo] ' + line);
     });
 
-    var mongoOutput = "";
     var mongodExit = function(errorCode) {
         if(shuttingDown_) return;
         if(errorCode !== 0) {
             var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
             db.open(function(error, client) {
                 if(error) {
-                    logger.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
+                    logger.error('Could not connect to mongo: '+errorCode);
                     shutdown(1);
                 } else {
                     logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
@@ -102,16 +111,6 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         }
     };
     mongoProcess.on('exit', mongodExit);
-
-    // watch for mongo startup
-    var callback = function(data) {
-        mongoOutput += data;
-        if(mongoOutput.match(/ waiting for connections on port/g)) {
-            mongoProcess.stdout.removeListener('data', callback);
-            lmongo.connect(checkKeys);
-       }
-    };
-    mongoProcess.stdout.on('data', callback);
 });
 
 
@@ -126,7 +125,7 @@ function checkKeys() {
                 shutdown(1);
                 return;
             }
-            finishStartup();
+            runMigrations("preServices", finishStartup);
         });
     });
 }
@@ -146,8 +145,7 @@ function finishStartup() {
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
                 registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry); // this may trigger synclets to start!
-                runMigrations();
+                serviceManager.init(syncManager, registry, function() {runMigrations("postServices", postStartup);}); // this may trigger synclets to start!
             });
         });
     });
@@ -155,46 +153,51 @@ function finishStartup() {
     lockerPortNext++;
 }
 
-function runMigrations() {
+function runMigrations(phase, migrationCB) {
     var migrations = [];
-    var metaData = {version: 1};
+    var metaData = {version: 0};
     try {
         migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
-        logger.verbose(migrations);
         metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
-        logger.verbose(metaData);
     } catch (E) {}
+
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
     // TODO do these using async serially and pass callbacks!
-    for (var i = 0; i < migrations.length; i++) {
-        if (migrations[i].substring(0, 13) > metaData.version) {
-            try {
-                logger.info("running global migration : " + migrations[i]);
-                migrate = require(path.join(lconfig.lockerDir, "migrations", migrations[i]));
-                var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
-                if (ret) {
-                    // load new file in case it changed, then save version back out
-                    var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
-                    metaData.version = migrations[i].substring(0, 13);
-                    curMe.version = metaData.version;
-                    lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
-                } else {
-                    // this isn't clean but we have to do something drastic!!!
+    async.forEach(migrations, function(migration, cb) {
+        if (Number(migration.substring(0, 13)) <= metaData.version) {
+            return cb();
+        }
+
+        try {
+            logger.info("running global migration : " + migration);
+            migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
+            migrate(lconfig, function(ret) {
+                if (!ret) {
                     logger.error("failed to run global migration!");
-                    process.exit(1);
+                    return shutdown(1);
                 }
+                metaData.version = Number(migration.substring(0, 13));
+                lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+                logger.info("Migration comlete for: " + migration);
+                cb();
+
+                /*
+                // XXX: These are synchronous only right now, until we can find a less destructive way to do post startup
                 // if they returned a string, it's a post-startup callback!
                 if (typeof ret == 'string')
                 {
                     serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
                 }
-            } catch (E) {
-                // TODO: do we need to exit here?!?
-                logger.error("error running global migration : " + migrations[i] + " ---- " + E);
-            }
+                */
+            });
+        } catch (E) {
+            // TODO: do we need to exit here?!?
+            logger.error("error running global migration : " + migration + " ---- " + E);
+            shutdown(1);
         }
-    }
-    postStartup();
+    }, function() {
+        migrationCB();
+    });
 }
 
 // scheduling and misc things
@@ -205,12 +208,14 @@ function postStartup() {
 }
 
 function shutdown(returnCode) {
-    process.stdout.write("\n");
     shuttingDown_ = true;
+    process.stdout.write("\n");
+    logger.info("Shutting down...");
     serviceManager.shutdown(function() {
         mongoProcess.kill();
-        logger.info("Shutdown complete.");
-        process.exit(returnCode);
+        logger.info("Shutdown complete.", {}, function (err, level, msg, meta) {
+            process.exit(returnCode);
+        });
     });
 }
 

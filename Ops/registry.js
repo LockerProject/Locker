@@ -56,8 +56,10 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                 }catch(E){
                     logger.error("couldn't parse registry.json: "+E);
                 }
-                syncTimer = setInterval(exports.sync, syncInterval);
-                exports.sync();
+                if(lconfig.registryUpdate === true) {
+                    syncTimer = setInterval(exports.sync, syncInterval);
+                    exports.sync();
+                }
                 process.chdir(lconfig.lockerDir);
                 callback(installed);
             });
@@ -74,8 +76,11 @@ exports.app = function(app)
     app.get('/registry/add/:id', function(req, res) {
         logger.info("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
-        if(!verify(regIndex[req.params.id])) return res.send("invalid app", 500);
-        exports.install({name:req.params.id}, function(){ res.send(true); });
+        if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
+        exports.install({name:req.params.id}, function(err){
+            if(err) return res.send(err, 500);
+            res.send(true);
+        });
     });
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
@@ -185,8 +190,9 @@ function verify(pkg)
 {
     if(!pkg) return false;
     if(!pkg.repository) return false;
-    if(!pkg.repository.static) return false;
-    if(pkg.repository.static === true || pkg.repository.static === "true") return true;
+    if(pkg.repository.type == 'app') return true;
+    if(pkg.repository.type == 'connector') return true;
+    if(pkg.repository.type == 'collection') return true;
     return false;
 }
 
@@ -217,7 +223,7 @@ function loadPackage(name, upsert, callback)
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(path.join('Me/node_modules',name,'package.json'));
+        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
         callback(null, installed[name]);
     });
 }
@@ -281,8 +287,10 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0)
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                    console.dir(thiz);
                     apps[k] = thiz;
+                }
             });
         }
         res.send(apps);
@@ -293,8 +301,9 @@ exports.getMyApps = function(req, res) {
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
+    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-    console.log("Install is being ran!");
+    logger.info("installing "+arg.name);
     npm.commands.install([arg.name], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
@@ -367,10 +376,10 @@ function checkPackage(pjs, arg, gh, callback)
               "repository": {
                 "title": arg.title || pkg,
                 "handle": handle,
-                "is": "app",
+                "type": "app",
                 "author": gh.login,
-                "static": "true",
-                "update": "auto",
+                "static": true,
+                "update": true,
                 "github": "https://github.com/"+gh.login+"/"+pkg
               },
               "dependencies": {},
@@ -497,7 +506,7 @@ function authIsAuth(req, res) {
     try {
         if(authModule.direct) return authModule.direct(res);
         // rest require apikeys
-        if(!apiKeys[id]) return res.send("missing required api keys", 500);
+        if(!apiKeys[id] && js.keys !== false && js.keys != "false") return res.send("missing required api keys", 500);
         if(typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function(err, auth) {
             if(err) return res.send(err, 500);
             finishAuth(js, auth, res);
@@ -535,6 +544,7 @@ function authIsAuth(req, res) {
         if(method == 'POST') auth = {token: body, clientID: theseKeys.appKey, clientSecret: theseKeys.appSecret};
         if(typeof authModule.authComplete == 'function') {
             return authModule.authComplete(auth, function(err, auth) {
+                if(err) return res.send(err, 500);
                 finishAuth(js, auth, res);
             });
         }
@@ -548,7 +558,7 @@ function finishAuth(js, auth, res) {
     js.auth = auth;
     js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
-    serviceManager.mapUpsert(path.join('Me/node_modules',js.id,'package.json'));
+    serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
