@@ -178,6 +178,7 @@ function runMigrations(phase, migrationCB) {
                 }
                 metaData.version = Number(migration.substring(0, 13));
                 lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+                logger.info("Migration comlete for: " + migration);
                 cb();
 
                 /*

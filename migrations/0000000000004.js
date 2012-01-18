@@ -182,8 +182,8 @@ function deleteStatics(dirs, deleteCB) {
 function me2me(cb) {
     logger.info("***************************************** me2me");
     var child = spawn("node", [path.join(locker_config.lockerDir, "Ops", "me2me.js"), locker_config.lockerDir], {cwd:path.join(locker_config.lockerDir, locker_config.me)});
-    child.stdout.on("data", logger.info);
-    child.stderr.on("data", logger.error);
+    child.stdout.on("data", function(data) { logger.info(data.toString("utf8")); });
+    child.stderr.on("data", function(data) { logger.error(data.toString("utf8")) });
     child.on("exit", function(code) {
         cb(code == 0);
     });
