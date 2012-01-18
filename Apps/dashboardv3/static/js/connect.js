@@ -20,7 +20,9 @@ $(function() {
     
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
-        parent.$(".installed-apps. a[data-id='contactsviewer']", window.parent.document).click();
+        parent.app = 'contactsviewer';
+        parent.loadApp();
+        parent.window.location.reload();
     });
     
     $('.synclets-list li a').each(function(index, item) {  

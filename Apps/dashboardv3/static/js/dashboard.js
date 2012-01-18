@@ -55,17 +55,17 @@ $(document).ready(function() {
   
   $('.gotit-button').click(function(e) {
       e.preventDefault();
+      $.cookie("firstvisit", null, {path: '/' });
       $(this).parent().parent().hide();
   });
   
-  $('#takemeback-link').click(function(e) {
-     e.preventDefault();
-     window.location.hash = "#connect";
-     window.location.reload(); 
-  });
+  // $('#takemeback-link').click(function(e) {
+  //    e.preventDefault();
+  //    window.location.reload('/dashboard/you#connect'); 
+  // });
   
-  if (window.location.hash === "#connect") {
-      $('#firstvisit-overlay').hide();
+  if (window.location.hash !== '#connect' && $.cookie("firstvisit") === 'true') {
+      $('#firstvisit-overlay').fadeIn();
   }
 });
 

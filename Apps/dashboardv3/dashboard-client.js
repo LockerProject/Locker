@@ -64,17 +64,8 @@ app.configure(function() {
 
 function checkInstalled(req, res, next) {
     if (connectPage === false) {
-        locker.mapType("connector", function(err, installedConnectors) {
-            var authedApp = false;
+        getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
-            
-            }
-            for (var i=0; i<installedConnectors; i++) {
-                if (installedConnectors[i].hasOwnProperty('authed')) {
-                    authedApp = true;
-                }
-            }
-            if (authedApp === false) {
                 connectPage = true;
                 return res.redirect('/dashboard/you#connect');
             } else {
@@ -389,11 +380,10 @@ var renderYou = function(req, res) {
             var page = 'you';
             
             getInstalledConnectors(function(err, installedConnectors) {
-                
                 if (req.cookies.firstvisit === 'true' &&
                     installedConnectors.length === 0) {
                     firstVisit = true;
-                    res.clearCookie('firstvisit');
+                    //res.clearCookie('firstvisit');
                 }
 
                 if (installedConnectors.length === 0) {
