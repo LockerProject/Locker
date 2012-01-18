@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "links",
   "description": "Links Collection",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": {
     "title": "Links",
     "run": "node links.js",
@@ -32,7 +32,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}
