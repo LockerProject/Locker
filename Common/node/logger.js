@@ -68,6 +68,7 @@ if (lconfig.logging.file) {
 
 // Help find any areas where we're not logging normal strings
 var fullLogger = new (winston.Logger)({"transports":transports});
+/*
 var __realLog = fullLogger.log;
 fullLogger.log = function(level, msg) {
     if (typeof(msg) != "string") {
@@ -77,4 +78,5 @@ fullLogger.log = function(level, msg) {
     }
     __realLog.call(fullLogger, level, msg);
 };
+*/
 module.exports = fullLogger
