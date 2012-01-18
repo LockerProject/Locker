@@ -34,7 +34,7 @@ var express = require('express')
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
-    lconfig.load('../Config/config.json');
+    lconfig.load('../../Config/config.json');
     locker = passedLocker;
     app.listen(listenPort, callback);
 };
@@ -280,8 +280,8 @@ var submitPublish = function(req, res) {
                         var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
                         // Send the screenshot
                         // TODO:  See if jer's fix in publish.js of predetermining Content-Size allows the pipe to work
-                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name, 
-                                            headers:{"Content-Type":"image/png"}, 
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
+                                            headers:{"Content-Type":"image/png"},
                                             body:fs.readFileSync(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'))});
                         // TODO:  All of this below is more correct for piping a file to the PUT request but it does not work.  Needs to be retested with node 0.6 and newer request.
                         /*
@@ -360,7 +360,6 @@ var getAppsInfo = function(count, callback) {
             }
         }
         for (var i in result) {
-            console.dir(result);
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
 
@@ -374,14 +373,14 @@ var renderYou = function(req, res) {
         locker.mapType("connector", function(err, installedConnectors) {
             request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
                 var connectors = [];
-                Object.keys(body).map(function(key) { 
+                Object.keys(body).map(function(key) {
                     if (body[key].repository.type == "connector") {
                         var connector = body[key];
                         for (var i = 0; i < installedConnectors.length; ++i) {
                             if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
                         }
                         connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
-                        connectors.push(connector); 
+                        connectors.push(connector);
                     }
                 });
                 page = 'you';

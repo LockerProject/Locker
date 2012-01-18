@@ -2,7 +2,7 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "contactsviewer",
   "description": "Merged Contacts Viewer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Merged Contacts Viewer",
     "handle": "contactsviewer",
@@ -11,10 +11,21 @@
     "type": "app",
     "static": false,
     "run": "node contacts.js",
-    "uses":{"services":["facebook", "twitter", "gcontacts", "foursquare"], "types":["contacts"]}
+    "uses": {
+      "services": [
+        "facebook",
+        "twitter",
+        "gcontacts",
+        "foursquare"
+      ],
+      "types": [
+        "contacts"
+      ]
+    },
+    "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}
