@@ -23,7 +23,8 @@ exports.sync = function (processInfo, cb) {
                            cb(err);
                        }
                        else {
-                           cb(null, {data : {info : info}});
+                           processInfo.auth.profile = info;
+                           cb(null, {data : {info : info}, auth: processInfo.auth});
                        }
                    }
     );

@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "lastfm",
   "description": "Last.fm",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Last.fm",
     "handle": "lastfm",

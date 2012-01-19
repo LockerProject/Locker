@@ -1,0 +1,43 @@
+body {
+  margin: 40px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 200;
+}
+
+.synclets-list {
+  margin: 40px 0;
+}
+
+.synclets-list li {
+  margin: 15px 0;
+  width: 400px;
+}
+
+.synclet-logo {
+  padding: 0 10px;
+}
+
+.synclet-name {
+  font-size: 22px;
+  font-weight: 200;
+}
+
+.connect-button {
+  float: right;
+  margin: 10px 0 0 0;
+}
+
+.hideable {
+  display: none;
+}
+
+.orange {
+  color: #F7931E;
+}
+
+#main-header-2 {
+  display: none;
+}

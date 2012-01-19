@@ -43,30 +43,27 @@ function paged(processInfo, synclet, perPage, params, cb) {
     api(processInfo.auth
       , params
       , function (err, body) {
-            if (err) {
-                cb(err);
+            if (err) return cb(err);
+
+            var js;
+            try {
+                js = JSON.parse(body);
             }
-            else {
-                var js;
-                try {
-                    js = JSON.parse(body);
-                }
-                catch (exc) { return cb(exc); }
+            catch (exc) { return cb(exc); }
 
-                if ('error' === js.status) return cb(js.message);
+            if ('error' === js.status) return cb(js.message);
 
-                var objList = js.result;
-                if (objList.length < perPage) {
-                    config.paging[synclet].start = 0;
-                    config.nextRun = 0;
-                }
-                else { // still paging
-                    config.paging[synclet].start += perPage;
-                    config.nextRun = -1;
-                }
-
-                cb(null, config, objList);
+            var objList = js.result;
+            if (objList.length < perPage) {
+                config.paging[synclet].start = 0;
+                config.nextRun = 0;
             }
+            else { // still paging
+                config.paging[synclet].start += perPage;
+                config.nextRun = -1;
+            }
+
+            return cb(null, config, objList);
         }
     );
 };
