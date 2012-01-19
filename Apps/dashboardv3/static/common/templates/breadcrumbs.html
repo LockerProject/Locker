@@ -1,0 +1,17 @@
+<ul class="breadcrumb">
+  <li><p class='first-crumb'><a class="parentLink iframeLink" href="#" data-id="Explore-Featured">App Gallery</a></p></li>
+    <li><p>
+      {#app}
+        <a class="blue parentLink iframeLink" href="#" data-id="Explore-Details-app={name}">{repository.title}</a>
+      {/app}
+      {?filters}apps that use 
+        {#filters}
+          <a class="blue parentLink iframeLink" href="#" data-id="Explore-Filter-
+          {#type}types={type}{/type}{#service}services={service}{/service}">{name}</a>{@sep} + {/sep}
+        {/filters}
+      {/filters}
+      {#author}
+        <a class="blue parentLink iframeLink" href="#" data-id="Explore-Author-&amp;author={author}">by {author}</a>
+      {/author}
+    </p></li><p></p>
+</ul>

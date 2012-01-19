@@ -1,4 +1,5 @@
 var app;
+var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
@@ -10,8 +11,8 @@ var specialApps = {
 var iframeLoaded = function() {};
 
 $(document).ready(function() {
-  app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
-  loadApp();
+  app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp;
+  // loadApp();
 
   $('.iframeLink').click(function() {
     app = $(this).data('id');
@@ -32,29 +33,20 @@ $(document).ready(function() {
       document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
     }
   });
-
-  $('.sidenav-items input').click(function() {
-    var checked = $('.sidenav-items input:checked');
-    if (checked.length == 0) {
-      $('.your-apps').click();
-    } else {
-      $('.your-apps').removeClass('blue');
-      app = "exploreApps&filter";
-      var types = [];
-      var services = [];
-      $('#types').find(checked).each(function(i, elem) {
-        app += "&types[]=" + $(elem).attr('id');
-      });
-      $('#services').find(checked).each(function(i, elem) {
-        app += "&services[]=" + $(elem).attr('id');
-      });
-      loadApp();
-    }
-  });
 });
 
 var loadApp = function(callback) {
   var appUrl = app;
+  if(app.indexOf('Explore-') === 0 ) {
+    console.error("DEBUG: explore!");
+    $('iframe#appFrame').hide();
+    $('div#appFrame').show();
+    return loadDiv(app);
+  } else {
+    console.error("DEBUG: !explore!");
+    $('iframe#appFrame').show();
+    $('div#appFrame').hide();
+  }
   var params = '';
   if (app.indexOf('&') != -1) {
     appUrl = app.substring(0, app.indexOf('&'));
