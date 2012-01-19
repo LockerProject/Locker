@@ -1,7 +1,7 @@
 $(document).ready(function() {
-  $('.authorship-history').click(function() {
-    $(this).toggleClass('expanded');
-  });
+  // $('.authorship-history').click(function() {
+  //   $(this).toggleClass('expanded');
+  // });
 
   $('.publishLink').click(function() {
     var id = $(this).attr('id');
