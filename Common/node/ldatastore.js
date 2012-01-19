@@ -16,12 +16,10 @@ var IJOD = require('ijod').IJOD
   , colls = {}
   , mongoIDs = {}
   ;
-var syncManager = require('lsyncmanager');
-var synclets;
+var svcMan = require('lservicemanager');
 
 exports.init = function(owner, callback) {
     if (mongo[owner]) return callback();
-    synclets = syncManager.synclets();
     lmongo.init(owner, [], function(_mongo) {
         mongo[owner] = _mongo;
         colls[owner] = mongo[owner].collections[owner];
@@ -116,7 +114,7 @@ exports.getCurrent = function(owner, type, id, callback) {
     var parts = type.split("_");
     var idname = "id";
     // BEWARE THE mongoId s appendage WEIRDNESS! #techdebt
-    if(parts.length == 2 && synclets && synclets[parts[0]] && synclets[parts[0]].mongoId && synclets[parts[0]].mongoId[parts[1]+'s']) idname = synclets[parts[0]].mongoId[parts[1]+'s'];
+    if(parts.length == 2 && svcMan.map(parts[0]) && svcMan.map(parts[0]).mongoId && svcMan.map(parts[0]).mongoId[parts[1]+'s']) idname = svcMan.map(parts[0]).mongoId[parts[1]+'s'];
     var id2 = {};
     id2[idname] = id;
     or.push(id2);

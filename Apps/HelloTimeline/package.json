@@ -1,0 +1,30 @@
+{
+  "author": "Singly, Inc. <nerds@singly.com>",
+  "name": "hellotimeline",
+  "description": "A simple way to view your timeline.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/LockerProject/locker",
+  "repository": {
+    "type": "app",
+    "title": "Hello Timeline",
+    "status": "stable",
+    "static": true,
+    "handle": "hellotimeline",
+    "update": true,
+    "uses": {
+      "services": [
+        "facebook",
+        "foursquare",
+        "instagram",
+        "twitter"
+      ]
+    },
+    "github": "https://github.com/LockerProject/locker",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
