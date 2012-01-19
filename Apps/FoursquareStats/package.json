@@ -2,20 +2,30 @@
   "author": "Chris Hannam <ch@chrishannam.co.uk>",
   "name": "foursquarestats",
   "description": "Visualize your Foursquare activity.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
-    "title":"Foursquare Stats",
-    "status":"stable",
-    "static":true,
-    "handle":"foursquarestats",
-    "uses":{"services":["twitter", "foursquare", "instagram"], "types":["places"]},
-    "update":true,
-    "github":"https://github.com/LockerProject/locker"
+    "title": "Foursquare Stats",
+    "status": "stable",
+    "static": true,
+    "handle": "foursquarestats",
+    "uses": {
+      "services": [
+        "twitter",
+        "foursquare",
+        "instagram"
+      ],
+      "types": [
+        "places"
+      ]
+    },
+    "update": true,
+    "github": "https://github.com/LockerProject/locker",
+    "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

@@ -110,7 +110,10 @@ exports.app = function(app)
     });
     app.get('/registry/sync', function(req, res) {
         logger.info("manual registry sync");
-        exports.sync(function(){res.send(true)});
+        exports.sync(function(err){
+            if(err) return res.send(500, err);
+            res.send(true);
+        }, req.param('force'));
     });
     // takes the local github id format, user-repo
     app.get('/registry/publish/:id', publishPackage);
@@ -229,7 +232,7 @@ function loadPackage(name, upsert, callback)
 }
 
 // background sync process to fetch/maintain the full package list
-exports.sync = function(callback)
+exports.sync = function(callback, force)
 {
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
@@ -243,11 +246,13 @@ exports.sync = function(callback)
     });
     // look for updated packages newer than the last we've seen
     startkey++;
+    if(force) startkey = 0; // refresh fully
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback(err) : "";
         // replace in-mem representation
+        if(force) regIndex = {}; // cleanse!
         Object.keys(body).forEach(function(k){
             if (body[k]["dist-tags"]) {
                 logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);

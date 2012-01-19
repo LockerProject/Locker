@@ -65,7 +65,7 @@ locker.get('/map', function(req, res) {
     var copy = {};
     lutil.extend(true, copy, serviceManager.map());
     Object.keys(copy).forEach(function(key){
-        if(copy[key].auth) copy[key].auth = {}; // silenced
+        if(copy[key].auth) copy[key].auth = {profile:copy[key].auth.profile}; // silence keys
     });
     res.send(copy);
 });
