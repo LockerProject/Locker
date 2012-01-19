@@ -4,7 +4,8 @@ var specialApps = {
     "publish" : "publish",
     "viewAll" : "viewAll",
     "exploreApps" : "exploreApps",
-    "registryApp" : "registryApp"
+    "registryApp" : "registryApp",
+    "connect" : "connect"
 };
 
 var iframeLoaded = function() {};
@@ -35,7 +36,7 @@ $(document).ready(function() {
 
   $('.sidenav-items input').click(function() {
     var checked = $('.sidenav-items input:checked');
-    if (checked.length == 0) {
+    if (checked.length === 0) {
       $('.your-apps').click();
     } else {
       $('.your-apps').removeClass('blue');
@@ -51,6 +52,16 @@ $(document).ready(function() {
       loadApp();
     }
   });
+  
+  $('.gotit-button').click(function(e) {
+      e.preventDefault();
+      $.cookie("firstvisit", null, {path: '/' });
+      $(this).parent().parent().hide();
+  });
+  
+  if (window.location.hash !== '#connect' && $.cookie("firstvisit") === 'true') {
+      $('#firstvisit-overlay').fadeIn();
+  }
 });
 
 var loadApp = function(callback) {
@@ -70,12 +81,14 @@ var loadApp = function(callback) {
   window.location.hash = app;
   if (specialApps[appUrl]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl] + '?params=' + params);
+  } else if (app === "connect") {
+    $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
     $.get('clickapp/' + appUrl, function(e) {});
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
   $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
-  $('.sidenav-items input').attr('checked', false)
+  $('.sidenav-items input').attr('checked', false);
   if (params.indexOf('filter') === 0) {
     var boxes = params.split('&');
     for (var i = 0; i < boxes.length; i++) {

@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "photos",
   "description": "Photos Collection",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Photos",
     "run": "node photos.js",
@@ -46,7 +46,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}
