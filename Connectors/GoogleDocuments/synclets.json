@@ -1,7 +1,4 @@
 {
-    "title":"Google Documents",
-    "status":"stable",
-    "provider":"gdocs",
     "mongoId" : {
         "changes":"_id"
     },
