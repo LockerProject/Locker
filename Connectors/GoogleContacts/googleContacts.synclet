@@ -1,8 +1,0 @@
-{
-    "title":"Google Contacts",
-    "status":"stable",
-    "provides":["contact/gcontacts"],
-    "provider":"gcontacts",
-    "synclets":[{"name": "contacts", "frequency": 600}],
-    "info":"Pulls down information about your google contacts."
-}

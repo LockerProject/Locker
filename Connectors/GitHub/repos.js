@@ -6,7 +6,6 @@ var GitHubApi = require("github").GitHubApi
   , fs = require('fs')
   , lockerUrl
   , auth
-  , viewers = []
   ;
 
 exports.sync = function(processInfo, cb) {
@@ -20,8 +19,6 @@ exports.sync = function(processInfo, cb) {
         if (err) console.error(err);
         var responseObj = {data : {}, config: { cached: cached }};
         responseObj.data.repo = repos;
-        responseObj.data.view = viewers;
-        // logger.debug(viewers);
         cb(err, responseObj);
     });
 };
@@ -58,7 +55,7 @@ exports.syncRepos = function(cached, callback) {
                             if(!js || js.static != "true") throw new Error("invalid manifest");
                             js.handle = repo.id.replace("/", "-");
                             js.author = auth.username;
-                            js.is = 'app';
+                            js.type = 'app';
                             js.github = "https://www.github.com/" + repo.id;
                             fs.writeFileSync(manifest, JSON.stringify(js));
                         } catch (err) {
@@ -66,7 +63,6 @@ exports.syncRepos = function(cached, callback) {
                             console.error("failed: "+err);
                             return cb();
                         }
-                        viewers.push({id:repo.id, manifest:manifest, at:repo.pushed_at, viewer:js.viewer});
                         request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+manifest+'&type=install'}, function(err, resp) {
                             cb();
                         });

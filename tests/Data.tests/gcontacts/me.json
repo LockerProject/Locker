@@ -1,6 +1,6 @@
 {
     "status": "stable",
-    "title": "Google Contacts Account",
+    "title": "Google Contacts",
     "synclets": [
         {
             "frequency": 36000,
@@ -11,13 +11,30 @@
         "contact/google"
     ],
     "auth": {
-        "clientID":"qwe",
-        "clientSecret":"wer",
-        "redirectURI":"http://localhost:8043/Me/gcontacts/auth",
-        "token":{"access_token":"ert","token_type":"Bearer","expires_in":3600,"refresh_token":"rty"}},
+        "clientID": "qwe",
+        "clientSecret": "wer",
+        "redirectURI": "http://localhost:8043/Me/gcontacts/auth",
+        "token": {
+            "access_token": "ert",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": "rty"
+        }
+    },
     "id": "gcontacts",
-    "provider": "github",
+    "provider": "gcontacts",
     "action": "Connect to a Google Contacts account",
-    "config":{},
-    "desc": "Collect and sync my data from my Google Contacts account using the Google Contacts API and a Google Contacts 'app' that I create just for myself."
+    "config": {},
+    "desc": "Collect and sync my data from my Google Contacts account using the Google Contacts API and a Google Contacts 'app' that I create just for myself.",
+    "handle": "gcontacts",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": "",
+    "authed": 1326505170140,
+    "manifest": "Me/node_modules/gcontacts/package.json",
+    "srcdir": "Me/node_modules/gcontacts",
+    "installed": 1326505170140
 }

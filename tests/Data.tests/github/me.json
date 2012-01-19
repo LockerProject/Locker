@@ -1,1 +1,43 @@
-{"title":"Github Account","action":"Connect to a Github account","desc":"Collect and sync my data from my Github account.","run":"node ../../Common/node/connector/client_init.js","status":"unstable","handle":"github","provides":["contact/github"],"mongoCollections":["repos","followers","following"],"processOptions":{"oauth2":{"provider":"Github","appIDName":"Client ID","appSecretName":"Secret","authEndpoint":"authorize","accessTokenResponse":"json","endPoint":"https://github.com/login/oauth","linkToCreate":"https://github.com/account/applications/new"}},"srcdir":"Connectors/GitHub","is":"connector","installable":true,"id":"github","uri":"http://localhost:8043/Me/github/"}
+{
+    "status": "waiting",
+    "title": "GitHub",
+    "synclets": [
+    ],
+    "provides": [
+        "contact/github",
+        "repo/github",
+        "event/github",
+        "view/github"
+    ],
+    "provider": "github",
+    "action": "Connect to a github account",
+    "desc": "Collect and sync my data from my github account using the github API and a github 'app' that I create just for myself.",
+    "info": "Syncs information about your github contacts, and your github repos.",
+    "srcdir": "Data/node_modules/github",
+    "authurl": "https://github.com/login/oauth/authorize?client_id=abc&response_type=code&redirect_uri=https://me.lvh.me:8443/auth/github/auth",
+    "auth": {
+        "accessToken": "abc",
+        "username": "temas"
+    },
+    "id": "github",
+    "version": 1324497510026,
+    "config": {
+        "cached": {
+        }
+    },
+    "lockerUrl": "http://localhost:8042",
+    "finishedOnce": true,
+    "uri": "http://localhost:8042/Me/github/",
+    "externalUri": "https://me.lvh.me:8443/Me/github/",
+    "loaded": 1326495524362,
+    "handle": "github",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": "",
+    "authed": 1326486455620,
+    "manifest": "Data/node_modules/github/package.json",
+    "installed": 1326486455620
+}

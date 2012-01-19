@@ -46,6 +46,7 @@ module.exports = function(app) {
         });
     });
 
+    // deprecated! 2012-01-12 by jer, pretty sure nothing uses this
     app.get('/synclets/:syncletId/get_profile', function(req, res) {
         lfs.readObjectFromFile(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'profile.json'), function(userInfo) {
             res.writeHead(200, {"Content-Type":"application/json"});

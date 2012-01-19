@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="js/connect.js"></script>
+  </head>
+  <body>
+    <content class="body">
+      <h1 id="main-header-1">Welcome! Connect services to begin.</h1>
+      <h1 id="main-header-2">Great! Connect a few more or <a target="_top" href="/dashboard/contactsviewer" class="orange" id="start-exploring-link">start exploring</a>.</h1>
+      <ul class="synclets-list">
+        <% for (var i = 0; i < connectors.length; i++) { %>
+          <% if (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true') { %>
+            <li class="featured hideable"><img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" /><span class="synclet-name"><%= connectors[i].repository.title %></span> 
+            <a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink" 
+               data-provider="<%=connectors[i].repository.handle%>"
+               data-width="<%= connectors[i].oauthSize.width %>"
+               data-height="<%= connectors[i].oauthSize.height %>">
+               <% if (connectors[i].hasOwnProperty('authed')) { %>
+                 <img class="connect-button" src="img/connected.png" />
+               <% } else { %>
+                 <img class="connect-button" src="img/connect.png" />
+               <% } %>
+            </a></li>
+          <% } %>
+        <% } %>
+      </ul>
+    </content>
+  </body>
+</html>

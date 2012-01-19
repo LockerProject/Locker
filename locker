@@ -37,6 +37,23 @@ if [ ! -f "$apikeys" ]; then
     exit 1
 fi
 
+mongodata=Me/mongodata
+mongolock=$mongodata/mongod.lock
+if [ -s $mongolock ]; then
+    echo "mongod lock file exists: $mongolock..."
+    pid=$(cat "$mongolock")
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "...and it's still running.  Hopefully that's OK."
+    else
+        echo "...but it's dead.  Cleaning up..."
+        rm -f "$mongolock"
+        if ! mongod --dbpath "$mongodata" --repair; then
+            echo "mongod --repair failed!" >&2
+            exit 1
+        fi
+    fi
+fi
+
 locker_runtime=lockerd.js
 
 # Set defaults based on our runtime mode

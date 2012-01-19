@@ -12,12 +12,11 @@
 var fs = require('fs'),
     url = require('url'),
     request = require('request'),
-    lconfig = require('../../Common/node/lconfig.js');
-    locker = require('../../Common/node/locker.js');
+    lconfig = require('lconfig.js');
+    locker = require('locker.js');
 var async = require("async");
 var crypto = require("crypto");
-lconfig.load('../../Config/config.json');
-var logger = require(__dirname + "/../../Common/node/logger");
+var logger;
 
 
 var dataIn = require('./dataIn'); // for processing incoming twitter/facebook/etc data types
@@ -256,11 +255,13 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
+    lconfig.load('../../Config/config.json');
+    logger = require("logger");
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
-        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo);
-        dataIn.init(locker, dataStore);
+        dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo, logger);
+        dataIn.init(locker, dataStore, logger);
         app.listen(0, 'localhost', function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

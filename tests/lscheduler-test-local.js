@@ -19,9 +19,6 @@ var events = require('events');
 var serviceManager = require('lservicemanager');
 var lscheduler = require("lscheduler.js");
 
-serviceManager.scanDirectory("Tests");
-serviceManager.findInstalled();
-
 vows.describe("Locker Scheduling System").addBatch({
     "Scheduler": {
         topic:lscheduler.masterScheduler,

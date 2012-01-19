@@ -1,0 +1,1 @@
+var baseUrl = 'https://api.spdev.east.singly.com:8443/<apikey>';

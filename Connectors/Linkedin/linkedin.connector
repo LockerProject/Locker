@@ -1,9 +1,0 @@
-{
-	"title":"Linkedin Account",
-	"action":"Connect to a Linkedin account",
-	"desc":"Collect and sync my data from my Linkedin account using the Linkedin API and a Linkedin 'app' that I create just for myself.",
-	"run":"node client.js",
-	"status":"unstable",
-	"handle":"linkedin",
-	"provides":["contact/linkedin"]
-}
