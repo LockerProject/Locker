@@ -34,13 +34,16 @@ type CollectionState struct {
 	LastId    string `json:"lastId"`
 }
 
-func stateHandler(w http.ResponseWriter, req *http.Request) {
+func mongoSession() *mgo.Session {
 	session, err := mgo.Mongo("127.0.0.1:27018")
 	if err != nil {
 		panic(err)
 	}
-	defer session.Close()
 
+	return session
+}
+
+func state(session *mgo.Session) *CollectionState {
 	scrobbles := session.DB("locker").C("asynclets_lastfm_scrobble")
 
 	count, err := scrobbles.Count()
@@ -56,18 +59,25 @@ func stateHandler(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	state := CollectionState{1, count, time.Seconds(), last.Id.Hex()}
-	encoder := json.NewEncoder(w)
-	encoder.Encode(state)
+	return &CollectionState{1, count, time.Seconds(), last.Id.Hex()}
+}
+
+func (cs *CollectionState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(cs)
 }
 
 func main() {
 	config := new(ProcessInfo)
-	decoder := json.NewDecoder(os.Stdin)
-	decoder.Decode(&config)
-	fmt.Print("Port is ", config.Port)
+	json.NewDecoder(os.Stdin).Decode(&config)
+	if config.Port == 0 {
+		panic("Must have port to start collection.")
+	}
+	fmt.Println("Port is", config.Port)
 
-	http.HandleFunc("/state", stateHandler)
+	session := mongoSession()
+	defer session.Close()
+
+	http.Handle("/state", state(session))
 	err := http.ListenAndServe("127.0.0.1:"+strconv.Itoa64(config.Port), nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err.String())
