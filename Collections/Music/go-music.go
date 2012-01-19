@@ -34,6 +34,13 @@ type CollectionState struct {
 	LastId    string `json:"lastId"`
 }
 
+func loadConfig() *ProcessInfo {
+	config := new(ProcessInfo)
+	json.NewDecoder(os.Stdin).Decode(&config)
+
+	return config
+}
+
 func mongoSession() *mgo.Session {
 	session, err := mgo.Mongo("127.0.0.1:27018")
 	if err != nil {
@@ -67,8 +74,7 @@ func (cs *CollectionState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	config := new(ProcessInfo)
-	json.NewDecoder(os.Stdin).Decode(&config)
+	config := loadConfig()
 	if config.Port == 0 {
 		panic("Must have port to start collection.")
 	}
