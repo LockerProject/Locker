@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "search",
   "description": "Search Collection",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Search",
     "run": "node search.js",
@@ -35,7 +35,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

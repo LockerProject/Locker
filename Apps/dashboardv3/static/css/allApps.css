@@ -52,7 +52,7 @@
 .apps-list .content p {
   margin: 0px 0px 15px 0px;
 }
-
+/*
 .authorship-history.expanded:before {
   content: "\25BC  ";
   font-size: .75em;
@@ -61,7 +61,7 @@
 .authorship-history:not(.expanded):before {
   content: "\25B6  ";
   font-size: .75em;
-}
+}*/
 
 .apps-list .title {
   font-size: 18px;

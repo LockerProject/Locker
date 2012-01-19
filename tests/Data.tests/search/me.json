@@ -25,7 +25,7 @@
             "/events"
         ]
     ],
-    "srcdir": "Me/node_modules/search",
+    "srcdir": "Data/node_modules/search",
     "is": "collection",
     "installable": false,
     "externalUri": "http://localhost:8043/Me/search/",
@@ -77,7 +77,7 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "manifest": "Me/node_modules/search/package.json",
+    "manifest": "Data/node_modules/search/package.json",
     "provider": "search",
     "update": "auto",
     "github": "https://github.com/LockerProject/Locker",
