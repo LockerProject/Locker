@@ -1,7 +1,4 @@
 {
-    "title":"BodyMedia FIT",
-    "status":"stable",
-    "provider":"bodymedia",
     "mongoId" : {
         "burn":"date",
         "minutes":"date",
