@@ -1,6 +1,6 @@
 var request = require('request');
 var async = require('async');
-var logger = require(__dirname + "/../../Common/node/logger");
+var logger;
 var lutil = require('lutil');
 var url = require('url');
 var crypto = require("crypto");
@@ -12,6 +12,7 @@ var dataStore, locker;
 exports.init = function(l, dStore, callback){
     dataStore = dStore;
     locker = l;
+    logger = l.logger;
     callback();
 }
 

@@ -1,0 +1,33 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "timeline",
+  "description": "Timeline Collection",
+  "version": "0.0.1",
+  "repository": {
+    "title": "Timeline",
+    "run": "node timeline.js",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "handle": "timeline",
+    "provides": [
+      "item"
+    ],
+    "mongoCollections": [
+      "item", "response"
+    ],
+    "events":[["checkin/foursquare","/events"]
+    ,["tweet/twitter","/events"]
+    ,["photo/instagram","/events"]
+    ,["related/twitter","/events"]
+    ,["post/facebook","/events"]
+    ,["link","/events"]
+    ]
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

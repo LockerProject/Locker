@@ -6,8 +6,8 @@
 * Please see the LICENSE file for more information.
 *
 */
-var logger = require(__dirname + "/../../Common/node/logger");
-var lutil = require(__dirname + "/../../Common/node/lutil");
+var logger;
+var lutil = require("lutil");
 var crypto = require("crypto");
 var async = require('async');
 var lmongoutil = require("lmongoutil");
@@ -17,6 +17,7 @@ var itemCol, respCol, locker;
 
 exports.init = function(iCollection, rCollection, l) {
     locker = l;
+    logger = l.logger;
     itemCol = iCollection;
     itemCol.ensureIndex({"id":1},{unique:true, background:true},function() {});
     itemCol.ensureIndex({"keys":1},{background:true},function() {});

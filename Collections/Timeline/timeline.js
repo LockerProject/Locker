@@ -12,10 +12,9 @@
 var fs = require('fs'),
     url = require('url'),
     request = require('request'),
-    locker = require('../../Common/node/locker.js'),
-    lconfig = require('../../Common/node/lconfig');
-lconfig.load('../../Config/config.json');
-var logger = require('logger');
+    locker = require('locker.js'),
+    lconfig = require('lconfig');
+var logger;
 var async = require("async");
 var url = require("url");
 
@@ -150,6 +149,8 @@ process.stdin.on('data', function(data) {
         process.exit(1);
     }
     process.chdir(lockerInfo.workingDirectory);
+    lconfig.load('../../Config/config.json');
+    locker.logger = logger = require('logger');
 
     locker.connectToMongo(function(mongo) {
         // initialize all our libs
