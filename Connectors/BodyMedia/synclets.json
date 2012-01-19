@@ -6,10 +6,12 @@
         "burn":"date",
         "minutes":"date",
         "sleep":"date",
+        "steps":"date",
         "periods":"date"
     },
-    "provides":["burn/bodymedia"],
+    "provides":["burn/bodymedia", "minutes/bodymedia", "sleep/bodymedia", "periods/bodymedia", "steps/bodymedia"],
     "synclets":[
+        {"name": "steps_hour", "frequency": 86400, "threshold": 0},
         {"name": "burn_year", "frequency": 86400, "threshold": 0},
         {"name": "burn_day", "frequency": 43200, "threshold": 0},
         {"name": "sleep_year", "frequency": 86400, "threshold": 0},
