@@ -50,27 +50,25 @@ func mongoSession() *mgo.Session {
 	return session
 }
 
-func state(session *mgo.Session) *CollectionState {
+func state(session *mgo.Session) func(http.ResponseWriter, *http.Request) {
 	scrobbles := session.DB("locker").C("asynclets_lastfm_scrobble")
 
-	count, err := scrobbles.Count()
-	if err != nil {
-		panic(err)
+	return func(w http.ResponseWriter, r *http.Request) {
+		count, err := scrobbles.Count()
+		if err != nil {
+			panic(err)
+		}
+
+		last := struct {
+			Id bson.ObjectId `bson:"_id"`
+		}{}
+		err = scrobbles.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
+		if err != nil {
+			panic(err)
+		}
+
+		json.NewEncoder(w).Encode(CollectionState{1, count, time.Seconds(), last.Id.Hex()})
 	}
-
-	last := struct {
-		Id bson.ObjectId `bson:"_id"`
-	}{}
-	err = scrobbles.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
-	if err != nil {
-		panic(err)
-	}
-
-	return &CollectionState{1, count, time.Seconds(), last.Id.Hex()}
-}
-
-func (cs *CollectionState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(cs)
 }
 
 func main() {
@@ -83,7 +81,7 @@ func main() {
 	session := mongoSession()
 	defer session.Close()
 
-	http.Handle("/state", state(session))
+	http.HandleFunc("/state", state(session))
 	err := http.ListenAndServe("127.0.0.1:"+strconv.Itoa64(config.Port), nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err.String())
