@@ -5,26 +5,25 @@ import (
 	"json"
 	"http"
 	"time"
-	"log"
+	"net"
 	"strconv"
 	"launchpad.net/gobson/bson"
 	"launchpad.net/mgo"
-	"fmt"
 )
 
 type MongoInfo struct {
-	Host        string   `json:"host"`
-	Port        int      `json:"port"`
-	Collections []string `json:"collections"`
+	Host        string   `json:"host,omitempty"`
+	Port        int      `json:"port,omitempty"`
+	Collections []string `json:"collections,omitempty"`
 }
 
 type ProcessInfo struct {
 	Port             int64     `json:"port"`
-	SourceDirectory  string    `json:"sourceDirectory"`
-	WorkingDirectory string    `json:"workingDirectory"`
-	LockerUrl        string    `json:"lockerUrl"`
-	ExternalBase     string    `json:"externalBase"`
-	Mongo            MongoInfo `json:"mongoInfo"`
+	SourceDirectory  string    `json:"sourceDirectory,omitempty"`
+	WorkingDirectory string    `json:"workingDirectory,omitempty"`
+	LockerUrl        string    `json:"lockerUrl,omitempty"`
+	ExternalBase     string    `json:"externalBase,omitempty"`
+	Mongo            MongoInfo `json:"mongoInfo,omitempty"`
 }
 
 type CollectionState struct {
@@ -41,8 +40,9 @@ func loadConfig() *ProcessInfo {
 	return config
 }
 
-func mongoSession() *mgo.Session {
-	session, err := mgo.Mongo("127.0.0.1:27018")
+func mongoSession(pi *ProcessInfo) *mgo.Session {
+	config := pi.Mongo
+	session, err := mgo.Mongo(config.Host + ":" + strconv.Itoa(config.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -67,23 +67,44 @@ func state(session *mgo.Session) func(http.ResponseWriter, *http.Request) {
 			panic(err)
 		}
 
-		json.NewEncoder(w).Encode(CollectionState{1, count, time.Seconds(), last.Id.Hex()})
+		json.NewEncoder(w).Encode(CollectionState{0, count, time.Seconds(), last.Id.Hex()})
 	}
 }
 
 func main() {
 	config := loadConfig()
-	if config.Port == 0 {
-		panic("Must have port to start collection.")
-	}
-	fmt.Println("Port is", config.Port)
 
-	session := mongoSession()
+	session := mongoSession(config)
 	defer session.Close()
 
-	http.HandleFunc("/state", state(session))
-	err := http.ListenAndServe("127.0.0.1:"+strconv.Itoa64(config.Port), nil)
+	listener, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa64(config.Port)))
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err.String())
+		panic(err)
+	}
+
+	// net.Listen will choose a port if port 0 is passed in (or omitted).
+	if config.Port == 0 {
+		_, port, err := net.SplitHostPort(listener.Addr().String())
+		if err != nil {
+			panic(err)
+		}
+
+		portnum, err := strconv.Atoi64(port)
+		if err != nil {
+			panic(err)
+		}
+		config.Port = portnum
+	}
+
+	// Make sure lservicemanager knows on which port the collection is listening.
+	json.NewEncoder(os.Stdout).Encode(config)
+
+	// Configure routes.
+	http.HandleFunc("/state", state(session))
+
+	// Actually run the server.
+	err = http.Serve(listener, nil)
+	if err != nil {
+		panic(err)
 	}
 }
