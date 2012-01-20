@@ -8,7 +8,7 @@ $(function() {
         showHiddenConnectors();
     });
     
-    $('.oauthLink').click(function(e) {
+    $('body').delegate('.oauthLink','click', function(e) {
         e.preventDefault();
         var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
         popup.focus();

@@ -7,6 +7,8 @@ var specialApps = {
     "registryApp" : "registryApp",
     "connect" : "connect"
 };
+var defaultSubSections = {};
+
 
 $(document).ready(function() {
   loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
@@ -38,6 +40,8 @@ $(document).ready(function() {
 
 var loadApp = function(app) {
   var appUrl = app;
+  $('iframe#appFrame').show();
+  $('div#appFrame').hide();
   $(".sidenav section").addClass('selected-section');
   var params = '';
   if (app.indexOf('&') != -1) {
