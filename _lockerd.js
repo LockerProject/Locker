@@ -141,7 +141,7 @@ function finishStartup() {
     pushManager.init();
     var webservice = require(__dirname + "/Ops/webservice.js");
     // start web server (so we can all start talking)
-    webservice.startService(lconfig.lockerPort, function(locker){
+    webservice.startService(lconfig.lockerPort, lconfig.lockerHost, function(locker){
         // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
