@@ -259,15 +259,23 @@ exports.spawn = function(serviceId, callback) {
         }
         processInformation.mongo.collections = svc.mongoCollections;
     }
+
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
+    env["PATH"] += ":" + processInformation.sourceDirectory;
+
     var tstart = Date.now();
-    var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
-    app.stdout.setEncoding("utf8");
+    var command = run[0];
+    var args = run.slice(1);
+    logger.verbose("Spawning command '" + command + "'' with args " + JSON.stringify(args) + ", cwd " + processInformation.sourceDirectory + " and processInfo " + JSON.stringify(processInformation));
+    var app = spawn(command, args, {cwd: processInformation.sourceDirectory, env:process.env});
+
     app.stderr.on('data', function (data) {
         process.stderr.write('[' + svc.id + '] ' + data.toString());
     });
+
     var dbuff = "";
+    app.stdout.setEncoding("utf8");
     app.stdout.on('data',function (data) {
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
@@ -320,6 +328,7 @@ exports.spawn = function(serviceId, callback) {
         }
 
     });
+
     app.on('exit', function (code,signal) {
         logger.info(svc.id + " exited with status " + code + ", signal " + signal);
         var id = svc.id;
@@ -332,11 +341,14 @@ exports.spawn = function(serviceId, callback) {
         svc.ended = Date.now();
         checkForShutdown();
     });
+
     logger.verbose("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+
     app.stdin.on('error',function(err){
         logger.error("STDIN error:" + util.inspect(err));
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
+
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
     svc.last = Date.now();
