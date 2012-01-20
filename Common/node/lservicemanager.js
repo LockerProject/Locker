@@ -26,7 +26,7 @@ var syncletManager, registry;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 
 /**
-* Scans the Me directory for instaled services
+* Scans the Me directory for installed services
 */
 exports.init = function (sman, reg, callback) {
     logger = require('logger');
