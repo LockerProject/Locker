@@ -1,0 +1,42 @@
+{
+  "author"     : "Forrest L Norvell <ogd@aoaioxxysz.net>",
+  "name"       : "music",
+  "description": "Music Collection (in Go!)",
+  "version"    : "0.0.0",
+  "repository" : {
+    "title"    : "Music",
+    "run"      : "go-music",
+    "author"   : "othiym23",
+    "update"   : "auto",
+    "github"   : "https://github.com/LockerProject/Locker",
+    "type"     : "collection",
+    "handle"   : "tracks",
+    "provides" : [
+      "music"
+    ],
+    "mongoCollections": [
+      "track",
+      "play"
+    ],
+    "events": [
+      [
+        "tracks/rdio",
+        "/events"
+      ],
+      [
+        "tracks/lastfm",
+        "/events"
+      ],
+      [
+        "scrobbles/lastfm",
+        "/events"
+      ]
+    ],
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
