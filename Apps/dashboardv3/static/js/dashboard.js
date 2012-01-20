@@ -3,8 +3,8 @@ var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
     "viewAll" : "viewAll",
-    "exploreApps" : "exploreApps",
-    "registryApp" : "registryApp",
+    // "exploreApps" : "exploreApps",
+    // "registryApp" : "registryApp",
     "connect" : "connect"
 };
 var defaultSubSections = {};
@@ -17,7 +17,7 @@ $(document).ready(function() {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
     $.get('/registry/add/' + id, function() {
-      window.location = 'you#app-' + id;
+      window.location = 'you#You-' + id;
     });
     return false;
   });
@@ -42,44 +42,26 @@ $(document).ready(function() {
       $(this).parent().parent().hide();
   });
   
-  if (window.location.hash !== '#connect' && $.cookie("firstvisit") === 'true') {
+  if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
       $('#firstvisit-overlay').fadeIn();
   }
 });
 
-var loadApp = function(app) {
-  var appUrl = app;
+var loadApp = function(info) {
+  var app = info.subSection;
   $('iframe#appFrame').show();
   $('div#appFrame').hide();
-  $(".sidenav section").addClass('selected-section');
-  var params = '';
-  if (app.indexOf('&') != -1) {
-    appUrl = app.substring(0, app.indexOf('&'));
-    params = app.substring(app.indexOf('&') + 1);
-  }
   $('.app-details').hide();
-  $('.iframeLink,.your-apps').removeClass('blue');
-  window.location.hash = app;
-  if (specialApps[appUrl]) {
-    $("#appFrame")[0].contentWindow.location.replace(specialApps[appUrl] + '?params=' + params);
+  if (specialApps[app]) {
+    $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
-    $.get('clickapp/' + appUrl, function(e) {});
-    $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
+    $.get('clickapp/' + app, function(e) {});
+    $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
   }
 
-  $('.iframeLink[data-id="app-' + appUrl + '"]').addClass('blue').parent('p').siblings().show();
-  $('.sidenav-items input').attr('checked', false)
-  if (params.indexOf('filter') === 0) {
-    var boxes = params.split('&');
-    for (var i = 0; i < boxes.length; i++) {
-      var item = boxes[i].split('=');
-      if (item.length > 1) {
-        $('#' + item[1]).attr('checked', true);
-      }
-    }
-  }
+  $('.iframeLink[data-id="' + info.app + '"]').parent('p').siblings().show();
 };
 
 var syncletInstalled = function(provider) {
