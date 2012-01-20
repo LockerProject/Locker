@@ -7,20 +7,27 @@
 *
 */
 
-var tw = require('../../Connectors/Twitter/lib.js');
+
+var request = require("request");
 var async = require('async');
 
-exports.sync = function(processInfo, cb) {
-    var posts = processInfo.syncletToRun.posts;
-    var ret = {data: { tweets: [] } };
-    if(!Array.isArray(posts) || posts.length == 0) return cb(undefined, ret);
-    tw.init(processInfo.auth);
-    async.forEachSeries(posts, function(post, cb){
-        tw.update(post, function(tweet){ ret.data.tweets.push(tweet); }, function(err){
-            if(err) console.error("got "+err+" while posting "+JSON.stringify(post));
-            cb();
+exports.sync = function(pi, cb) {
+    if(!pi.syncletToRun || !pi.syncletToRun.posts) return cb("no posts");
+    var issues = pi.syncletToRun.posts;
+    if(!Array.isArray(issues) || issues.length == 0) return cb("no issues");
+    var errors = [];
+    async.forEachSeries(issues, function(issue, cb2){
+        if(!issue.repo) return cb2();
+        var url = "https://api.github.com/repos/"+pi.auth.username+"/"+issue.repo+"/issues?access_token="+pi.auth.accessToken;
+        delete issue.repo;
+        console.error(url);
+        request.post({uri:url, body:JSON.stringify(issue)}, function(err, resp, body){
+            if(err) errors.push(err); // accumulate them for mass return
+            console.error(resp);
+            console.error(body);
+            cb2();
         });
-    }, function(err){
-        cb(err, ret);
+    }, function(){
+        cb(errors.join(""));
     });
 };
