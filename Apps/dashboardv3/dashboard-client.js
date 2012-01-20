@@ -23,6 +23,7 @@ var express = require('express')
   , fs = require('fs')
   , im = require('imagemagick')
   , page = ''
+  , connectPage = false
   , cropping = {}
   , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
                  github: {height: 1000, width: 1000},
@@ -30,7 +31,8 @@ var express = require('express')
                  tumblr: {width: 630, height: 500},
                  facebook: {width: 980, height: 705},
                  instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877}
+                 flickr: {width: 1000, height: 877},
+                 linkedin: {width: 491, height: 163}
                 };
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
@@ -60,6 +62,22 @@ app.configure(function() {
         }
     });
 });
+
+function checkInstalled(req, res, next) {
+    if (connectPage === false) {
+        getInstalledConnectors(function(err, installedConnectors) {
+            if (installedConnectors.length === 0) {
+                connectPage = true;
+                return res.redirect('/dashboard/you#connect');
+            } else {
+                next();
+            }
+        });
+    } else {
+        next();
+        connectPage = false;
+    }
+}
 
 app.all('*', function(req, res, next) {
     // hackzzzzzzzzzzzzzzzzz
@@ -116,88 +134,7 @@ var renderExplore = function(req, res) {
     locker.mapType("connector", function(error, connectors) {
         res.render('explore', {synclets:connectors});
     });
-    /*
-    locker.synclets(function(err, synclets) {
-        syncletSorted = [];
-        for (var i in synclets.available) {
-            if (synclets.available[i].authurl) {
-                syncletSorted.push({title: synclets.available[i].title, id: synclets.available[i].provider});
-            }
-        }
-        syncletSorted.sort(function(a, b) {
-            return (a.title > b.title);
-        });
-    });
-    */
 }
-// 
-// var renderExploreApps = function(req, res) {
-//     getAllRegistryApps(function(apps) {
-//         locker.mapType("connector", function(error, connectors) {
-//             for (var i = 0; i < connectors.length; i++) {
-//                 connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
-//             }
-//             Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
-//             // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
-//             var data = {layout: false, apps: apps, connectors: connectors}
-//             if (req.param('author')) {
-//                 data.breadcrumb = req.param('author');
-//                 for (var i in apps) {
-//                     // yes i know this is gross, i just make sure all the proper variables are present before checking them
-//                     if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
-//                         delete apps[i];
-//                     }
-//                 }
-//                 if (Object.keys(apps).length === 0) {
-//                     return res.send('No apps by that user!', 404);
-//                 }
-//             } else if (req.param('types') || req.param('services')) {
-//                 data.breadcrumb = 'filter';
-//                 var types = {};
-//                 if (req.param('types')) {
-//                     types.types = true;
-//                     data.types = req.param('types');
-//                 }
-//                 if (req.param('services')) {
-//                     types.services = true;
-//                     data.services = {};
-//                     for (var i = 0; i < req.param('services').length; i++) {
-//                         console.log("Checking " + req.param('services')[i]);
-//                         var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
-//                         if (actualConnector.length > 0) {
-//                             actualConnector = actualConnector[0];
-//                             data.services[req.param('services')[i]] = actualConnector.title;
-//                         }
-//                     }
-//                 }
-//                 for (var i in apps) {
-//                     if (!apps[i].repository.uses) {
-//                         delete apps[i];
-//                     } else if (req.param('types') && !apps[i].repository.uses.types) {
-//                         delete apps[i];
-//                     } else if (req.param('params') && !apps[i].repository.uses.services) {
-//                         delete apps[i];
-//                     } else {
-//                         var valid = false;
-//                         for (var key in types) {
-//                             if (req.param(key)) {
-//                                 for (var j = 0; j < req.param(key).length; j++) {
-//                                     if (apps[i].repository.uses[key].indexOf(req.param(key)[j]) > -1) {
-//                                         valid = true;
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                         if (!valid) {
-//                             delete apps[i];
-//                         }
-//                     }
-//                 }
-//             }
-//             res.render('iframe/exploreApps', data);
-//         });
-//     });
-// }
 
 var renderCreate = function(req, res) {
     page = 'create';
@@ -369,26 +306,46 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {
-        locker.mapType("connector", function(err, installedConnectors) {
-            request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
-                var connectors = [];
-                Object.keys(body).map(function(key) {
-                    if (body[key].repository.type == "connector") {
-                        var connector = body[key];
-                        for (var i = 0; i < installedConnectors.length; ++i) {
-                            if (installedConnectors[i].id == connector.name && installedConnectors[i].auth) connector.authed = true;
-                        }
-                        connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
-                        connectors.push(connector);
-                    }
-                });
-                page = 'you';
-                res.render('you', {
+
+    getAppsInfo(8, function(sortedResult) {        
+        getConnectors(function(err, connectors) {
+            var firstVisit = false;
+            var page = 'you';
+            
+            getInstalledConnectors(function(err, installedConnectors) {
+                if (req.cookies.firstvisit === 'true' &&
+                    installedConnectors.length === 0) {
+                    firstVisit = true;
+                    //res.clearCookie('firstvisit');
+                }
+
+                if (installedConnectors.length === 0) {
+                    page += '-connect';
+                }
+
+                res.render(page, {
                     connectors: connectors,
-                    map: sortedResult
+                    installedConnectors: installedConnectors,
+                    map: sortedResult,
+                    firstVisit: firstVisit
                 });
             });
+        });
+    });
+};
+
+var renderConnect = function(req, res) {
+    getConnectors(function(err, connectors) {
+        var numInstalled = 0;
+        for (var i=0; i<connectors.length; i++) {
+            if (connectors[i].hasOwnProperty('authed')) {
+                numInstalled++;
+            }
+        }
+        res.render('iframe/connect', {
+            layout: false,
+            numInstalled: numInstalled,
+            connectors: connectors
         });
     });
 };
@@ -440,8 +397,11 @@ var registryApp = function(req, res) {
 }
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', renderYou);
-app.get('/', renderYou);
+app.get('/you', checkInstalled, renderYou);
+app.get('/', checkInstalled, renderYou);
+
+app.get('/connect', renderConnect);
+
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
 
@@ -466,7 +426,6 @@ var getGithubApps = function(callback) {
     githubapps = {};
     var pattern = /^Me\/github/
     getRegistryApps(function(myPublishedApps) {
-        console.log("my apps:" + require("util").inspect(myPublishedApps));
         locker.map(function(err, map) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
@@ -519,6 +478,38 @@ var checkDraftState = function(appInfo) {
     appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
 }
+
+var getConnectors = function(callback) {
+    locker.mapType("connector", function(err, installedConnectors) {
+        request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
+            var connectors = [];
+            Object.keys(body).map(function(key) { 
+                if (body[key].repository.type == "connector") {
+                    var connector = body[key];
+                    for (var i = 0; i < installedConnectors.length; ++i) {
+                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
+                    }
+                    connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
+                    connectors.push(connector); 
+                }
+            });
+            callback(err, connectors);
+        });
+    });
+}
+
+var getInstalledConnectors = function(callback) {
+    getConnectors(function(err, connectors) {
+       var installedConnectors = [];
+       for (var i=0; i<connectors.length; i++) {
+           if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
+               installedConnectors.push(connectors[i]);
+           }
+       } 
+       callback(err, installedConnectors);
+    });
+}
+
 
 /*
 var getLocalConnectors = function(callback) {

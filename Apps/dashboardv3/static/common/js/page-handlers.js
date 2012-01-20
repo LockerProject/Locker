@@ -40,6 +40,7 @@ function filterCheckboxClick(element) {
 
 function loadDiv(app) {
   if(app.indexOf('app-') === 0) loadApp(app.substring(4));
+  if(app.indexOf('connect') === 0) loadApp(app);
   var info = splitApp(app);
   app = info.app;
   window.location.hash = info.app;
