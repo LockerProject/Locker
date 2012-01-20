@@ -77,6 +77,7 @@ exports.app = function(app)
         logger.info("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
         if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
+        console.error("DEBUG: calling install");
         exports.install({name:req.params.id}, function(err){
             if(err) return res.send(err, 500);
             res.send(true);
@@ -304,12 +305,18 @@ exports.getMyApps = function(req, res) {
 
 // npm wrappers
 exports.install = function(arg, callback) {
+    console.error("DEBUG: install.01");
     if(typeof arg === 'string') arg = {name:arg}; // convenience
+    console.error("DEBUG: install.02");
     if(!arg || !arg.name) return callback("missing package name");
+    console.error("DEBUG: install.03");
     if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+    console.error("DEBUG: install.04");
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    console.error("DEBUG: install.05");
     logger.info("installing "+arg.name);
     npm.commands.install([arg.name], function(err){
+        console.error("DEBUG: install.07,", err);
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;

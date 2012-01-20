@@ -8,11 +8,20 @@ var specialApps = {
     "connect" : "connect"
 };
 var defaultSubSections = {};
-
+var loggedIn = true;
 
 $(document).ready(function() {
   loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-
+  
+  $('body').delegate('.install', 'click', function(e) {
+    var $e = $(e.currentTarget);
+    var id = $e.attr('id');
+    $.get('/registry/add/' + id, function() {
+      window.location = 'you#app-' + id;
+    });
+    return false;
+  });
+  
   $('.oauthLink').click(function() {
     var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
     popup.focus();
