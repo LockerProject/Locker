@@ -155,7 +155,6 @@ button.publish {
   top: 100px;
   left: 226px;
   background: white;
-  box-shadow: 0px 0px 42px #000;
   display: none;
   
   .content {
@@ -170,5 +169,44 @@ button.publish {
     float: right;
     margin: 0 30px;
   }
-  
+}
+
+/* Modal */
+#basic-modal-content {
+
+  display: none;
+
+  p {
+    display:block;
+  }
+  section.selected-modal-section {
+    display:block;
+  }
+  #close-button {
+    position:absolute;
+    right:16px;
+    top:10px;
+    font-weight:bold;
+    font-size:24px;
+    cursor:pointer;
+  }
+  #close-this {
+    cursor:pointer;
+    float:right;
+    margin-top:38px;
+  }
+}
+
+#simplemodal-overlay {
+  background-color: #000;
+}
+
+#simplemodal-container {
+  height: 190px;
+  width: 600px;
+  background-color: #FFFFFF;
+  padding: 50px 80px;
+  text-align:center;
+  font-size:32px;
+  font-weight:none;
 }
