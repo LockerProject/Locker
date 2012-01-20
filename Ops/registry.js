@@ -320,7 +320,6 @@ exports.getMyApps = function(req, res) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
                 if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
-                    console.dir(thiz);
                     apps[k] = thiz;
                 }
             });
@@ -349,7 +348,6 @@ exports.install = function(arg, callback) {
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
-    console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
         loadPackage(arg.name, true, callback); // once updated, re-load
@@ -426,7 +424,7 @@ function checkPackage(pjs, arg, gh, callback)
                 js.repository.title = arg.body.title;
             }
             if (arg.body.desc) {
-                js.repository.desc = arg.body.desc;
+                js.description = arg.body.desc;
             }
             if (arg.body.uses) {
                 js.repository.uses = arg.body.uses;

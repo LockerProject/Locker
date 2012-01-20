@@ -22,7 +22,8 @@
               <% } else { %>
                 <span class="drafts">draft</span><a id=<%= apps[i].handle %> class='publishLink' href="publish?app=<%= apps[i].handle %>"><button class="publish">publish app</button></a>
               <% } %>
-              <p>last updated <%= apps[i].lastUpdated.getMonth() + "." + apps[i].lastUpdated.getDate() + "." + apps[i].lastUpdated.getFullYear() %></p>
+              <% var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]; %>
+              <p>last updated <%= months[apps[i].lastUpdated.getMonth()] + ". " + apps[i].lastUpdated.getDate() + ", " + apps[i].lastUpdated.getFullYear() %></p>
             </div>
             <div class="divider"></div>
             <div class="content">
