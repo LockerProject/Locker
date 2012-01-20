@@ -20,9 +20,7 @@ $(function() {
     
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
-        parent.app = 'contactsviewer';
-        parent.loadApp();
-        parent.window.location.reload();
+        parent.window.location.replace('/');
     });
     
     $('.synclets-list li a').each(function(index, item) {  

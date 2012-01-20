@@ -35,15 +35,23 @@ $(document).ready(function() {
       document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
     }
   });
-  
-  $('.gotit-button').click(function(e) {
-      e.preventDefault();
+
+  var modalClosed = true;
+  function doModal(sectionNum) {
+    if (!modalClosed) return;
+    modalClosed = false;
+    var modal = $('#basic-modal-content').modal({onClose: function (dialog) {
+      modalClosed = true;
+      $.modal.close();
+    }});
+    $('#simplemodal-overlay,#no-thanks,#close-button,#close-this,.gotit-button').click(function(e) {
       $.cookie("firstvisit", null, {path: '/' });
-      $(this).parent().parent().hide();
-  });
+      modal.close();
+    });
+  }
   
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-      $('#firstvisit-overlay').fadeIn();
+      doModal();
   }
 });
 
