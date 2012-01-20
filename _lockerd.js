@@ -104,6 +104,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
                     shutdown(1);
                 } else {
                     logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
+                    mongoProcess = null;
                     db.close();
                     checkKeys();
                 }
@@ -140,7 +141,7 @@ function finishStartup() {
     pushManager.init();
     var webservice = require(__dirname + "/Ops/webservice.js");
     // start web server (so we can all start talking)
-    webservice.startService(lconfig.lockerPort, function(locker){
+    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker){
         // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
         syncManager.init(serviceManager, function(){
             registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
@@ -212,10 +213,35 @@ function shutdown(returnCode) {
     process.stdout.write("\n");
     logger.info("Shutting down...");
     serviceManager.shutdown(function() {
-        mongoProcess.kill();
-        logger.info("Shutdown complete.", {}, function (err, level, msg, meta) {
-            process.exit(returnCode);
+        cleanupMongo(function() {
+            exit(returnCode);
         });
+    });
+}
+
+function cleanupMongo(cb) {
+    if (!mongoProcess) {
+        cb();
+        return;
+    }
+
+    mongoProcess.on('exit', function (code, signal) {
+        logger.info('Mongo process exited with code '+code+', signal '+signal);
+        cb();
+    });
+
+    mongoProcess.kill();
+
+    var timeout = 5000;
+    setTimeout(function() {
+        logger.error('Mongo did not exit after timeout ('+timeout+'ms), giving up');
+        cb();
+    }, timeout);
+}
+
+function exit(returnCode) {
+    logger.info("Shutdown complete", {}, function (err, level, msg, meta) {
+        process.exit(returnCode);
     });
 }
 
