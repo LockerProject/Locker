@@ -21,6 +21,7 @@ exports.load = function(filepath) {
     }
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
+    exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
     exports.lockerPort = config.lockerPort || 8042;
     if(config.externalPort)
         exports.externalPort = config.externalPort;
