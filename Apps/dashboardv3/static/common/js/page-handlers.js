@@ -4,8 +4,15 @@ var prettyNames = {
 
 
 $(document).ready(function() {
-  $('body').delegate('.app-card', 'hover', appCardHover);
-  $('body').delegate('.sidenav-items input', 'click', filterCheckboxClick);
+  $('body').delegate('.app-card', 'hover', appCardHover)
+  .delegate('.sidenav-items input', 'click', filterCheckboxClick)
+  .delegate('.app-card', 'click', function() {
+    loadDiv('Explore-Details-app=' + $(this).data('id'));
+    return false;
+  }).delegate('.iframeLink', 'click', function() {
+    loadDiv($(this).data('id'));
+    return false;
+  });
 });
 
 function filterCheckboxClick(element) {
@@ -32,6 +39,7 @@ function filterCheckboxClick(element) {
 }
 
 function loadDiv(app) {
+  if(app.indexOf('app-') === 0) loadApp(app.substring(4));
   var info = splitApp(app);
   app = info.app;
   window.location.hash = info.app;

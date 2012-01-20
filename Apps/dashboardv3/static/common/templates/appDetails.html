@@ -9,11 +9,11 @@
         <a href="#" class="share-button facebook">SHARE IT</a> -->
       </div>
       <p class="title">{repository.title}</p>
-      <p class="author"><a class="orange parentLink iframeLink" href="#" data-id="Explore-Author-author={author.name}">by {author.name}</a></p>
+      <p class="author"><a class="orange iframeLink" href="#" data-id="Explore-Author-author={author.name}">by {author.name}</a></p>
         <p class="uses">
           {?repository.uses.types}Uses 
             {#repository.uses.types}
-              <a class="blue parentLink iframeLink" href="#" data-id="Explore-Filter-
+              <a class="blue iframeLink" href="#" data-id="Explore-Filter-
               types={.}">{.}</a>{@sep} + {/sep}
             {/repository.uses.types}
           {/repository.uses.types}

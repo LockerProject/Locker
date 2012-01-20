@@ -4,17 +4,8 @@ $(document).ready(function() {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
     $.get('/registry/add/' + id, function() {
-      parent.window.location = 'you#' + id;
+      parent.window.location = 'you#app-' + id;
     });
-    return false;
-  }).delegate('.app-card', 'click', function(e) {
-    parent.window.app = 'registryApp&' + $(e.currentTarget).attr('id');
-    parent.window.loadApp();
-  });
-
-  $('.body').delegate('.parentLink', 'click', function() {
-    window.parent.app = $(this).attr('href').split('#')[1];
-    parent.window.loadApp();
     return false;
   });
 

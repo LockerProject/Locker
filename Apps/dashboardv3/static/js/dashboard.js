@@ -1,4 +1,3 @@
-var app;
 var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps" : "allApps",
@@ -8,17 +7,8 @@ var specialApps = {
     "registryApp" : "registryApp"
 };
 
-var iframeLoaded = function() {};
-
 $(document).ready(function() {
-  app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp;
-  // loadApp();
-
-  $('.iframeLink').click(function() {
-    app = $(this).data('id');
-    loadApp();
-    return false;
-  });
+  loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
 
   $('.oauthLink').click(function() {
     var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
@@ -35,27 +25,22 @@ $(document).ready(function() {
   });
 });
 
-var loadApp = function(callback) {
+var loadApp = function(app) {
   var appUrl = app;
-  if(app.indexOf('Explore-') === 0 ) {
-    console.error("DEBUG: explore!");
-    $('iframe#appFrame').hide();
-    $('div#appFrame').show();
-    return loadDiv(app);
-  } else {
-    console.error("DEBUG: !explore!");
-    $('iframe#appFrame').show();
-    $('div#appFrame').hide();
-  }
+  // if(app.indexOf('Explore-') === 0 ) {
+  //   $('iframe#appFrame').hide();
+  //   $('div#appFrame').show();
+  //   return loadDiv(app);
+  // } else {
+  //   $('iframe#appFrame').show();
+  //   $('div#appFrame').hide();
+  // }
+  console.log('adding sel');
+  $(".sidenav section").addClass('selected-section');
   var params = '';
   if (app.indexOf('&') != -1) {
     appUrl = app.substring(0, app.indexOf('&'));
     params = app.substring(app.indexOf('&') + 1);
-  }
-  if (callback) {
-    iframeLoaded = callback;
-  } else {
-    iframeLoaded = function() {};
   }
   $('.app-details').hide();
   $('.iframeLink,.your-apps').removeClass('blue');
@@ -66,7 +51,7 @@ var loadApp = function(callback) {
     $.get('clickapp/' + appUrl, function(e) {});
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
-  $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
+  $('.iframeLink[data-id="app-' + appUrl + '"]').addClass('blue').parent('p').siblings().show();
   $('.sidenav-items input').attr('checked', false)
   if (params.indexOf('filter') === 0) {
     var boxes = params.split('&');
