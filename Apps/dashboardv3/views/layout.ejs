@@ -3,7 +3,13 @@
 <html>
   <head>
     <%- partial('header_partial') %>
+    <script type="text/javascript" charset="utf-8" src='common/js/dust-core-0.3.0.min.js'></script>
+    <script type="text/javascript" charset="utf-8" src='common/js/moment.min.js'></script>
+    <script src='common/js/compiled_templates.js'></script>
+    <script src="common/js/generators.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="common/js/registry.js"></script>
+    <script src="common/js/page-handlers.js"></script>
   </head>
   <body class="app-page">
 
@@ -16,7 +22,7 @@
         <div class="nav">
           <a <% if (page === 'you' || page === 'you-connect') { %>class='selected'<% } %> href='you'>YOU</a>
           <a <% if (page === 'explore') { %>class='selected'<% } %> href='explore'>EXPLORE</a>
-          <a <% if (page === 'create') { %>class='selected'<% } %> href='create'>CREATE</A>
+          <a <% if (page === 'create') { %>class='selected'<% } %> href='create#app-devdocs'>CREATE</A>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
@@ -33,6 +39,18 @@
       <%- body %>
     </aside>
     <iframe id="appFrame"></iframe>
+    <div id="appFrame">
+      <section id="Explore">
+        <section id="Featured">
+        </section>
+        <section id="Author">
+        </section>
+        <section id="Filter">
+        </section>
+        <section id="Details">
+        </section>
+      </section>
+    </div>
 
   </body>
 </html>

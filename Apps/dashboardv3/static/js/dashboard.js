@@ -1,4 +1,4 @@
-var app;
+var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
@@ -8,17 +8,8 @@ var specialApps = {
     "connect" : "connect"
 };
 
-var iframeLoaded = function() {};
-
 $(document).ready(function() {
-  app = window.location.hash.substring(1) || $('.installed-apps a').data('id') || 'contactsviewer';
-  loadApp();
-
-  $('.iframeLink').click(function() {
-    app = $(this).data('id');
-    loadApp();
-    return false;
-  });
+  loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
 
   $('.oauthLink').click(function() {
     var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
@@ -33,25 +24,6 @@ $(document).ready(function() {
       document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
     }
   });
-
-  $('.sidenav-items input').click(function() {
-    var checked = $('.sidenav-items input:checked');
-    if (checked.length === 0) {
-      $('.your-apps').click();
-    } else {
-      $('.your-apps').removeClass('blue');
-      app = "exploreApps&filter";
-      var types = [];
-      var services = [];
-      $('#types').find(checked).each(function(i, elem) {
-        app += "&types[]=" + $(elem).attr('id');
-      });
-      $('#services').find(checked).each(function(i, elem) {
-        app += "&services[]=" + $(elem).attr('id');
-      });
-      loadApp();
-    }
-  });
   
   $('.gotit-button').click(function(e) {
       e.preventDefault();
@@ -64,17 +36,13 @@ $(document).ready(function() {
   }
 });
 
-var loadApp = function(callback) {
+var loadApp = function(app) {
   var appUrl = app;
+  $(".sidenav section").addClass('selected-section');
   var params = '';
   if (app.indexOf('&') != -1) {
     appUrl = app.substring(0, app.indexOf('&'));
     params = app.substring(app.indexOf('&') + 1);
-  }
-  if (callback) {
-    iframeLoaded = callback;
-  } else {
-    iframeLoaded = function() {};
   }
   $('.app-details').hide();
   $('.iframeLink,.your-apps').removeClass('blue');
@@ -87,8 +55,9 @@ var loadApp = function(callback) {
     $.get('clickapp/' + appUrl, function(e) {});
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + appUrl);
   }
-  $('.iframeLink[data-id="' + app + '"]').addClass('blue').parent('p').siblings().show();
-  $('.sidenav-items input').attr('checked', false);
+
+  $('.iframeLink[data-id="app-' + appUrl + '"]').addClass('blue').parent('p').siblings().show();
+  $('.sidenav-items input').attr('checked', false)
   if (params.indexOf('filter') === 0) {
     var boxes = params.split('&');
     for (var i = 0; i < boxes.length; i++) {

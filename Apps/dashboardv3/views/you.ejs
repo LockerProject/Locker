@@ -6,7 +6,7 @@
   <ul>
     <% for (var i = 0; i < map.length; i++) { %>
       <li>
-        <p><a href="<%= map[i].externalUri %>" class="iframeLink" data-id="<%= map[i].id %>"><%= map[i].title %></a></p>
+        <p><a href="#" class="iframeLink" data-id="app-<%= map[i].id %>"><%= map[i].title %></a></p>
         <div class="app-details">
           created by <%= map[i].author || "Singly, Inc." %><br />
           <a class="orange" href="<%= map[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a>
@@ -14,7 +14,7 @@
       </li>
     <% } %>
   </ul>
-  <p><a class="orange" href="#">Explore more apps</a></p>
+  <p><a class="orange iframeLink" href="#" data-id="app-allApps">Explore more apps</a></p>
 </div>
 <div class="sidenav-header">
   <p class='sidenav-header-title'>YOUR SERVICES</p>

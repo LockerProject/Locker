@@ -47,15 +47,10 @@ $(document).ready(function() {
   });
 
   $('.cancel').click(function() {
-    window.parent.app = 'viewAll';
-    window.parent.loadApp();
+    window.parent.loadApp('viewAll');
   });
 
   setupUploader();
-
-  if (parent.iframeLoaded) {
-    parent.iframeLoaded();
-  }
 });
 
 var rename = function() {

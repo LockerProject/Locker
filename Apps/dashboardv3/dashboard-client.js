@@ -136,73 +136,6 @@ var renderExplore = function(req, res) {
     });
 }
 
-var renderExploreApps = function(req, res) {
-    getAllRegistryApps(function(apps) {
-        locker.mapType("connector", function(error, connectors) {
-            for (var i = 0; i < connectors.length; i++) {
-                connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
-            }
-            Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
-            // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
-            var data = {layout: false, apps: apps, connectors: connectors}
-            if (req.param('author')) {
-                data.breadcrumb = req.param('author');
-                for (var i in apps) {
-                    // yes i know this is gross, i just make sure all the proper variables are present before checking them
-                    if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
-                        delete apps[i];
-                    }
-                }
-                if (Object.keys(apps).length === 0) {
-                    return res.send('No apps by that user!', 404);
-                }
-            } else if (req.param('types') || req.param('services')) {
-                data.breadcrumb = 'filter';
-                var types = {};
-                if (req.param('types')) {
-                    types.types = true;
-                    data.types = req.param('types');
-                }
-                if (req.param('services')) {
-                    types.services = true;
-                    data.services = {};
-                    for (var i = 0; i < req.param('services').length; i++) {
-                        var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
-                        if (actualConnector.length > 0) {
-                            actualConnector = actualConnector[0];
-                            data.services[req.param('services')[i]] = actualConnector.title;
-                        }
-                    }
-                }
-                for (var i in apps) {
-                    if (!apps[i].repository.uses) {
-                        delete apps[i];
-                    } else if (req.param('types') && !apps[i].repository.uses.types) {
-                        delete apps[i];
-                    } else if (req.param('params') && !apps[i].repository.uses.services) {
-                        delete apps[i];
-                    } else {
-                        var valid = false;
-                        for (var key in types) {
-                            if (req.param(key)) {
-                                for (var j = 0; j < req.param(key).length; j++) {
-                                    if (apps[i].repository.uses[key].indexOf(req.param(key)[j]) > -1) {
-                                        valid = true;
-                                    }
-                                }
-                            }
-                        }
-                        if (!valid) {
-                            delete apps[i];
-                        }
-                    }
-                }
-            }
-            res.render('iframe/exploreApps', data);
-        });
-    });
-}
-
 var renderCreate = function(req, res) {
     page = 'create';
     getGithubApps(function(apps) {
@@ -479,7 +412,7 @@ app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
 
 app.get('/explore', renderExplore);
-app.get('/exploreApps', renderExploreApps);
+// app.get('/exploreApps', renderExploreApps);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);

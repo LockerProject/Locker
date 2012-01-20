@@ -1,0 +1,39 @@
+<span>
+  <div class="full-app-details gradient">
+    <div class="screenshot-container">
+      <img src="https://burrow.singly.com/registry/{name}/screenshot.png">
+    </div>
+    <div class="full-app-info">
+      <div class="action-buttons">
+        <!-- <a href="#" class="share-button twitter">TWEET THIS</a>
+        <a href="#" class="share-button facebook">SHARE IT</a> -->
+      </div>
+      <p class="title">{repository.title}</p>
+      <p class="author"><a class="orange iframeLink" href="#" data-id="Explore-Author-author={author.name}">by {author.name}</a></p>
+        <p class="uses">
+          {?repository.uses.types}Uses 
+            {#repository.uses.types}
+              <a class="blue iframeLink" href="#" data-id="Explore-Filter-
+              types={.}">{.}</a>{@sep} + {/sep}
+            {/repository.uses.types}
+          {/repository.uses.types}
+        </p>
+      <div class="description">{repository.desc}</div>
+      <div class="last-update">last updated {updated}</div>
+      
+      <div id="access-form">
+        <span>
+          <h3>Get access to this app!</h3>
+          <form class='signup-form' action="signup_for_beta" method="get" accept-charset="utf-8">
+            <input tabindex='40' type='text' name='email' value='' placeholder='Email' />{~n}
+            <input tabindex='42' type='text' name='github' value='' placeholder='GitHub' />{~n}
+            <input tabindex='41' type='checkbox' name='developer' /><label for='developer'>I'm a developer!</label>{~n}
+            <input tabindex='43' type='submit' value='&nbsp;'>
+          </form>
+        </span>
+      </div>
+    </div>
+    
+
+  </div>
+</span>
