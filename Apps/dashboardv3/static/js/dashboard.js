@@ -27,15 +27,6 @@ $(document).ready(function() {
 
 var loadApp = function(app) {
   var appUrl = app;
-  // if(app.indexOf('Explore-') === 0 ) {
-  //   $('iframe#appFrame').hide();
-  //   $('div#appFrame').show();
-  //   return loadDiv(app);
-  // } else {
-  //   $('iframe#appFrame').show();
-  //   $('div#appFrame').hide();
-  // }
-  console.log('adding sel');
   $(".sidenav section").addClass('selected-section');
   var params = '';
   if (app.indexOf('&') != -1) {

@@ -11,8 +11,10 @@ registry.getAllApps = function(callback) {
       data = data.rows;
       var apps = {};
       for(var i in data) apps[data[i].value.name] = data[i].value;
-      cache.allApps = apps;
-      callback(apps, success);
+      flagMine(apps, function() {
+        cache.allApps = apps;
+        callback(apps, success);
+      });
     })
   });
 }
@@ -60,11 +62,14 @@ registry.getAllConnectors = function(callback) {
 
 
 function getMyApps(callback, force) {
-  if(cache.myApps && !force) return callback(cache.myApps, true);
+  if(cache.myApps !== undefined && !force) return callback(cache.myApps, true);
   $.getJSON('/registry/added', function(myApps, success) {
     if(!success) return callback(myApps, success);
     cache.myApps = myApps;
     if(typeof callback === 'function') callback(myApps, success);
+  }).error(function() {  
+    cache.myApps = null;
+    if(typeof callback === 'function') callback(null);
   });
 }
 

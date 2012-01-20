@@ -19,6 +19,16 @@
           <a href="/auth/{.handle}" class="orange oauthLink" data-provider="{.handle}" data-width="{.oauthSize.width}" data-height="{.oauthSize.height}">{.title}</a>{@sep} + {/sep}
         {/connect}
       {/connect}
+      
+      {?app.actions}
+        <div class='action-buttons'>
+          {?app.actions.add}
+            <input type='button' id='<%= app.name %>' class='install' value='+ add to account'>
+          {:else}
+            <input disabled type='button' value='added'>
+          {/app.actions.add}
+        </div>
+      {/app.actions}
   </div>
   
 </div>
