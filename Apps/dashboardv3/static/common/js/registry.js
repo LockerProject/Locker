@@ -75,7 +75,12 @@ function getMyApps(callback, force) {
 
 function flagMine(apps, callback) {
   getMyApps(function(myApps, success) {
-    for(var i in apps) if(myApps[i]) apps[i].installed = true;
+    for(var i in apps) {
+      if(loggedIn) {
+        apps[i].actions = {add:true};
+        if(myApps[i]) apps[i].actions.add = false;
+      }
+    }
     callback();
   });
 }

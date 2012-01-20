@@ -7,10 +7,21 @@ var specialApps = {
     "registryApp" : "registryApp",
     "connect" : "connect"
 };
+var defaultSubSections = {};
+var loggedIn = true;
 
 $(document).ready(function() {
   loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-
+  
+  $('body').delegate('.install', 'click', function(e) {
+    var $e = $(e.currentTarget);
+    var id = $e.attr('id');
+    $.get('/registry/add/' + id, function() {
+      window.location = 'you#app-' + id;
+    });
+    return false;
+  });
+  
   $('.oauthLink').click(function() {
     var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
     popup.focus();
@@ -24,20 +35,30 @@ $(document).ready(function() {
       document.getElementById('appFrame').contentWindow.filterItems($(this).attr('id'));
     }
   });
-  
-  $('.gotit-button').click(function(e) {
-      e.preventDefault();
+
+  var modalClosed = true;
+  function doModal(sectionNum) {
+    if (!modalClosed) return;
+    modalClosed = false;
+    var modal = $('#basic-modal-content').modal({onClose: function (dialog) {
+      modalClosed = true;
+      $.modal.close();
+    }});
+    $('#simplemodal-overlay,#no-thanks,#close-button,#close-this,.gotit-button').click(function(e) {
       $.cookie("firstvisit", null, {path: '/' });
-      $(this).parent().parent().hide();
-  });
+      modal.close();
+    });
+  }
   
   if (window.location.hash !== '#connect' && $.cookie("firstvisit") === 'true') {
-      $('#firstvisit-overlay').fadeIn();
+      doModal();
   }
 });
 
 var loadApp = function(app) {
   var appUrl = app;
+  $('iframe#appFrame').show();
+  $('div#appFrame').hide();
   $(".sidenav section").addClass('selected-section');
   var params = '';
   if (app.indexOf('&') != -1) {

@@ -39,6 +39,8 @@ function filterCheckboxClick(element) {
 }
 
 function loadDiv(app) {
+  $('iframe#appFrame').hide();
+  $('div#appFrame').show();
   if(app.indexOf('app-') === 0) loadApp(app.substring(4));
   if(app.indexOf('connect') === 0) loadApp(app);
   var info = splitApp(app);

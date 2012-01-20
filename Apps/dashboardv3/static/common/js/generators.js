@@ -10,7 +10,6 @@ function generateAppsHtml(apps, callback, html) {
   });
 }
 
-
 function generateAppDetailsHtml(app, callback) {
   app.updated = moment(new Date(app.time.modified)).fromNow();
   // if(app.repository.uses) {
@@ -18,8 +17,10 @@ function generateAppDetailsHtml(app, callback) {
   //     for(var i in app.repository.uses.types) types.push(prettyName(app.repository.uses.types[i]));
   //     app.repository.uses.types = types;
   // }
-  dust.render('appDetails', app, function(err, appHtml) {
-    callback(appHtml);
+  registry.getUnConnectedServices(app, function(unconnected) {
+    dust.render('appDetails', {app:app, connect:unconnected}, function(err, appHtml) {
+      callback(appHtml);
+    });
   });
 }
 
