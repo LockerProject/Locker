@@ -488,8 +488,8 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
-exports.startService = function(port, cb) {
-    locker.listen(port, function(){
+exports.startService = function(port, ip, cb) {
+    locker.listen(port, ip, function(){
         cb(locker);
     });
 }
