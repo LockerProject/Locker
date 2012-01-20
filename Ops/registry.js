@@ -152,33 +152,60 @@ function publishPackage(req, res) {
 }
 
 function publishScreenshot(req, res) {
-    // first, required github
-    req.pause();
-    regUser(function(err, auth){
-        if(err ||!auth || !auth._auth) {
-            res.send(400, err);
-            return;
-        }
-        logger.log("info", "Publising the screenshot for " + req.params.id);
-        request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
-            if (err) {
-                logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
-                res.send(400, err);
+    // TODO: This should really use streams, but it's not letting us.
+    var buffer = new Buffer(Number(req.headers["content-length"]), "binary");
+    var offset = 0;
+    req.on("data", function(data) {
+        data.copy(buffer, offset, 0, data.length);
+        offset += data.length;
+    });
+    req.on("end", function() {
+        // first, required github
+        regUser(function(err, auth){
+            if(err ||!auth || !auth._auth) {
+                res.send(err, 400);
                 return;
             }
-
-            var putReq = request.put({uri:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth}});
-            putReq.on("error", function(err) {
-                console.log("error", "Error uploading the screenshot: " + err);
-                res.send(400, err);
+            logger.log("info", "Publising the screenshot for " + req.params.id);
+            request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
+                if (err) {
+                    logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
+                    res.send(err, 400);
+                    return;
+                }
+                var putReq = request.put(
+                    {
+                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , 
+                        headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth, "Content-Length":req.headers["content-length"]},
+                        body:buffer
+                    }, 
+                    function(putErr, putResult, putBody) {
+                        if (putErr) {
+                            logger.log("error", "Error uploading the screenshot: " + putErr);
+                            return res.send(err, 400);
+                        }
+                        logger.info("Registry done sending screenshot");
+                        res.send(200);
+                    }
+                );
+                //req.pipe(putReq);
+                /*
+                putReq.on("error", function(err) {
+                    res.send(400, err);
+                });
+                putReq.on("end", function() {
+                    res.send(200);
+                });
+                putReq.on("data", function(data) {
+                    console.log("registry: " + data);
+                });
+                req.on("data", function() {
+                    console.log("read some data for the registry");
+                });
+                */
             });
-            putReq.on("end", function() {
-                res.send(200);
-            });
-            req.resume();
-            req.pipe(putReq);
-        });
-    })
+        })
+    });
 }
 
 function getScreenshot(req, res) {
@@ -376,7 +403,7 @@ function checkPackage(pjs, arg, gh, callback)
             var js = {
               "author": { "name": gh.login },
               "name": handle,
-              "description": arg.description || "auto generated",
+              "description": arg.description || "",
               "version": "0.0.0",
               "repository": {
                 "title": arg.title || pkg,
