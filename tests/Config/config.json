@@ -32,7 +32,11 @@
         "port": 27020
     },
     "logging": {
-        "level": "silly",
+        "level": "error",
         "config": true
+    },
+    "dashboard": {
+        "customLogout"         : "logout",
+        "customHostedEndpoint" : "info"
     }
 }

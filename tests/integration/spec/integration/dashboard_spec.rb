@@ -53,5 +53,16 @@ describe 'dashboard' do
     end
   end
 
+  it "should allow account holders to change their settings" do
+    visit '/'
+    click_link 'Account Settings'
+    page.should have_content('ACCOUNT SETTINGS')
+  end
 
+  it "should allow account holders to connect to services (by default)" do
+    visit '/'
+    click_link 'Account Settings'
+    page.should have_content('ACCOUNT SETTINGS')
+    page.should have_css('.iframeLink.blue[data-id="connections"]')
+  end
 end
