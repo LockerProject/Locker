@@ -10,7 +10,7 @@
     "update"   : "auto",
     "github"   : "https://github.com/LockerProject/Locker",
     "type"     : "collection",
-    "handle"   : "tracks",
+    "handle"   : "music",
     "provides" : [
       "music"
     ],
