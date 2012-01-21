@@ -80,3 +80,8 @@ var syncletInstalled = function(provider) {
   link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
   link.remove();
 };
+
+
+handlers.You = loadApp;
+handlers.Create = loadApp;
+handlers.connect = loadApp;
