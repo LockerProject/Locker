@@ -68,7 +68,7 @@ function checkInstalled(req, res, next) {
         getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
                 connectPage = true;
-                return res.redirect('/dashboard/you#connect');
+                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
             } else {
                 next();
             }

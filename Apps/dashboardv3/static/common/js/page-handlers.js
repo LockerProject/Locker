@@ -22,7 +22,7 @@ function filterCheckboxClick(element) {
     $('.your-apps').click();
   } else {
     $('.your-apps').removeClass('blue');
-    var app = "Explore-Filter-";
+    var app = "Explore-Filter?";
     var types = [];
     var services = [];
     $('#types').find(checked).each(function(i, elem) {
@@ -41,19 +41,19 @@ function filterCheckboxClick(element) {
 function loadDiv(app) {
   $('iframe#appFrame').hide();
   $('div#appFrame').show();
-  if(app.indexOf('app-') === 0) loadApp(app.substring(4));
-  if(app.indexOf('connect') === 0) loadApp(app);
+  $('.iframeLink,.your-apps,header div.nav a').removeClass('blue');
+  $(".selected-section").removeClass('selected-section');
   var info = splitApp(app);
   app = info.app;
   window.location.hash = info.app;
-  $('.iframeLink,.your-apps,header div.nav a').removeClass('blue');
-  $('header div.nav a').removeClass('blue');
-  $(".selected-section").removeClass('selected-section');
+  $('.iframeLink[data-id="' + info.app + '"]').addClass('blue');
+  $('header div a[data-id="' + info.topSection + '"]').addClass('blue');
+  if(app.indexOf('You-') === 0 || app.indexOf('Create-') === 0) return loadApp(info);
+  if(app.indexOf('connect') === 0) return loadApp(info);
+  
   $(".sidenav #" + info.topSection).addClass('selected-section');
   $("div#appFrame #" + info.topSection).addClass('selected-section');
   $("div#appFrame #" + info.topSection + " #" + info.subSection).addClass('selected-section');
-  $('.iframeLink[data-id="' + info.app + '"],').addClass('blue');
-  $('header div a[data-id="' + info.topSection + '"]').addClass('blue');
   if(info.topSection === 'Explore') {
     if(info.subSection === 'Filter') {
       $('.sidenav-items input').attr('checked', false);
@@ -69,16 +69,23 @@ function loadDiv(app) {
 
 function splitApp(app) {
   var appTmp = app;
-  var sections = app.split('-');
+  
+  var params = '';
+  var ndx = app.indexOf('?');
+  if (ndx != -1) {
+    params = app.substring(ndx + 1);
+    app = app.substring(0, ndx);
+  }
+  
   var index = app.indexOf('-');
-  var topSection = index > -1? app.substring(0, index) : app;
-  app = (index > -1? app.substring(index+1) : '');
-  index = app.indexOf('-');
-  var subSection = (index > -1 && app? app.substring(0, index) : app) || defaultSubSections[topSection];
-  var params = index > -1? app.substring(index+1) : undefined;
-  app = topSection + '-' + subSection;
+  var topSection = app;
+  var substring;
+  if(index > -1) {
+    topSection = app.substring(0, index);
+    subSection = app.substring(index + 1);
+  }
   if(params) {
-      app += '-' + params;
+    app += '?' + params;
     var paramsArr = params.split('&');
     params = {};
     for(var i in paramsArr) {

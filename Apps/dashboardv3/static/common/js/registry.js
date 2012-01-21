@@ -1,5 +1,4 @@
 var baseUrl = "https://burrow.singly.com/registry/_design";
-var myBaseUrl = '';
 
 var registry = {};
 var cache = {};
@@ -67,7 +66,7 @@ function getMyApps(callback, force) {
     if(!success) return callback(myApps, success);
     cache.myApps = myApps;
     if(typeof callback === 'function') callback(myApps, success);
-  }).error(function() {  
+  }).error(function() {
     cache.myApps = null;
     if(typeof callback === 'function') callback(null);
   });
