@@ -68,7 +68,7 @@ function checkInstalled(req, res, next) {
         getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
                 connectPage = true;
-                return res.redirect('/dashboard/you#You-connect');
+                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
             } else {
                 next();
             }
@@ -306,7 +306,6 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-
     getAppsInfo(8, function(sortedResult) {        
         getConnectors(function(err, connectors) {
             var firstVisit = false;
