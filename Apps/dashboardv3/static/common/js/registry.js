@@ -87,19 +87,19 @@ function flagMine(apps, callback) {
 registry.getUnConnectedServices = function(app, callback) {
   if(!app.repository.uses) return callback([]);
   registry.getAllConnectors(function(allConnectors) {
-    getMyConnectors(function(myConnectors) {
+    registry.getMyConnectors(function(myConnectors) {
       if(myConnectors === null) return callback();
       var unconnected = [];
       var svcs = app.repository.uses.services;
       for(var i in svcs) {
-        if(!myConnectors[svcs[i]] && allConnectors[svcs[i]]) unconnected.push(allConnectors[svcs[i]]);
+        if(!registry.getMyConnectors[svcs[i]] && allConnectors[svcs[i]]) unconnected.push(allConnectors[svcs[i]]);
       }
       callback(unconnected);
     });
   });
 }
 
-function getMyConnectors(callback, force) {
+registry.getMyConnectors = function(callback, force) {
   if(cache.myConnectors !== undefined && !force) return callback(cache.myConnectors, true);
   $.getJSON('/map', function(map, success) {
     if(!success) return callback(map, success);
