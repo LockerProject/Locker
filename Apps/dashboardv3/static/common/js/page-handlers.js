@@ -2,6 +2,7 @@ var prettyNames = {
   gcontacts : 'Google Contacts',
 }
 
+var handlers = {};
 
 $(document).ready(function() {
   $('body').delegate('.app-card', 'hover', appCardHover)
@@ -48,21 +49,15 @@ function loadDiv(app) {
   window.location.hash = info.app;
   $('.iframeLink[data-id="' + info.app + '"]').addClass('blue');
   $('header div a[data-id="' + info.topSection + '"]').addClass('blue');
-  if(app.indexOf('You-') === 0 || app.indexOf('Create-') === 0) return loadApp(info);
-  if(app.indexOf('connect') === 0) return loadApp(info);
-  
   $(".sidenav #" + info.topSection).addClass('selected-section');
   $("div#appFrame #" + info.topSection).addClass('selected-section');
   $("div#appFrame #" + info.topSection + " #" + info.subSection).addClass('selected-section');
-  if(info.topSection === 'Explore') {
-    if(info.subSection === 'Filter') {
-      $('.sidenav-items input').attr('checked', false);
-      exploreFilter(info.params);
-    } else {
-      $('.sidenav-items input').attr('checked', false);
-      if(info.subSection === 'Featured') exploreFeatured();
-      else if(info.subSection === 'Author') exploreAuthor(info.params.author);
-      else if(info.subSection === 'Details') exploreDetails(info.params.app);
+  $('.sidenav-items input').attr('checked', false);
+  if(handlers[info.topSection]) {
+    if(typeof handlers[info.topSection] === 'function') {
+      return handlers[info.topSection](info);
+    } else if(typeof handlers[info.topSection][info.subSection] === 'function') {
+      return handlers[info.topSection][info.subSection](info.params);
     }
   }
 }
@@ -79,10 +74,14 @@ function splitApp(app) {
   
   var index = app.indexOf('-');
   var topSection = app;
+  var subSection;
   var substring;
   if(index > -1) {
     topSection = app.substring(0, index);
     subSection = app.substring(index + 1);
+  } else {
+    subSection = defaultSubSections[topSection];
+    app += '-' + subSection;
   }
   if(params) {
     app += '?' + params;
@@ -96,7 +95,8 @@ function splitApp(app) {
   return {app:app, topSection:topSection, subSection:subSection, params:params};
 }
 
-function exploreFeatured() {
+handlers.Explore = {};
+handlers.Explore.Featured = function() {
   registry.getAllApps(function(appsObj) {
     var apps = [];
     for(var i in appsObj) apps.push(appsObj[i]);
@@ -106,11 +106,11 @@ function exploreFeatured() {
   })
 }
 
-function exploreAuthor(author) {
-  registry.getByAuthor(author, function(appsObj) {
+handlers.Explore.Author = function(params) {
+  registry.getByAuthor(params.author, function(appsObj) {
     var apps = [];
     for(var i in appsObj) apps.push(appsObj[i]);
-    generateBreadCrumbs({author:author},function(appHTML) {
+    generateBreadCrumbs({author:params.author},function(appHTML) {
       $('#Explore #Author').html(appHTML);
       generateAppsHtml(apps, function(html) {
         $('#Explore #Author').append(html);
@@ -119,7 +119,7 @@ function exploreAuthor(author) {
   })
 }
 
-function exploreFilter(params) {
+handlers.Explore.Filter = function(params) {
   var filters = {};
   if(params.types) {
     filters.types = params.types.split(',');
@@ -148,16 +148,8 @@ function exploreFilter(params) {
   })
 }
 
-function prettyName(str) {
-  return prettyNames[str] || capitalizeFirstLetter(str);
-}
-
-function capitalizeFirstLetter(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function exploreDetails(appName) {
-  registry.getApp(appName, function(app) {
+handlers.Explore.Details = function(params) {
+  registry.getApp(params.app, function(app) {
     generateBreadCrumbs({app:app},function(appHTML) {
       $('#Explore #Details').html(appHTML);
       generateAppDetailsHtml(app, function(html) {
@@ -166,6 +158,15 @@ function exploreDetails(appName) {
     });
   });
 }
+
+function prettyName(str) {
+  return prettyNames[str] || capitalizeFirstLetter(str);
+}
+
+function capitalizeFirstLetter(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 
 function appCardHover(e) {
   if (e.type === 'mouseenter') {
