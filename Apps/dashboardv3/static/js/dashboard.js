@@ -12,7 +12,7 @@ var loggedIn = true;
 
 $(document).ready(function() {
   loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-  
+
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
@@ -21,7 +21,7 @@ $(document).ready(function() {
     });
     return false;
   });
-  
+
   $('.oauthLink').click(function() {
     var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
     popup.focus();
@@ -49,7 +49,7 @@ $(document).ready(function() {
       modal.close();
     });
   }
-  
+
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
       doModal();
   }
@@ -81,7 +81,26 @@ var syncletInstalled = function(provider) {
   link.remove();
 };
 
-
 handlers.You = loadApp;
 handlers.Create = loadApp;
 handlers.connect = loadApp;
+handlers.Settings = {};
+handlers.Settings.Connections = function () {
+  registry.getMyConnectors(function (authedConnectors, mySuccess) {
+    registry.getMyUnconnectedConnectors(function (otherConnectors, unSuccess) {
+      var mine = [];
+      for (var conn in authedConnectors) {
+        if (authedConnectors.hasOwnProperty(conn)) mine.push(authedConnectors[conn]);
+      }
+      generateConnectors({authedConnectors:mine, otherConnectors:otherConnectors}, function (connHTML) {
+        $('#Settings #Connections').html(connHTML);
+      });
+    });
+  });
+}
+
+function generateConnectors(connectors, callback) {
+  dust.render('connectors', connectors, function (err, appHtml) {
+    callback(appHtml);
+  });
+}

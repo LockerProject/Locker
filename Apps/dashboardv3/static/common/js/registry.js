@@ -99,7 +99,20 @@ registry.getUnConnectedServices = function(app, callback) {
   });
 }
 
-registry.getMyConnectors = function(callback, force) {
+registry.getMyUnconnectedConnectors = function(callback) {
+  registry.getAllConnectors(function(allConnectors) {
+    registry.getMyConnectors(function(myConnectors) {
+      if (myConnectors === null) return callback(allConnectors);
+      var unconnected = [];
+      for (var conn in allConnectors) {
+        if (allConnectors.hasOwnProperty(conn) && !myConnectors.hasOwnProperty(conn)) unconnected.push(allConnectors[conn]);
+      }
+      callback(unconnected);
+    });
+  });
+}
+
+registry.getMyConnectors = function (callback, force) {
   if(cache.myConnectors !== undefined && !force) return callback(cache.myConnectors, true);
   $.getJSON('/map', function(map, success) {
     if(!success) return callback(map, success);
@@ -107,7 +120,7 @@ registry.getMyConnectors = function(callback, force) {
     for(var i in map) if(map[i].type === 'connector') myConnectors[i] = map[i];
     cache.myConnectors = myConnectors;
     if(typeof callback === 'function') callback(myConnectors, success);
-  }).error(function() {  
+  }).error(function() {
     cache.myConnectors = null;
     if(typeof callback === 'function') callback(null);
   });

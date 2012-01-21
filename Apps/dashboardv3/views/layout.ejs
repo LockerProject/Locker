@@ -28,7 +28,7 @@
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
             <a href='<%= dashboard.customLogout %>'>Sign out</a>
-            <a href='<%= dashboard.customSettings || "settings" %>'>Account Settings</a>
+            <a href='<%= dashboard.customSettings || "settings#Settings-Connections" %>'>Account Settings</a>
             <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
           </div>
           <script src="js/hosted.js"></script>
@@ -49,6 +49,14 @@
         <section id="Filter">
         </section>
         <section id="Details">
+        </section>
+      </section>
+      <section id="Settings">
+        <section id="Connections">
+        </section>
+        <section id="AccountInformation">
+        </section>
+        <section id="APIKey">
         </section>
       </section>
     </div>

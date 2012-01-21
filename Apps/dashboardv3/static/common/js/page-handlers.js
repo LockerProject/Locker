@@ -36,7 +36,7 @@ function filterCheckboxClick(element) {
     if(services.length > 0) app += "&services=" + services.join(',');
     loadDiv(app);
   }
-  
+
 }
 
 function loadDiv(app) {
@@ -64,14 +64,14 @@ function loadDiv(app) {
 
 function splitApp(app) {
   var appTmp = app;
-  
+
   var params = '';
   var ndx = app.indexOf('?');
   if (ndx != -1) {
     params = app.substring(ndx + 1);
     app = app.substring(0, ndx);
   }
-  
+
   var index = app.indexOf('-');
   var topSection = app;
   var subSection;
