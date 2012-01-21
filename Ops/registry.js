@@ -189,6 +189,7 @@ function getScreenshot(req, res) {
 function verify(pkg)
 {
     if(!pkg) return false;
+    if(lconfig.requireSigned && !pkg.signed) return false;
     if(!pkg.repository) return false;
     if(pkg.repository.type == 'app') return true;
     if(pkg.repository.type == 'connector') return true;
@@ -266,6 +267,12 @@ exports.sync = function(callback)
     });
 };
 
+// once it shows up in the master registry, do stuff
+function checkPkg(callback)
+{
+    //  SET .latest!
+}
+
 // share the data
 exports.getInstalled = function() {
     return installed;
@@ -301,10 +308,12 @@ exports.getMyApps = function(req, res) {
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
+    var reg = regIndex[arg.name];
+    if(!reg || !reg.latest) return callback("missing registry info");
     if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-    logger.info("installing "+arg.name);
-    npm.commands.install([arg.name], function(err){
+    logger.info("installing "+arg.name+" version "+reg.latest);
+    npm.commands.install([arg.name, reg.latest], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
@@ -317,6 +326,8 @@ exports.install = function(arg, callback) {
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
+    var reg = regIndex[arg.name];
+    if(!reg || !reg.latest) return callback("missing registry info");
     console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
@@ -351,7 +362,12 @@ exports.publish = function(arg, callback) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
                         regIndex[updated.name] = updated; // shim it in, sync will replace it eventually too just to be sure
-                        callback(null, updated);
+                        var issues = require(path.join(lconfig.lockerDir, lconfig.me, "github/issue.js")); // this feels dirty, but is also reusing the synclet pattern
+                        issues.sync(serviceManager.map('github'), function(err, js){
+                            if(err) return callback(err);
+                            if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("missing issue");
+                            callback(null, updated, js.data.issue[0]);
+                        });
                     })
                 });
             });
@@ -470,6 +486,11 @@ function adduser (username, password, email, cb) {
 // given a connector package in the registry, install it, and get the auth url for it to return
 function authIsAwesome(req, res) {
     var id = req.params.id;
+    if(!verify(regIndex[id]))
+    {
+        logger.error("package verification failed trying to auth "+id);
+        return res.send(id+" failed verification :(", 500);
+    }
     exports.install(id, function(err){
         if(err) return res.send(err, 500);
         var js = serviceManager.map(id);
