@@ -62,6 +62,19 @@ exports.load = function(filepath) {
     exports.ui = config.ui || 'dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
+
+    // load trusted public keys
+    var kdir = path.join(path.dirname(filepath), "keys");
+    exports.keys = [];
+    if(path.exists(kdir))
+    {
+        var keys = fs.readdirSync(kdir);
+        keys.forEach(function(key){
+            if(key.indexOf(".pub") == -1) return;
+            exports.keys.push(fs.readFileSync(path.join(kdir, key)));
+        });
+    }
+
 }
 
 function setBase() {

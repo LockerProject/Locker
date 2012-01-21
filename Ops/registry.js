@@ -248,29 +248,43 @@ exports.sync = function(callback)
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
         if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
-        // replace in-mem representation
-        Object.keys(body).forEach(function(k){
-            if (body[k]["dist-tags"]) {
-                logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
-                regIndex[k] = body[k];
-                // if installed and autoupdated and newer, do it!
-                if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
-                {
-                    logger.verbose("auto-updating "+k);
-                    exports.update({name:k}, function(){}); // lazy
-                }
-            }
+        // new updates from the registry, update our local mirror
+        async.forEachSeries(Object.keys(body), function(pkg, cb){
+            if(!body[pkg].versions) return cb();
+            checkPkg(body[pkg], Object.keys(body[pkg].versions), cb);
+        }, function(){
+            // cache to disk lazily
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
+            if(callback) callback();
         });
-        // cache to disk lazily
-        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-        if(callback) callback();
+
     });
 };
 
-// once it shows up in the master registry, do stuff
-function checkPkg(callback)
+// recursively process vers array, looking for one that is signed, then process that
+function checkPkg(pkg, ver, callback)
 {
+    if(!ver || ver.length == 0) return callback();
+    if()
+    var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
+    request.get({uri:url}, function(err, resp, body){
+
+    })
     //  SET .latest!
+}
+
+// good version, update!
+function usePkg(pkg, ver, callback)
+{
+    // compare .latest, set otherwise
+    logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
+    regIndex[k] = body[k];
+    // if installed and autoupdated and newer, do it!
+    if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+    {
+        logger.verbose("auto-updating "+k);
+        exports.update({name:k}, function(){}); // lazy
+    }
 }
 
 // share the data
