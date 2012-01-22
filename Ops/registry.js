@@ -251,7 +251,7 @@ exports.sync = function(callback)
         // new updates from the registry, update our local mirror
         async.forEachSeries(Object.keys(body), function(pkg, cb){
             if(!body[pkg].versions) return cb();
-            checkPkg(body[pkg], Object.keys(body[pkg].versions), cb);
+            checkPkg(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
         }, function(){
             // cache to disk lazily
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
@@ -262,29 +262,37 @@ exports.sync = function(callback)
 };
 
 // recursively process vers array, looking for one that is signed, then process that
-function checkPkg(pkg, ver, callback)
+function checkPkg(pkg, versions, callback)
 {
-    if(!ver || ver.length == 0) return callback();
-    if()
+    if(!versions || versions.length == 0) return callback();
+    if(!lconfig.requireSigned) return usePkg(pkg, pkg["dist-tags"].latest, callback); // if no sig required just pass through
+    var ver = versions.pop(); // try newest
     var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
     request.get({uri:url}, function(err, resp, body){
-
-    })
-    //  SET .latest!
+        if(err || !body || !body.sig) return checkPkg(pkg, versions, callback);
+        // annoyingly, /-/all is different structure than /packagename!
+        var data = (pkg.dist) ? pkg.dist[ver].shasum + " " + pkg.dist[ver].tarball : pkg.versions[ver].dist.shasum + " " + pkg.versions[ver].dist.tarball;
+        if(!crypto.verify(data, body.sig, lconfig.keys)) {
+            logger.error(pkg.name + " version "+ ver+ " signature failed verification :(");
+            return checkPkg(pkg, versions, callback);
+        }
+        pkg.signed = true;
+        return usePkg(pkg, ver, callback);
+    });
 }
 
 // good version, update!
 function usePkg(pkg, ver, callback)
 {
-    // compare .latest, set otherwise
-    logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
-    regIndex[k] = body[k];
-    // if installed and autoupdated and newer, do it!
-    if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
+    logger.verbose("new "+pkg.name+" "+ver);
+    pkg.latest = ver;
+    regIndex[pkg.name] = pkg;
+    if(installed[pkg.name] && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(installed[pkg.name].version, ver))
     {
-        logger.verbose("auto-updating "+k);
-        exports.update({name:k}, function(){}); // lazy
+        logger.verbose("auto-updating "+pkg.name);
+        exports.update({name:pkg.name}, function(){}); // lazy update
     }
+    callback();
 }
 
 // share the data
@@ -322,10 +330,22 @@ exports.getMyApps = function(req, res) {
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
-    var reg = regIndex[arg.name];
-    if(!reg || !reg.latest) return callback("missing registry info");
     if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
     if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+
+    // if not in registry yet, try to go get it directly!
+    var reg = regIndex[arg.name];
+    if(!reg || !reg.latest) {
+        request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
+            if(err || !body || !body.versions) return callback("can't find in the registry");
+            checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
+                if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
+                return exports.install(arg, callback); // saved now, re-run
+            });
+        });
+        return;
+    }
+
     logger.info("installing "+arg.name+" version "+reg.latest);
     npm.commands.install([arg.name, reg.latest], function(err){
         if(err){ // some errors appear to be transient
