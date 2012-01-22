@@ -1,0 +1,7 @@
+{
+    "mongoId" : {
+        "changes":"_id"
+    },
+    "provides":["change/gdocs"],
+    "synclets":[{"name": "changes", "frequency": 600}]
+}
