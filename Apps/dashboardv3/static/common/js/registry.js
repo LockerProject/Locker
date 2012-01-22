@@ -92,7 +92,7 @@ registry.getUnConnectedServices = function(app, callback) {
       var unconnected = [];
       var svcs = app.repository.uses.services;
       for(var i in svcs) {
-        if(!registry.getMyConnectors[svcs[i]] && allConnectors[svcs[i]]) unconnected.push(allConnectors[svcs[i]]);
+        if(!myConnectors[svcs[i]] && allConnectors[svcs[i]]) unconnected.push(allConnectors[svcs[i]]);
       }
       callback(unconnected);
     });
