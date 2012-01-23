@@ -87,7 +87,9 @@ var syncletInstalled = function(provider) {
       element.remove();
     })
   } else {
-    link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
+    var connectedList = $('.sidenav-items.synclets-connected');
+    // \n's are for spacing, gross, but true
+    connectedList.append('\n\n\n').append(link.find('img'));
     link.remove();
   }
 };
