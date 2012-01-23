@@ -22,6 +22,7 @@ var express = require('express')
   , path = require('path')
   , fs = require('fs')
   , im = require('imagemagick')
+  , util = require("util")
   , page = ''
   , connectPage = false
   , cropping = {}
