@@ -123,8 +123,10 @@ var renderApps = function(req, res) {
 
 var renderExplore = function(req, res) {
     page = 'explore';
-    locker.mapType("connector", function(error, connectors) {
-        res.render('explore', {synclets:connectors});
+    getConnectors(function(error, connectors) {
+        var c = [];
+        for(var i in connectors) if(!connectors[i].repository.hidden) c.push(connectors[i].repository);
+        res.render('explore', {synclets:c});
     });
 }
 
@@ -311,7 +313,6 @@ var renderYou = function(req, res) {
                 if (installedConnectors.length === 0) {
                     page += '-connect';
                 }
-
                 res.render(page, {
                     connectors: connectors,
                     installedConnectors: installedConnectors,
@@ -491,13 +492,5 @@ var getConnectors = function(callback) {
 }
 
 var getInstalledConnectors = function(callback) {
-    getConnectors(function(err, connectors) {
-       var installedConnectors = [];
-       for (var i=0; i<connectors.length; i++) {
-           if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
-               installedConnectors.push(connectors[i]);
-           }
-       } 
-       callback(err, installedConnectors);
-    });
+    locker.mapType("connector", callback);
 }
