@@ -4,7 +4,7 @@ set -e
 
 rev=$(git rev-parse --short --default HEAD $rev)
 build_id=${BUILD_NUMBER:-$rev}
-subdir="locker-$rev"
+subdir="locker-$build_id"
 top="$PWD"
 out="$PWD/locker-$build_id.tar.gz"
 builddir="$top/build"
