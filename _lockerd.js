@@ -94,24 +94,14 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         logger.error('[mongo] ' + line);
     });
 
-    var mongodExit = function(errorCode) {
-        if(shuttingDown_) return;
-        if(errorCode !== 0) {
-            var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
-            db.open(function(error, client) {
-                if(error) {
-                    logger.error('Could not connect to mongo: '+errorCode);
-                    shutdown(1);
-                } else {
-                    logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
-                    mongoProcess = null;
-                    db.close();
-                    checkKeys();
-                }
-            });
+    mongoProcess.on('exit', function(code, signal) {
+        mongoProcess = null;
+        if (shuttingDown_) {
+            logger.info('mongod exited with code '+code+', signal '+signal);
+        } else {
+            logger.error('mongod exited unexpectedly with code '+code+', signal '+signal);
         }
-    };
-    mongoProcess.on('exit', mongodExit);
+    });
 });
 
 
@@ -225,15 +215,14 @@ function cleanupMongo(cb) {
         return;
     }
 
-    mongoProcess.on('exit', function (code, signal) {
-        logger.info('Mongo process exited with code '+code+', signal '+signal);
-        cb();
-    });
+    var gaveUp = false; // make sure we only call the callback once
+    mongoProcess.on('exit', function (code, signal) { if (!gaveUp) { cb(); } });
 
     mongoProcess.kill();
 
     var timeout = 5000;
     setTimeout(function() {
+        gaveUp = true;
         logger.error('Mongo did not exit after timeout ('+timeout+'ms), giving up');
         cb();
     }, timeout);
