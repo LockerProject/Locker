@@ -1,14 +1,31 @@
 package main
 
 import (
-	"os"
-	"json"
+	"fmt"
 	"http"
-	"time"
+	"io"
+	"json"
+	"log"
 	"net"
+	"os"
+	"path"
 	"strconv"
+	"strings"
+	"time"
+	"url"
 	"launchpad.net/gobson/bson"
 	"launchpad.net/mgo"
+)
+
+const (
+	lockerDbName        = "locker"
+	trackCollectionName = "amusic_track"
+	playCollectionName  = "amusic_play"
+)
+
+var (
+	types        = [...]string{"track", "play"}
+	trackSources = [...]string{"track/lastfm", "track/rdio"}
 )
 
 type MongoInfo struct {
@@ -33,6 +50,37 @@ type CollectionState struct {
 	LastId    string `json:"lastId"`
 }
 
+type MusicbrainzId string
+
+type lastfmArtist struct {
+	Name string        `json:"name"`
+	MBID MusicbrainzId `json:"mbid"`
+	URL  string        `json:"url"`
+}
+
+type lastfmTrack struct {
+	Id        string        `json:"id"`
+	MongoId   string        `json:"_id"`
+	Name      string        `json:"name"`
+	Duration  string        `json:"duration"`
+	Playcount string        `json:"playcount"`
+	MBID      MusicbrainzId `json:"mbid"`
+	URL       string        `json:"url"`
+	Artist    lastfmArtist  `json:"artist"`
+}
+
+type CandidateId struct {
+	Type string `bson:"type"`
+	Id   string `bson:"id"`
+}
+
+type Track struct {
+	IdBundle []CandidateId `bson:"ids"`
+	Name     string        `bson:"name"`
+	Artist   string        `bson:"artist"`
+	Duration int64         `bson:"duration"`
+}
+
 func loadConfig() *ProcessInfo {
 	config := new(ProcessInfo)
 	json.NewDecoder(os.Stdin).Decode(&config)
@@ -50,8 +98,12 @@ func mongoSession(pi *ProcessInfo) *mgo.Session {
 	return session
 }
 
-func state(session *mgo.Session) func(http.ResponseWriter, *http.Request) {
-	scrobbles := session.DB("locker").C("asynclets_lastfm_scrobble")
+func getDB(session *mgo.Session) mgo.Database {
+	return session.DB(lockerDbName)
+}
+
+func state(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
+	scrobbles := db.C("asynclets_lastfm_scrobble")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		count, err := scrobbles.Count()
@@ -71,10 +123,112 @@ func state(session *mgo.Session) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+func resetCollection(db *mgo.Database, collection string, config *ProcessInfo) {
+	db.C(collection).DropCollection()
+	if _, err := http.Get(config.LockerUrl + "/Me/search/reindexForType?type=music"); err != nil {
+		log.Println("Search reset error: " + err.String())
+	}
+}
+
+func addLastfmTrack(collection *mgo.Collection, track *lastfmTrack) {
+	ids := make([]CandidateId, 1)
+	ids[0] = CandidateId{Type: "lastfm", Id: track.URL}
+	duration, err := strconv.Atoi64(track.Duration)
+	if err != nil {
+		log.Println("Unable to convert duration to integer value.", track.Duration)
+	}
+
+	if err := collection.Insert(Track{IdBundle: ids, Name: track.Name, Artist: track.Artist.Name, Duration: duration}); err != nil {
+		log.Println("Unable to insert into MongoDB: ", err.String())
+	}
+}
+
+func readLastfmStream(collection *mgo.Collection, r io.Reader) {
+	decoder := json.NewDecoder(r)
+	for {
+		var track lastfmTrack
+		if err := decoder.Decode(&track); err != nil {
+			log.Println(err)
+			return
+		}
+
+		addLastfmTrack(collection, &track)
+	}
+}
+
+func pullTracks(collection *mgo.Collection, config *ProcessInfo, source string) {
+	pieces := strings.Split(source, "/")
+	dataType := pieces[0]
+	svcId := pieces[1]
+
+	url := config.LockerUrl + "/" + path.Join("Me", svcId, "getCurrent", dataType) + "?stream=true"
+	log.Println("Pulling tracks from " + url)
+	r, err := http.Get(url)
+	if err != nil {
+		log.Println("pullTracks failed: ", err)
+		return
+	}
+
+	switch svcId {
+	case "lastfm":
+		readLastfmStream(collection, r.Body)
+	case "rdio":
+		// handler go here
+	default:
+		log.Println("Don't know how to handle service " + svcId)
+	}
+}
+
+func syncTracks(db *mgo.Database, config *ProcessInfo) {
+	collection := db.C(trackCollectionName)
+	for _, source := range trackSources {
+		go pullTracks(&collection, config, source)
+	}
+}
+
+func validType(t string) (b bool) {
+	for _, v := range types {
+		if t == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func gatherMusic(db *mgo.Database, config *ProcessInfo, r *url.URL) {
+	updateType := r.Query().Get("type")
+
+	if updateType != "" && !validType(updateType) {
+		log.Println("Can't update for type: " + updateType)
+		return
+	}
+
+	switch updateType {
+	case "track":
+		go syncTracks(db, config)
+	case "play":
+		// go syncPlays(db, config)
+	default:
+		resetCollection(db, trackCollectionName, config)
+		go syncTracks(db, config)
+		// resetCollection(db, playCollectionName, config)
+		// go syncPlays(db, config)
+	}
+}
+
+func update(db *mgo.Database, config *ProcessInfo) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		go gatherMusic(db, config, r.URL)
+		fmt.Fprintln(w, "updating collection")
+	}
+}
+
 func main() {
 	config := loadConfig()
 
 	session := mongoSession(config)
+	db := getDB(session)
 	defer session.Close()
 
 	listener, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa64(config.Port)))
@@ -100,7 +254,8 @@ func main() {
 	json.NewEncoder(os.Stdout).Encode(config)
 
 	// Configure routes.
-	http.HandleFunc("/state", state(session))
+	http.HandleFunc("/state", state(&db))
+	http.HandleFunc("/update", update(&db, config))
 
 	// Actually run the server.
 	err = http.Serve(listener, nil)
