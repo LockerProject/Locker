@@ -209,7 +209,7 @@ var submitPublish = function(req, res) {
                 }
                 request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
                     if (!err) {
-                        var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
+                        var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
                         // Send the screenshot
                         var filePath = path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot');
                         var stat = fs.statSync(filePath);
@@ -238,7 +238,7 @@ var submitPublish = function(req, res) {
                     }
                 });
             } else {
-                res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
+                res.send('<script type="text/javascript">parent.loadApp();</script>');
             }
             uistate.saveDraft(fields);
         });
