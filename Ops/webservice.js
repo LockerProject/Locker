@@ -74,13 +74,14 @@ locker.get('/map/profiles', function(req, res) {
     var profiles = {};
     var map = serviceManager.map();
     for(var key in map) {
-        if(!map[key].auth || !map[key].auth.profile) return;
+        if(!map[key].auth || !map[key].auth.profile) continue;
         var idr = { slashes: true, pathname: '/', host: key };
         // the type could be named something service-specific, usually 'contact' tho
         idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
         // generate idrs from profiles, some services have both numeric and username (or more?)!
         var ids = map[key].profileIds || ['id'];
         for(var i in ids) {
+            var id = ids[i];
             if(!map[key].auth.profile[id]) return;
             idr.hash = map[key].auth.profile[id];
             profiles[url.format(idr)] = map[key].auth.profile;
