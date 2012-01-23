@@ -57,7 +57,7 @@ $(document).ready(function() {
 });
 
 var loadApp = function(info) {
-  var app = info.subSection;
+  var app = info.subSection || info.topSection;
   $('iframe#appFrame').show();
   $('div#appFrame').hide();
   $('.app-details').hide();
@@ -94,5 +94,6 @@ var syncletInstalled = function(provider) {
 
 
 handlers.You = loadApp;
-handlers.Create = loadApp;
+handlers.create = loadApp;
 handlers.connect = loadApp;
+handlers.viewAll = loadApp;

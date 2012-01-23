@@ -81,7 +81,7 @@ function splitApp(app) {
     subSection = app.substring(index + 1);
   } else {
     subSection = defaultSubSections[topSection];
-    app += '-' + subSection;
+    if (subSection) app += '-' + subSection;
   }
   if(params) {
     app += '?' + params;
