@@ -7,19 +7,23 @@
     <p class="title">{app.repository.title}</p>
     <p class="author"><a class="orange iframeLink" href="#" data-id="Explore-Author-author={app.author.name}">by {app.author.name}</a></p>
     <p class="uses">
-      {?app.repository.uses.types}Uses 
+      {?app.repository.uses.types}<span>Uses</span>
         {#app.repository.uses.types}
           <a class="blue iframeLink" href="#" data-id="Explore-Filter-
           types={.}">{.}</a>{@sep} + {/sep}
         {/app.repository.uses.types}
       {/app.repository.uses.types}
     </p>
-      {?connect}<span>Connect </span>
+      {?connect}<span>Connect</span>
         {#connect}
-          <a href="/auth/{.handle}" class="orange oauthLink" data-provider="{.handle}" data-width="{.oauthSize.width}" data-height="{.oauthSize.height}">{.title}</a>{@sep}<span> + </span>{/sep}
+          <a href="/auth/{.handle}" class="orange oauthLink"
+             data-provider="{.handle}" data-width="{.oauthSize.width}"
+             data-height="{.oauthSize.height}">
+             <img src="img/icons/16px/{.handle}.png" alt="{.title}" title="{.title}"/>
+          </a>
         {/connect}
       {/connect}
-      
+
       {?app.actions}
         <div class='action-buttons'>
           {?app.actions.add}
@@ -30,5 +34,5 @@
         </div>
       {/app.actions}
   </div>
-  
+
 </div>
