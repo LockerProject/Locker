@@ -11,7 +11,14 @@ var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-  loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    $.history.init(function(hash){
+        if(hash == "") {
+            // initialize your app
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        } else {
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        }
+    }, { unescape: ",/" });
   
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
