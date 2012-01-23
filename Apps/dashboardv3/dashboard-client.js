@@ -25,15 +25,7 @@ var express = require('express')
   , page = ''
   , connectPage = false
   , cropping = {}
-  , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
-                 github: {height: 1000, width: 1000},
-                 twitter: {width: 630, height: 500},
-                 tumblr: {width: 630, height: 500},
-                 facebook: {width: 980, height: 705},
-                 instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877},
-                 linkedin: {width: 491, height: 163}
-                };
+  ;
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     lconfig.load('../../Config/config.json');
@@ -68,7 +60,7 @@ function checkInstalled(req, res, next) {
         getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
                 connectPage = true;
-                return res.redirect('/dashboard/you#connect');
+                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
             } else {
                 next();
             }
@@ -133,73 +125,6 @@ var renderExplore = function(req, res) {
     page = 'explore';
     locker.mapType("connector", function(error, connectors) {
         res.render('explore', {synclets:connectors});
-    });
-}
-
-var renderExploreApps = function(req, res) {
-    getAllRegistryApps(function(apps) {
-        locker.mapType("connector", function(error, connectors) {
-            for (var i = 0; i < connectors.length; i++) {
-                connectors[i].oauthSize = oauthPopupSizes[connectors[i].provider] || {width:960, height:600};
-            }
-            Object.keys(apps).forEach(function(key) { if (apps[key].repository.hidden) delete apps[key]; });
-            // TODO:  Change all of these to small visitor style filters instead of spinning the list so much
-            var data = {layout: false, apps: apps, connectors: connectors}
-            if (req.param('author')) {
-                data.breadcrumb = req.param('author');
-                for (var i in apps) {
-                    // yes i know this is gross, i just make sure all the proper variables are present before checking them
-                    if (!apps[i].author || !apps[i].author.name || apps[i].author.name != req.param('author')) {
-                        delete apps[i];
-                    }
-                }
-                if (Object.keys(apps).length === 0) {
-                    return res.send('No apps by that user!', 404);
-                }
-            } else if (req.param('types') || req.param('services')) {
-                data.breadcrumb = 'filter';
-                var types = {};
-                if (req.param('types')) {
-                    types.types = true;
-                    data.types = req.param('types');
-                }
-                if (req.param('services')) {
-                    types.services = true;
-                    data.services = {};
-                    for (var i = 0; i < req.param('services').length; i++) {
-                        var actualConnector = connectors.filter(function(connector) { return connector.id == req.param('services')[i]; });
-                        if (actualConnector.length > 0) {
-                            actualConnector = actualConnector[0];
-                            data.services[req.param('services')[i]] = actualConnector.title;
-                        }
-                    }
-                }
-                for (var i in apps) {
-                    if (!apps[i].repository.uses) {
-                        delete apps[i];
-                    } else if (req.param('types') && !apps[i].repository.uses.types) {
-                        delete apps[i];
-                    } else if (req.param('params') && !apps[i].repository.uses.services) {
-                        delete apps[i];
-                    } else {
-                        var valid = false;
-                        for (var key in types) {
-                            if (req.param(key)) {
-                                for (var j = 0; j < req.param(key).length; j++) {
-                                    if (apps[i].repository.uses[key].indexOf(req.param(key)[j]) > -1) {
-                                        valid = true;
-                                    }
-                                }
-                            }
-                        }
-                        if (!valid) {
-                            delete apps[i];
-                        }
-                    }
-                }
-            }
-            res.render('iframe/exploreApps', data);
-        });
     });
 }
 
@@ -371,7 +296,6 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-
     getAppsInfo(8, function(sortedResult) {        
         getConnectors(function(err, connectors) {
             var firstVisit = false;
@@ -471,7 +395,7 @@ app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
 
 app.get('/explore', renderExplore);
-app.get('/exploreApps', renderExploreApps);
+// app.get('/exploreApps', renderExploreApps);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
@@ -554,7 +478,10 @@ var getConnectors = function(callback) {
                     for (var i = 0; i < installedConnectors.length; ++i) {
                         if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
                     }
-                    connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
+                    if(!connector.repository.oauthSize) {
+                      connector.repository.oauthSize = {width:960, height:600};
+                      console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
+                    }
                     connectors.push(connector); 
                 }
             });
@@ -574,36 +501,3 @@ var getInstalledConnectors = function(callback) {
        callback(err, installedConnectors);
     });
 }
-
-
-/*
-var getLocalConnectors = function(callback) {
-    var connectors = [];
-    locker.mapType(callback)(err, map) {;
-        callback(err, map)
-        Object.keys(map).forEach(function(key) {
-            var service = map[key];
-            if (service.type == "connector") {
-                connectors.push(service);
-            }
-        }
-        callback(err, connectors);
-        for (var i in synclets.installed) {
-            if (i === 'github') { github = true; }
-            synclets.available.some(function(synclet) {
-                if (synclet.provider === synclets.installed[i].provider) {
-                    synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                }
-            });
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
-            if (oauthPopupSizes[synclets.available[i].provider]) {
-                synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-            } else {
-                synclets.available[i].oauthSize = {width: 960, height: 600};
-            }
-        }
-        callback(err, synclets);
-    });
-}
-*/

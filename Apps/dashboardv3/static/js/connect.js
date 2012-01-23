@@ -8,10 +8,12 @@ $(function() {
         showHiddenConnectors();
     });
     
-    $('.oauthLink').click(function(e) {
-        e.preventDefault();
-        var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
-        popup.focus();
+    //copied from dashboard.js
+    $('body').delegate('.oauthLink','click', function(e) {
+      var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
+      var popup = window.open($(this).attr('href'), "account", options);
+      popup.focus();
+      return false;
     });
     
     if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
@@ -20,9 +22,7 @@ $(function() {
     
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
-        parent.app = 'contactsviewer';
-        parent.loadApp();
-        parent.window.location.reload();
+        parent.window.location.replace('/');
     });
     
     $('.synclets-list li a').each(function(index, item) {  
