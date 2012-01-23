@@ -3,6 +3,7 @@ function generateAppsHtml(apps, callback, html) {
   if(!apps || apps.length <= 0) return callback(html);
   var app = apps.shift();
   registry.getUnConnectedServices(app, function(unconnected) {
+    console.error("DEBUG: app", app);
     dust.render('app', {app:app, connect:unconnected}, function(err, appHtml) {
       html += appHtml;
       generateAppsHtml(apps, callback, html);

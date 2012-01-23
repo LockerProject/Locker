@@ -14,9 +14,9 @@
         {/app.repository.uses.types}
       {/app.repository.uses.types}
     </p>
-      {?connect}Connect 
+      {?connect}<span>Connect </span>
         {#connect}
-          <a href="/auth/{.handle}" class="orange oauthLink" data-provider="{.handle}" data-width="{.oauthSize.width}" data-height="{.oauthSize.height}">{.title}</a>{@sep} + {/sep}
+          <a href="/auth/{.handle}" class="orange oauthLink" data-provider="{.handle}" data-width="{.oauthSize.width}" data-height="{.oauthSize.height}">{.title}</a>{@sep}<span> + </span>{/sep}
         {/connect}
       {/connect}
       

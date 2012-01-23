@@ -22,8 +22,11 @@ $(document).ready(function() {
     return false;
   });
   
-  $('.oauthLink').click(function() {
-    var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
+  $('body').delegate('.oauthLink','click', function(e) {
+    var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
+    console.error("DEBUG: options", options);
+    return false;
+    var popup = window.open($(this).attr('href'), "account", options);
     popup.focus();
     return false;
   });
@@ -77,8 +80,18 @@ var syncletInstalled = function(provider) {
     $('.your-apps').show();
   }
   var link = $('.oauthLink[data-provider="' + provider + '"]');
-  link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
-  link.remove();
+  if($('div#appFrame').is(':visible')) {
+    link.each(function(index, element) {
+      element = $(element);
+      var nxt = element.next('span');
+      if(!nxt.length) nxt = element.prev('span');
+      nxt.remove();
+      element.remove();
+    })
+  } else {
+    link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
+    link.remove();
+  }
 };
 
 

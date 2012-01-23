@@ -25,15 +25,7 @@ var express = require('express')
   , page = ''
   , connectPage = false
   , cropping = {}
-  , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
-                 github: {height: 1000, width: 1000},
-                 twitter: {width: 630, height: 500},
-                 tumblr: {width: 630, height: 500},
-                 facebook: {width: 980, height: 705},
-                 instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877},
-                 linkedin: {width: 491, height: 163}
-                };
+  ;
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     lconfig.load('../../Config/config.json');
@@ -486,7 +478,10 @@ var getConnectors = function(callback) {
                     for (var i = 0; i < installedConnectors.length; ++i) {
                         if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
                     }
-                    connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
+                    if(!connector.repository.oauthSize) {
+                      connector.repository.oauthSize = {width:960, height:600};
+                      console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
+                    }
                     connectors.push(connector); 
                 }
             });
@@ -506,36 +501,3 @@ var getInstalledConnectors = function(callback) {
        callback(err, installedConnectors);
     });
 }
-
-
-/*
-var getLocalConnectors = function(callback) {
-    var connectors = [];
-    locker.mapType(callback)(err, map) {;
-        callback(err, map)
-        Object.keys(map).forEach(function(key) {
-            var service = map[key];
-            if (service.type == "connector") {
-                connectors.push(service);
-            }
-        }
-        callback(err, connectors);
-        for (var i in synclets.installed) {
-            if (i === 'github') { github = true; }
-            synclets.available.some(function(synclet) {
-                if (synclet.provider === synclets.installed[i].provider) {
-                    synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                }
-            });
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
-            if (oauthPopupSizes[synclets.available[i].provider]) {
-                synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-            } else {
-                synclets.available[i].oauthSize = {width: 960, height: 600};
-            }
-        }
-        callback(err, synclets);
-    });
-}
-*/
