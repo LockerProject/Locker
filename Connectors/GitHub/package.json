@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "github",
   "description": "GitHub Connector",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "repository": {
     "title": "GitHub",
     "handle": "github",
@@ -15,6 +15,7 @@
         "width": 1000,
         "height": 1000
     },
+    "profileIds":["login"],
     "url": ""
   },
   "engines": {
