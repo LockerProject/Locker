@@ -12,7 +12,7 @@ buildlog="$(tempfile build)"
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
 
-trap "rm -rf \"$builddir\'" EXIT
+trap "rm -rf \"$builddir\"" EXIT
 
 # fetch a clean copy of the code from git
 echo "Fetching code..."
