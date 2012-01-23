@@ -24,8 +24,6 @@ $(document).ready(function() {
   
   $('body').delegate('.oauthLink','click', function(e) {
     var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
-    console.error("DEBUG: options", options);
-    return false;
     var popup = window.open($(this).attr('href'), "account", options);
     popup.focus();
     return false;
