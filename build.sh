@@ -26,13 +26,13 @@ echo "Compressing..."
 (cd $builddir; tar czf $out $subdir)
 
 # The test suite doesn't clean up after itself, so do this last
-echo "Testing..."
-cd $builddir/$subdir/tests
-if ! node runTests.js; then
-    echo "Tests failed!"
-    rm -f $out
-    exit 1
-fi
+#echo "Testing..."
+#cd $builddir/$subdir/tests
+#if ! node runTests.js; then
+#    echo "Tests failed!"
+#    rm -f $out
+#    exit 1
+#fi
 
 echo "Done."
 echo $out
