@@ -102,5 +102,7 @@ var syncletInstalled = function(provider) {
 
 handlers.You = loadApp;
 handlers.create = loadApp;
+handlers.Create = loadApp;
 handlers.connect = loadApp;
 handlers.viewAll = loadApp;
+handlers.publish = loadApp;
