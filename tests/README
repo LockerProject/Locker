@@ -1,6 +1,8 @@
 In order to run the front end tests, you need:
 
 - ruby
-- gem install rake
-- gem install rspec
+- rubygems
+- bundler
 - chromedriver
+
+To install dependencies, cd integration && bundle install
