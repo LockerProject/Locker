@@ -2,6 +2,9 @@
 
 set -e
 
+# debug jenkins
+env
+
 rev=$(git rev-parse --short --default HEAD $rev)
 subdir=locker-$rev
 top=$PWD
