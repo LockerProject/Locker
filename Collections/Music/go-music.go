@@ -103,10 +103,10 @@ func getDB(session *mgo.Session) mgo.Database {
 }
 
 func state(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
-	scrobbles := db.C("asynclets_lastfm_scrobble")
+	tracks := db.C("amusic_track")
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		count, err := scrobbles.Count()
+		count, err := tracks.Count()
 		if err != nil {
 			panic(err)
 		}
@@ -114,12 +114,13 @@ func state(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
 		last := struct {
 			Id bson.ObjectId `bson:"_id"`
 		}{}
-		err = scrobbles.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
+		err = tracks.Find(nil).Select(bson.M{"_id": 1}).Sort(bson.M{"_id": -1}).One(&last)
 		if err != nil {
 			panic(err)
 		}
 
-		json.NewEncoder(w).Encode(CollectionState{0, count, time.Seconds(), last.Id.Hex()})
+		// Need to find out what constitutes "ready"; hardcoded for now
+		json.NewEncoder(w).Encode(CollectionState{1, count, time.Seconds(), last.Id.Hex()})
 	}
 }
 
