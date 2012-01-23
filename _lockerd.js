@@ -47,7 +47,7 @@ if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
 fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
 
 var logger = require("logger");
-logger.info('proccess id:' + process.pid);
+logger.info('process id:' + process.pid);
 var lscheduler = require("lscheduler");
 var syncManager = require('lsyncmanager');
 var serviceManager = require("lservicemanager");
