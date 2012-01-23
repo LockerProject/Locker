@@ -20,12 +20,12 @@
         <p class="uses">
           {?app.repository.uses.types}Uses 
             {#app.repository.uses.types}
-              <a class="blue iframeLink" href="#" data-id="Explore-Filter-
+              <a class="blue iframeLink" href="#" data-id="Explore-Filter?
               types={.}">{.}</a>{@sep} + {/sep}
             {/app.repository.uses.types}
           {/app.repository.uses.types}
         </p>
-      <div class="description">{app.repository.desc}</div>
+      <div class="description">{app.description}</div>
       <div class="last-update">last updated {app.updated}</div>
       
       {^app.actions}

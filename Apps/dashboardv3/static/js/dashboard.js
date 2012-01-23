@@ -11,7 +11,14 @@ var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-  loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    $.history.init(function(hash){
+        if(hash == "") {
+            // initialize your app
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        } else {
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        }
+    }, { unescape: ",/" });
   
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
@@ -87,7 +94,9 @@ var syncletInstalled = function(provider) {
       element.remove();
     })
   } else {
-    link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
+    var connectedList = $('.sidenav-items.synclets-connected');
+    // \n's are for spacing, gross, but true
+    connectedList.append('\n\n\n').append(link.find('img'));
     link.remove();
   }
 };
@@ -95,5 +104,7 @@ var syncletInstalled = function(provider) {
 
 handlers.You = loadApp;
 handlers.create = loadApp;
+handlers.Create = loadApp;
 handlers.connect = loadApp;
 handlers.viewAll = loadApp;
+handlers.publish = loadApp;
