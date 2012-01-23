@@ -1,0 +1,6 @@
+In order to run the front end tests, you need:
+
+- ruby
+- gem install rake
+- gem install rspec
+- chromedriver
