@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "facebook",
   "description": "Facebook Connector",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "repository": {
     "title": "Facebook",
     "handle": "facebook",
@@ -11,6 +11,10 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+        "width": 980,
+        "height": 705
+    },
     "url": ""
   },
   "engines": {

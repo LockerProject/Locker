@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "flickr",
   "description": "Flickr Connector",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "repository": {
     "title": "Flickr",
     "handle": "flickr",
@@ -11,6 +11,10 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+        "width": 1000,
+        "height": 877
+    },
     "url": ""
   },
   "engines": {
