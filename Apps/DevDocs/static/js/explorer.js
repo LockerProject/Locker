@@ -203,10 +203,11 @@ $.ajaxSetup({
 });
 var callBase = window.location.protocol+"//"+window.location.host;
 
-if (document.location.hostname == 'me.singly.com') {
-    $.getJSON('https://singly.com/users/me/apiToken', function(token){
+if (document.location.hostname.substr(0,3) == 'me.') {
+    var host = document.location.hostname.substr(3);
+    $.getJSON('https://'+host+'/users/me/apiToken', function(token){
       if(!token || !token.apiToken) return;
-        callBase = 'https://api.singly.com/'+token.apiToken;
+        callBase = 'https://api.'+host+'/'+token.apiToken;
     });
 }
 

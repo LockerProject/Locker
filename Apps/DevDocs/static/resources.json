@@ -449,26 +449,6 @@
         ]
     },
     {
-        "path": "/available",
-        "description": "Retrieve the service information of an available service with the given handle.",
-        "operations": [
-        {
-            "httpMethod": "GET",
-            "nickname": "coreAvailable",
-            "summary": "Retrieve the service information of an available service with the given handle.",
-            "parameters": [
-            {
-                "name": "handle",
-                "description": "The handle of the available service to retrieve",
-                "dataType": "string",
-                "paramType": "query",
-                "default": "contacts"
-            }
-            ]
-        }
-        ]
-    },
-    {
         "path": "/query/get{dataSet}",
         "description": "Query data.  This endpoint should not be used for trying to just get all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.<br><h3>Examples</h3>Get all contact data for a person with a certain Facebook ID:<br><br><code><a href='/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]' target='_blank'>/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]</a></code><br><br>Get 5 photos with a height greater than 480 pixels, sorted by created date, newest to oldest:<br><br><code><a href=\"/query/getPhoto?terms=[width:480+]&limit=5&sort='{&quot;timestamp&quot;:-1}'\" target='_blank'>/query/getPhoto?terms=[width:480+]&limit=5&sort='{\"timestamp\":-1}'</a></code><br><br>Get only the url, thumb url, title and twitter username (if present) fields from the Photos collection (and return only the first 5):<br><br><code><a href=\"/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]\" target='_blank'>/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]</a></code><br><br>",
         "operations": [
@@ -869,13 +849,9 @@
         "responseClass": {
             "id": "serviceMap",
             "properties": {
-                "available": {
-                    "type": "string",
-                    "description": "An array of service manifest entries for all of the available services."
-                },
-                "installed": {
-                    "type": "string",
-                    "description": "An object of the currently installed services and their internal state."
+                "Set": {
+                    "type": "Set",
+                    "description": "A set of all things available in the locker."
                 }
             }
         }

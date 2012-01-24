@@ -50,8 +50,9 @@ function pollForGitHubProfile(callback) {
 }
 
 function checkForToken(callback) {
-    if (document.location.hostname != 'me.singly.com') return callback();
-    $.getJSON('https://singly.com/users/me/apiToken', callback);
+    if (document.location.hostname.substr(0,3) != 'me.') return callback();
+    var host = document.location.hostname.substr(3);
+    $.getJSON('https://'+host+'/users/me/apiToken', callback);
 }
 
 var syncingViewers = false;
@@ -97,7 +98,9 @@ function waitForGitHubConnected(callback) {
 $(document).ready(function() {
     checkForToken(function(token) {
         if(!token || !token.apiToken) return;
-        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+        if (document.location.hostname.substr(0,3) != 'me.') return;
+        var host = document.location.hostname.substr(3);
+        $("#token").html("baseUrl = 'https://api."+host+"/"+token.apiToken+"';");
     });
     waitForGitHubConnected(function() {
         pollForGitHubProfile();
