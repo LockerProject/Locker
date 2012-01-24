@@ -50,6 +50,7 @@ exports.syncRepos = function(cached, callback) {
                             // make sure package.json is safe
                             pkg.repository.handle = repo.id.replace("/", "-");
                             pkg.repository.author = "myself";
+                            if(!pkg.repository.title) pkg.repository.title = repo.name;
                             fs.writeFileSync(repo.id+"/package.json", JSON.stringify(pkg)); // overwriting :/
                             request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+repo.id+'/package.json'}, function(err, resp) {
                                 cb();
