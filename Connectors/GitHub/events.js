@@ -10,7 +10,7 @@ exports.sync = function(processInfo, cb) {
 
 function page(arg, callback)
 {
-    if(!arg.url) arg.url = "https://api.github.com/users/"+arg.username+"/received_events?per_page=100&access_token="+arg.accessToken;
+    if(!arg.url) arg.url = "https://api.github.com/users/"+arg.profile.login+"/received_events?per_page=100&access_token="+arg.accessToken;
     var api = arg.url;
     if(arg.page) api += "&page="+arg.page;
 //    console.error(api);
