@@ -3,7 +3,7 @@
     "lockerPort" : 8043,
     "me" : "Data",
     "registryUpdate" : false,
-    "ui":"dashboardv3",
+    "ui":"dashboardv3:Apps/dashboardv3",
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
         "core-lib" : [
@@ -19,7 +19,7 @@
           "collection-contacts-test.js"
         ]
     },
-    "apps" : ["dashboardv3", "photosv09", "helloplaces", "linkalatte", "hellolinks", "contactsviewer", "devdocs", "foursquare"],
+    "apps" : ["photosv09:Apps/photosv0.9", "helloplaces:Apps/HelloPlaces", "linkalatte:Apps/LinkaLatte", "hellolinks:Apps/HelloLinks", "contactsviewer:Apps/MergedContacts", "devdocs:Apps/DevDocs", "foursquare:Connectors/foursquare"],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
