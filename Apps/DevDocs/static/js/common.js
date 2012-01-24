@@ -50,6 +50,7 @@ function pollForGitHubProfile(callback) {
 }
 
 function checkForToken(callback) {
+    if (document.location.hostname != 'me.singly.com') return callback();
     $.getJSON('https://singly.com/users/me/apiToken', callback);
 }
 
@@ -102,7 +103,7 @@ $(document).ready(function() {
         pollForGitHubProfile();
     });
     $("#sync-link").click(syncViewers);
-    
+
     if ($.cookie('optin') === "true") {
         $("body").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
     }
