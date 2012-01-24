@@ -53,7 +53,7 @@ exports.init = function (sman, reg, callback) {
     var installs = [];
     if(lconfig.ui) {
         installs.push(lconfig.ui);
-        if(lconfig.ui.indexOf(':')) lconfig.ui = lconfig.ui.substr(0,lconfig.ui.indexOf(':')); // only use name hereafter
+        if(lconfig.ui.indexOf(':') != -1) lconfig.ui = lconfig.ui.substr(0,lconfig.ui.indexOf(':')); // only use name hereafter
     }
     if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
