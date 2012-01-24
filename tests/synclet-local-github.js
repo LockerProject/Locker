@@ -24,6 +24,9 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri : 'https://api.github.com:443/user?access_token=abc',
                 file : __dirname + '/fixtures/github/ctide.json' });
+            fakeweb.registerUri({
+                uri : 'https://api.github.com/user?access_token=abc',
+                file : __dirname + '/fixtures/github/ctide.json' });
             profile.sync(pinfo, this.callback) },
         "successfully" : function(err, response) {
             assert.equal(response.data.profile[0].login, 'ctide');
