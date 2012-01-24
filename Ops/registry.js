@@ -175,10 +175,10 @@ function publishScreenshot(req, res) {
                 }
                 var putReq = request.put(
                     {
-                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , 
+                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev ,
                         headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth, "Content-Length":req.headers["content-length"]},
                         body:buffer
-                    }, 
+                    },
                     function(putErr, putResult, putBody) {
                         if (putErr) {
                             logger.log("error", "Error uploading the screenshot: " + putErr);
@@ -234,27 +234,27 @@ function loadInstalled(callback)
         var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, false, function(){cb()}); // ignore individual errors
+            loadPackage(path.join(lconfig.me, 'node_modules', item, 'package.json'), false, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
 
 // load an individual package
-function loadPackage(name, upsert, callback)
+function loadPackage(ppath, upsert, callback)
 {
-    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
+    fs.readFile(path.join(lconfig.lockerDir, ppath), 'utf8', function(err, data){
         if(err || !data) return callback(err);
+        var js;
         try{
-            var js = JSON.parse(data);
-            if(js.name != name) throw new Error("invalid package");
-            installed[js.name] = js;
+            js = JSON.parse(data);
+            installed[js.repository.handle] = js;
         }catch(E){
-            logger.error("couldn't parse "+name+"'s package.json: "+E);
+            logger.error("couldn't parse "+ppath+": "+E);
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
-        callback(null, installed[name]);
+        if(upsert) serviceManager.mapUpsert(ppath);
+        callback(null, js);
     });
 }
 
@@ -331,11 +331,14 @@ exports.getMyApps = function(req, res) {
 // npm wrappers
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
-    if(!arg || !arg.name) return callback("missing package name");
-    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-    if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-    logger.info("installing "+arg.name);
-    npm.commands.install([arg.name], function(err){
+    if(!arg || (!arg.name && !arg.path)) return callback("missing package name");
+    if(arg.name)
+    {
+        if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+        if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    }
+    logger.info("installing "+(arg.name||arg.path));
+    npm.commands.install([arg.name||path.join(lconfig.lockerDir, arg.path)], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
@@ -343,14 +346,16 @@ exports.install = function(arg, callback) {
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
             return callback(err);
         }
-        loadPackage(arg.name, true, callback); // once installed, load
+        var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
+        loadPackage(ppath, true, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
-        loadPackage(arg.name, true, callback); // once updated, re-load
+        var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
+        loadPackage(ppath, true, callback); // once updated, re-load
     });
 };
 

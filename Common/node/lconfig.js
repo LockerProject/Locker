@@ -59,6 +59,7 @@ exports.load = function(filepath) {
         maxstep: config.tolerance.maxstep || 10, // what is the largest frequency multiplier
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
+//    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.ui = config.ui || 'dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
