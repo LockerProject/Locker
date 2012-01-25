@@ -10,7 +10,7 @@
 /* random notes:
 on startup scan all folders
     Apps Collections Connectors - generate lists of "available"
-    Me/* - generate lists of "existing"
+    Me - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
 if first time
