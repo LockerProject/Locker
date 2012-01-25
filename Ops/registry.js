@@ -363,7 +363,7 @@ exports.update = function(arg, callback) {
 exports.publish = function(arg, callback) {
     if(!arg || !arg.dir) return callback("missing base dir");
     var pjs = path.join(arg.dir, "package.json");
-    logger.info("attempting to publishing "+pjs);
+    logger.info("attempting to publish "+pjs);
     // first, required github
     github(function(gh) {
         if(!gh) return callback("github account is required");
