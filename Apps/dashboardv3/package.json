@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "dashboardv3",
   "description": "Dashboard v3",
-  "version": "0.0.8",
+  "version": "0.0.15",
   "repository": {
     "title": "Dashboard v3",
     "handle": "dashboardv3",
@@ -16,7 +16,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

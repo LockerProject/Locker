@@ -1,13 +1,14 @@
-var fs = require("fs");
-var me = JSON.parse(fs.readFileSync(process.argv[2]));
-console.log("using "+JSON.stringify(me.auth));
-var sync = require(process.argv[3]);
-if(process.argv[4])
+var fs = require('fs');
+var pi = {lockerUrl:'http://localhost:8042'};
+pi.auth = JSON.parse(fs.readFileSync("../../Me/github/me.json")).auth;
+if(process.argv[3])
 {
-    me.syncletToRun = {posts:[]};
-    me.syncletToRun.posts.push(JSON.parse(process.argv[4]));
+    auth.syncletToRun = {posts:[]};
+    auth.syncletToRun.posts.push(JSON.parse(process.argv[3]));
 }
-sync.sync(me, function(err, data){
-    if(err) console.error(err);
-    if(data) console.log(JSON.stringify(data));
+console.error(pi);
+var sync = require(process.argv[2]);
+sync.sync(pi,function(e,js){
+    console.error(e);
+    console.error("got js:"+JSON.stringify(js));
 });

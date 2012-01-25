@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "twitter",
   "description": "Twitter Connector",
-  "version": "0.0.12",
+  "version": "0.0.14",
   "repository": {
     "title": "Twitter",
     "handle": "twitter",
@@ -11,10 +11,14 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+        "width": 630,
+        "height": 500
+    },
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

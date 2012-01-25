@@ -57,7 +57,6 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                     logger.error("couldn't parse registry.json: "+E);
                 }
                 if(lconfig.registryUpdate === true) {
-                    syncTimer = setInterval(exports.sync, syncInterval);
                     exports.sync();
                 }
                 process.chdir(lconfig.lockerDir);
@@ -110,7 +109,10 @@ exports.app = function(app)
     });
     app.get('/registry/sync', function(req, res) {
         logger.info("manual registry sync");
-        exports.sync(function(){res.send(true)});
+        exports.sync(function(err){
+            if(err) return res.send(500, err);
+            res.send(true);
+        }, req.param('force'));
     });
     // takes the local github id format, user-repo
     app.get('/registry/publish/:id', publishPackage);
@@ -149,33 +151,60 @@ function publishPackage(req, res) {
 }
 
 function publishScreenshot(req, res) {
-    // first, required github
-    req.pause();
-    regUser(function(err, auth){
-        if(err ||!auth || !auth._auth) {
-            res.send(400, err);
-            return;
-        }
-        logger.log("info", "Publising the screenshot for " + req.params.id);
-        request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
-            if (err) {
-                logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
-                res.send(400, err);
+    // TODO: This should really use streams, but it's not letting us.
+    var buffer = new Buffer(Number(req.headers["content-length"]), "binary");
+    var offset = 0;
+    req.on("data", function(data) {
+        data.copy(buffer, offset, 0, data.length);
+        offset += data.length;
+    });
+    req.on("end", function() {
+        // first, required github
+        regUser(function(err, auth){
+            if(err ||!auth || !auth._auth) {
+                res.send(err, 400);
                 return;
             }
-
-            var putReq = request.put({uri:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth}});
-            putReq.on("error", function(err) {
-                console.log("error", "Error uploading the screenshot: " + err);
-                res.send(400, err);
+            logger.log("info", "Publising the screenshot for " + req.params.id);
+            request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
+                if (err) {
+                    logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
+                    res.send(err, 400);
+                    return;
+                }
+                var putReq = request.put(
+                    {
+                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev ,
+                        headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth, "Content-Length":req.headers["content-length"]},
+                        body:buffer
+                    },
+                    function(putErr, putResult, putBody) {
+                        if (putErr) {
+                            logger.log("error", "Error uploading the screenshot: " + putErr);
+                            return res.send(err, 400);
+                        }
+                        logger.info("Registry done sending screenshot");
+                        res.send(200);
+                    }
+                );
+                //req.pipe(putReq);
+                /*
+                putReq.on("error", function(err) {
+                    res.send(400, err);
+                });
+                putReq.on("end", function() {
+                    res.send(200);
+                });
+                putReq.on("data", function(data) {
+                    console.log("registry: " + data);
+                });
+                req.on("data", function() {
+                    console.log("read some data for the registry");
+                });
+                */
             });
-            putReq.on("end", function() {
-                res.send(200);
-            });
-            req.resume();
-            req.pipe(putReq);
-        });
-    })
+        })
+    });
 }
 
 function getScreenshot(req, res) {
@@ -205,33 +234,41 @@ function loadInstalled(callback)
         var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, false, function(){cb()}); // ignore individual errors
+            loadPackage(path.join(lconfig.me, 'node_modules', item, 'package.json'), false, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
 
 // load an individual package
-function loadPackage(name, upsert, callback)
+function loadPackage(ppath, upsert, callback)
 {
-    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
+    fs.readFile(path.join(lconfig.lockerDir, ppath), 'utf8', function(err, data){
         if(err || !data) return callback(err);
+        var js;
         try{
-            var js = JSON.parse(data);
-            if(js.name != name) throw new Error("invalid package");
-            installed[js.name] = js;
+            js = JSON.parse(data);
+            installed[js.repository.handle] = js;
         }catch(E){
-            logger.error("couldn't parse "+name+"'s package.json: "+E);
+            logger.error("couldn't parse "+ppath+": "+E);
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
-        callback(null, installed[name]);
+        if(upsert) serviceManager.mapUpsert(ppath);
+        callback(null, js);
     });
 }
 
 // background sync process to fetch/maintain the full package list
-exports.sync = function(callback)
+exports.sync = function(callback, force)
 {
+    function finish(err) {
+        if (lconfig.registryUpdate) {
+            syncTimer = setTimeout(exports.sync, syncInterval);
+        }
+        if (callback) callback(err);
+    }
+
+    if (syncTimer) clearTimeout(syncTimer);
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
@@ -244,10 +281,13 @@ exports.sync = function(callback)
     });
     // look for updated packages newer than the last we've seen
     startkey++;
+    if(force) startkey = 0; // refresh fully
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
         if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
+        // replace in-mem representation
+        if(force) regIndex = {}; // cleanse!
         // new updates from the registry, update our local mirror
         async.forEachSeries(Object.keys(body), function(pkg, cb){
             if(!body[pkg].versions) return cb();
@@ -255,7 +295,7 @@ exports.sync = function(callback)
         }, function(){
             // cache to disk lazily
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-            if(callback) callback();
+            finish();
         });
 
     });
@@ -317,7 +357,6 @@ exports.getMyApps = function(req, res) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
                 if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
-                    console.dir(thiz);
                     apps[k] = thiz;
                 }
             });
@@ -329,25 +368,31 @@ exports.getMyApps = function(req, res) {
 // npm wrappers
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
-    if(!arg || !arg.name) return callback("missing package name");
-    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-    if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-
-    // if not in registry yet, try to go get it directly!
-    var reg = regIndex[arg.name];
-    if(!reg || !reg.latest) {
-        request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
-            if(err || !body || !body.versions) return callback("can't find in the registry");
-            checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
-                if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
-                return exports.install(arg, callback); // saved now, re-run
+    if(!arg || (!arg.name && !arg.path)) return callback("missing package name");
+    var npmarg = [];
+    if(arg.name)
+    {
+        // if not in registry yet, try to go get it directly!
+        if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+        if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+        var reg = regIndex[arg.name];
+        if(!reg || !reg.latest) {
+            request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
+                if(err || !body || !body.versions) return callback("can't find in the registry");
+                checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
+                    if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
+                    return exports.install(arg, callback); // saved now, re-run
+                });
             });
-        });
-        return;
+            return;
+        }
+        npmarg.push(arg.name);
+        npmarg.push(reg.latest); // specifically install only the latest version
+    }else{
+        npmarg.push(path.join(lconfig.lockerDir, arg.path));
     }
-
-    logger.info("installing "+arg.name+" version "+reg.latest);
-    npm.commands.install([arg.name, reg.latest], function(err){
+    logger.info("installing "+JSON.stringify(npmarg));
+    npm.commands.install(npmarg, function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
@@ -355,7 +400,8 @@ exports.install = function(arg, callback) {
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
             return callback(err);
         }
-        loadPackage(arg.name, true, callback); // once installed, load
+        var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
+        loadPackage(ppath, true, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
@@ -365,7 +411,8 @@ exports.update = function(arg, callback) {
     console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
-        loadPackage(arg.name, true, callback); // once updated, re-load
+        var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
+        loadPackage(ppath, true, callback); // once updated, re-load
     });
 };
 
@@ -421,7 +468,7 @@ function checkPackage(pjs, arg, gh, callback)
             var js = {
               "author": { "name": gh.login },
               "name": handle,
-              "description": arg.description || "auto generated",
+              "description": arg.description || "",
               "version": "0.0.0",
               "repository": {
                 "title": arg.title || pkg,
@@ -444,7 +491,7 @@ function checkPackage(pjs, arg, gh, callback)
                 js.repository.title = arg.body.title;
             }
             if (arg.body.desc) {
-                js.repository.desc = arg.body.desc;
+                js.description = arg.body.desc;
             }
             if (arg.body.uses) {
                 js.repository.uses = arg.body.uses;

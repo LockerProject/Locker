@@ -1,21 +1,33 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "photosviewer",
-  "description": "A simple way to view your photos.",
-  "version": "0.0.2",
+  "description": "A  beautiful, grid-based layout of all your photos from a ton of services. You'll never want to view your photos another way. ",
+  "version": "0.0.4",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
-    "title":"Masonry",
-    "status":"stable",
-    "static":true,
-    "handle":"photosviewer",
-    "uses":{"services":["facebook", "twitter", "foursquare", "flickr", "instagram"], "types":["photos"]},
-    "update":true,
-    "github":"https://github.com/LockerProject/locker"
+    "title": "Masonry Photos",
+    "status": "stable",
+    "static": true,
+    "handle": "photosviewer",
+    "uses": {
+      "services": [
+        "facebook",
+        "twitter",
+        "foursquare",
+        "flickr",
+        "instagram"
+      ],
+      "types": [
+        "photos"
+      ]
+    },
+    "update": true,
+    "github": "https://github.com/LockerProject/locker",
+    "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

@@ -1,49 +1,51 @@
-<div class="sidenav-header">
-  <p class='sidenav-header-title'>YOUR APPS</p>
-</div>
-<div class="installed-apps sidenav-items">
-  <ul>
-    <% if (apps && apps.length > 0) { %>
+<!-- <section> -->
+  <div class="sidenav-header">
+    <p class='sidenav-header-title'>YOUR APPS</p>
+  </div>
+  <div class="installed-apps sidenav-items">
+    <ul>
+      <% if (apps && apps.length > 0) { %>
+        <li>
+          <p><a href="viewAll" class="iframeLink viewAll" data-id="Create-viewAll">View All</a></p>
+          <p id='published' class="your-apps published app-details">Published (<%= published %>)</p>
+          <!--no review stage yet, so omitting this one for now-->
+          <!--<p class="your-apps in-review app-details">In Review (0)</p>-->
+          <p id='drafts' class="your-apps drafts app-details">Drafts (<%= draft %>)</p>
+        </li>
+        <li>
+          <p><a href="publish" class="iframeLink" data-id="publish">Publish New</a></p>
+        </li>
+      <% } else { %>
+        <li>
+          <p><a href="#" class="iframeLink" data-id="Create-devdocs">Getting Started</a></p>
+        </li>
+      <% } %>
+      </li>
+    </ul>
+  </div>
+  <div class="sidenav-header">
+    <p class='sidenav-header-title'>TOOLS</p>
+  </div>
+  <div class="installed-apps sidenav-items">
+    <ul>
       <li>
-        <p><a href="viewAll" class="iframeLink viewAll" data-id="viewAll">View All</a></p>
-        <p id='published' class="your-apps published app-details">Published (<%= published %>)</p>
-        <!--no review stage yet, so omitting this one for now-->
-        <!--<p class="your-apps in-review app-details">In Review (0)</p>-->
-        <p id='drafts' class="your-apps drafts app-details">Drafts (<%= draft %>)</p>
+        <p><a href="#" class="iframeLink" data-id="Create-devdocs/local.html">Develop Locally</a></p>
+        <p><a href="#" class="iframeLink" data-id="Create-devdocs/explorer.html">API Explorer</a></p>
+        <p><a target='_blank' href="https://www.dropbox.com/s/svvhf335hp0vg25">Templates + Icons</a></p>
+      </li>
+    </ul>
+  </div>
+  <div class="sidenav-header">
+    <p class='sidenav-header-title'>COMMUNITY</p>
+  </div>
+  <div class="installed-apps sidenav-items">
+    <ul>
+      <li>
+        <p><a href="http://www.lockerproject.org/">The Locker Project</a></p>
       </li>
       <li>
-        <p><a href="publish" class="iframeLink" data-id="publish">Publish New</a></p>
+        <p><a href="https://www.github.com/Singly">Singly on Github</a></p>
       </li>
-    <% } else { %>
-      <li>
-        <p><a href="/Me/devdocs" class="iframeLink" data-id="devdocs">Getting Started</a></p>
-      </li>
-    <% } %>
-    </li>
-  </ul>
-</div>
-<div class="sidenav-header">
-  <p class='sidenav-header-title'>TOOLS</p>
-</div>
-<div class="installed-apps sidenav-items">
-  <ul>
-    <li>
-      <p><a href="/Me/devdocs" class="iframeLink" data-id="devdocs">Develop Locally</a></p>
-      <p><a href="/Me/devdocs/explorer.html" class="iframeLink" data-id="devdocs/explorer.html">API Explorer</a></p>
-      <p><a target='_blank' href="https://www.dropbox.com/s/svvhf335hp0vg25">Templates + Icons</a></p>
-    </li>
-  </ul>
-</div>
-<div class="sidenav-header">
-  <p class='sidenav-header-title'>COMMUNITY</p>
-</div>
-<div class="installed-apps sidenav-items">
-  <ul>
-    <li>
-      <p><a href="http://www.lockerproject.org/">The Locker Project</a></p>
-    </li>
-    <li>
-      <p><a href="https://www.github.com/Singly">Singly on Github</a></p>
-    </li>
-  </ul>
-</div>
+    </ul>
+  </div>
+<!-- </section> -->

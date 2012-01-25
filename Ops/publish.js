@@ -59,7 +59,7 @@ function publish()
         var config = {registry:regBase};
         npm.load(config, function(err) {
             if(err) {
-                return console.error(err);
+                console.error(err);
                 process.exit(1);
             }
             npm.config.set("username", username);
@@ -68,7 +68,7 @@ function publish()
             npm.commands.publish(["."], function(err){
                 if(err) {
                     console.log("Oh no, errors!");
-                    return console.error(err);
+                    console.error(err);
                     process.exit(1);
                 }
                 console.log("published!");
