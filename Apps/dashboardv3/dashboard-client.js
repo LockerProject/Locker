@@ -376,7 +376,6 @@ var renderTempScreenshot = function(req, res) {
 
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
-        console.error("DEBUG: apps", apps);
         res.render('iframe/allApps', {
             layout: false,
             apps: apps,
