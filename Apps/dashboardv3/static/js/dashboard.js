@@ -12,7 +12,7 @@ var loggedIn = true;
 
 $(document).ready(function() {
     $.history.init(function(hash){
-        if(hash == "") {
+        if(hash === "") {
             // initialize your app
             loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
         } else {
@@ -59,7 +59,11 @@ $(document).ready(function() {
   }
   
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-      doModal();
+      if (window.location.hash === '#Create-devdocs' || window.location.hash === '#Explore-Featured') {
+        $.cookie("firstvisit", null, {path: '/' });
+      } else {
+        doModal();
+      }
   }
 });
 
@@ -92,7 +96,7 @@ var syncletInstalled = function(provider) {
       if(!nxt.length) nxt = element.prev('span');
       nxt.remove();
       element.remove();
-    })
+    });
   } else {
     var connectedList = $('.sidenav-items.synclets-connected');
     // \n's are for spacing, gross, but true
