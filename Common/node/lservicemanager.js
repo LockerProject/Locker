@@ -123,6 +123,9 @@ exports.providers = function(types) {
 // update or install this file into the map
 exports.mapUpsert = function (file) {
     var js;
+    // ensure file is always relative to lockerdir
+    file = lutil.relative(lconfig.lockerDir, file);
+    logger.verbose("upsert request for "+file);
     try {
         js = JSON.parse(fs.readFileSync(file, 'utf8'));
         if(!js) throw new Error("no data");
