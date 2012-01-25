@@ -496,7 +496,7 @@ var getConnectors = function(callback) {
                       connector.repository.oauthSize = {width:960, height:600};
                       console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
                     }
-                    connectors.push(connector); 
+                    connectors.push(connector);
                 }
             });
             callback(err, connectors);

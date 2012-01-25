@@ -19,7 +19,7 @@ $(document).ready(function() {
             loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
         }
     }, { unescape: ",/" });
-  
+
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
@@ -28,7 +28,7 @@ $(document).ready(function() {
     });
     return false;
   });
-  
+
   $('body').delegate('.oauthLink','click', function(e) {
     var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
     var popup = window.open($(this).attr('href'), "account", options);
