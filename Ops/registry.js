@@ -132,18 +132,17 @@ exports.app = function(app)
 function publishPackage(req, res) {
     logger.info("registry publishing "+req.params.id);
     var id = req.params.id;
-    if(id.indexOf("-") <= 0) return res.send("not found", 404);
-    if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
-    id = id.replace("-","/");
-    var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
-    fs.stat(dir, function(err, stat){
-        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
+    var svc = serviceManager.map()[id];
+    if(!svc || !svc.srcdir) return res.send("not found in map", 400);
+    var dir = svc.srcdir;
+    if(!dir || dir.indexOf('Me/github/') != 0) return res.send("package path not valid", 400);
+    fs.stat(dir, function(err, stat) {
+        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 400);
         var args = req.query || {};
         args.dir = dir;
-        if (req.body) {
-            args.body = req.body;
-        }
-        exports.publish(args, function(err, doc){
+        args.id = id;
+        if(req.body) args.body = req.body;
+        exports.publish(args, function(err, doc) {
             // npm publish always returns an error even though it works, so until that's fixed, commenting this out
             //if(err) res.send(err, 500);
             res.send(doc);
@@ -152,6 +151,7 @@ function publishPackage(req, res) {
 }
 
 function publishScreenshot(req, res) {
+    if(!req.params.id) return res.send('id undefined', 400);
     // TODO: This should really use streams, but it's not letting us.
     var buffer = new Buffer(Number(req.headers["content-length"]), "binary");
     var offset = 0;
@@ -181,8 +181,8 @@ function publishScreenshot(req, res) {
                     },
                     function(putErr, putResult, putBody) {
                         if (putErr) {
-                            logger.log("error", "Error uploading the screenshot: " + putErr);
-                            return res.send(err, 400);
+                            logger.error("error", "Error uploading the screenshot: " + putErr);
+                            return res.send(putErr, 400);
                         }
                         logger.info("Registry done sending screenshot");
                         res.send(200);
@@ -319,7 +319,7 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf(gh.login + '-') === 0) {
                     apps[k] = thiz;
                 }
             });
@@ -363,31 +363,33 @@ exports.update = function(arg, callback) {
 exports.publish = function(arg, callback) {
     if(!arg || !arg.dir) return callback("missing base dir");
     var pjs = path.join(arg.dir, "package.json");
-    logger.info("publishing "+pjs);
+    logger.info("attempting to publishing "+pjs);
     // first, required github
-    github(function(gh){
+    github(function(gh) {
         if(!gh) return callback("github account is required");
         // next, required registry auth
-        regUser(function(err, auth){
+        regUser(function(err, auth) {
             if(err ||!auth || !auth._auth) return callback(err);
             // saves for publish auth and maintainer
             npm.config.set("username", auth.username);
             npm.config.set("email", auth.email);
             npm.config.set("_auth", auth._auth);
             // make sure there's a package.json
-            checkPackage(pjs, arg, gh, function(){
+            checkPackage(pjs, arg, gh, function(err) {
+                if(err) return callback(err);
                 // bump version
                 process.chdir(arg.dir); // this must be run in the package dir, grr
-                npm.commands.version(["patch"], function(err){
+                npm.commands.version(["patch"], function(err) {
                     process.chdir(lconfig.lockerDir); // restore
                     if(err) return callback(err);
                     // finally !!!
-                    npm.commands.publish([arg.dir], function(err){
+                    npm.commands.publish([arg.dir], function(err) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
-                        regIndex[updated.name] = updated; // shim it in, sync will replace it eventually too just to be sure
+                        regIndex[arg.id] = updated; // shim it in, sync will replace it eventually too just to be sure
+                        serviceManager.mapUpsert(pjs);
                         callback(null, updated);
-                    })
+                    });
                 });
             });
         });
@@ -395,45 +397,29 @@ exports.publish = function(arg, callback) {
 };
 
 // make sure a package.json exists, or create one
-function checkPackage(pjs, arg, gh, callback)
-{
-    fs.stat(pjs, function(err, stat){
-        var js = {};
-        if(err || !stat || !stat.isFile())
-        {
-            var pkg = path.basename(path.dirname(pjs));
-            var handle = ("app-" + gh.login + "-" + pkg).toLowerCase();
-            var js = {
-              "author": { "name": gh.login },
-              "name": handle,
-              "description": arg.description || "",
-              "version": "0.0.0",
-              "repository": {
-                "title": arg.title || pkg,
-                "handle": handle,
-                "type": "app",
-                "author": gh.login,
-                "static": true,
-                "update": true,
-                "github": "https://github.com/"+gh.login+"/"+pkg
-              },
-              "dependencies": {},
-              "devDependencies": {},
-              "engines": {"node": "*"}
-            };
-        } else {
-            js = JSON.parse(fs.readFileSync(pjs));
+function checkPackage(pjs, arg, gh, callback) {
+    fs.stat(pjs, function(err, stat) {
+        if(err || !stat || !stat.isFile()) return callback(err || new Error(pjs + ' does not exist.'));
+        try {
+            var js = JSON.parse(fs.readFileSync(pjs));
+        } catch(err) {
+            return callback(err);
+        }
+        if(js.name != arg.id) {
+            logger.warn('while checking package ' + arg.dir + ', found inconsisent name (' + js.name + ') and id (' + arg.id +'), setting name = id');
+            js.name = arg.id;
+        }
+        if(js.repository.handle != arg.id) {
+            logger.warn('while checking package ' + arg.dir + ', found inconsisent handle (' + js.repository.handle + ') and id (' + arg.id +'), setting name = id');
+            js.repository.handle = arg.id;
         }
         if (arg.body) {
-            if (arg.body.title) {
-                js.repository.title = arg.body.title;
+            if (arg.body.title) js.repository.title = arg.body.title;
+            if (arg.body.description) {
+                js.repository.description = arg.body.description;
+                js.description = arg.body.description;
             }
-            if (arg.body.desc) {
-                js.description = arg.body.desc;
-            }
-            if (arg.body.uses) {
-                js.repository.uses = arg.body.uses;
-            }
+            if (arg.body.uses) js.repository.uses = arg.body.uses;
         }
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();

@@ -123,7 +123,7 @@ exports.providers = function(types) {
 exports.mapUpsert = function (file) {
     var js;
     try {
-        js = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir,file), 'utf8'));
+        js = JSON.parse(fs.readFileSync(path.join(file), 'utf8'));
         if(!js) throw new Error("no data");
         // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
         if(!js.handle && js.repository) {

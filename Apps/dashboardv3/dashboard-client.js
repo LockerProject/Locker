@@ -183,14 +183,17 @@ var submitPublish = function(req, res) {
                 cropping[fields.app] = true;
             }
             if (err) res.write(JSON.stringify(err.message));
+            var handle = githubapps[fields.app].handle;
+            if(!handle) return res.send('invalid app ' + fields.app, 400);
+            var srcdir = githubapps[fields.app].srcdir;
             if (fields['new-file'] === 'true') {
-                fs.rename('tempScreenshot', path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), function() {
-                    cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields, done);
+                fs.rename('tempScreenshot', path.join(lconfig.lockerDir, srcdir, 'screenshot'), function() {
+                    cropImage(path.join(lconfig.lockerDir, srcdir, 'screenshot'), fields, done);
                 });
             } else if (fields['app-screenshot-url']) {
                 request.get({uri: fields['app-screenshot-url'], encoding: 'binary'}, function(err, resp, body) {
-                    fs.writeFile(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), body, 'binary', function() {
-                        cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields, done);
+                    fs.writeFile(path.join(lconfig.lockerDir, srcdir, 'screenshot'), body, 'binary', function() {
+                        cropImage(path.join(lconfig.lockerDir, srcdir, 'screenshot'), fields, done);
                     });
                 });
             } else {
@@ -201,42 +204,46 @@ var submitPublish = function(req, res) {
                 if (fields['app-publish'] === 'true') {
                     var data = {
                         uses: githubapps[fields.app].uses,
-                        desc: fields['app-description']
+                        description: fields['app-description']
                     }
                     if (fields['rename-app'] === 'on') {
                         data.title = fields['app-newname'];
                     } else {
                         data.title = fields['old-name'];
                     }
-                    request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
-                        if (!err) {
-                            var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
-                            // Send the screenshot
-                            var filePath = path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot');
-                            var stat = fs.statSync(filePath);
-                            var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
-                                                headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {
-                                if (err) {
-                                    console.log("Error sending screenshot from dashboard: " + err);
-                                    console.log(err.stack);
-                                   return res.send(400);
-                                }
-                                res.send(reloadScript);
-                            });
-                            // TODO:  This still feels more proper, but is not working
-                            /*
-                            var readStream = fs.createReadStream(filePath);
-                            readStream.on("data", function() {
-                                console.log("Sent some image data");
-                            });
-                            readStream.on("end", function() {
-                                console.log("image send done");
-                            });
-                            readStream.pipe(ssPut);
-                            */
-                        } else {
-                            res.send(reloadScript);
+                    request.post({uri: locker.lockerBase + '/registry/publish/' + handle, json: data}, function(err, resp, body) {
+                        if(err) {
+                            console.error('error publishing ' + handle + ', got status code ' + resp.statusCode, err);
+                            return res.send('error publishing' + err, 500);
                         }
+                        if(resp.statusCode != 200) {
+                            console.error('error publishing ' + handle + ', got status code ' + resp.statusCode + ':', body);
+                            return res.send('error publishing: ' + body, 500);
+                        }
+                        var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
+                        // Send the screenshot
+                        var filePath = path.join(lconfig.lockerDir, srcdir, 'screenshot');
+                        var stat = fs.statSync(filePath);
+                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + handle,
+                                            headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {
+                            if (err) {
+                                console.log("Error sending screenshot from dashboard: " + err);
+                                console.log(err.stack);
+                               return res.send(400);
+                            }
+                            res.send(reloadScript);
+                        });
+                        // TODO:  This still feels more proper, but is not working
+                        /*
+                        var readStream = fs.createReadStream(filePath);
+                        readStream.on("data", function() {
+                            console.log("Sent some image data");
+                        });
+                        readStream.on("end", function() {
+                            console.log("image send done");
+                        });
+                        readStream.pipe(ssPut);
+                        */
                     });
                 } else {
                     res.send('<script type="text/javascript">parent.loadApp();</script>');
@@ -369,6 +376,7 @@ var renderTempScreenshot = function(req, res) {
 
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
+        console.error("DEBUG: apps", apps);
         res.render('iframe/allApps', {
             layout: false,
             apps: apps,
@@ -427,7 +435,7 @@ var getGithubApps = function(callback) {
                 if (pattern.exec(map[i].srcdir)) {
                     var appInfo = checkDraftState(map[i]);
                     if (!appInfo.title) continue
-                    var appId = 'app-' + appInfo.id.toLowerCase();
+                    var appId = appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];
                     }
@@ -467,7 +475,7 @@ var checkDraftState = function(appInfo) {
         if (appInfo.draft['rename-app'] === 'on') {
             appInfo.title = appInfo.draft['app-newname'];
         }
-        appInfo.desc = appInfo.draft['app-description'];
+        appInfo.description = appInfo.draft['app-description'];
     } else {
         appInfo.draft = {};
     }
