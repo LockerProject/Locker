@@ -11,8 +11,15 @@ var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-  loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-
+    $.history.init(function(hash){
+        if(hash == "") {
+            // initialize your app
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        } else {
+            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        }
+    }, { unescape: ",/" });
+  
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
@@ -21,9 +28,10 @@ $(document).ready(function() {
     });
     return false;
   });
-
-  $('.oauthLink').click(function() {
-    var popup = window.open($(this).attr('href'), "account", "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no");
+  
+  $('body').delegate('.oauthLink','click', function(e) {
+    var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
+    var popup = window.open($(this).attr('href'), "account", options);
     popup.focus();
     return false;
   });
@@ -56,7 +64,7 @@ $(document).ready(function() {
 });
 
 var loadApp = function(info) {
-  var app = info.subSection;
+  var app = info.subSection || info.topSection;
   $('iframe#appFrame').show();
   $('div#appFrame').hide();
   $('.app-details').hide();
@@ -77,8 +85,20 @@ var syncletInstalled = function(provider) {
     $('.your-apps').show();
   }
   var link = $('.oauthLink[data-provider="' + provider + '"]');
-  link.children('img').addClass('installed').appendTo('.sidenav-items.synclets');
-  link.remove();
+  if($('div#appFrame').is(':visible')) {
+    link.each(function(index, element) {
+      element = $(element);
+      var nxt = element.next('span');
+      if(!nxt.length) nxt = element.prev('span');
+      nxt.remove();
+      element.remove();
+    })
+  } else {
+    var connectedList = $('.sidenav-items.synclets-connected');
+    // \n's are for spacing, gross, but true
+    connectedList.append('\n\n\n').append(link.find('img'));
+    link.remove();
+  }
 };
 
 handlers.You = loadApp;
@@ -104,3 +124,11 @@ function generateConnectors(connectors, callback) {
     callback(appHtml);
   });
 }
+
+
+handlers.You = loadApp;
+handlers.create = loadApp;
+handlers.Create = loadApp;
+handlers.connect = loadApp;
+handlers.viewAll = loadApp;
+handlers.publish = loadApp;

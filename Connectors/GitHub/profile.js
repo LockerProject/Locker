@@ -1,11 +1,9 @@
-var GitHubApi = require("github").GitHubApi;
-var github = new GitHubApi();
+var request = require('request');
 
-exports.sync = function(processInfo, cb) {
-    var auth = processInfo.auth;
-    // auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
-    github.getUserApi().show(auth.username, function(err, profile) {
-        auth.profile = profile;
-        cb(err, {auth: auth, data : {profile : [{obj: profile}]}});
+exports.sync = function(pi, cb) {
+    request.get({url:"https://api.github.com/user?access_token=" + pi.auth.accessToken, json:true}, function(err, resp, body) {
+        if(err || !body) return cb(err);
+        pi.auth.profile = body;
+        cb(null, {auth: pi.auth, data: {profile: [body]}});
     });
 };

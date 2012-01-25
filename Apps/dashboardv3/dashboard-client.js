@@ -22,18 +22,11 @@ var express = require('express')
   , path = require('path')
   , fs = require('fs')
   , im = require('imagemagick')
+  , util = require("util")
   , page = ''
   , connectPage = false
   , cropping = {}
-  , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
-                 github: {height: 1000, width: 1000},
-                 twitter: {width: 630, height: 500},
-                 tumblr: {width: 630, height: 500},
-                 facebook: {width: 980, height: 705},
-                 instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877},
-                 linkedin: {width: 491, height: 163}
-                };
+  ;
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     lconfig.load('../../Config/config.json');
@@ -131,8 +124,10 @@ var renderApps = function(req, res) {
 
 var renderExplore = function(req, res) {
     page = 'explore';
-    locker.mapType("connector", function(error, connectors) {
-        res.render('explore', {synclets:connectors});
+    getConnectors(function(error, connectors) {
+        var c = [];
+        for(var i in connectors) if(!connectors[i].repository.hidden) c.push(connectors[i].repository);
+        res.render('explore', {synclets:c});
     });
 }
 
@@ -190,69 +185,71 @@ var submitPublish = function(req, res) {
             if (err) res.write(JSON.stringify(err.message));
             if (fields['new-file'] === 'true') {
                 fs.rename('tempScreenshot', path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), function() {
-                    cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
+                    cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields, done);
                 });
-            } else {
-                if (fields['app-screenshot-url']) {
-                    request.get({uri: fields['app-screenshot-url'], encoding: 'binary'}, function(err, resp, body) {
-                        fs.writeFile(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), body, 'binary', function() {
-                            cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
-                        });
+            } else if (fields['app-screenshot-url']) {
+                request.get({uri: fields['app-screenshot-url'], encoding: 'binary'}, function(err, resp, body) {
+                    fs.writeFile(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), body, 'binary', function() {
+                        cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields, done);
                     });
-                }
-            }
-            fields.lastUpdated = Date.now();
-            if (fields['app-publish'] === 'true') {
-                var data = {
-                    uses: githubapps[fields.app].uses,
-                    desc: fields['app-description']
-                }
-                if (fields['rename-app'] === 'on') {
-                    data.title = fields['app-newname'];
-                } else {
-                    data.title = fields['old-name'];
-                }
-                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
-                    if (!err) {
-                        var reloadScript = '<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>';
-                        // Send the screenshot
-                        var filePath = path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot');
-                        var stat = fs.statSync(filePath);
-                        var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
-                                            headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {
-                            if (err) {
-                                console.log("Error sending screenshot from dashboard: " + err);
-                                console.log(err.stack);
-                               return res.send(400);
-                            }
-                            res.send(reloadScript);
-                        });
-                        // TODO:  This still feels more proper, but is not working
-                        /*
-                        var readStream = fs.createReadStream(filePath);
-                        readStream.on("data", function() {
-                            console.log("Sent some image data");
-                        });
-                        readStream.on("end", function() {
-                            console.log("image send done");
-                        });
-                        readStream.pipe(ssPut);
-                        */
-                    } else {
-                        res.send(reloadScript);
-                    }
                 });
             } else {
-                res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
+                done();
             }
-            uistate.saveDraft(fields);
+            function done() {
+                fields.lastUpdated = Date.now();
+                if (fields['app-publish'] === 'true') {
+                    var data = {
+                        uses: githubapps[fields.app].uses,
+                        desc: fields['app-description']
+                    }
+                    if (fields['rename-app'] === 'on') {
+                        data.title = fields['app-newname'];
+                    } else {
+                        data.title = fields['old-name'];
+                    }
+                    request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
+                        if (!err) {
+                            var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
+                            // Send the screenshot
+                            var filePath = path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot');
+                            var stat = fs.statSync(filePath);
+                            var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + body.name,
+                                                headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {
+                                if (err) {
+                                    console.log("Error sending screenshot from dashboard: " + err);
+                                    console.log(err.stack);
+                                   return res.send(400);
+                                }
+                                res.send(reloadScript);
+                            });
+                            // TODO:  This still feels more proper, but is not working
+                            /*
+                            var readStream = fs.createReadStream(filePath);
+                            readStream.on("data", function() {
+                                console.log("Sent some image data");
+                            });
+                            readStream.on("end", function() {
+                                console.log("image send done");
+                            });
+                            readStream.pipe(ssPut);
+                            */
+                        } else {
+                            res.send(reloadScript);
+                        }
+                    });
+                } else {
+                    res.send('<script type="text/javascript">parent.loadApp();</script>');
+                }
+                uistate.saveDraft(fields);
+            }
         });
     } else {
         res.send(req.body);
     }
 }
 
-var cropImage = function(file, fields) {
+var cropImage = function(file, fields, callback) {
     if (fields['x']) {
         im.crop({
             srcPath: file,
@@ -268,8 +265,11 @@ var cropImage = function(file, fields) {
                 height: 200
             }, function() {
                 cropping[fields.app] = false;
+                callback();
             });
         });
+    } else {
+        callback();
     }
 }
 
@@ -320,7 +320,6 @@ var renderYou = function(req, res) {
                 if (installedConnectors.length === 0) {
                     page += '-connect';
                 }
-
                 res.render(page, {
                     connectors: connectors,
                     installedConnectors: installedConnectors,
@@ -493,8 +492,11 @@ var getConnectors = function(callback) {
                     for (var i = 0; i < installedConnectors.length; ++i) {
                         if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
                     }
-                    connector.oauthSize = oauthPopupSizes[connectors.provider] || {width:960, height:600};
-                    connectors.push(connector);
+                    if(!connector.repository.oauthSize) {
+                      connector.repository.oauthSize = {width:960, height:600};
+                      console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
+                    }
+                    connectors.push(connector); 
                 }
             });
             callback(err, connectors);
@@ -503,46 +505,5 @@ var getConnectors = function(callback) {
 }
 
 var getInstalledConnectors = function(callback) {
-    getConnectors(function(err, connectors) {
-       var installedConnectors = [];
-       for (var i=0; i<connectors.length; i++) {
-           if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
-               installedConnectors.push(connectors[i]);
-           }
-       }
-       callback(err, installedConnectors);
-    });
+    locker.mapType("connector", callback);
 }
-
-
-/*
-var getLocalConnectors = function(callback) {
-    var connectors = [];
-    locker.mapType(callback)(err, map) {;
-        callback(err, map)
-        Object.keys(map).forEach(function(key) {
-            var service = map[key];
-            if (service.type == "connector") {
-                connectors.push(service);
-            }
-        }
-        callback(err, connectors);
-        for (var i in synclets.installed) {
-            if (i === 'github') { github = true; }
-            synclets.available.some(function(synclet) {
-                if (synclet.provider === synclets.installed[i].provider) {
-                    synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                }
-            });
-        }
-        for (var i = 0; i < synclets.available.length; i++) {
-            if (oauthPopupSizes[synclets.available[i].provider]) {
-                synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-            } else {
-                synclets.available[i].oauthSize = {width: 960, height: 600};
-            }
-        }
-        callback(err, synclets);
-    });
-}
-*/

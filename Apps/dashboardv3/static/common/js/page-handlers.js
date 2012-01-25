@@ -8,7 +8,7 @@ $(document).ready(function() {
   $('body').delegate('.app-card', 'hover', appCardHover)
   .delegate('.sidenav-items input', 'click', filterCheckboxClick)
   .delegate('.app-card', 'click', function() {
-    loadDiv('Explore-Details-app=' + $(this).data('id'));
+    loadDiv('Explore-Details?app=' + $(this).data('id'));
     return false;
   }).delegate('.iframeLink', 'click', function() {
     loadDiv($(this).data('id'));
@@ -81,7 +81,7 @@ function splitApp(app) {
     subSection = app.substring(index + 1);
   } else {
     subSection = defaultSubSections[topSection];
-    app += '-' + subSection;
+    if (subSection) app += '-' + subSection;
   }
   if(params) {
     app += '?' + params;

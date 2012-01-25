@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "github",
   "description": "GitHub Connector",
-  "version": "0.0.7",
+  "version": "0.0.11",
   "repository": {
     "title": "GitHub",
     "handle": "github",
@@ -11,6 +11,13 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+      "width": 1000,
+      "height": 1000
+    },
+    "profileIds": [
+      "login"
+    ],
     "url": ""
   },
   "engines": {

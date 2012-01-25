@@ -51,12 +51,24 @@ exports.init = function (sman, reg, callback) {
 
     // make sure default collections, ui, and apps are all installed!
     var installs = [];
-    if(lconfig.ui) installs.push(lconfig.ui);
+    if(lconfig.ui) {
+        installs.push(lconfig.ui);
+        if(lconfig.ui.indexOf(':') != -1) lconfig.ui = lconfig.ui.substr(0,lconfig.ui.indexOf(':')); // only use name hereafter
+    }
     if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
     async.forEachSeries(installs, function(id, cb){
+        var arg = {};
+        // allow a configurable name:path/to/it value for local installs
+        if(id.indexOf(':') != -1)
+        {
+            arg.path = id.substr(id.indexOf(':')+1);
+            id = id.substr(0,id.indexOf(':'));
+        }else{
+            arg.name = id;
+        }
         if(serviceMap[id]) return cb();
-        registry.install({name:id}, cb);
+        registry.install(arg, cb);
     }, callback);
 }
 

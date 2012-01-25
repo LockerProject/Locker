@@ -16,8 +16,8 @@
             <li class="featured hideable"><img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" /><span class="synclet-name"><%= connectors[i].repository.title %></span> 
             <a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink" 
                data-provider="<%=connectors[i].repository.handle%>"
-               data-width="<%= connectors[i].oauthSize.width %>"
-               data-height="<%= connectors[i].oauthSize.height %>">
+               data-width="<%= connectors[i].repository.oauthSize.width %>"
+               data-height="<%= connectors[i].repository.oauthSize.height %>">
                <% if (connectors[i].hasOwnProperty('authed')) { %>
                  <img class="connect-button" src="img/connected.png" />
                <% } else { %>

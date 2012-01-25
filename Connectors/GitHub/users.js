@@ -1,49 +1,27 @@
-var GitHubApi = require("github").GitHubApi
-  , contacts = {}
-  , github = new GitHubApi()
-  , auth
-  ;
-
+var contacts = {};
 contacts.following = [];
 contacts.followers = [];
+var auth;
+var async = require('async');
+var request = require('request');
 
 exports.sync = function(processInfo, cb) {
     auth = processInfo.auth;
-    exports.syncUsers('following', function(err) {
-        if (err) console.error(err);
-        exports.syncUsers('followers', function(err) {
-            if (err) console.error(err);
-            var responseObj = {data : contacts};
-            cb(err, responseObj);
-        });
+    auth.headers = {"Authorization":"token "+auth.accessToken, "Connection":"keep-alive"};
+    async.forEachSeries(['following', 'followers'], FoF, function(){
+        cb(null, {data: contacts});
     });
 };
 
-exports.syncUsers = function(friendsOrFollowers, callback) {
-    if(!friendsOrFollowers || friendsOrFollowers.toLowerCase() != 'followers')
-        friendsOrFollowers = 'following';
-
-    var processData = function(err, data) {
-        var processUser = function(data) {
-            if (data && data.length) {
-                js = data.splice(0, 1)[0];
-                github.getUserApi().show(js, function(err, user) {
-                    if(err) return processUser(data);
-                    contacts[friendsOrFollowers].push({obj: user, timestamp: Date.now(), type: 'new'});
-                    processUser(data);
-                });
-            } else {
-                return callback(err);
-            }
-        };
-
-        processUser(data);
-    }
-
-    if (friendsOrFollowers === 'following') github.getUserApi().getFollowing(auth.username, function(err, data) {
-        processData(err, data);
-    });
-    if (friendsOrFollowers === 'followers') github.getUserApi().getFollowers(auth.username, function(err, data) {
-        processData(err, data);
+function FoF(type, cb)
+{
+    request.get({url:"https://api.github.com/user/"+type, json:true, headers:auth.headers}, function(err, resp, body) {
+        if(err || !body || !Array.isArray(body)) return cb(err);
+        async.forEachSeries(body, function(user, cb2){
+            request.get({url:"https://api.github.com/users/"+user.login, json:true, headers:auth.headers}, function(err, resp, body) {
+                if(body) contacts[type].push(body);
+                cb2();
+            });
+        }, cb);
     });
 }

@@ -14,24 +14,34 @@
       </li>
     <% } %>
   </ul>
-  <p><a class="orange iframeLink" href="#" data-id="app-allApps">Explore more apps</a></p>
+  <p><a class="orange" href="explore#Explore-Featured">Explore more apps</a></p>
 </div>
 <div class="sidenav-header">
-  <p class='sidenav-header-title'>YOUR SERVICES</p>
+  <p class='sidenav-header-title'>CONNECTED</p>
 </div>
-<div class="sidenav-items synclets">
+<div class="sidenav-items synclets-connected">
+  <% for (var i = 0; i < connectors.length; i++) { %>
+    <% if (connectors[i].repository.hidden) continue; %>
+    <% if (connectors[i].authed) { %><img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"><% } %>
+  <% } %>
+</div>
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>MORE SERVICES</p>
+</div>
+<div class="sidenav-items synclets-unconnected">
   <% for (var i = 0; i < connectors.length; i++) { %>
     <% if (connectors[i].repository.hidden) continue; %>
     <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%= connectors[i].repository.handle %>'
-        data-width='<%=connectors[i].oauthSize.width%>' data-height='<%=connectors[i].oauthSize.height%>' class="oauthLink"><% } %>
-    <img class='<%=(connectors[i].authed ? "installed" : "")%>' src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
-    <% if (!connectors[i].authed) { %></a><% } %>
+        data-width='<%=connectors[i].repository.oauthSize.width%>' data-height='<%=connectors[i].repository.oauthSize.height%>' class="oauthLink">
+    <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"></a>
+    <% } %>
   <% } %>
 </div>
+
 <% if (firstVisit === false) { %>
   <div id="basic-modal-content">
     <span id='close-button'>X</span>
-    <p>When you want to connect more services, click on the logo under "Your Services", or go to your "Account Settings" page.</p><br>
+    <p>When you're ready to connect more services, find them under "More Services".</p><br>
     <div class="action">
       <img class="gotit-button" src="img/got-it.png" />
     </div>

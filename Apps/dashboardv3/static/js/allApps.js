@@ -3,6 +3,7 @@ $(document).ready(function() {
   //   $(this).toggleClass('expanded');
   // });
 
+  /*
   $('.publishLink').click(function() {
     var id = $(this).attr('id');
     window.parent.app = 'publish';
@@ -11,6 +12,7 @@ $(document).ready(function() {
     });
     return false;
   });
+  */
 
   $('img[src="img/loading6.gif"]').each(poll);
 });
