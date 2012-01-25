@@ -386,8 +386,7 @@ exports.install = function(arg, callback) {
             });
             return;
         }
-        npmarg.push(arg.name);
-        npmarg.push(reg.latest); // specifically install only the latest version
+        npmarg.push(arg.name+'@'+reg.latest); // specifically install only the latest version
     }else{
         npmarg.push(path.join(lconfig.lockerDir, arg.path));
     }
