@@ -22,6 +22,7 @@ git archive $rev | tar -x -C "$builddir/$subdir"
 echo "Building..."
 cd "$builddir/$subdir"
 npm install 2>&1 | tee -a "$buildlog"
+test -d Me || mkdir Me
 
 echo "Compressing..."
 (cd "$builddir"; tar czf "$out" "$subdir")
