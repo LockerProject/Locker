@@ -265,28 +265,27 @@ function proxyRequest(method, req, res, next) {
     }
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
-        logger.verbose("Checking " + req.url);
         var fileUrl = url.parse(ppath);
         if(fileUrl.pathname.indexOf("..") >= 0)
         { // extra sanity check
             return res.send(404);
         }
 
-        fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
+        fs.stat(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname), function(err, stats) {
             if (!err && (stats.isFile() || stats.isDirectory())) {
-                res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));
+                res.sendfile(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
             } else {
-                fs.stat(path.join(info.srcdir, fileUrl.pathname), function(err, stats) {
+                fs.stat(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname), function(err, stats) {
                     if (!err && (stats.isFile() || stats.isDirectory())) {
-                        res.sendfile(path.join(info.srcdir, fileUrl.pathname));
+                        res.sendfile(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                     } else {
-                        logger.warn("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        logger.warn("Could not find " + path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname))
                         res.send(404);
                     }
                 });
             }
         });
-        logger.verbose("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
+        logger.silly("Sent static file " + path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
     } else {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
@@ -298,7 +297,7 @@ function proxyRequest(method, req, res, next) {
             proxied(method, info, ppath, req, res);
         }
     }
-    logger.verbose("Proxy complete");
+    logger.silly("Proxy complete");
 };
 
 // DIARY

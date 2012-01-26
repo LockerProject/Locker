@@ -60,10 +60,11 @@ exports.init = function (sman, reg, callback) {
     async.forEachSeries(installs, function(id, cb){
         var arg = {};
         // allow a configurable name:path/to/it value for local installs
+        // This will currently directly upsert and skip the install
         if(id.indexOf(':') != -1)
         {
-            arg.path = id.substr(id.indexOf(':')+1);
-            id = id.substr(0,id.indexOf(':'));
+            exports.mapUpsert(path.join(id.substr(id.indexOf(':')+1), "package.json"));
+            return cb();
         }else{
             arg.name = id;
         }

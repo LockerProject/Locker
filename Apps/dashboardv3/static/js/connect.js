@@ -1,6 +1,7 @@
 $.cookie("firstvisit", true, {path: '/' });
 
 var profileTimeout;
+var hasTwitterOrFacebook = false;
 
 $(function() {
     $(".connect-button-link").click(function(e) {
@@ -28,8 +29,14 @@ $(function() {
     $('.synclets-list li a').each(function(index, item) {  
        if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
            $(this).parent().fadeIn();
+           hasTwitterOrFacebook = true;
        } 
     });
+    
+    // if apikeys doens't have twitter/facebook, just show everything
+    if (hasTwitterOrFacebook === false) {
+        showAllConnectors();
+    }
 });
 
 // this one is called only when going through a first-time connection
@@ -41,24 +48,32 @@ var syncletInstalled = function(provider) {
     });
 
     $('.sidenav-items.synclets', window.parent.document).append("<img class='installed' src='img/icons/32px/"+provider+".png'>");
+    showHeaderTwo();
     showAllConnectors();
     updateUserProfile();
 };
 
 var showHiddenConnectors = function() {
+    showHeader2();
+    $(".hideable").fadeIn();
+};
+
+var showHeaderOne = function() {
+    if ($("#main-header-2").is(":visible")) {
+        $("#main-header-2").hide();
+        $("#main-header-1").show();
+    }
+};
+
+var showHeaderTwo = function() {
     if ($("#main-header-1").is(":visible")) {
         $("#main-header-1").hide();
         $("#main-header-2").show();
-        $(".hideable").fadeIn();
     }
 };
 
 var showAllConnectors = function() {
-    if ($("#main-header-1").is(":visible")) {
-        $("#main-header-1").hide();
-        $("#main-header-2").show();
-        $(".synclets-list li").fadeIn();
-    }
+    $(".synclets-list li").fadeIn();
 };
 
 var updateUserProfile = function() {
