@@ -304,11 +304,11 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {        
+    getAppsInfo(8, function(sortedResult) {
         getConnectors(function(err, connectors) {
             var firstVisit = false;
             var page = 'you';
-            
+
             getInstalledConnectors(function(err, installedConnectors) {
                 if (req.cookies.firstvisit === 'true' &&
                     installedConnectors.length === 0) {
@@ -448,16 +448,7 @@ var getRegistryApps = function(callback) {
 
 var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        apps = JSON.parse(body);
-        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
-            added = JSON.parse(added);
-            for (var i in added) {
-                if (apps[i]) {
-                    apps[i].installed = true;
-                }
-            }
-            callback(apps);
-        });
+        callback(JSON.parse(body));
     });
 }
 
@@ -479,7 +470,7 @@ var getConnectors = function(callback) {
     locker.mapType("connector", function(err, installedConnectors) {
         request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
             var connectors = [];
-            Object.keys(body).map(function(key) { 
+            Object.keys(body).map(function(key) {
                 if (body[key].repository.type == "connector") {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
@@ -489,7 +480,7 @@ var getConnectors = function(callback) {
                       connector.repository.oauthSize = {width:960, height:600};
                       console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
                     }
-                    connectors.push(connector); 
+                    connectors.push(connector);
                 }
             });
             callback(err, connectors);

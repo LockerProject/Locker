@@ -22,7 +22,6 @@ var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
-var installed = {};
 var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
@@ -42,26 +41,22 @@ exports.init = function(serman, syncman, config, crypto, callback) {
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
-    loadInstalled(function(err){
+    var home = path.join(lconfig.lockerDir, lconfig.me);
+    process.chdir(home);
+    var config = {registry:regBase, cache:path.join(home, '.npm')};
+    npm.load(config, function(err) {
         if(err) logger.error(err);
-        // janky stuff to make npm run isolated fully
-        var home = path.join(lconfig.lockerDir, lconfig.me);
-        process.chdir(home);
-        var config = {registry:regBase, cache:path.join(home, '.npm')};
-        npm.load(config, function(err) {
-            if(err) logger.error(err);
-            fs.readFile('registry.json', 'utf8', function(err, reg){
-                try {
-                    if(reg) regIndex = JSON.parse(reg);
-                }catch(E){
-                    logger.error("couldn't parse registry.json: "+E);
-                }
-                if(lconfig.registryUpdate === true) {
-                    exports.sync();
-                }
-                process.chdir(lconfig.lockerDir);
-                callback(installed);
-            });
+        fs.readFile('registry.json', 'utf8', function(err, reg){
+            try {
+                if(reg) regIndex = JSON.parse(reg);
+            }catch(E){
+                logger.error("couldn't parse registry.json: "+E);
+            }
+            if(lconfig.registryUpdate === true) {
+                exports.sync();
+            }
+            process.chdir(lconfig.lockerDir);
+            callback();
         });
     });
 };
@@ -69,9 +64,6 @@ exports.init = function(serman, syncman, config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
-    app.get('/registry/added', function(req, res) {
-        res.send(exports.getInstalled());
-    });
     app.get('/registry/add/:id', function(req, res) {
         logger.info("registry trying to add "+req.params.id);
         if(!regIndex[req.params.id]) return res.send("not found", 404);
@@ -104,7 +96,7 @@ exports.app = function(app)
         var id = req.params.id;
         if(!regIndex[id]) return res.send("not found", 404);
         var copy = lutil.extend(true, {}, regIndex[id]);
-        copy.installed = installed[id];
+        copy.installed = (serviceManager.map(k)) ? true : false;
         res.send(copy);
     });
     app.get('/registry/sync', function(req, res) {
@@ -226,38 +218,6 @@ function verify(pkg)
     return false;
 }
 
-// just load up any installed packages in node_modules
-function loadInstalled(callback)
-{
-    var files = fs.readdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"));
-    async.forEach(files, function(item, cb){
-        var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
-        fs.stat(ppath, function(err, stat){
-            if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(path.join(lconfig.me, 'node_modules', item, 'package.json'), false, function(){cb()}); // ignore individual errors
-        });
-    }, callback);
-}
-
-// load an individual package
-function loadPackage(ppath, upsert, callback)
-{
-    fs.readFile(path.join(lconfig.lockerDir, ppath), 'utf8', function(err, data){
-        if(err || !data) return callback(err);
-        var js;
-        try{
-            js = JSON.parse(data);
-            installed[js.repository.handle] = js;
-        }catch(E){
-            logger.error("couldn't parse "+ppath+": "+E);
-            return callback(E);
-        }
-        // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(ppath);
-        callback(null, js);
-    });
-}
-
 // background sync process to fetch/maintain the full package list
 exports.sync = function(callback, force)
 {
@@ -327,18 +287,14 @@ function usePkg(pkg, ver, callback)
     logger.verbose("new "+pkg.name+" "+ver);
     pkg.latest = ver;
     regIndex[pkg.name] = pkg;
-    if(installed[pkg.name] && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(installed[pkg.name].version, ver))
+    if(serviceManager.map(pkg.name) && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(serviceManager.map(pkg.name).version, ver))
     {
         logger.verbose("auto-updating "+pkg.name);
-        exports.update({name:pkg.name}, function(){}); // lazy update
+        exports.install({name:pkg.name}, function(){}); // lazy update
     }
     callback();
 }
 
-// share the data
-exports.getInstalled = function() {
-    return installed;
-}
 exports.getRegistry = function() {
     return regIndex;
 }
@@ -347,7 +303,11 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){
+        if(!regIndex[k].repository || regIndex[k].repository.type != 'app') return;
+        apps[k] = regIndex[k];
+        apps[k].installed = (serviceManager.map(k)) ? true : false;
+    });
     return apps;
 }
 exports.getMyApps = function(req, res) {
@@ -356,7 +316,7 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf(gh.login + '-') >= 0) {
                     apps[k] = thiz;
                 }
             });
@@ -374,7 +334,6 @@ exports.install = function(arg, callback) {
     {
         // if not in registry yet, try to go get it directly!
         if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-        if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
         var reg = regIndex[arg.name];
         if(!reg || !reg.latest) {
             request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
@@ -400,18 +359,9 @@ exports.install = function(arg, callback) {
             return callback(err);
         }
         var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
-        loadPackage(ppath, true, callback); // once installed, load
-    });
-};
-exports.update = function(arg, callback) {
-    if(!arg || !arg.name) return callback("missing package name");
-    var reg = regIndex[arg.name];
-    if(!reg || !reg.latest) return callback("missing registry info");
-    console.log("update is being ran on " + arg.name);
-    npm.commands.update([arg.name], function(err){
-        if(err) logger.error(err);
-        var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
-        loadPackage(ppath, true, callback); // once updated, re-load
+        var up = serviceManager.mapUpsert(ppath);
+        if(!up) callback("upsert failed");
+        callback(null, up);
     });
 };
 

@@ -142,7 +142,7 @@ exports.mapUpsert = function (file) {
         }
     } catch (E) {
         logger.error("failed to upsert "+file+" due to "+E);
-        return;
+        return false;
     }
 
     js.upserted = Date.now();
