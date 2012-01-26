@@ -151,6 +151,7 @@ exports.mapUpsert = function (file) {
     js.upserted = Date.now();
     js.manifest = file;
     js.srcdir = path.dirname(file);
+    js.id = js.provider = js.handle; // kinda legacy where they could differ
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
@@ -159,7 +160,7 @@ exports.mapUpsert = function (file) {
         exports.mapReload(js.handle);
         // if it's running and updated, signal it to shutdown so new code/config is run at next request
         if(js.pid) try {
-            logger.info("restarting " + js.id + " running at pid " + js.pid);
+            logger.info("restarting " + js.handle + " running at pid " + js.pid);
             process.kill(js.pid, "SIGTERM");
         } catch(e) {}
         // worth detecting if it changed here first?
@@ -169,11 +170,10 @@ exports.mapUpsert = function (file) {
 
     // creating from scratch
     logger.verbose("creating "+js.handle);
-    js.id = js.provider = js.handle; // kinda legacy where they could differ
-    serviceMap[js.id] = js;
+    serviceMap[js.handle] = js;
     js.installed = Date.now();
     cleanLoad(js);
-    levents.fireEvent('service://me/#'+js.id, 'new', js);
+    levents.fireEvent('service://me/#'+js.handle, 'new', js);
     return js;
 }
 
