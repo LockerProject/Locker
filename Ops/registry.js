@@ -328,27 +328,23 @@ exports.getMyApps = function(req, res) {
 // npm wrappers
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
-    if(!arg || (!arg.name && !arg.path)) return callback("missing package name");
+    if(!arg || !arg.name) return callback("missing package name");
     var npmarg = [];
-    if(arg.name)
-    {
-        // if not in registry yet, try to go get it directly!
-        if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-        var reg = regIndex[arg.name];
-        if(!reg || !reg.latest) {
-            request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
-                if(err || !body || !body.versions) return callback("can't find in the registry");
-                checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
-                    if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
-                    return exports.install(arg, callback); // saved now, re-run
-                });
+    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+
+    // if not in registry yet, try to go get it directly!
+    var reg = regIndex[arg.name];
+    if(!reg || !reg.latest) {
+        request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
+            if(err || !body || !body.versions) return callback("can't find in the registry");
+            checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
+                if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
+                return exports.install(arg, callback); // saved now, re-run
             });
-            return;
-        }
-        npmarg.push(arg.name+'@'+reg.latest); // specifically install only the latest version
-    }else{
-        npmarg.push(path.join(lconfig.lockerDir, arg.path));
+        });
+        return;
     }
+    var npmarg = [arg.name+'@'+reg.latest];
     logger.info("installing "+JSON.stringify(npmarg));
     npm.commands.install(npmarg, function(err){
         if(err){ // some errors appear to be transient
@@ -358,7 +354,7 @@ exports.install = function(arg, callback) {
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
             return callback(err);
         }
-        var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
+        var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
         var up = serviceManager.mapUpsert(ppath);
         if(!up) callback("upsert failed");
         callback(null, up);
