@@ -1,12 +1,12 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "helloplaces",
-  "description": "A simple way to view your places",
-  "version": "0.0.3",
+  "description": "A simple way to view the check-ins of you and your friends on a map.",
+  "version": "0.0.4",
   "homepage": "https://github.com/LockerProject/photosv0.9",
   "repository": {
     "type": "app",
-    "title": "Hello Places",
+    "title": "Basic Places",
     "status": "stable",
     "static": true,
     "handle": "helloplaces",

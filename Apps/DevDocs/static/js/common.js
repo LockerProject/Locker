@@ -50,7 +50,9 @@ function pollForGitHubProfile(callback) {
 }
 
 function checkForToken(callback) {
-    $.getJSON('https://singly.com/users/me/apiToken', callback);
+    if (document.location.hostname.substr(0,3) != 'me.') return callback();
+    var host = document.location.hostname.substr(3);
+    $.getJSON('https://'+host+'/users/me/apiToken', callback);
 }
 
 var syncingViewers = false;
@@ -96,13 +98,15 @@ function waitForGitHubConnected(callback) {
 $(document).ready(function() {
     checkForToken(function(token) {
         if(!token || !token.apiToken) return;
-        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+        if (document.location.hostname.substr(0,3) != 'me.') return;
+        var host = document.location.hostname.substr(3);
+        $("#token").html("baseUrl = 'https://api."+host+"/"+token.apiToken+"';");
     });
     waitForGitHubConnected(function() {
         pollForGitHubProfile();
     });
     $("#sync-link").click(syncViewers);
-    
+
     if ($.cookie('optin') === "true") {
         $("body").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
     }

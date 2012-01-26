@@ -1,12 +1,12 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "photosv09",
-  "description": "A fancy mobile interface to view your links by service (Flickr, Twitter, etc).",
-  "version": "0.9.2",
+  "description": "A fun way to view your photos by year, month, and day.",
+  "version": "0.9.3",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
-    "title": "Timeline",
+    "title": "Photo Timeline",
     "status": "stable",
     "static": true,
     "handle": "photosv09",

@@ -10,7 +10,7 @@
 /* random notes:
 on startup scan all folders
     Apps Collections Connectors - generate lists of "available"
-    Me/* - generate lists of "existing"
+    Me - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
 if first time
@@ -130,13 +130,17 @@ function finishStartup() {
 
     pushManager.init();
     var webservice = require(__dirname + "/Ops/webservice.js");
-    // start web server (so we can all start talking)
-    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker){
-        // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
-        syncManager.init(serviceManager, function(){
-            registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
-                registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry, function() {runMigrations("postServices", postStartup);}); // this may trigger synclets to start!
+    // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
+    syncManager.init(serviceManager, function() {
+        registry.init(serviceManager, syncManager, lconfig, lcrypto, function() {
+            serviceManager.init(syncManager, registry, function() {  // this may trigger synclets to start!
+                runMigrations("postServices", function() {
+                    // start web server (so we can all start talking)
+                    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
+                        registry.app(locker); // add it's endpoints
+                        postStartup();
+                    });
+                });
             });
         });
     });

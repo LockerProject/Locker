@@ -103,7 +103,7 @@ $(function() {
           }
         }
       });
-      
+
       var selectCount = 0;
       for(var i in data.operations[0].parameters) {
         if(data.operations[0].parameters[i].options && data.operations[0].parameters[i].options.length > 0)
@@ -202,7 +202,12 @@ $.ajaxSetup({
     crossDomain: true
 });
 var callBase = window.location.protocol+"//"+window.location.host;
-$.getJSON('https://singly.com/users/me/apiToken', function(token){
-  if(!token || !token.apiToken) return;
-    callBase = 'https://api.singly.com/'+token.apiToken;
-});
+
+if (document.location.hostname.substr(0,3) == 'me.') {
+    var host = document.location.hostname.substr(3);
+    $.getJSON('https://'+host+'/users/me/apiToken', function(token){
+      if(!token || !token.apiToken) return;
+        callBase = 'https://api.'+host+'/'+token.apiToken;
+    });
+}
+

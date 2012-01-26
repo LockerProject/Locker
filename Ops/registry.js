@@ -57,7 +57,6 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                     logger.error("couldn't parse registry.json: "+E);
                 }
                 if(lconfig.registryUpdate === true) {
-                    syncTimer = setInterval(exports.sync, syncInterval);
                     exports.sync();
                 }
                 process.chdir(lconfig.lockerDir);
@@ -261,6 +260,14 @@ function loadPackage(ppath, upsert, callback)
 // background sync process to fetch/maintain the full package list
 exports.sync = function(callback, force)
 {
+    function finish(err) {
+        if (lconfig.registryUpdate) {
+            syncTimer = setTimeout(exports.sync, syncInterval);
+        }
+        if (callback) callback(err);
+    }
+
+    if (syncTimer) clearTimeout(syncTimer);
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
@@ -277,7 +284,7 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback(err) : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish(err);
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         Object.keys(body).forEach(function(k){
@@ -294,7 +301,7 @@ exports.sync = function(callback, force)
         });
         // cache to disk lazily
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-        if(callback) callback();
+        finish();
     });
 };
 
