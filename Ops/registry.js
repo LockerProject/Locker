@@ -251,7 +251,7 @@ exports.sync = function(callback, force)
         // new updates from the registry, update our local mirror
         async.forEachSeries(Object.keys(body), function(pkg, cb){
             if(!body[pkg].versions) return cb();
-            checkPkg(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
+            checkSigned(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
         }, function(){
             // cache to disk lazily
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
@@ -262,19 +262,19 @@ exports.sync = function(callback, force)
 };
 
 // recursively process vers array, looking for one that is signed, then process that
-function checkPkg(pkg, versions, callback)
+function checkSigned(pkg, versions, callback)
 {
     if(!versions || versions.length == 0) return callback();
     if(!lconfig.requireSigned) return usePkg(pkg, pkg["dist-tags"].latest, callback); // if no sig required just pass through
     var ver = versions.pop(); // try newest
     var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
     request.get({uri:url}, function(err, resp, body){
-        if(err || !body || !body.sig) return checkPkg(pkg, versions, callback);
+        if(err || !body || !body.sig) return checkSigned(pkg, versions, callback);
         // annoyingly, /-/all is different structure than /packagename!
         var data = (pkg.dist) ? pkg.dist[ver].shasum + " " + pkg.dist[ver].tarball : pkg.versions[ver].dist.shasum + " " + pkg.versions[ver].dist.tarball;
         if(!crypto.verify(data, body.sig, lconfig.keys)) {
             logger.error(pkg.name + " version "+ ver+ " signature failed verification :(");
-            return checkPkg(pkg, versions, callback);
+            return checkSigned(pkg, versions, callback);
         }
         pkg.signed = true;
         return usePkg(pkg, ver, callback);
@@ -337,7 +337,7 @@ exports.install = function(arg, callback) {
     if(!reg || !reg.latest) {
         request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
             if(err || !body || !body.versions) return callback("can't find in the registry");
-            checkPkg(body, Object.keys(body.versions).sort(semver.compare), function(){
+            checkSigned(body, Object.keys(body.versions).sort(semver.compare), function(){
                 if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
                 return exports.install(arg, callback); // saved now, re-run
             });
