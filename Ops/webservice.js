@@ -233,7 +233,8 @@ locker.post('/Me/*', function(req,res, next){
 });
 
 locker.get('/synclets/:id/run', function(req, res) {
-    syncManager.syncNow(req.params.id, req.query.id, false, function() {
+    syncManager.syncNow(req.params.id, req.query.id, false, function(err) {
+        if(err) return res.send(err, 500);
         res.send(true);
     });
 });
