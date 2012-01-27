@@ -52,9 +52,7 @@ exports.init = function(serman, syncman, config, crypto, callback) {
             }catch(E){
                 logger.error("couldn't parse registry.json: "+E);
             }
-            if(lconfig.registryUpdate === true) {
-                exports.sync();
-            }
+            exports.sync();
             process.chdir(lconfig.lockerDir);
             callback();
         });
@@ -222,9 +220,7 @@ function verify(pkg)
 exports.sync = function(callback, force)
 {
     function finish(err) {
-        if (lconfig.registryUpdate) {
-            syncTimer = setTimeout(exports.sync, syncInterval);
-        }
+        syncTimer = setTimeout(exports.sync, syncInterval);
         if (callback) callback(err);
     }
 
@@ -287,7 +283,7 @@ function usePkg(pkg, ver, callback)
     logger.verbose("new "+pkg.name+" "+ver);
     pkg.latest = ver;
     regIndex[pkg.name] = pkg;
-    if(serviceManager.map(pkg.name) && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(serviceManager.map(pkg.name).version, ver))
+    if(lconfig.registryUpdate === true && serviceManager.map(pkg.name) && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(serviceManager.map(pkg.name).version, ver))
     {
         logger.verbose("auto-updating "+pkg.name);
         exports.install({name:pkg.name}, function(){}); // lazy update
