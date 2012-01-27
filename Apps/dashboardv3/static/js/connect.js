@@ -54,7 +54,7 @@ var syncletInstalled = function(provider) {
 };
 
 var showHiddenConnectors = function() {
-    showHeader2();
+    showHeaderTwo();
     $(".hideable").fadeIn();
 };
 
