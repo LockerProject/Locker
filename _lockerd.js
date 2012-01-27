@@ -67,12 +67,10 @@ if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
 var shuttingDown_ = false;
 
 var mongoProcess;
-var firstRun = false;
 path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     if(!exists) {
         try {
             //ensure there is a Me dir
-            firstRun = true;
             fs.mkdirSync(lconfig.me, 0755);
         } catch(err) {
             if(err.code !== 'EEXIST')
@@ -160,7 +158,7 @@ function runMigrations(phase, migrationCB) {
 
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
 
-    if (firstRun && phase == "preServices") {
+    if (!metaData.version && phase == "preServices") {
         metaData.version = Number(migrations[migrations.length - 1].substring(0, 13));
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
         return migrationCB();
