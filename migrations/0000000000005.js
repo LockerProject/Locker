@@ -40,7 +40,7 @@ function reMe(meDir, callback) {
 
 function cleanTrees(ghd, callback) {
     fs.readdir(ghd, function(err, files) {
-        if(err) return callback();
+        if(err || !files) return callback();
         files.filter(function(file) {
             return !fs.statSync(path.join(ghd, file)).isDirectory() && file.indexOf('tree.json') === file.length - 9;
         }).forEach(function(file) {
