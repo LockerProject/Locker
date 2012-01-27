@@ -16,10 +16,8 @@ module.exports.preServices = function(config, callback) {
     logger.info("Migrating to publish cleanup");
     var meDir = path.join(config.lockerDir, config.me);
     reMe(meDir, function(err) {
-        console.error('DEBUG: done reMe');
         if(err) return callback(false);
         clearCached(meDir, function(err) {
-            console.error('DEBUG: done clearCache');
             if(err) return callback(false);
             callback(true);
         })
@@ -28,6 +26,7 @@ module.exports.preServices = function(config, callback) {
 
 function reMe(meDir, callback) {
     logger.info("Checking " + meDir + " for old github app directories");
+    
     fs.readdir(meDir, function(err, dirs) {
         if (err) return callback(err);
         dirs = dirs.filter(function(dir) {
@@ -39,10 +38,21 @@ function reMe(meDir, callback) {
     });
 }
 
+function cleanTrees(ghd, callback) {
+    fs.readdir(ghd, function(err, files) {
+        if(err) return callback();
+        files.filter(function(file) {
+            return !fs.statSync(path.join(ghd, file)).isDirectory() && file.indexOf('tree.json') === file.length - 9;
+        }).forEach(function(file) {
+            fs.unlinkSync(path.join(ghd, file));
+        });
+        callback();
+    });
+}
+
 // update a me.json file in the dir
 function cleanMe(dir, callback) {
     logger.info("Checking " + dir);
-
     readMe(dir, function(err, me) {
         // not all dirs in Me have a me.json (node_modules, mongodata, etc)
         if(err || !me) return callback();
@@ -59,13 +69,15 @@ function cleanMe(dir, callback) {
 function clearCached(meDir, callback) {
     logger.info('looking for github data...');
     var ghDir = path.join(meDir, 'github');
-    readMe(ghDir, function(err, me) {
-        if(err) return callback(err);
-        logger.info('github data found, clearing cache...');
-        delete me.config.cached;
-        writeMeSync(ghDir, me);
-        logger.info('cleared github config cache...');
-        callback();
+    cleanTrees(ghDir, function() {
+        readMe(ghDir, function(err, me) {
+            if(err) return callback(err);
+            logger.info('github data found, clearing cache...');
+            delete me.config.cached;
+            writeMeSync(ghDir, me);
+            logger.info('cleared github config cache...');
+            callback();
+        });
     });
 }
 
