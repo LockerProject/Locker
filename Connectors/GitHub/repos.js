@@ -41,8 +41,9 @@ exports.syncRepos = function(cached, callback) {
                     if(err || !pkg) return cb();
                     try {
                         pkg = JSON.parse(pkg);
-                    }catch(E){ return cb(); } // this is going to be really hard to catch, but what can we do from here to let someone know? console.error?
-                    if(!pkg.repository || pkg.repository.static != "true" || pkg.repository.type != "app") return cb();
+                    } catch(E) { return cb(); } // this is going to be really hard to catch, but what can we do from here to let someone know? console.error?
+                    var repo = pkg.repository;
+                    if(!(repo && (repo.static == "true" || repo.static == true) && repo.type == "app")) return cb();
                     // ok, we've got an app, make sure settings are valid
                     request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                         if(err || !tree || !tree.tree) return cb();
@@ -54,6 +55,7 @@ exports.syncRepos = function(cached, callback) {
                             if(!pkg.repository.title) pkg.repository.title = repo.name;
                             fs.writeFileSync(repo.id+"/package.json", JSON.stringify(pkg)); // overwriting :/
                             request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+repo.id+'/package.json'}, function(err, resp) {
+                                if(err) console.error(err);
                                 cb();
                             });
                         });
