@@ -110,17 +110,17 @@ var clickApp = function(req, res) {
         uistate.appClicked(clickedApp);
     }
     res.end();
-}
+};
 
 var renderApps = function(req, res) {
     uistate.fetchState();
     getAppsInfo(null, function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
-            apps: sortedResult,
+            apps: sortedResult
         });
-    })
-}
+    });
+};
 
 var renderExplore = function(req, res) {
     page = 'explore';
@@ -129,7 +129,7 @@ var renderExplore = function(req, res) {
         for(var i in connectors) if(!connectors[i].repository.hidden) c.push(connectors[i].repository);
         res.render('explore', {synclets:c});
     });
-}
+};
 
 var renderCreate = function(req, res) {
     page = 'create';
@@ -146,7 +146,7 @@ var renderCreate = function(req, res) {
             apps: apps
         });
     });
-}
+};
 
 var handleUpload = function(req, res) {
     if (req.form) {
@@ -165,7 +165,7 @@ var handleUpload = function(req, res) {
     } else {
         res.send('broken', 500);
     }
-}
+};
 
 var renderPublish = function(req, res) {
     getGithubApps(function(apps) {
@@ -174,7 +174,7 @@ var renderPublish = function(req, res) {
             apps: apps
         });
     });
-}
+};
 
 var submitPublish = function(req, res) {
     if (req.form) {
@@ -202,15 +202,15 @@ var submitPublish = function(req, res) {
                     var data = {
                         uses: githubapps[fields.app].uses,
                         desc: fields['app-description']
-                    }
+                    };
                     if (fields['rename-app'] === 'on') {
                         data.title = fields['app-newname'];
                     } else {
                         data.title = fields['old-name'];
                     }
+                    var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
                     request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, json: data}, function(err, resp, body) {
                         if (!err) {
-                            var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
                             // Send the screenshot
                             var filePath = path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot');
                             var stat = fs.statSync(filePath);
@@ -247,7 +247,7 @@ var submitPublish = function(req, res) {
     } else {
         res.send(req.body);
     }
-}
+};
 
 var cropImage = function(file, fields, callback) {
     if (fields['x']) {
@@ -271,7 +271,7 @@ var cropImage = function(file, fields, callback) {
     } else {
         callback();
     }
-}
+};
 
 var getAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
@@ -300,7 +300,7 @@ var getAppsInfo = function(count, callback) {
 
         callback(sortedResult);
     });
-}
+};
 
 var renderYou = function(req, res) {
     uistate.fetchState();
@@ -332,9 +332,20 @@ var renderYou = function(req, res) {
 };
 
 var renderSettings = function(req, res) {
-    var page = 'settings';
-    res.render(page);
-}
+    getConnectors(function(err, connectors) {
+        var numInstalled = 0;
+        for (var i=0; i<connectors.length; i++) {
+            if (connectors[i].hasOwnProperty('authed')) {
+                numInstalled++;
+            }
+        }
+        res.render('iframe/settings', {
+            layout: false,
+            numInstalled: numInstalled,
+            connectors: connectors
+        });
+    });
+};
 
 var renderConnect = function(req, res) {
     getConnectors(function(err, connectors) {
@@ -371,7 +382,7 @@ var renderScreenshot = function(req, res) {
 
 var renderTempScreenshot = function(req, res) {
     res.sendfile('tempScreenshot');
-}
+};
 
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
@@ -385,7 +396,7 @@ var renderAllApps = function(req, res) {
 
 var croppingFinished = function(req, res) {
     res.send(!cropping[req.params.app]);
-}
+};
 
 var registryApp = function(req, res) {
     request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
@@ -396,14 +407,14 @@ var registryApp = function(req, res) {
             app: app
         });
     });
-}
+};
 
 app.get('/clickapp/:app', clickApp);
 app.get('/you', checkInstalled, renderYou);
-app.get('/settings', renderSettings);
 app.get('/', checkInstalled, renderYou);
 
 app.get('/connect', renderConnect);
+app.get('/settingsConnectors', renderSettings);
 
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
@@ -427,13 +438,13 @@ var getGithubApps = function(callback) {
     uistate.fetchState();
     var apps = [];
     githubapps = {};
-    var pattern = /^Me\/github/
+    var pattern = /^Me\/github/;
     getRegistryApps(function(myPublishedApps) {
         locker.map(function(err, map) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
                     var appInfo = checkDraftState(map[i]);
-                    if (!appInfo.title) continue
+                    if (!appInfo.title) continue;
                     var appId = 'app-' + appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];
@@ -445,13 +456,13 @@ var getGithubApps = function(callback) {
             callback(apps);
         });
     });
-}
+};
 
 var getRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
         callback(JSON.parse(body));
     });
-}
+};
 
 var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
@@ -466,7 +477,7 @@ var getAllRegistryApps = function(callback) {
             callback(apps);
         });
     });
-}
+};
 
 var checkDraftState = function(appInfo) {
     if (uistate.state.draftApps[appInfo.handle]) {
@@ -480,7 +491,7 @@ var checkDraftState = function(appInfo) {
     }
     appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
-}
+};
 
 var getConnectors = function(callback) {
     locker.mapType("connector", function(err, installedConnectors) {
@@ -502,8 +513,8 @@ var getConnectors = function(callback) {
             callback(err, connectors);
         });
     });
-}
+};
 
 var getInstalledConnectors = function(callback) {
     locker.mapType("connector", callback);
-}
+};

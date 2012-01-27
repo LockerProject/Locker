@@ -1,11 +1,12 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-    "allApps" : "allApps",
-    "publish" : "publish",
-    "viewAll" : "viewAll",
+    "allApps"  : "allApps",
+    "publish"  : "publish",
+    "viewAll"  : "viewAll",
     // "exploreApps" : "exploreApps",
     // "registryApp" : "registryApp",
-    "connect" : "connect"
+    "connect"  : "connect",
+    "settings" : "settings"
 };
 var defaultSubSections = {};
 var loggedIn = true;
@@ -76,6 +77,12 @@ var loadApp = function(info) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
+  } else if (info.topSection === "Settings") {
+    if (info.subSection === "Connections") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settingsConnectors');
+    } else {
+      alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
+    }
   } else {
     $.get('clickapp/' + app, function(e) {});
     $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
@@ -108,31 +115,6 @@ var syncletInstalled = function(provider) {
 handlers.You = loadApp;
 handlers.Create = loadApp;
 handlers.connect = loadApp;
-handlers.Settings = {};
-handlers.Settings.Connections = function () {
-  registry.getMyConnectors(function (authedConnectors, mySuccess) {
-    registry.getMyUnconnectedConnectors(function (otherConnectors, unSuccess) {
-      var mine = [];
-      for (var conn in authedConnectors) {
-        if (authedConnectors.hasOwnProperty(conn)) mine.push(authedConnectors[conn]);
-      }
-      generateConnectors({authedConnectors:mine, otherConnectors:otherConnectors}, function (connHTML) {
-        $('#Settings #Connections').html(connHTML);
-      });
-    });
-  });
-}
-
-function generateConnectors(connectors, callback) {
-  dust.render('connectors', connectors, function (err, appHtml) {
-    callback(appHtml);
-  });
-}
-
-
-handlers.You = loadApp;
-handlers.create = loadApp;
-handlers.Create = loadApp;
-handlers.connect = loadApp;
+handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;
