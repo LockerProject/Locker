@@ -157,15 +157,20 @@ function runMigrations(phase, migrationCB) {
     } catch (E) {}
 
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
-    // TODO do these using async serially and pass callbacks!
-    async.forEach(migrations, function(migration, cb) {
-        if (Number(migration.substring(0, 13)) <= metaData.version) {
-            return cb();
-        }
+
+    if (!metaData.version && phase == "preServices") {
+        metaData.version = Number(migrations[migrations.length - 1].substring(0, 13));
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+        return migrationCB();
+    }
+
+    async.forEachSeries(migrations, function(migration, cb) {
+        if (Number(migration.substring(0, 13)) <= metaData.version) return cb();
 
         try {
-            logger.info("running global migration : " + migration);
             migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
+            if(typeof migrate !== 'function') return cb();
+            logger.info("running global migration : " + migration + ' for phase ' + phase);
             migrate(lconfig, function(ret) {
                 if (!ret) {
                     logger.error("failed to run global migration!");
@@ -173,7 +178,7 @@ function runMigrations(phase, migrationCB) {
                 }
                 metaData.version = Number(migration.substring(0, 13));
                 lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
-                logger.info("Migration comlete for: " + migration);
+                logger.info("Migration complete for: " + migration);
                 cb();
 
                 /*
@@ -190,9 +195,7 @@ function runMigrations(phase, migrationCB) {
             logger.error("error running global migration : " + migration + " ---- " + E);
             shutdown(1);
         }
-    }, function() {
-        migrationCB();
-    });
+    }, migrationCB);
 }
 
 // scheduling and misc things
@@ -200,6 +203,7 @@ function postStartup() {
     lscheduler.masterScheduler.loadAndStart();
     logger.info('locker is up and running at ' + lconfig.lockerBase);
     exports.alive = true;
+    runMigrations("postStartup", function() {});
 }
 
 function shutdown(returnCode) {

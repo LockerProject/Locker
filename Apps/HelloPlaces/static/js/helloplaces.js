@@ -1,21 +1,43 @@
 /* Generic log function for debugging. */
-var log = function(msg) { if (console && console.log) console.debug(msg); }
+var log = function(msg) { if (console && console.log) console.debug(msg); };
 window.onload = loadScript;
 
 var markers = [];
 var map;
 
-function initializeMap() {
+function getLatestPlace() {
+    $.getJSON(
+        '/Me/places',
+        {'offset':0, 'limit':1, 'sort': 'at', 'order': -1},
+        initializeMap
+    );
+}
+
+function initializeMap(place) {
+    var myLat = place[0].lat || 37.759;
+    var myLng = place[0].lng || -122.410;
+    var mySource = place[0].network || undefined;
+
+    if (place[0].at){
+        date = new Date(place[0].at);
+        var myTitle = date.toLocaleString();
+    }
+    else{
+        var myTitle = "Singly HQ";
+    }
+
     var myOptions = {
         zoom: 12,
-        center: new google.maps.LatLng(37.759, -122.410),
+        center: new google.maps.LatLng(myLat, myLng),
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
+    console.log(place);
 
     map = new google.maps.Map(document.getElementById('mapcanvas'), myOptions);
+    addMarker(myLat, myLng, myTitle, mySource);
 
-    addMarker(37.759, -122.410, "Singly HQ");
 }
+
 
 function loadPlaceslist(offset, limit) {
     // set the params if not specified
@@ -83,7 +105,7 @@ function clearOverlays() {
 function loadScript() {
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'https://maps.googleapis.com/maps/api/js?sensor=false&callback=initializeMap';
+    script.src = 'https://maps.googleapis.com/maps/api/js?sensor=false&callback=getLatestPlace';
     document.body.appendChild(script);
 }
 
@@ -98,7 +120,7 @@ $(function() {
         var lng = $(this).attr('data-lng');
         addMarker(lat, lng, $(this).attr('data-title'), $(this).attr('data-network'));
         map.panTo(new google.maps.LatLng(lat, lng));
-        console.log(lat);
-        console.log(lng);
+        //console.log(lat);
+        //console.log(lng);
     });
 });

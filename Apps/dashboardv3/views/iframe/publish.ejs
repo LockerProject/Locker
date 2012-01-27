@@ -23,7 +23,7 @@
             <select name="app" class='app'>
               <% for (var i = 0; i < apps.length; i++) { %>
               <option value="<%= apps[i].handle %>" data-rename="<%= apps[i].draft['rename-app'] || 'off' %>" data-handle="<%= apps[i].handle %>"
-                      data-description="<%= apps[i].desc %>"><%= apps[i].title %></option>
+                      data-description="<%= apps[i].description %>"><%= apps[i].title %></option>
               <% } %>
             </select></p>
             <p class="indented">

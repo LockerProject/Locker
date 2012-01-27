@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "glatitude",
   "description": "Google Latitude Connector",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": {
     "title": "Google Latitude",
     "handle": "glatitude",
