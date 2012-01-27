@@ -169,17 +169,19 @@ function executeSynclet(info, synclet, callback, force) {
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
+    var env = process.env;
     if (!synclet.run) {
+        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else if (synclet.run.substr(-3) == ".py") {
+        env["PYTHONPATH"] = path.join(lconfig.lockerDir, 'Common', 'python');
         run = ["python", lconfig.lockerDir + "/Common/python/synclet/client.py"];
     } else {
+        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
 
     var dataResponse = '';
-    var env = process.env;
-    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
     var cwd = (info.srcdir.charAt(0) == '/') ? info.srcdir : path.join(lconfig.lockerDir, info.srcdir);
     var app = spawn(run.shift(), run, {cwd: cwd, env:env});
 
