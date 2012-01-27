@@ -68,7 +68,7 @@ exports.load = function(filepath) {
     // load trusted public keys
     var kdir = path.join(path.dirname(filepath), "keys");
     exports.keys = [];
-    if(path.exists(kdir))
+    if(path.existsSync(kdir))
     {
         var keys = fs.readdirSync(kdir);
         keys.forEach(function(key){

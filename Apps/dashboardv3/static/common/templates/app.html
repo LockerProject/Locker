@@ -27,7 +27,7 @@
       {?app.actions}
         <div class='action-buttons'>
           {?app.actions.add}
-            <input type='button' id='{app.name}' class='install' value='+ add to account'>
+            <input type='button' id='{app.repository.handle}' class='install' value='+ add to account'>
           {:else}
             <input disabled type='button' value='added'>
           {/app.actions.add}

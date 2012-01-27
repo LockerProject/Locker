@@ -164,6 +164,34 @@ exports.atomicWriteFileSync = function(dest, data) {
     fs.renameSync(tmp, dest);
 }
 
+// this is for node 0.4.x, it's built into path in node 0.6
+exports.relative = function(from, to) {
+    from = path.resolve(from).substr(1);
+    to = path.resolve(to).substr(1);
+
+    var fromParts = from.split('/');
+    var toParts = to.split('/');
+
+    var length = Math.min(fromParts.length, toParts.length);
+    var samePartsLength = length;
+    for (var i = 0; i < length; i++) {
+        if (fromParts[i] !== toParts[i]) {
+            samePartsLength = i;
+            break;
+        }
+    }
+
+    var outputParts = [];
+    for (var i = samePartsLength; i < fromParts.length; i++) {
+        outputParts.push('..');
+    }
+
+    outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+    return outputParts.join('/');
+};
+
+
 // processes a json newline stream, cbEach(json, callback) and cbDone(err) when done
 exports.streamFromUrl = function(url, cbEach, cbDone) {
     var ended = false;
