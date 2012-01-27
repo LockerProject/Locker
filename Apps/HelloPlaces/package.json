@@ -2,7 +2,7 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "helloplaces",
   "description": "A simple way to view the check-ins of you and your friends on a map.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/LockerProject/photosv0.9",
   "repository": {
     "type": "app",
