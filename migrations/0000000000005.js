@@ -71,7 +71,7 @@ function clearCached(meDir, callback) {
     var ghDir = path.join(meDir, 'github');
     cleanTrees(ghDir, function() {
         readMe(ghDir, function(err, me) {
-            if(err) return callback(err);
+            if(err) return callback();
             logger.info('github data found, clearing cache...');
             delete me.config.cached;
             writeMeSync(ghDir, me);
