@@ -1,25 +1,25 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-    "allApps"  : "allApps",
-    "publish"  : "publish",
-    "viewAll"  : "viewAll",
-    // "exploreApps" : "exploreApps",
-    // "registryApp" : "registryApp",
-    "connect"  : "connect",
-    "settings" : "settings"
+  "allApps"  : "allApps",
+  "publish"  : "publish",
+  "viewAll"  : "viewAll",
+  // "exploreApps" : "exploreApps",
+  // "registryApp" : "registryApp",
+  "connect"  : "connect",
+  "settings" : "settings"
 };
 var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-    $.history.init(function(hash){
-        if(hash === "") {
-            // initialize your app
-            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        } else {
-            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        }
-    }, { unescape: ",/" });
+  $.history.init(function(hash){
+    if(hash === "") {
+      // initialize your app
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    } else {
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    }
+  }, { unescape: ",/" });
 
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
@@ -60,11 +60,11 @@ $(document).ready(function() {
   }
 
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-      if (window.location.hash === '#Create-devdocs' || window.location.hash === '#Explore-Featured') {
-        $.cookie("firstvisit", null, {path: '/' });
-      } else {
-        doModal();
-      }
+    if (window.location.hash === '#Create-devdocs' || window.location.hash === '#Explore-Featured') {
+      $.cookie("firstvisit", null, {path: '/' });
+    } else {
+      doModal();
+    }
   }
 });
 
