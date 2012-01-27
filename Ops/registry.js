@@ -217,14 +217,23 @@ function verify(pkg)
 }
 
 // background sync process to fetch/maintain the full package list
+var syncCallbacks = [];
 exports.sync = function(callback, force)
 {
+    if(!callback) callback = function(){}; // callback is required
+    syncCallbacks.push(callback);
+
+    // if we're syncing already, bail
+    if(syncCallbacks.length > 1) return;
+
+
     function finish(err) {
         syncTimer = setTimeout(exports.sync, syncInterval);
-        if (callback) callback(err);
+        syncCallbacks.forEach(function(cb){ cb(err); });
     }
 
     if (syncTimer) clearTimeout(syncTimer);
+
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
@@ -241,7 +250,7 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback() : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish("couldn't sync with registry");
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         // new updates from the registry, update our local mirror
@@ -253,7 +262,6 @@ exports.sync = function(callback, force)
             lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
             finish();
         });
-
     });
 };
 
@@ -264,12 +272,12 @@ function checkSigned(pkg, versions, callback)
     if(!lconfig.requireSigned) return usePkg(pkg, pkg["dist-tags"].latest, callback); // if no sig required just pass through
     var ver = versions.pop(); // try newest
     var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
-    request.get({uri:url}, function(err, resp, body){
+    request.get({uri:url, json:true, headers:{"Connection":"keep-alive"}}, function(err, resp, body){
         if(err || !body || !body.sig) return checkSigned(pkg, versions, callback);
         // annoyingly, /-/all is different structure than /packagename!
-        var data = (pkg.dist) ? pkg.dist[ver].shasum + " " + pkg.dist[ver].tarball : pkg.versions[ver].dist.shasum + " " + pkg.versions[ver].dist.tarball;
-        if(!crypto.verify(data, body.sig, lconfig.keys)) {
-            logger.error(pkg.name + " version "+ ver+ " signature failed verification :(");
+        var data = pkg.dist[ver].shasum + " " + path.basename(pkg.dist[ver].tarball);
+        if(!lcrypto.verify(data, body.sig, lconfig.keys)) {
+            logger.error(data + " signature failed verification :(");
             return checkSigned(pkg, versions, callback);
         }
         pkg.signed = true;
@@ -328,15 +336,12 @@ exports.install = function(arg, callback) {
     var npmarg = [];
     if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
 
-    // if not in registry yet, try to go get it directly!
+    // if not in registry yet, sync to latest!
     var reg = regIndex[arg.name];
     if(!reg || !reg.latest) {
-        request.get({uri:regBase+'/'+arg.name, json:true}, function(err, resp, body){
-            if(err || !body || !body.versions) return callback("can't find in the registry");
-            checkSigned(body, Object.keys(body.versions).sort(semver.compare), function(){
-                if(!regIndex[arg.name] || !regIndex[arg.name].latest) return callback("failed to find valid version");
-                return exports.install(arg, callback); // saved now, re-run
-            });
+        exports.sync(function(){
+            if(regIndex[arg.name]) return exports.install(arg, callback);
+            return callback("failed to find valid version");
         });
         return;
     }
@@ -384,10 +389,12 @@ exports.publish = function(arg, callback) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
                         regIndex[updated.name] = updated; // shim it in, sync will replace it eventually too just to be sure
-                        var issues = require(path.join(lconfig.lockerDir, lconfig.me, "github/issue.js")); // this feels dirty, but is also reusing the synclet pattern
+                        var issues = require(path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js")); // this feels dirty, but is also reusing the synclet pattern
+                        // TODO fill out issue
                         issues.sync(serviceManager.map('github'), function(err, js){
                             if(err) return callback(err);
                             if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("missing issue");
+                            // save pending=issue# to package.json
                             callback(null, updated, js.data.issue[0]);
                         });
                     })
