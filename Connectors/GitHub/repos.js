@@ -25,7 +25,7 @@ exports.syncRepos = function(cached, callback) {
     request.get({url:"https://api.github.com/user/repos", json:true, headers:auth.headers}, function(err, resp, repos) {
         if(err || !repos || !repos.length) return callback(err, []);
         // process each one to get richer data
-        async.forEach(repos, function(repo, cb) {
+        async.forEachSeries(repos, function(repo, cb) {
             repo.idorig = repo.id;
             repo.id = getIDFromUrl(repo.url); // LEGACY UGH, we're overwriting the numeric id, not simple to change now
             // nothing changed
@@ -42,8 +42,8 @@ exports.syncRepos = function(cached, callback) {
                     try {
                         pkg = JSON.parse(pkg);
                     } catch(E) { return cb(); } // this is going to be really hard to catch, but what can we do from here to let someone know? console.error?
-                    var repo = pkg.repository;
-                    if(!(repo && (repo.static == "true" || repo.static == true) && repo.type == "app")) return cb();
+                    var repository = pkg.repository;
+                    if(!(repository && (repository.static == "true" || repository.static == true) && repository.type == "app")) return cb();
                     // ok, we've got an app, make sure settings are valid
                     request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                         if(err || !tree || !tree.tree) return cb();
