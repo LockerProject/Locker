@@ -73,19 +73,20 @@ locker.get('/map', function(req, res) {
 locker.get('/map/profiles', function(req, res) {
     var profiles = {};
     var map = serviceManager.map();
-    Object.keys(map).forEach(function(key){
-        if(!map[key].auth || !map[key].auth.profile) return;
+    for(var key in map) {
+        if(!map[key].auth || !map[key].auth.profile) continue;
         var idr = { slashes: true, pathname: '/', host: key };
         // the type could be named something service-specific, usually 'contact' tho
         idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
         // generate idrs from profiles, some services have both numeric and username (or more?)!
         var ids = map[key].profileIds || ['id'];
-        ids.forEach(function(id){
+        for(var i in ids) {
+            var id = ids[i];
             if(!map[key].auth.profile[id]) return;
             idr.hash = map[key].auth.profile[id];
             profiles[url.format(idr)] = map[key].auth.profile;
-        });
-    });
+        }
+    }
     res.send(profiles);
 });
 
@@ -232,7 +233,8 @@ locker.post('/Me/*', function(req,res, next){
 });
 
 locker.get('/synclets/:id/run', function(req, res) {
-    syncManager.syncNow(req.params.id, req.query.id, false, function() {
+    syncManager.syncNow(req.params.id, req.query.id, false, function(err) {
+        if(err) return res.send(err, 500);
         res.send(true);
     });
 });
@@ -264,28 +266,27 @@ function proxyRequest(method, req, res, next) {
     }
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
-        logger.verbose("Checking " + req.url);
         var fileUrl = url.parse(ppath);
         if(fileUrl.pathname.indexOf("..") >= 0)
         { // extra sanity check
             return res.send(404);
         }
 
-        fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
+        fs.stat(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname), function(err, stats) {
             if (!err && (stats.isFile() || stats.isDirectory())) {
-                res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));
+                res.sendfile(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
             } else {
-                fs.stat(path.join(info.srcdir, fileUrl.pathname), function(err, stats) {
+                fs.stat(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname), function(err, stats) {
                     if (!err && (stats.isFile() || stats.isDirectory())) {
-                        res.sendfile(path.join(info.srcdir, fileUrl.pathname));
+                        res.sendfile(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                     } else {
-                        logger.warn("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        logger.warn("Could not find " + path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname))
                         res.send(404);
                     }
                 });
             }
         });
-        logger.verbose("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
+        logger.silly("Sent static file " + path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
     } else {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
@@ -297,7 +298,7 @@ function proxyRequest(method, req, res, next) {
             proxied(method, info, ppath, req, res);
         }
     }
-    logger.verbose("Proxy complete");
+    logger.silly("Proxy complete");
 };
 
 // DIARY
@@ -488,8 +489,8 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
-exports.startService = function(port, cb) {
-    locker.listen(port, function(){
+exports.startService = function(port, ip, cb) {
+    locker.listen(port, ip, function(){
         cb(locker);
     });
 }

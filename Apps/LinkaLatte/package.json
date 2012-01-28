@@ -1,8 +1,8 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "linkalatte",
-  "description": "View all the links your locker has collected",
-  "version": "0.0.4",
+  "description": "A way to see all of the links shared by your contacts across services.",
+  "version": "0.0.5",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
