@@ -1,8 +1,8 @@
 {
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "contactsviewer",
-  "description": "Finally! A way to view all of your contacts in one place merged from all services.",
-  "version": "0.0.5",
+  "description": "View all of your contacts in one place merged from all services.",
+  "version": "0.0.6",
   "repository": {
     "title": "Basic Contacts",
     "handle": "contactsviewer",
@@ -16,7 +16,9 @@
         "facebook",
         "twitter",
         "gcontacts",
-        "foursquare"
+        "foursquare",
+        "flickr",
+        "github"
       ],
       "types": [
         "contacts"
