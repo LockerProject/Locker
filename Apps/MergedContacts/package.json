@@ -9,7 +9,7 @@
     "update": true,
     "github": "https://github.com/LockerProject/Locker",
     "type": "app",
-    "static": false,
+    "static": true,
     "run": "node contacts.js",
     "uses": {
       "services": [
