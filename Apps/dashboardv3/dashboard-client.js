@@ -131,6 +131,39 @@ var renderExplore = function(req, res) {
     });
 };
 
+var renderSettings = function(req, res) {
+    res.render('settings', {});
+};
+
+var renderSettingsConnectors = function(req, res) {
+    getConnectors(function(err, connectors) {
+        var numInstalled = 0;
+        for (var i=0; i<connectors.length; i++) {
+            if (connectors[i].hasOwnProperty('authed')) {
+                numInstalled++;
+            }
+        }
+        res.render('iframe/settings-connectors', {
+            layout: false,
+            numInstalled: numInstalled,
+            connectors: connectors
+        });
+    });
+};
+
+var renderSettingsAccountInformation = function(req, res) {
+    res.render('iframe/settings-account', {
+        layout: false,
+        config: {}
+    });
+};
+
+var renderSettingsAPIKey = function(req, res) {
+    res.render('iframe/settings-api', {
+        layout: false
+    });
+};
+
 var renderCreate = function(req, res) {
     page = 'create';
     getGithubApps(function(apps) {
@@ -338,22 +371,6 @@ var renderYou = function(req, res) {
     });
 };
 
-var renderSettings = function(req, res) {
-    getConnectors(function(err, connectors) {
-        var numInstalled = 0;
-        for (var i=0; i<connectors.length; i++) {
-            if (connectors[i].hasOwnProperty('authed')) {
-                numInstalled++;
-            }
-        }
-        res.render('iframe/settings', {
-            layout: false,
-            numInstalled: numInstalled,
-            connectors: connectors
-        });
-    });
-};
-
 var renderConnect = function(req, res) {
     getConnectors(function(err, connectors) {
         var numInstalled = 0;
@@ -421,7 +438,11 @@ app.get('/you', checkInstalled, renderYou);
 app.get('/', checkInstalled, renderYou);
 
 app.get('/connect', renderConnect);
-app.get('/settingsConnectors', renderSettings);
+
+app.get('/settings', renderSettings);
+app.get('/settings-connectors', renderSettingsConnectors);
+app.get('/settings-account', renderSettingsAccountInformation);
+app.get('/settings-api', renderSettingsAPIKey);
 
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
@@ -451,7 +472,7 @@ var getGithubApps = function(callback) {
             for (var i in map) {
                 if (pattern.exec(map[i].srcdir)) {
                     var appInfo = checkDraftState(map[i]);
-                    if (!appInfo.title) continue
+                    if (!appInfo.title) continue;
                     var appId = appInfo.id.toLowerCase();
                     if (myPublishedApps[appId]) {
                         appInfo.published = myPublishedApps[appId];

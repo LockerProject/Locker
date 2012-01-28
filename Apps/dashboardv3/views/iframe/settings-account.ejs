@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="js/settings.js"></script>
+  </head>
+  <body>
+    <content class="body">
+    <form action="<%= config.integralURL || 'https://singly.com/' %>/users/me" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+      <div>
+        <p><img width="32" height="32" src="http://singly.com/blank.gif" />
+        This is your current avatar</p>
+        <input type="submit" name="avi-chooser" value="Choose File" />
+        <p>OR</p>
+        <input type="text" name="avi-url" placeholder="Set URL for image" />
+      </div>
+      <div>
+        <input type="text" name="accountholder-name" placeholder="Name" />
+      </div>
+      <div>
+        <input type="text" name="email" placeholder="Email address" />
+      </div>
+      <div>
+        <label for="old-password" id="old-password-label">
+          Current password
+        </label>
+        <input type="password" name="old-password">
+        <label for="new-password" id="new-password-label">
+          New password
+        </label>
+        <input type="password" name="new-password">
+      </div>
+      <div>
+        <label for="optout" id="optout_label">
+          Opt out of anonymous analytics?
+        </label>
+        <input type="checkbox" name="optout" value="true" id="optin" />
+      </div>
+      <span id="save-button">
+        <input type="submit" value="Save Changes">
+      </span>
+    </form>
+    </content>
+  </body>
+</html>

@@ -79,7 +79,11 @@ var loadApp = function(info) {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else if (info.topSection === "Settings") {
     if (info.subSection === "Connections") {
-      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settingsConnectors');
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-connectors');
+    } else if (info.subSection === "AccountInformation") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-account');
+    } else if (info.subSection === "APIKey") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-api');
     } else {
       alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
     }

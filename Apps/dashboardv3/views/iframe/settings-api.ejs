@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="js/settings.js"></script>
+  </head>
+  <body>
+    <content class="body">
+    <div>
+      <input type='text' name='apiToken' value='' disabled='disabled'
+      class='apiToken' />
+    </div>
+    <div class='apitokens-buttongroup'>
+      <input type='button' name='showToken' value='Show API Token'
+      class='showToken' />
+      <input type='button' name='resetToken' value='Reset API Token'
+      class='resetToken' />
+    </div>
+    </content>
+  </body>
+</html>
