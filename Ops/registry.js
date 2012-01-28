@@ -132,6 +132,7 @@ function publishPackage(req, res) {
         args.id = id;
         if(req.body) args.body = req.body;
         exports.publish(args, function(err, doc) {
+            if(err) logger.error(err);
             // npm publish always returns an error even though it works, so until that's fixed, commenting this out
             //if(err) res.send(err, 500);
             res.send(doc);
@@ -390,9 +391,17 @@ exports.publish = function(arg, callback) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
                         serviceManager.mapUpsert(pjs);
-                        var issues = require(path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js")); // this feels dirty, but is also reusing the synclet pattern
-                        // TODO fill out issue
-                        issues.sync(serviceManager.map('github'), function(err, js){
+pattern
+                        // create an issue to track this publish request
+                        var pi = {};
+                        pi.auth = serviceManager.map('github').auth;
+                        pi.posts = [];
+                        var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
+                        issue.labels = updated.name.split('-');
+                        issue.labels.push('App');
+                        pi.posts.push(issue);
+                        var issues = require(path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js")); // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
+                        issues.sync(pi, function(err, js){
                             if(err) return callback(err);
                             if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("missing issue");
                             // save pending=issue# to package.json
