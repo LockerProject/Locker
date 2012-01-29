@@ -10,7 +10,7 @@
 /* random notes:
 on startup scan all folders
     Apps Collections Connectors - generate lists of "available"
-    Me/* - generate lists of "existing"
+    Me - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
 if first time
@@ -47,7 +47,7 @@ if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
 fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
 
 var logger = require("logger");
-logger.info('proccess id:' + process.pid);
+logger.info('process id:' + process.pid);
 var lscheduler = require("lscheduler");
 var syncManager = require('lsyncmanager');
 var serviceManager = require("lservicemanager");
@@ -94,23 +94,14 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         logger.error('[mongo] ' + line);
     });
 
-    var mongodExit = function(errorCode) {
-        if(shuttingDown_) return;
-        if(errorCode !== 0) {
-            var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
-            db.open(function(error, client) {
-                if(error) {
-                    logger.error('Could not connect to mongo: '+errorCode);
-                    shutdown(1);
-                } else {
-                    logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
-                    db.close();
-                    checkKeys();
-                }
-            });
+    mongoProcess.on('exit', function(code, signal) {
+        mongoProcess = null;
+        if (shuttingDown_) {
+            logger.info('mongod exited with code '+code+', signal '+signal);
+        } else {
+            logger.error('mongod exited unexpectedly with code '+code+', signal '+signal);
         }
-    };
-    mongoProcess.on('exit', mongodExit);
+    });
 });
 
 
@@ -139,13 +130,17 @@ function finishStartup() {
 
     pushManager.init();
     var webservice = require(__dirname + "/Ops/webservice.js");
-    // start web server (so we can all start talking)
-    webservice.startService(lconfig.lockerPort, function(locker){
-        // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
-        syncManager.init(serviceManager, function(){
-            registry.init(serviceManager, syncManager, lconfig, lcrypto, function(){
-                registry.app(locker); // add it's endpoints
-                serviceManager.init(syncManager, registry, function() {runMigrations("postServices", postStartup);}); // this may trigger synclets to start!
+    // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
+    syncManager.init(serviceManager, function() {
+        registry.init(serviceManager, syncManager, lconfig, lcrypto, function() {
+            serviceManager.init(syncManager, registry, function() {  // this may trigger synclets to start!
+                runMigrations("postServices", function() {
+                    // start web server (so we can all start talking)
+                    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
+                        registry.app(locker); // add it's endpoints
+                        postStartup();
+                    });
+                });
             });
         });
     });
@@ -162,15 +157,20 @@ function runMigrations(phase, migrationCB) {
     } catch (E) {}
 
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
-    // TODO do these using async serially and pass callbacks!
-    async.forEach(migrations, function(migration, cb) {
-        if (Number(migration.substring(0, 13)) <= metaData.version) {
-            return cb();
-        }
+
+    if (!metaData.version && phase == "preServices") {
+        metaData.version = Number(migrations[migrations.length - 1].substring(0, 13));
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+        return migrationCB();
+    }
+
+    async.forEachSeries(migrations, function(migration, cb) {
+        if (Number(migration.substring(0, 13)) <= metaData.version) return cb();
 
         try {
-            logger.info("running global migration : " + migration);
             migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
+            if(typeof migrate !== 'function') return cb();
+            logger.info("running global migration : " + migration + ' for phase ' + phase);
             migrate(lconfig, function(ret) {
                 if (!ret) {
                     logger.error("failed to run global migration!");
@@ -178,7 +178,7 @@ function runMigrations(phase, migrationCB) {
                 }
                 metaData.version = Number(migration.substring(0, 13));
                 lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
-                logger.info("Migration comlete for: " + migration);
+                logger.info("Migration complete for: " + migration);
                 cb();
 
                 /*
@@ -195,9 +195,7 @@ function runMigrations(phase, migrationCB) {
             logger.error("error running global migration : " + migration + " ---- " + E);
             shutdown(1);
         }
-    }, function() {
-        migrationCB();
-    });
+    }, migrationCB);
 }
 
 // scheduling and misc things
@@ -205,6 +203,7 @@ function postStartup() {
     lscheduler.masterScheduler.loadAndStart();
     logger.info('locker is up and running at ' + lconfig.lockerBase);
     exports.alive = true;
+    runMigrations("postStartup", function() {});
 }
 
 function shutdown(returnCode) {
@@ -212,10 +211,34 @@ function shutdown(returnCode) {
     process.stdout.write("\n");
     logger.info("Shutting down...");
     serviceManager.shutdown(function() {
-        mongoProcess.kill();
-        logger.info("Shutdown complete.", {}, function (err, level, msg, meta) {
-            process.exit(returnCode);
+        cleanupMongo(function() {
+            exit(returnCode);
         });
+    });
+}
+
+function cleanupMongo(cb) {
+    if (!mongoProcess) {
+        cb();
+        return;
+    }
+
+    var gaveUp = false; // make sure we only call the callback once
+    mongoProcess.on('exit', function (code, signal) { if (!gaveUp) { cb(); } });
+
+    mongoProcess.kill();
+
+    var timeout = 5000;
+    setTimeout(function() {
+        gaveUp = true;
+        logger.error('Mongo did not exit after timeout ('+timeout+'ms), giving up');
+        cb();
+    }, timeout);
+}
+
+function exit(returnCode) {
+    logger.info("Shutdown complete", {}, function (err, level, msg, meta) {
+        process.exit(returnCode);
     });
 }
 

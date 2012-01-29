@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "gcontacts",
   "description": "Google Contacts",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "repository": {
     "title": "Google Contacts",
     "handle": "gcontacts",
@@ -11,10 +11,14 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+        "width": 960,
+        "height": 600
+    },
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

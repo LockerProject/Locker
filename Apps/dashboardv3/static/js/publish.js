@@ -47,15 +47,19 @@ $(document).ready(function() {
   });
 
   $('.cancel').click(function() {
-    window.parent.app = 'viewAll';
-    window.parent.loadApp();
+    window.parent.loadApp('viewAll');
   });
 
   setupUploader();
-
-  if (parent.iframeLoaded) {
-    parent.iframeLoaded();
-  }
+  
+    // Pick the right app
+    if (window.location.search) {
+        var app = window.location.search.substring(1);
+        if (app.substring(0, 3) == "app") {
+            app = app.substring(4);
+            selectItem(app);
+        }
+    }
 });
 
 var rename = function() {

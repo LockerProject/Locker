@@ -1,0 +1,22 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "rdio",
+  "description": "Rdio",
+  "version": "0.0.4",
+  "repository": {
+    "title": "Rdio",
+    "handle": "rdio",
+    "author": "nerds",
+    "update": "auto",
+    "hidden": true,
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

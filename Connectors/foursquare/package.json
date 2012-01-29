@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "foursquare",
   "description": "Foursquare Connector",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "repository": {
     "title": "foursquare",
     "handle": "foursquare",
@@ -11,10 +11,14 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "oauthSize": {
+        "width": 960,
+        "height": 540
+    },
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}
