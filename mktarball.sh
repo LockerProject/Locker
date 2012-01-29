@@ -8,6 +8,7 @@ subdir="locker-$build_id"
 top="$PWD"
 out="$PWD/locker-$build_id.tar.gz"
 builddir="$top/build"
+buildlog="$(tempfile build)"
 
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
@@ -23,7 +24,7 @@ if test -d "$top/node_modules"; then
 else
     echo "Building..."
     cd "$builddir/$subdir"
-    npm install
+    npm install 2>&1 | tee -a "$buildlog"
 fi
 mkdir -p Me
 
