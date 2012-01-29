@@ -36,7 +36,8 @@ exports.generic = function(data, svcName, callback) {
 
     if(typeof map.photo === 'function') addToSet.photos = map.photo(data);
     else addToSet.photos = data[map.photo || 'photo'];
-
+    if(!addToSet.photos) delete addToSet.photos;
+    
     //addresses
     var address = getNested(data, map.address);
     if(address) {
@@ -100,14 +101,7 @@ exports.generic = function(data, svcName, callback) {
 }
 
 // add the generic inserters
-exports.twitter = exports.generic;
-exports.github = exports.generic;
-exports.facebook = exports.generic;
-exports.flickr = exports.generic;
-exports.instagram = exports.generic;
-exports.linkedin = exports.generic;
-exports.foursquare = exports.generic;
-exports.gcontacts = exports.generic;
+for(var i in maps) exports[i] = exports.generic;
 
 // get the value for the key, split on . if needed
 function getNested(data, key) {

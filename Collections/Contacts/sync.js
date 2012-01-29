@@ -17,11 +17,13 @@ var EventEmitter = require('events').EventEmitter;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
     lconfig = config;
-    logger = require("logger.js");
+    logger = require('logger.js');
     dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
 
+// TODO: this can be cleaned up further, the information is mostly captured in dataMap
+// should only need to specify that contact/github is only pulled from following
 var acceptedServices = {
     'contact/facebook':1,
     'contact/twitter':1,
@@ -33,13 +35,16 @@ var acceptedServices = {
     'contact/github':'following'
 }
 
-exports.gatherContacts = function(cb) {
-    clearAll(function() {
-        getServices(function(services) {
+exports.gatherContacts = function(callback) {
+    clearAll(function(err) { // synchro delete, async/background reindex
+        if(err) return callback(err);
+        locker.providers(['contact','connection'], function(err, services) {
+            if(err) return callback(err);
             // do them in series so as not to pin the box
-            async.forEachSeries(services, processService, function() {
-                cb(); // synchro delete, async/background reindex
-                logger.info('finished processing data from all services');
+            async.forEachSeries(services, processService, function(err) {
+                callback(err);
+                if(err) logger.error('error processing data from all services' + JSON.stringify(err));
+                else logger.info('finished processing data from all services');
             });
         });
     });
@@ -47,19 +52,9 @@ exports.gatherContacts = function(cb) {
 
 function clearAll(callback) {
     dataStore.clear(function(err) {
+        if(err && err.message !== 'ns not found') return callback(err);
         // now that we've deleted them, we need to tell search to whack ours too before we start
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, callback);
-    });
-}
-
-function getServices(callback) {
-    locker.providers(['contact'], function(err, services) {
-        locker.providers(['connection'], function(err, connectionServices) {
-            if (!(services || connectionServices)) return;
-            services = services || [];
-            for(var i in connectionServices) services.push(connectionServices[i]);
-            callback(services);
-        });
     });
 }
 

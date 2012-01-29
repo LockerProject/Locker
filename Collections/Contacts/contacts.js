@@ -16,7 +16,7 @@ var fs = require('fs')
   , lutil = require('lutil')
   , url = require('url')
   , sync = require('./sync')
-  , dataStore = require("./dataStore")
+  , dataStore = require('./dataStore')
   , logger
   , lockerInfo
   ;
@@ -30,7 +30,7 @@ app.get('/state', function(req, res) {
         if(err) return res.send(err, 500);
         dataStore.getLastObjectID(function(err, lastObject) {
             if(err) return res.send(err, 500);
-            var objId = "000000000000000000000000";
+            var objId = '000000000000000000000000';
             if (lastObject) objId = lastObject._id.toHexString();
             var updated = Date.now();
             try {
@@ -54,7 +54,7 @@ app.get('/', function(req, res) {
         if(!req.query.all) cursor.limit(20); // default 20 unless all is set
         if(req.query.limit) cursor.limit(parseInt(req.query.limit));
         if(req.query.offset) cursor.skip(parseInt(req.query.offset));
-        if(req.query.stream == "true") {
+        if(req.query.stream == 'true') {
             res.writeHead(200, {'content-type' : 'application/jsonstream'});
             cursor.each(function(err, object){
                 if (err) logger.error(err); // only useful here for logging really
@@ -82,7 +82,7 @@ app.post('/events', function(req, res) {
         return;
     }
     // we don't support these yet
-    if(req.body.action == "delete") return res.send("skipping");
+    if(req.body.action == 'delete') return res.send('skipping');
     var idr = url.parse(req.body.idr);
     dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
         if (err) res.send(err, 500);
@@ -90,7 +90,7 @@ app.post('/events', function(req, res) {
     });
 });
 
-app.get("/since", function(req, res) {
+app.get('/since', function(req, res) {
     if (!req.query.id) return res.send([]);
 
     var results = [];
@@ -122,7 +122,7 @@ process.stdin.on('data', function(data) {
 
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
-    logger = require("logger.js");
+    logger = require('logger.js');
     locker.connectToMongo(function(mongo) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.contact, mongo, lconfig);
         app.listen(0, function() {

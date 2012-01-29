@@ -11,7 +11,7 @@ var collection;
 var db;
 var lutil = require('lutil');
 var locker = require('locker');
-var lmongoutil = require("lmongoutil");
+var lmongoutil = require('lmongoutil');
 var url = require('url');
 var inserters = require('./inserters');
 
@@ -33,7 +33,7 @@ exports.get = function(id, callback) {
 }
 
 exports.getSince = function(objId, cbEach, cbDone) {
-    collection.find({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}).each(function(err, item) {
+    collection.find({'_id':{'$gt':lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}).each(function(err, item) {
         if (item != null) cbEach(item);
         else cbDone();
     });
@@ -52,7 +52,7 @@ function updateState() {
     if (writeTimer) clearTimeout(writeTimer);
     writeTimer = setTimeout(function() {
         try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
+            lutil.atomicWriteFileSync('state.json', JSON.stringify({updated:Date.now()}));
         } catch (E) {}
     }, 5000);
 }
@@ -61,9 +61,10 @@ exports.addData = function(type, data, cb) {
     // shim to send events, post-add stuff
     if(typeof inserters[type] === 'function') inserters[type](data, type, function(err, doc) {
         if(doc && doc._id) {
-            var idr = lutil.idrNew("contact", "contacts", doc._id);
+            var idr = lutil.idrNew('contact', 'contacts', doc._id);
             locker.ievent(idr, doc);
         }
         cb(err, doc);
     });
+    else cb(new Error('unhandled data type,' + type));
 }
