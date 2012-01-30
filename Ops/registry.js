@@ -294,8 +294,13 @@ function usePkg(pkg, ver, callback)
     regIndex[pkg.name] = pkg;
     if(lconfig.registryUpdate === true && serviceManager.map(pkg.name) && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(serviceManager.map(pkg.name).version, ver))
     {
-        logger.verbose("auto-updating "+pkg.name);
-        exports.install({name:pkg.name}, function(){}); // lazy update
+        if(serviceManager.map(pkg.name).srcdir.indexOf("node_modules") == -1)
+        {
+            logger.verbose("skipping since local versionis not from the registry");
+        }else{
+            logger.verbose("auto-updating "+pkg.name);
+            exports.install({name:pkg.name}, function(){}); // lazy update
+        }
     }
     callback();
 }
