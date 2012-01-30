@@ -42,6 +42,7 @@ exports.load = function(filepath) {
         "search:Collections/Search",
     ];
     exports.apps = config.apps || [
+        "devdocs:Apps/DevDocs",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
         "github:Connectors/GitHub",

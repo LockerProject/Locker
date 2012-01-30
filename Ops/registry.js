@@ -89,7 +89,7 @@ exports.app = function(app)
         Object.keys(regIndex).forEach(function(key) {
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
                 // not all connectors need auth keys!
-                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") connectors.push(regIndex[key]);
+                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false" && !regIndex[key].repository.hidden) connectors.push(regIndex[key]);
                 // require keys now
                 if(apiKeys[key]) connectors.push(regIndex[key]);
             }
