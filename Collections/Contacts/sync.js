@@ -75,7 +75,7 @@ function processService(svc, callback) {
     callback();
 }
 
-exports.getContacts = function (type, endpoint, svcID, callback) {
+function getContacts(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
         if(err || !body || !Array.isArray(body)) return callback(err);
         async.forEachSeries(body, function(contact, cb) {
