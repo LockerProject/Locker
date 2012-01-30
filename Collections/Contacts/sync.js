@@ -83,3 +83,5 @@ function getContacts(type, endpoint, svcID, callback) {
         }, callback);
     });
 }
+
+exports.getContacts = getContacts;

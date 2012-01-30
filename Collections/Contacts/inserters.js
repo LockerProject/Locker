@@ -87,6 +87,10 @@ exports.generic = function(data, svcName, callback) {
             if(obj[i]) or.push(obj);
         }
         if(cleanedName) or.push({'_matching.cleanedNames':cleanedName});
+        if(addToSet.emails) {
+            var emails = addToSet.emails.$each || [addToSet.emails];
+            for(var i in emails) or.push({'emails.value':emails[i].value});
+        }
         
         var set = setName(name);
         //gender
