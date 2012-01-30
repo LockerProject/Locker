@@ -68,7 +68,6 @@ function checkInstalled(req, res, next) {
             }
         });
     } else {
-    console.log('2');
         next();
         connectPage = false;
     }
