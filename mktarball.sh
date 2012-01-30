@@ -19,7 +19,7 @@ echo "Fetching code..."
 git archive $rev | tar -x -C "$builddir/$subdir"
 
 if test -d "$top/node_modules"; then
-    cp -a "$top/node_modules" "$builddir/subdir"
+    cp -a "$top/node_modules" "$builddir/$subdir"
 else
     echo "Building..."
     cd "$builddir/$subdir"
