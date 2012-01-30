@@ -12,73 +12,76 @@ var locker = require('locker.js');
 var lconfig;
 var dataStore = require('./dataStore');
 var async = require('async');
-var lockerUrl;
 var logger;
 var EventEmitter = require('events').EventEmitter;
 
 exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
-    lockerUrl = theLockerUrl;
     lconfig = config;
-    logger = require("logger.js");
+    logger = require('logger.js');
     dataStore.init(mongoCollection, mongo);
     exports.eventEmitter = new EventEmitter();
 }
 
-exports.gatherContacts = function(cb) {
-    lconfig.load('../../Config/config.json');
-    dataStore.clear(function(err) {
-        // now that we've deleted them, we need to tell search to whack ours too before we start
-        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, function(){
-            cb(); // synchro delete, async/background reindex
-            // This should really be timered, triggered, something else
-            locker.providers(['contact'], function(err, services) {
-                if (!services) return;
-                services.forEach(function(svc) {
-                    if(svc.provides.indexOf('contact/facebook') >= 0) {
-                        exports.getContacts("facebook", "contact", svc.id, function() {
-                            logger.info('facebook done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/twitter') >= 0) {
-                        exports.getContacts("twitter", "contact", svc.id, function() {
-                            logger.info('twitter done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/flickr') >= 0) {
-                        exports.getContacts("flickr", "contact", svc.id, function() {
-                            logger.info('flickr done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/gcontacts') >= 0) {
-                        exports.getContacts("gcontacts", "contact", svc.id, function() {
-                            logger.info('gcontacts done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/foursquare') >= 0) {
-                        exports.getContacts('foursquare', "contact", svc.id, function() {
-                            logger.info('foursquare done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/instagram') >= 0) {
-                        exports.getContacts('instagram', "contact", svc.id, function() {
-                            logger.info('instagram done!');
-                        });
-                    } else if(svc.provides.indexOf('contact/github') >= 0) {
-                        exports.getContacts('github', 'following', svc.id, function() {
-                            logger.info('github done!');
-                        })
-                    } else if(svc.provides.indexOf('connection/linkedin') >= 0) {
-                        exports.getContacts('linkedin', 'connection', svc.id, function() {
-                            logger.info('linkedin done!');
-                        })
-                    }
-                });
+// TODO: this can be cleaned up further, the information is mostly captured in dataMap
+// should only need to specify that contact/github is only pulled from following
+var acceptedServices = {
+    'contact/facebook':1,
+    'contact/twitter':1,
+    'contact/flickr':1,
+    'contact/gcontacts':1,
+    'contact/foursquare':1,
+    'contact/instagram':1,
+    'connection/linkedin':1,
+    'contact/github':'following'
+}
+
+exports.gatherContacts = function(callback) {
+    clearAll(function(err) { // synchro delete, async/background reindex
+        if(err) return callback(err);
+        locker.providers(['contact','connection'], function(err, services) {
+            if(err) return callback(err);
+            // do them in series so as not to pin the box
+            async.forEachSeries(services, processService, function(err) {
+                callback(err);
+                if(err) logger.error('error processing data from all services' + JSON.stringify(err));
+                else logger.info('finished processing data from all services');
             });
         });
     });
 }
 
+function clearAll(callback) {
+    dataStore.clear(function(err) {
+        if(err && err.message !== 'ns not found') return callback(err);
+        // now that we've deleted them, we need to tell search to whack ours too before we start
+        request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=contact'}, callback);
+    });
+}
 
-exports.getContacts = function(type, endpoint, svcID, callback) {
+function processService(svc, callback) {
+    for(var i in svc.provides) {
+        var provides = svc.provides[i];
+        if(acceptedServices[provides]) {
+            var endpoint = acceptedServices[provides];
+            if(endpoint === 1) endpoint = provides.substring(0, provides.indexOf('/'));
+            logger.info('processing data from ' + svc.provider);
+            getContacts(svc.provider, endpoint , svc.id, function() {
+                logger.info('finished processing data from ' + svc.provider);
+                callback();
+            });
+            return;
+        }
+    }
+    callback();
+}
+
+function getContacts(type, endpoint, svcID, callback) {
     request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
         if(err || !body || !Array.isArray(body)) return callback(err);
-        async.forEachSeries(body, function(contact, cb){
+        async.forEachSeries(body, function(contact, cb) {
             dataStore.addData(type, contact, cb);
         }, callback);
     });
 }
+
+exports.getContacts = getContacts;

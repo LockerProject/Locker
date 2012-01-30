@@ -4,23 +4,23 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 describe 'dashboard' do
   it 'allows people to switch between 4 views' do
     visit '/'
-    page.should have_css('.iframeLink[data-id="contactsviewer"]')
-    page.execute_script("$('.iframeLink[data-id=\"contactsviewer\"]').click()")
+    page.should have_css('.iframeLink[data-id="You-contactsviewer"]')
+    page.execute_script("$('.iframeLink[data-id=\"You-contactsviewer\"]').click()")
     within_frame 'appFrame' do
       page.should have_content('Jeremie')
     end
-    page.execute_script("$('.iframeLink[data-id=\"photosv09\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="photosv09"]')
+    page.execute_script("$('.iframeLink[data-id=\"You-photosv09\"]').click()")
+    page.should have_css('.iframeLink.blue[data-id="You-photosv09"]')
     within_frame 'appFrame' do
       page.should have_content('Photos')
     end
-    page.execute_script("$('.iframeLink[data-id=\"linkalatte\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="linkalatte"]')
+    page.execute_script("$('.iframeLink[data-id=\"You-linkalatte\"]').click()")
+    page.should have_css('.iframeLink.blue[data-id="You-linkalatte"]')
     within_frame 'appFrame' do
       page.should have_content('Links')
     end
-    page.execute_script("$('.iframeLink[data-id=\"helloplaces\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="helloplaces"]')
+    page.execute_script("$('.iframeLink[data-id=\"You-helloplaces\"]').click()")
+    page.should have_css('.iframeLink.blue[data-id="You-helloplaces"]')
     within_frame 'appFrame' do
       page.should have_content('Places')
     end

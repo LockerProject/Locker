@@ -23,6 +23,7 @@ var express = require('express')
   , fs = require('fs')
   , im = require('imagemagick')
   , util = require("util")
+  , moment = require("moment")
   , page = ''
   , connectPage = false
   , cropping = {}
@@ -126,8 +127,7 @@ var renderExplore = function(req, res) {
     page = 'explore';
     getConnectors(function(error, connectors) {
         var c = [];
-        for(var i in connectors) if(!connectors[i].repository.hidden) c.push(connectors[i].repository);
-        res.render('explore', {synclets:c});
+        res.render('explore', {synclets:connectors});
     });
 };
 
@@ -410,6 +410,9 @@ var renderTempScreenshot = function(req, res) {
 
 var renderAllApps = function(req, res) {
     getGithubApps(function(apps) {
+        apps.forEach(function(app) {
+            if (app.lastUpdated) app.lastUpdatedStr = moment(app.lastUpdated).fromNow();
+        });
         res.render('iframe/allApps', {
             layout: false,
             apps: apps,
@@ -479,6 +482,7 @@ var getGithubApps = function(callback) {
                     }
                     githubapps[appInfo.id] = appInfo;
                     apps.push(appInfo);
+                    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || (appInfo.published ? (appInfo.published.time ? appInfo.published.time.modified : null) : null) || Date.now());
                 }
             }
             callback(apps);
@@ -517,7 +521,6 @@ var checkDraftState = function(appInfo) {
     } else {
         appInfo.draft = {};
     }
-    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
     return appInfo;
 };
 
