@@ -8,7 +8,6 @@ subdir="locker-$build_id"
 top="$PWD"
 out="$PWD/locker-$build_id.tar.gz"
 builddir="$top/build"
-buildlog="$(tempfile build)"
 
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
@@ -19,10 +18,14 @@ trap "rm -rf \"$builddir\"" EXIT
 echo "Fetching code..."
 git archive $rev | tar -x -C "$builddir/$subdir"
 
-echo "Building..."
-cd "$builddir/$subdir"
-npm install 2>&1 | tee -a "$buildlog"
-test -d Me || mkdir Me
+if test -d "$top/node_modules"; then
+    cp -a "$top/node_modules" "$builddir/$subdir"
+else
+    echo "Building..."
+    cd "$builddir/$subdir"
+    npm install
+fi
+mkdir -p "$builddir/$subdir/Me"
 
 echo "Compressing..."
 (cd "$builddir"; tar czf "$out" "$subdir")

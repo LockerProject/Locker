@@ -35,8 +35,23 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.collections = config.collections || ['contacts', 'links', 'photos', 'places', 'search'];
-    exports.apps = config.apps || ["contactsviewer", "photosv09", "photosviewer", "linkalatte", "helloplaces", "devdocs"];
+    exports.collections = config.collections || [
+        "contacts:Collections/Contacts",
+        "links:Collections/Links",
+        "photos:Collections/Photos",
+        "places:Collections/Places",
+        "search:Collections/Search",
+    ];
+    exports.apps = config.apps || [
+        "devdocs:Apps/DevDocs",
+        "facebook:Connectors/Facebook",
+        "flickr:Connectors/Flickr",
+        "github:Connectors/GitHub",
+        "gcontacts:Connectors/GoogleContacts",
+        "instagram:Connectors/Instagram",
+        "twitter:Connectors/Twitter",
+        "foursquare:Connectors/foursquare",
+    ];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
         "host": "localhost",
@@ -61,7 +76,7 @@ exports.load = function(filepath) {
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
 //    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
-    exports.ui = config.ui || 'dashboardv3';
+    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
 
