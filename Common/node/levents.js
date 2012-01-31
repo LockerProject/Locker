@@ -85,7 +85,7 @@ exports.fireEvent = function(idr, action, obj) {
 }
 
 exports.displayListeners = function(type) {
-    return eventListeners[type];
+    return eventListeners[type] || [];
 }
 
 function findListenerPosition(type, id, cb) {

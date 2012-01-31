@@ -9,6 +9,7 @@
 
 var fs = require("fs");
 var path = require("path");
+var os = require("os");
 var lconfig = require("lconfig");
 var crypto = require("crypto");
 var util = require("util");
@@ -454,3 +455,22 @@ function checkForShutdown() {
     shuttingDown();
     shuttingDown = null;
 }
+
+// create signal events for services to listen to
+var workLast = null;
+var workSig = ""; // need to re-signal if listeners change
+function workCheck()
+{
+    var newSig = levents.displayListeners("work/me").join(" ");
+    if(newSig != workSig) workLast = null;
+    workSig = newSig;
+    if(newSig == "") return; // no listeners!
+    var work = "start";
+    var load = os.loadavg();
+    if(load[0] > lconfig.workWarn) work = "warn";
+    if(load[0] > lconfig.workStop) work = "stop";
+    if(work == workLast) return; // no changes!
+    workLast = work;
+    levents.fireEvent("work://me/#"+work,"new",{});
+}
+setInterval(workCheck, 10000); // 10s granularity
