@@ -553,7 +553,7 @@ var getInstalledConnectors = function(callback) {
            if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
                installedConnectors.push(connectors[i]);
            }
-       } 
+       }
        callback(err, installedConnectors);
     });
 }
