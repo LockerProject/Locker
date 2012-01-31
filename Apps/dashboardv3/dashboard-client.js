@@ -532,9 +532,16 @@ var getConnectors = function(callback) {
                 if (body[key].repository.type == "connector") {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
-                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
+                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) {
+                          connector.authed = true;
+                          if (installedConnectors[i].hasOwnProperty('profileIds') && 
+                              installedConnectors[i].profileIds.length === 2) {
+                            var usernameIndex = installedConnectors[i].profileIds[1];
+                            connector.username = installedConnectors[i].auth.profile[usernameIndex];
+                          }
+                        }
                     }
-                    if(!connector.repository.oauthSize) {
+                    if (!connector.repository.oauthSize) {
                       connector.repository.oauthSize = {width:960, height:600};
                       console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
                     }

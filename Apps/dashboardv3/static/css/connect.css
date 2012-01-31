@@ -12,8 +12,14 @@ h1 {
 }
 
 .synclets-list li {
-  margin: 15px 0;
-  width: 400px;
+  margin: 17px 0;
+  width: 100%;
+  min-width: 670px;
+}
+
+.synclet-logoname-container {
+  width: 270px;
+  display: inline-block;
 }
 
 .synclet-logo {
@@ -23,11 +29,31 @@ h1 {
 .synclet-name {
   font-size: 22px;
   font-weight: 200;
+  position: absolute;
+  margin: 5px 0 0 0;
+}
+
+.oauthLink {
+  width: 150px;
+  display: inline-block;
+}
+
+.synclet-username {
+  font-style: italic;
+  display: inline-block;
+  position: absolute;
+  margin: 10px 0 0 2px;
+}
+
+.synclet-disconnect {
+  float: right;
+  margin: 12px 0 0 15px;
+  font-size: 0.8em;
+  text-decoration: underline;
 }
 
 .connect-button {
-  float: right;
-  margin: 10px 0 0 0;
+  margin: 0;
 }
 
 .hideable {

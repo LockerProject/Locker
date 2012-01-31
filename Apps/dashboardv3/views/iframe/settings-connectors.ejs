@@ -12,8 +12,10 @@
         <% for (var i = 0; i < connectors.length; i++) { %>
           <% if (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true') { %>
           <li class="featured hideable">
-            <img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" />
-            <span class="synclet-name"><%= connectors[i].repository.title %></span>
+            <div class="synclet-logoname-container">
+              <img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" />
+              <span class="synclet-name"><%= connectors[i].repository.title %></span>
+            </div>
             <a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink"
                data-provider="<%=connectors[i].repository.handle%>"
                data-width="<%= connectors[i].repository.oauthSize.width %>"
@@ -24,7 +26,10 @@
                <img alt="connect" class="connect-button" src="img/connect.png" />
                <% } %>
              </a>
-             <span class="disconnect"><a class="disconnector" href="#">disconnect</a></span>
+             <% if (connectors[i].hasOwnProperty('username')) { %>
+               <div class="synclet-username"><%= connectors[i].username %></div>
+             <% } %>  
+             <span class="synclet-disconnect"><a class="disconnector" href="#">Disconnect</a></span>
           </li>
           <% } %>
         <% } %>
