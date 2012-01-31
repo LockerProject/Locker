@@ -2,6 +2,10 @@
     "synclets": [
         {
             "frequency": 3600,
+            "name": "profile"
+        },
+        {
+            "frequency": 3600,
             "name": "users"
         },
         {
@@ -11,10 +15,6 @@
         {
             "frequency": 3600,
             "name": "events"
-        },
-        {
-            "frequency": 3600,
-            "name": "profile"
         }
     ],
     "provides": [

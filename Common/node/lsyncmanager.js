@@ -141,48 +141,47 @@ function executeSynclet(info, synclet, callback, force) {
     delete synclet.nextRun; // cancel any schedule
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
-    if (!force && !executeable)
-    {
+    if (!force && !executeable) {
         setTimeout(function() {
             executeSynclet(info, synclet, callback);
         }, 1000);
         return;
     }
-    if(!synclet.tolMax){
+    if(!synclet.tolMax) {
         synclet.tolAt = 0;
         synclet.tolMax = 0;
     }
     // if we can have tolerance, try again later
-    if(!force && synclet.tolAt > 0)
-    {
+    if(!force && synclet.tolAt > 0) {
         synclet.tolAt--;
         logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
         exports.scheduleRun(info, synclet);
         return callback();
     }
     // if another synclet is running, come back a little later, don't overlap!
-    if (info.status == 'running')
-    {
+    if (info.status == 'running') {
         logger.verbose("delaying "+synclet.name);
         setTimeout(function() {
-            executeSynclet(info, synclet, callback);
+            executeSynclet(info, synclet, callback, force);
         }, 10000);
         return;
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var run;
+    var env = process.env;
     if (!synclet.run) {
+        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else if (synclet.run.substr(-3) == ".py") {
+        env["PYTHONPATH"] = path.join(lconfig.lockerDir, 'Common', 'python');
         run = ["python", lconfig.lockerDir + "/Common/python/synclet/client.py"];
     } else {
+        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
 
     var dataResponse = '';
-    var env = process.env;
-    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
     var cwd = (info.srcdir.charAt(0) == '/') ? info.srcdir : path.join(lconfig.lockerDir, info.srcdir);
     var app = spawn(run.shift(), run, {cwd: cwd, env:env});
 

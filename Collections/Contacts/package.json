@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "contacts",
   "description": "Contacts Collection",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "repository": {
     "title": "Contacts",
     "run": "node contacts.js",
@@ -35,10 +35,6 @@
         "/events"
       ],
       [
-        "contact/tumblr",
-        "/events"
-      ],
-      [
         "contact/instagram",
         "/events"
       ],
@@ -58,7 +54,7 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.4.9"
+    "node": ">=0.4.9"
   },
   "dependencies": {},
   "devDependencies": {}

@@ -154,6 +154,7 @@ var runTests = function() {
         return runRake();
     }
     if (process.argv.indexOf("-s") > 0) {
+        // Yes, it's really misspelled this way in vows.
         vowsArgument.push("--supress-stdout");
     }
     if (process.argv.indexOf("-nc") > 0) {

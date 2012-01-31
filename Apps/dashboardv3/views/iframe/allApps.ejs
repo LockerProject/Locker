@@ -22,11 +22,12 @@
               <% } else { %>
                 <span class="drafts">draft</span><a id=<%= apps[i].handle %> class='publishLink' href="publish?app=<%= apps[i].handle %>"><button class="publish">publish app</button></a>
               <% } %>
-              <p>last updated <%= apps[i].lastUpdated.getMonth() + "." + apps[i].lastUpdated.getDate() + "." + apps[i].lastUpdated.getFullYear() %></p>
+              <% var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]; %>
+              <p>last updated <%= apps[i].lastUpdatedStr %></p>
             </div>
             <div class="divider"></div>
             <div class="content">
-              <p class="description"><%= apps[i].desc %></p>
+              <p class="description"><%= apps[i].published.description || apps[i].draft.description %></p>
               <% if (apps[i].uses) { %>
                 <% if (apps[i].uses.types || apps[i].uses.services) { %>
                   <% if (!apps[i].uses.types) { apps[i].uses.types = [] } %>
@@ -34,8 +35,8 @@
                   <p class="bold">Uses <%= apps[i].uses.types.concat(apps[i].uses.services).join(', ') %></p>
                 <% } %>
               <% } %>
-              <div class="authorship-history">Authorship History
-              </div>
+              <!-- <div class="authorship-history">Authorship History
+              </div> -->
             </div>
           </div>
           </li>

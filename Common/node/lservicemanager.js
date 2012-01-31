@@ -51,12 +51,25 @@ exports.init = function (sman, reg, callback) {
 
     // make sure default collections, ui, and apps are all installed!
     var installs = [];
-    if(lconfig.ui) installs.push(lconfig.ui);
+    if(lconfig.ui) {
+        installs.push(lconfig.ui);
+        if(lconfig.ui.indexOf(':') != -1) lconfig.ui = lconfig.ui.substr(0,lconfig.ui.indexOf(':')); // only use name hereafter
+    }
     if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
     if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
     async.forEachSeries(installs, function(id, cb){
+        var arg = {};
+        // allow a configurable name:path/to/it value for local installs
+        // This will currently directly upsert and skip the install
+        if(id.indexOf(':') != -1)
+        {
+            exports.mapUpsert(path.join(id.substr(id.indexOf(':')+1), "package.json"));
+            return cb();
+        }else{
+            arg.name = id;
+        }
         if(serviceMap[id]) return cb();
-        registry.install({name:id}, cb);
+        registry.install(arg, cb);
     }, callback);
 }
 
@@ -110,8 +123,11 @@ exports.providers = function(types) {
 // update or install this file into the map
 exports.mapUpsert = function (file) {
     var js;
+    // ensure file is always relative to lockerdir
+    file = lutil.relative(lconfig.lockerDir, file);
+    logger.verbose("upsert request for "+file);
     try {
-        js = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir,file), 'utf8'));
+        js = JSON.parse(fs.readFileSync(file, 'utf8'));
         if(!js) throw new Error("no data");
         // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
         if(!js.handle && js.repository) {
@@ -135,6 +151,7 @@ exports.mapUpsert = function (file) {
     js.upserted = Date.now();
     js.manifest = file;
     js.srcdir = path.dirname(file);
+    js.id = js.provider = js.handle; // kinda legacy where they could differ
 
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
@@ -143,7 +160,7 @@ exports.mapUpsert = function (file) {
         exports.mapReload(js.handle);
         // if it's running and updated, signal it to shutdown so new code/config is run at next request
         if(js.pid) try {
-            logger.info("restarting " + js.id + " running at pid " + js.pid);
+            logger.info("restarting " + js.handle + " running at pid " + js.pid);
             process.kill(js.pid, "SIGTERM");
         } catch(e) {}
         // worth detecting if it changed here first?
@@ -153,11 +170,10 @@ exports.mapUpsert = function (file) {
 
     // creating from scratch
     logger.verbose("creating "+js.handle);
-    js.id = js.provider = js.handle; // kinda legacy where they could differ
-    serviceMap[js.id] = js;
+    serviceMap[js.handle] = js;
     js.installed = Date.now();
     cleanLoad(js);
-    levents.fireEvent('service://me/#'+js.id, 'new', js);
+    levents.fireEvent('service://me/#'+js.handle, 'new', js);
     return js;
 }
 
@@ -259,15 +275,23 @@ exports.spawn = function(serviceId, callback) {
         }
         processInformation.mongo.collections = svc.mongoCollections;
     }
+
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
+    env["PATH"] += ":" + processInformation.sourceDirectory;
+
     var tstart = Date.now();
-    var app = spawn(run.shift(), run, {cwd: processInformation.sourceDirectory, env:process.env});
-    app.stdout.setEncoding("utf8");
+    var command = run[0];
+    var args = run.slice(1);
+    logger.verbose("Spawning command '" + command + "'' with args " + JSON.stringify(args) + ", cwd " + processInformation.sourceDirectory + " and processInfo " + JSON.stringify(processInformation));
+    var app = spawn(command, args, {cwd: processInformation.sourceDirectory, env:process.env});
+
     app.stderr.on('data', function (data) {
         process.stderr.write('[' + svc.id + '] ' + data.toString());
     });
+
     var dbuff = "";
+    app.stdout.setEncoding("utf8");
     app.stdout.on('data',function (data) {
         if (svc.hasOwnProperty("pid")) {
             // We're already running so just log it for them
@@ -320,6 +344,7 @@ exports.spawn = function(serviceId, callback) {
         }
 
     });
+
     app.on('exit', function (code,signal) {
         logger.info(svc.id + " exited with status " + code + ", signal " + signal);
         var id = svc.id;
@@ -332,11 +357,14 @@ exports.spawn = function(serviceId, callback) {
         svc.ended = Date.now();
         checkForShutdown();
     });
+
     logger.verbose("sending "+svc.id+" startup info of "+JSON.stringify(processInformation));
+
     app.stdin.on('error',function(err){
         logger.error("STDIN error:" + util.inspect(err));
     });
     app.stdin.write(JSON.stringify(processInformation)+"\n"); // Send them the process information
+
     // We track this here because app.pid doesn't seem to work inside the next context
     svc.startingPid = app.pid;
     svc.last = Date.now();

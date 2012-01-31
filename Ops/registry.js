@@ -57,7 +57,6 @@ exports.init = function(serman, syncman, config, crypto, callback) {
                     logger.error("couldn't parse registry.json: "+E);
                 }
                 if(lconfig.registryUpdate === true) {
-                    syncTimer = setInterval(exports.sync, syncInterval);
                     exports.sync();
                 }
                 process.chdir(lconfig.lockerDir);
@@ -90,7 +89,7 @@ exports.app = function(app)
         Object.keys(regIndex).forEach(function(key) {
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
                 // not all connectors need auth keys!
-                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") connectors.push(regIndex[key]);
+                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false" && !regIndex[key].repository.hidden) connectors.push(regIndex[key]);
                 // require keys now
                 if(apiKeys[key]) connectors.push(regIndex[key]);
             }
@@ -132,18 +131,17 @@ exports.app = function(app)
 function publishPackage(req, res) {
     logger.info("registry publishing "+req.params.id);
     var id = req.params.id;
-    if(id.indexOf("-") <= 0) return res.send("not found", 404);
-    if(id.indexOf("..") >= 0 || id.indexOf("/") >= 0) return res.send("invalid id characters", 500)
-    id = id.replace("-","/");
-    var dir = path.join(lconfig.lockerDir, lconfig.me, 'github', id);
-    fs.stat(dir, function(err, stat){
-        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 500);
+    var svc = serviceManager.map()[id];
+    if(!svc || !svc.srcdir) return res.send("not found in map", 400);
+    var dir = svc.srcdir;
+    if(!dir || dir.indexOf('Me/github/') != 0) return res.send("package path not valid", 400);
+    fs.stat(dir, function(err, stat) {
+        if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 400);
         var args = req.query || {};
         args.dir = dir;
-        if (req.body) {
-            args.body = req.body;
-        }
-        exports.publish(args, function(err, doc){
+        args.id = id;
+        if(req.body) args.body = req.body;
+        exports.publish(args, function(err, doc) {
             // npm publish always returns an error even though it works, so until that's fixed, commenting this out
             //if(err) res.send(err, 500);
             res.send(doc);
@@ -152,33 +150,61 @@ function publishPackage(req, res) {
 }
 
 function publishScreenshot(req, res) {
-    // first, required github
-    req.pause();
-    regUser(function(err, auth){
-        if(err ||!auth || !auth._auth) {
-            res.send(400, err);
-            return;
-        }
-        logger.log("info", "Publising the screenshot for " + req.params.id);
-        request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
-            if (err) {
-                logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
-                res.send(400, err);
+    if(!req.params.id) return res.send('id undefined', 400);
+    // TODO: This should really use streams, but it's not letting us.
+    var buffer = new Buffer(Number(req.headers["content-length"]), "binary");
+    var offset = 0;
+    req.on("data", function(data) {
+        data.copy(buffer, offset, 0, data.length);
+        offset += data.length;
+    });
+    req.on("end", function() {
+        // first, required github
+        regUser(function(err, auth){
+            if(err ||!auth || !auth._auth) {
+                res.send(err, 400);
                 return;
             }
-
-            var putReq = request.put({uri:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev , headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth}});
-            putReq.on("error", function(err) {
-                console.log("error", "Error uploading the screenshot: " + err);
-                res.send(400, err);
+            logger.log("info", "Publising the screenshot for " + req.params.id);
+            request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function(err, result, body) {
+                if (err) {
+                    logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
+                    res.send(err, 400);
+                    return;
+                }
+                var putReq = request.put(
+                    {
+                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev ,
+                        headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth, "Content-Length":req.headers["content-length"]},
+                        body:buffer
+                    },
+                    function(putErr, putResult, putBody) {
+                        if (putErr) {
+                            logger.error("error", "Error uploading the screenshot: " + putErr);
+                            return res.send(putErr, 400);
+                        }
+                        logger.info("Registry done sending screenshot");
+                        res.send(200);
+                    }
+                );
+                //req.pipe(putReq);
+                /*
+                putReq.on("error", function(err) {
+                    res.send(400, err);
+                });
+                putReq.on("end", function() {
+                    res.send(200);
+                });
+                putReq.on("data", function(data) {
+                    console.log("registry: " + data);
+                });
+                req.on("data", function() {
+                    console.log("read some data for the registry");
+                });
+                */
             });
-            putReq.on("end", function() {
-                res.send(200);
-            });
-            req.resume();
-            req.pipe(putReq);
-        });
-    })
+        })
+    });
 }
 
 function getScreenshot(req, res) {
@@ -207,33 +233,41 @@ function loadInstalled(callback)
         var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
         fs.stat(ppath, function(err, stat){
             if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(item, false, function(){cb()}); // ignore individual errors
+            loadPackage(path.join(lconfig.me, 'node_modules', item, 'package.json'), false, function(){cb()}); // ignore individual errors
         });
     }, callback);
 }
 
 // load an individual package
-function loadPackage(name, upsert, callback)
+function loadPackage(ppath, upsert, callback)
 {
-    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'node_modules', name, 'package.json'), 'utf8', function(err, data){
+    fs.readFile(path.join(lconfig.lockerDir, ppath), 'utf8', function(err, data){
         if(err || !data) return callback(err);
+        var js;
         try{
-            var js = JSON.parse(data);
-            if(js.name != name) throw new Error("invalid package");
-            installed[js.name] = js;
+            js = JSON.parse(data);
+            installed[js.repository.handle] = js;
         }catch(E){
-            logger.error("couldn't parse "+name+"'s package.json: "+E);
+            logger.error("couldn't parse "+ppath+": "+E);
             return callback(E);
         }
         // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(path.join(lconfig.me,'node_modules',name,'package.json'));
-        callback(null, installed[name]);
+        if(upsert) serviceManager.mapUpsert(ppath);
+        callback(null, js);
     });
 }
 
 // background sync process to fetch/maintain the full package list
 exports.sync = function(callback, force)
 {
+    function finish(err) {
+        if (lconfig.registryUpdate) {
+            syncTimer = setTimeout(exports.sync, syncInterval);
+        }
+        if (callback) callback(err);
+    }
+
+    if (syncTimer) clearTimeout(syncTimer);
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
@@ -250,7 +284,7 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return callback ? callback(err) : "";
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish(err);
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         Object.keys(body).forEach(function(k){
@@ -267,7 +301,7 @@ exports.sync = function(callback, force)
         });
         // cache to disk lazily
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-        if(callback) callback();
+        finish();
     });
 };
 
@@ -292,8 +326,7 @@ exports.getMyApps = function(req, res) {
         if (gh && gh.login) {
             Object.keys(regIndex).forEach(function(k){
                 var thiz = regIndex[k];
-                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf('app-' + gh.login + '-') === 0) {
-                    console.dir(thiz);
+                if(thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf(gh.login + '-') === 0) {
                     apps[k] = thiz;
                 }
             });
@@ -305,11 +338,14 @@ exports.getMyApps = function(req, res) {
 // npm wrappers
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
-    if(!arg || !arg.name) return callback("missing package name");
-    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-    if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
-    logger.info("installing "+arg.name);
-    npm.commands.install([arg.name], function(err){
+    if(!arg || (!arg.name && !arg.path)) return callback("missing package name");
+    if(arg.name)
+    {
+        if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+        if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    }
+    logger.info("installing "+(arg.name||arg.path));
+    npm.commands.install([arg.name||path.join(lconfig.lockerDir, arg.path)], function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
@@ -317,15 +353,16 @@ exports.install = function(arg, callback) {
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
             return callback(err);
         }
-        loadPackage(arg.name, true, callback); // once installed, load
+        var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
+        loadPackage(ppath, true, callback); // once installed, load
     });
 };
 exports.update = function(arg, callback) {
     if(!arg || !arg.name) return callback("missing package name");
-    console.log("update is being ran on " + arg.name);
     npm.commands.update([arg.name], function(err){
         if(err) logger.error(err);
-        loadPackage(arg.name, true, callback); // once updated, re-load
+        var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
+        loadPackage(ppath, true, callback); // once updated, re-load
     });
 };
 
@@ -333,31 +370,33 @@ exports.update = function(arg, callback) {
 exports.publish = function(arg, callback) {
     if(!arg || !arg.dir) return callback("missing base dir");
     var pjs = path.join(arg.dir, "package.json");
-    logger.info("publishing "+pjs);
+    logger.info("attempting to publish "+pjs);
     // first, required github
-    github(function(gh){
+    github(function(gh) {
         if(!gh) return callback("github account is required");
         // next, required registry auth
-        regUser(function(err, auth){
+        regUser(function(err, auth) {
             if(err ||!auth || !auth._auth) return callback(err);
             // saves for publish auth and maintainer
             npm.config.set("username", auth.username);
             npm.config.set("email", auth.email);
             npm.config.set("_auth", auth._auth);
             // make sure there's a package.json
-            checkPackage(pjs, arg, gh, function(){
+            checkPackage(pjs, arg, gh, function(err) {
+                if(err) return callback(err);
                 // bump version
                 process.chdir(arg.dir); // this must be run in the package dir, grr
-                npm.commands.version(["patch"], function(err){
+                npm.commands.version(["patch"], function(err) {
                     process.chdir(lconfig.lockerDir); // restore
                     if(err) return callback(err);
                     // finally !!!
-                    npm.commands.publish([arg.dir], function(err){
+                    npm.commands.publish([arg.dir], function(err) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
-                        regIndex[updated.name] = updated; // shim it in, sync will replace it eventually too just to be sure
+                        regIndex[arg.id] = updated; // shim it in, sync will replace it eventually too just to be sure
+                        serviceManager.mapUpsert(pjs);
                         callback(null, updated);
-                    })
+                    });
                 });
             });
         });
@@ -365,45 +404,29 @@ exports.publish = function(arg, callback) {
 };
 
 // make sure a package.json exists, or create one
-function checkPackage(pjs, arg, gh, callback)
-{
-    fs.stat(pjs, function(err, stat){
-        var js = {};
-        if(err || !stat || !stat.isFile())
-        {
-            var pkg = path.basename(path.dirname(pjs));
-            var handle = ("app-" + gh.login + "-" + pkg).toLowerCase();
-            var js = {
-              "author": { "name": gh.login },
-              "name": handle,
-              "description": arg.description || "auto generated",
-              "version": "0.0.0",
-              "repository": {
-                "title": arg.title || pkg,
-                "handle": handle,
-                "type": "app",
-                "author": gh.login,
-                "static": true,
-                "update": true,
-                "github": "https://github.com/"+gh.login+"/"+pkg
-              },
-              "dependencies": {},
-              "devDependencies": {},
-              "engines": {"node": "*"}
-            };
-        } else {
-            js = JSON.parse(fs.readFileSync(pjs));
+function checkPackage(pjs, arg, gh, callback) {
+    fs.stat(pjs, function(err, stat) {
+        if(err || !stat || !stat.isFile()) return callback(err || new Error(pjs + ' does not exist.'));
+        try {
+            var js = JSON.parse(fs.readFileSync(pjs));
+        } catch(err) {
+            return callback(err);
+        }
+        if(js.name != arg.id) {
+            logger.warn('while checking package ' + arg.dir + ', found inconsisent name (' + js.name + ') and id (' + arg.id +'), setting name = id');
+            js.name = arg.id;
+        }
+        if(js.repository.handle != arg.id) {
+            logger.warn('while checking package ' + arg.dir + ', found inconsisent handle (' + js.repository.handle + ') and id (' + arg.id +'), setting name = id');
+            js.repository.handle = arg.id;
         }
         if (arg.body) {
-            if (arg.body.title) {
-                js.repository.title = arg.body.title;
+            if (arg.body.title) js.repository.title = arg.body.title;
+            if (arg.body.description) {
+                js.repository.description = arg.body.description;
+                js.description = arg.body.description;
             }
-            if (arg.body.desc) {
-                js.repository.desc = arg.body.desc;
-            }
-            if (arg.body.uses) {
-                js.repository.uses = arg.body.uses;
-            }
+            if (arg.body.uses) js.repository.uses = arg.body.uses;
         }
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();

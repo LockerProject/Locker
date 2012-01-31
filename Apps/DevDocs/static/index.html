@@ -33,7 +33,9 @@
 $(document).ready(function() {
     checkForToken(function(token) {
         if(!token || !token.apiToken) return;
-        $("#token").html("baseUrl = 'https://api.singly.com/"+token.apiToken+"';");
+        if (document.location.hostname.substr(0,3) != 'me.') return;
+        var host = document.location.hostname.substr(3);
+        $("#token").html("baseUrl = 'https://api."+host+"/"+token.apiToken+"';");
     });
     waitForGitHubConnected(function() {
         pollForGitHubProfile(function(profile) {

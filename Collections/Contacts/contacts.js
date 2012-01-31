@@ -9,18 +9,18 @@
 
 // merge contacts from connectors
 
-var fs = require('fs'),
-    locker = require('locker.js'),
-    logger;
-var lutil = require('lutil');
-var url = require('url');
+var fs = require('fs')
+  , locker = require('locker.js')
+  , express = require('express')
+  , connect = require('connect')
+  , lutil = require('lutil')
+  , url = require('url')
+  , sync = require('./sync')
+  , dataStore = require('./dataStore')
+  , logger
+  , lockerInfo
+  ;
 
-var sync = require('./sync');
-var dataStore = require("./dataStore");
-
-var lockerInfo;
-var express = require('express'),
-    connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 
 app.set('views', __dirname);
@@ -30,7 +30,7 @@ app.get('/state', function(req, res) {
         if(err) return res.send(err, 500);
         dataStore.getLastObjectID(function(err, lastObject) {
             if(err) return res.send(err, 500);
-            var objId = "000000000000000000000000";
+            var objId = '000000000000000000000000';
             if (lastObject) objId = lastObject._id.toHexString();
             var updated = Date.now();
             try {
@@ -51,18 +51,17 @@ app.get('/', function(req, res) {
         } catch(E) {}
     }
     dataStore.getAll(fields, function(err, cursor) {
-        if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
-        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
-        if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        if(req.query['stream'] == "true")
-        {
+        if(!req.query.all) cursor.limit(20); // default 20 unless all is set
+        if(req.query.limit) cursor.limit(parseInt(req.query.limit));
+        if(req.query.offset) cursor.skip(parseInt(req.query.offset));
+        if(req.query.stream == 'true') {
             res.writeHead(200, {'content-type' : 'application/jsonstream'});
             cursor.each(function(err, object){
                 if (err) logger.error(err); // only useful here for logging really
                 if (!object) return res.end();
                 res.write(JSON.stringify(object)+'\n');
             });
-        }else{
+        } else {
             cursor.toArray(function(err, items) {
                 res.send(items);
             });
@@ -71,40 +70,28 @@ app.get('/', function(req, res) {
 });
 
 app.get('/update', function(req, res) {
-    sync.gatherContacts(function(){
-        res.writeHead(200);
-        res.end('Updating');
+    sync.gatherContacts(function() {
+        res.send('updated');
     });
 });
 
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
         logger.error('5 HUNDO');
-        res.writeHead(500);
-        res.end('bad data');
+        res.send('bad data', 500);
         return;
     }
     // we don't support these yet
-    if(req.body.action == "delete")
-    {
-        return res.send("skipping");
-    }
+    if(req.body.action == 'delete') return res.send('skipping');
     var idr = url.parse(req.body.idr);
     dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
-        if (err) {
-            res.writeHead(500);
-            res.end(err);
-        } else {
-            res.writeHead(200);
-            res.end('processed event');
-        }
+        if (err) res.send(err, 500);
+        else res.send('processed event');
     });
 });
 
-app.get("/since", function(req, res) {
-    if (!req.query.id) {
-        return res.send([]);
-    }
+app.get('/since', function(req, res) {
+    if (!req.query.id) return res.send([]);
 
     var results = [];
     dataStore.getSince(req.query.id, function(item) {
@@ -133,10 +120,9 @@ process.stdin.on('data', function(data) {
     }
     process.chdir(lockerInfo.workingDirectory);
 
-
     var lconfig = require('lconfig');
     lconfig.load('../../Config/config.json');
-    logger = require("logger.js");
+    logger = require('logger.js');
     locker.connectToMongo(function(mongo) {
         sync.init(lockerInfo.lockerUrl, mongo.collections.contact, mongo, lconfig);
         app.listen(0, function() {
