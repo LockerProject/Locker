@@ -24,7 +24,7 @@ exports.sync = function(arg, cb) {
         // labels must be created first, if any, pretty lame
         async.forEachSeries(issue.labels, function(name, cb3){ label(arg.auth.accessToken, issue.repo, name, cb3); }, function(){
             delete issue.repo;
-            request.post({uri:url, body:JSON.stringify(issue)}, function(err, resp, body){
+            request.post({uri:url, json:issue}, function(err, resp, body){
                 if(err) errors.push(err); // accumulate them for mass return
                 ret.data.issue.push(body);
                 cb2();

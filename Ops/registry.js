@@ -131,11 +131,11 @@ function publishPackage(req, res) {
         args.dir = dir;
         args.id = id;
         if(req.body) args.body = req.body;
-        exports.publish(args, function(err, doc) {
+        exports.publish(args, function(err, doc, issue) {
             if(err) logger.error(err);
             // npm publish always returns an error even though it works, so until that's fixed, commenting this out
             //if(err) res.send(err, 500);
-            res.send(doc);
+            res.send({err:err, doc:doc, issue:issue});
         });
     });
 }
@@ -411,7 +411,8 @@ exports.publish = function(arg, callback) {
                         delete require.cache[isynclet]; // don't keep the copy in ram!
                         issues.sync(pi, function(err, js){
                             if(err) return callback(err);
-                            if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("failed to create issue");
+                            console.error(js);
+                            if(!js || !js.data || !js.data.issue || !js.data.issue[0] || !js.data.issue[0].number) return callback("failed to create issue to track this for publishing, please re-auth github"); // this text triggers a more friendly response in dashboardv3
                             // save pending=issue# to package.json
                             callback(null, updated, js.data.issue[0]);
                         });

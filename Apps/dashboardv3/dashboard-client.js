@@ -214,11 +214,31 @@ var submitPublish = function(req, res) {
                     request.post({uri: locker.lockerBase + '/registry/publish/' + handle, json: data}, function(err, resp, body) {
                         if(err) {
                             console.error('error publishing ' + handle + ', got status code ' + resp.statusCode, err);
-                            return res.send('error publishing' + err, 500);
+                            return res.send('error publishing ' + err, 500);
                         }
                         if(resp.statusCode != 200) {
                             console.error('error publishing ' + handle + ', got status code ' + resp.statusCode + ':', body);
-                            return res.send('error publishing: ' + body, 500);
+                            return res.send('error message from publishing: ' + body, 500);
+                        }
+                        if(!body) {
+                            console.error('error publishing ' + handle + ':', body);
+                            return res.send('error publishing, ' + JSON.stringify(body), 500);
+                        }
+                        if(body.err) {
+                            if(typeof body.err == 'string' && body.err.indexOf("failed to create issue") != -1) {
+                                console.error('asking to re-auth');
+                                // TODO this should link to or say to go to auth settings to re-auth instead of it being jacked in here!
+                                var htm = '<script>function pop(){'
+                                    +'var options = "width=1000,height=1000,status=no,scrollbars=no,resizable=no";'
+                                    +'var popup = window.open("/auth/github", "account", options);'
+                                    +'popup.focus(); popup.opener = window;'
+                                    +'return false;'
+                                +'}; var self = window; function syncletInstalled(){self.history.back();}</script>'
+                                +'Oops, please <a href="/auth/github" onClick="pop()">re-authenticate</a> to github so that we can create an issue to track this request, thanks!';
+                                return res.send(htm);
+                            }
+                            console.error('error publishing ' + handle + ':', body.err);
+                            return res.send('error publishing - ' + JSON.stringify(body.err), 500);
                         }
                         var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
                         // Send the screenshot
