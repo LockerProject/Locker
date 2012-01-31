@@ -396,19 +396,22 @@ exports.publish = function(arg, callback) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
                         serviceManager.mapUpsert(pjs);
-pattern
                         // create an issue to track this publish request
-                        var pi = {};
+                        var pi = {syncletToRun:{}};
                         pi.auth = serviceManager.map('github').auth;
-                        pi.posts = [];
+                        pi.syncletToRun.posts = [];
                         var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
+                        issue.repo = 'Singly/apps';
                         issue.labels = updated.name.split('-');
                         issue.labels.push('App');
-                        pi.posts.push(issue);
-                        var issues = require(path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js")); // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
+                        pi.syncletToRun.posts.push(issue);
+                        // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
+                        var isynclet = path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js");
+                        var issues = require(isynclet);
+                        delete require.cache[isynclet]; // don't keep the copy in ram!
                         issues.sync(pi, function(err, js){
                             if(err) return callback(err);
-                            if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("missing issue");
+                            if(!js || !js.data || !js.data.issue || !js.data.issue[0]) return callback("failed to create issue");
                             // save pending=issue# to package.json
                             callback(null, updated, js.data.issue[0]);
                         });
