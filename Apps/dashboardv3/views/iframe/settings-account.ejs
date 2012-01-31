@@ -3,16 +3,16 @@
 <html>
   <head>
     <%- partial('header_partial') %>
-    <link rel="stylesheet" href="css/connect.css" />
+    <link rel="stylesheet" href="css/settings-account.css" />
     <script src="js/settings.js"></script>
   </head>
   <body>
     <content class="body">
     <form action="<%= config.integralURL || 'https://singly.com/' %>/users/me" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
       <div>
-        <p><img width="50" height="50" src="http://singly.com/blank.gif" />
+        <p><img class="avatar" src="<%= profileImage %>" />
         This is your current avatar</p>
-        <input type="submit" name="avi-chooser" value="Choose File" />
+        <input type="file" name="avi-chooser" value="Choose File" />
         <p>OR</p>
         <input type="text" name="avi-url" placeholder="Set URL for image" />
       </div>
@@ -22,15 +22,15 @@
       <div>
         <input type="text" name="email" placeholder="Email address" />
       </div>
-      <div>
-        <label for="old-password" id="old-password-label">
-          Current password
-        </label>
-        <input type="password" name="old-password">
-        <label for="new-password" id="new-password-label">
-          New password
-        </label>
-        <input type="password" name="new-password">
+      <div id="password-changer">
+        <div>
+          <label for="old-password" id="old-password-label">Current password</label>
+          <input type="password" name="old-password" />
+        </div>
+        <div>
+          <label for="new-password" id="new-password-label">New password</label>
+          <input type="password" name="new-password" />
+        </div>
       </div>
       <div>
         <label for="optout" id="optout_label">
