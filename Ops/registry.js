@@ -48,6 +48,8 @@ exports.init = function(serman, syncman, config, crypto, callback) {
         var home = path.join(lconfig.lockerDir, lconfig.me);
         process.chdir(home);
         var config = {registry:regBase, cache:path.join(home, '.npm')};
+        config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
+        config.locker_base = lconfig.lockerBase;
         npm.load(config, function(err) {
             if(err) logger.error(err);
             fs.readFile('registry.json', 'utf8', function(err, reg){
