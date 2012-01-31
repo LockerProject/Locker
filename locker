@@ -37,14 +37,17 @@ if [ ! -f "$apikeys" ]; then
     exit 1
 fi
 
-if [ "$lockermode" != "production" ]; then
-    # Automatically check and repair mongo
-
-    mongodata=Me/mongodata
-    mongolock=$mongodata/mongod.lock
-    if [ -s $mongolock ]; then
-        echo "mongod lock file exists: $mongolock..."
-        pid=$(cat "$mongolock")
+mongodata=Me/mongodata
+mongolock=$mongodata/mongod.lock
+if [ -s $mongolock ]; then
+    echo "mongod lock file exists: $mongolock..."
+    pid=$(cat "$mongolock")
+    if [ "$lockermode" = "production" ]; then
+        # Shut it down
+        echo "...shutting it down"
+        kill "$pid"
+    else
+        # Automatically check and repair mongo
         if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
             echo "...and it's still running.  Hopefully that's OK."
         else
