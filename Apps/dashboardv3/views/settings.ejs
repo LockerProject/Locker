@@ -4,7 +4,9 @@
 <div class="sidenav-items">
   <ul>
     <li><a class="iframeLink" data-id="Settings-Connections" href="#">Connections</a></li>
+    <% if (dashboard.customHostedEndpoint) { %>
     <li><a class="iframeLink" data-id="Settings-AccountInformation" href="#">Account Information</a></li>
     <li><a class="iframeLink" data-id="Settings-APIKey" href="#">API Key</a></li>
+    <% } %>
   </ul>
 </div>

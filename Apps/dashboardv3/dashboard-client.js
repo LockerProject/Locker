@@ -132,7 +132,7 @@ var renderExplore = function(req, res) {
 };
 
 var renderSettings = function(req, res) {
-    res.render('settings', {});
+    res.render('settings', {dashboard: lconfig.dashboard});
 };
 
 var renderSettingsConnectors = function(req, res) {
@@ -556,4 +556,4 @@ var getInstalledConnectors = function(callback) {
        }
        callback(err, installedConnectors);
     });
-}
+};
