@@ -1,28 +1,11 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
-describe 'dashboard' do
-  it 'allows people to switch between 4 views' do
+describe 'dashboard' do 
+  it 'allows people to see the connect page' do
     visit '/'
-    page.should have_css('.iframeLink[data-id="You-contactsviewer"]')
-    page.execute_script("$('.iframeLink[data-id=\"You-contactsviewer\"]').click()")
     within_frame 'appFrame' do
-      page.should have_content('Jeremie')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"You-photosv09\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="You-photosv09"]')
-    within_frame 'appFrame' do
-      page.should have_content('Photos')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"You-linkalatte\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="You-linkalatte"]')
-    within_frame 'appFrame' do
-      page.should have_content('Links')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"You-helloplaces\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="You-helloplaces"]')
-    within_frame 'appFrame' do
-      page.should have_content('Places')
+      page.should have_content('Welcome! Connect services to begin.')
     end
   end
 
