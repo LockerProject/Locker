@@ -587,6 +587,7 @@ var getConnectors = function(callback) {
                             var usernameIndex = installedConnectors[i].profileIds[1];
                             connector.username = installedConnectors[i].auth.profile[usernameIndex];
                           }
+                          console.log(require('util').inspect(installedConnectors[i], false, null));
                         }
                     }
                     if (!connector.repository.oauthSize) {
