@@ -547,5 +547,13 @@ var getConnectors = function(callback) {
 };
 
 var getInstalledConnectors = function(callback) {
-    locker.mapType("connector", callback);
-};
+    getConnectors(function(err, connectors) {
+       var installedConnectors = [];
+       for (var i=0; i<connectors.length; i++) {
+           if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
+               installedConnectors.push(connectors[i]);
+           }
+       } 
+       callback(err, installedConnectors);
+    });
+}
