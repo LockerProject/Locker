@@ -75,7 +75,6 @@ p {
   width: 600px;
 }
 ul {
-  width: 400px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -87,7 +86,6 @@ ul li {
 ul li:last-child { border-bottom: none; }
 ul span {
   display: inline-block;
-  width: 100px;
   margin-right: 20px;
   text-align: right;
 }

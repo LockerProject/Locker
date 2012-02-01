@@ -42,14 +42,21 @@ mongolock=$mongodata/mongod.lock
 if [ -s $mongolock ]; then
     echo "mongod lock file exists: $mongolock..."
     pid=$(cat "$mongolock")
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-        echo "...and it's still running.  Hopefully that's OK."
+    if [ "$lockermode" = "production" ]; then
+        # Shut it down
+        echo "...shutting it down"
+        kill "$pid"
     else
-        echo "...but it's dead.  Cleaning up..."
-        rm -f "$mongolock"
-        if ! mongod --dbpath "$mongodata" --repair; then
-            echo "mongod --repair failed!" >&2
-            exit 1
+        # Automatically check and repair mongo
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "...and it's still running.  Hopefully that's OK."
+        else
+            echo "...but it's dead.  Cleaning up..."
+            rm -f "$mongolock"
+            if ! mongod --dbpath "$mongodata" --repair; then
+                echo "mongod --repair failed!" >&2
+                exit 1
+            fi
         fi
     fi
 fi

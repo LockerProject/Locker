@@ -2,7 +2,7 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "linkalatte",
   "description": "A way to see all of the links shared by your contacts across services.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "https://github.com/LockerProject/locker",
   "repository": {
     "type": "app",
