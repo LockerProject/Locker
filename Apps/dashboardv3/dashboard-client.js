@@ -580,7 +580,8 @@ var getConnectors = function(callback) {
                 if (body[key].repository.type == "connector") {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
-                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) {
+                        if (installedConnectors[i].id === connector.name && installedConnectors[i].authed) {
+                          console.log(connector.name + ": " + installedConnectors[i].authed);
                           connector.authed = true;
                           connector.username = getReadableProfileNameForConnector(installedConnectors[i]);
                         }
@@ -611,48 +612,44 @@ var getInstalledConnectors = function(callback) {
 
 var getReadableProfileNameForConnector = function(connector) {
 
-  function tryForProfileName(name) {
-    try {
-      return name;
-    } catch(e) { return ''; }
-  }
-
   // TODO: absolutely need to refactor this into the profile collection once we have it done.  Until then, here we are:
-  switch(connector.handle){
-    case 'facebook':
-      return tryForProfileName(connector.auth.profile.username);
-      break;
-    case 'twitter':
-      return '@' + tryForProfileName(connector.auth.profile.screen_name);
-      break;
-    case 'rdio':
-      return tryForProfileName(connector.auth.profile.url.split('/')[2]);
-      break;
-    case 'lastfm':
-      return tryForProfileName(connector.auth.profile.name);
-      break;
-    case 'flickr': // TODO: flickr connector has empty auth object
-      return tryForProfileName('');
-      break;
-    case 'foursquare':
-      return tryForProfileName(connector.auth.profile.canonicalUrl.split('/')[3]);
-      break;
-    case 'gcontacts': // TODO: gcontacts connector has empty auth object
-      return tryForProfileName('');
-      break;
-    case 'instagram':
-      return tryForProfileName(connector.auth.profile.username);
-      break;
-    case 'pandora': // TODO: pandora connector has empty auth object
-      return tryForProfileName('');
-      break;
-    case 'rdio':
-      return tryForProfileName(connector.auth.profile.firstName) + tryForProfileName(connector.auth.profile.lastName);
-      break;
-    case 'github':
-      return tryForProfileName(connector.auth.profile.login);
-      break;
-    default:
-      return '';
-  }
+  try {
+    switch(connector.handle){
+      case 'facebook':
+        return connector.auth.profile.username;
+        break;
+      case 'twitter':
+        return '@' + connector.auth.profile.screen_name;
+        break;
+      case 'rdio':
+        return connector.auth.profile.url.split('/')[2];
+        break;
+      case 'lastfm':
+        return connector.auth.profile.name;
+        break;
+      case 'flickr': // TODO: flickr connector has empty auth object
+        return '';
+        break;
+      case 'foursquare':
+        return connector.auth.profile.canonicalUrl.split('/')[3];
+        break;
+      case 'gcontacts': // TODO: gcontacts connector has empty auth object
+        return '';
+        break;
+      case 'instagram':
+        return connector.auth.profile.username;
+        break;
+      case 'pandora': // TODO: pandora connector has empty auth object
+        return '';
+        break;
+      case 'rdio':
+        return connector.auth.profile.firstName + connector.auth.profile.lastName;
+        break;
+      case 'github':
+        return connector.auth.profile.login;
+        break;
+      default:
+        return '';
+    }
+  } catch(e) { return ''; }
 };

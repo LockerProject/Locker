@@ -28,8 +28,10 @@
              <% } %>
              <% if (connectors[i].hasOwnProperty('username')) { %>
                <div class="synclet-username"><%= connectors[i].username %></div>
-             <% } %>  
-             <span class="synclet-disconnect"><a class="disconnector" href="#">Disconnect</a></span>
+             <% } %>
+             <% if (connectors[i].hasOwnProperty('authed')) { %>
+               <span class="synclet-disconnect"><a class="disconnector" href="/deauth/<%= connectors[i].repository.handle %>">Disconnect</a></span>
+              <% } %>
           </li>
           <% } %>
         <% } %>

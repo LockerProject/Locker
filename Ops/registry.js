@@ -118,6 +118,8 @@ exports.app = function(app)
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
+    
+    app.get('/deauth/:id', deauthIsAwesomer);
 }
 
 function publishPackage(req, res) {
@@ -618,4 +620,14 @@ function finishAuth(js, auth, res) {
     serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
+}
+
+function deauthIsAwesomer(req, res) {
+  var home = path.join(lconfig.lockerDir, lconfig.me);
+  var serviceName = req.url.split("/")[2];
+  var service = serviceManager.map(serviceName);
+  service.auth = {};
+  service.authed = undefined;
+  serviceManager.mapDirty(serviceName);
+  res.redirect('back');
 }
