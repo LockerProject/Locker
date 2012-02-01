@@ -221,7 +221,9 @@ function verify(pkg)
 var syncCallbacks = [];
 exports.sync = function(callback, force)
 {
-    if(!callback) callback = function(){}; // callback is required
+    if(!callback) callback = function(err){
+        if(err) logger.error(err);
+    }; // callback is required
     syncCallbacks.push(callback);
 
     // if we're syncing already, bail
@@ -251,7 +253,7 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish("couldn't sync with registry");
+        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish("couldn't sync with registry: "+err+" "+body);
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         // new updates from the registry, update our local mirror
