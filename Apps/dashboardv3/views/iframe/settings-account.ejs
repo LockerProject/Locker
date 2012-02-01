@@ -10,34 +10,34 @@
   <body>
     <content class="body">
     <form action="settings-account" method="post" accept-charset="utf-8" enctype="multipart/form-data">
-      <div class="avi">
-        <p><img class="avatar" src="<%= profileImage %>" />
+      <div id="settings_avatar">
+        <p><img class="avatar" alt="your avatar" src="<%= profileImage %>" />
         This is your current avatar</p>
-        <input type="file" name="avi" value="Choose File" />
+        <input type="file" id="avi_chooser" name="avi_chooser" value="Choose File" />
         <p>OR</p>
-        <input type="text" name="avi-url" placeholder="Set URL for image" />
+        <input type="text" class="disabled" id="avi_url" name="avi_url" placeholder="Set URL for image" />
       </div>
-      <div>
-        <input type="text" name="accountholder-name" placeholder="Name" />
+      <div id="settings_name">
+        <input type="text" name="name" placeholder="Name" />
       </div>
       <div>
         <input type="text" name="email" placeholder="Email address" />
       </div>
-      <div id="password-changer">
+      <div id="settings_password">
         <div>
-          <label for="old-password" id="old-password-label">Current password</label>
-          <input type="password" name="old-password" />
+          <label for="old_password" id="old_password_label">Current password</label>
+          <input type="password" name="old_password" />
         </div>
         <div>
-          <label for="new-password" id="new-password-label">New password</label>
-          <input type="password" name="new-password" />
+          <label for="new_password" id="new_password_label">New password</label>
+          <input type="password" name="new_password" />
         </div>
       </div>
-      <div class="analytics">
+      <div id="settings_analytics">
         <label for="optout" id="optout_label">Opt out of anonymous analytics?</label>
         <input type="checkbox" name="optout" value="true" id="optin" />
         <br />
-        <input id="save-button" type="submit" value="Save Changes">
+        <input id="save_button" type="submit" value="Save Changes">
       </div>
     </form>
     </content>

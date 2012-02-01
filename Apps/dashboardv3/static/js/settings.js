@@ -18,13 +18,24 @@ $(function () {
         return false;
     });
 
-    if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
-        showAllConnectors();
+    $('input[name=name]').val(info.name);
+    $('input[name=email]').val(info.email);
+
+    if (info.imageUrl) {
+        $('input[name=avi_url]').val(info.imageUrl);
+        $('input[name=avi_chooser]').prop('disabled', true);
     }
 
-    $('input[name=accountholder-name]').val(info.name);
-    $('input[name=email]').val(info.email);
-    $('input[name=avi-url]').val(info.imageUrl);
+    $('body').delegate('#avi_url.disabled', 'click', function (e) {
+        $('input[name=avi_url]').removeClass('disabled');
+        $('input[name=avi_chooser]').addClass('disabled');
+    });
+
+    $('body').delegate('#avi_chooser.disabled', 'click', function (e) {
+        $('input[name=avi_chooser]').removeClass('disabled');
+        $('input[name=avi_url]').addClass('disabled');
+        $('input[name=avi_url]').val('');
+    });
 
     showAllConnectors();
 });

@@ -38,17 +38,21 @@ h1 {
   display: none;
 }
 
-.avi img {
+#settings_avatar img {
   margin-right:20px;
   vertical-align:middle;
 }
 
-.avi p {
+#settings_avatar p {
   margin-top:20px;
-  margin-bottom:20px;
+  margin-bottom:10px;
 }
 
-.analytics {
+#settings_name {
+  margin-top:20px;
+}
+
+#settings_analytics {
   width:368px;
   text-align:right;
   margin-top:20px;
@@ -62,19 +66,27 @@ input[type=text], input[type=password] {
   margin:6px 0;
 }
 
-#password-changer {
+input[type=text].disabled {
+  border:1px solid #bfbfbf;
+}
+
+input[type=file].disabled {
+  color: #bfbfbf;
+}
+
+#settings_password {
   margin-top:20px;
 }
 
-#password-changer div {
+#settings_password div {
   margin-right:20px;
   display:inline-block;
 }
 
-#password-changer label, #password-changer input {
+#settings_password label, #settings_password input {
   display:block;
 }
 
-#save-button {
+#save_button {
   margin-top:20px;
 }
