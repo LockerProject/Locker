@@ -1,6 +1,5 @@
 {
     "provides":["connection/linkedin"],
-    "profileIds" : ["id", "name"],
     "synclets":[
         {"name": "profile", "frequency": 86400, "threshold": 0},
         {"name": "connections", "frequency": 86400, "threshold": 0}
