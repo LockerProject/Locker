@@ -5,7 +5,7 @@ describe 'dashboard' do
   it 'allows people to see the connect page' do
     visit '/'
     within_frame 'appFrame' do
-      page.should have_content('Welcome! Connect services to begin.')
+      page.should have_content("Nobody Selected")
     end
   end
 
