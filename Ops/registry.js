@@ -349,7 +349,6 @@ exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
     var npmarg = [];
-    if(serviceManager.map(arg.name) && serviceManager.map(arg.name).version == reg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
 
     // if not in registry yet, sync to latest!
     var reg = regIndex[arg.name];
@@ -360,6 +359,8 @@ exports.install = function(arg, callback) {
         });
         return;
     }
+
+    if(serviceManager.map(arg.name) && serviceManager.map(arg.name).version == reg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
     var npmarg = [arg.name+'@'+reg.latest];
     logger.info("installing "+JSON.stringify(npmarg));
     npm.commands.install(npmarg, function(err){
