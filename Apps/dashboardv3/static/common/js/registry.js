@@ -62,8 +62,10 @@ registry.getAllConnectors = function(callback) {
 
 function getMyApps(callback, force) {
   if(cache.myApps !== undefined && !force) return callback(cache.myApps, true);
-  $.getJSON('/registry/added', function(myApps, success) {
-    if(!success) return callback(myApps, success);
+  $.getJSON('/map', function(map, success) {
+    if(!success) return callback(map, success);
+    var myApps = {};
+    for(var i in map) if(map[i].type === 'app') myApps[i] = map[i];
     cache.myApps = myApps;
     if(typeof callback === 'function') callback(myApps, success);
   }).error(function() {
@@ -107,7 +109,7 @@ registry.getMyConnectors = function(callback, force) {
     for(var i in map) if(map[i].type === 'connector') myConnectors[i] = map[i];
     cache.myConnectors = myConnectors;
     if(typeof callback === 'function') callback(myConnectors, success);
-  }).error(function() {  
+  }).error(function() {
     cache.myConnectors = null;
     if(typeof callback === 'function') callback(null);
   });
