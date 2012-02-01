@@ -214,11 +214,31 @@ var submitPublish = function(req, res) {
                     request.post({uri: locker.lockerBase + '/registry/publish/' + handle, json: data}, function(err, resp, body) {
                         if(err) {
                             console.error('error publishing ' + handle + ', got status code ' + resp.statusCode, err);
-                            return res.send('error publishing' + err, 500);
+                            return res.send('error publishing ' + err, 500);
                         }
                         if(resp.statusCode != 200) {
                             console.error('error publishing ' + handle + ', got status code ' + resp.statusCode + ':', body);
-                            return res.send('error publishing: ' + body, 500);
+                            return res.send('error message from publishing: ' + body, 500);
+                        }
+                        if(!body) {
+                            console.error('error publishing ' + handle + ':', body);
+                            return res.send('error publishing, ' + JSON.stringify(body), 500);
+                        }
+                        if(body.err) {
+                            if(typeof body.err == 'string' && body.err.indexOf("failed to create issue") != -1) {
+                                console.error('asking to re-auth');
+                                // TODO this should link to or say to go to auth settings to re-auth instead of it being jacked in here!
+                                var htm = '<script>function pop(){'
+                                    +'var options = "width=1000,height=1000,status=no,scrollbars=no,resizable=no";'
+                                    +'var popup = window.open("/auth/github", "account", options);'
+                                    +'popup.focus(); popup.opener = window;'
+                                    +'return false;'
+                                +'}; var self = window; function syncletInstalled(){self.history.back();}</script>'
+                                +'Oops, please <a href="/auth/github" onClick="pop()">re-authenticate</a> to github so that we can create an issue to track this request, thanks!';
+                                return res.send(htm);
+                            }
+                            console.error('error publishing ' + handle + ':', body.err);
+                            return res.send('error publishing - ' + JSON.stringify(body.err), 500);
                         }
                         var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
                         // Send the screenshot
@@ -311,11 +331,11 @@ var getAppsInfo = function(count, callback) {
 
 var renderYou = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {        
+    getAppsInfo(8, function(sortedResult) {
         getConnectors(function(err, connectors) {
             var firstVisit = false;
             var page = 'you';
-            
+
             getInstalledConnectors(function(err, installedConnectors) {
                 if (req.cookies.firstvisit === 'true' &&
                     installedConnectors.length === 0) {
@@ -459,16 +479,7 @@ var getRegistryApps = function(callback) {
 
 var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        apps = JSON.parse(body);
-        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
-            added = JSON.parse(added);
-            for (var i in added) {
-                if (apps[i]) {
-                    apps[i].installed = true;
-                }
-            }
-            callback(apps);
-        });
+        callback(JSON.parse(body));
     });
 }
 
@@ -489,7 +500,7 @@ var getConnectors = function(callback) {
     locker.mapType("connector", function(err, installedConnectors) {
         request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
             var connectors = [];
-            Object.keys(body).map(function(key) { 
+            Object.keys(body).map(function(key) {
                 if (body[key].repository.type == "connector") {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
@@ -499,7 +510,7 @@ var getConnectors = function(callback) {
                       connector.repository.oauthSize = {width:960, height:600};
                       console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
                     }
-                    connectors.push(connector); 
+                    connectors.push(connector);
                 }
             });
             callback(err, connectors);
