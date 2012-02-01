@@ -33,16 +33,11 @@ h1 {
   margin: 5px 0 0 0;
 }
 
-.oauthLink {
-  width: 150px;
-  display: inline-block;
-}
-
 .synclet-username {
   font-style: italic;
   display: inline-block;
   position: absolute;
-  margin: 10px 0 0 2px;
+  margin: 10px 0 0 10px;
 }
 
 .synclet-disconnect {
@@ -54,6 +49,8 @@ h1 {
 
 .connect-button {
   margin: 0;
+  width: 150px;
+  display: inline-block;
 }
 
 .hideable {
