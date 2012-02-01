@@ -158,6 +158,33 @@ var renderSettingsAccountInformation = function(req, res) {
     });
 };
 
+var handleAviUpload = function (req, res) {
+    if (!req.form) return res.send('bad form submission', 500);
+
+    req.form.complete(function (err, fields, files) {
+        if (err) return res.send('unable to process form: ' + err, 500);
+
+        var uploaded = fs.createReadStream(files.avi.path);
+        var avatar = fs.createWriteStream('tmpAvatar');
+
+        avatar.once('open', function (fd) {
+            util.pump(uploaded, avatar, function (err) {
+                if (err) return res.send('unable to write file: ' + err, 500);
+
+                im.resize({srcPath : 'tmpAvatar'
+                         , dstPath : 'avatar.png'
+                         , width   : 48
+                         , height  : 48}
+                        , function (err, stdout, stderr) {
+                              if (err) return res.send('unable to convert file: ' + err, 500);
+
+                              return res.send('ok');
+                          });
+            });
+        });
+    });
+};
+
 var renderSettingsAPIKey = function(req, res) {
     res.render('iframe/settings-api', {
         layout: false
@@ -190,7 +217,7 @@ var handleUpload = function(req, res) {
                 var write = fs.createWriteStream('tempScreenshot');
                 var uploadedFile = fs.createReadStream(files.file.path);
                 write.once('open', function(fd) {
-                    require('util').pump(uploadedFile, write);
+                    util.pump(uploadedFile, write);
                 });
                 res.send('ok');
             }
@@ -446,6 +473,7 @@ app.get('/settings', renderSettings);
 app.get('/settings-connectors', renderSettingsConnectors);
 app.get('/settings-account', renderSettingsAccountInformation);
 app.get('/settings-api', renderSettingsAPIKey);
+app.post('/settings-account', handleAviUpload);
 
 app.get('/allApps', renderApps);
 app.get('/create', renderCreate);
@@ -534,7 +562,7 @@ var getConnectors = function(callback) {
                     for (var i = 0; i < installedConnectors.length; ++i) {
                         if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) {
                           connector.authed = true;
-                          if (installedConnectors[i].hasOwnProperty('profileIds') && 
+                          if (installedConnectors[i].hasOwnProperty('profileIds') &&
                               installedConnectors[i].profileIds.length === 2) {
                             var usernameIndex = installedConnectors[i].profileIds[1];
                             connector.username = installedConnectors[i].auth.profile[usernameIndex];

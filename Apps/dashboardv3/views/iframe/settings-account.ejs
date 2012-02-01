@@ -9,11 +9,11 @@
   </head>
   <body>
     <content class="body">
-    <form action="<%= config.integralURL || 'https://singly.com/' %>/users/me" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+    <form action="settings-account" method="post" accept-charset="utf-8" enctype="multipart/form-data">
       <div class="avi">
         <p><img class="avatar" src="<%= profileImage %>" />
         This is your current avatar</p>
-        <input type="file" name="avi-chooser" value="Choose File" />
+        <input type="file" name="avi" value="Choose File" />
         <p>OR</p>
         <input type="text" name="avi-url" placeholder="Set URL for image" />
       </div>
