@@ -235,6 +235,7 @@ exports.sync = function(callback, force)
     function finish(err) {
         syncTimer = setTimeout(exports.sync, syncInterval);
         syncCallbacks.forEach(function(cb){ cb(err); });
+        syncCallbacks = [];
     }
 
     if (syncTimer) clearTimeout(syncTimer);
@@ -255,7 +256,7 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish("couldn't sync with registry: "+err+" "+body);
+        if(err || !body || typeof body !== "object" || body === null) return finish("couldn't sync with registry: "+err+" "+body);
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         // new updates from the registry, update our local mirror
