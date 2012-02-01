@@ -81,7 +81,7 @@ locker.get('/map/profiles', function(req, res) {
         var ids = map[key].profileIds || ['id'];
         for(var i in ids) {
             var id = ids[i];
-            if(!map[key].auth.profile[id]) return;
+            if(!map[key].auth.profile[id]) continue;
             idr.hash = map[key].auth.profile[id];
             profiles[url.format(idr)] = map[key].auth.profile;
         }
