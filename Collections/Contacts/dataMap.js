@@ -22,6 +22,7 @@ exports.facebook = {
     photo: function(data) {
         return 'https://graph.facebook.com/' + data.id + '/picture';
     },
+    gender: 'gender',
     or: {
         'accounts.foursquare.data.contacts.facebook':'id'
     }
