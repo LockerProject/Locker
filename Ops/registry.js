@@ -623,11 +623,10 @@ function finishAuth(js, auth, res) {
 }
 
 function deauthIsAwesomer(req, res) {
-  var home = path.join(lconfig.lockerDir, lconfig.me);
-  var serviceName = req.url.split("/")[2];
+  var serviceName = req.params.id;
   var service = serviceManager.map(serviceName);
-  service.auth = {};
-  service.authed = undefined;
+  delete service.auth;
+  delete service.authed;
   serviceManager.mapDirty(serviceName);
   res.redirect('back');
 }
