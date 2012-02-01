@@ -24,7 +24,7 @@ exports.sync = function (processInfo, cb) {
                      }
                      else {
                          processInfo.auth.profile = self;
-                         cb(null, {data : {profile : [self]}, auth : processInfo.auth});
+                         cb(null, {data : {self : [self]}, auth : processInfo.auth});
                      }
                  }
     );
