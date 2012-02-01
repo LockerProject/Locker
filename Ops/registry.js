@@ -627,6 +627,8 @@ function deauthIsAwesomer(req, res) {
   var service = serviceManager.map(serviceName);
   delete service.auth;
   delete service.authed;
+  service.deleted = Date.now();
   serviceManager.mapDirty(serviceName);
+  logger.info("disconnecting "+serviceName)
   res.redirect('back');
 }
