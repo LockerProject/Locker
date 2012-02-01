@@ -1,7 +1,7 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
-describe 'dashboard' do 
+describe 'dashboard' do
   it 'allows people to see the connect page' do
     visit '/'
     within_frame 'appFrame' do
