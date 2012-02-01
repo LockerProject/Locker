@@ -304,7 +304,9 @@ function usePkg(pkg, ver, callback)
             logger.verbose("skipping since local versionis not from the registry");
         }else{
             logger.verbose("auto-updating "+pkg.name);
-            exports.install({name:pkg.name}, function(){}); // lazy update
+            exports.install({name:pkg.name}, function(err){
+                if(err) logger.error(err);
+            }); // lazy update
         }
     }
     callback();
@@ -345,7 +347,7 @@ exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
     if(!arg || !arg.name) return callback("missing package name");
     var npmarg = [];
-    if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
+    if(serviceManager.map(arg.name) && serviceManager.map(arg.name).version == reg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
 
     // if not in registry yet, sync to latest!
     var reg = regIndex[arg.name];
