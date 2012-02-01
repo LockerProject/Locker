@@ -10,7 +10,7 @@
   <body>
     <content class="body">
     <form action="<%= config.integralURL || 'https://singly.com/' %>/users/me" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-      <div>
+      <div class="avi">
         <p><img class="avatar" src="<%= profileImage %>" />
         This is your current avatar</p>
         <input type="file" name="avi-chooser" value="Choose File" />
@@ -33,15 +33,12 @@
           <input type="password" name="new-password" />
         </div>
       </div>
-      <div>
-        <label for="optout" id="optout_label">
-          Opt out of anonymous analytics?
-        </label>
+      <div class="analytics">
+        <label for="optout" id="optout_label">Opt out of anonymous analytics?</label>
         <input type="checkbox" name="optout" value="true" id="optin" />
+        <br />
+        <input id="save-button" type="submit" value="Save Changes">
       </div>
-      <span id="save-button">
-        <input type="submit" value="Save Changes">
-      </span>
     </form>
     </content>
   </body>
