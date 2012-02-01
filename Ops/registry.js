@@ -22,7 +22,6 @@ var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
-var installed = {};
 var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
@@ -42,26 +41,22 @@ exports.init = function(serman, syncman, config, crypto, callback) {
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
-    loadInstalled(function(err){
+    var home = path.join(lconfig.lockerDir, lconfig.me);
+    process.chdir(home);
+    var config = {registry:regBase, cache:path.join(home, '.npm')};
+    config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
+    config.locker_base = lconfig.lockerBase;
+    npm.load(config, function(err) {
         if(err) logger.error(err);
-        // janky stuff to make npm run isolated fully
-        var home = path.join(lconfig.lockerDir, lconfig.me);
-        process.chdir(home);
-        var config = {registry:regBase, cache:path.join(home, '.npm')};
-        npm.load(config, function(err) {
-            if(err) logger.error(err);
-            fs.readFile('registry.json', 'utf8', function(err, reg){
-                try {
-                    if(reg) regIndex = JSON.parse(reg);
-                }catch(E){
-                    logger.error("couldn't parse registry.json: "+E);
-                }
-                if(lconfig.registryUpdate === true) {
-                    exports.sync();
-                }
-                process.chdir(lconfig.lockerDir);
-                callback(installed);
-            });
+        fs.readFile('registry.json', 'utf8', function(err, reg){
+            try {
+                if(reg) regIndex = JSON.parse(reg);
+            }catch(E){
+                logger.error("couldn't parse registry.json: "+E);
+            }
+            exports.sync();
+            process.chdir(lconfig.lockerDir);
+            callback();
         });
     });
 };
@@ -69,18 +64,31 @@ exports.init = function(serman, syncman, config, crypto, callback) {
 // init web endpoints
 exports.app = function(app)
 {
-    app.get('/registry/added', function(req, res) {
-        res.send(exports.getInstalled());
-    });
-    app.get('/registry/add/:id', function(req, res) {
+    app.get('/registry/add/:id', add);
+    
+    function add(req, res, retry) {
+        // if this is the next function, then this isn't a retry
+        if(typeof retry === 'function') retry = false;
+        if(!req.params.id) return res.send('invalid id', 400);
         logger.info("registry trying to add "+req.params.id);
-        if(!regIndex[req.params.id]) return res.send("not found", 404);
+        
+        if(!regIndex[req.params.id]) {
+            // if it has already tried to sync, this isn't a real package
+            if(retry === true) return res.send("package " + req.params.id + " not found", 404);
+            logger.info(req.params.id + " not found in local registry cache, re-syncing");
+            return exports.sync(function(err) {
+                if(err) return res.send(err, 500);
+                // no errors, it should be in regIndex, so just call again
+                return add(req, res, true);
+            });
+        } 
         if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
         exports.install({name:req.params.id}, function(err){
             if(err) return res.send(err, 500);
             res.send(true);
         });
-    });
+    }
+    
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
     });
@@ -89,7 +97,7 @@ exports.app = function(app)
         Object.keys(regIndex).forEach(function(key) {
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
                 // not all connectors need auth keys!
-                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") connectors.push(regIndex[key]);
+                if(regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false" && !regIndex[key].repository.hidden) connectors.push(regIndex[key]);
                 // require keys now
                 if(apiKeys[key]) connectors.push(regIndex[key]);
             }
@@ -104,13 +112,13 @@ exports.app = function(app)
         var id = req.params.id;
         if(!regIndex[id]) return res.send("not found", 404);
         var copy = lutil.extend(true, {}, regIndex[id]);
-        copy.installed = installed[id];
+        copy.installed = (serviceManager.map(k)) ? true : false;
         res.send(copy);
     });
     app.get('/registry/sync', function(req, res) {
         logger.info("manual registry sync");
-        exports.sync(function(err){
-            if(err) return res.send(500, err);
+        exports.sync(function(err) {
+            if(err) return res.send(err, 500);
             res.send(true);
         }, req.param('force'));
     });
@@ -141,10 +149,11 @@ function publishPackage(req, res) {
         args.dir = dir;
         args.id = id;
         if(req.body) args.body = req.body;
-        exports.publish(args, function(err, doc) {
+        exports.publish(args, function(err, doc, issue) {
+            if(err) logger.error(err);
             // npm publish always returns an error even though it works, so until that's fixed, commenting this out
             //if(err) res.send(err, 500);
-            res.send(doc);
+            res.send({err:err, doc:doc, issue:issue});
         });
     });
 }
@@ -218,6 +227,7 @@ function getScreenshot(req, res) {
 function verify(pkg)
 {
     if(!pkg) return false;
+    if(lconfig.requireSigned && !pkg.signed) return false;
     if(!pkg.repository) return false;
     if(pkg.repository.type == 'app') return true;
     if(pkg.repository.type == 'connector') return true;
@@ -225,49 +235,27 @@ function verify(pkg)
     return false;
 }
 
-// just load up any installed packages in node_modules
-function loadInstalled(callback)
-{
-    var files = fs.readdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"));
-    async.forEach(files, function(item, cb){
-        var ppath = path.join(lconfig.lockerDir, lconfig.me, 'node_modules', item, 'package.json');
-        fs.stat(ppath, function(err, stat){
-            if(err || !stat || !stat.isFile()) return cb();
-            loadPackage(path.join(lconfig.me, 'node_modules', item, 'package.json'), false, function(){cb()}); // ignore individual errors
-        });
-    }, callback);
-}
-
-// load an individual package
-function loadPackage(ppath, upsert, callback)
-{
-    fs.readFile(path.join(lconfig.lockerDir, ppath), 'utf8', function(err, data){
-        if(err || !data) return callback(err);
-        var js;
-        try{
-            js = JSON.parse(data);
-            installed[js.repository.handle] = js;
-        }catch(E){
-            logger.error("couldn't parse "+ppath+": "+E);
-            return callback(E);
-        }
-        // during install/update tell serviceManager about this as well
-        if(upsert) serviceManager.mapUpsert(ppath);
-        callback(null, js);
-    });
-}
-
 // background sync process to fetch/maintain the full package list
+var syncCallbacks = [];
 exports.sync = function(callback, force)
 {
+    if(!callback) callback = function(err){
+        if(err) logger.error(err);
+    }; // callback is required
+    syncCallbacks.push(callback);
+
+    // if we're syncing already, bail
+    if(syncCallbacks.length > 1) return;
+
+
     function finish(err) {
-        if (lconfig.registryUpdate) {
-            syncTimer = setTimeout(exports.sync, syncInterval);
-        }
-        if (callback) callback(err);
+        syncTimer = setTimeout(exports.sync, syncInterval);
+        syncCallbacks.forEach(function(cb){ cb(err); });
+        syncCallbacks = [];
     }
 
     if (syncTimer) clearTimeout(syncTimer);
+
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
@@ -284,31 +272,62 @@ exports.sync = function(callback, force)
     var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
     logger.info("registry update from "+u);
     request.get({uri:u, json:true}, function(err, resp, body){
-        if(err || !body || typeof body !== "object" || body === null || Object.keys(body).length === 0) return finish(err);
+        if(err || !body || typeof body !== "object" || body === null) return finish("couldn't sync with registry: "+err+" "+body);
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
-        Object.keys(body).forEach(function(k){
-            if (body[k]["dist-tags"]) {
-                logger.verbose("new "+k+" "+body[k]["dist-tags"].latest);
-                regIndex[k] = body[k];
-                // if installed and autoupdated and newer, do it!
-                if(installed[k] && body[k].repository && (body[k].repository.update == 'auto' || body[k].repository.update == 'true' || body[k].repository.update === true) && semver.lt(installed[k].version, body[k]["dist-tags"].latest))
-                {
-                    logger.verbose("auto-updating "+k);
-                    exports.update({name:k}, function(){}); // lazy
-                }
-            }
+        // new updates from the registry, update our local mirror
+        async.forEachSeries(Object.keys(body), function(pkg, cb){
+            if(!body[pkg].versions) return cb();
+            checkSigned(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
+        }, function(){
+            // cache to disk lazily
+            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
+            finish();
         });
-        // cache to disk lazily
-        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-        finish();
     });
 };
 
-// share the data
-exports.getInstalled = function() {
-    return installed;
+// recursively process vers array, looking for one that is signed, then process that
+function checkSigned(pkg, versions, callback)
+{
+    if(!versions || versions.length == 0) return callback();
+    if(!lconfig.requireSigned) return usePkg(pkg, pkg["dist-tags"].latest, callback); // if no sig required just pass through
+    var ver = versions.pop(); // try newest
+    var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
+    request.get({uri:url, json:true, headers:{"Connection":"keep-alive"}}, function(err, resp, body){
+        if(err || !body || !body.sig) return checkSigned(pkg, versions, callback);
+        // annoyingly, /-/all is different structure than /packagename!
+        var data = pkg.dist[ver].shasum + " " + path.basename(pkg.dist[ver].tarball);
+        if(!lcrypto.verify(data, body.sig, lconfig.keys)) {
+            logger.error(data + " signature failed verification :(");
+            return checkSigned(pkg, versions, callback);
+        }
+        pkg.signed = true;
+        return usePkg(pkg, ver, callback);
+    });
 }
+
+// good version, update!
+function usePkg(pkg, ver, callback)
+{
+    logger.verbose("new "+pkg.name+" "+ver);
+    pkg.latest = ver;
+    regIndex[pkg.name] = pkg;
+    if(lconfig.registryUpdate === true && serviceManager.map(pkg.name) && pkg.repository && (pkg.repository.update == 'auto' || pkg.repository.update == 'true' || pkg.repository.update === true) && semver.lt(serviceManager.map(pkg.name).version, ver))
+    {
+        if(serviceManager.map(pkg.name).srcdir.indexOf("node_modules") == -1)
+        {
+            logger.verbose("skipping since local versionis not from the registry");
+        }else{
+            logger.verbose("auto-updating "+pkg.name);
+            exports.install({name:pkg.name}, function(err){
+                if(err) logger.error(err);
+            }); // lazy update
+        }
+    }
+    callback();
+}
+
 exports.getRegistry = function() {
     return regIndex;
 }
@@ -317,7 +336,11 @@ exports.getPackage = function(name) {
 }
 exports.getApps = function() {
     var apps = {};
-    Object.keys(regIndex).forEach(function(k){ if(regIndex[k].repository && regIndex[k].repository.type === 'app') apps[k] = regIndex[k]; });
+    Object.keys(regIndex).forEach(function(k){
+        if(!regIndex[k].repository || regIndex[k].repository.type != 'app') return;
+        apps[k] = regIndex[k];
+        apps[k].installed = (serviceManager.map(k)) ? true : false;
+    });
     return apps;
 }
 exports.getMyApps = function(req, res) {
@@ -338,14 +361,23 @@ exports.getMyApps = function(req, res) {
 // npm wrappers
 exports.install = function(arg, callback) {
     if(typeof arg === 'string') arg = {name:arg}; // convenience
-    if(!arg || (!arg.name && !arg.path)) return callback("missing package name");
-    if(arg.name)
-    {
-        if(serviceManager.map(arg.name)) return callback(null, serviceManager.map(arg.name)); // in the map already
-        if(installed[arg.name]) return callback(null, installed[arg.name]); // already done
+    if(!arg || !arg.name) return callback("missing package name");
+    var npmarg = [];
+
+    // if not in registry yet, sync to latest!
+    var reg = regIndex[arg.name];
+    if(!reg || !reg.latest) {
+        exports.sync(function(){
+            if(regIndex[arg.name]) return exports.install(arg, callback);
+            return callback("failed to find valid version");
+        });
+        return;
     }
-    logger.info("installing "+(arg.name||arg.path));
-    npm.commands.install([arg.name||path.join(lconfig.lockerDir, arg.path)], function(err){
+
+    if(serviceManager.map(arg.name) && serviceManager.map(arg.name).version == reg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
+    var npmarg = [arg.name+'@'+reg.latest];
+    logger.info("installing "+JSON.stringify(npmarg));
+    npm.commands.install(npmarg, function(err){
         if(err){ // some errors appear to be transient
             if(!arg.retry) arg.retry=0;
             arg.retry++;
@@ -353,16 +385,10 @@ exports.install = function(arg, callback) {
             if(arg.retry < 3) return setTimeout(function(){exports.install(arg, callback);}, 1000);
             return callback(err);
         }
-        var ppath = (arg.name) ? path.join(lconfig.me, 'node_modules', arg.name, 'package.json') : path.join(arg.path, 'package.json');
-        loadPackage(ppath, true, callback); // once installed, load
-    });
-};
-exports.update = function(arg, callback) {
-    if(!arg || !arg.name) return callback("missing package name");
-    npm.commands.update([arg.name], function(err){
-        if(err) logger.error(err);
         var ppath = path.join(lconfig.me, 'node_modules', arg.name, 'package.json');
-        loadPackage(ppath, true, callback); // once updated, re-load
+        var up = serviceManager.mapUpsert(ppath);
+        if(!up) callback("upsert failed");
+        callback(null, up);
     });
 };
 
@@ -393,10 +419,28 @@ exports.publish = function(arg, callback) {
                     npm.commands.publish([arg.dir], function(err) {
                         if(err) return callback(err);
                         var updated = JSON.parse(fs.readFileSync(pjs));
-                        regIndex[arg.id] = updated; // shim it in, sync will replace it eventually too just to be sure
                         serviceManager.mapUpsert(pjs);
-                        callback(null, updated);
-                    });
+                        // create an issue to track this publish request
+                        var pi = {syncletToRun:{}};
+                        pi.auth = serviceManager.map('github').auth;
+                        pi.syncletToRun.posts = [];
+                        var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
+                        issue.repo = 'Singly/apps';
+                        issue.labels = updated.name.split('-');
+                        issue.labels.push('App');
+                        pi.syncletToRun.posts.push(issue);
+                        // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
+                        var isynclet = path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js");
+                        var issues = require(isynclet);
+                        delete require.cache[isynclet]; // don't keep the copy in ram!
+                        issues.sync(pi, function(err, js){
+                            if(err) return callback(err);
+                            console.error(js);
+                            if(!js || !js.data || !js.data.issue || !js.data.issue[0] || !js.data.issue[0].number) return callback("failed to create issue to track this for publishing, please re-auth github"); // this text triggers a more friendly response in dashboardv3
+                            // save pending=issue# to package.json
+                            callback(null, updated, js.data.issue[0]);
+                        });
+                    })
                 });
             });
         });
@@ -498,6 +542,11 @@ function adduser (username, password, email, cb) {
 // given a connector package in the registry, install it, and get the auth url for it to return
 function authIsAwesome(req, res) {
     var id = req.params.id;
+    if(!verify(regIndex[id]))
+    {
+        logger.error("package verification failed trying to auth "+id);
+        return res.send(id+" failed verification :(", 500);
+    }
     exports.install(id, function(err){
         if(err) return res.send(err, 500);
         var js = serviceManager.map(id);

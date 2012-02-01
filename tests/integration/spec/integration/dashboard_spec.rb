@@ -1,28 +1,11 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
-describe 'dashboard' do
-  it 'allows people to switch between 4 views' do
+describe 'dashboard' do 
+  it 'allows people to see the connect page' do
     visit '/'
-    page.should have_css('.iframeLink[data-id="contactsviewer"]')
-    page.execute_script("$('.iframeLink[data-id=\"contactsviewer\"]').click()")
     within_frame 'appFrame' do
-      page.should have_content('Jeremie')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"photosv09\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="photosv09"]')
-    within_frame 'appFrame' do
-      page.should have_content('Photos')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"linkalatte\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="linkalatte"]')
-    within_frame 'appFrame' do
-      page.should have_content('Links')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"helloplaces\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="helloplaces"]')
-    within_frame 'appFrame' do
-      page.should have_content('Places')
+      page.should have_content("Nobody Selected")
     end
   end
 
@@ -42,16 +25,5 @@ describe 'dashboard' do
       page.should have_content('API Explorer')
     end
   end
-
-  it "should allow the user to view all of their apps" do
-    visit '/'
-    click_link 'see all'
-    within_frame 'appFrame' do
-      page.should have_content('Hello Links, by Singly, Inc.')
-      page.execute_script("$('li[data-id=\"hellolinks\"]').click()")
-      page.should have_content('This is example of how easy it is to load your links using HTML and jQuery')
-    end
-  end
-
 
 end

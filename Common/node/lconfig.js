@@ -31,6 +31,7 @@ exports.load = function(filepath) {
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
+    exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : false;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
@@ -42,6 +43,7 @@ exports.load = function(filepath) {
         "search:Collections/Search",
     ];
     exports.apps = config.apps || [
+        "devdocs:Apps/DevDocs",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
         "github:Connectors/GitHub",
@@ -77,6 +79,19 @@ exports.load = function(filepath) {
     exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
+
+    // load trusted public keys
+    var kdir = path.join(path.dirname(filepath), "keys");
+    exports.keys = [];
+    if(path.existsSync(kdir))
+    {
+        var keys = fs.readdirSync(kdir);
+        keys.forEach(function(key){
+            if(key.indexOf(".pub") == -1) return;
+            exports.keys.push(fs.readFileSync(path.join(kdir, key)));
+        });
+    }
+
 }
 
 function setBase() {

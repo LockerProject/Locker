@@ -23,6 +23,10 @@
         "appKey" : "PASTE_HERE",
         "appSecret" : "PASTE_HERE"
     },
+    "instagram" : {
+        "appKey" : "PASTE_HERE",
+        "appSecret" : "PASTE_HERE"
+    },
     "glatitude" : {
         "appKey" : "PASTE_HERE",
         "appSecret" : "PASTE_HERE"

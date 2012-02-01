@@ -25,7 +25,7 @@ else
     cd "$builddir/$subdir"
     npm install
 fi
-mkdir -p Me
+mkdir -p "$builddir/$subdir/Me"
 
 echo "Compressing..."
 (cd "$builddir"; tar czf "$out" "$subdir")

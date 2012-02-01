@@ -183,7 +183,7 @@ $(function(){
                                 "facebook":"img/facebook.png",
                                 "twitter":"img/twitter.png"
                             };
-                            return (arg.item.encounters.length > 0) ? images[arg.item.encounters[arg.item.encounters.length - 1].network] : "img/1x1-pixel.png";
+                            return images[encounter(arg.item).network] || "img/1x1-pixel.png";
                         },
                         "div.fullInfo@class+":function(arg) {
                             var theClass = arg.pos % 2 === 0 ? " even" : " odd";
@@ -211,7 +211,7 @@ $(function(){
                         },
                         "span.linkFrom":function(arg) {
                             var dedup = {};
-                            return "Shared <em>" + getSincePrettified(arg.item.encounters[arg.item.encounters.length - 1].at) + "</em> by " + arg.item.encounters.map(function(item) {
+                            return "Shared <em>" + getSincePrettified(encounter(arg.item).at) + "</em> by " + arg.item.encounters.map(function(item) {
                                 if(dedup[item.from]) return false;
                                 dedup[item.from] = true;
                                 var base = (item.network == "twitter") ? "http://twitter.com/#" : "http://facebook.com/";
@@ -220,7 +220,7 @@ $(function(){
                             }).clean(false).join(", ");
                         },
                         "span.linkFrom@style":function(arg) {
-                            return arg.item.encounters[arg.item.encounters.length - 1].from ? "" : "display:none";
+                            return encounter(arg.item).from ? "" : "display:none";
                         }
                     }
                 }
@@ -247,6 +247,11 @@ $(function(){
 
 function hideMe() {
     $(event.srcElement).hide();
+}
+
+function encounter(item)
+{
+    return (item.encounters && item.encounters.length > 0) ? item.encounters[item.encounters.length - 1] : {};
 }
 
 function getSincePrettified(timestamp) {
