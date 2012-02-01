@@ -420,7 +420,7 @@ exports.publish = function(arg, callback) {
                         issues.sync(pi, function(err, js){
                             if(err) return callback(err);
                             console.error(js);
-                            if(!js || !js.data || !js.data.issue || !js.data.issue[0] || !js.data.issue[0].number) return callback("failed to create issue to track this for publishing, please re-auth github"); // this text triggers a more friendly response in dashboardv3
+                            if(!js || !js.data || !js.data.issue || !js.data.issue[0] || !js.data.issue[0].number) return callback("failed to create issue to track this for publishing, please re-auth github: "+JSON.stringify(js)); // this text triggers a more friendly response in dashboardv3
                             // save pending=issue# to package.json
                             callback(null, updated, js.data.issue[0]);
                         });
