@@ -23,11 +23,11 @@
                 <span class="drafts">draft</span><a id=<%= apps[i].handle %> class='publishLink' href="publish?app=<%= apps[i].handle %>"><button class="publish">publish app</button></a>
               <% } %>
               <% var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]; %>
-              <p>last updated <%= months[apps[i].lastUpdated.getMonth()] + ". " + apps[i].lastUpdated.getDate() + ", " + apps[i].lastUpdated.getFullYear() %></p>
+              <p>last updated <%= apps[i].lastUpdatedStr %></p>
             </div>
             <div class="divider"></div>
             <div class="content">
-              <p class="description"><%= apps[i].description %></p>
+              <p class="description"><%= (apps[i].draft && apps[i].draft.description) || (apps[i].published && apps[i].published.description) || "" %></p>
               <% if (apps[i].uses) { %>
                 <% if (apps[i].uses.types || apps[i].uses.services) { %>
                   <% if (!apps[i].uses.types) { apps[i].uses.types = [] } %>

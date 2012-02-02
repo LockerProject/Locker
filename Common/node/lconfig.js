@@ -32,11 +32,27 @@ exports.load = function(filepath) {
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
+    exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : false;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.collections = config.collections || ['contacts', 'links', 'photos', 'places', 'search'];
-    exports.apps = config.apps || ["contactsviewer", "photosv09", "photosviewer", "linkalatte", "helloplaces", "devdocs"];
+    exports.collections = config.collections || [
+        "contacts:Collections/Contacts",
+        "links:Collections/Links",
+        "photos:Collections/Photos",
+        "places:Collections/Places",
+        "search:Collections/Search",
+    ];
+    exports.apps = config.apps || [
+        "devdocs:Apps/DevDocs",
+        "facebook:Connectors/Facebook",
+        "flickr:Connectors/Flickr",
+        "github:Connectors/GitHub",
+        "gcontacts:Connectors/GoogleContacts",
+        "instagram:Connectors/Instagram",
+        "twitter:Connectors/Twitter",
+        "foursquare:Connectors/foursquare",
+    ];
     exports.mongo = config.mongo || {
         "dataDir": "mongodata",
         "host": "localhost",
@@ -61,11 +77,24 @@ exports.load = function(filepath) {
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
 //    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
-    exports.ui = config.ui || 'dashboardv3';
+    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.quiesce = config.quiesce || 650000;
     exports.dashboard = config.dashboard;
     exports.workWarn = config.workWarn || os.cpus().length;
     exports.workStop = config.workStop || os.cpus().length * 3;
+
+    // load trusted public keys
+    var kdir = path.join(path.dirname(filepath), "keys");
+    exports.keys = [];
+    if(path.existsSync(kdir))
+    {
+        var keys = fs.readdirSync(kdir);
+        keys.forEach(function(key){
+            if(key.indexOf(".pub") == -1) return;
+            exports.keys.push(fs.readFileSync(path.join(kdir, key)));
+        });
+    }
+
 }
 
 function setBase() {

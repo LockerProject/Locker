@@ -166,6 +166,7 @@ suite.next().suite.addBatch({
             dataStore.addData("foursquare", JSON.parse(foursquareEvent1).data, this.callback); },
         "is handled properly" : function(err, object) {
             assert.equal(object.name, 'Jacob Mitchell');
+            // assert.equal(object.emai, 'Jacob Mitchell');
         }
     }
 }).addBatch({
@@ -207,7 +208,7 @@ suite.next().suite.addBatch({
             assert.equal(object.accounts.foursquare[0].data.name, 'Jake Mitchell');
             assert.equal(object.name, 'Jeremie Miller');
             assert.equal(object.accounts.github[0].data.name, 'James Burkhart');
-            assert.equal(object.accounts.googleContacts[0].data.name, 'Jeremie Miller');
+            assert.equal(object.accounts.gcontacts[0].data.name, 'Jeremie Miller');
         }
     }
 }).addBatch({

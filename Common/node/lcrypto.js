@@ -85,6 +85,11 @@ exports.generatePKKeys = function(cb) {
     });
 }
 
+exports.pubkey = function()
+{
+    return idKeyPub;
+}
+
 exports.encrypt = function(data) {
     if (!data) {
         logger.error("Error encrypting " + data);
@@ -104,5 +109,26 @@ exports.decrypt = function(data) {
     var cipher = crypto.createDecipher("aes192", symKey);
     var ret = cipher.update(data, "hex", "utf8");
     ret += cipher.final("utf8");
+    return ret;
+}
+
+exports.sign = function(data) {
+    if (!data) {
+        logger.error("Error signing " + data);
+        return false;
+    }
+    var signer = crypto.createSign("RSA-SHA256");
+    signer.update(data, "utf8");
+    return signer.sign(idKey, 'base64');
+}
+
+exports.verify = function(data, sig, keys) {
+    if (!data || !sig || !keys || !Array.isArray(keys)) return false;
+    var ret = false;
+    keys.forEach(function(key){
+        var verifier = crypto.createVerify("RSA-SHA256");
+        verifier.update(data, "utf8");
+        if(verifier.verify(key, sig, 'base64')) ret = true;
+    });
     return ret;
 }

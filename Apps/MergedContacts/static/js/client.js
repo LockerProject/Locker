@@ -292,7 +292,7 @@ $(function() {
                 var twitter = contact.accounts.twitter[0].data;
                 $('.twitterhandle').attr('href', 'http://www.twitter.com/' + twitter.screen_name);
                 $('.twitterhandle').text('@' + twitter.screen_name);
-                $('.lasttweet').text(twitter.status.text);
+                // $('.lasttweet').text(twitter.status.text);
                 $('.twitterSection').show();
             } else {
                 $('.twitterSection').hide();
