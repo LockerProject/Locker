@@ -13,11 +13,15 @@ h1 {
 
 .synclets-list li {
   margin: 15px 0;
-  width: 400px;
+  width: 350px;
+  height: 27px;
+  padding: 5px 0 0 40px;
+  background: transparent url() no-repeat left center;
 }
 
 .synclet-logo {
   padding: 0 10px;
+  vertical-align: middle;
 }
 
 .synclet-name {
@@ -25,9 +29,9 @@ h1 {
   font-weight: 200;
 }
 
-.connect-button {
+.action-button {
   float: right;
-  margin: 10px 0 0 0;
+  vertical-align: middle;
 }
 
 .hideable {

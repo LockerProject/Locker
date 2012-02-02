@@ -21,7 +21,9 @@
 </div>
 <div class="sidenav-items synclets-connected">
   <% for (var i = 0; i < connectors.length; i++) { %>
-    <% if (connectors[i].authed) { %><img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"><% } %>
+    <% if (connectors[i].authed) { %>
+      <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
+    <% } %>
   <% } %>
 </div>
 <div class="sidenav-header">
