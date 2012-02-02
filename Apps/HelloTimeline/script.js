@@ -8,10 +8,10 @@ var offset=0;
 $(function() {
     // be careful with the limit, some people have large datasets ;)
     loadStuff();
+    loadStatus();
     $("#moar").click( function(){
         offset += 50;
         loadStuff();
-        loadStatus();
     });
 });
 
@@ -21,7 +21,8 @@ function loadStatus()
     $.getJSON(baseUrl + '/Me/timeline/state',{}, function(data) {
         if(!data) return $("#status").text("timeline failed :(");
         if(data.ready == 1) return $("#status").text("");
-        $("#status").text("timeline is indexing...");
+        var name = (data.current) ? data.current.type + " at "+data.current.offset : "";
+        $("#status").text("timeline is indexing "+name);
         if(max-- <= 0) return $("#status").text("plz reload");
         window.setTimeout(loadStatus, 10000); // poll for a bit
     });

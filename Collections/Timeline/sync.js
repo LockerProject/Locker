@@ -2,6 +2,7 @@ var async = require('async');
 var logger;
 var lutil = require('lutil');
 var url = require('url');
+var fs = require('fs');
 
 var dataStore, dataIn, locker, state;
 
@@ -23,14 +24,17 @@ var stopped;
 exports.work = function(type)
 {
     stopped = false;
-    if(type == "start") exports.sync();
+    if(type == "start") {
+        state.sleep = 500;
+        exports.sync();
+    }
     if(type == "stop") stopped = true;
     if(type == "warn") state.sleep = 10000;
 }
 
 function loadState(callback)
 {
-    try { state = JSON.parse(fs.readFileSync('state.json')); } catch(E) {}
+    try { state = JSON.parse(fs.readFileSync('state.json')); } catch(E) { logger.error("state.json failed ",E); }
     if(state) return callback();
     // starting from scratch, make sure clear, set initial list
     logger.error("syncing from a new state");
@@ -40,7 +44,7 @@ function loadState(callback)
             "twitter/getCurrent/tweets", "twitter/getCurrent/timeline", "twitter/getCurrent/mentions", "twitter/getCurrent/related",
             "foursquare/getCurrent/recents", "foursquare/getCurrent/checkin",
             "instagram/getCurrent/photo", "instagram/getCurrent/feed",
-            "links/"
+            "links/encounters"
             ]};
         saveState();
         callback();
@@ -70,7 +74,7 @@ exports.sync = function() {
         if(!state) return logger.error("invalid state!");
         if(state.ready == 1) return;
         // see if we're all done!
-        if(state.types.length == 0)
+        if(state.types.length == 0 && !state.current)
         {
             running = false;
             state.ready = 1;
@@ -83,11 +87,11 @@ exports.sync = function() {
             state.current.offset = 0;
         }
         var cnt = 0;
-        var lurl = locker.lockerBase + '/Me/' + state.current.type + "?full=true&stream=true&limit=250&offset="+state.current.offset;
+        var lurl = locker.lockerBase + '/Me/' + state.current.type + "?stream=true&limit=250&offset="+state.current.offset;
         logger.error("syncing "+lurl);
         lutil.streamFromUrl(lurl, function(a, cb){
             cnt++;
-            (state.current.type == "link/") ? dataIn.processLink({data:a}, cb) : dataIn.masterMaster(getIdr(state.current.type, a), a, cb);
+            (state.current.type.indexOf("link/") == 0) ? dataIn.processLink({data:a}, cb) : dataIn.masterMaster(getIdr(state.current.type, a), a, cb);
         }, function(err){
             running = false;
             if(err) return logger.error("sync failed, stopping: ",err);
