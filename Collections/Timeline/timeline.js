@@ -89,6 +89,22 @@ app.get('/id/:id', function(req, res) {
     dataStore.getItem(req.param('id'), function(err, doc) { return (err != null || !doc) ? res.send(err, 500) : res.send(doc); });
 });
 
+// this would only be useful if something changes or removes state.json
+app.get('/sync', function(req, res) {
+    res.send(true);
+    sync.sync(); // happens async
+});
+
+// sync.init() optionally listens for work events, funnel back
+app.post('/work', function(req, res) {
+    if (!req.body.idr || !req.body.data){
+        logger.error('bad work data: ',JSON.stringify(req.body));
+        return res.send('bad data', 500);
+    }
+    res.send('ok');
+    sync.work(req.body.data.work);
+});
+
 app.get('/ref', function(req, res) {
     var idr = url.parse(req.query.id);
     if(!idr || !idr.hash) return res.send("missing or invalid id",500);

@@ -471,6 +471,6 @@ function workCheck()
     if(load[0] > lconfig.workStop) work = "stop";
     if(work == workLast) return; // no changes!
     workLast = work;
-    levents.fireEvent("work://me/#"+work,"new",{});
+    levents.fireEvent("work://me/#"+work,"new",{work:work});
 }
 setInterval(workCheck, 10000); // 10s granularity
