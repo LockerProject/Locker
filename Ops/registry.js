@@ -65,13 +65,13 @@ exports.init = function(serman, syncman, config, crypto, callback) {
 exports.app = function(app)
 {
     app.get('/registry/add/:id', add);
-    
+
     function add(req, res, retry) {
         // if this is the next function, then this isn't a retry
         if(typeof retry === 'function') retry = false;
         if(!req.params.id) return res.send('invalid id', 400);
         logger.info("registry trying to add "+req.params.id);
-        
+
         if(!regIndex[req.params.id]) {
             // if it has already tried to sync, this isn't a real package
             if(retry === true) return res.send("package " + req.params.id + " not found", 404);
@@ -81,14 +81,14 @@ exports.app = function(app)
                 // no errors, it should be in regIndex, so just call again
                 return add(req, res, true);
             });
-        } 
+        }
         if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
         exports.install({name:req.params.id}, function(err){
             if(err) return res.send(err, 500);
             res.send(true);
         });
     }
-    
+
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
     });
@@ -134,7 +134,7 @@ exports.app = function(app)
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
-    
+
     app.get('/deauth/:id', deauthIsAwesomer);
 }
 

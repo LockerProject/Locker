@@ -158,32 +158,27 @@ var renderSettingsAccountInformation = function(req, res) {
     });
 };
 
-var handleAviUpload = function (req, res) {
-    if (!req.form) return res.send('bad form submission', 500);
+var handleSettings = function (req, res, next) {
+    if (!req.form) return next();
 
     req.form.complete(function (err, fields, files) {
         if (err) return res.send('unable to process form: ' + err, 500);
 
-        var uploaded = fs.createReadStream(files.avi.path);
-        var avatar = fs.createWriteStream('tmpAvatar');
+        return res.end(util.inspect({fields: fields, files: files}));
 
-        avatar.once('open', function (fd) {
-            util.pump(uploaded, avatar, function (err) {
-                if (err) return res.send('unable to write file: ' + err, 500);
+        if (files.avi && files.avi.path) {
+            im.resize({srcPath : files.avi.path
+                     , dstPath : 'avatar.png'
+                     , width   : 48
+                     , height  : 48}
+                    , function (err, stdout, stderr) {
+                          if (err) return res.send('unable to convert file: ' + err, 500);
 
-                im.resize({srcPath : 'tmpAvatar'
-                         , dstPath : 'avatar.png'
-                         , width   : 48
-                         , height  : 48}
-                        , function (err, stdout, stderr) {
-                              if (err) return res.send('unable to convert file: ' + err, 500);
-
-                              return res.send('ok');
-                          });
-            });
-        });
-    });
-};
+                          return res.send('ok');
+                      });
+        }
+    })
+}
 
 var renderSettingsAPIKey = function(req, res) {
     res.render('iframe/settings-api', {
@@ -483,36 +478,6 @@ var registryApp = function(req, res) {
     });
 };
 
-app.get('/clickapp/:app', clickApp);
-app.get('/you', checkInstalled, renderYou);
-app.get('/', checkInstalled, renderYou);
-
-app.get('/connect', renderConnect);
-
-app.get('/settings', renderSettings);
-app.get('/settings-connectors', renderSettingsConnectors);
-app.get('/settings-account', renderSettingsAccountInformation);
-app.get('/settings-api', renderSettingsAPIKey);
-app.post('/settings-account', handleAviUpload);
-
-app.get('/allApps', renderApps);
-app.get('/create', renderCreate);
-
-app.get('/explore', renderExplore);
-// app.get('/exploreApps', renderExploreApps);
-
-app.get('/publish', renderPublish);
-app.post('/publish', submitPublish);
-
-app.get('/viewAll', renderAllApps);
-
-app.get('/screenshot/:handle', renderScreenshot);
-
-app.post('/publishScreenshot', handleUpload);
-app.get('/tempScreenshot', renderTempScreenshot);
-app.get('/finishedCropping/:app', croppingFinished);
-app.get('/registryApp', registryApp);
-
 var getGithubApps = function(callback) {
     uistate.fetchState();
     var apps = [];
@@ -617,39 +582,56 @@ var getReadableProfileNameForConnector = function(connector) {
     switch(connector.handle){
       case 'facebook':
         return connector.auth.profile.username;
-        break;
       case 'twitter':
         return '@' + connector.auth.profile.screen_name;
-        break;
-      case 'rdio':
-        return connector.auth.profile.url.split('/')[2];
-        break;
       case 'lastfm':
         return connector.auth.profile.name;
-        break;
       case 'flickr': // TODO: flickr connector has empty auth object
         return '';
-        break;
       case 'foursquare':
         return connector.auth.profile.canonicalUrl.split('/')[3];
-        break;
       case 'gcontacts': // TODO: gcontacts connector has empty auth object
         return '';
-        break;
       case 'instagram':
         return connector.auth.profile.username;
-        break;
       case 'pandora': // TODO: pandora connector has empty auth object
         return '';
-        break;
       case 'rdio':
-        return connector.auth.profile.firstName + connector.auth.profile.lastName;
-        break;
+        return connector.auth.profile.firstName + ' ' + connector.auth.profile.lastName;
       case 'github':
         return connector.auth.profile.login;
-        break;
       default:
         return '';
     }
   } catch(e) { return ''; }
 };
+
+app.get('/clickapp/:app', clickApp);
+app.get('/you', checkInstalled, renderYou);
+app.get('/', checkInstalled, renderYou);
+
+app.get('/connect', renderConnect);
+
+app.get('/settings', renderSettings);
+app.get('/settings-connectors', renderSettingsConnectors);
+app.get('/settings-account', renderSettingsAccountInformation);
+app.get('/settings-api', renderSettingsAPIKey);
+app.post('/settings-account', handleSettings);
+
+app.get('/allApps', renderApps);
+app.get('/create', renderCreate);
+
+app.get('/explore', renderExplore);
+// app.get('/exploreApps', renderExploreApps);
+
+app.get('/publish', renderPublish);
+app.post('/publish', submitPublish);
+
+app.get('/viewAll', renderAllApps);
+
+app.get('/screenshot/:handle', renderScreenshot);
+
+app.post('/publishScreenshot', handleUpload);
+app.get('/tempScreenshot', renderTempScreenshot);
+app.get('/finishedCropping/:app', croppingFinished);
+app.get('/registryApp', registryApp);

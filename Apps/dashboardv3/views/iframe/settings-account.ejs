@@ -5,39 +5,40 @@
     <%- partial('header_partial') %>
     <link rel="stylesheet" href="css/settings-account.css" />
     <script src="js/settings.js"></script>
+    <script src="js/settings-account.js"></script>
+    <script src="common/js/jquery.validate.min.js"></script>
     <script src="<%= dashboard.customHostedEndpoint %>"></script>
   </head>
   <body>
     <content class="body">
-    <form action="settings-account" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+    <form id="settings-account" action="#" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+      <div id="settings-account-error"></div>
       <div id="settings_avatar">
         <p><img class="avatar" alt="your avatar" src="<%= profileImage %>" />
         This is your current avatar</p>
-        <input type="file" id="avi_chooser" name="avi_chooser" value="Choose File" />
-        <p>OR</p>
         <input type="text" class="disabled" id="avi_url" name="avi_url" placeholder="Set URL for image" />
       </div>
       <div id="settings_name">
-        <input type="text" name="name" placeholder="Name" />
+        <input type="text" id="username" name="username" placeholder="Name" />
       </div>
       <div>
-        <input type="text" name="email" placeholder="Email address" />
+        <input type="text" id="email" name="email" placeholder="Email address" />
       </div>
       <div id="settings_password">
         <div>
           <label for="old_password" id="old_password_label">Current password</label>
-          <input type="password" name="old_password" />
+          <input type="password" id="old_password" name="old_password" />
         </div>
         <div>
           <label for="new_password" id="new_password_label">New password</label>
-          <input type="password" name="new_password" />
+          <input type="password" id="new_password" name="new_password" />
         </div>
       </div>
       <div id="settings_analytics">
         <label for="optout" id="optout_label">Opt out of anonymous analytics?</label>
-        <input type="checkbox" name="optout" value="true" id="optin" />
+        <input type="checkbox" name="optout" value="true" id="optout" />
         <br />
-        <input id="save_button" type="submit" value="Save Changes">
+        <input class="action-button" id="save_button" type="submit" value="Save Changes">
       </div>
     </form>
     </content>
