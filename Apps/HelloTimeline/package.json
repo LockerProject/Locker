@@ -9,6 +9,7 @@
     "title": "Hello Timeline",
     "status": "stable",
     "static": true,
+    "hidden": true,
     "handle": "hellotimeline",
     "update": true,
     "uses": {

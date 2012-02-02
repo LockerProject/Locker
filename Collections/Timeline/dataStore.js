@@ -26,8 +26,7 @@ exports.init = function(iCollection, rCollection, l) {
     respCol.ensureIndex({"item":1},{background:true},function() {});
 }
 
-exports.clear = function(flag, callback) {
-    if(flag) return callback();
+exports.clear = function(callback) {
     itemCol.drop(function(){respCol.drop(callback)});
 }
 

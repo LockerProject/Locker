@@ -65,17 +65,14 @@ app.get('/', function(req, res) {
 app.get('/state', function(req, res) {
     dataStore.getTotalItems(function(err, countInfo) {
         if(err) return res.send(err, 500);
-        dataStore.getLastObjectID(function(err, lastObject) {
-            if(err) return res.send(err, 500);
-            var objId = "000000000000000000000000";
-            if (lastObject) objId = lastObject._id.toHexString();
-            var updated = new Date().getTime();
-            try {
-                var js = JSON.parse(fs.readFileSync('state.json'));
-                if(js && js.updated) updated = js.updated;
-            } catch(E) {}
-            res.send({ready:1, count:countInfo, updated:updated, lastId:objId});
-        });
+        var updated = new Date().getTime();
+        var js;
+        try {
+            js = JSON.parse(fs.readFileSync('state.json'));
+        } catch(E) {}
+        if(!js) js = {ready:0};
+        js.count = countInfo;
+        res.send(js);
     });
 });
 
@@ -99,13 +96,6 @@ app.get('/ref', function(req, res) {
     request.get({url:lurl, json:true}, function(err, res2, body){
         if(err || !body) return res.send(err, 500);
         res.send(body);
-    });
-});
-
-app.get('/update', function(req, res) {
-    sync.update(locker, req.query.type, function(){
-        res.writeHead(200);
-        res.end('Extra mince!');
     });
 });
 

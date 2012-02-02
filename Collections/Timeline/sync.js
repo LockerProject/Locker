@@ -12,10 +12,25 @@ exports.init = function(l, dStore, dIn, callback){
     locker = l;
     logger = l.logger;
     callback();
+    var js;
+    try { js = JSON.parse(fs.readFileSync('state.json')); } catch(E) {}
+    if(js && js.ready == 1) return; // already sync'd
+    if(js) exports.sync(l, js, function(err){ if(err) logger.error(err); });
+    // starting from scratch, make sure clear, set initial list
+    dataStore.clear(function(){
+        js = {types:[
+            "facebook/getCurrent/home",
+            "twitter/getCurrent/tweets", "twitter/getCurrent/timeline", "twitter/getCurrent/mentions", "twitter/getCurrent/related",
+            "foursquare/getCurrent/recents", "foursquare/getCurrent/checkin",
+            "instagram/getCurrent/photo", "instagram/getCurrent/feed",
+            "links/"
+            ]};
+            exports.sync(l, js, function(err){ if(err) logger.error(err); });
+    });
 }
 
 // manually walk and reindex all possible link sources
-exports.update = function(locker, type, callback) {
+exports.sync = function(js, callback) {
     dataStore.clear(type, function(){
         callback();
         var types = (type) ? [type] : ['home/facebook', 'tweets/twitter', 'checkin/foursquare', 'feed/instagram'];

@@ -11,8 +11,21 @@ $(function() {
     $("#moar").click( function(){
         offset += 50;
         loadStuff();
+        loadStatus();
     });
 });
+
+var max = 20;
+function loadStatus()
+{
+    $.getJSON(baseUrl + '/Me/timeline/state',{}, function(data) {
+        if(!data) return $("#status").text("timeline failed :(");
+        if(data.ready == 1) return $("#status").text("");
+        $("#status").text("timeline is indexing...");
+        if(max-- <= 0) return $("#status").text("plz reload");
+        window.setTimeout(loadStatus, 10000); // poll for a bit
+    });
+}
 
 function loadStuff(){
     $.getJSON(baseUrl + '/Me/timeline/',{limit:50, offset:offset}, function(data) {
