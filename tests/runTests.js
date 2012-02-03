@@ -1,8 +1,8 @@
 var fs = require("fs");
 var net = require("net");
-require.paths.push(__dirname + "/../Common/node");
-process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
-var lconfig = require("lconfig");
+var path = require("path");
+process.env["NODE_PATH"] = path.join(__dirname, "..", "Common", "node"); // for spawn'd nodelings
+var lconfig = require(__dirname + "/../Common/node/lconfig");
 lconfig.load("Config/config.json");
 var wrench = require("wrench");
 var runIntegration = true;

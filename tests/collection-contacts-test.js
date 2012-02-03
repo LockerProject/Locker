@@ -42,7 +42,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json') });
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=500',
                 contentType:"application/json",
@@ -85,7 +85,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json') });
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=500',
                 contentType:"application/json",
@@ -119,7 +119,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json') });
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
                 contentType:"application/json",
@@ -153,7 +153,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json') });
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
                 contentType:"application/json",
