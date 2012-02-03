@@ -5,14 +5,13 @@
     <%- partial('header_partial') %>
     <link rel="stylesheet" href="css/settings-account.css" />
     <script src="js/settings.js"></script>
-    <script src="js/settings-account.js"></script>
     <script src="common/js/jquery.validate.min.js"></script>
     <script src="common/js/jquery.jsonp-2.2.0.min.js"></script>
     <script src="<%= dashboard.customHostedEndpoint %>"></script>
   </head>
   <body>
     <content class="body">
-    <form id="settings-account" action="#" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+    <form id="settings-account" action="#">
       <div id="settings-account-error"></div>
       <div id="settings_avatar">
         <p><img class="avatar" alt="your avatar" src="<%= profileImage %>" />
