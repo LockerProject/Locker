@@ -43,7 +43,20 @@ $(function () {
                         old_password : $(old_password).val(),
                         new_password : $(new_password).val(),
                         optout       : $(optout).is(':checked') ? true : undefined};
-            var url = info.externalHost + '/settings';
+
+            if (post.old_password && post.new_password) {
+                var passwordUrl = info.externalHost + '/users/changePassword';
+                $.ajax({url         : passwordUrl,
+                        data        : post,
+                        dataType    : 'jsonp',
+                        error       : function (xhr, status, err) {
+                            alert(status + ': ' + err + ' (from url ' + passwordUrl + ')');
+                        },
+                        success     : function (data, status, xhr) {
+                            alert('somehow, success: ' + data);
+                        }});
+            }
+            /*var url = info.externalHost + '/settings';
             $.ajax({type        : 'POST',
                     url         : url,
                     data        : post,
@@ -51,7 +64,7 @@ $(function () {
                     crossDomain : true,
                     complete    : function (result) {
                         alert('hi');
-                    }});
+                    }});*/
         },
         invalidHandler : function (form) {
             alert("You done screwed the pooch, chum.");
