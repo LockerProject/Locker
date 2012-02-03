@@ -79,5 +79,8 @@ case "$locker_mode" in
         ;;
 esac
 
+# Extra paths to search for files : separated
+export NODE_PATH=Common/node
+
 # Launch the locker
 exec node "$locker_runtime" "$@"

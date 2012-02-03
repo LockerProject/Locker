@@ -63,7 +63,7 @@ function checkInstalled(req, res, next) {
         getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
                 connectPage = true;
-                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
+                return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
             } else {
                 next();
             }
@@ -430,6 +430,30 @@ var renderYou = function(req, res) {
                         map: sortedAllResult,
                         firstVisit: firstVisit
                     });
+}
+
+var renderExplore = function(req, res) {
+    uistate.fetchState();
+    getAppsInfo(8, function(sortedResult) {
+        getConnectors(function(err, connectors) {
+            var firstVisit = false;
+            var page = 'explore';
+
+            getInstalledConnectors(function(err, installedConnectors) {
+                if (req.cookies.firstvisit === 'true' &&
+                    installedConnectors.length === 0) {
+                    firstVisit = true;
+                    //res.clearCookie('firstvisit');
+                }
+
+                if (installedConnectors.length === 0) {
+                    page += '-connect';
+                }
+                res.render(page, {
+                    connectors: connectors,
+                    installedConnectors: installedConnectors,
+                    map: sortedResult,
+                    firstVisit: firstVisit
                 });
             });
         });
@@ -679,8 +703,8 @@ var getCollectionsUsedByConnectors = function(connectors, callback) {
 };
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', checkInstalled, renderYou);
-app.get('/', checkInstalled, renderYou);
+app.get('/explore', checkInstalled, renderExplore);
+app.get('/', checkInstalled, renderExplore);
 
 app.get('/connect', renderConnect);
 

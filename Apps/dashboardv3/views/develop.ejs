@@ -1,29 +1,5 @@
 <!-- <section> -->
   <div class="sidenav-header">
-    <p class='sidenav-header-title'>YOUR APPS</p>
-  </div>
-  <div class="installed-apps sidenav-items">
-    <ul>
-      <% if (apps && apps.length > 0) { %>
-        <li>
-          <p><a href="viewAll" class="iframeLink viewAll" data-id="Develop-viewAll">View All</a></p>
-          <p id='published' class="your-apps published app-details">Published (<%= published %>)</p>
-          <!--no review stage yet, so omitting this one for now-->
-          <!--<p class="your-apps in-review app-details">In Review (0)</p>-->
-          <p id='drafts' class="your-apps drafts app-details">Drafts (<%= draft %>)</p>
-        </li>
-        <li>
-          <p><a href="publish" class="iframeLink" data-id="publish">Publish New</a></p>
-        </li>
-      <% } else { %>
-        <li>
-          <p><a href="#" class="iframeLink" data-id="Develop-devdocs">Getting Started</a></p>
-        </li>
-      <% } %>
-      </li>
-    </ul>
-  </div>
-  <div class="sidenav-header">
     <p class='sidenav-header-title'>TOOLS</p>
   </div>
   <div class="installed-apps sidenav-items">

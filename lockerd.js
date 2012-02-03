@@ -1,5 +1,7 @@
 var forever = require('forever');
 
+process.env["NODE_PATH"] = __dirname + "/Common/node";
+
 var child = new (forever.Monitor)('_lockerd.js', {
     spinSleepTime: 30000,
     minUptime: 10000,

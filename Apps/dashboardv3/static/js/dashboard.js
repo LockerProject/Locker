@@ -1,7 +1,6 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps"  : "allApps",
-    "publish"  : "publish",
     "viewAll"  : "viewAll",
     "connect"  : "connect",
     "settings" : "settings"
@@ -23,7 +22,7 @@ $(document).ready(function() {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
     $.get('/registry/add/' + id, function() {
-      window.location = 'you#You-' + id;
+      window.location = 'explore#Explore-' + id;
     });
     return false;
   });
@@ -56,8 +55,8 @@ $(document).ready(function() {
       modal.close();
     });
   }
-
-  if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
+  
+  if (window.location.hash !== '#Explore-connect' && $.cookie("firstvisit") === 'true') {
       if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
       } else {
@@ -68,13 +67,11 @@ $(document).ready(function() {
 
 var loadApp = function(info) {
   var app = info.subSection || info.topSection;
-  $('iframe#appFrame').show();
-  $('div#appFrame').hide();
+  $('.app-container').hide();
+  $('.app-container#iframeContainer').show();
   $('.app-details').hide();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
-  } else if (app === "connect") {
-    $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else if (info.topSection === "Settings") {
     if (info.subSection === "Connections") {
       $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-connectors');
@@ -85,9 +82,13 @@ var loadApp = function(info) {
     } else {
       alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
     }
+  } else if (app === "Publish") {
+    $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
+    $('#appHeader').hide();
+  } else if (app === "connect") {
+    $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
-    $.get('clickapp/' + app, function(e) {});
-    $("#appFrame")[0].contentWindow.location.replace('/Me/' + app);
+    handleApp(app);
   }
 
   $('.iframeLink[data-id="' + info.app + '"]').parent('p').siblings().show();
@@ -97,8 +98,8 @@ var syncletInstalled = function(provider) {
   if (provider === 'github') {
     $('.your-apps').show();
   }
-  var link = $('.oauthLink[data-provider="' + provider + '"]');
-  if($('div#appFrame').is(':visible')) {
+  var link = $('.sidenav .oauthLink[data-provider="' + provider + '"]');
+  if($('#appDiv').is(':visible')) {
     link.each(function(index, element) {
       element = $(element);
       var nxt = element.next('span');
@@ -112,6 +113,7 @@ var syncletInstalled = function(provider) {
     connectedList.append('\n\n\n').append(link.find('img'));
     link.remove();
   }
+<<<<<<< /private/srv/projects/singly/locker-lockerproject-git/./Apps/dashboardv3/static/js/dashboard.js.LOCAL.75640.js
 };
 
 handlers.You = loadApp;
@@ -120,3 +122,43 @@ handlers.connect = loadApp;
 handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;
+=======
+  link = $('#appHeader .unconnected-services .oauthLink[data-provider="' + provider + '"]');
+  if(link.length) {
+    var unConnectedList = $('#appHeader .connected-services');
+    // \n's are for spacing, gross, but true
+    unConnectedList.append('\n\n\n').append(link.find('img').addClass('installed'));
+    link.remove();
+  }
+};
+
+
+handlers.Explore = loadApp;
+handlers.Develop = loadApp;
+handlers.connect = loadApp;
+handlers.viewAll = loadApp;
+handlers.publish = loadApp;
+
+
+function handleApp(appName) {
+  $.get('clickapp/' + appName, function(e) {});
+  doAppHeader(appName);
+  $("#appFrame")[0].contentWindow.location.replace('/Me/' + appName);
+}
+
+function doAppHeader(appName) {
+  registry.getApp(appName, function(app) {
+    if(!app) return;
+    registry.getConnectedServices(app, function(connected) {
+      registry.getUnConnectedServices(app, function(unconnected) {
+        registry.getMyAuthoredApps(function(myAuthoredApps) {
+          var mine = myAuthoredApps[appName];
+          dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
+            $('#appHeader').html(appHtml);
+          });
+        });
+      })
+    });
+  });
+}
+>>>>>>> /private/srv/projects/singly/locker-lockerproject-git/./Apps/dashboardv3/static/js/dashboard.js.REMOTE.75640.js
