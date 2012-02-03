@@ -32,6 +32,6 @@
     },
     "logging": {
         "level": "silly",
-        "config": true
+        "console": false
     }
 }

@@ -44,6 +44,10 @@ exports.load = function(filepath) {
     ];
     exports.apps = config.apps || [
         "devdocs:Apps/DevDocs",
+        "helloplaces:Apps/HelloPlaces",
+        "linkalatte:Apps/LinkaLatte",
+        "contactsviewer:Apps/MergedContacts",
+        "photosviewer:Apps/PhotosViewer",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
         "github:Connectors/GitHub",

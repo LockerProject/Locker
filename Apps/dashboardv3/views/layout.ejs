@@ -21,7 +21,7 @@
       </div>
       <div class="nav-section">
         <div class="nav">
-          <a <% if (page === 'you' || page === 'you-connect') { %>class='blue'<% } %> data-id='You' href='you'>EXPLORE</a>
+          <a <% if (page === 'explore' || page === 'you-connect') { %>class='blue'<% } %> data-id='Explore' href='explore'>EXPLORE</a>
           <a <% if (page === 'appGallery') { %>class='blue'<% } %> data-id='AppGallery' href='appGallery'>APP GALLERY</a>
           <a <% if (page === 'develop') { %>class='blue'<% } %> data-id='Develop' href='develop'>DEVELOP</A>
         </div>
@@ -39,8 +39,11 @@
     <aside class="sidenav">
       <%- body %>
     </aside>
-    <iframe id="appFrame"></iframe>
-    <div id="appFrame">
+    <div class="app-container" id="iframeContainer">
+      <div id="appHeader"></div>
+      <iframe id="appFrame"></iframe>
+    </div>
+    <div class="app-container" id="appDiv">
       <section id="AppGallery">
         <section id="Featured">
         </section>
