@@ -1,3 +1,3 @@
-NODE_PATH=$(dirname `pwd`)/Common/node
+NODE_PATH="$(dirname $PWD)/Common/node"
 export NODE_PATH
-node ./runTests.js $@
+node ./runTests.js "$@"
