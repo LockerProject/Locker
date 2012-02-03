@@ -79,14 +79,14 @@ app.all('*', function(req, res, next) {
     // will replace when we have a reasonable notion of a user's profile
      request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
          try {
-             var body = JSON.parse(body);
+             body = JSON.parse(body);
              if (body.username) {
                  profileImage = "http://graph.facebook.com/" + body.username + "/picture";
              }
          } catch (E) {
              request.get({url:locker.lockerBase + "/synclets/twitter/get_profile"}, function(error, res, body) {
                  try {
-                     var body = JSON.parse(body);
+                     body = JSON.parse(body);
                      if (body.profile_image_url_https) {
                          profileImage = body.profile_image_url_https;
                      }
@@ -96,7 +96,7 @@ app.all('*', function(req, res, next) {
     });
     request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
         try {
-            var body = JSON.parse(body);
+            body = JSON.parse(body);
             if (body[0].login) {
                 githubLogin = body[0].login;
             }
@@ -233,7 +233,7 @@ var renderPublish = function(req, res) {
 var submitPublish = function(req, res) {
     if (req.form) {
         req.form.complete(function(err, fields, files) {
-            if (fields['x']) {
+            if (fields.x) {
                 cropping[fields.app] = true;
             }
             if (err) res.write(JSON.stringify(err.message));
@@ -282,13 +282,13 @@ var submitPublish = function(req, res) {
                             if(typeof body.err == 'string' && body.err.indexOf("failed to create issue") != -1) {
                                 console.error('asking to re-auth');
                                 // TODO this should link to or say to go to auth settings to re-auth instead of it being jacked in here!
-                                var htm = '<script>function pop(){'
-                                    +'var options = "width=1000,height=1000,status=no,scrollbars=no,resizable=no";'
-                                    +'var popup = window.open("/auth/github", "account", options);'
-                                    +'popup.focus(); popup.opener = window;'
-                                    +'return false;'
-                                +'}; var self = window; function syncletInstalled(){self.history.back();}</script>'
-                                +'Oops, please <a href="/auth/github" onClick="pop()">re-authenticate</a> to github so that we can create an issue to track this request, thanks!';
+                                var htm = '<script>function pop(){' +
+                                    'var options = "width=1000,height=1000,status=no,scrollbars=no,resizable=no";' +
+                                    'var popup = window.open("/auth/github", "account", options);' +
+                                    'popup.focus(); popup.opener = window;' +
+                                    'return false;' +
+                                '}; var self = window; function syncletInstalled(){self.history.back();}</script>' +
+                                'Oops, please <a href="/auth/github" onClick="pop()">re-authenticate</a> to github so that we can create an issue to track this request, thanks!';
                                 return res.send(htm);
                             }
                             console.error('error publishing ' + handle + ':', body.err);
@@ -331,13 +331,13 @@ var submitPublish = function(req, res) {
 };
 
 var cropImage = function(file, fields, callback) {
-    if (fields['x']) {
+    if (fields.x) {
         im.crop({
             srcPath: file,
             dstPath: file,
-            width: fields['w'],
-            height: fields['h'],
-            offset: {x: fields['x'], y: fields['y']}
+            width: fields.w,
+            height: fields.h,
+            offset: {x: fields.x, y: fields.y}
         }, function(err, stdout, stderr) {
             im.resize({
                 srcData: file,
@@ -373,8 +373,8 @@ var getInstalledAppsInfo = function(count, callback) {
                 }
             }
         }
-        for (var i in result) {
-            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
+        for (var k in result) {
+            if(!added[result[k].id] && result[k].title) sortedResult.push(result[k]);
         }
 
         callback(sortedResult);
