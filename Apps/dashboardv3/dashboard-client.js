@@ -123,11 +123,11 @@ var renderApps = function(req, res) {
     })
 }
 
-var renderExplore = function(req, res) {
-    page = 'explore';
+var renderAppGallery = function(req, res) {
+    page = 'appGallery';
     getConnectors(function(error, connectors) {
         var c = [];
-        res.render('explore', {synclets:connectors});
+        res.render('appGallery', {synclets:connectors});
     });
 }
 
@@ -431,8 +431,7 @@ app.get('/connect', renderConnect);
 app.get('/allApps', renderApps);
 app.get('/develop', renderDevelop);
 
-app.get('/explore', renderExplore);
-// app.get('/exploreApps', renderExploreApps);
+app.get('/appGallery', renderAppGallery);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);

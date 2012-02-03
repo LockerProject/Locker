@@ -3,8 +3,6 @@ var specialApps = {
     "allApps" : "allApps",
     "publish" : "publish",
     "viewAll" : "viewAll",
-    // "exploreApps" : "exploreApps",
-    // "registryApp" : "registryApp",
     "connect" : "connect"
 };
 var defaultSubSections = {};
@@ -12,12 +10,12 @@ var loggedIn = true;
 
 $(document).ready(function() {
     $.history.init(function(hash){
-        if(hash === "") {
+        // if(hash === "") {
             // initialize your app
             loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        } else {
-            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        }
+        // } else {
+        //     loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+        // }
     }, { unescape: ",/" });
   
   $('body').delegate('.install', 'click', function(e) {
@@ -59,7 +57,7 @@ $(document).ready(function() {
   }
   
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-      if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#Explore-Featured') {
+      if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
       } else {
         doModal();

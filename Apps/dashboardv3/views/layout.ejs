@@ -22,7 +22,7 @@
       <div class="nav-section">
         <div class="nav">
           <a <% if (page === 'you' || page === 'you-connect') { %>class='blue'<% } %> data-id='You' href='you'>EXPLORE</a>
-          <a <% if (page === 'explore') { %>class='blue'<% } %> data-id='Explore' href='explore'>APP GALLERY</a>
+          <a <% if (page === 'appGallery') { %>class='blue'<% } %> data-id='AppGallery' href='appGallery'>APP GALLERY</a>
           <a <% if (page === 'develop') { %>class='blue'<% } %> data-id='Develop' href='develop'>DEVELOP</A>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
@@ -41,7 +41,7 @@
     </aside>
     <iframe id="appFrame"></iframe>
     <div id="appFrame">
-      <section id="Explore">
+      <section id="AppGallery">
         <section id="Featured">
         </section>
         <section id="Author">
