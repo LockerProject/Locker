@@ -56,7 +56,7 @@ $(document).ready(function() {
       modal.close();
     });
   }
-  
+
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
       if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
