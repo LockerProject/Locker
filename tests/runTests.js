@@ -1,6 +1,7 @@
 var fs = require("fs");
 var net = require("net");
-process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
+var path = require("path");
+process.env["NODE_PATH"] = path.join(__dirname, "..", "Common", "node"); // for spawn'd nodelings
 var lconfig = require(__dirname + "/../Common/node/lconfig");
 lconfig.load("Config/config.json");
 var wrench = require("wrench");
