@@ -23,7 +23,7 @@ var conf = {};
 conf._exit = false;
 exports.alive = false;
 
-require.paths.push(__dirname + "/Common/node");
+
 var spawn = require('child_process').spawn;
 var fs = require('fs');
 var path = require('path');

@@ -72,7 +72,7 @@ exports.waitForPathsToExist = function(paths, retries, timeout,  callback) {
         var files = [];
         for(var i in paths)
             files.push(paths[i]);
-        
+
         exports.checkFiles(files, function(err) {
             if(err) {
                 exports.waitForPathsToExist(paths, retries - 1, timeout,  callback);
@@ -115,12 +115,11 @@ exports.waitForEvents = function (url, retries, timeout, expectedResponses, valu
     setTimeout(function() {
         request.get({uri: url}, function(err, resp, data) {
             retries--;
-            exports.waitForEvents(url, retries, timeout, expectedResponses, JSON.parse(data), callback); 
+            exports.waitForEvents(url, retries, timeout, expectedResponses, JSON.parse(data), callback);
         });
     }, timeout);
 }
 
-require.paths.push(__dirname + "/../Common/node");
 var EventEmitter = require('events').EventEmitter;
 exports.eventEmitter = new EventEmitter();
 
@@ -131,7 +130,7 @@ var oldFuncs = {};
 
 // types is an array of the event types to listen for
 exports.hijackEvents = function (types, svcId) {
-    
+
     lservicemanager.isRunning = function() { return true; };
     lservicemanager.isInstalled = function() { return true; };
     lservicemanager.metaInfo = function() { return { uriLocal: 'http://testing:80/' }; };
@@ -140,7 +139,7 @@ exports.hijackEvents = function (types, svcId) {
             exports.eventEmitter.emit('event', body, callback);
         }
     }
-    
+
     for (var i = 0; i < types.length; i++) {
         levents.addListener(types[i], svcId, '/faked');
     }
