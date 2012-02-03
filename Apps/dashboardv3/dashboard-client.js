@@ -23,6 +23,7 @@ var express = require('express')
   , fs = require('fs')
   , im = require('imagemagick')
   , util = require("util")
+  , lutil = require('lutil')
   , moment = require("moment")
   , page = ''
   , connectPage = false
@@ -546,7 +547,6 @@ var getConnectors = function(callback) {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
                         if (installedConnectors[i].id === connector.name && installedConnectors[i].authed) {
-                          console.log(connector.name + ": " + installedConnectors[i].authed);
                           connector.authed = true;
                           connector.username = getReadableProfileNameForConnector(installedConnectors[i]);
                         }
@@ -558,7 +558,7 @@ var getConnectors = function(callback) {
                     connectors.push(connector);
                 }
             });
-            callback(err, connectors);
+            getCollectionsUsedByConnectors(connectors, callback);
         });
     });
 };
@@ -577,33 +577,83 @@ var getInstalledConnectors = function(callback) {
 
 var getReadableProfileNameForConnector = function(connector) {
 
-  // TODO: absolutely need to refactor this into the profile collection once we have it done.  Until then, here we are:
-  try {
-    switch(connector.handle){
-      case 'facebook':
-        return connector.auth.profile.username;
-      case 'twitter':
-        return '@' + connector.auth.profile.screen_name;
-      case 'lastfm':
-        return connector.auth.profile.name;
-      case 'flickr': // TODO: flickr connector has empty auth object
-        return '';
-      case 'foursquare':
-        return connector.auth.profile.canonicalUrl.split('/')[3];
-      case 'gcontacts': // TODO: gcontacts connector has empty auth object
-        return '';
-      case 'instagram':
-        return connector.auth.profile.username;
-      case 'pandora': // TODO: pandora connector has empty auth object
-        return '';
-      case 'rdio':
-        return connector.auth.profile.firstName + ' ' + connector.auth.profile.lastName;
-      case 'github':
-        return connector.auth.profile.login;
-      default:
-        return '';
+    // TODO: absolutely need to refactor this into the profile collection once we have it done.  Until then, here we are:
+    try {
+        switch(connector.handle){
+        case 'facebook':
+            return connector.auth.profile.username;
+        case 'twitter':
+            return '@' + connector.auth.profile.screen_name;
+        case 'lastfm':
+            return connector.auth.profile.name;
+        case 'flickr': // TODO: flickr connector has empty auth object
+            return '';
+        case 'foursquare':
+            return connector.auth.profile.canonicalUrl.split('/')[3];
+        case 'gcontacts': // TODO: gcontacts connector has empty auth object
+            return '';
+        case 'instagram':
+            return connector.auth.profile.username;
+        case 'pandora': // TODO: pandora connector has empty auth object
+            return '';
+        case 'rdio':
+            return connector.auth.profile.firstName + ' ' + connector.auth.profile.lastName;
+        case 'github':
+            return connector.auth.profile.login;
+        default:
+            return '';
+        }
+    } catch(e) { return ''; }
+};
+
+var getCollectionsUsedByConnectors = function(connectors, callback) {
+
+    function findConnectorInObject(connector) {
+        for(var j in connectors) {
+            if (connectors.hasOwnProperty(j) && connectors[j].name === connector) {
+               return connectors[j];
+            }
+        }
+        return undefined;
     }
-  } catch(e) { return ''; }
+
+    // we hardwire the collections here with a nasty O(n^2) nested loop, b/c /registry/connectors
+    // doesn't return the "provides" yet.
+    function addProvidesToConnectors(map, collection) {
+        if (map.hasOwnProperty(collection) && map[collection].hasOwnProperty('events') && lutil.is('Array', map[collection].events)) {
+            for (var i=0; i<map[collection].events.length; i++) {
+                var event = map[collection].events[i][0].split('/');
+                var currentConn = findConnectorInObject(event[event.length -1]);
+                if (currentConn !== undefined) {
+                    if (!currentConn.hasOwnProperty('provides')) {
+                        currentConn.provides = [];
+                    }
+                    var foundCollection = false;
+                    for (var k=0; k<currentConn.provides.length; k++) {
+                        if (currentConn.provides[k] === lutil.ucfirst(collection)) {
+                            foundCollection = true;
+                        }
+                    }
+                    if (!foundCollection) {
+                        currentConn.provides.push(lutil.ucfirst(collection));
+                    }
+                }
+            }
+        }
+    }
+
+    locker.map(function(err, map) {
+        if (map === undefined) {
+            return console.error('Map undefined when attempting to get collections in dashboardv3');
+        }
+
+        addProvidesToConnectors(map, 'contacts');
+        addProvidesToConnectors(map, 'photos');
+        addProvidesToConnectors(map, 'links');
+        addProvidesToConnectors(map, 'places');
+        
+        callback(err, connectors);
+    });
 };
 
 app.get('/clickapp/:app', clickApp);

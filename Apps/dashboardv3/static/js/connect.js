@@ -8,7 +8,7 @@ $(function() {
         e.preventDefault();
         showHiddenConnectors();
     });
-    
+
     //copied from dashboard.js
     $('body').delegate('.oauthLink','click', function(e) {
       var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
@@ -16,23 +16,37 @@ $(function() {
       popup.focus();
       return false;
     });
-    
-    if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
+
+    if ($('.sidenav-items.synclets-connected', window.parent.document).length > 0) {
         showAllConnectors();
     }
-    
+
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
         parent.window.location.replace('/');
     });
-    
-    $('.synclets-list li a').each(function(index, item) {  
+
+    $('.synclets-list li a').each(function(index, item) {
        if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
            $(this).parent().fadeIn();
            hasTwitterOrFacebook = true;
-       } 
+       }
     });
-    
+
+    $('.learnmore-link').click(function(e) {
+      if ($('.learnmore-copy').is(":hidden")) {
+        $(this).hide();
+        $(this).html('Close section');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      } else {
+        $(this).hide();
+        $(this).html('Learn more about what we do');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      }
+    });
+
     // if apikeys doens't have twitter/facebook, just show everything
     if (hasTwitterOrFacebook === false) {
         showAllConnectors();
@@ -47,7 +61,7 @@ var syncletInstalled = function(provider) {
         }
     });
 
-    $('.sidenav-items.synclets', window.parent.document).append("<img class='installed' src='img/icons/32px/"+provider+".png'>");
+    $('.sidenav-items.synclets-connected', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
     showHeaderTwo();
     showAllConnectors();
     updateUserProfile();
@@ -77,10 +91,10 @@ var showAllConnectors = function() {
 };
 
 var updateUserProfile = function() {
-    
+
     var username = null;
     var avatar = null;
-    
+
     var fetchUserProfile = function() {
         $.get('/synclets/facebook/get_profile', function(body) {
             if (body.username) {
@@ -96,7 +110,7 @@ var updateUserProfile = function() {
             }
         });
     };
-    
+
     profileTimeout = setInterval(function() {
         fetchUserProfile();
         if (username !== null) {
