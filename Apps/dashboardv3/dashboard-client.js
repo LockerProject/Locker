@@ -651,7 +651,7 @@ var getCollectionsUsedByConnectors = function(connectors, callback) {
         addProvidesToConnectors(map, 'photos');
         addProvidesToConnectors(map, 'links');
         addProvidesToConnectors(map, 'places');
-        
+
         callback(err, connectors);
     });
 };
@@ -669,10 +669,9 @@ app.get('/settings-api', renderSettingsAPIKey);
 app.post('/settings-account', handleSettings);
 
 app.get('/allApps', renderApps);
-app.get('/create', renderCreate);
+app.get('/develop', renderDevelop);
 
-app.get('/explore', renderExplore);
-// app.get('/exploreApps', renderExploreApps);
+app.get('/appGallery', renderAppGallery);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
