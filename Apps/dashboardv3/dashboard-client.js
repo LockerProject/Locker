@@ -116,7 +116,7 @@ var clickApp = function(req, res) {
 
 var renderApps = function(req, res) {
     uistate.fetchState();
-    getAllAppsInfo(null, function(sortedResult) {
+    getInstalledAppsInfo(null, function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult
@@ -356,23 +356,43 @@ var cropImage = function(file, fields, callback) {
     }
 };
 
-var getAllAppsInfo = function(count, callback) {
-    locker.map(function(err, map) {
+var getInstalledAppsInfo = function(count, callback) {
+    locker.mapType('app', function(err, map) {
         var result = [];
         var sortedResult = [];
-        for (var i in map) {
-            if ((map[i].type === 'app' || map[i].type === 'app') && !map[i].hidden) {
-                result.push(map[i]);
-            }
-        }
+
         var recentApps = uistate.getNLastUsedApps(count);
         var added = {};
         for (var i = 0; i < recentApps.length; i++) {
-            for (var j in result) {
-                if (result[j].id === recentApps[i].name && result[j].static) {
-                    result[j].lastUsed = recentApps[i].lastUsed;
-                    sortedResult.push(result[j]);
-                    added[result[j].id] = true;
+            for (var j in map) {
+                if (map.hasOwnProperty(j) && map[j].srcdir.substring(0,9) !== 'Me/github') {
+                    if (map[j].id === recentApps[i].name && map[j].static) {
+                        map[j].lastUsed = recentApps[i].lastUsed;
+                        sortedResult.push(map[j]);
+                        added[map[j].id] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        for (var i in result) {
+            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
+        }
+
+        callback(sortedResult);
+    });
+};
+
+var getMyAppsInfo = function(count, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = [];
+        var sortedResult = [];
+        var added = {};
+        for (var j in map) {
+            if (map.hasOwnProperty(j) && map[j].srcdir.substring(0,9) === 'Me/github') {
+                if (map[j].static) {
+                    sortedResult.push(map[j]);
+                    added[map[j].id] = true;
                     break;
                 }
             }
@@ -388,12 +408,11 @@ var getAllAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
 
-    getAllAppsInfo(8, function(sortedAllResult) {
+    getInstalledAppsInfo(8, function(sortedAllResult) {
         getMyAppsInfo(8, function(sortedMyResult) {
             getConnectors(function(err, connectors) {
                 var firstVisit = false;
                 var page = 'you';
-
                 getInstalledConnectors(function(err, installedConnectors) {
                     if (req.cookies.firstvisit === 'true' &&
                         installedConnectors.length === 0) {

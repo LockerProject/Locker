@@ -6,12 +6,12 @@
   <ul>
     <% for (var i=0; i<myMap.length; i++) { %>
       <li>
-        <p><a href="#" class="iframeLink" data-id="You-<%= map[i].id %>"><%= myMap[i].title %></a></p>
+        <p><a href="#" class="iframeLink" data-id="You-<%= myMap[i].id %>"><%= myMap[i].title %></a></p>
       </li>
     <% } %>
   </ul>
 <% if (myMap.length === 0) { %>
-  <p><a class="orange" href="appGallery#AppGallery-Featured">Explore more apps</a></p>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Build an App!</a></p>
 <% } %>
 </div>
 
@@ -30,14 +30,6 @@
   </ul>
   <p><a class="orange" href="explore#Explore-Featured">Get more apps!</a></p>
 </div>
-
-<div class="sidenav-items synclets-connected">
-  <% for (var i = 0; i < connectors.length; i++) { %>
-    <% if (connectors[i].authed) { %>
-      <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
-    <% } %>
-  <% } %>
-</div>.
 
 <div class="sidenav-header">
   <p class='sidenav-header-title'>CONNECT MORE SERVICES</p>
