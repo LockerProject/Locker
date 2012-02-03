@@ -43,6 +43,10 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
                 body: fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             locker.initClient({workingDirectory:'./' + lconfig.me + '/contacts', lockerUrl:lconfig.lockerBase});
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact"}, function() {
@@ -82,6 +86,10 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
                 body: fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             contacts.getContacts("facebook", "contact", "facebook", function() {
                 dataStore.getTotalCount(self.callback);
@@ -112,6 +120,10 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
                 body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             contacts.getContacts("twitter", "contact", "twitter", function() {
                 dataStore.getTotalCount(self.callback);
@@ -142,6 +154,10 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
                 body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
             // be going direct to mongo like this in a test
