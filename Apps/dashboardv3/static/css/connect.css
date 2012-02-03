@@ -60,11 +60,6 @@ h2 {
   display: inline-block;
 }
 
-.action-button {
-  float: right;
-  vertical-align: middle;
-}
-
 .hideable {
   display: none;
 }
