@@ -59,7 +59,7 @@ $(document).ready(function() {
   }
   
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-      if (window.location.hash === '#Create-devdocs' || window.location.hash === '#Explore-Featured') {
+      if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#Explore-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
       } else {
         doModal();
@@ -107,8 +107,7 @@ var syncletInstalled = function(provider) {
 
 
 handlers.You = loadApp;
-handlers.create = loadApp;
-handlers.Create = loadApp;
+handlers.Develop = loadApp;
 handlers.connect = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;

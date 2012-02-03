@@ -131,8 +131,8 @@ var renderExplore = function(req, res) {
     });
 }
 
-var renderCreate = function(req, res) {
-    page = 'create';
+var renderDevelop = function(req, res) {
+    page = 'develop';
     getGithubApps(function(apps) {
         var publishedCount = 0;
         for (var i = 0; i < apps.length; i++) {
@@ -140,7 +140,7 @@ var renderCreate = function(req, res) {
                 publishedCount++;
             }
         }
-        res.render('create', {
+        res.render('develop', {
             published: publishedCount,
             draft: apps.length - publishedCount,
             apps: apps
@@ -429,7 +429,7 @@ app.get('/', checkInstalled, renderYou);
 app.get('/connect', renderConnect);
 
 app.get('/allApps', renderApps);
-app.get('/create', renderCreate);
+app.get('/develop', renderDevelop);
 
 app.get('/explore', renderExplore);
 // app.get('/exploreApps', renderExploreApps);
