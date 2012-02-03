@@ -62,7 +62,7 @@ function checkInstalled(req, res, next) {
         getInstalledConnectors(function(err, installedConnectors) {
             if (installedConnectors.length === 0) {
                 connectPage = true;
-                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
+                return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
             } else {
                 next();
             }
@@ -329,12 +329,12 @@ var getAppsInfo = function(count, callback) {
     });
 }
 
-var renderYou = function(req, res) {
+var renderExplore = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
         getConnectors(function(err, connectors) {
             var firstVisit = false;
-            var page = 'you';
+            var page = 'explore';
 
             getInstalledConnectors(function(err, installedConnectors) {
                 if (req.cookies.firstvisit === 'true' &&
@@ -423,8 +423,8 @@ var registryApp = function(req, res) {
 }
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', checkInstalled, renderYou);
-app.get('/', checkInstalled, renderYou);
+app.get('/explore', checkInstalled, renderExplore);
+app.get('/', checkInstalled, renderExplore);
 
 app.get('/connect', renderConnect);
 
