@@ -42,7 +42,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json') });
             var self = this;
             locker.initClient({workingDirectory:'./' + lconfig.me + '/contacts', lockerUrl:lconfig.lockerBase});
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact"}, function() {
@@ -81,7 +81,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json') });
             var self = this;
             contacts.getContacts("facebook", "contact", "facebook", function() {
                 dataStore.getTotalCount(self.callback);
@@ -111,7 +111,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json') });
             var self = this;
             contacts.getContacts("twitter", "contact", "twitter", function() {
                 dataStore.getTotalCount(self.callback);
@@ -141,7 +141,7 @@ suite.next().suite.addBatch({
             fakeweb.registerUri({
                 uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json') });
             var self = this;
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
             // be going direct to mongo like this in a test
