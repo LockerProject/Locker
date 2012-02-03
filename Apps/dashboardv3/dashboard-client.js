@@ -116,7 +116,7 @@ var clickApp = function(req, res) {
 
 var renderApps = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(null, function(sortedResult) {
+    getAllAppsInfo(null, function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult
@@ -356,7 +356,7 @@ var cropImage = function(file, fields, callback) {
     }
 };
 
-var getAppsInfo = function(count, callback) {
+var getAllAppsInfo = function(count, callback) {
     locker.map(function(err, map) {
         var result = [];
         var sortedResult = [];
@@ -388,26 +388,29 @@ var getAppsInfo = function(count, callback) {
 var renderYou = function(req, res) {
     uistate.fetchState();
 
-    getAppsInfo(8, function(sortedResult) {
-        getConnectors(function(err, connectors) {
-            var firstVisit = false;
-            var page = 'you';
+    getAllAppsInfo(8, function(sortedAllResult) {
+        getMyAppsInfo(8, function(sortedMyResult) {
+            getConnectors(function(err, connectors) {
+                var firstVisit = false;
+                var page = 'you';
 
-            getInstalledConnectors(function(err, installedConnectors) {
-                if (req.cookies.firstvisit === 'true' &&
-                    installedConnectors.length === 0) {
-                    firstVisit = true;
-                    //res.clearCookie('firstvisit');
-                }
+                getInstalledConnectors(function(err, installedConnectors) {
+                    if (req.cookies.firstvisit === 'true' &&
+                        installedConnectors.length === 0) {
+                        firstVisit = true;
+                        //res.clearCookie('firstvisit');
+                    }
 
-                if (installedConnectors.length === 0) {
-                    page += '-connect';
-                }
-                res.render(page, {
-                    connectors: connectors,
-                    installedConnectors: installedConnectors,
-                    map: sortedResult,
-                    firstVisit: firstVisit
+                    if (installedConnectors.length === 0) {
+                        page += '-connect';
+                    }
+                    res.render(page, {
+                        connectors: connectors,
+                        installedConnectors: installedConnectors,
+                        myMap: sortedMyResult,
+                        map: sortedAllResult,
+                        firstVisit: firstVisit
+                    });
                 });
             });
         });
