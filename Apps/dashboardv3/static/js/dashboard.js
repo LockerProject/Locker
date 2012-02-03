@@ -1,7 +1,6 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps" : "allApps",
-    "publish" : "publish",
     "viewAll" : "viewAll",
     "connect" : "connect"
 };
@@ -67,14 +66,13 @@ $(document).ready(function() {
 
 var loadApp = function(info) {
   var app = info.subSection || info.topSection;
-  $('#appFrame').show();
-  $('#appDiv').hide();
-  $('#appHeader').html('');
-  $('.app-details').hide();
+  $('.app-container').hide();
+  $('.app-container#iframeContainer').show();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
   } else if (app === "Publish") {
     $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
+    $('#appHeader').hide();
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
