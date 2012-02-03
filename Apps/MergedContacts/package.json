@@ -2,9 +2,9 @@
   "author": "Singly, Inc. <nerds@singly.com>",
   "name": "contactsviewer",
   "description": "View all of your contacts in one place merged from all services.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "repository": {
-    "title": "Basic Contacts",
+    "title": "Contacts (DEMO)",
     "handle": "contactsviewer",
     "update": true,
     "github": "https://github.com/LockerProject/Locker",
