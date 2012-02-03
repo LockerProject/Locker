@@ -14,14 +14,16 @@
       </li>
     <% } %>
   </ul>
-  <p><a class="orange" href="explore#Explore-Featured">Explore more apps</a></p>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Explore more apps</a></p>
 </div>
 <div class="sidenav-header">
   <p class='sidenav-header-title'>CONNECTED</p>
 </div>
 <div class="sidenav-items synclets-connected">
   <% for (var i = 0; i < connectors.length; i++) { %>
-    <% if (connectors[i].authed) { %><img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"><% } %>
+    <% if (connectors[i].authed) { %>
+      <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
+    <% } %>
   <% } %>
 </div>
 <div class="sidenav-header">
@@ -41,7 +43,7 @@
     <span id='close-button'>X</span>
     <p>When you're ready to connect more services, find them under "More Services".</p><br>
     <div class="action">
-      <img class="gotit-button" src="img/got-it.png" />
+      <span class="gotit-button action-button">Got it!</span>
     </div>
   </div>
 <% } %>
