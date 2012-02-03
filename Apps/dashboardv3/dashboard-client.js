@@ -157,8 +157,6 @@ var handleSettings = function (req, res, next) {
     req.form.complete(function (err, fields, files) {
         if (err) return res.send('unable to process form: ' + err, 500);
 
-        return res.end(util.inspect({fields: fields, files: files}));
-
         if (files.avi && files.avi.path) {
             im.resize({srcPath : files.avi.path
                      , dstPath : 'avatar.png'
@@ -170,8 +168,8 @@ var handleSettings = function (req, res, next) {
                           return res.send('ok');
                       });
         }
-    })
-}
+    });
+};
 
 var renderSettingsAPIKey = function(req, res) {
     res.render('iframe/settings-api', {
@@ -185,7 +183,7 @@ var renderAppGallery = function(req, res) {
         var c = [];
         res.render('appGallery', {synclets:connectors});
     });
-}
+};
 
 var renderDevelop = function(req, res) {
     page = 'develop';
@@ -404,33 +402,6 @@ var getMyAppsInfo = function(count, callback) {
         callback(sortedResult);
     });
 };
-
-var renderYou = function(req, res) {
-    uistate.fetchState();
-
-    getInstalledAppsInfo(8, function(sortedAllResult) {
-        getMyAppsInfo(8, function(sortedMyResult) {
-            getConnectors(function(err, connectors) {
-                var firstVisit = false;
-                var page = 'you';
-                getInstalledConnectors(function(err, installedConnectors) {
-                    if (req.cookies.firstvisit === 'true' &&
-                        installedConnectors.length === 0) {
-                        firstVisit = true;
-                        //res.clearCookie('firstvisit');
-                    }
-
-                    if (installedConnectors.length === 0) {
-                        page += '-connect';
-                    }
-                    res.render(page, {
-                        connectors: connectors,
-                        installedConnectors: installedConnectors,
-                        myMap: sortedMyResult,
-                        map: sortedAllResult,
-                        firstVisit: firstVisit
-                    });
-}
 
 var renderExplore = function(req, res) {
     uistate.fetchState();
