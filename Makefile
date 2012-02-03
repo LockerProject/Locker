@@ -4,9 +4,9 @@ build:
 	npm install
 
 test: build
-	npm test
+	cd tests && ./runTests
 
-bindist:
+bindist: build
 	./mktarball.sh
 
 clean:
