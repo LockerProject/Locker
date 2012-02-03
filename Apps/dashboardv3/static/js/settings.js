@@ -4,11 +4,6 @@ function setUserGlobals(data) {
     info = data;
 }
 
-function updateToken(json) {
-  info.apiToken = json.apiToken;
-  $("#apiToken").val(info.apiToken);
-}
-
 $(function () {
     $(".connect-button-link").click(function (e) {
         e.preventDefault();
@@ -20,16 +15,14 @@ $(function () {
     });
 
     $("#resetToken").click(function(e) {
-      $.ajax({
-        dataType: 'jsonp',
-        crossDomain: true,
-        jsonpCallback: 'updateToken',
-        url: info.externalHost + '/users/me/resetApiToken?updateToken=',
-        type: 'GET'
-      })
-      .fail(function(data, status, three) {
-            console.error('Uhoh: ' + data);
-            console.error(data);
+      $.jsonp({url : info.externalHost + '/users/me/resetApiToken',
+               callbackParameter : 'callback',
+               error : function (xopts, status) {
+                   console.error('Uhoh: ' + status);
+               },
+               success : function (json, status) {
+                   $("#apiToken").val(json.apiToken);
+               }
       });
     });
 

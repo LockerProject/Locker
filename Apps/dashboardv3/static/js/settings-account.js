@@ -29,28 +29,16 @@ $(function () {
 
             if (post.old_password && post.new_password) {
                 var passwordUrl = info.externalHost + '/users/changePassword';
-                $.ajax({url         : passwordUrl,
-                        data        : post,
-                        dataType    : 'jsonp',
-                        error       : function (xhr, status, err) {
-                            alert(status + ': ' + err + ' (from url ' + passwordUrl + ')');
-                        },
-                        success     : function (data, status, xhr) {
-                            alert('somehow, success: ' + data);
-                        }});
+                $.jsonp({url : passwordUrl,
+                         callbackParameter : 'callback',
+                         data : post,
+                         error : function (xopts, status) {
+                             alert(status + ': ' + JSON.stringify(xopts) + ' (from url ' + passwordUrl + ')');
+                         },
+                         success : function (json, status) {
+                             alert('somehow, success: ' + JSON.stringify(json));
+                         }});
             }
-            /*var url = info.externalHost + '/settings';
-            $.ajax({type        : 'POST',
-                    url         : url,
-                    data        : post,
-                    dataType    : 'json',
-                    crossDomain : true,
-                    complete    : function (result) {
-                        alert('hi');
-                    }});*/
-        },
-        invalidHandler : function (form) {
-            alert("You done screwed the pooch, chum.");
         }
     });
 });
