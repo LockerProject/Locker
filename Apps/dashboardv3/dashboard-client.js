@@ -17,7 +17,7 @@ var express = require('express')
   , githubLogin = ''
   , githubapps = {}
   , form = require('connect-form')
-  , uistate = require(__dirname + '/state')
+  , uistate = require(__dirname + '/uistate')
   , profileImage = 'img/default-profile.png'
   , path = require('path')
   , fs = require('fs')
@@ -124,14 +124,6 @@ var renderApps = function(req, res) {
     });
 };
 
-var renderExplore = function(req, res) {
-    page = 'explore';
-    getConnectors(function(error, connectors) {
-        var c = [];
-        res.render('explore', {synclets:connectors});
-    });
-};
-
 var renderSettings = function(req, res) {
     res.render('settings', {dashboard: lconfig.dashboard});
 };
@@ -187,8 +179,16 @@ var renderSettingsAPIKey = function(req, res) {
     });
 };
 
-var renderCreate = function(req, res) {
-    page = 'create';
+var renderAppGallery = function(req, res) {
+    page = 'appGallery';
+    getConnectors(function(error, connectors) {
+        var c = [];
+        res.render('appGallery', {synclets:connectors});
+    });
+}
+
+var renderDevelop = function(req, res) {
+    page = 'develop';
     getGithubApps(function(apps) {
         var publishedCount = 0;
         for (var i = 0; i < apps.length; i++) {
@@ -196,7 +196,7 @@ var renderCreate = function(req, res) {
                 publishedCount++;
             }
         }
-        res.render('create', {
+        res.render('develop', {
             published: publishedCount,
             draft: apps.length - publishedCount,
             apps: apps

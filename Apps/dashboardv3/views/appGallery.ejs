@@ -2,7 +2,7 @@
   <script type="text/javascript">
     $(document).ready(function() {
       if (window.location.hash.length === 0) {
-        app = 'Explore-Featured';
+        app = 'AppGallery-Featured';
         loadDiv(app);
       }
     });
@@ -13,7 +13,7 @@
   <div class="installed-apps sidenav-items">
     <ul>
       <li>
-        <a href="#" data-id='Explore-Featured' class="your-apps iframeLink">FEATURED</a>
+        <a href="#" data-id='AppGallery-Featured' class="iframeLink">FEATURED</a>
       </li>
     </ul>
   </div>
@@ -34,7 +34,7 @@
   <div class="sidenav-items synclets">
     <ul id='services'>
       <% for (var i in synclets) { %>
-        <li><input name="<%= synclets[i].handle %>" id="<%= synclets[i].handle %>" type="checkbox"><label for="<%= synclets[i].handle %>"><%= synclets[i].title %></label></li>
+        <li><input name="<%= synclets[i].repository.handle %>" id="<%= synclets[i].repository.handle %>" type="checkbox"><label for="<%= synclets[i].repository.handle %>"><%= synclets[i].repository.title %></label></li>
       <% } %>
     </ul>
   </div>

@@ -27,24 +27,11 @@ $(function() {
     });
 
     $('.synclets-list li a').each(function(index, item) {
-       if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
-           $(this).parent().fadeIn();
-           hasTwitterOrFacebook = true;
-       }
-    });
-
-    $('.learnmore-link').click(function(e) {
-      if ($('.learnmore-copy').is(":hidden")) {
-        $(this).hide();
-        $(this).html('Close section');
-        $(this).fadeIn('fast');
-        $('.learnmore-copy').slideToggle('fast');
-      } else {
-        $(this).hide();
-        $(this).html('Learn more about what we do');
-        $(this).fadeIn('fast');
-        $('.learnmore-copy').slideToggle('fast');
-      }
+        var that = $(this);
+        if (that.attr('data-provider') === 'twitter' || that.attr('data-provider') === 'facebook') {
+            that.parent().fadeIn();
+            hasTwitterOrFacebook = true;
+        }
     });
 
     // if apikeys doens't have twitter/facebook, just show everything
@@ -98,8 +85,8 @@ var updateUserProfile = function() {
     var fetchUserProfile = function() {
         $.get('/synclets/facebook/get_profile', function(body) {
             if (body.username) {
-                 avatar = "http://graph.facebook.com/" + body.username + "/picture";
-                 username = body.name;
+                avatar = "http://graph.facebook.com/" + body.username + "/picture";
+                username = body.name;
             } else {
                 $.get('/synclets/twitter/get_profile', function(body) {
                     if (body.profile_image_url_https) {

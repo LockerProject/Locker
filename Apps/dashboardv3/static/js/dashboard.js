@@ -1,12 +1,10 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-  "allApps"  : "allApps",
-  "publish"  : "publish",
-  "viewAll"  : "viewAll",
-  // "exploreApps" : "exploreApps",
-  // "registryApp" : "registryApp",
-  "connect"  : "connect",
-  "settings" : "settings"
+    "allApps"  : "allApps",
+    "publish"  : "publish",
+    "viewAll"  : "viewAll",
+    "connect"  : "connect",
+    "settings" : "settings"
 };
 var defaultSubSections = {};
 var loggedIn = true;
@@ -58,13 +56,13 @@ $(document).ready(function() {
       modal.close();
     });
   }
-
+  
   if (window.location.hash !== '#You-connect' && $.cookie("firstvisit") === 'true') {
-    if (window.location.hash === '#Create-devdocs' || window.location.hash === '#Explore-Featured') {
-      $.cookie("firstvisit", null, {path: '/' });
-    } else {
-      doModal();
-    }
+      if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
+        $.cookie("firstvisit", null, {path: '/' });
+      } else {
+        doModal();
+      }
   }
 });
 
@@ -117,7 +115,7 @@ var syncletInstalled = function(provider) {
 };
 
 handlers.You = loadApp;
-handlers.Create = loadApp;
+handlers.Develop = loadApp;
 handlers.connect = loadApp;
 handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
