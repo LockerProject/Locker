@@ -472,6 +472,8 @@ function checkPackage(pjs, arg, gh, callback) {
             }
             if (arg.body.uses) js.repository.uses = arg.body.uses;
         }
+        var dirs = pjs.split('/');
+        js.repository.url = 'https://github.com/' + dirs[dirs.length-3] + '/' + dirs[dirs.length-2];
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });
