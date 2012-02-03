@@ -75,12 +75,16 @@ function processService(svc, callback) {
     callback();
 }
 
-function getContacts(type, endpoint, svcID, callback) {
-    request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint, json:true}, function(err, resp, body) {
+function getContacts(type, endpoint, svcID, callback, offset) {
+    if(!offset) offset = 0;
+    request.get({uri:lconfig.lockerBase + '/Me/' + svcID + '/getCurrent/' + endpoint + '?limit=500&offset=' + offset, json:true}, function(err, resp, body) {
         if(err || !body || !Array.isArray(body)) return callback(err);
+        if(body.length == 0) return callback();
         async.forEachSeries(body, function(contact, cb) {
             dataStore.addData(type, contact, cb);
-        }, callback);
+        }, function(){
+            getContacts(type, endpoint, svcID, callback, offset+500);
+        });
     });
 }
 
