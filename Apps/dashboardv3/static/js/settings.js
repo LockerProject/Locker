@@ -18,7 +18,7 @@ $(function () {
       $.jsonp({url : info.externalHost + '/users/me/resetApiToken',
                callbackParameter : 'callback',
                error : function (xopts, status) {
-                   console.error('Uhoh: ' + status);
+                   if (console && console.error) console.error('Uhoh: ' + status);
                },
                success : function (json, status) {
                    $("#apiToken").val(json.apiToken);
@@ -55,11 +55,12 @@ $(function () {
             new_password : {minlength : "At least 6 characters are necessary."}
         },
         submitHandler : function (form) {
-            var post = {email        : $(email).val(),
-                        username     : $(username).val(),
-                        old_password : $(old_password).val(),
-                        new_password : $(new_password).val(),
-                        optout       : $(optout).is(':checked') ? true : undefined};
+            var post = {email        : $('#email').val(),
+                        username     : $('#username').val(),
+                        old_password : $('#old_password').val(),
+                        new_password : $('#new_password').val(),
+                        avi_url      : $('#avi_url').val(),
+                        optout       : $('#optout').is(':checked') ? true : undefined};
 
             if (post.old_password && post.new_password) {
                 var passwordUrl = info.externalHost + '/users/changePassword';
@@ -67,10 +68,11 @@ $(function () {
                          callbackParameter : 'callback',
                          data : post,
                          error : function (xopts, status) {
-                             alert(status + ': ' + JSON.stringify(xopts) + ' (from url ' + passwordUrl + ')');
+                             if (console && console.error) console.error(status + ': from url ' + xopts.url);
+                             $('#settings_account_error').text('Password change failed. Perhaps you entered your old password incorrectly?');
                          },
                          success : function (json, status) {
-                             alert('somehow, success: ' + JSON.stringify(json));
+                             $('#settings_account_error').text('Your password was successfully changed.');
                          }});
             }
         }
