@@ -68,6 +68,7 @@ var loadApp = function(info) {
   var app = info.subSection || info.topSection;
   $('.app-container').hide();
   $('.app-container#iframeContainer').show();
+  $('.app-details').hide();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
   } else if (app === "Publish") {
@@ -126,6 +127,7 @@ function handleApp(appName) {
 
 function doAppHeader(appName) {
   registry.getApp(appName, function(app) {
+    if(!app) return;
     registry.getConnectedServices(app, function(connected) {
       registry.getUnConnectedServices(app, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
