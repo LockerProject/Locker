@@ -11,11 +11,15 @@ var lutil = require("lutil");
 var crypto = require("crypto");
 var async = require('async');
 var lmongoutil = require("lmongoutil");
+var lsql = require('sqlite-cursor');
 
 
-var itemCol, respCol, locker;
+var itemCol, respCol;
+var locker;
+var mItem, mResp, mKey;
 
-exports.init = function(iCollection, rCollection, l) {
+
+exports.init = function(iCollection, rCollection, l, callback) {
     locker = l;
     logger = l.logger;
     itemCol = iCollection;
@@ -24,6 +28,32 @@ exports.init = function(iCollection, rCollection, l) {
     respCol = rCollection;
     respCol.ensureIndex({"id":1},{unique:true, background:true},function() {});
     respCol.ensureIndex({"item":1},{background:true},function() {});
+    async.series([
+        function(cb) {
+            lsql.connectToDB("./timeline.sqlite", cb);
+        },
+        function(cb) {
+            mKey = new lsql.Model("key", {
+                key:{type:lsql.Types.String, primaryKey:true},
+                item:lsql.Types.String
+            });
+            console.error()
+            mKey.create(cb);
+        },
+        function(cb) {
+            mItem = new lsql.Model("item", {
+                item:{type:lsql.Types.String, primaryKey:true},
+                json:lsql.Types.String
+            });
+            mItem.create(cb);
+        },
+        function(cb) {
+            mResp = new lsql.Model("response", {
+                item:{type:lsql.Types.String},
+                json:lsql.Types.String
+            });
+            mResp.create(cb);
+        }], callback);
 }
 
 exports.clear = function(callback) {
