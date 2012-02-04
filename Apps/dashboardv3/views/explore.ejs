@@ -7,10 +7,6 @@
     <% for (var i = 0; i < myMap.length; i++) { %>
       <li>
         <p><a href="#" class="iframeLink" data-id="Explore-<%= myMap[i].id %>"><%= myMap[i].title %></a></p>
-        <div class="app-details">
-          created by <%= myMap[i].author || "Singly, Inc." %><br />
-          <a class="orange" href="<%= myMap[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a>
-        </div>
       </li>
     <% } %>
   </ul>
@@ -28,11 +24,11 @@
   <ul>
     <% for (var i=0; i<map.length; i++) { %>
       <li>
-        <p><a href="#" class="iframeLink" data-id="You-<%= map[i].id %>"><%= map[i].title %></a></p>
+        <p><a href="#" class="iframeLink" data-id="Explore-<%= map[i].id %>"><%= map[i].title %></a></p>
       </li>
     <% } %>
   </ul>
-  <p><a class="orange" href="explore#Explore-Featured">Get more apps!</a></p>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Explore more apps</a></p>
 </div>
 
 <div class="sidenav-header">
