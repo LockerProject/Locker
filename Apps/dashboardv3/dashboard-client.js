@@ -25,7 +25,7 @@ var express = require('express')
   , util = require("util")
   , moment = require("moment")
   , page = ''
-  , connectPage = false
+  , connectSkip = false
   , cropping = {}
   ;
 
@@ -58,19 +58,15 @@ app.configure(function() {
 });
 
 function checkInstalled(req, res, next) {
-    if (connectPage === false) {
-        getInstalledConnectors(function(err, installedConnectors) {
-            if (installedConnectors.length === 0) {
-                connectPage = true;
-                return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
-            } else {
-                next();
-            }
-        });
-    } else {
-        next();
-        connectPage = false;
-    }
+    if(connectSkip) return next();
+    getInstalledConnectors(function(err, installedConnectors) {
+        if (installedConnectors.length === 0) {
+            return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
+        } else {
+            connectSkip = true;
+            return next();
+        }
+    });
 }
 
 app.all('*', function(req, res, next) {
@@ -423,7 +419,7 @@ var registryApp = function(req, res) {
 }
 
 app.get('/clickapp/:app', clickApp);
-app.get('/explore', checkInstalled, renderExplore);
+app.get('/explore', renderExplore);
 app.get('/', checkInstalled, renderExplore);
 
 app.get('/connect', renderConnect);
@@ -524,7 +520,7 @@ var getInstalledConnectors = function(callback) {
            if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
                installedConnectors.push(connectors[i]);
            }
-       } 
+       }
        callback(err, installedConnectors);
     });
 }
