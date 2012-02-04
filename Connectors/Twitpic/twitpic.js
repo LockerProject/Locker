@@ -18,7 +18,6 @@ var fs = require('fs'),
     express = require('express'),
     connect = require('connect'),
     request = require('request'),
-    sys = require('sys'),
     app = express.createServer(
                     connect.bodyParser(),
                     connect.cookieParser()),

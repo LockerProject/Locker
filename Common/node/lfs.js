@@ -8,7 +8,6 @@
 */
 
 var fs = require('fs'),
-    sys = require('sys'),
     url = require('url'),
     https = require('https'),
     http = require('http'),

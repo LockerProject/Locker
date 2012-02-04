@@ -8,7 +8,6 @@
 */
 
 var fs      = require('fs'),
-    sys     = require('sys'),
     sqlite  = require('sqlite'),
     express = require('express'),
     connect = require('connect'),
