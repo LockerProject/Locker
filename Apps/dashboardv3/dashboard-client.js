@@ -410,13 +410,47 @@ var getAppsInfo = function(count, callback) {
     });
 };
 
+var getAllAppsInfo = function(count, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = [];
+        var sortedResult = [];
+
+        var recentApps = uistate.getNLastUsedApps(count);
+        var added = {};
+        for (var i = 0; i < recentApps.length; i++) {
+            for (var j in map) {
+                if (map[j].id === recentApps[i].name && map[j].static) {
+                    map[j].lastUsed = recentApps[i].lastUsed;
+                    sortedResult.push(map[j]);
+                    added[map[j].id] = true;
+                    break;
+                }
+            }
+        }
+        for (var i in map) {
+            if(!added[map[i].id] && map[i].title) sortedResult.push(map[i]);
+        }
+
+        callback(sortedResult);
+    });
+}
+
+
 var renderExplore = function(req, res) {
     uistate.fetchState();
+<<<<<<< Updated upstream
     getInstalledApps(8, function(sortedResult) {
         getMyApps(8, function(mySortedResult) {
             getConnectors(function(err, connectors) {
                 var firstVisit = false;
                 var page = 'explore';
+=======
+    
+    getAllRegistryApps(function(sortedResult) {
+        getConnectors(function(err, connectors) {
+            var firstVisit = false;
+            var page = 'explore';
+>>>>>>> Stashed changes
 
                 getInstalledConnectors(function(err, installedConnectors) {
                     if (req.cookies.firstvisit === 'true' &&
@@ -541,7 +575,7 @@ var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
         apps = JSON.parse(body);
         request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
-            added = JSON.parse(added);
+            //added = JSON.parse(added);
             for (var i in added) {
                 if (apps[i]) {
                     apps[i].installed = true;
