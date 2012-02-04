@@ -10,7 +10,8 @@
         "node": ">= 0.6.8"
     },
     "scripts": {
-        "test": "cd tests && ./runTests"
+        "test": "make test",
+        "start": "./locker"
     },
     "dependencies": {
         "npm":"=1.0.106",
