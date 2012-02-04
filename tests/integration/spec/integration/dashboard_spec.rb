@@ -9,20 +9,20 @@ describe 'dashboard' do
     end
   end
 
-  it 'should allow people to access the create interface' do
+  it 'should allow people to access the develop interface' do
     visit '/'
-    click_link 'CREATE'
-    page.should have_content('Getting Started')
+    click_link 'DEVELOP'
+    within_frame 'appFrame' do
+      page.should have_content('Edit your viewer locally!')
+    end
   end
 
   it 'should allow access to api explorer' do
     visit '/'
-    click_link 'CREATE'
-    click_link 'Getting Started'
+    click_link 'DEVELOP'
+    click_link 'API Explorer'
     within_frame 'appFrame' do
-      page.should have_content('Make your own viewer!')
-      click_on 'API Explorer'
-      page.should have_content('API Explorer')
+      page.should have_content('Choose an endpoint:')
     end
   end
 

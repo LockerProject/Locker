@@ -9,7 +9,7 @@
 
 var request = require('request'),
     fs = require("fs"),
-    sys = require('sys'),
+    util = require('util'),
     url = require("url"),
     lstate = require("lstate"),
     lutil = require("lutil"),
@@ -138,7 +138,7 @@ exports.idrLocal = function(idr)
 exports.listen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };
@@ -146,7 +146,7 @@ exports.listen = function(type, callbackEndpoint, callbackFunction) {
 exports.deafen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/deafen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };

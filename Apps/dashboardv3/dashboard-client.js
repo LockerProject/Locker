@@ -17,7 +17,7 @@ var express = require('express')
   , githubLogin = ''
   , githubapps = {}
   , form = require('connect-form')
-  , uistate = require(__dirname + '/state')
+  , uistate = require(__dirname + '/uistate')
   , profileImage = 'img/default-profile.png'
   , path = require('path')
   , fs = require('fs')
@@ -25,7 +25,7 @@ var express = require('express')
   , util = require("util")
   , moment = require("moment")
   , page = ''
-  , connectPage = false
+  , connectSkip = false
   , cropping = {}
   ;
 
@@ -58,19 +58,15 @@ app.configure(function() {
 });
 
 function checkInstalled(req, res, next) {
-    if (connectPage === false) {
-        getInstalledConnectors(function(err, installedConnectors) {
-            if (installedConnectors.length === 0) {
-                connectPage = true;
-                return res.redirect(lconfig.externalBase + '/dashboard/you#You-connect');
-            } else {
-                next();
-            }
-        });
-    } else {
-        next();
-        connectPage = false;
-    }
+    if(connectSkip) return next();
+    getInstalledConnectors(function(err, installedConnectors) {
+        if (installedConnectors.length === 0) {
+            return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
+        } else {
+            connectSkip = true;
+            return next();
+        }
+    });
 }
 
 app.all('*', function(req, res, next) {
@@ -123,16 +119,16 @@ var renderApps = function(req, res) {
     })
 }
 
-var renderExplore = function(req, res) {
-    page = 'explore';
+var renderAppGallery = function(req, res) {
+    page = 'appGallery';
     getConnectors(function(error, connectors) {
         var c = [];
-        res.render('explore', {synclets:connectors});
+        res.render('appGallery', {synclets:connectors});
     });
 }
 
-var renderCreate = function(req, res) {
-    page = 'create';
+var renderDevelop = function(req, res) {
+    page = 'develop';
     getGithubApps(function(apps) {
         var publishedCount = 0;
         for (var i = 0; i < apps.length; i++) {
@@ -140,7 +136,7 @@ var renderCreate = function(req, res) {
                 publishedCount++;
             }
         }
-        res.render('create', {
+        res.render('develop', {
             published: publishedCount,
             draft: apps.length - publishedCount,
             apps: apps
@@ -329,12 +325,12 @@ var getAppsInfo = function(count, callback) {
     });
 }
 
-var renderYou = function(req, res) {
+var renderExplore = function(req, res) {
     uistate.fetchState();
     getAppsInfo(8, function(sortedResult) {
         getConnectors(function(err, connectors) {
             var firstVisit = false;
-            var page = 'you';
+            var page = 'explore';
 
             getInstalledConnectors(function(err, installedConnectors) {
                 if (req.cookies.firstvisit === 'true' &&
@@ -423,16 +419,15 @@ var registryApp = function(req, res) {
 }
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', checkInstalled, renderYou);
-app.get('/', checkInstalled, renderYou);
+app.get('/explore', renderExplore);
+app.get('/', checkInstalled, renderExplore);
 
 app.get('/connect', renderConnect);
 
 app.get('/allApps', renderApps);
-app.get('/create', renderCreate);
+app.get('/develop', renderDevelop);
 
-app.get('/explore', renderExplore);
-// app.get('/exploreApps', renderExploreApps);
+app.get('/appGallery', renderAppGallery);
 
 app.get('/publish', renderPublish);
 app.post('/publish', submitPublish);
@@ -525,7 +520,7 @@ var getInstalledConnectors = function(callback) {
            if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
                installedConnectors.push(connectors[i]);
            }
-       } 
+       }
        callback(err, installedConnectors);
     });
 }

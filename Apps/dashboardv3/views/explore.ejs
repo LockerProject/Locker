@@ -1,41 +1,45 @@
-<!-- <section> -->
-  <script type="text/javascript">
-    $(document).ready(function() {
-      if (window.location.hash.length === 0) {
-        app = 'Explore-Featured';
-        loadDiv(app);
-      }
-    });
-  </script>
-  <div class="sidenav-header">
-    <p class='sidenav-header-title'>APP GALLERY</p>
-  </div>
-  <div class="installed-apps sidenav-items">
-    <ul>
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>APPS</p>
+  <p class="sidenav-header-link"><a href="allApps" data-id="allApps" class="orange iframeLink">see all</a></p>
+</div>
+<div class="installed-apps sidenav-items">
+  <ul>
+    <% for (var i = 0; i < map.length; i++) { %>
       <li>
-        <a href="#" data-id='Explore-Featured' class="your-apps iframeLink">FEATURED</a>
+        <p><a href="#" class="iframeLink" data-id="Explore-<%= map[i].id %>"><%= map[i].title %></a></p>
       </li>
-    </ul>
+    <% } %>
+  </ul>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Explore more apps</a></p>
+</div>
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>CONNECTED</p>
+</div>
+<div class="sidenav-items synclets-connected">
+  <% for (var i = 0; i < connectors.length; i++) { %>
+    <% if (connectors[i].authed) { %>
+      <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
+    <% } %>
+  <% } %>
+</div>
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>MORE SERVICES</p>
+</div>
+<div class="sidenav-items synclets-unconnected">
+  <% for (var i = 0; i < connectors.length; i++) { %>
+    <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%= connectors[i].repository.handle %>'
+        data-width='<%=connectors[i].repository.oauthSize.width%>' data-height='<%=connectors[i].repository.oauthSize.height%>' class="oauthLink">
+    <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"></a>
+    <% } %>
+  <% } %>
+</div>
+
+<% if (firstVisit === false) { %>
+  <div id="basic-modal-content">
+    <span id='close-button'>X</span>
+    <p>When you're ready to connect more services, find them under "More Services".</p><br>
+    <div class="action">
+      <span class="gotit-button action-button">Got it!</span>
+    </div>
   </div>
-  <div class="sidenav-header">
-    <p class='sidenav-header-title'>FILTER BY TYPE</p>
-  </div>
-  <div class="sidenav-items synclets">
-    <ul id='types'>
-      <li><input name="photos" id="photos" type="checkbox"><label for="photos">Photos</label></li>
-      <li><input name="links" id="links" type="checkbox"><label for="links">Links</label></li>
-      <li><input name="contacts" id="contacts" type="checkbox"><label for="contacts">Contacts</label></li>
-      <li><input name="places" id="places" type="checkbox"><label for="places">Places</label></li>
-    </ul>
-  </div>
-  <div class="sidenav-header">
-    <p class='sidenav-header-title'>FILTER BY SERVICE</p>
-  </div>
-  <div class="sidenav-items synclets">
-    <ul id='services'>
-      <% for (var i in synclets) { %>
-        <li><input name="<%= synclets[i].handle %>" id="<%= synclets[i].handle %>" type="checkbox"><label for="<%= synclets[i].handle %>"><%= synclets[i].title %></label></li>
-      <% } %>
-    </ul>
-  </div>
-<!-- </section> -->
+<% } %>

@@ -8,31 +8,34 @@ $(function() {
         e.preventDefault();
         showHiddenConnectors();
     });
-    
+
     //copied from dashboard.js
     $('body').delegate('.oauthLink','click', function(e) {
-      var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
-      var popup = window.open($(this).attr('href'), "account", options);
-      popup.focus();
-      return false;
+        var that = $(this);
+        if (that.is(':disabled') || that.hasClass('disabled')) return false;
+        var options = "width=" + that.data('width') + ",height=" + that.data('height') + ",status=no,scrollbars=no,resizable=no";
+        var popup = window.open(that.attr('href'), "account", options);
+        popup.focus();
+        return false;
     });
-    
-    if ($('.sidenav-items.synclets .installed', window.parent.document).length > 0) {
+
+    if ($('.sidenav-items synclets-connected', window.parent.document).length > 0) {
         showAllConnectors();
     }
-    
+
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
         parent.window.location.replace('/');
     });
-    
-    $('.synclets-list li a').each(function(index, item) {  
-       if ($(this).attr('data-provider') === 'twitter' || $(this).attr('data-provider') === 'facebook') {
-           $(this).parent().fadeIn();
-           hasTwitterOrFacebook = true;
-       } 
+
+    $('.synclets-list li a').each(function(index, item) {
+        var that = $(this);
+        if (that.attr('data-provider') === 'twitter' || that.attr('data-provider') === 'facebook') {
+            that.parent().fadeIn();
+            hasTwitterOrFacebook = true;
+        }
     });
-    
+
     // if apikeys doens't have twitter/facebook, just show everything
     if (hasTwitterOrFacebook === false) {
         showAllConnectors();
@@ -41,13 +44,11 @@ $(function() {
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
-    $('.oauthLink img').each(function(index) {
-        if ($(this).parent().attr('data-provider') === provider) {
-            $(this).attr('src', 'img/connected.png');
-        }
-    });
-
-    $('.sidenav-items.synclets', window.parent.document).append("<img class='installed' src='img/icons/32px/"+provider+".png'>");
+    var dataProvider = '[data-provider=' + provider + ']';
+    var newIcon = $('<img>', {src: 'img/icons/32px/' + provider + '.png'});
+    $('.oauthLink' + dataProvider).text('Connected').addClass('disabled');
+    $('.synclets-connected', window.parent.document).append(newIcon);
+    $('.synclets-unconnected a' + dataProvider, window.parent.document).remove();
     showHeaderTwo();
     showAllConnectors();
     updateUserProfile();
@@ -77,15 +78,15 @@ var showAllConnectors = function() {
 };
 
 var updateUserProfile = function() {
-    
+
     var username = null;
     var avatar = null;
-    
+
     var fetchUserProfile = function() {
         $.get('/synclets/facebook/get_profile', function(body) {
             if (body.username) {
-                 avatar = "http://graph.facebook.com/" + body.username + "/picture";
-                 username = body.name;
+                avatar = "http://graph.facebook.com/" + body.username + "/picture";
+                username = body.name;
             } else {
                 $.get('/synclets/twitter/get_profile', function(body) {
                     if (body.profile_image_url_https) {
@@ -96,7 +97,7 @@ var updateUserProfile = function() {
             }
         });
     };
-    
+
     profileTimeout = setInterval(function() {
         fetchUserProfile();
         if (username !== null) {

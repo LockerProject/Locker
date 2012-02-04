@@ -12,8 +12,7 @@ var fs = require('fs'),
     async = require('async'),
     url = require('url'),
     crypto = require("crypto"),
-    querystring = require('querystring'),
-    sys = require('sys');
+    querystring = require('querystring');
 
     
 var auth;
