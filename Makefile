@@ -1,12 +1,14 @@
+BUILD_NUMBER?=git-$(shell git rev-parse --short --default HEAD)
+
 all: build
 
 build:
 	npm install
+	echo "\"$(BUILD_NUMBER)\"" |tee build.json tests/build.json
 
 test: build
 	cd tests && ./runTests
 
-BUILD_NUMBER?=git-$(shell git rev-parse --short --default HEAD)
 SUBDIR=locker-$(BUILD_NUMBER)
 DISTFILE=$(SUBDIR).tar.gz
 
