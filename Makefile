@@ -19,6 +19,7 @@ bindist: $(DISTFILE)
 $(DISTFILE):
 	./scripts/build-tarball "$(SUBDIR)" "$@"
 
+# This is the rule that Jenkins runs -mdz 2012-02-04
 test-bindist: $(DISTFILE)
 	./scripts/test-tarball "$(SUBDIR)" "$<"
 
