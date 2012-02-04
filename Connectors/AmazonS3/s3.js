@@ -16,7 +16,6 @@ var fs = require('fs'),
     express = require('express'),
     connect = require('connect'),
     request = require('request'),
-    sys = require('sys'),
     path = require('path'),
     knox = require('knox'),
     app = express.createServer(

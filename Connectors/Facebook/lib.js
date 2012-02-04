@@ -9,8 +9,7 @@
 
 var fs = require('fs'),
     request = require('request'),
-    async = require('async'),
-    sys = require('sys');
+    async = require('async');
 
 
 var auth;
