@@ -11,7 +11,6 @@ var url = require('url');
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
-var sys = require('sys');
 var fs = require("fs");
 var path = require("path");
 var querystring = require("querystring");

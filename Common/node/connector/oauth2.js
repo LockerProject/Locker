@@ -10,7 +10,7 @@
 var request = require('request'),
     lfs = require('lfs'),
     fs = require('fs'),
-    sys = require('sys'),
+    util = require('util'),
     querystring = require('querystring'),
     options = {provider :            'Some oauth2 consumer',
                endPoint :            'http://consumer.com/oauth/',
@@ -92,7 +92,7 @@ function go(req, res) {
     } else {
         var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey + 
                         '&response_type=code&redirect_uri=' + options.redirectURI + 'auth/';
-        sys.debug('redirecting to ' + newUrl);
+        util.debug('redirecting to ' + newUrl);
         if (options.extraParams) {
             newUrl += "&" + options.extraParams;
         }
