@@ -22,7 +22,10 @@ git archive $rev | tar -x -C "$builddir/$subdir"
 git submodule foreach --quiet 'echo $path' | while read submodule; do
     dest="$builddir/$subdir/$submodule"
     mkdir -p "$dest"
-    (cd "$submodule" && git archive HEAD | tar -x -C "$dest")
+    (cd "$submodule" &&
+     echo "Submodule $submodule at revision" $(git rev-parse HEAD) &&
+     git archive HEAD | tar -x -C "$dest"
+    )
 done
 
 make -C "$builddir/$subdir"
