@@ -15,15 +15,10 @@ DISTFILE=$(SUBDIR).tar.gz
 bindist: $(DISTFILE)
 
 $(DISTFILE):
-	./scripts/mktarball "$(SUBDIR)" "$@"
+	./scripts/build-tarball "$(SUBDIR)" "$@"
 
 test-bindist: $(DISTFILE)
-	set -e; \
-	tmpdir=$$(mktemp -d); \
-	trap "rm -rf '$$tmpdir'" EXIT; \
-	tar xf "$(DISTFILE)" -C "$$tmpdir"; \
-	cd $$tmpdir/$(SUBDIR); \
-	$(MAKE) test
+	./scripts/test-tarball "$(SUBDIR)" "$<"
 
 clean:
 	echo "Surely you must be joking."
