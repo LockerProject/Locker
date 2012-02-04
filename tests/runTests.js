@@ -7,6 +7,7 @@ lconfig.load("Config/config.json");
 var wrench = require("wrench");
 var runIntegration = true;
 var integrationOnly = false;
+var tty = require('tty');
 
 var runFiles = [];
 var runGroups = [];
@@ -158,7 +159,7 @@ var runTests = function() {
         // Yes, it's really misspelled this way in vows.
         vowsArgument.push("--supress-stdout");
     }
-    if (process.argv.indexOf("-nc") > 0) {
+    if (process.argv.indexOf("-nc") > 0 || !tty.isatty(1)) {
         vowsArgument.push("--nocolor");
     }
 

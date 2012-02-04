@@ -7,7 +7,9 @@ build:
 	echo "\"$(BUILD_NUMBER)\"" |tee build.json tests/build.json
 
 test: build
-	cd tests && ./runTests
+	cd tests && \
+	env NODE_PATH="$(PWD)/Common/node" \
+	node ./runTests.js
 
 SUBDIR=locker-$(BUILD_NUMBER)
 DISTFILE=$(SUBDIR).tar.gz
