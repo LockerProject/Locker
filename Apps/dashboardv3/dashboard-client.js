@@ -26,7 +26,7 @@ var express = require('express')
   , lutil = require('lutil')
   , moment = require("moment")
   , page = ''
-  , connectPage = false
+  , connectSkip = false
   , cropping = {}
   ;
 
@@ -59,19 +59,15 @@ app.configure(function() {
 });
 
 function checkInstalled(req, res, next) {
-    if (connectPage === false) {
-        getInstalledConnectors(function(err, installedConnectors) {
-            if (installedConnectors.length === 0) {
-                connectPage = true;
-                return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
-            } else {
-                next();
-            }
-        });
-    } else {
-        next();
-        connectPage = false;
-    }
+    if(connectSkip) return next();
+    getInstalledConnectors(function(err, installedConnectors) {
+        if (installedConnectors.length === 0) {
+            return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
+        } else {
+            connectSkip = true;
+            return next();
+        }
+    });
 }
 
 app.all('*', function(req, res, next) {
@@ -688,7 +684,7 @@ var getCollectionsUsedByConnectors = function(connectors, callback) {
 };
 
 app.get('/clickapp/:app', clickApp);
-app.get('/explore', checkInstalled, renderExplore);
+app.get('/explore', renderExplore);
 app.get('/', checkInstalled, renderExplore);
 
 app.get('/connect', renderConnect);
@@ -715,3 +711,4 @@ app.post('/publishScreenshot', handleUpload);
 app.get('/tempScreenshot', renderTempScreenshot);
 app.get('/finishedCropping/:app', croppingFinished);
 app.get('/registryApp', registryApp);
+app.get('/clickapp/:app', clickApp);

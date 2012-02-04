@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+rev=$(git rev-parse --short --default HEAD $rev)
+build_id=${BUILD_NUMBER:-$rev}
+subdir="$1"
+top="$PWD"
+out="$2"
+builddir="$top/build"
+builddir="$(mktemp -d)"
+
+rm -rf "$builddir"
+mkdir -p "$builddir/$subdir"
+
+trap "rm -rf \"$builddir\"" EXIT
+
+# fetch a clean copy of the code from git
+echo "Fetching code..."
+# This doesn't work anymore with submodules.  I hate submodules.
+git archive $rev | tar -x -C "$builddir/$subdir"
+git submodule foreach --quiet 'echo $path' | while read submodule; do
+    dest="$builddir/$subdir/$submodule"
+    mkdir -p "$dest"
+    (cd "$submodule" &&
+     echo "Submodule $submodule at revision" $(git rev-parse HEAD) &&
+     git archive HEAD | tar -x -C "$dest"
+    )
+done
+
+make -C "$builddir/$subdir"
+mkdir -p "$builddir/$subdir/Me"
+
+echo "Compressing..."
+(cd "$builddir"; tar czf - "$subdir") > "$out"
+
+echo "Done."
+echo "$out"

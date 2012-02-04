@@ -1,4 +1,0 @@
-toplevel="$(dirname '$PWD')"
-NODE_PATH="$toplevel/Common/node"
-export NODE_PATH
-node ./runTests.js "$@"

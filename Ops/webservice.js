@@ -348,9 +348,10 @@ locker.get("/diary", function(req, res) {
 });
 
 locker.get('/core/revision', function(req, res) {
-    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), function(err, doc) {
+    fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
+        console.log(err);
         if (doc) res.send(JSON.parse(doc));
-        else res.send("git cmd not available!");
+        else res.send("unknown");
     });
 });
 
