@@ -113,16 +113,6 @@ var syncletInstalled = function(provider) {
     connectedList.append('\n\n\n').append(link.find('img'));
     link.remove();
   }
-<<<<<<< /private/srv/projects/singly/locker-lockerproject-git/./Apps/dashboardv3/static/js/dashboard.js.LOCAL.75640.js
-};
-
-handlers.You = loadApp;
-handlers.Develop = loadApp;
-handlers.connect = loadApp;
-handlers.Settings = loadApp;
-handlers.viewAll = loadApp;
-handlers.publish = loadApp;
-=======
   link = $('#appHeader .unconnected-services .oauthLink[data-provider="' + provider + '"]');
   if(link.length) {
     var unConnectedList = $('#appHeader .connected-services');
@@ -136,6 +126,7 @@ handlers.publish = loadApp;
 handlers.Explore = loadApp;
 handlers.Develop = loadApp;
 handlers.connect = loadApp;
+handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;
 
@@ -157,8 +148,7 @@ function doAppHeader(appName) {
             $('#appHeader').html(appHtml);
           });
         });
-      })
+      });
     });
   });
 }
->>>>>>> /private/srv/projects/singly/locker-lockerproject-git/./Apps/dashboardv3/static/js/dashboard.js.REMOTE.75640.js
