@@ -56,6 +56,7 @@ exports.load = function(filepath) {
         "twitter:Connectors/Twitter",
         "foursquare:Connectors/foursquare",
     ];
+    config.mongo = config.mongo || {};
     exports.mongo = {
         "dataDir": config.mongo.dataDir || "mongodata",
         "host": config.mongo.host || "localhost",
