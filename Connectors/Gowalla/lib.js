@@ -10,8 +10,7 @@
 var fs = require('fs'),
     request = require('request'),
     async = require('async'),
-    url = require('url'),
-    sys = require('sys');
+    url = require('url');
 
 var auth;
 var base = 'http://api.gowalla.com';
