@@ -10,4 +10,4 @@ tmpdir=$(mktemp -d)
 trap "rm -rf '$tmpdir'" EXIT
 tar xf "$tarball" -C "$tmpdir"
 cd "$tmpdir/$subdir"
-exec $MAKE test
+$MAKE test
