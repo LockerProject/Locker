@@ -116,7 +116,7 @@ var clickApp = function(req, res) {
 
 var renderApps = function(req, res) {
     uistate.fetchState();
-    getInstalledAppsInfo(null, function(sortedResult) {
+    getInstalledApps(null, function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult
@@ -354,34 +354,7 @@ var cropImage = function(file, fields, callback) {
     }
 };
 
-var getInstalledAppsInfo = function(count, callback) {
-    locker.mapType('app', function(err, map) {
-        var result = [];
-        var sortedResult = [];
-
-        var recentApps = uistate.getNLastUsedApps(count);
-        var added = {};
-        for (var i = 0; i < recentApps.length; i++) {
-            for (var j in map) {
-                if (map.hasOwnProperty(j) && map[j].srcdir.substring(0,9) !== 'Me/github') {
-                    if (map[j].id === recentApps[i].name && map[j].static) {
-                        map[j].lastUsed = recentApps[i].lastUsed;
-                        sortedResult.push(map[j]);
-                        added[map[j].id] = true;
-                        break;
-                    }
-                }
-            }
-        }
-        for (var i in result) {
-            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
-        }
-
-        callback(sortedResult);
-    });
-};
-
-var getMyAppsInfo = function(count, callback) {
+var getFilteredApps = function(count, filterFn, callback) {
     locker.mapType('app', function(err, map) {
         var result = [];
         var sortedResult = [];
@@ -403,28 +376,69 @@ var getMyAppsInfo = function(count, callback) {
     });
 };
 
+var getInstalledApps = function(count, callback) {
+    return getFilteredApps(count, function(app) {
+        return app.srcdir.substring(0,9) !== 'Me/github';
+    }, callback);
+};
+
+var getMyApps = function(count, callback) {
+    return getFilteredApps(count, function(app) {
+        return app.srcdir.substring(0,9) === 'Me/github';
+    }, callback);
+};
+
+
+var getAppsInfo = function(count, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = map;
+        var sortedResult = [];
+        
+        var recentApps = uistate.getNLastUsedApps(count);
+        var added = {};
+        for (var i = 0; i < recentApps.length; i++) {
+            for (var j in result) {
+                if (result[j].id === recentApps[i].name && result[j].static) {
+                    result[j].lastUsed = recentApps[i].lastUsed;
+                    sortedResult.push(result[j]);
+                    added[result[j].id] = true;
+                    break;
+                }
+            }
+        }
+        for (var i in result) {
+            if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
+        }
+
+        callback(sortedResult);
+    });
+};
+
 var renderExplore = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {
-        getConnectors(function(err, connectors) {
-            var firstVisit = false;
-            var page = 'explore';
+    getInstalledApps(8, function(sortedResult) {
+        getMyApps(8, function(mySortedResult) {
+            getConnectors(function(err, connectors) {
+                var firstVisit = false;
+                var page = 'explore';
 
-            getInstalledConnectors(function(err, installedConnectors) {
-                if (req.cookies.firstvisit === 'true' &&
-                    installedConnectors.length === 0) {
-                    firstVisit = true;
-                    //res.clearCookie('firstvisit');
-                }
+                getInstalledConnectors(function(err, installedConnectors) {
+                    if (req.cookies.firstvisit === 'true' &&
+                        installedConnectors.length === 0) {
+                        firstVisit = true;
+                        //res.clearCookie('firstvisit');
+                    }
 
-                if (installedConnectors.length === 0) {
-                    page += '-connect';
-                }
-                res.render(page, {
-                    connectors: connectors,
-                    installedConnectors: installedConnectors,
-                    map: sortedResult,
-                    firstVisit: firstVisit
+                    if (installedConnectors.length === 0) {
+                        page += '-connect';
+                    }
+                    res.render(page, {
+                        connectors: connectors,
+                        installedConnectors: installedConnectors,
+                        map: sortedResult,
+                        myMap: mySortedResult,
+                        firstVisit: firstVisit
+                    });
                 });
             });
         });
