@@ -356,7 +356,7 @@ var getFilteredApps = function(count, filterFn, callback) {
         var sortedResult = [];
         var added = {};
         for (var j in map) {
-            if (map.hasOwnProperty(j) && map[j].srcdir.substring(0,9) === 'Me/github') {
+            if (map.hasOwnProperty(j) && filterFn(map[j])) {
                 if (map[j].static) {
                     sortedResult.push(map[j]);
                     added[map[j].id] = true;
@@ -389,7 +389,7 @@ var getAppsInfo = function(count, callback) {
     locker.mapType('app', function(err, map) {
         var result = map;
         var sortedResult = [];
-        
+
         var recentApps = uistate.getNLastUsedApps(count);
         var added = {};
         for (var i = 0; i < recentApps.length; i++) {
@@ -711,4 +711,3 @@ app.post('/publishScreenshot', handleUpload);
 app.get('/tempScreenshot', renderTempScreenshot);
 app.get('/finishedCropping/:app', croppingFinished);
 app.get('/registryApp', registryApp);
-app.get('/clickapp/:app', clickApp);
