@@ -65,13 +65,13 @@ exports.init = function(serman, syncman, config, crypto, callback) {
 exports.app = function(app)
 {
     app.get('/registry/add/:id', add);
-    
+
     function add(req, res, retry) {
         // if this is the next function, then this isn't a retry
         if(typeof retry === 'function') retry = false;
         if(!req.params.id) return res.send('invalid id', 400);
         logger.info("registry trying to add "+req.params.id);
-        
+
         if(!regIndex[req.params.id]) {
             // if it has already tried to sync, this isn't a real package
             if(retry === true) return res.send("package " + req.params.id + " not found", 404);
@@ -81,14 +81,14 @@ exports.app = function(app)
                 // no errors, it should be in regIndex, so just call again
                 return add(req, res, true);
             });
-        } 
+        }
         if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
         exports.install({name:req.params.id}, function(err){
             if(err) return res.send(err, 500);
             res.send(true);
         });
     }
-    
+
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
     });
@@ -145,14 +145,11 @@ function publishPackage(req, res) {
     if(!dir || dir.indexOf('Me/github/') != 0) return res.send("package path not valid", 400);
     fs.stat(dir, function(err, stat) {
         if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 400);
-        var args = req.query || {};
+        var args = {};
         args.dir = dir;
         args.id = id;
-        if(req.body) args.body = req.body;
         exports.publish(args, function(err, doc, issue) {
             if(err) logger.error(err);
-            // npm publish always returns an error even though it works, so until that's fixed, commenting this out
-            //if(err) res.send(err, 500);
             res.send({err:err, doc:doc, issue:issue});
         });
     });
@@ -463,14 +460,6 @@ function checkPackage(pjs, arg, gh, callback) {
         if(js.repository.handle != arg.id) {
             logger.warn('while checking package ' + arg.dir + ', found inconsisent handle (' + js.repository.handle + ') and id (' + arg.id +'), setting name = id');
             js.repository.handle = arg.id;
-        }
-        if (arg.body) {
-            if (arg.body.title) js.repository.title = arg.body.title;
-            if (arg.body.description) {
-                js.repository.description = arg.body.description;
-                js.description = arg.body.description;
-            }
-            if (arg.body.uses) js.repository.uses = arg.body.uses;
         }
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();

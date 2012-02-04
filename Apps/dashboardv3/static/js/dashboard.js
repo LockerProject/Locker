@@ -1,7 +1,5 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-    "allApps" : "allApps",
-    "viewAll" : "viewAll",
     "connect" : "connect"
 };
 var defaultSubSections = {};
@@ -16,7 +14,7 @@ $(document).ready(function() {
         //     loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
         // }
     }, { unescape: ",/" });
-  
+
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
@@ -25,7 +23,7 @@ $(document).ready(function() {
     });
     return false;
   });
-  
+
   $('body').delegate('.oauthLink','click', function(e) {
     var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
     var popup = window.open($(this).attr('href'), "account", options);
@@ -54,7 +52,7 @@ $(document).ready(function() {
       modal.close();
     });
   }
-  
+
   if (window.location.hash !== '#Explore-connect' && $.cookie("firstvisit") === 'true') {
       if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
@@ -115,7 +113,6 @@ var syncletInstalled = function(provider) {
 handlers.Explore = loadApp;
 handlers.Develop = loadApp;
 handlers.connect = loadApp;
-handlers.viewAll = loadApp;
 handlers.publish = loadApp;
 
 
