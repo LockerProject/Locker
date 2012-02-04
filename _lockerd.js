@@ -78,9 +78,11 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         }
         fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
     }
-    mongoProcess = spawn('mongod', ['--nohttpinterface',
-                                    '--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
-                                    '--port', lconfig.mongo.port]);
+    var mongoOptions = ['--dbpath',
+      lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
+      '--port', lconfig.mongo.port].concat(lconfig.mongo.options);
+
+    mongoProcess = spawn('mongod', mongoOptions);
 
     var mongoStdout = carrier.carry(mongoProcess.stdout);
     mongoStdout.on('line', function (line) {
