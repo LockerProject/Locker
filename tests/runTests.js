@@ -178,6 +178,10 @@ var runTests = function() {
             output = output.replace(/^\s+|\s+$/g, '');
             fs.writeFileSync('output.xml', output);
         }
+        if (code || signal) {
+            // unit tests failed
+            return finished(code, signal);
+        }
         if (runIntegration) {
             runRake();
         } else {
