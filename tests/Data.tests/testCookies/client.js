@@ -4,7 +4,6 @@ var fs = require("fs");
 var querystring = require("querystring");
     express = require('express'),
     connect = require('connect'),
-    sys = require('sys'),
     app = express.createServer();
 
 

@@ -28,7 +28,8 @@
         "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
-        "port": 27020
+        "port": 27020,
+        "options": ["--nohttpinterface", "--noprealloc"]
     },
     "logging": {
         "level": "silly",

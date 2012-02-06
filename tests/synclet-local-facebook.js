@@ -21,11 +21,11 @@ suite.next().suite.addBatch({
     "Can get users" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/friends?access_token=foo&date_format=U',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me/friends?access_token=foo&date_format=U',
                 file : __dirname + '/fixtures/facebook/friends2.json' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/1234?access_token=foo&date_format=U&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/1234?access_token=foo&date_format=U&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
                 file : __dirname + '/fixtures/facebook/1234.json' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/1234/picture?access_token=foo',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/1234/picture?access_token=foo',
                 file : __dirname + '/fixtures/facebook/1234.jpg',
                 contentType : 'image/jpeg' });
             process.chdir("." + mePath);
@@ -39,9 +39,9 @@ suite.next().suite.addBatch({
     "Can get newsfeed" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/home?access_token=foo&date_format=U&limit=100',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me/home?access_token=foo&date_format=U&limit=100',
                 file : __dirname + '/fixtures/facebook/home.json' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me/feed?date_format=U&access_token=abc&limit=25&until=1305843879',
                 body :'{"data":[]}' });
 
             home.sync(pinfo, this.callback)
@@ -54,11 +54,11 @@ suite.next().suite.addBatch({
     "Can get photos" : {
         topic: function() {
             fakeweb.allowNetConnect = false;
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me?access_token=foo&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me?access_token=foo&fields=id,name,first_name,middle_name,last_name,gender,locale,languages,link,username,third_party_id,timezone,updated_time,verified,bio,birthday,education,email,hometown,interested_in,location,political,favorite_athletes,favorite_teams,quotes,relationship_status,religion,significant_other,video_upload_limits,website,work',
                 file : __dirname + '/fixtures/facebook/1234.json' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/albums?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/albums.js' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/427822997594/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
-            fakeweb.registerUri({uri : 'https://graph.facebook.com/me/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me/albums?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/albums.js' });
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/427822997594/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
+            fakeweb.registerUri({uri : 'https://graph.facebook.com:443/me/photos?access_token=foo&date_format=U',file : __dirname + '/fixtures/facebook/photos.js' });
             photos.sync(pinfo, this.callback)
         },
         "successfully" : function(err, response) {

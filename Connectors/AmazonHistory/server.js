@@ -10,7 +10,6 @@
 var fs = require('fs'),
     path = require('path'),
     url = require('url'),
-    sys = require('sys'),
     express = require('express'),
     connect = require('connect');
     

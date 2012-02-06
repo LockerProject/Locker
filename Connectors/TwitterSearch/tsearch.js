@@ -15,7 +15,6 @@ var fs = require('fs'),
     url = require('url'),
     express = require('express'),
     connect = require('connect'),
-    sys = require('sys'),
     async = require('async'),
     app = express.createServer(
                     connect.bodyParser(),

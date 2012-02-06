@@ -7,10 +7,6 @@
     <% for (var i = 0; i < map.length; i++) { %>
       <li>
         <p><a href="#" class="iframeLink" data-id="Explore-<%= map[i].id %>"><%= map[i].title %></a></p>
-        <div class="app-details">
-          created by <%= map[i].author || "Singly, Inc." %><br />
-          <a class="orange" href="<%= map[i].url || "https://github.com/LockerProject/Locker" %>">view code on GitHub</a>
-        </div>
       </li>
     <% } %>
   </ul>
