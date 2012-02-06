@@ -17,3 +17,4 @@ Config/*
 !Config/favicon.ico
 Logs/*
 !.gitignore
+build.json
