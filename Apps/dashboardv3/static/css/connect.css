@@ -71,3 +71,25 @@ h2 {
 #main-header-2 {
   display: none;
 }
+
+
+.learnmore-link {
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.learnmore-copy { 
+	display: none; 
+	font-size: 0.9em;
+	padding: 15px 0 0 10px;
+	font-weight: 200;
+	line-height: 1.4em;
+}
+
+.gets-list { 
+	font-size: 0.9em;
+	font-weight: 200;
+	display: inline-block;
+	position: absolute;
+	margin: 11px 0 0 30px; 
+}

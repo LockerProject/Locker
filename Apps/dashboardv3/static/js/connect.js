@@ -34,6 +34,20 @@ $(function() {
         }
     });
 
+    $('.learnmore-link').click(function(e) {
+      if ($('.learnmore-copy').is(":hidden")) {
+        $(this).hide();
+        $(this).html('Close section');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      } else {
+        $(this).hide();
+        $(this).html('Learn more about what we do');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      }
+    });
+
     // if apikeys doens't have twitter/facebook, just show everything
     if (hasTwitterOrFacebook === false) {
         showAllConnectors();

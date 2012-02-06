@@ -35,6 +35,17 @@
                  data-height="<%= connectors[i].repository.oauthSize.height %>">
                  <%= (authed) ? 'Connected' : 'Connect' %>
               </a>
+              <div class="gets-list">
+               Gets: &nbsp;
+               <% if (connectors[i].hasOwnProperty('provides')) {
+                    for (var j=0; j<connectors[i].provides.length; j++) { %>
+                      <%= connectors[i].provides[j] %>
+                      <% if (j < connectors[i].provides.length - 1) { %>
+                        ,
+                      <% } %>
+                 <% }
+               } %>
+              </div>
             </li>
           <% } %>
         <% } %>
