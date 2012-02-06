@@ -48,11 +48,14 @@ exports.syncRepos = function(cached, callback) {
                     request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                         if(err || !tree || !tree.tree) return cb();
                         syncRepo(repo, tree.tree, function(err) {
-                            // make sure package.json is safe
+                            // make sure package.json is safe, set some defaults!
                             pkg.repository.handle = repo.id.replace("/", "-").toLowerCase();
                             pkg.name = pkg.repository.handle;
                             pkg.repository.author = "myself";
                             if(!pkg.repository.title) pkg.repository.title = repo.name;
+                            if(!pkg.repository.hasOwnProperty('static')) pkg.repository.static = true;
+                            if(!pkg.repository.hasOwnProperty('type')) pkg.repository.type = "app";
+                            if(!pkg.repository.hasOwnProperty('update')) pkg.repository.update = "auto";
                             fs.writeFileSync(repo.id+"/package.json", JSON.stringify(pkg)); // overwriting :/
                             request.post({url:lockerUrl+'/map/upsert?manifest=Me/github/'+repo.id+'/package.json'}, function(err, resp) {
                                 if(err) console.error(err);
