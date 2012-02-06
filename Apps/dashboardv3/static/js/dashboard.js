@@ -12,9 +12,9 @@ $(document).ready(function() {
   $.history.init(function(hash){
     if(hash === "") {
       // initialize your app
-      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
     } else {
-      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
     }
   }, { unescape: ",/" });
 
