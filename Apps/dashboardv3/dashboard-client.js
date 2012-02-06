@@ -438,19 +438,11 @@ var getAllAppsInfo = function(count, callback) {
 
 var renderExplore = function(req, res) {
     uistate.fetchState();
-<<<<<<< Updated upstream
     getInstalledApps(8, function(sortedResult) {
         getMyApps(8, function(mySortedResult) {
             getConnectors(function(err, connectors) {
                 var firstVisit = false;
                 var page = 'explore';
-=======
-    
-    getAllRegistryApps(function(sortedResult) {
-        getConnectors(function(err, connectors) {
-            var firstVisit = false;
-            var page = 'explore';
->>>>>>> Stashed changes
 
                 getInstalledConnectors(function(err, installedConnectors) {
                     if (req.cookies.firstvisit === 'true' &&
