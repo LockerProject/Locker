@@ -9,7 +9,7 @@ var hasError = false;
   </head>
   <body>
     <content class="body">
-      <form method="GET" action="publish/<%= app.handle %>">
+      <form method="GET" action="publish/<%= app.name %>">
         <ul class="publish-list">
           <li><p>1. App Name
           <% if (app.repository && app.repository.title) { %>
@@ -23,9 +23,9 @@ var hasError = false;
             </p>
           </li>
           <li><p>2. App Description</p>
-          <% if (app && app.description) { %>
+          <% if (app && app.repository && app.repository.description) { %>
             <p class="indented">
-            <%= app.description%>
+            <%= app.repository.description%>
             <% } else { %>
               <% hasError = true; %>
             <p class='indented error'>
@@ -39,9 +39,9 @@ var hasError = false;
               <%=: app.repository.uses.types | capitalAll | join:', ' %>
             <% } else { %>
             <p class="indented warning">
-              You did not supply the types that your application uses in your 
-              package.json.  While not required it is highly recommended that 
-              you set your primary types.  Refer to the 
+              You did not supply the types that your application uses in your
+              package.json.  While not required it is highly recommended that
+              you set your primary types.  Refer to the
               <a href='#'>publishing documentation</a> for more details.
             <% } %>
             </p>
@@ -54,19 +54,25 @@ var hasError = false;
               <% } %>
             <% } else { %>
             <p class="indented warning">
-              You did not supply the services that your application uses in your 
-              package.json.  While not required it is highly recommended that 
-              you set your primary services.  Refer to the 
+              You did not supply the services that your application uses in your
+              package.json.  While not required it is highly recommended that
+              you set your primary services.  Refer to the
               <a href='#'>publishing documentation</a> for more details.
             <% } %>
             </p>
           </li>
           <li><p>5. Screenshot or other appropriate imagery</p>
-            <div class="preview"><img src="/Me/<%= app.repository.handle %>/screenshot" onerror="TODO this.parent.html('screenshot missing, see doc')" /></div>
+          <% if (app.screenshot) { %>
+          <div class="preview"><img src="/Me/<%= app.name %>/screenshot.png"/></div>
+            <% } else { %>
+              <% hasError = true; %>
+            <p class='indented error'>
+              You must include a screenshot.png, please refer to the <a href='#'>publishing documentation</a> for more details.
+            <% } %>
           </li>
         </ul>
         <div class="actions">
-          <button type="submit" <%=(hasError ? "disabled='disabled'" : "")%> class="publish">Publish to registry</button>
+          <p><button type="submit" <%=(hasError ? "disabled='disabled'" : "")%> class="publish">Publish to registry</button>
       </form>
     </content>
   </body>

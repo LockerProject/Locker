@@ -30,8 +30,8 @@ var express = require('express')
 
 ejs.filters.capitalAll = function(obj) {
     return obj.map(
-        function(word) { 
-          return word.charAt(0).toUpperCase() + word.substr(1); 
+        function(word) {
+          return word.charAt(0).toUpperCase() + word.substr(1);
         }
     );
 };
@@ -146,6 +146,7 @@ var renderPublish = function(req, res) {
         try {
             console.log("Parsing: " + path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json"));
             pkg = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json")));
+            if(path.existsSync(path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "screenshot.png"))) pkg.screenshot = true;
         } catch (E) {
             pkg = {};
         }
@@ -159,10 +160,10 @@ var renderPublish = function(req, res) {
 
 var submitPublish = function(req, res) {
     if (!req.params.handle) return res.send('missing handle to publish', 404);
-    var id = req.params.handle;
-    getGithubApps(function(apps){
-        if(!apps[id]) return res.send('no publishable package by the name of '+id, 400);
-        request.post({uri: locker.lockerBase + '/registry/publish/' + handle, json: data}, function(err, resp, body) {
+    var handle = req.params.handle;
+    getMyGithubApps(function(apps){
+        if(!apps[handle]) return res.send('no publishable package by the name of '+handle, 400);
+        request.post({uri: locker.lockerBase + '/registry/publish/' + handle}, function(err, resp, body) {
             if(err) {
                 console.error('error publishing ' + handle + ', got status code ' + resp.statusCode, err);
                 return res.send('error publishing ' + err, 500);
@@ -193,7 +194,7 @@ var submitPublish = function(req, res) {
             }
             var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
             // Send the screenshot
-            var filePath = path.join(lconfig.lockerDir, srcdir, 'screenshot.png');
+            var filePath = path.join(lconfig.lockerDir, apps[handle].srcdir, 'screenshot.png');
             var stat = fs.statSync(filePath);
             var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + handle,
                                 headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {
