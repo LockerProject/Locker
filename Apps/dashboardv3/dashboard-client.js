@@ -176,7 +176,7 @@ var submitPublish = function(req, res) {
             }
             var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
             // Send the screenshot
-            var filePath = path.join(lconfig.lockerDir, srcdir, 'screenshot');
+            var filePath = path.join(lconfig.lockerDir, srcdir, 'screenshot.png');
             var stat = fs.statSync(filePath);
             var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + handle,
                                 headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, body) {

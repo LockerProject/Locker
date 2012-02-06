@@ -1,0 +1,22 @@
+<h1>Formatting a package.json for apps</h1>
+
+<p>All apps need to have a package.json file to describe themselves, this is based on the <a href="http://wiki.commonjs.org/wiki/Packages">CommonJS Packages</a> format and <a href="http://npmjs.org/doc/json.html">NPM</a>, as well as some additional fields needed to describe the app.</p>
+
+<h2>Minimum template to start</h2>
+
+<pre><code>{
+    "version": "0.0.1",
+    "repository": {
+        "title": "My App",
+        "type": "app",
+        "description": "This is my awesome app!",
+        "static": "true"
+    }
+}
+</code></pre>
+
+<h2>Screenshot</h2>
+
+<p>The default screenshot used to describe the app is simply the screenshot.png file included with it.  The preferred size is 360x360, and it should represent what the app looks like in use (not an icon or cover).</p>
+
+<h2>Optional repository fields</h2>
