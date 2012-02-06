@@ -11,6 +11,7 @@ var express = require('express')
   , connect = require('connect')
   , locker
   , request = require('request')
+  , async = require('async')
   // TODO:  This should not be used in an app
   , lconfig = require('lconfig.js')
   , github = false
@@ -112,7 +113,7 @@ var clickApp = function(req, res) {
 
 var renderApps = function(req, res) {
     uistate.fetchState();
-    getInstalledApps(null, function(sortedResult) {
+    getInstalledApps(function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
             apps: sortedResult
@@ -350,36 +351,30 @@ var cropImage = function(file, fields, callback) {
     }
 };
 
-var getFilteredApps = function(count, filterFn, callback) {
+var getFilteredApps = function(filterFn, callback) {
     locker.mapType('app', function(err, map) {
         var result = [];
-        var sortedResult = [];
         var added = {};
-        for (var j in map) {
-            if (map.hasOwnProperty(j) && filterFn(map[j])) {
-                if (map[j].static) {
-                    sortedResult.push(map[j]);
-                    added[map[j].id] = true;
-                    break;
-                }
+        async.forEach(map, function(app, forEachCb) {
+            if (app.static && filterFn(app)) {
+                result.push(app);
+                added[app.id] = true;
             }
-        }
-        for (var k in result) {
-            if(!added[result[k].id] && result[k].title) sortedResult.push(result[k]);
-        }
-
-        callback(sortedResult);
+            forEachCb();
+        }, function(err) {
+            callback(result);
+        });
     });
 };
 
-var getInstalledApps = function(count, callback) {
-    return getFilteredApps(count, function(app) {
-        return app.srcdir.substring(0,9) !== 'Me/github';
+var getInstalledApps = function(callback) {
+    return getFilteredApps(function(app) {
+        return app.srcdir.substring(0,9) !== 'Me/github' && app.hidden !== true;
     }, callback);
 };
 
-var getMyApps = function(count, callback) {
-    return getFilteredApps(count, function(app) {
+var getMyApps = function(callback) {
+    return getFilteredApps(function(app) {
         return app.srcdir.substring(0,9) === 'Me/github';
     }, callback);
 };
@@ -438,8 +433,8 @@ var getAllAppsInfo = function(count, callback) {
 
 var renderExplore = function(req, res) {
     uistate.fetchState();
-    getInstalledApps(8, function(sortedResult) {
-        getMyApps(8, function(mySortedResult) {
+    getInstalledApps(function(sortedResult) {
+        getMyApps(function(mySortedResult) {
             getConnectors(function(err, connectors) {
                 var firstVisit = false;
                 var page = 'explore';
