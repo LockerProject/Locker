@@ -126,14 +126,18 @@ function handleApp(appName) {
 }
 
 function doAppHeader(appName) {
-  registry.getApp(appName, function(app) {
-    if(!app) return;
-    registry.getConnectedServices(app, function(connected) {
-      registry.getUnConnectedServices(app, function(unconnected) {
+  registry.getMap(function(err, map) {
+    if(err || !map[appName]) return callback(err, map);
+    var app = map[appName];
+    // this {repository: app} stuff is because the map flattens the things in the repository field
+    // up to the top level, but these registry functions expect them to be inside of repository
+    registry.getConnectedServices({repository: app}, function(connected) {
+      registry.getUnConnectedServices({repository: app}, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
           var mine = myAuthoredApps[appName];
           dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
             $('#appHeader').html(appHtml);
+            $('#appHeader').show();
           });
         });
       })
