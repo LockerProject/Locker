@@ -9,6 +9,7 @@
 
 var express = require('express')
   , connect = require('connect')
+  , ejs = require("ejs")
   , locker
   , request = require('request')
   // TODO:  This should not be used in an app
@@ -26,6 +27,14 @@ var express = require('express')
   , page = ''
   , connectSkip = false
   ;
+
+ejs.filters.capitalAll = function(obj) {
+    return obj.map(
+        function(word) { 
+          return word.charAt(0).toUpperCase() + word.substr(1); 
+        }
+    );
+};
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
     lconfig.load('../../Config/config.json');
@@ -133,9 +142,17 @@ var renderDevelop = function(req, res) {
 var renderPublish = function(req, res) {
     getMyGithubApps(function(apps) {
         if(!apps[req.param("app")]) return res.send('invalid app id of '+req.param("app"), 400);
+        var pkg = {};
+        try {
+            console.log("Parsing: " + path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json"));
+            pkg = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json")));
+        } catch (E) {
+            pkg = {};
+        }
+        console.dir(pkg);
         res.render('iframe/publish', {
             layout: false,
-            app: apps[req.param("app")]
+            app: pkg
         });
     });
 }

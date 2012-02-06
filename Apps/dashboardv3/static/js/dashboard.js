@@ -123,12 +123,14 @@ function handleApp(appName) {
 }
 
 function doAppHeader(appName) {
-  registry.getApp(appName, function(app) {
+  registry.getInstalledApps(function(apps) {
+    var app = apps[appName];
     if(!app) return;
-    registry.getConnectedServices(app, function(connected) {
-      registry.getUnConnectedServices(app, function(unconnected) {
+    registry.getConnectedServices(app.uses, function(connected) {
+      registry.getUnConnectedServices(app.uses, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
           var mine = myAuthoredApps[appName];
+          if (mine) app.author = registry.localAuthor;
           dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
             $('#appHeader').html(appHtml);
           });

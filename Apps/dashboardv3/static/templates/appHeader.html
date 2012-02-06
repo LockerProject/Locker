@@ -1,6 +1,6 @@
-<span id="appTitle">{app.repository.title}</span>
-by <a class="orange iframeLink" href="#" data-id="AppGallery-Author?author={app.author.name}">{app.author.name}</a>{~s}
-with{~s}{#app.repository.uses.types}<a class="orange iframeLink" href="#" data-id="AppGallery-Filter?types={.}">{.}</a>{@sep} + {/sep}{/app.repository.uses.types}
+<span id="appTitle">{app.title}</span>
+by <a class="orange iframeLink" href="#" data-id="AppGallery-Author?author={app.author}">{app.author}</a>{~s}
+with{~s}{#app.uses.types}<a class="orange iframeLink" href="#" data-id="AppGallery-Filter?types={.}">{.}</a>{@sep} + {/sep}{/app.uses.types}
 {~s}from 
 <span class='appServices'>
   <span class='connected-services'>{#connected}<img class="installed appService" src="https://burrow.singly.com/registry/{.handle}/icon.png">{@sep}{~s}{/sep}{/connected}</span>{~s}
@@ -9,4 +9,4 @@ with{~s}{#app.repository.uses.types}<a class="orange iframeLink" href="#" data-i
      data-height="{.oauthSize.height}"><img class="appService" src="https://burrow.singly.com/registry/{.handle}/icon.png"></a>{@sep}{~s}{/sep}{/unconnected}
   </span>
 </span>
-{ see the <a class="orange" href="{app.repository.github}">code</a> } {?mine}<a class='iframeLink action-button' data-id='Explore-Publish?app={app.name}'>PUBLISH!</a>{/mine}
+{ see the <a class="orange" href="{app.github}">code</a> } {?mine}<a class='iframeLink action-button' data-id='Explore-Publish?app={app.handle}'>PUBLISH!</a>{/mine}
