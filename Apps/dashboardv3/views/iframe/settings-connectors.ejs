@@ -19,18 +19,11 @@
             </div>
             <% if (connectors[i].hasOwnProperty('authed')) { %>
              <input class="action-button disabled" value="Connected" />
-             <!-- img alt="connected" class="connect-button" src="img/connected.png" /-->
             <% } else { %>
             <input class="oauthLink action-button" value="Connect"
                data-provider="<%=connectors[i].repository.handle%>"
                data-width="<%= connectors[i].repository.oauthSize.width %>"
                data-height="<%= connectors[i].repository.oauthSize.height %>" />
-            <!--a href="/auth/<%= connectors[i].repository.handle %>" class="oauthLink"
-               data-provider="<%=connectors[i].repository.handle%>"
-               data-width="<%= connectors[i].repository.oauthSize.width %>"
-               data-height="<%= connectors[i].repository.oauthSize.height %>">
-               <img alt="connect" class="connect-button" src="img/connect.png" />
-             </a-->
              <% } %>
              <% if (connectors[i].hasOwnProperty('username')) { %>
                <div class="synclet-username"><%= connectors[i].username %></div>

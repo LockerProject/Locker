@@ -20,33 +20,31 @@
       <ul class="synclets-list">
         <% for (var i = 0; i < connectors.length; i++) { %>
           <% if (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true') { %>
-            <%
-              authed = connectors[i].hasOwnProperty('authed');
-              classes = "oauthLink action-button";
-              if (authed) classes += ' disabled';
-            %>
-            <li class="featured hideable"
-                style="background-image: url('img/icons/32px/<%= connectors[i].name %>.png')">
+          <li class="featured hideable">
+            <div class="synclet-logoname-container">
+              <img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" />
               <span class="synclet-name"><%= connectors[i].repository.title %></span>
-              <a href="/auth/<%= connectors[i].repository.handle %>"
-                 class="<%= classes %>"
-                 data-provider="<%=connectors[i].repository.handle%>"
-                 data-width="<%= connectors[i].repository.oauthSize.width %>"
-                 data-height="<%= connectors[i].repository.oauthSize.height %>">
-                 <%= (authed) ? 'Connected' : 'Connect' %>
-              </a>
-              <div class="gets-list">
-               Gets: &nbsp;
-               <% if (connectors[i].hasOwnProperty('provides')) {
-                    for (var j=0; j<connectors[i].provides.length; j++) { %>
-                      <%= connectors[i].provides[j] %>
-                      <% if (j < connectors[i].provides.length - 1) { %>
-                        ,
-                      <% } %>
-                 <% }
-               } %>
-              </div>
-            </li>
+            </div>
+            <% if (connectors[i].hasOwnProperty('authed')) { %>
+             <input class="action-button disabled" value="Connected" />
+            <% } else { %>
+            <input class="oauthLink action-button" value="Connect"
+               data-provider="<%=connectors[i].repository.handle%>"
+               data-width="<%= connectors[i].repository.oauthSize.width %>"
+               data-height="<%= connectors[i].repository.oauthSize.height %>" />
+             <% } %>
+             <div class="gets-list">
+              Gets: &nbsp;
+              <% if (connectors[i].hasOwnProperty('provides')) {
+                   for (var j=0; j<connectors[i].provides.length; j++) { %>
+                     <%= connectors[i].provides[j] %>
+                     <% if (j < connectors[i].provides.length - 1) { %>
+                       ,
+                     <% } %>
+                <% }
+              } %>
+             </div>
+          </li>
           <% } %>
         <% } %>
       </ul>
