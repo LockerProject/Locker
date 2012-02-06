@@ -1,5 +1,5 @@
 /*****************************
-* Migrates from an "original" locker state to the version of the locker that 
+* Migrates from an "original" locker state to the version of the locker that
 * uses the registry for most pacakges
 */
 var fs = require("fs");
@@ -26,7 +26,7 @@ module.exports.preServices = function(config, callback) {
 
 function reMe(meDir, callback) {
     logger.info("Checking " + meDir + " for old github app directories");
-    
+
     fs.readdir(meDir, function(err, dirs) {
         if (err) return callback(err);
         dirs = dirs.filter(function(dir) {

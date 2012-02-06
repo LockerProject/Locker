@@ -1,22 +1,23 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-    "allApps" : "allApps",
-    "viewAll" : "viewAll",
-    "connect" : "connect"
+    "allApps"  : "allApps",
+    "viewAll"  : "viewAll",
+    "connect"  : "connect",
+    "settings" : "settings"
 };
 var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-    $.history.init(function(hash){
-        // if(hash === "") {
-            // initialize your app
-            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        // } else {
-        //     loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        // }
-    }, { unescape: ",/" });
-  
+  $.history.init(function(hash){
+    if(hash === "") {
+      // initialize your app
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    } else {
+      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
+    }
+  }, { unescape: ",/" });
+
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
     var id = $e.attr('id');
@@ -25,7 +26,7 @@ $(document).ready(function() {
     });
     return false;
   });
-  
+
   $('body').delegate('.oauthLink','click', function(e) {
     var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
     var popup = window.open($(this).attr('href'), "account", options);
@@ -54,7 +55,7 @@ $(document).ready(function() {
       modal.close();
     });
   }
-  
+
   if (window.location.hash !== '#Explore-connect' && $.cookie("firstvisit") === 'true') {
       if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
         $.cookie("firstvisit", null, {path: '/' });
@@ -71,6 +72,16 @@ var loadApp = function(info) {
   $('.app-details').hide();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
+  } else if (info.topSection === "Settings") {
+    if (info.subSection === "Connections") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-connectors');
+    } else if (info.subSection === "AccountInformation") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-account');
+    } else if (info.subSection === "APIKey") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-api');
+    } else {
+      alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
+    }
   } else if (app === "Publish") {
     $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
     $('#appHeader').hide();
@@ -115,6 +126,7 @@ var syncletInstalled = function(provider) {
 handlers.Explore = loadApp;
 handlers.Develop = loadApp;
 handlers.connect = loadApp;
+handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;
 
@@ -136,7 +148,7 @@ function doAppHeader(appName) {
             $('#appHeader').html(appHtml);
           });
         });
-      })
+      });
     });
   });
 }

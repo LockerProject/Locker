@@ -94,6 +94,10 @@ exports.addAll = function(thisArray, anotherArray) {
         thisArray.push(anotherArray[i]);
 };
 
+exports.ucfirst = function(str) {
+    return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
+}
+
 exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
 
     var foundValues = [];

@@ -1,5 +1,5 @@
 /* Generic log function for debugging. */
-var log = function(msg) { if (console && console.log) console.debug(msg); }
+var log = function(msg) { if (console && console.log) console.debug(msg); };
 window.onload = loadScript;
 
 var markers = [];
@@ -17,7 +17,7 @@ function initializeMap(place) {
     var myLat = place[0].lat || 37.759;
     var myLng = place[0].lng || -122.410;
     var mySource = place[0].network || undefined;
-    
+
     if (place[0].at){
         date = new Date(place[0].at);
         var myTitle = date.toLocaleString();
@@ -25,7 +25,7 @@ function initializeMap(place) {
     else{
         var myTitle = "Singly HQ";
     }
-    
+
     var myOptions = {
         zoom: 12,
         center: new google.maps.LatLng(myLat, myLng),
@@ -35,7 +35,7 @@ function initializeMap(place) {
 
     map = new google.maps.Map(document.getElementById('mapcanvas'), myOptions);
     addMarker(myLat, myLng, myTitle, mySource);
-    
+
 }
 
 

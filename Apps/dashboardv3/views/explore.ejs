@@ -1,29 +1,38 @@
 <div class="sidenav-header">
-  <p class='sidenav-header-title'>APPS</p>
+  <p class='sidenav-header-title'>YOUR APPS</p>
   <p class="sidenav-header-link"><a href="allApps" data-id="allApps" class="orange iframeLink">see all</a></p>
 </div>
 <div class="installed-apps sidenav-items">
   <ul>
-    <% for (var i = 0; i < map.length; i++) { %>
+    <% for (var i = 0; i < myMap.length; i++) { %>
+      <li>
+        <p><a href="#" class="iframeLink" data-id="Explore-<%= myMap[i].id %>"><%= myMap[i].title %></a></p>
+      </li>
+    <% } %>
+  </ul>
+<% if (myMap.length === 0) { %>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Build an App!</a></p>
+<% } %>
+</div>
+
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>INSTALLED APPS</p>
+  <p class="sidenav-header-link"><a href="allApps" data-id="allApps" class="orange iframeLink">see all</a></p>
+</div>
+
+<div class="installed-apps sidenav-items">
+  <ul>
+    <% for (var i=0; i<map.length; i++) { %>
       <li>
         <p><a href="#" class="iframeLink" data-id="Explore-<%= map[i].id %>"><%= map[i].title %></a></p>
       </li>
     <% } %>
   </ul>
-  <p><a class="orange" href="appGallery#AppGallery-Featured">Explore more apps</a></p>
+  <p><a class="orange" href="appGallery#AppGallery-Featured">Get more Apps!</a></p>
 </div>
+
 <div class="sidenav-header">
-  <p class='sidenav-header-title'>CONNECTED</p>
-</div>
-<div class="sidenav-items synclets-connected">
-  <% for (var i = 0; i < connectors.length; i++) { %>
-    <% if (connectors[i].authed) { %>
-      <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png">
-    <% } %>
-  <% } %>
-</div>
-<div class="sidenav-header">
-  <p class='sidenav-header-title'>MORE SERVICES</p>
+  <p class='sidenav-header-title'>CONNECT MORE SERVICES</p>
 </div>
 <div class="sidenav-items synclets-unconnected">
   <% for (var i = 0; i < connectors.length; i++) { %>
@@ -31,6 +40,15 @@
         data-width='<%=connectors[i].repository.oauthSize.width%>' data-height='<%=connectors[i].repository.oauthSize.height%>' class="oauthLink">
     <img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"></a>
     <% } %>
+  <% } %>
+</div>
+
+<div class="sidenav-header">
+  <p class='sidenav-header-title'>YOUR CONNECTED SERVICES</p>
+</div>
+<div class="sidenav-items synclets-connected">
+  <% for (var i = 0; i < connectors.length; i++) { %>
+    <% if (connectors[i].authed) { %><img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"><% } %>
   <% } %>
 </div>
 

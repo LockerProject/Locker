@@ -51,7 +51,7 @@ $(document).ready(function() {
   });
 
   setupUploader();
-  
+
     // Pick the right app
     if (window.location.search) {
         var app = window.location.search.substring(1);

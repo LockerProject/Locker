@@ -32,7 +32,11 @@
         "options": ["--nohttpinterface", "--noprealloc"]
     },
     "logging": {
-        "level": "silly",
-        "console": false
+        "level": "error",
+        "config": true
+    },
+    "dashboard": {
+        "customLogout"         : "logout",
+        "customHostedEndpoint" : "info"
     }
 }

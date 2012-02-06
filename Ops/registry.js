@@ -65,13 +65,13 @@ exports.init = function(serman, syncman, config, crypto, callback) {
 exports.app = function(app)
 {
     app.get('/registry/add/:id', add);
-    
+
     function add(req, res, retry) {
         // if this is the next function, then this isn't a retry
         if(typeof retry === 'function') retry = false;
         if(!req.params.id) return res.send('invalid id', 400);
         logger.info("registry trying to add "+req.params.id);
-        
+
         if(!regIndex[req.params.id]) {
             // if it has already tried to sync, this isn't a real package
             if(retry === true) return res.send("package " + req.params.id + " not found", 404);
@@ -81,14 +81,14 @@ exports.app = function(app)
                 // no errors, it should be in regIndex, so just call again
                 return add(req, res, true);
             });
-        } 
+        }
         if(!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
         exports.install({name:req.params.id}, function(err){
             if(err) return res.send(err, 500);
             res.send(true);
         });
     }
-    
+
     app.get('/registry/apps', function(req, res) {
         res.send(exports.getApps());
     });
@@ -134,6 +134,8 @@ exports.app = function(app)
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
+
+    app.get('/deauth/:id', deauthIsAwesomer);
 }
 
 function publishPackage(req, res) {
@@ -638,4 +640,15 @@ function finishAuth(js, auth, res) {
     serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
+}
+
+function deauthIsAwesomer(req, res) {
+  var serviceName = req.params.id;
+  var service = serviceManager.map(serviceName);
+  delete service.auth;
+  delete service.authed;
+  service.deleted = Date.now();
+  serviceManager.mapDirty(serviceName);
+  logger.info("disconnecting "+serviceName)
+  res.redirect('back');
 }
