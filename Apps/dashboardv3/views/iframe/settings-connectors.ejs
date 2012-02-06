@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="common/js/jquery.validate.min.js"></script>
+    <script src="js/settings.js"></script>
+  </head>
+  <body>
+    <content class="body">
+      <ul class="synclets-list">
+        <% for (var i = 0; i < connectors.length; i++) { %>
+          <% if (!connectors[i].repository.hasOwnProperty('hidden') || connectors[i].repository.hidden !== 'true') { %>
+          <li class="featured hideable">
+            <div class="synclet-logoname-container">
+              <img class="synclet-logo" src="img/icons/32px/<%= connectors[i].name %>.png" />
+              <span class="synclet-name"><%= connectors[i].repository.title %></span>
+            </div>
+            <% if (connectors[i].hasOwnProperty('authed')) { %>
+             <input class="action-button disabled" value="Connected" />
+            <% } else { %>
+            <input class="oauthLink action-button" value="Connect"
+               data-provider="<%=connectors[i].repository.handle%>"
+               data-width="<%= connectors[i].repository.oauthSize.width %>"
+               data-height="<%= connectors[i].repository.oauthSize.height %>" />
+             <% } %>
+             <% if (connectors[i].hasOwnProperty('username')) { %>
+               <div class="synclet-username"><%= connectors[i].username %></div>
+             <% } %>
+             <% if (connectors[i].hasOwnProperty('authed')) { %>
+               <span class="synclet-disconnect"><a class="disconnector" href="/deauth/<%= connectors[i].repository.handle %>">Disconnect</a></span>
+              <% } %>
+          </li>
+          <% } %>
+        <% } %>
+      </ul>
+    </content>
+  </body>
+</html>

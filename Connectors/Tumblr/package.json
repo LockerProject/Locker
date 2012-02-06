@@ -12,7 +12,7 @@
     "type": "connector",
     "static": "false",
     "oauthSize": {
-        "width": 630, 
+        "width": 630,
         "height": 500
     },
     "url": ""
