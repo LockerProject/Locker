@@ -474,6 +474,9 @@ function checkPackage(pjs, arg, gh, callback) {
             }
             if (arg.body.uses) js.repository.uses = arg.body.uses;
         }
+        // This depends on the path to the package being of the form .../<github_login>/<repo_name>/package.json
+        var dirs = pjs.split('/');
+        js.repository.url = 'https://github.com/' + dirs[dirs.length-3] + '/' + dirs[dirs.length-2];
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });
