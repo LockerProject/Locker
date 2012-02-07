@@ -1,79 +1,125 @@
+<%
+var hasError = false;
+%>
 <!DOCTYPE html>
 
 <html>
   <head>
     <%- partial('header_partial') %>
-    <script src="js/publish.js"></script>
-    <script src="js/vendor/plupload.full.js"></script>
-    <script src="js/vendor/jquery.Jcrop.min.js"></script>
-    <link rel="stylesheet" href="css/vendor/jquery.Jcrop.css" />
+    <script type='text/javascript'>
+      $(function() {
+        $("#publishedInfo .action-button").click(function() {
+            window.parent.location.hash = "";
+        });
+        $("#submitPublish").click(function() {
+            $("#submitPublish").attr("disabled", "disabled").text("PUBLISHING...");
+            $("#publishedInfo a.issueLink").show();
+            $("#publishedInfo p").text("Publishing...");
+            $("#publishedInfo .action-button").hide();
+            $("#publishedInfo a.issueLink").hide();
+            $("#publishedInfo").show();
+            $("#publishOverlay").width($("body").width()).height($("body").height()).show();
+            $("body").scrollTop(0);
+            $.getJSON("publish/<%= app.name %>", function(info) {
+console.log(info);
+                $("#publishedInfo .action-button").show();
+                if (info.err) {
+                    if (info.reauth) {
+                        $("#publishedInfo p").addClass("error").text("There was an error publishing your app, you may need to re-connect Github in the account settings.");
+                    }else{
+                        $("#publishedInfo p").addClass("error").html("There was an error publishing your app, please <u><a href=\"https://github.com/Singly/apps/issues/new?title=publish+fail&body="+encodeURIComponent(info.err)+"\" target=_blank>file an issue</a></u>, thanks!");
+                    }
+                    $("#submitPublish").removeAttr("disabled");
+                } else {
+                    $("#publishedInfo p").text("You successfully submitted \"<%=app.repository.title%>\" to be published.  You can track its status on Github.");
+                    $("#publishedInfo").show();
+                    $("#publishedInfo a").show();
+                    $("#publishedInfo .issueLink").attr("href", info.issue.html_url).text(info.issue.html_url);
+                }
+            }).error(function() {
+                $("#submitPublish").removeAttr("disabled");
+                $("#publishedInfo p").addClass("error").text("There was an error publishing your app.  Please try again.");
+            });
+        });
+      });
+    </script>
   </head>
   <body>
-    <form id="publish" method="POST"
-          action="publish" enctype="multipart/form-data">
-      <input type="hidden" name="app-publish" value="true">
-      <input type="hidden" name="new-file" value="false">
-      <input type="hidden" class="old-name" name="old-name"
-             value="<%=apps[0].title%>">
-      <input type="hidden" name="x" id="x">
-      <input type="hidden" name="y" id="y">
-      <input type="hidden" name="w" id="w">
-      <input type="hidden" name="h" id="h">
-      <ul class="publish-list">
-        <li>
-          <p>1. Choose an application to submit
-            <select name="app" class="app">
-              <% for (var i = 0; i < apps.length; i++) { %>
-                <option value="<%= apps[i].handle %>"
-                        data-rename="<%= apps[i].draft['rename-app'] || 'off' %>"
-                        data-handle="<%= apps[i].handle %>"
-                        data-description="<%= apps[i].description %>">
-                  <%= apps[i].title %>
-                </option>
-              <% } %>
-            </select>
-          </p>
-          <p class="indented">
-            <input type="checkbox" name="rename-app" class="rename-app"
-                   id="rename-app" <%= apps[0].draft['rename-app'] || 'off' %> />
-            <label for="rename-app">I want to rename this app</label>
-          </p>
-          <p class="indented app-name hidden">
-            Rename "<span class="app-name-span"></span>" as
-            <input type="text" class="app-newname" name="app-newname"
-                   placeholder="40 characters left" maxlength=40 />
-          </p>
-        </li>
-        <li>
-          <p>2. Confirm your app description</p>
-          <textarea rows="4" cols="50" id="app-description"
-                    name="app-description"
-                    placeholder="Describe your application....">
-            <%= apps[0].desc %>
-          </textarea>
-        </li>
-        <li id="container">
-          <p>3. Choose screenshot or other appropriate imagery</p>
-          <p><input id="appscreenshot" type="file" name="app-screenshot"/></p>
-          <p class="bold">OR</p>
-          <p>
-            <input class="screenshot-url" type="text" name="app-screenshot-url"
-                   placeholder="Set URL for image"/>
-          </p>
-          <div class="preview">
-            <img src="screenshot/<%= apps[0].handle %>" alt="Previe" />
-            <p>preview</p>
-          </div>
-        </li>
-      </ul>
-      <div class="actions">
-        <a class="orange cancel" href="#">cancel</a>
-        <a class="orange save-draft" href="#">save as draft</a>
-        <button type="submit" class="publish action-button">
-          Publish to registry
-        </button>
+    <div id='publishOverlay'>
+      <div id='publishedInfo'>
+        <p>You successfully submitted "<%=app.repository.title%>" to be published.  You can track its status on Github.</p>
+        <a class='issueLink' href='#'>...</a>
+        <a class='action-button' href='#'>GOT IT!</a>
       </div>
-    </form>
+    </div>
+    <content class="body">
+      <p class='publishInfo'>
+        Confirm the information in the fields below, then click "Publish to registry" to submit the app.  Once you've submitted your app, we create an issue on Github to track it.
+      </p>
+        <ul class="publish-list">
+          <li><p>1. App Name
+          <% if (app.repository && app.repository.title) { %>
+            <p class="indented">
+            <%= app.repository.title %>
+            <% } else { %>
+              <% hasError = true; %>
+            <p class='indented error'>
+              You must supply a title for your application.  Please refer to the <a href='/Me/devdocs/package.html'>publishing documentation</a> for more details.
+            <% } %>
+            </p>
+          </li>
+          <li><p>2. App Description</p>
+          <% if (app && app.description) { %>
+            <p class="indented">
+            <%= app.description%>
+            <% } else { %>
+              <% hasError = true; %>
+            <p class='indented error'>
+              You must supply a description for your application.  Please refer to the <a href='/Me/devdocs/package.html'>publishing documentation</a> for more details.
+            <% } %>
+            </p>
+          </li>
+          <li><p>3. Types Used (optional)</p>
+            <% if (app && app.repository && app.repository.uses && app.repository.uses.types && app.repository.uses.types.length > 0) { %>
+              <p class="indented">
+              <%=: app.repository.uses.types | capitalAll | join:', ' %>
+            <% } else { %>
+            <p class="indented warning">
+              You did not supply the types that your application uses in your
+              package.json.  While not required it is highly recommended that
+              you set your primary types.  Refer to the
+              <a href='/Me/devdocs/package.html'>publishing documentation</a> for more details.
+            <% } %>
+            </p>
+          </li>
+          <li><p>4. Services Used (optional)</p>
+            <% if (app && app.repository && app.repository.uses && app.repository.uses.services && app.repository.uses.services.length > 0) { %>
+              <p class="indented">
+              <% for (var i = 0; i < app.repository.uses.services.length; ++i) { console.log(i);%>
+                 <img src='img/icons/32px/<%= app.repository.uses.services[i] %>.png' />
+              <% } %>
+            <% } else { %>
+            <p class="indented warning">
+              You did not supply the services that your application uses in your
+              package.json.  While not required it is highly recommended that
+              you set your primary services.  Refer to the
+              <a href='/Me/devdocs/package.html'>publishing documentation</a> for more details.
+            <% } %>
+            </p>
+          </li>
+          <li><p>5. Screenshot or other appropriate imagery</p>
+          <% if (app.screenshot) { %>
+          <div class="preview"><img src="/Me/<%= app.name %>/screenshot.png"/></div>
+            <% } else { %>
+              <% hasError = true; %>
+            <p class='indented error'>
+              You must include a screenshot.png, please refer to the <a href='/Me/devdocs/package.html'>publishing documentation</a> for more details.
+            <% } %>
+          </li>
+        </ul>
+        <div class="actions">
+        <p><button id='submitPublish' type="submit" <%=(hasError ? "disabled='disabled'" : "")%> class="publish">PUBLISH</button></p>
+    </content>
   </body>
 </html>
 
