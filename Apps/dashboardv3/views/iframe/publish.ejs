@@ -21,10 +21,13 @@ var hasError = false;
             $("#publishOverlay").width($("body").width()).height($("body").height()).show();
             $("body").scrollTop(0);
             $.getJSON("publish/<%= app.name %>", function(info) {
+console.log(info);
                 $("#publishedInfo .action-button").show();
                 if (info.err) {
                     if (info.reauth) {
-                        $("#publishedInfo p").addClass("error").text("There was an error publishing your app.  Please try again.");
+                        $("#publishedInfo p").addClass("error").text("There was an error publishing your app, you may need to re-connect Github in the account settings.");
+                    }else{
+                        $("#publishedInfo p").addClass("error").html("There was an error publishing your app, please <u><a href=\"https://github.com/Singly/apps/issues/new?title=publish+fail&body="+encodeURIComponent(info.err)+"\" target=_blank>file an issue</a></u>, thanks!");
                     }
                     $("#submitPublish").removeAttr("disabled");
                 } else {
