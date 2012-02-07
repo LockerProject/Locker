@@ -22,7 +22,7 @@ describe("lutil", function () {
                 should.not.exist(err);
 
                 success.should.equal('avatar uploaded');
-                done();
+                return done();
             });
         });
     });

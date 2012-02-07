@@ -2,7 +2,7 @@ BUILD_NUMBER?=git-$(shell git rev-parse --short --default HEAD)
 TESTS = $(shell find test -name "*.test.js")
 MOCHA = ./node_modules/.bin/mocha
 RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
-DEFAULT_OPTS = --growl --timeout 100
+DEFAULT_OPTS = --growl --timeout 500
 
 all: build
 
