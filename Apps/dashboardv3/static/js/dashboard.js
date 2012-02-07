@@ -1,6 +1,6 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
-    "connect" : "connect"
+    "connect" : "connect",
     "allApps"  : "allApps",
     "connect"  : "connect",
     "settings" : "settings"
