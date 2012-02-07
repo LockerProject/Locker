@@ -1,4 +1,8 @@
 BUILD_NUMBER?=git-$(shell git rev-parse --short --default HEAD)
+TESTS = $(shell find test -name "*.test.js")
+MOCHA = ./node_modules/.bin/mocha
+RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
+DEFAULT_OPTS = --growl --timeout 100
 
 all: build
 
@@ -6,7 +10,12 @@ build:
 	npm install
 	echo "\"$(BUILD_NUMBER)\"" |tee build.json tests/build.json
 
-test: build
+test: oldtest newtest
+
+newtest: build
+	@$(RUNALL) $(DEFAULT_OPTS)
+
+oldtest: build
 	cd tests && \
 	env NODE_PATH="$(PWD)/Common/node" \
 	node ./runTests.js

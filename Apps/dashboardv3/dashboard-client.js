@@ -149,22 +149,13 @@ var renderSettingsAccountInformation = function(req, res) {
 };
 
 var handleSettings = function (req, res, next) {
-    if (!req.form) return next();
+    if (!req.params || !req.params.avi_url) return res.send('missing parameter', 400);
 
-    req.form.complete(function (err, fields, files) {
-        if (err) return res.send('unable to process form: ' + err, 500);
+    var rawAvatar = 'raw-avatar';
+    lutil.fetchAndResizeImageURL(req.params.avi_url, 'raw-avatar', 'avatar.png', function (err, success) {
+        if (err) return res.send(err, 500);
 
-        if (files.avi && files.avi.path) {
-            im.resize({srcPath : files.avi.path
-                     , dstPath : 'avatar.png'
-                     , width   : 48
-                     , height  : 48}
-                    , function (err, stdout, stderr) {
-                          if (err) return res.send('unable to convert file: ' + err, 500);
-
-                          return res.send('ok');
-                      });
-        }
+        return res.send(success);
     });
 };
 
@@ -397,7 +388,7 @@ var getAppsInfo = function(count, callback) {
                 }
             }
         }
-        for (var i in result) {
+        for (i in result) {
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
 
@@ -422,13 +413,13 @@ var getAllAppsInfo = function(count, callback) {
                 }
             }
         }
-        for (var i in map) {
+        for (i in map) {
             if(!added[map[i].id] && map[i].title) sortedResult.push(map[i]);
         }
 
         callback(sortedResult);
     });
-}
+};
 
 
 var renderExplore = function(req, res) {
