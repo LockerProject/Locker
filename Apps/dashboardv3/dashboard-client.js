@@ -708,7 +708,9 @@ app.get('/settings-api', renderSettingsAPIKey);
 app.post('/settings-account', handleSettings);
 
 app.get('/allApps', renderApps);
+
 app.get('/develop', renderDevelop);
+app.get('/develop-buildapp', renderDevelopBuildApp);
 
 app.get('/appGallery', renderAppGallery);
 

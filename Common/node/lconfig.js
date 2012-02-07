@@ -43,7 +43,6 @@ exports.load = function(filepath) {
         "search:Collections/Search",
     ];
     exports.apps = config.apps || [
-        "devdocs:Apps/DevDocs",
         "helloplaces:Apps/HelloPlaces",
         "linkalatte:Apps/LinkaLatte",
         "contactsviewer:Apps/MergedContacts",
