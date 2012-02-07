@@ -9,6 +9,9 @@ var hasError = false;
   </head>
   <body>
     <content class="body">
+      <p class='publishInfo'>
+        Confirm the information in the fields below, then click "Publish to registry" to submit the app.  Once you've submitted your app, we create an issue on Github to track it.
+      </p>
       <form method="GET" action="publish/<%= app.name %>">
         <ul class="publish-list">
           <li><p>1. App Name
@@ -23,9 +26,9 @@ var hasError = false;
             </p>
           </li>
           <li><p>2. App Description</p>
-          <% if (app && app.repository && app.repository.description) { %>
+          <% if (app && app.description) { %>
             <p class="indented">
-            <%= app.repository.description%>
+            <%= app.description%>
             <% } else { %>
               <% hasError = true; %>
             <p class='indented error'>
