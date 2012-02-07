@@ -86,6 +86,8 @@ app.all('*', function(req, res, next) {
              body = JSON.parse(body);
              if (body.username) {
                  profileImage = "http://graph.facebook.com/" + body.username + "/picture";
+             }else{
+                 throw new Error("no username");
              }
          } catch (E) {
              request.get({url:locker.lockerBase + "/synclets/twitter/get_profile"}, function(error, res, body) {
@@ -93,6 +95,8 @@ app.all('*', function(req, res, next) {
                      body = JSON.parse(body);
                      if (body.profile_image_url_https) {
                          profileImage = body.profile_image_url_https;
+                     }else{
+                         throw new Error("no profie");
                      }
                  } catch (E) {}
              });
