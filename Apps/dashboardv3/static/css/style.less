@@ -36,6 +36,45 @@
     width:500px;
 }
 
+#publishOverlay {
+    background:rgba(0, 0, 0, 0.5);
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    z-index:9;
+    display:none;
+}
+
+#publishedInfo {
+    position:absolute;
+    display:none;
+    top:100px;
+    left:20px;
+    width:500px;
+    border:2px solid #ddd;
+    font-size:24px;
+    padding:20px;
+    background-color:white;
+    z-index:10;
+    -webkit-box-shadow: 0px 0px 8px 0px black;
+    -moz-box-shadow: 0px 0px 8px 0px black;
+    box-shadow: 0px 0px 8px 0px black;
+
+    .issueLink {
+        background-color:#eee;
+        display:block;
+        margin:10px;
+        text-align:center;
+        color:@orange;
+    }
+
+    .action-button {
+        float:right;
+    }
+}
+
 .publish-list {
   li {
     margin-left: 30px;

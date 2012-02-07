@@ -152,7 +152,7 @@ function publishPackage(req, res) {
         args.id = id;
         exports.publish(args, function(err, doc, issue) {
             if(err) logger.error(err);
-            res.send({err:err, doc:doc, issue:issue});
+            res.json({err:(err && typeof(err) == "object" && err.message ? err.message : err), doc:doc, issue:issue});
         });
     });
 }
@@ -425,8 +425,8 @@ exports.publish = function(arg, callback) {
                         pi.syncletToRun.posts = [];
                         var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
                         issue.repo = 'Singly/apps';
-                        issue.labels = updated.name.split('-');
-                        issue.labels.push('App');
+                        //issue.labels = updated.name.split('-');
+                        //issue.labels.push('App');
                         pi.syncletToRun.posts.push(issue);
                         // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
                         var isynclet = path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js");

@@ -6,13 +6,53 @@ var hasError = false;
 <html>
   <head>
     <%- partial('header_partial') %>
+    <script type='text/javascript'>
+      $(function() {
+        $("#publishedInfo .action-button").click(function() {
+            window.parent.location.hash = "";
+        });
+        $("#submitPublish").click(function() {
+            $("#submitPublish").attr("disabled", "disabled").text("PUBLISHING...");
+            $("#publishedInfo a.issueLink").show();
+            $("#publishedInfo p").text("Publishing...");
+            $("#publishedInfo .action-button").hide();
+            $("#publishedInfo a.issueLink").hide();
+            $("#publishedInfo").show();
+            $("#publishOverlay").width($("body").width()).height($("body").height()).show();
+            $("body").scrollTop(0);
+            $.getJSON("publish/<%= app.name %>", function(info) {
+                $("#publishedInfo .action-button").show();
+                if (info.err) {
+                    if (info.reauth) {
+                        $("#publishedInfo p").addClass("error").text("There was an error publishing your app.  Please try again.");
+                    }
+                    $("#submitPublish").removeAttr("disabled");
+                } else {
+                    $("#publishedInfo p").text("You successfully submitted \"<%=app.repository.title%>\" to be published.  You can track its status on Github.");
+                    $("#publishedInfo").show();
+                    $("#publishedInfo a").show();
+                    $("#publishedInfo .issueLink").attr("href", info.issue.html_url).text(info.issue.html_url);
+                }
+            }).error(function() {
+                $("#submitPublish").removeAttr("disabled");
+                $("#publishedInfo p").addClass("error").text("There was an error publishing your app.  Please try again.");
+            });
+        });
+      });
+    </script>
   </head>
   <body>
+    <div id='publishOverlay'>
+      <div id='publishedInfo'>
+        <p>You successfully submitted "<%=app.repository.title%>" to be published.  You can track its status on Github.</p>
+        <a class='issueLink' href='#'>...</a>
+        <a class='action-button' href='#'>GOT IT!</a>
+      </div>
+    </div>
     <content class="body">
       <p class='publishInfo'>
         Confirm the information in the fields below, then click "Publish to registry" to submit the app.  Once you've submitted your app, we create an issue on Github to track it.
       </p>
-      <form method="GET" action="publish/<%= app.name %>">
         <ul class="publish-list">
           <li><p>1. App Name
           <% if (app.repository && app.repository.title) { %>
@@ -75,8 +115,7 @@ var hasError = false;
           </li>
         </ul>
         <div class="actions">
-          <p><button type="submit" <%=(hasError ? "disabled='disabled'" : "")%> class="publish">Publish to registry</button>
-      </form>
+        <p><button id='submitPublish' type="submit" <%=(hasError ? "disabled='disabled'" : "")%> class="publish">PUBLISH</button></p>
     </content>
   </body>
 </html>
