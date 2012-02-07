@@ -8,6 +8,7 @@ all: build
 
 build:
 	npm install
+	./Apps/dashboardv3/static/common/templates/compile.sh
 	echo "\"$(BUILD_NUMBER)\"" |tee build.json tests/build.json
 
 test: oldtest newtest

@@ -19,5 +19,9 @@
     "node": ">=0.4.9"
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "scripts": {
+    "postinstall": "./static/common/templates/compile.sh"
+  }
+  
 }
