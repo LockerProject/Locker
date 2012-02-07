@@ -147,15 +147,12 @@ function publishPackage(req, res) {
     if(!dir || dir.indexOf('Me/github/') != 0) return res.send("package path not valid", 400);
     fs.stat(dir, function(err, stat) {
         if(err || !stat || !stat.isDirectory()) return res.send("invalid id", 400);
-        var args = req.query || {};
+        var args = {};
         args.dir = dir;
         args.id = id;
-        if(req.body) args.body = req.body;
         exports.publish(args, function(err, doc, issue) {
             if(err) logger.error(err);
-            // npm publish always returns an error even though it works, so until that's fixed, commenting this out
-            //if(err) res.send(err, 500);
-            res.send({err:err, doc:doc, issue:issue});
+            res.json({err:(err && typeof(err) == "object" && err.message ? err.message : err), doc:doc, issue:issue});
         });
     });
 }
@@ -428,8 +425,8 @@ exports.publish = function(arg, callback) {
                         pi.syncletToRun.posts = [];
                         var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
                         issue.repo = 'Singly/apps';
-                        issue.labels = updated.name.split('-');
-                        issue.labels.push('App');
+                        //issue.labels = updated.name.split('-');
+                        //issue.labels.push('App');
                         pi.syncletToRun.posts.push(issue);
                         // this feels dirty, but is also reusing the synclet, to do this the synclet must not rely on config or rewriting auth stuff at all!
                         var isynclet = path.join(lconfig.lockerDir, serviceManager.map('github').srcdir, "issue.js");
@@ -466,17 +463,6 @@ function checkPackage(pjs, arg, gh, callback) {
             logger.warn('while checking package ' + arg.dir + ', found inconsisent handle (' + js.repository.handle + ') and id (' + arg.id +'), setting name = id');
             js.repository.handle = arg.id;
         }
-        if (arg.body) {
-            if (arg.body.title) js.repository.title = arg.body.title;
-            if (arg.body.description) {
-                js.repository.description = arg.body.description;
-                js.description = arg.body.description;
-            }
-            if (arg.body.uses) js.repository.uses = arg.body.uses;
-        }
-        // This depends on the path to the package being of the form .../<github_login>/<repo_name>/package.json
-        var dirs = pjs.split('/');
-        js.repository.url = 'https://github.com/' + dirs[dirs.length-3] + '/' + dirs[dirs.length-2];
         lutil.atomicWriteFileSync(pjs, JSON.stringify(js));
         return callback();
     });
