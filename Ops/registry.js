@@ -134,6 +134,8 @@ exports.app = function(app)
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
+
+    app.get('/deauth/:id', deauthIsAwesomer);
 }
 
 function publishPackage(req, res) {
@@ -627,4 +629,15 @@ function finishAuth(js, auth, res) {
     serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function(){}); // force immediate sync too
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
+}
+
+function deauthIsAwesomer(req, res) {
+  var serviceName = req.params.id;
+  var service = serviceManager.map(serviceName);
+  delete service.auth;
+  delete service.authed;
+  service.deleted = Date.now();
+  serviceManager.mapDirty(serviceName);
+  logger.info("disconnecting "+serviceName)
+  res.redirect('back');
 }

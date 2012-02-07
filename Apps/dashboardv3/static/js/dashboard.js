@@ -1,19 +1,17 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
     "connect" : "connect"
+    "allApps"  : "allApps",
+    "connect"  : "connect",
+    "settings" : "settings"
 };
 var defaultSubSections = {};
 var loggedIn = true;
 
 $(document).ready(function() {
-    $.history.init(function(hash){
-        // if(hash === "") {
-            // initialize your app
-            loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        // } else {
-        //     loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || defaultApp);
-        // }
-    }, { unescape: ",/" });
+  $.history.init(function(hash){
+    loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
+  }, { unescape: ",/" });
 
   $('body').delegate('.install', 'click', function(e) {
     var $e = $(e.currentTarget);
@@ -69,6 +67,16 @@ var loadApp = function(info) {
   $('.app-details').hide();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
+  } else if (info.topSection === "Settings") {
+    if (info.subSection === "Connections") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-connectors');
+    } else if (info.subSection === "AccountInformation") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-account');
+    } else if (info.subSection === "APIKey") {
+      $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-api');
+    } else {
+      alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
+    }
   } else if (app === "Publish") {
     $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
     $('#appHeader').hide();
@@ -113,6 +121,8 @@ var syncletInstalled = function(provider) {
 handlers.Explore = loadApp;
 handlers.Develop = loadApp;
 handlers.connect = loadApp;
+handlers.Settings = loadApp;
+handlers.viewAll = loadApp;
 handlers.publish = loadApp;
 
 
@@ -123,19 +133,22 @@ function handleApp(appName) {
 }
 
 function doAppHeader(appName) {
-  registry.getInstalledApps(function(apps) {
-    var app = apps[appName];
-    if(!app) return;
-    registry.getConnectedServices(app.uses, function(connected) {
-      registry.getUnConnectedServices(app.uses, function(unconnected) {
+  registry.getMap(function(err, map) {
+    if(err || !map[appName]) return callback(err, map);
+    var app = map[appName];
+    // this {repository: app} stuff is because the map flattens the things in the repository field
+    // up to the top level, but these registry functions expect them to be inside of repository
+    registry.getConnectedServices({repository: app}, function(connected) {
+      registry.getUnConnectedServices({repository: app}, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
           var mine = myAuthoredApps[appName];
           if (mine) app.author = registry.localAuthor;
           dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
             $('#appHeader').html(appHtml);
+            $('#appHeader').show();
           });
         });
-      })
+      });
     });
   });
 }

@@ -1,7 +1,7 @@
 <span id="appTitle">{app.title}</span>
 by <a class="orange iframeLink" href="#" data-id="AppGallery-Author?author={app.author}">{app.author}</a>{~s}
 with{~s}{#app.uses.types}<a class="orange iframeLink" href="#" data-id="AppGallery-Filter?types={.}">{.}</a>{@sep} + {/sep}{/app.uses.types}
-{~s}from 
+{~s}from
 <span class='appServices'>
   <span class='connected-services'>{#connected}<img class="installed appService" src="https://burrow.singly.com/registry/{.handle}/icon.png">{@sep}{~s}{/sep}{/connected}</span>{~s}
   <span class='unconnected-services'>{#unconnected}<a href="/auth/{.handle}" class="oauthLink"

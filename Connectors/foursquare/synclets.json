@@ -21,6 +21,7 @@
     "mongoId" : {
         "photos": "photoID"
     },
+    "profileIds" : ["id", "username"],
     "types" : {
         "recents":"checkin"
     },

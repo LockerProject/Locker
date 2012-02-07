@@ -12,6 +12,7 @@ var express = require('express')
   , ejs = require("ejs")
   , locker
   , request = require('request')
+  , async = require('async')
   // TODO:  This should not be used in an app
   , lconfig = require('lconfig.js')
   , github = false
@@ -23,6 +24,7 @@ var express = require('express')
   , fs = require('fs')
   , im = require('imagemagick')
   , util = require("util")
+  , lutil = require('lutil')
   , moment = require("moment")
   , page = ''
   , connectSkip = false
@@ -81,14 +83,14 @@ app.all('*', function(req, res, next) {
     // will replace when we have a reasonable notion of a user's profile
      request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
          try {
-             var body = JSON.parse(body);
+             body = JSON.parse(body);
              if (body.username) {
                  profileImage = "http://graph.facebook.com/" + body.username + "/picture";
              }
          } catch (E) {
              request.get({url:locker.lockerBase + "/synclets/twitter/get_profile"}, function(error, res, body) {
                  try {
-                     var body = JSON.parse(body);
+                     body = JSON.parse(body);
                      if (body.profile_image_url_https) {
                          profileImage = body.profile_image_url_https;
                      }
@@ -98,7 +100,7 @@ app.all('*', function(req, res, next) {
     });
     request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
         try {
-            var body = JSON.parse(body);
+            body = JSON.parse(body);
             if (body[0].login) {
                 githubLogin = body[0].login;
             }
@@ -114,17 +116,61 @@ var clickApp = function(req, res) {
         uistate.appClicked(clickedApp);
     }
     res.end();
-}
+};
 
 var renderApps = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(null, function(sortedResult) {
+    getInstalledApps(function(sortedResult) {
         res.render('iframe/appsList', {
             layout: false,
-            apps: sortedResult,
+            apps: sortedResult
         });
-    })
-}
+    });
+};
+
+var renderSettings = function(req, res) {
+    res.render('settings', {dashboard: lconfig.dashboard});
+};
+
+var renderSettingsConnectors = function(req, res) {
+    getConnectors(function(err, connectors) {
+        var numInstalled = 0;
+        for (var i=0; i<connectors.length; i++) {
+            if (connectors[i].hasOwnProperty('authed')) {
+                numInstalled++;
+            }
+        }
+        res.render('iframe/settings-connectors', {
+            layout: false,
+            numInstalled: numInstalled,
+            connectors: connectors
+        });
+    });
+};
+
+var renderSettingsAccountInformation = function(req, res) {
+    res.render('iframe/settings-account', {
+        layout: false,
+        config: {}
+    });
+};
+
+var handleSettings = function (req, res, next) {
+    if (!req.params || !req.params.avi_url) return res.send('missing parameter', 400);
+
+    var rawAvatar = 'raw-avatar';
+    lutil.fetchAndResizeImageURL(req.params.avi_url, 'raw-avatar', 'avatar.png', function (err, success) {
+        if (err) return res.send(err, 500);
+
+        return res.send(success);
+    });
+};
+
+var renderSettingsAPIKey = function(req, res) {
+    res.render('iframe/settings-api', {
+        layout: false
+    });
+};
 
 var renderAppGallery = function(req, res) {
     page = 'appGallery';
@@ -132,7 +178,7 @@ var renderAppGallery = function(req, res) {
         var c = [];
         res.render('appGallery', {synclets:connectors});
     });
-}
+};
 
 var renderDevelop = function(req, res) {
     page = 'develop';
@@ -156,7 +202,7 @@ var renderPublish = function(req, res) {
             app: pkg
         });
     });
-}
+};
 
 var submitPublish = function(req, res) {
     if (!req.params.handle) return res.send('missing handle to publish', 404);
@@ -188,6 +234,7 @@ var submitPublish = function(req, res) {
                     +'}; var self = window; function syncletInstalled(){self.history.back();}</script>'
                     +'Oops, please <a href="/auth/github" onClick="pop()">re-authenticate</a> to github so that we can create an issue to track this request, thanks!';
                     return res.send(htm);
+
                 }
                 console.error('error publishing ' + handle + ':', body.err);
                 return res.send('error publishing - ' + JSON.stringify(body.err), 500);
@@ -209,16 +256,40 @@ var submitPublish = function(req, res) {
     });
 };
 
+var getFilteredApps = function(filterFn, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = [];
+        var added = {};
+        async.forEach(map, function(app, forEachCb) {
+            if (app.static && filterFn(app)) {
+                result.push(app);
+                added[app.id] = true;
+            }
+            forEachCb();
+        }, function(err) {
+            callback(result);
+        });
+    });
+};
+
+var getInstalledApps = function(callback) {
+    return getFilteredApps(function(app) {
+        return app.srcdir.substring(0,9) !== 'Me/github' && app.hidden !== true;
+    }, callback);
+};
+
+var getMyApps = function(callback) {
+    return getFilteredApps(function(app) {
+        return app.srcdir.substring(0,9) === 'Me/github';
+    }, callback);
+};
+
 
 var getAppsInfo = function(count, callback) {
-    locker.map(function(err, map) {
-        var result = [];
+    locker.mapType('app', function(err, map) {
+        var result = map;
         var sortedResult = [];
-        for (var i in map) {
-            if ((map[i].type === 'app' || map[i].type === 'app') && !map[i].hidden) {
-                result.push(map[i]);
-            }
-        }
+
         var recentApps = uistate.getNLastUsedApps(count);
         var added = {};
         for (var i = 0; i < recentApps.length; i++) {
@@ -231,36 +302,65 @@ var getAppsInfo = function(count, callback) {
                 }
             }
         }
-        for (var i in result) {
+        for (i in result) {
             if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
         }
 
         callback(sortedResult);
     });
-}
+};
+
+var getAllAppsInfo = function(count, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = [];
+        var sortedResult = [];
+
+        var recentApps = uistate.getNLastUsedApps(count);
+        var added = {};
+        for (var i = 0; i < recentApps.length; i++) {
+            for (var j in map) {
+                if (map[j].id === recentApps[i].name && map[j].static) {
+                    map[j].lastUsed = recentApps[i].lastUsed;
+                    sortedResult.push(map[j]);
+                    added[map[j].id] = true;
+                    break;
+                }
+            }
+        }
+        for (i in map) {
+            if(!added[map[i].id] && map[i].title) sortedResult.push(map[i]);
+        }
+
+        callback(sortedResult);
+    });
+};
+
 
 var renderExplore = function(req, res) {
     uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {
-        getConnectors(function(err, connectors) {
-            var firstVisit = false;
-            var page = 'explore';
+    getInstalledApps(function(sortedResult) {
+        getMyApps(function(mySortedResult) {
+            getConnectors(function(err, connectors) {
+                var firstVisit = false;
+                var page = 'explore';
 
-            getInstalledConnectors(function(err, installedConnectors) {
-                if (req.cookies.firstvisit === 'true' &&
-                    installedConnectors.length === 0) {
-                    firstVisit = true;
-                    //res.clearCookie('firstvisit');
-                }
+                getInstalledConnectors(function(err, installedConnectors) {
+                    if (req.cookies.firstvisit === 'true' &&
+                        installedConnectors.length === 0) {
+                        firstVisit = true;
+                        //res.clearCookie('firstvisit');
+                    }
 
-                if (installedConnectors.length === 0) {
-                    page += '-connect';
-                }
-                res.render(page, {
-                    connectors: connectors,
-                    installedConnectors: installedConnectors,
-                    map: sortedResult,
-                    firstVisit: firstVisit
+                    if (installedConnectors.length === 0) {
+                        page += '-connect';
+                    }
+                    res.render(page, {
+                        connectors: connectors,
+                        installedConnectors: installedConnectors,
+                        map: sortedResult,
+                        myMap: mySortedResult,
+                        firstVisit: firstVisit
+                    });
                 });
             });
         });
@@ -283,6 +383,7 @@ var renderConnect = function(req, res) {
     });
 };
 
+
 var registryApp = function(req, res) {
     request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
         var app = JSON.parse(body);
@@ -293,21 +394,6 @@ var registryApp = function(req, res) {
         });
     });
 }
-
-app.get('/clickapp/:app', clickApp);
-app.get('/explore', renderExplore);
-app.get('/', checkInstalled, renderExplore);
-
-app.get('/connect', renderConnect);
-
-app.get('/develop', renderDevelop);
-
-app.get('/appGallery', renderAppGallery);
-
-app.get('/publish', renderPublish);
-app.get('/publish/:handle', submitPublish);
-
-app.get('/registryApp', registryApp);
 
 var getMyGithubApps = function(callback) {
     var pattern = /^Me\/github/
@@ -323,19 +409,28 @@ var getMyGithubApps = function(callback) {
         }
         callback(apps);
     });
-}
+};
 
 var getMyRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
         callback(JSON.parse(body));
     });
-}
+};
 
 var getAllRegistryApps = function(callback) {
     request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        callback(JSON.parse(body));
+        apps = JSON.parse(body);
+        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
+            //added = JSON.parse(added);
+            for (var i in added) {
+                if (apps[i]) {
+                    apps[i].installed = true;
+                }
+            }
+            callback(apps);
+        });
     });
-}
+};
 
 var getConnectors = function(callback) {
     locker.mapType("connector", function(err, installedConnectors) {
@@ -345,19 +440,22 @@ var getConnectors = function(callback) {
                 if (body[key].repository.type == "connector") {
                     var connector = body[key];
                     for (var i = 0; i < installedConnectors.length; ++i) {
-                        if (installedConnectors[i].id == connector.name && installedConnectors[i].authed) connector.authed = true;
+                        if (installedConnectors[i].id === connector.name && installedConnectors[i].authed) {
+                          connector.authed = true;
+                          connector.username = getReadableProfileNameForConnector(installedConnectors[i]);
+                        }
                     }
-                    if(!connector.repository.oauthSize) {
+                    if (!connector.repository.oauthSize) {
                       connector.repository.oauthSize = {width:960, height:600};
                       console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
                     }
                     connectors.push(connector);
                 }
             });
-            callback(err, connectors);
+            getCollectionsUsedByConnectors(connectors, callback);
         });
     });
-}
+};
 
 var getInstalledConnectors = function(callback) {
     getConnectors(function(err, connectors) {
@@ -369,4 +467,109 @@ var getInstalledConnectors = function(callback) {
        }
        callback(err, installedConnectors);
     });
-}
+};
+
+var getReadableProfileNameForConnector = function(connector) {
+
+    // TODO: absolutely need to refactor this into the profile collection once we have it done.  Until then, here we are:
+    try {
+        switch(connector.handle){
+        case 'facebook':
+            return connector.auth.profile.username;
+        case 'twitter':
+            return '@' + connector.auth.profile.screen_name;
+        case 'lastfm':
+            return connector.auth.profile.name;
+        case 'flickr': // TODO: flickr connector has empty auth object
+            return '';
+        case 'foursquare':
+            return connector.auth.profile.canonicalUrl.split('/')[3];
+        case 'gcontacts': // TODO: gcontacts connector has empty auth object
+            return '';
+        case 'instagram':
+            return connector.auth.profile.username;
+        case 'pandora': // TODO: pandora connector has empty auth object
+            return '';
+        case 'rdio':
+            return connector.auth.profile.firstName + ' ' + connector.auth.profile.lastName;
+        case 'github':
+            return connector.auth.profile.login;
+        default:
+            return '';
+        }
+    } catch(e) { return ''; }
+};
+
+var getCollectionsUsedByConnectors = function(connectors, callback) {
+
+    function findConnectorInObject(connector) {
+        for(var j in connectors) {
+            if (connectors.hasOwnProperty(j) && connectors[j].name === connector) {
+               return connectors[j];
+            }
+        }
+        return undefined;
+    }
+
+    // we hardwire the collections here with a nasty O(n^2) nested loop, b/c /registry/connectors
+    // doesn't return the "provides" yet.
+    function addProvidesToConnectors(map, collection) {
+        if (map.hasOwnProperty(collection) && map[collection].hasOwnProperty('events') && lutil.is('Array', map[collection].events)) {
+            for (var i=0; i<map[collection].events.length; i++) {
+                var event = map[collection].events[i][0].split('/');
+                var currentConn = findConnectorInObject(event[event.length -1]);
+                if (currentConn !== undefined) {
+                    if (!currentConn.hasOwnProperty('provides')) {
+                        currentConn.provides = [];
+                    }
+                    var foundCollection = false;
+                    for (var k=0; k<currentConn.provides.length; k++) {
+                        if (currentConn.provides[k] === lutil.ucfirst(collection)) {
+                            foundCollection = true;
+                        }
+                    }
+                    if (!foundCollection) {
+                        currentConn.provides.push(lutil.ucfirst(collection));
+                    }
+                }
+            }
+        }
+    }
+
+    locker.map(function(err, map) {
+        if (map === undefined) {
+            return console.error('Map undefined when attempting to get collections in dashboardv3');
+        }
+
+        addProvidesToConnectors(map, 'contacts');
+        addProvidesToConnectors(map, 'photos');
+        addProvidesToConnectors(map, 'links');
+        addProvidesToConnectors(map, 'places');
+
+        callback(err, connectors);
+    });
+};
+
+
+
+app.get('/clickapp/:app', clickApp);
+app.get('/explore', renderExplore);
+app.get('/', checkInstalled, renderExplore);
+
+app.get('/connect', renderConnect);
+
+app.get('/settings', renderSettings);
+app.get('/settings-connectors', renderSettingsConnectors);
+app.get('/settings-account', renderSettingsAccountInformation);
+app.get('/settings-api', renderSettingsAPIKey);
+app.post('/settings-account', handleSettings);
+
+app.get('/allApps', renderApps);
+app.get('/develop', renderDevelop);
+
+app.get('/appGallery', renderAppGallery);
+
+app.get('/publish', renderPublish);
+app.get('/publish/:handle', submitPublish);
+
+app.get('/registryApp', registryApp);

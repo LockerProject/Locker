@@ -3,6 +3,8 @@
 <html>
   <head>
     <%- partial('header_partial') %>
+    <script type="text/javascript" src="https://use.typekit.com/znj4adx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
     <script type="text/javascript" charset="utf-8" src='common/js/dust-core-0.3.0.min.js'></script>
     <script type="text/javascript" charset="utf-8" src='common/js/moment.min.js'></script>
     <script type='text/javascript' charset="utf-8" src='js/jquery.simplemodal.js'></script>
@@ -28,7 +30,7 @@
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
             <a href='<%= dashboard.customLogout %>'>Sign out</a>
-            <a href='<%= dashboard.customSettings %>'>Account Settings</a>
+            <a href='<%= dashboard.customSettings || "settings#Settings-Connections" %>'>Account Settings</a>
             <a href='<%= dashboard.customLearnmore || "https://singly.com/home.html#About-OurMission" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
           </div>
           <script src="js/hosted.js"></script>
@@ -52,6 +54,14 @@
         <section id="Filter">
         </section>
         <section id="Details">
+        </section>
+      </section>
+      <section id="Settings">
+        <section id="Connections">
+        </section>
+        <section id="AccountInformation">
+        </section>
+        <section id="APIKey">
         </section>
       </section>
     </div>

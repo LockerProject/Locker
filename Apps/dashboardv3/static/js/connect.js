@@ -11,15 +11,13 @@ $(function() {
 
     //copied from dashboard.js
     $('body').delegate('.oauthLink','click', function(e) {
-        var that = $(this);
-        if (that.is(':disabled') || that.hasClass('disabled')) return false;
-        var options = "width=" + that.data('width') + ",height=" + that.data('height') + ",status=no,scrollbars=no,resizable=no";
-        var popup = window.open(that.attr('href'), "account", options);
-        popup.focus();
-        return false;
+      var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
+      var popup = window.open($(this).attr('href'), "account", options);
+      popup.focus();
+      return false;
     });
 
-    if ($('.sidenav-items synclets-connected', window.parent.document).length > 0) {
+    if ($('.sidenav-items.synclets-connected', window.parent.document).length > 0) {
         showAllConnectors();
     }
 
@@ -36,6 +34,20 @@ $(function() {
         }
     });
 
+    $('.learnmore-link').click(function(e) {
+      if ($('.learnmore-copy').is(":hidden")) {
+        $(this).hide();
+        $(this).html('Close section');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      } else {
+        $(this).hide();
+        $(this).html('Learn more about what we do');
+        $(this).fadeIn('fast');
+        $('.learnmore-copy').slideToggle('fast');
+      }
+    });
+
     // if apikeys doens't have twitter/facebook, just show everything
     if (hasTwitterOrFacebook === false) {
         showAllConnectors();
@@ -44,11 +56,13 @@ $(function() {
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
-    var dataProvider = '[data-provider=' + provider + ']';
-    var newIcon = $('<img>', {src: 'img/icons/32px/' + provider + '.png'});
-    $('.oauthLink' + dataProvider).text('Connected').addClass('disabled');
-    $('.synclets-connected', window.parent.document).append(newIcon);
-    $('.synclets-unconnected a' + dataProvider, window.parent.document).remove();
+    $('.oauthLink img').each(function(index) {
+        if ($(this).parent().attr('data-provider') === provider) {
+            $(this).attr('src', 'img/connected.png');
+        }
+    });
+
+    $('.sidenav-items.synclets-connected', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
     showHeaderTwo();
     showAllConnectors();
     updateUserProfile();

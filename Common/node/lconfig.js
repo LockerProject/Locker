@@ -56,10 +56,12 @@ exports.load = function(filepath) {
         "twitter:Connectors/Twitter",
         "foursquare:Connectors/foursquare",
     ];
-    exports.mongo = config.mongo || {
-        "dataDir": "mongodata",
-        "host": "localhost",
-        "port": 27018
+    config.mongo = config.mongo || {};
+    exports.mongo = {
+        "dataDir": config.mongo.dataDir || "mongodata",
+        "host": config.mongo.host || "localhost",
+        "port": config.mongo.port || 27018,
+        "options": config.mongo.options || ['--nohttpinterface']
     };
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";

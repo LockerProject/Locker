@@ -51,6 +51,7 @@ exports.syncRepos = function(cached, callback) {
                             // make sure package.json is safe, set some defaults!
                             pkg.repository.handle = repo.id.replace("/", "-").toLowerCase();
                             pkg.name = pkg.repository.handle;
+                            pkg.repository.url = 'https://github.com/' + repo.id;
                             pkg.repository.author = "myself";
                             if(!pkg.repository.title) pkg.repository.title = repo.name;
                             if(!pkg.repository.hasOwnProperty('static')) pkg.repository.static = true;

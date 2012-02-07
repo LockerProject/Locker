@@ -2,12 +2,9 @@
 
 set -e
 
-rev=$(git rev-parse --short --default HEAD $rev)
-build_id=${BUILD_NUMBER:-$rev}
 subdir="$1"
-top="$PWD"
 out="$2"
-builddir="$top/build"
+top="$PWD"
 builddir="$(mktemp -d)"
 
 rm -rf "$builddir"
@@ -18,7 +15,7 @@ trap "rm -rf \"$builddir\"" EXIT
 # fetch a clean copy of the code from git
 echo "Fetching code..."
 # This doesn't work anymore with submodules.  I hate submodules.
-git archive $rev | tar -x -C "$builddir/$subdir"
+git archive HEAD | tar -x -C "$builddir/$subdir"
 git submodule foreach --quiet 'echo $path' | while read submodule; do
     dest="$builddir/$subdir/$submodule"
     mkdir -p "$dest"

@@ -1,8 +1,9 @@
-var fs = require("fs");
-var path = require("path");
-var url = require("url");
-var async = require("async");
-var request = require("request");
+var fs = require("fs")
+  , path = require("path")
+  , im = require('imagemagick')
+  , url = require("url")
+  , async = require("async")
+  , request = require("request");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
@@ -94,6 +95,10 @@ exports.addAll = function(thisArray, anotherArray) {
         thisArray.push(anotherArray[i]);
 };
 
+exports.ucfirst = function(str) {
+    return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
+};
+
 exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
 
     var foundValues = [];
@@ -143,7 +148,7 @@ exports.rtrim = function(stringToTrim) {
 exports.atomicWriteFileSync = function(dest, data) {
     var tmp = dest + '.tmp';
     var bkp = dest + '.bkp';
-    var stat = undefined;
+    var stat;
 
     try {
         stat = fs.statSync(dest);
@@ -162,7 +167,7 @@ exports.atomicWriteFileSync = function(dest, data) {
 
     // atomically rename the temp file into place
     fs.renameSync(tmp, dest);
-}
+};
 
 // this is for node 0.4.x, it's built into path in node 0.6
 exports.relative = function(from, to) {
@@ -182,7 +187,7 @@ exports.relative = function(from, to) {
     }
 
     var outputParts = [];
-    for (var i = samePartsLength; i < fromParts.length; i++) {
+    for (var j = samePartsLength; j < fromParts.length; j++) {
         outputParts.push('..');
     }
 
@@ -196,8 +201,9 @@ exports.relative = function(from, to) {
 exports.streamFromUrl = function(url, cbEach, cbDone) {
     var ended = false;
     var q = async.queue(function(chunk, cb){
-        if(chunk == "") return cb();
-        try{ var js = JSON.parse(chunk); }catch(E){ return cb(); }
+        if (chunk === "") return cb();
+        var js;
+        try { js = JSON.parse(chunk); } catch (E) { return cb(); }
         cbEach(js, cb);
     },1);
     var error;
@@ -221,7 +227,35 @@ exports.streamFromUrl = function(url, cbEach, cbDone) {
         ended = true;
         q.push(""); // this triggers the drain if there was no data, GOTCHA
     });
-}
+};
+
+
+/*
+ * @sourceUrl - URL of the avatar you want to fetch
+ * @rawfile - where you want the raw downloaded data stored
+ * @destfile - the name of the resized PNG file
+ * @callback - function(err, success) that takes the respective strings for failure and success.
+ */
+exports.fetchAndResizeImageURL = function (sourceUrl, rawFile, destFile, callback) {
+    request.get({uri: sourceUrl, encoding: 'binary'}, function (err, resp, body) {
+        if (err) return callback("Unable to download avatar from source URL: " + err);
+
+        fs.writeFile(rawFile, body, 'binary', function (err) {
+            if (err) return callback("Unable to save downloaded raw avatar: " + err);
+
+            im.resize({srcPath : rawFile
+                     , dstPath : destFile
+                     , width   : 48
+                     , height  : 48}
+                    , function (err, stdout, stderr) {
+                          if (err) return callback('Unable to convert avatar to 48x48 PNG: ' + err);
+
+                          return callback(null, 'avatar uploaded');
+                      });
+        });
+    });
+};
+
 // creates an idr, type://network/context?id=account#id
 // context and account are optional
 exports.idrNew = function(type, network, id, context, account)
@@ -233,7 +267,7 @@ exports.idrNew = function(type, network, id, context, account)
     r.protocol = type;
     if(id) r.hash = id.toString();
     return url.format(r);
-}
+};
 /*
 IDR
 
