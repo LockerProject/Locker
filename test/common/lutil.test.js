@@ -18,6 +18,7 @@ describe("lutil", function () {
         });
 
         it("downloads and resizes an avatar", function (done) {
+            this.timeout(5000);
             lutil.fetchAndResizeImageURL(sampleAviUrl, '/tmp/raw', '/tmp/avatar.png', function (err, success) {
                 should.not.exist(err);
 
