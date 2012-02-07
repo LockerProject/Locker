@@ -1,15 +1,15 @@
 <h1>Editing a package.json for apps</h1>
 
-<p>All apps need to have a package.json file to describe themselves with a few required fields. This is based on the <a href="http://wiki.commonjs.org/wiki/Packages">CommonJS Packages</a> format and <a href="http://npmjs.org/doc/json.html">NPM</a>, with all of our additional data in the repository field.</p>
+<p>All apps need to have a package.json file to describe themselves with a few required fields. This is based on the <a href="http://wiki.commonjs.org/wiki/Packages">CommonJS Packages</a> format and <a href="http://npmjs.org/doc/json.html">NPM</a>, with the additional data needed in the repository field.</p>
 
 <h2>Minimum template to start</h2>
 
 <pre><code>{
     "name": "myapp",
     "version": "0.0.0",
+    "description": "This is my awesome app!",
     "repository": {
-        "title": "My App",
-        "description": "This is my awesome app!"
+        "title": "My App"
     }
 }
 </code></pre>
@@ -18,9 +18,9 @@
 
 <p>The <code>version</code> is good to start with <code>0.0.0</code> and only increment the first two (x.x.0) if you want to track your own versions here, the last one (0.0.y) is auto-incremented every time an app is published.</p>
 
-<p>For <code>repository.title</code> choose a short recognizable title (show in the list of apps after it's added).</p>
+<p>Set <code>description</code> to a sentence describing what the app does in the gallery or details page before someone installs it.</p>
 
-<p>Set <code>repository.description</code> to a sentence describing what the app does in the gallery or details page before someone installs it.</p>
+<p>For <code>repository.title</code> choose a short recognizable title (show in the list of apps after it's added).</p>
 
 <h2>Screenshot</h2>
 
@@ -33,20 +33,23 @@
 <pre><code>{
     "name": "myapp",
     "version": "0.0.0",
+    "description": "This is my awesome app!",
     "repository": {
         "title": "My App",
-        "description": "This is my awesome app!",
         "uses": {
             "services": [ "twitter", "foursquare", "instagram" ],
             "types": [ "places" ]
         }
-    }
+    },
+    "author": "My Name &lt;my@email&gt;"
 }
 </code></pre>
 
 <p>Add any helpful or required services to the <code>repository.uses.services</code> array.</p>
 
 <p>If any collections are used, add them to the <code>repository.uses.rypes</code> array.</p>
+
+<p>By default the <code>author</code> is set to your github information when you publish, but you can override it here too.</p>
 
 <h2>Problems/Questions?</h2>
 
