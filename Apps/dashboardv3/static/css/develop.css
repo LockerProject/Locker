@@ -42,20 +42,21 @@ h3 {
 }
 
 li {
-  margin-left:30px;
+  margin-left: 30px;
 }
 
 li p {
-  font-size:16px;
+  font-size: 16px;
   margin: 0;
 }
 
 pre.prettyprint {
-  margin:20px;
-  font-size:14px;
-  display:inline-block;
-  background-color:#F8F8F8;
-  border-radius:3px;
+  font-family: "Courier New";
+  margin: 20px;
+  font-size: 14px;
+  display: inline-block;
+  background-color: #F8F8F8;
+  border-radius: 3px;
   padding: 10px;
 }
 
