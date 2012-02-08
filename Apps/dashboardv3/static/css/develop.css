@@ -10,7 +10,14 @@ h1 {
 h2 {
   font-size: 24px;
   font-weight: 200;
-  margin: 20px 0;
+  margin: 16px 0 6px 0;
+  font-weight:bold;
+}
+
+h3 {
+  font-size: 20px;
+  margin: 4px 0;
+  font-weight:bold;
 }
 
 #develop-nav {
@@ -32,4 +39,21 @@ h2 {
 .navitem-selected {
   font-weight: bold;
   color: #29ABE2 !important;
+}
+
+li p {
+  font-size:16px;
+  margin: 0;
+}
+
+pre.prettyprint {
+  font-size:14px;
+  display:inline-block;
+  background-color:#F8F8F8;
+  border-radius:3px;
+  padding: 10px;
+}
+
+.hidden {
+  display: none;
 }
