@@ -1,7 +1,7 @@
 var defaultApp = 'contactsviewer';
 var specialApps = {
+    "connect" : "connect",
     "allApps"  : "allApps",
-    "viewAll"  : "viewAll",
     "connect"  : "connect",
     "develop"  : "develop",
     "settings" : "settings"
@@ -11,12 +11,7 @@ var loggedIn = true;
 
 $(document).ready(function() {
   $.history.init(function(hash){
-    if(hash === "") {
-      // initialize your app
-      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
-    } else {
-      loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
-    }
+    loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
   }, { unescape: ",/" });
 
   $('body').delegate('.install', 'click', function(e) {
@@ -150,6 +145,7 @@ function doAppHeader(appName) {
       registry.getUnConnectedServices({repository: app}, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
           var mine = myAuthoredApps[appName];
+          if (mine) app.author = registry.localAuthor;
           dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
             $('#appHeader').html(appHtml);
             $('#appHeader').show();

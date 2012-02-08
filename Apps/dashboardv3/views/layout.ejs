@@ -23,9 +23,18 @@
       </div>
       <div class="nav-section">
         <div class="nav">
-          <a <% if (page === 'explore' || page === 'you-connect') { %>class='blue'<% } %> data-id='Explore' href='explore'>EXPLORE</a>
-          <a <% if (page === 'appGallery') { %>class='blue'<% } %> data-id='AppGallery' href='appGallery'>APP GALLERY</a>
-          <a <% if (page === 'develop') { %>class='blue'<% } %> data-id='Develop' href='develop'>DEVELOP</A>
+          <a data-id='Explore' href='explore'
+             class="explore <% if (page === 'explore' || page === 'you-connect') { %>blue<% } %>">
+            Explore
+          </a>
+          <a data-id='AppGallery' href='appGallery'
+             class="gallery <% if (page === 'appGallery') { %>blue<% } %>">
+             App Gallery
+          </a>
+          <a data-id='Develop' href='develop'
+             class="develop <% if (page === 'develop') { %>blue<% } %>">
+             Develop
+          </a>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
