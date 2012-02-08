@@ -23,12 +23,12 @@ h3 {
 #develop-nav {
   width: 100%;
   background: #F2F2F2;
-  height: 200px;
+  height: 160px;
 }
 
 .develop-nav-column {
 	width: 200px; 
-	height: 200px;
+	height: 160px;
 	float: left;
 }
 
