@@ -20,6 +20,11 @@ function setUserGlobals(data) {
 }
 
 $(document).ready(function() {
+    if (userOptin === 'false') {
+        $('#settings_analytics_optedout').removeClass('hidden');
+        $('#settings_analytics').addClass('hidden');
+    }
+
     if (userOptin === 'true') {
         $('.app-page').append('<script type=\'text/javascript\' charset=\'utf-8\' src=\'js/ga.js\'></script>');
     }

@@ -34,6 +34,11 @@ $(function () {
         return false;
     });
 
+    $('body').delegate('input[name=optout]', 'click', function (e) {
+        $('#settings_analytics').addClass('hidden');
+        $('#settings_analytics_optedout').removeClass('hidden');
+    });
+
     $('input[name=username]').val(info.name);
     $('input[name=email]').val(info.email);
     $('input[name=avi_url]').val(info.imageUrl);

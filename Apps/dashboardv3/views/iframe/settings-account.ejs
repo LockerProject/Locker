@@ -5,12 +5,13 @@
     <%- partial('header_partial') %>
     <link rel="stylesheet" href="css/settings-account.css" />
     <script src="js/settings.js"></script>
+    <script src="js/hosted.js"></script>
     <script src="common/js/jquery.validate.min.js"></script>
     <script src="common/js/jquery.jsonp-2.2.0.min.js"></script>
     <script src="<%= dashboard.customHostedEndpoint %>"></script>
+    <title>settings iframe</title>
   </head>
-  <body>
-    <content class="body">
+  <body class="body">
     <form id="settings-account" action="#">
       <div id="settings_account_error"></div>
       <div id="settings_avatar">
@@ -36,11 +37,15 @@
       </div>
       <div id="settings_analytics">
         <label for="optout" id="optout_label">Opt out of anonymous analytics?</label>
-        <input type="checkbox" name="optout" value="true" id="optout" />
+        <input type="checkbox" name="optout" id="optout" />
         <br />
+      </div>
+      <div id="settings_analytics_optedout" class="hidden">
+        <p>You've opted out of participating in our anonymized analytics. There is no going back.</p>
+      </div>
+      <div id="save_that_sucker">
         <input class="action-button" id="save_button" type="submit" value="Save Changes">
       </div>
     </form>
-    </content>
   </body>
 </html>

@@ -58,6 +58,17 @@ h1 {
   margin-top:20px;
 }
 
+#settings_analytics_optedout {
+  width:368px;
+  text-align:left;
+  margin-top:20px;
+}
+
+#save_that_sucker {
+  width:368px;
+  text-align:right;
+}
+
 input[type=text], input[type=password] {
   width:360px;
   font-size:18px;
