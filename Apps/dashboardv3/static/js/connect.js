@@ -1,5 +1,3 @@
-$.cookie("firstvisit", true, {path: '/' });
-
 var profileTimeout;
 var hasTwitterOrFacebook = false;
 

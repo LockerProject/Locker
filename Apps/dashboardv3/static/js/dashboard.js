@@ -36,22 +36,20 @@ $(document).ready(function() {
   function doModal(sectionNum) {
     if (!modalClosed) return;
     modalClosed = false;
+    $.cookie("firstvisit", null, {path: '/' });
     var modal = $('#basic-modal-content').modal({onClose: function (dialog) {
       modalClosed = true;
       $.modal.close();
     }});
     $('#simplemodal-overlay,#no-thanks,#close-button,#close-this,.gotit-button').click(function(e) {
-      $.cookie("firstvisit", null, {path: '/' });
       modal.close();
     });
   }
 
-  if (window.location.hash !== '#Explore-connect' && $.cookie("firstvisit") === 'true') {
-      if (window.location.hash === '#Develop-devdocs' || window.location.hash === '#AppGallery-Featured') {
-        $.cookie("firstvisit", null, {path: '/' });
-      } else {
-        doModal();
-      }
+  if ($.cookie("firstvisit") === 'true') {
+    doModal();
+  } else {
+    $.cookie("firstvisit", null, {path: '/' });
   }
 });
 
