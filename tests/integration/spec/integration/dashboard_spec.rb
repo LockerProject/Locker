@@ -11,7 +11,7 @@ describe 'dashboard' do
 
   it 'should allow people to access the develop interface' do
     visit '/'
-    click_link 'DEVELOP'
+    click_link 'Develop'
     within_frame 'appFrame' do
       page.should have_content('Edit your viewer locally!')
     end
@@ -19,7 +19,7 @@ describe 'dashboard' do
 
   it 'should allow access to api explorer' do
     visit '/'
-    click_link 'DEVELOP'
+    click_link 'Develop'
     click_link 'API Explorer'
     within_frame 'appFrame' do
       page.should have_content('Choose an endpoint:')

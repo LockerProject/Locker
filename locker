@@ -42,7 +42,7 @@ mongolock=$mongodata/mongod.lock
 if [ -s $mongolock ]; then
     echo "mongod lock file exists: $mongolock..."
     pid=$(cat "$mongolock")
-    if [ "$lockermode" = "production" ]; then
+    if [ "$locker_mode" = "production" ]; then
         # Shut it down
         echo "...shutting it down"
         kill "$pid"
