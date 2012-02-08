@@ -2,47 +2,96 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>Developer Documentation</title>
+
+  <title>Build an App!</title>
+  <link rel="stylesheet/less" type="text/less" href="/dashboard/common/css/common.less">
+  <link rel="stylesheet/less" type="text/less" href="/dashboard/css/connect.css">
+  <link rel="stylesheet" type="text/css" href="prettify/prettify.css">
   <link rel="stylesheet" type="text/css" href="css/common.css">
+  <script type="text/javascript" charset="utf-8" src="/dashboard/common/js/less-1.1.5.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+  <script type="text/javascript" src="js/common.js"></script>
+  <script src="prettify/prettify.js" type="text/javascript"></script>
+
 </head>
 
-<body>
-    <h3>Make your own viewer!</h3>
-    <ol>
-        <li id="connect"> <a id="connect-link"> Connect your GitHub account. </a></li>
-        <li> Fork the <a href="https://github.com/LockerProject/Skeleton-Viewer" target="_blank">Skeleton Viewer</a>. </li>
-        <li> Edit the <a id="edit-link"  target="_blank">index.html file on GitHub</a>. After line 11 of index.html add:<br>
-            <pre>body { background-color:black; }</pre>
-        </li>
-        <li> Manually <a id="sync-link" href="#">sync your viewer</a> back into your Singly account. </li>
-    </ol>
-    <p id="synced">
-        Great! Your viewer will now appear in the Photos drop down menu!<br>
-        <br>
-        Next, learn how to <a href="local.html">edit your viewer on your local machine</a>.
-    </p>
-  <h3>Play with the <a href="explorer.html">API Explorer</a></h3>
-  <h3>Try some of the <a href="https://github.com/LockerProject/Locker/wiki/Viewers" target="_blank">other viewers</a> and share your own :)</h3>
-<a href="regtest.html" style="float:right; font-size:12pt; text-decoration:none">&#960;</div>
+<body onload="prettyPrint()">
+  <p>Singly makes it easy to build a HTML5 + JavaScript app and publish it to the Singly App Gallery.
+<ul>
+  <li id='connect-github' class='hidden'><h2>Step 0: Connect GitHub</h2>
+    <p>GitHub is used for automatically syncing apps you build to you Singly account, from there you will be able to publish them to the App Gallery</p>
+    <li class="featured hideable" style="display: list-item; ">
+      <div class="synclet-logoname-container">
+        <img class="synclet-logo" src="/dashboard/img/icons/32px/github.png">
+        <span class="synclet-name">GitHub</span>
+      </div>
+      <input class="oauthLink action-button" value="Connect" data-provider="github" data-width="1000" data-height="1000">
+     <div class="gets-list">Gets: &nbsp;Contacts</div>
+    </li>
+  </li>
+  
+  <li><h2>Step 1: Build Your App</h2>
+    <ul>
+      <li><h3>Create a new repo on your local machine</h3>
+        <p>(for help with this, checkout <a class="orange" href="http://help.github.com/create-a-repo/">GitHub's excellent doc</a>)</p>
+      </li>
+  
+      <li><h3>Add an index.html file</h3>
+        <p>For now, just put something simple in there to make sure everything is working:</p>
+<pre class="prettyprint">&lt;html&gt;
+  &lt;head&gt;
+    &lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"&gt;&lt;/script&gt;
+    &lt;script src="js/config.js" type="text/javascript"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+      $(function() {
+        $.getJSON(baseUrl + '/Me/photo', {limit:10}, function(photos) {
+          for(var i in photos) {
+            $('body').append('&lt;img src="' + photos[i].url + '"&gt;)
+          }
+        });
+      });
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+      </li>
+  
+      <li><h3>Add a js/config.js</h3>
+        <p>This enables you to connect your app to Singly via your <a class="orange" href="https://singly.com/users/me/settings" target="_blank">API token</a> while developing on your local machine.</p>
+        <pre id="token" class="prettyprint">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
+      </li>
+      
+      <li><h3>Open index.html in a browser (it works!)</h3></li>
+    </ul>
+  </li>
+  
+  <li><h2>Step 2: Prepare to publish</h2>
+    <ul>
+      <li><h3>Add a package.json file</h3>
+        <p></p>
+      </li>
+      <li><h3>Push to GitHub:</h3>
+        <pre class="prettyprint">git push origin master</pre>
+      </li>
+    </ul>
+  </li>
+  <li><h2>Step 3: <a class="orange" href="/linktothepublishpage">Publish your app</a> to the Singly App Gallery!</h2>
+  </li>
+</ul>
+
 </body>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
-<script type="text/javascript" src="js/jquery.cookie.js"></script>
-<script type="text/javascript" src="js/common.js"></script>
 <script>
 $(document).ready(function() {
-    checkForToken(function(token) {
-        if(!token || !token.apiToken) return;
-        if (document.location.hostname.substr(0,3) != 'me.') return;
-        var host = document.location.hostname.substr(3);
-        $("#token").html("baseUrl = 'https://api."+host+"/"+token.apiToken+"';");
+  isGitHubConnected(function(isConnected) {
+    if(isConnected) return;
+    $('#connect-github').removeClass('hidden');
+    pollForGitHubProfile(function(profile) {
+      $('#connect-github').addClass('hidden');
     });
-    waitForGitHubConnected(function() {
-        pollForGitHubProfile(function(profile) {
-            $("#edit-link").attr('href', "https://github.com/" + profile.login + "/Skeleton-Viewer/edit/master/index.html");
-        });
-    });
-    $("#sync-link").click(syncViewers);
+  });
 });
 </script>
 </html>
