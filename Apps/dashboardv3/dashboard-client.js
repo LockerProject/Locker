@@ -354,6 +354,12 @@ var renderDevelopApiExplorer = function(req, res) {
     });
 };
 
+var renderDevelopPublishing = function(req, res) {
+    res.render('iframe/develop-publishing', {
+        layout: false
+    });
+};
+
 var renderDevelopExampleApps = function(req, res) {
     res.render('iframe/develop-exampleapps', {
         layout: false
@@ -605,6 +611,7 @@ app.get('/allApps', renderApps);
 app.get('/develop', renderDevelop);
 app.get('/develop-buildapp', renderDevelopBuildApp);
 app.get('/develop-apiexplorer', renderDevelopApiExplorer);
+app.get('/develop-publishing', renderDevelopPublishing);
 app.get('/develop-exampleapps', renderDevelopExampleApps);
 app.get('/develop-chatwiththeteam', renderDevelopChatWithTheTeam);
 app.get('/develop-templatesicons', renderDevelopTemplatesIcons);
