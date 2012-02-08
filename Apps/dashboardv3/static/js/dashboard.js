@@ -84,6 +84,8 @@ var loadApp = function(info) {
   } else if (info.topSection === "Develop") {
     if (info.subSection === "BuildAnApp") {
         $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-buildapp');
+    } else if (info.subSection === "ApiExplorer") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-apiexplorer');
     }
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');

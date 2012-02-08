@@ -348,6 +348,12 @@ var renderDevelopBuildApp = function(req, res) {
     });
 };
 
+var renderDevelopApiExplorer = function(req, res) {
+    res.render('iframe/develop-apiexplorer', {
+        layout: false
+    });
+};
+
 var registryApp = function(req, res) {
     request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
         var app = JSON.parse(body);
@@ -374,29 +380,6 @@ var getMyGithubApps = function(callback) {
         callback(apps);
     });
 };
-
-/*
-var getMyRegistryApps = function(callback) {
-    request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
-        callback(JSON.parse(body));
-    });
-};
-
-var getAllRegistryApps = function(callback) {
-    request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        apps = JSON.parse(body);
-        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
-            //added = JSON.parse(added);
-            for (var i in added) {
-                if (apps[i]) {
-                    apps[i].installed = true;
-                }
-            }
-            callback(apps);
-        });
-    });
-};*/
-
 
 var getConnectors = function(callback) {
     locker.mapType("connector", function(err, installedConnectors) {
@@ -603,6 +586,7 @@ app.get('/allApps', renderApps);
 
 app.get('/develop', renderDevelop);
 app.get('/develop-buildapp', renderDevelopBuildApp);
+app.get('/develop-apiexplorer', renderDevelopApiExplorer);
 
 app.get('/appGallery', renderAppGallery);
 
