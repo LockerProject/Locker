@@ -21,6 +21,11 @@ $(function() {
             break;
         default:   
     }
+    
+    $(".develop-nav-column div a").click(function(e) {
+        e.preventDefault();
+        window.parent.location.replace($(this).attr('href'));
+    })
 });
 
 

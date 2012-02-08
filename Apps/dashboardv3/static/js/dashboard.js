@@ -86,6 +86,14 @@ var loadApp = function(info) {
         $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-buildapp');
     } else if (info.subSection === "ApiExplorer") {
         $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-apiexplorer');
+    } else if (info.subSection === "Publishing") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-publishing');
+    } else if (info.subSection === "ExampleApps") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-exampleapps');
+    } else if (info.subSection === "ChatWithTheTeam") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-chatwiththeteam');
+    } else if (info.subSection === "TemplatesIcons") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-templatesicons');
     }
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');

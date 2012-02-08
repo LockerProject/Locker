@@ -3,13 +3,13 @@ body {
 }
 
 h1 {
-  font-size: 36px;
+  font-size: 24px;
   font-weight: 200;
+  margin: 20px 0 6px 0;
 }
 
 h2 {
   font-size: 24px;
-  font-weight: 200;
   margin: 20px 0 6px 0;
   font-weight:bold;
 }
