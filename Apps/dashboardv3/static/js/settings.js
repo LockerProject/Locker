@@ -26,13 +26,7 @@ $(function () {
       });
     });
 
-    // copied from connect.js
-    $('body').delegate('.oauthLink','click', function (e) {
-        var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
-        var popup = window.open($(this).attr('href'), "account", options);
-        popup.focus();
-        return false;
-    });
+    $('body').delegate('.oauthLink','click', Locker.connectService);
 
     $('body').delegate('input[name=optout]', 'click', function (e) {
         $('#settings_analytics').addClass('hidden');
