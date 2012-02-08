@@ -230,35 +230,6 @@ var submitPublish = function(req, res) {
     });
 };
 
-var getFilteredApps = function(filterFn, callback) {
-    locker.mapType('app', function(err, map) {
-        var result = [];
-        var added = {};
-        async.forEach(map, function(app, forEachCb) {
-            if (app.static && filterFn(app)) {
-                result.push(app);
-                added[app.id] = true;
-            }
-            forEachCb();
-        }, function(err) {
-            callback(result);
-        });
-    });
-};
-
-var getInstalledApps = function(callback) {
-    return getFilteredApps(function(app) {
-        return app.srcdir.substring(0,9) !== 'Me/github' && app.hidden !== true;
-    }, callback);
-};
-
-var getMyApps = function(callback) {
-    return getFilteredApps(function(app) {
-        return app.srcdir.substring(0,9) === 'Me/github';
-    }, callback);
-};
-
-
 var getAppsInfo = function(count, callback) {
     locker.mapType('app', function(err, map) {
         var result = map;
@@ -309,38 +280,6 @@ var getAllAppsInfo = function(count, callback) {
     });
 };
 
-
-var renderExplore = function(req, res) {
-    uistate.fetchState();
-    getInstalledApps(function(sortedResult) {
-        getMyApps(function(mySortedResult) {
-            getConnectors(function(err, connectors) {
-                var firstVisit = false;
-                var page = 'explore';
-
-                getInstalledConnectors(function(err, installedConnectors) {
-                    if (req.cookies.firstvisit === 'true' &&
-                        installedConnectors.length === 0) {
-                        firstVisit = true;
-                        //res.clearCookie('firstvisit');
-                    }
-
-                    if (installedConnectors.length === 0) {
-                        page += '-connect';
-                    }
-                    res.render(page, {
-                        connectors: connectors,
-                        installedConnectors: installedConnectors,
-                        map: sortedResult,
-                        myMap: mySortedResult,
-                        firstVisit: firstVisit
-                    });
-                });
-            });
-        });
-    });
-};
-
 var renderConnect = function(req, res) {
     getConnectors(function(err, connectors) {
         var numInstalled = 0;
@@ -357,6 +296,63 @@ var renderConnect = function(req, res) {
     });
 };
 
+var renderExplore = function(req, res) {
+    uistate.fetchState();
+    var firstVisit = false;
+    var page = 'explore';
+
+    getSidebarData(function(sidebarData) {
+        if (req.cookies.firstvisit === 'true' && sidebarData.installedConnectors.length === 0) {
+            firstVisit = true;
+            //res.clearCookie('firstvisit');
+        }
+
+        if (sidebarData.installedConnectors.length === 0) {
+            page += '-connect';
+        }
+        res.render(page, {
+            connectors: sidebarData.connectors,
+            installedConnectors: sidebarData.installedConnectors,
+            map: sidebarData.installedApps,
+            myMap: sidebarData.myApps,
+            firstVisit: firstVisit
+        });
+    });
+};
+
+var renderAppGallery = function(req, res) {
+    getSidebarData(function(sidebarData) {
+        res.render('appGallery', {
+            connectors: sidebarData.connectors,
+            installedConnectors: sidebarData.installedConnectors,
+            map: sidebarData.installedApps,
+            myMap: sidebarData.myApps
+        });
+    });
+};
+
+var renderDevelop = function(req, res) {
+    getSidebarData(function(sidebarData) {
+        res.render('explore', {
+            connectors: sidebarData.connectors,
+            installedConnectors: sidebarData.installedConnectors,
+            map: sidebarData.installedApps,
+            myMap: sidebarData.myApps
+        });
+    });
+};
+
+var renderDevelopBuildApp = function(req, res) {
+    res.render('iframe/develop-buildapp', {
+        layout: false
+    });
+};
+
+var renderDevelopApiExplorer = function(req, res) {
+    res.render('iframe/develop-apiexplorer', {
+        layout: false
+    });
+};
 
 var registryApp = function(req, res) {
     request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
@@ -382,27 +378,6 @@ var getMyGithubApps = function(callback) {
             }
         }
         callback(apps);
-    });
-};
-
-var getMyRegistryApps = function(callback) {
-    request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
-        callback(JSON.parse(body));
-    });
-};
-
-var getAllRegistryApps = function(callback) {
-    request.get({uri: locker.lockerBase + '/registry/apps'}, function(err, resp, body) {
-        apps = JSON.parse(body);
-        request.get({uri: locker.lockerBase + '/registry/added'}, function(err, resp, added) {
-            //added = JSON.parse(added);
-            for (var i in added) {
-                if (apps[i]) {
-                    apps[i].installed = true;
-                }
-            }
-            callback(apps);
-        });
     });
 };
 
@@ -524,6 +499,73 @@ var getCollectionsUsedByConnectors = function(connectors, callback) {
     });
 };
 
+var getSidebarData = function(callback) {
+    function initIfError(err, data) {
+        if (err) {
+           data = [];
+        }
+    }
+
+    async.parallel({
+        installedAppsData: function(parallelCb) {
+            getInstalledApps(function(err, result) {
+                parallelCb(err, result);
+            });
+        },
+        myAppsData: function(parallelCb) {
+            getMyApps(function(err, result) {
+                parallelCb(err, result);
+            });
+        },
+        connectorsData: function(parallelCb) {
+            getConnectors(function(err, result) {
+                parallelCb(err, result);
+            });
+        },
+        installedConnectorsData: function(parallelCb) {
+            getInstalledConnectors(function(err, result) {
+                parallelCb(err, result);
+            });
+        }     
+    },
+    function(err, results) {
+        return callback({
+            installedApps: results.installedAppsData,
+            myApps: results.myAppsData,
+            connectors: results.connectorsData,
+            installedConnectors: results.installedConnectorsData 
+        });
+    });
+}
+
+var getFilteredApps = function(filterFn, callback) {
+    locker.mapType('app', function(err, map) {
+        var result = [];
+        var added = {};
+        async.forEach(map, function(app, forEachCb) {
+            if (app.static && filterFn(app)) {
+                result.push(app);
+                added[app.id] = true;
+            }
+            forEachCb();
+        }, function(err) {
+            callback(err, result);
+        });
+    });
+};
+
+var getInstalledApps = function(callback) {
+    return getFilteredApps(function(app) {
+        return app.srcdir.substring(0,9) !== 'Me/github' && app.hidden !== true;
+    }, callback);
+};
+
+var getMyApps = function(callback) {
+    return getFilteredApps(function(app) {
+        return app.srcdir.substring(0,9) === 'Me/github';
+    }, callback);
+};
+
 var sendAvatar = function (req, res) {
     res.sendfile('avatar.png');
 };
@@ -541,7 +583,10 @@ app.get('/settings-api', renderSettingsAPIKey);
 app.post('/settings-account', handleSettings);
 
 app.get('/allApps', renderApps);
+
 app.get('/develop', renderDevelop);
+app.get('/develop-buildapp', renderDevelopBuildApp);
+app.get('/develop-apiexplorer', renderDevelopApiExplorer);
 
 app.get('/appGallery', renderAppGallery);
 
@@ -549,5 +594,4 @@ app.get('/publish', renderPublish);
 app.get('/publish/:handle', submitPublish);
 
 app.get('/registryApp', registryApp);
-
 app.get('/avatar.png', sendAvatar);
