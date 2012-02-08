@@ -12,19 +12,26 @@
 
     <link rel="stylesheet" href="css/develop.css" />
     <script src="js/develop.js"></script>
+    <script src="js/locker.js"></script>
     <script src="js/connect.js"></script>
 
   </head>
   <body onload="prettyPrint()">
     <content class="body">
       <div id="main-header-1">
-        <h1>Build an HTML5 web app that uses your personal data from APIs like Facebook, Twitter, and Instagram without having to write any server-side code.</h1>
+        <h1>
+          Build an HTML5 web app that uses your personal data from APIs like Facebook, Twitter, and Instagram without
+          having to write any server-side code.
+        </h1>
         <%- partial('iframe/developnav_partial') %>
       </div>
       
       <ul>
         <li id='connect-github' class='hidden'><h2>Step 0: Connect GitHub</h2>
-          <p>GitHub is used for automatically syncing apps you build to you Singly account, from there you will be able to publish them to the App Gallery</p>
+          <p>
+            GitHub is used for automatically syncing apps you build to you Singly account, from there you will be 
+            able to publish them to the App Gallery
+          </p>
           <ul>
             <li class="featured hideable" style="display: list-item; ">
               <div class="synclet-logoname-container">
@@ -40,18 +47,30 @@
         <li><h2>Step 1: Build Your App</h2>
           <ul>
             <li><h3>Create a new repo on your local machine</h3>
-              <p>(for help with this, checkout <a class="orange" href="http://help.github.com/create-a-repo/">GitHub's excellent doc</a>)</p>
+              <p>
+                (for help with this, check out 
+                <a class="orange" target="_blank" href="http://help.github.com/create-a-repo/">
+                  GitHub's excellent doc
+                </a>)
+              </p>
             </li>
 
             <li><h3>Add an index.html file</h3>
               <p>For now, just put something simple in there to make sure everything is working:</p>
 <pre class="prettyprint">&lt;html&gt;
   &lt;head&gt;
+    &lt;script type="text/javascript"&gt;
+      // this value of baseUrl will be used on singly.com, the one set (later) in js/config.js 
+      // will be used only for local development
+      var baseUrl = '/';
+    &lt;/script&gt;
     &lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"&gt;&lt;/script&gt;
     &lt;script src="js/config.js" type="text/javascript"&gt;&lt;/script&gt;
     &lt;script type="text/javascript"&gt;
       $(function() {
+        // get some photos
         $.getJSON(baseUrl + '/Me/photo', {limit:10}, function(photos) {
+          // add them to the DOM
           for(var i in photos) {
             $('body').append('&lt;img src="' + photos[i].url + '"&gt;)
           }
@@ -65,7 +84,10 @@
             </li>
 
             <li><h3>Add a js/config.js</h3>
-              <p>This enables you to connect your app to Singly via your <a class="orange" href="https://singly.com/users/me/settings" target="_blank">API token</a> while developing on your local machine.</p>
+              <p>This enables you to connect your app to Singly via your 
+                <a class="orange iframeLink" href="settings#Settings-APIKey">API token</a> while 
+                developing on your local machine.
+              </p>
               <pre id="token" class="prettyprint">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
             </li>
 
@@ -76,7 +98,10 @@
         <li><h2>Step 2: Prepare to publish</h2>
           <ul>
             <li><h3>Add a package.json file</h3>
-              <p>The package.json file in the root directory of your app specifies some basic info about your app. Minimally, you need at least these fields populated:</p>
+              <p>
+                The package.json file in the root directory of your app specifies some basic info about your app. 
+                Minimally, you need at least these fields populated:
+              </p>
 <pre class="prettyprint">
 {  
   "description": "See all my photos, but upside down!",
@@ -91,7 +116,10 @@
   }
 }
 </pre>
-              <p>Without those fields populated, your app will not be synced to your Singly account. For more info about the package.json file, see <a class="orange" href="/publish">the full publishing documentation</a>.</p>
+              <p>Without those fields populated, your app will not be synced to your Singly account. For more info 
+                 about the package.json file, see the <a class="orange iframeLink" href="develop#Develop-Publishing">
+                 full publishing documentation</a>.
+              </p>
             </li>
             <li><h3>Push to GitHub:</h3>
               <p>Be sure to .gitignore the config.js file:</p>
@@ -101,9 +129,13 @@
           </ul>
         </li>
         <li><h2>Step 3: Publish your app to the Singly App Gallery!</h2>
-          <p>Once your app is synced to your Singly account, it will show up in the "Your Apps" section in the top left hand corner of the screen. Click on the app, make sure everything is working, and then click the PUBLISH button in the app header.</p>
+          <p>
+            Once your app is synced to your Singly account, it will show up in the "Your Apps" section in the top 
+            left hand corner of the screen. Click on the app, make sure everything is working, and then click the 
+            PUBLISH button in the app header.
+          </p>
           <br>
-          <p>For more info, see <a class="orange" href="publish">the full publishing documentation</a></p>
+          <p>For more info, see the <a class="orange iframeLink" href="develop#Develop-Publishing">full publishing documentation</a></p>
         </li>
       </ul>
 

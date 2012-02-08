@@ -61,6 +61,7 @@ var loadApp = function(info) {
   $('.app-container').hide();
   $('.app-container#iframeContainer').show();
   $('.app-details').hide();
+  $('#appHeader').hide();
   if (specialApps[app]) {
     $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
   } else if (info.topSection === "Settings") {
@@ -75,7 +76,6 @@ var loadApp = function(info) {
     }
   } else if (app === "Publish") {
     $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
-    $('#appHeader').hide();
   } else if (info.topSection === "Develop") {
     if (info.subSection === "BuildAnApp") {
         $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-buildapp');
@@ -148,8 +148,8 @@ function doAppHeader(appName) {
     var app = map[appName];
     // this {repository: app} stuff is because the map flattens the things in the repository field
     // up to the top level, but these registry functions expect them to be inside of repository
-    registry.getConnectedServices({repository: app}, function(connected) {
-      registry.getUnConnectedServices({repository: app}, function(unconnected) {
+    registry.getConnectedServices(app.uses, function(connected) {
+      registry.getUnConnectedServices(app.uses, function(unconnected) {
         registry.getMyAuthoredApps(function(myAuthoredApps) {
           var mine = myAuthoredApps[appName];
           if (mine) app.author = registry.localAuthor;
