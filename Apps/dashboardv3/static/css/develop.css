@@ -1,0 +1,30 @@
+body {
+  margin: 40px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 200;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 200;
+  margin: 20px 0;
+}
+
+#develop-nav {
+  width: 100%;
+  background: #F2F2F2;
+  height: 200px;
+}
+
+.develop-nav-column {
+	width: 200px; 
+	height: 200px;
+	float: left;
+}
+
+.develop-nav-column div { 
+	margin: 25px; 
+}
