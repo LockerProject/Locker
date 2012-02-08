@@ -13,16 +13,7 @@ describe 'dashboard' do
     visit '/'
     click_link 'Develop'
     within_frame 'appFrame' do
-      page.should have_content('Edit your viewer locally!')
-    end
-  end
-
-  it 'should allow access to api explorer' do
-    visit '/'
-    click_link 'Develop'
-    click_link 'API Explorer'
-    within_frame 'appFrame' do
-      page.should have_content('Choose an endpoint:')
+      page.should have_content('Build an HTML5 web app')
     end
   end
 
