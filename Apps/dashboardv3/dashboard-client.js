@@ -79,28 +79,8 @@ function checkInstalled(req, res, next) {
 }
 
 app.all('*', function(req, res, next) {
-    // hackzzzzzzzzzzzzzzzzz
-    // will replace when we have a reasonable notion of a user's profile
-     request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
-         try {
-             body = JSON.parse(body);
-             if (body.username) {
-                 profileImage = "http://graph.facebook.com/" + body.username + "/picture";
-             }else{
-                 throw new Error("no username");
-             }
-         } catch (E) {
-             request.get({url:locker.lockerBase + "/synclets/twitter/get_profile"}, function(error, res, body) {
-                 try {
-                     body = JSON.parse(body);
-                     if (body.profile_image_url_https) {
-                         profileImage = body.profile_image_url_https;
-                     }else{
-                         throw new Error("no profie");
-                     }
-                 } catch (E) {}
-             });
-         }
+    lutil.avatarUrlFromMap(process.cwd, locker.lockerBase, function (err, url) {
+        if (!err) profileImage = url;
     });
     request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
         try {
@@ -187,7 +167,7 @@ var renderAppGallery = function(req, res) {
 var renderDevelop = function(req, res) {
     page = 'develop';
     res.render('develop', {});
-}
+};
 
 var renderPublish = function(req, res) {
     getMyGithubApps(function(apps) {
@@ -387,10 +367,10 @@ var registryApp = function(req, res) {
             app: app
         });
     });
-}
+};
 
 var getMyGithubApps = function(callback) {
-    var pattern = /^Me\/github/
+    var pattern = /^Me\/github/;
     var apps = {};
     locker.map(function(err, map) {
         for (var i in map) {
@@ -544,7 +524,9 @@ var getCollectionsUsedByConnectors = function(connectors, callback) {
     });
 };
 
-
+var sendAvatar = function (req, res) {
+    res.sendfile('avatar.png');
+};
 
 app.get('/clickapp/:app', clickApp);
 app.get('/explore', renderExplore);
@@ -567,3 +549,5 @@ app.get('/publish', renderPublish);
 app.get('/publish/:handle', submitPublish);
 
 app.get('/registryApp', registryApp);
+
+app.get('/avatar.png', sendAvatar);
