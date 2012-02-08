@@ -48,6 +48,7 @@ li {
 li p {
   font-size: 16px;
   margin: 0;
+  max-width: 640px;
 }
 
 pre.prettyprint {

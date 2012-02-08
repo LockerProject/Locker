@@ -25,23 +25,23 @@ $(function() {
 
 
 function isGitHubConnected(callback) {
-    $.getJSON('/map', function(map) {
-        return callback(map.github && map.github.auth && map.github.auth.profile && map.github.authed > 0);
-    });
+  $.getJSON('/map', function(map) {
+    return callback(map.github && map.github.auth && map.github.auth.profile && map.github.authed > 0);
+  });
 }
 
 function getGitHubProfile(callback) {
-    $.getJSON("/map/profiles", function(profiles) {
-        for(var i in profiles) if(i.indexOf('contact://github/') === 0) return callback(profiles[i]);
-        return callback();
-    });
+  $.getJSON("/map/profiles", function(profiles) {
+    for(var i in profiles) if(i.indexOf('contact://github/') === 0) return callback(profiles[i]);
+    return callback();
+  });
 }
 
 function pollForGitHubProfile(callback) {
-    getGitHubProfile(function(profile) {
-        if(profile) return callback(profile);
-        setTimeout(function() {
-            pollForGitHubProfile(callback);
-        }, 1000);
-    });
+  getGitHubProfile(function(profile) {
+    if(profile) return callback(profile);
+    setTimeout(function() {
+      pollForGitHubProfile(callback);
+    }, 1000);
+  });
 }

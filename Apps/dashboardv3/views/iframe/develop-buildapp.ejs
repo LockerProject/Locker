@@ -78,23 +78,32 @@
             <li><h3>Add a package.json file</h3>
               <p>The package.json file in the root directory of your app specifies some basic info about your app. Minimally, you need at least these fields populated:</p>
 <pre class="prettyprint">
-{
+{  
+  "description": "See all my photos, but upside down!",
   "repository": {
     "title": "Upside Down Photos",
-    "description": "See all my photo, but upside down!",
     "type": "app",
-    "static": true
+    "static": true,
+    "uses": {
+      "types": [ "photos" ],
+      "services": [ "facebook", "twitter", "foursquare", "instagram" ]
+    }
   }
 }
 </pre>
-              <p>For more info about the package.json file, see <a class="orange" href="/publish">this doc</a>.
+              <p>Without those fields populated, your app will not be synced to your Singly account. For more info about the package.json file, see <a class="orange" href="/publish">the full publishing documentation</a>.</p>
             </li>
             <li><h3>Push to GitHub:</h3>
-              <pre class="prettyprint">git push origin master</pre>
+              <p>Be sure to .gitignore the config.js file:</p>
+              <pre class="prettyprint">echo "js/config.js" > .gitignore<br>git add  .<br>git commit -m 'ready to go'<br>git push origin master</pre>
+              <p>Your app will be synced to you Singly account automatically.</p>
             </li>
           </ul>
         </li>
-        <li><h2>Step 3: <a class="orange" href="/linktothepublishpage">Publish your app</a> to the Singly App Gallery!</h2>
+        <li><h2>Step 3: Publish your app to the Singly App Gallery!</h2>
+          <p>Once your app is synced to your Singly account, it will show up in the "Your Apps" section in the top left hand corner of the screen. Click on the app, make sure everything is working, and then click the PUBLISH button in the app header.</p>
+          <br>
+          <p>For more info, see <a class="orange" href="publish">the full publishing documentation</a></p>
         </li>
       </ul>
 
