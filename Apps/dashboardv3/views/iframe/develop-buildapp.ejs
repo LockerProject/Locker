@@ -76,7 +76,18 @@
         <li><h2>Step 2: Prepare to publish</h2>
           <ul>
             <li><h3>Add a package.json file</h3>
-              <p></p>
+              <p>The package.json file in the root directory of your app specifies some basic info about your app. Minimally, you need at least these fields populated:</p>
+<pre class="prettyprint">
+{
+  "repository": {
+    "title": "Upside Down Photos",
+    "description": "See all my photo, but upside down!",
+    "type": "app",
+    "static": true
+  }
+}
+</pre>
+              <p>For more info about the package.json file, see <a class="orange" href="/publish">this doc</a>.
             </li>
             <li><h3>Push to GitHub:</h3>
               <pre class="prettyprint">git push origin master</pre>
