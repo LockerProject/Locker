@@ -81,8 +81,10 @@ var loadApp = function(info) {
   } else if (app === "Publish") {
     $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
     $('#appHeader').hide();
-  } else if (app === "Develop") {
-    $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop');
+  } else if (info.topSection === "Develop") {
+    if (info.subSection === "BuildAnApp") {
+        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-buildapp');
+    }
   } else if (app === "connect") {
     $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
   } else {
