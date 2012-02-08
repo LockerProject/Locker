@@ -354,6 +354,24 @@ var renderDevelopApiExplorer = function(req, res) {
     });
 };
 
+var renderDevelopExampleApps = function(req, res) {
+    res.render('iframe/develop-exampleapps', {
+        layout: false
+    });
+};
+
+var renderDevelopChatWithTheTeam = function(req, res) {
+    res.render('iframe/develop-chatwiththeteam', {
+        layout: false
+    });
+};
+
+var renderDevelopTemplatesIcons = function(req, res) {
+    res.render('iframe/develop-templatesicons', {
+        layout: false
+    });
+};
+
 var registryApp = function(req, res) {
     request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
         var app = JSON.parse(body);
@@ -587,6 +605,9 @@ app.get('/allApps', renderApps);
 app.get('/develop', renderDevelop);
 app.get('/develop-buildapp', renderDevelopBuildApp);
 app.get('/develop-apiexplorer', renderDevelopApiExplorer);
+app.get('/develop-exampleapps', renderDevelopExampleApps);
+app.get('/develop-chatwiththeteam', renderDevelopChatWithTheTeam);
+app.get('/develop-templatesicons', renderDevelopTemplatesIcons);
 
 app.get('/appGallery', renderAppGallery);
 
