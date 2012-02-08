@@ -28,3 +28,8 @@ h2 {
 .develop-nav-column div { 
 	margin: 25px; 
 }
+
+.navitem-selected {
+  font-weight: bold;
+  color: #29ABE2 !important;
+}
