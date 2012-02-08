@@ -92,6 +92,12 @@ $(document).ready(function() {
       $('#connect-github').addClass('hidden');
     });
   });
+  $('body').delegate('.oauthLink', 'click', function() {
+    var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
+    var popup = window.open('https://' + window.location.host + '/auth/github', "account", options);
+    popup.focus();
+    return false;
+  });
 });
 </script>
 </html>
