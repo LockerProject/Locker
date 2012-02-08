@@ -23,12 +23,7 @@ $(document).ready(function() {
     return false;
   });
 
-  $('body').delegate('.oauthLink','click', function(e) {
-    var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
-    var popup = window.open($(this).attr('href'), "account", options);
-    popup.focus();
-    return false;
-  });
+  $('body').delegate('.oauthLink','click', Locker.connectService);
 
   $('.your-apps').click(function() {
     $('.blue').removeClass('blue');

@@ -3,19 +3,14 @@ $.cookie("firstvisit", true, {path: '/' });
 var profileTimeout;
 var hasTwitterOrFacebook = false;
 
+
 $(function() {
     $(".connect-button-link").click(function(e) {
         e.preventDefault();
         showHiddenConnectors();
     });
 
-    //copied from dashboard.js
-    $('body').delegate('.oauthLink','click', function(e) {
-      var options = "width=" + $(this).data('width') + ",height=" + $(this).data('height') + ",status=no,scrollbars=no,resizable=no";
-      var popup = window.open($(this).attr('href'), "account", options);
-      popup.focus();
-      return false;
-    });
+    $('body').delegate('.oauthLink','click', Locker.connectService);
 
     if ($('.sidenav-items.synclets-connected', window.parent.document).length > 0) {
         showAllConnectors();
