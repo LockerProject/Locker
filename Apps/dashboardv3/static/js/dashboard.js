@@ -53,11 +53,11 @@ var loadApp = function(info) {
         $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
     } else if (info.topSection === "Settings") {
         if (info.subSection === "Connections") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-connectors');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-connectors');
         } else if (info.subSection === "AccountInformation") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-account');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-account');
         } else if (info.subSection === "APIKey") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/settings-api');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-api');
         } else {
             alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
         }
@@ -65,20 +65,20 @@ var loadApp = function(info) {
         $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
     } else if (info.topSection === "Develop") {
         if (info.subSection === "BuildAnApp") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-buildapp');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-buildapp');
         } else if (info.subSection === "ApiExplorer") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-apiexplorer');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-apiexplorer');
         } else if (info.subSection === "Publishing") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-publishing');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-publishing');
         } else if (info.subSection === "ExampleApps") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-exampleapps');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-exampleapps');
         } else if (info.subSection === "ChatWithTheTeam") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-chatwiththeteam');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-chatwiththeteam');
         } else if (info.subSection === "TemplatesIcons") {
-            $("#appFrame")[0].contentWindow.location.replace('/Dashboard/develop-templatesicons');
+            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-templatesicons');
         }
     } else if (app === "connect") {
-        $("#appFrame")[0].contentWindow.location.replace('/Dashboard/connect');
+        $("#appFrame")[0].contentWindow.location.replace('/dashboard/connect');
     } else {
         handleApp(app);
     }
