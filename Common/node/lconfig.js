@@ -46,6 +46,7 @@ exports.load = function(filepath) {
         "helloplaces:Apps/HelloPlaces",
         "linkalatte:Apps/LinkaLatte",
         "contactsviewer:Apps/MergedContacts",
+        "devdocs:Apps/DevDocs",
         "photosviewer:Apps/PhotosViewer",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
