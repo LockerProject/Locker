@@ -23,7 +23,6 @@ $(function() {
     }
     
     $(".develop-nav-column div a, a.iframeLink").click(function(e) {
-      console.error("DEBUG: e", e);
         e.preventDefault();
         window.parent.location.replace($(this).attr('href'));
     });
