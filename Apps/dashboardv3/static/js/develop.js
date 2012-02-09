@@ -28,6 +28,12 @@ $(function() {
         if (href.indexOf('#') === 0) window.parent.location.hash = href;
         else window.parent.location.replace(href);
     });
+
+    $('.lazyload').each(function(i, el) {
+        el = $(el);
+        $.get(el.data('src'), function(r) { el.html(r); });
+    });
+
 });
 
 

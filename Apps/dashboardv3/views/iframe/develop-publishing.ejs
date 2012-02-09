@@ -2,17 +2,18 @@
 
 <html>
   <head>
-    <%- partial('header_partial') %>
+    <%- partial("header_partial") %>
     <link rel="stylesheet" href="css/develop.css" />
     <script src="js/develop.js"></script>
     <script src="js/locker.js"></script>
     <script src="js/connect.js"></script>
   </head>
   <body>
-    <content class="body">
-      <div id="main-header-1">
-        <h1>Publishing</h1>
-        <%- partial('iframe/developnav_partial') %>
-    </content>
+    <div id="main-header-1">
+      <h1>Publishing</h1>
+      <%- partial("iframe/developnav_partial") %>
+      <div id="publishing-content" class="lazyload"
+           data-src="/Me/devdocs/package.html" />
+    </div>
   </body>
 </html>

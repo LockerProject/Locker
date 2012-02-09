@@ -27,13 +27,13 @@ h3 {
 }
 
 .develop-nav-column {
-	width: 200px; 
+	width: 200px;
 	height: 160px;
 	float: left;
 }
 
-.develop-nav-column div { 
-	margin: 25px; 
+.develop-nav-column div {
+	margin: 25px;
 }
 
 .navitem-selected {
