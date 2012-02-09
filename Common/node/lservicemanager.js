@@ -128,13 +128,11 @@ exports.mapUpsert = function (file) {
     logger.verbose("upsert request for "+file);
     try {
         js = JSON.parse(fs.readFileSync(file, 'utf8'));
-        if(!js) throw new Error("no data");
-        // in package.json files our manifest data is in 'repository', TODO TECH DEBT CLEANUP
-        if(!js.handle && js.repository) {
-            var version = js.version;
-            js = js.repository;
-            js.version = version; // at least preserve native package version
-        }
+        if(!js || !js.repository) throw new Error("missing or invalid data");
+        // flatten into one, repository primary
+        var repo = js.repository;
+        delete js.repository;
+        lutil.extend(true, js, repo);
         if(!js.handle) throw new Error("no handle");
         js.handle = js.handle.toLowerCase(); // sanity
         // synclets are in their own file, extend them in too

@@ -15,11 +15,6 @@ describe 'dashboard' do
     within_frame 'appFrame' do
       page.should have_content('Build an HTML5 web app')
     end
-  end
-  
-  it 'should allow people to access the develop/API Explorer interface' do
-    visit '/'
-    click_link 'Develop'
     within_frame 'appFrame' do
       click_link 'API Explorer'
       within_frame 'appFrame' do
