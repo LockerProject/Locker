@@ -11,8 +11,13 @@ $(function () {
     });
 
     $("#showToken").click(function(e) {
-      $("#apiToken").val(info.apiToken);
+        $("#apiToken").val(info.apiToken);
     });
+
+    if (info.optin === 'false') {
+        $('#settings_analytics_optedout').removeClass('hidden');
+        $('#settings_analytics').addClass('hidden');
+    }
 
     $("#resetToken").click(function(e) {
       $.jsonp({url : info.externalHost + '/users/me/resetApiToken',
