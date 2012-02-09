@@ -48,6 +48,12 @@ exports.syncRepos = function(cached, callback) {
                     request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                         if(err || !tree || !tree.tree) return cb();
                         syncRepo(repo, tree.tree, function(err) {
+                            if(err)
+                            {
+                                delete cached[repo.id]; // invalidate the cache, it never sync'd
+                                console.error(err);
+                                return cb();
+                            }
                             // make sure package.json is safe, set some defaults!
                             pkg.repository.handle = repo.id.replace("/", "-").toLowerCase();
                             pkg.name = pkg.repository.handle;
@@ -96,12 +102,18 @@ function syncRepo(repo, tree, callback)
         nfs.mkdir(repo.id + "/" + t.path, 0777, true, cb);
     }, function(){
         // then the blobs
+        var errors = [];
         async.forEachSeries(tree, function(t, cb){
             if(t.type != "blob") return cb();
             if(existing[t.path] == t.sha) return cb(); // no changes
             request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+t.path, encoding: 'binary', headers:auth.headers}, function(err, resp, body) {
                 // logger.debug(resp.statusCode + " for "+ t.path);
-                if(err || !resp || resp.statusCode != 200) {t.sha = ""; return cb(); } // don't save the sha so it gets retried again
+                if(err || !resp || resp.statusCode != 200) {
+                    // don't save the sha so it gets retried again
+                    errors.push(repo.id+": error fetching "+t.path+" status code "+(resp ? resp.statusCode : 0)+" body "+body);
+                    t.sha = "";
+                    return cb();
+                }
                 if (body) {
                     fs.writeFile(repo.id + "/" + t.path, body, 'binary', cb);
                 } else {
@@ -110,7 +122,7 @@ function syncRepo(repo, tree, callback)
             });
         }, function(){
             fs.writeFile(repo.id+".tree.json", JSON.stringify(tree));
-            callback();
+            callback(errors.length > 0 ? errors : null);
         });
     });
 }
