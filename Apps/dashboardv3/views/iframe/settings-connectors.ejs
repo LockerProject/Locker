@@ -18,12 +18,12 @@
               <span class="synclet-name"><%= connectors[i].repository.title %></span>
             </div>
             <% if (connectors[i].hasOwnProperty('authed')) { %>
-             <input class="action-button disabled" value="Connected" />
+              <span class="action-button disabled">Connected</span>
             <% } else { %>
-            <input class="oauthLink action-button" value="Connect"
+            <span class="oauthLink action-button"
                data-provider="<%=connectors[i].repository.handle%>"
                data-width="<%= connectors[i].repository.oauthSize.width %>"
-               data-height="<%= connectors[i].repository.oauthSize.height %>" />
+               data-height="<%= connectors[i].repository.oauthSize.height %>">Connect</span>
              <% } %>
              <% if (connectors[i].hasOwnProperty('username')) { %>
                <div class="synclet-username"><%= connectors[i].username %></div>
