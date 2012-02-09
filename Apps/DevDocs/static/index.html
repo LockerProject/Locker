@@ -27,17 +27,17 @@
         <img class="synclet-logo" src="/dashboard/img/icons/32px/github.png">
         <span class="synclet-name">GitHub</span>
       </div>
-      <input class="oauthLink action-button" value="Connect" data-provider="github" data-width="1000" data-height="1000">
+      <span class="oauthLink action-button" data-provider="github" data-width="1000" data-height="1000">Connect</span>
      <div class="gets-list">Gets: &nbsp;Contacts</div>
     </li>
   </li>
-  
+
   <li><h2>Step 1: Build Your App</h2>
     <ul>
       <li><h3>Create a new repo on your local machine</h3>
         <p>(for help with this, checkout <a class="orange" href="http://help.github.com/create-a-repo/">GitHub's excellent doc</a>)</p>
       </li>
-  
+
       <li><h3>Add an index.html file</h3>
         <p>For now, just put something simple in there to make sure everything is working:</p>
 <pre class="prettyprint">&lt;html&gt;
@@ -58,16 +58,16 @@
   &lt;/body&gt;
 &lt;/html&gt;</pre>
       </li>
-  
+
       <li><h3>Add a js/config.js</h3>
         <p>This enables you to connect your app to Singly via your <a class="orange" href="https://singly.com/users/me/settings" target="_blank">API token</a> while developing on your local machine.</p>
         <pre id="token" class="prettyprint">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
       </li>
-      
+
       <li><h3>Open index.html in a browser (it works!)</h3></li>
     </ul>
   </li>
-  
+
   <li><h2>Step 2: Prepare to publish</h2>
     <ul>
       <li><h3>Add a package.json file</h3>
