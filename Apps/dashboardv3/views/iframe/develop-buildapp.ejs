@@ -55,24 +55,44 @@
               </p>
             </li>
 
+            <li><h3>Add a js/config.js</h3>
+              <p>
+                Before you can start, you need to add a config file with your 
+                <a class="orange iframeLink" href="settings#Settings-APIKey">API token</a> in it. This enables you to
+                develop on your local machine while using data directly from your Singly account.
+              </p>
+              <pre id="token" class="prettyprint">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
+            </li>
+
             <li><h3>Add an index.html file</h3>
-              <p>For now, just put something simple in there to make sure everything is working:</p>
+              <p>For now, just put something simple and fun in there to make sure everything is working:</p>
 <pre class="prettyprint">&lt;html&gt;
   &lt;head&gt;
+    &lt;style&gt;
+    img {
+      /* upside down! */
+      -webkit-transform: rotate(180deg);
+      -moz-transform: rotate(180deg);
+      max-width:300px;
+      max-height:300px;
+    }
+    &lt;/style&gt;
     &lt;script type="text/javascript"&gt;
-      // this value of baseUrl will be used on singly.com, the one set (later) in js/config.js
-      // will be used only for local development
-      var baseUrl = '/';
+      // this (empty) value of baseUrl will be used on singly.com (resulting in a relative URL for all API calls),
+      // the one set (later) in js/config.js will be used only for local development
+      var baseUrl = '';
     &lt;/script&gt;
     &lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"&gt;&lt;/script&gt;
     &lt;script src="js/config.js" type="text/javascript"&gt;&lt;/script&gt;
     &lt;script type="text/javascript"&gt;
       $(function() {
         // get some photos
-        $.getJSON(baseUrl + '/Me/photo', {limit:10}, function(photos) {
+        $.getJSON(baseUrl + '/Me/photos', {limit: 10}, function(photos) {
+          console.log('found ' + photos.length + ' photos');
           // add them to the DOM
           for(var i in photos) {
-            $('body').append('&lt;img src="' + photos[i].url + '"&gt;)
+            console.log('photo #' + i, photos[i]);
+            $('body').append('&lt;img src="' + photos[i].url + '"&gt;');
           }
         });
       });
@@ -83,19 +103,17 @@
 &lt;/html&gt;</pre>
             </li>
 
-            <li><h3>Add a js/config.js</h3>
-              <p>This enables you to connect your app to Singly via your
-                <a class="orange iframeLink" href="settings#Settings-APIKey">API token</a> while
-                developing on your local machine.
-              </p>
-              <pre id="token" class="prettyprint">baseUrl = 'https://api.singly.com/&lt;apikey&gt;';</pre>
+            <li><h3>Open index.html in a browser &mdash; it works!</h3>
+              <p>It probably looks really ugly, but that's where you come in &mdash; <a class="orange iframeLink" href="develop#Develop-ApiExplorer">take it from here!</a></p>
             </li>
-
-            <li><h3>Open index.html in a browser (it works!)</h3></li>
           </ul>
         </li>
 
         <li><h2>Step 2: Prepare to publish</h2>
+          <p>
+            Once you are ready to publish your app (or at least see it in your Singly account), you will need to add
+            a package file and push your work to GitHub &mdash; it will sync from GitHub to your Singly account automatically.
+          </p>
           <ul>
             <li><h3>Add a package.json file</h3>
               <p>
@@ -121,8 +139,11 @@
                  full publishing documentation</a>.
               </p>
             </li>
+            <li><h3>Add a screenshot</h3>
+              <p>Take a screenshot and put it in the root directory of your app as screenshot.png</p>
+            </li>
             <li><h3>Push to GitHub:</h3>
-              <p>Be sure to .gitignore the config.js file:</p>
+              <p>Commit your changes and push to GitHub. Be sure to add js/config.js to the .gitignore:</p>
               <pre class="prettyprint">echo "js/config.js" > .gitignore<br>git add  .<br>git commit -m 'ready to go'<br>git push origin master</pre>
               <p>Your app will be synced to you Singly account automatically.</p>
             </li>
