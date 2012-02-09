@@ -158,4 +158,23 @@ ul span {
   text-align: right;
 }
 
+#chatwiththeteam-content p {
+  padding: 10px 0;
+}
 
+#chatwiththeteam-content ul li {
+  padding: 5px 5px 3px;
+  border-bottom: 1px solid #EFEFEF;
+}
+#chatwiththeteam-content span {
+  display: inline-block;
+  width: 100px;
+  margin-right: 20px;
+  text-align: right;
+}
+#templatesicons-content img {
+  float: right;
+}
+#templatesicons-content a {
+  color: #F7931E;
+}
