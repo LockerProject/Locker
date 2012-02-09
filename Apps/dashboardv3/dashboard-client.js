@@ -291,7 +291,8 @@ var renderConnect = function(req, res) {
         res.render('iframe/connect', {
             layout: false,
             numInstalled: numInstalled,
-            connectors: connectors
+            connectors: connectors,
+            dashboard: lconfig.dashboard
         });
     });
 };
@@ -550,17 +551,17 @@ var getSidebarData = function(callback) {
             getInstalledConnectors(function(err, result) {
                 parallelCb(err, result);
             });
-        }     
+        }
     },
     function(err, results) {
         return callback({
             installedApps: results.installedAppsData,
             myApps: results.myAppsData,
             connectors: results.connectorsData,
-            installedConnectors: results.installedConnectorsData 
+            installedConnectors: results.installedConnectorsData
         });
     });
-}
+};
 
 var getFilteredApps = function(filterFn, callback) {
     locker.mapType('app', function(err, map) {
