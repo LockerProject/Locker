@@ -69,7 +69,8 @@ app.configure(function() {
 function checkInstalled(req, res, next) {
     if(connectSkip) return next();
     getInstalledConnectors(function(err, installedConnectors) {
-        if (installedConnectors.length === 0) {
+        // We ignore github since it's semi special and often presetup connector
+        if (installedConnectors.length === 0 || (installedConnectors.length == 1 && installedConnectors[0].repository.handle == "github")) {
             return res.redirect(lconfig.externalBase + '/dashboard/explore#Explore-connect');
         } else {
             connectSkip = true;
