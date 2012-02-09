@@ -19,7 +19,7 @@ $(function() {
         parent.window.location.replace('/');
     });
 
-    $('.synclets-list li a').each(function(index, item) {
+    $('.synclets-list li input').each(function(index, item) {
         var that = $(this);
         if (that.attr('data-provider') === 'twitter' || that.attr('data-provider') === 'facebook') {
             that.parent().fadeIn();
@@ -41,7 +41,7 @@ $(function() {
       }
     });
 
-    // if apikeys doens't have twitter/facebook, just show everything
+    // if apikeys doesn't have twitter/facebook, just show everything
     if (hasTwitterOrFacebook === false) {
         showAllConnectors();
     }
@@ -49,13 +49,15 @@ $(function() {
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
-    $('.oauthLink img').each(function(index) {
-        if ($(this).parent().attr('data-provider') === provider) {
-            $(this).attr('src', 'img/connected.png');
+    $('.oauthLink').each(function(index) {
+        if ($(this).attr('data-provider') === provider) {
+            $(this).removeClass('oauthLink');
+            $(this).addClass('disabled');
+            $(this).val('Connected');
         }
     });
 
-    $('.sidenav-items.synclets-connected', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
+    $('.sidenav-items.synclets.connect', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
     showHeaderTwo();
     showAllConnectors();
     updateUserProfile();
@@ -64,6 +66,10 @@ var syncletInstalled = function(provider) {
 var showHiddenConnectors = function() {
     showHeaderTwo();
     $(".hideable").fadeIn();
+};
+
+var showAllConnectors = function() {
+    $(".synclets-list li").fadeIn();
 };
 
 var showHeaderOne = function() {
@@ -78,10 +84,6 @@ var showHeaderTwo = function() {
         $("#main-header-1").hide();
         $("#main-header-2").show();
     }
-};
-
-var showAllConnectors = function() {
-    $(".synclets-list li").fadeIn();
 };
 
 var updateUserProfile = function() {
@@ -114,4 +116,3 @@ var updateUserProfile = function() {
         }
     }, 500);
 };
-
