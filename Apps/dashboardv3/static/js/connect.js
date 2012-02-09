@@ -1,18 +1,20 @@
 var profileTimeout;
 var hasTwitterOrFacebook = false;
 
-
 $(function() {
-    $(".connect-button-link").click(function(e) {
+    // a guard in case any other pages (like develop) load this JS file
+    if (window.parent.location.hash === '#Explore-connect') {
+        $('.nav-section', window.parent.document).fadeOut();
+    }
+
+    $(".oauthLink.action-button").click(function(e) {
         e.preventDefault();
         showHiddenConnectors();
     });
 
     $('body').delegate('.oauthLink','click', Locker.connectService);
 
-    if ($('.sidenav-items.synclets-connected', window.parent.document).length > 0) {
-        showAllConnectors();
-    }
+    //updateIfConnected();
 
     $('#start-exploring-link').click(function(e) {
         e.preventDefault();
@@ -80,11 +82,24 @@ var showHeaderOne = function() {
 };
 
 var showHeaderTwo = function() {
+    $('.nav-section', window.parent.document).fadeIn();
+
     if ($("#main-header-1").is(":visible")) {
         $("#main-header-1").hide();
         $("#main-header-2").show();
     }
 };
+
+/*
+var updateIfConnected = function() {
+    if ($('.sidenav-items.synclets.connect img', window.parent.document).length === 0) {
+        $('.nav-section', window.parent.document).fadeOut();
+    } else {
+        $('.nav-section', window.parent.document).fadeIn();
+        showAllConnectors();
+    }
+}*/
+
 
 var updateUserProfile = function() {
 

@@ -83,6 +83,9 @@ exports.load = function(filepath) {
 //    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.quiesce = config.quiesce || 650000;
+
+    config.dashboard = config.dashboard || {};
+    config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
 
     // load trusted public keys
@@ -96,8 +99,7 @@ exports.load = function(filepath) {
             exports.keys.push(fs.readFileSync(path.join(kdir, key)));
         });
     }
-
-}
+};
 
 function setBase() {
     exports.lockerBase = 'http://' + exports.lockerHost +
