@@ -423,7 +423,7 @@ exports.publish = function(arg, callback) {
                         var pi = {syncletToRun:{}};
                         pi.auth = serviceManager.map('github').auth;
                         pi.syncletToRun.posts = [];
-                        var issue = {'title':updated.name+'@'+updated.version, 'description':'Auto-submission to have this published.'};
+                        var issue = {'title':updated.name+'@'+updated.version, 'body':'Auto-submission to have this published.'};
                         issue.repo = 'Singly/apps';
                         //issue.labels = updated.name.split('-');
                         //issue.labels.push('App');

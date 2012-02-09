@@ -34,7 +34,7 @@ console.log(info);
                     $("#publishedInfo p").text("You successfully submitted \"<%=app.repository.title%>\" to be published.  You can track its status on Github.");
                     $("#publishedInfo").show();
                     $("#publishedInfo a").show();
-                    $("#publishedInfo .issueLink").attr("href", info.issue.html_url).text(info.issue.html_url);
+                    $("#publishedInfo .issueLink").attr("href", info.issue.html_url).text(info.issue.html_url).attr("target", "_blank");
                 }
             }).error(function() {
                 $("#submitPublish").removeAttr("disabled");
