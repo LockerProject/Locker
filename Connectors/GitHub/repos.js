@@ -59,6 +59,7 @@ exports.syncRepos = function(cached, callback) {
                             pkg.name = pkg.repository.handle;
                             pkg.repository.url = 'https://github.com/' + repo.id;
                             if(!pkg.author) pkg.author = auth.profile.name + ' <'+auth.profile.email+'>';
+                            if(!pkg.version) pkg.version = "0.0.0";
                             if(!pkg.repository.title) pkg.repository.title = repo.name;
                             if(!pkg.repository.hasOwnProperty('static')) pkg.repository.static = true;
                             if(!pkg.repository.hasOwnProperty('type')) pkg.repository.type = "app";
