@@ -207,22 +207,20 @@ locker.get('/core/:svcId/at', function(req, res) {
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
     // ensure the ending slash - i.e. /Me/foo ==>> /Me/foo/
     if(!req.params[1]) {
-        var url = "/Me/" + req.params[0];
-        if (!req.params[1]) {
-            url += "/"
-        } else {
-            url += req.params[1];
-        }
+        var handle = req.params[0];
+        var service = serviceManager.map(handle);
+        //rebuild the url with a / after the /Me/<handle>
+        var url = "/Me/" + handle + "/";
         var qs = querystring.stringify(req.query);
-        if (qs.length > 0) {
-            url += "?" + qs
+        if (qs.length > 0) url += "?" + qs;
+        if(service && service.type === 'app') {
+            res.header("Location", url);
+            return res.send(302);
         }
-        res.header("Location", url);
-        res.send(302);
-    } else {
-        logger.verbose("GET proxy of " + req.originalUrl);
-        proxyRequest('GET', req, res, next);
+        req.url = url;
     }
+    logger.verbose("GET proxy of " + req.originalUrl);
+    proxyRequest('GET', req, res, next);
 });
 
 // all posts just pass
