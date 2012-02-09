@@ -56,6 +56,7 @@ var syncletInstalled = function(provider) {
             $(this).removeClass('oauthLink');
             $(this).addClass('disabled');
             $(this).val('Connected');
+            $(this).html('Connected');
         }
     });
 
