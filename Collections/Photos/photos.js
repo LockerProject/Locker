@@ -81,32 +81,28 @@ app.get("/since", function(req, res) {
 });
 
 app.get("/image/:photoId", function(req, res) {
-    if (!req.params.photoId) {
+    getImageHelper(req.params.photoId, "url", req.query.proxy, res);
+});
+
+app.get("/thumbnail/:photoId", function(req, res) {
+    getImageHelper(req.params.photoId, "thumbnail", req.query.proxy, res);
+});
+
+function getImageHelper(id, field, proxy, res) {
+    if (!id) {
         res.writeHead(500);
         res.end("No photo id supplied");
         return;
     }
-    dataStore.get(req.params.photoId, function(error, data) {
-        if (error || !data || !data.url) {
-            res.writeHead(500);
-            res.end(error);
-        } else {
-            res.writeHead(302, {"location":data.url});
-            res.end("");
-            /*
-            request.get({url:data.url}, function(error, resp, body) {
-                if (error) {
-                    res.writeHead(500);
-                    res.end(error);
-                } else {
-                    res.writeHead(200, resp.headers);
-                    res.end(body);
-                }
-            });
-            */
-        }
-    })
-});
+    dataStore.get(id, function(error, data) {
+        if (error || !data || !data[field]) return res.send(error||"no data", 500);
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "X-Requested-With");
+        if(proxy) return request.get({url:data[field]}).pipe(res);
+        res.writeHead(302, {"location":data[field]});
+        return res.end("");
+    });
+};
 
 app.get('/update', function(req, res) {
     sync.gatherPhotos(function(){
