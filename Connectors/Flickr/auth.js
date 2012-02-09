@@ -3,7 +3,7 @@ module.exports = {
         var client = require('flickr-js')(apiKeys.appKey, apiKeys.appSecret);
         var frob = req.param('frob');
         if(!frob) { //starting out
-            res.redirect(client.getAuthURL('read'));
+            res.send('<script> window.location = "' + client.getAuthURL('read'); + '"</script>');
         } else { //finishing
             client.getTokenFromFrob(frob, function(err, auth) {
                 if(err) return done(err);

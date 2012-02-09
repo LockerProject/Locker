@@ -21,7 +21,7 @@
         "dropbox": "=0.3.3",
         "facebook-js": "=1.0.0",
         "gdata-js": "=0.1.2",
-        "flickr-js":"=0.0.2",
+        "flickr-js":"=0.0.3",
         "soundcloud-js":"=0.0.1",
         "github": "=0.0.6",
         "imap": "=0.2.4",
