@@ -17,9 +17,7 @@ describe 'dashboard' do
     end
     within_frame 'appFrame' do
       click_link 'API Explorer'
-      within_frame 'appFrame' do
-        page.should have_content('API Explorer')
-      end
+      page.should have_content('API Explorer')
     end
   end
 

@@ -19,12 +19,14 @@ $(function() {
         case '#Develop-TemplatesIcons':
             $("#develop-nav-templatesicons").addClass('navitem-selected');
             break;
-        default:   
+        default:
     }
-    
+
     $(".develop-nav-column div a, a.iframeLink").click(function(e) {
         e.preventDefault();
-        window.parent.location.replace($(this).attr('href'));
+        var href = $(this).attr('href');
+        if (href.indexOf('#') === 0) window.parent.location.hash = href;
+        else window.parent.location.replace(href);
     });
 });
 
