@@ -69,10 +69,14 @@ app.get('/', function(req, res) {
     });
 });
 
+var updating = false;
 app.get('/update', function(req, res) {
+    if (udpating) { return res.send("Already updating..."); }
+    updating = true;
     sync.gatherContacts(function() {
-        res.send('updated');
+        updating = false;
     });
+    res.send("Update started");
 });
 
 app.post('/events', function(req, res) {
