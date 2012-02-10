@@ -36,18 +36,25 @@ h3 {
   font-weight: bold;
 }
 
-#apiexplorer-form {
-  margin: 30px 0 0 0;
+.description {
+  width: 600px;
+  margin: 20px 0 30px 0;
+  font-size: 20px;
+  color: #666;
 }
 
-li {
-  margin-left: 30px;
+#apiexplorer-form {
+  margin: 30px 0 0 0;
 }
 
 li p {
   font-size: 16px;
   margin: 0;
   max-width: 640px;
+}
+
+li li {
+  margin-left: 30px;
 }
 
 pre.prettyprint {
@@ -83,4 +90,15 @@ pre.prettyprint {
 }
 #templatesicons-content a {
   color: #F7931E;
+}
+
+.github-step .connect {
+  margin-top: 10px;
+  padding: 10px 0 10px 40px;
+  background: transparent url('/dashboard/img/icons/32px/github.png') no-repeat left center;
+}
+.github-step .synclet-name {
+  display: inline-block;
+  position: relative;
+  margin-right: 10px;
 }
