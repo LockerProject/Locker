@@ -20,25 +20,20 @@ h3 {
   font-weight:bold;
 }
 
-#develop-nav {
+.develop-nav {
   width: 100%;
   background: #F2F2F2;
-  height: 160px;
 }
-
-.develop-nav-column {
-	width: 200px;
-	height: 160px;
+.develop-nav ul {
+	width: 250px;
 	float: left;
 }
-
-.develop-nav-column div {
-	margin: 25px;
+.develop-nav li {
+  margin: 25px;
 }
-
-.navitem-selected {
+.develop-nav .selected {
+  color: #29ABE2;
   font-weight: bold;
-  color: #29ABE2 !important;
 }
 
 #apiexplorer-form {

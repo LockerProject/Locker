@@ -1,38 +1,21 @@
 $(function() {
-    $("#develop-nav-column div").removeClass('selected');
-    switch (window.parent.location.hash) {
-        case '#Develop-BuildAnApp':
-            $("#develop-nav-buildanapp").addClass('navitem-selected');
-            break;
-        case '#Develop-ApiExplorer':
-            $("#develop-nav-apiexplorer").addClass('navitem-selected');
-            break;
-        case '#Develop-Publishing':
-            $("#develop-nav-publishing").addClass('navitem-selected');
-            break;
-        case '#Develop-ExampleApps':
-            $("#develop-nav-exampleapps").addClass('navitem-selected');
-            break;
-        case '#Develop-ChatWithTheTeam':
-            $("#develop-nav-chatwiththeteam").addClass('navitem-selected');
-            break;
-        case '#Develop-TemplatesIcons':
-            $("#develop-nav-templatesicons").addClass('navitem-selected');
-            break;
-        default:
-    }
+  var section = window.parent.location.hash.split('-')[1];
+  if (section) {
+    $('#develop-nav .' + section.toLowerCase()).addClass('selected');
+  }
 
-    $(".develop-nav-column div a, a.iframeLink").click(function(e) {
-        e.preventDefault();
-        var href = $(this).attr('href');
-        if (href.indexOf('#') === 0) window.parent.location.hash = href;
-        else window.parent.location.replace(href);
-    });
+  $('#develop-nav a, a.iframeLink').click(function(e) {
+    e.preventDefault();
+    var link = $(this);
+    var href = link.attr('href');
+    if (href.indexOf('#') === 0) window.parent.location.hash = href;
+    else window.open(href, '_blank').focus();
+  });
 
-    $('.lazyload').each(function(i, el) {
-        el = $(el);
-        $.get(el.data('src'), function(r) { el.html(r); });
-    });
+  $('.lazyload').each(function(i, el) {
+    el = $(el);
+    $.get(el.data('src'), function(r) { el.html(r); });
+  });
 
 });
 
@@ -44,7 +27,7 @@ function isGitHubConnected(callback) {
 }
 
 function getGitHubProfile(callback) {
-  $.getJSON("/map/profiles", function(profiles) {
+  $.getJSON('/map/profiles', function(profiles) {
     for(var i in profiles) if(i.indexOf('contact://github/') === 0) return callback(profiles[i]);
     return callback();
   });
