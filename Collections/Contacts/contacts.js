@@ -71,7 +71,7 @@ app.get('/', function(req, res) {
 
 var updating = false;
 app.get('/update', function(req, res) {
-    if (udpating) { return res.send("Already updating..."); }
+    if (updating) { return res.send("Already updating..."); }
     updating = true;
     sync.gatherContacts(function() {
         updating = false;
