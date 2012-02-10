@@ -347,7 +347,7 @@ locker.get("/diary", function(req, res) {
 
 locker.get('/core/revision', function(req, res) {
     fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
-        console.log(err);
+        if (err) return logger.error(err);
         if (doc) res.send(JSON.parse(doc));
         else res.send("unknown");
     });
