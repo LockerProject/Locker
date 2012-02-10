@@ -1,6 +1,7 @@
-GIT_REVISION=$(shell git rev-parse --short --default HEAD)
+export GIT_REVISION?=$(shell git rev-parse --short --default HEAD)
 # if not provided by Jenkins, then just use the gitrev
-BUILD_NUMBER?=git-$(GIT_REVISION)
+export BUILD_NUMBER?=git-$(GIT_REVISION)
+
 TESTS = $(shell find test -name "*.test.js")
 MOCHA = ./node_modules/.bin/mocha
 RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
