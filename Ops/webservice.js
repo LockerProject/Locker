@@ -264,7 +264,7 @@ function proxyRequest(method, req, res, next) {
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
         var fileUrl = url.parse(ppath);
-        if(fileUrl.pathname.indexOf("..") >= 0)
+        if(fileUrl.pathname.indexOf("/..") >= 0)
         { // extra sanity check
             return res.send(404);
         }
