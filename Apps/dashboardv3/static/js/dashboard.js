@@ -140,7 +140,12 @@ function doAppHeader(appName) {
                 registry.getMyAuthoredApps(function(myAuthoredApps) {
                     var mine = myAuthoredApps[appName];
                     if (mine) app.author = registry.localAuthor;
-                    dust.render('appHeader', {app:app, connected:connected, unconnected:unconnected, mine:mine}, function(err, appHtml) {
+                    dust.render('appHeader', {
+                      app:app,
+                      connected:connected,
+                      unconnected:unconnected,
+                      mine:mine
+                    }, function(err, appHtml) {
                         $('#appHeader').html(appHtml);
                         $('#appHeader').show();
                     });

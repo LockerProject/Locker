@@ -1,9 +1,9 @@
 var fs = require("fs")
-  , path = require("path")
-  , im = require('imagemagick')
-  , url = require("url")
-  , async = require("async")
-  , request = require("request");
+, path = require("path")
+, im = require('imagemagick')
+, url = require("url")
+, async = require("async")
+, request = require("request");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
@@ -62,7 +62,7 @@ exports.extend = function() {
 
         // Prevent never-ending loop
         if (target === copy)
-            continue;
+          continue;
 
         // Recurse if we're merging object literal values or arrays
         if (deep && copy && (isPlainObject(copy) || Array.isArray(copy))) {
@@ -71,7 +71,7 @@ exports.extend = function() {
           // Never move original objects, clone them
           target[name] = exports.extend(deep, clone, copy);
 
-        // Don't bring in undefined values
+          // Don't bring in undefined values
         } else if (typeof copy !== "undefined")
           target[name] = copy;
       }
@@ -84,55 +84,55 @@ exports.extend = function() {
 
 // Found on http://bonsaiden.github.com/JavaScript-Garden/#types.typeof
 exports.is = function(type, obj) {
-    var clas = Object.prototype.toString.call(obj).slice(8, -1);
-    return obj !== undefined && obj !== null && clas === type;
+  var clas = Object.prototype.toString.call(obj).slice(8, -1);
+  return obj !== undefined && obj !== null && clas === type;
 };
 
 exports.addAll = function(thisArray, anotherArray) {
-    if(!(thisArray && anotherArray && anotherArray.length))
-        return;
-    for(var i = 0; i < anotherArray.length; i++)
-        thisArray.push(anotherArray[i]);
+  if(!(thisArray && anotherArray && anotherArray.length))
+    return;
+  for(var i = 0; i < anotherArray.length; i++)
+    thisArray.push(anotherArray[i]);
 };
 
 exports.ucfirst = function(str) {
-    return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
+  return str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
 };
 
 exports.getPropertyInObject = function(jsonObject, propertyName, callback) {
 
-    var foundValues = [];
+  var foundValues = [];
 
-    function recurseObject(jsonObject, propertyName) {
-        if (exports.is("Object", jsonObject)) {
-            for (var m in jsonObject) {
-                if (jsonObject.hasOwnProperty(m)) {
-                    if (m === propertyName) {
-                        foundValues.push(jsonObject[m]);
-                    }
-                    else if (exports.is("Object", jsonObject[m])) {
-                        recurseObject(jsonObject[m], propertyName);
-                    }
-                    else if (exports.is("Array", jsonObject[m])) {
-                        for (var n=0; n<jsonObject[m].length; n++) {
-                            recurseObject(jsonObject[m][n], propertyName);
-                        }
-                    }
-                }
+  function recurseObject(jsonObject, propertyName) {
+    if (exports.is("Object", jsonObject)) {
+      for (var m in jsonObject) {
+        if (jsonObject.hasOwnProperty(m)) {
+          if (m === propertyName) {
+            foundValues.push(jsonObject[m]);
+          }
+          else if (exports.is("Object", jsonObject[m])) {
+            recurseObject(jsonObject[m], propertyName);
+          }
+          else if (exports.is("Array", jsonObject[m])) {
+            for (var n=0; n<jsonObject[m].length; n++) {
+              recurseObject(jsonObject[m][n], propertyName);
             }
+          }
         }
+      }
     }
-    recurseObject(jsonObject, propertyName);
-    callback(foundValues);
+  }
+  recurseObject(jsonObject, propertyName);
+  callback(foundValues);
 };
 
 // quick/dirty sanitization ripped from the Jade template engine
 exports.sanitize = function(term){
-    return String(term)
-        .replace(/&(?!\w+;)/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+  return String(term)
+    .replace(/&(?!\w+;)/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 };
 
 exports.trim = function(stringToTrim) {
@@ -146,87 +146,87 @@ exports.rtrim = function(stringToTrim) {
 };
 
 exports.atomicWriteFileSync = function(dest, data) {
-    var tmp = dest + '.tmp';
-    var bkp = dest + '.bkp';
-    var stat;
+  var tmp = dest + '.tmp';
+  var bkp = dest + '.bkp';
+  var stat;
 
-    try {
-        stat = fs.statSync(dest);
-    } catch (err) {
-    }
+  try {
+    stat = fs.statSync(dest);
+  } catch (err) {
+  }
 
-    // make a backup iff the destination file already exists
-    if (stat)
-        fs.writeFileSync(bkp, fs.readFileSync(dest));
+  // make a backup iff the destination file already exists
+  if (stat)
+    fs.writeFileSync(bkp, fs.readFileSync(dest));
 
-    // write out the new contents to a temp file
-    fs.writeFileSync(tmp, data);
+  // write out the new contents to a temp file
+  fs.writeFileSync(tmp, data);
 
-    // check if it worked
-    if(data.length && fs.statSync(tmp).size !== Buffer.byteLength(data, 'utf8')) throw new Error('atomic write error! file size !== data.length');
+  // check if it worked
+  if(data.length && fs.statSync(tmp).size !== Buffer.byteLength(data, 'utf8')) throw new Error('atomic write error! file size !== data.length');
 
-    // atomically rename the temp file into place
-    fs.renameSync(tmp, dest);
+  // atomically rename the temp file into place
+  fs.renameSync(tmp, dest);
 };
 
 // this is for node 0.4.x, it's built into path in node 0.6
 exports.relative = function(from, to) {
-    from = path.resolve(from).substr(1);
-    to = path.resolve(to).substr(1);
+  from = path.resolve(from).substr(1);
+  to = path.resolve(to).substr(1);
 
-    var fromParts = from.split('/');
-    var toParts = to.split('/');
+  var fromParts = from.split('/');
+  var toParts = to.split('/');
 
-    var length = Math.min(fromParts.length, toParts.length);
-    var samePartsLength = length;
-    for (var i = 0; i < length; i++) {
-        if (fromParts[i] !== toParts[i]) {
-            samePartsLength = i;
-            break;
-        }
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
     }
+  }
 
-    var outputParts = [];
-    for (var j = samePartsLength; j < fromParts.length; j++) {
-        outputParts.push('..');
-    }
+  var outputParts = [];
+  for (var j = samePartsLength; j < fromParts.length; j++) {
+    outputParts.push('..');
+  }
 
-    outputParts = outputParts.concat(toParts.slice(samePartsLength));
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
 
-    return outputParts.join('/');
+  return outputParts.join('/');
 };
 
 
 // processes a json newline stream, cbEach(json, callback) and cbDone(err) when done
 exports.streamFromUrl = function(url, cbEach, cbDone) {
-    var ended = false;
-    var q = async.queue(function(chunk, cb){
-        if (chunk === "") return cb();
-        var js;
-        try { js = JSON.parse(chunk); } catch (E) { return cb(); }
-        cbEach(js, cb);
-    },1);
-    var error;
-    var req = request.get({uri:url}, function(err){
-        if(err) error = err;
-        ended = true;
-        q.push(""); // this triggers the drain if there was no data, GOTCHA
-    });
-    var buff = "";
-    req.on("data",function(data){
-        buff += data.toString();
-        var chunks = buff.split('\n');
-        buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
-        chunks.forEach(q.push);
-    });
-    q.drain = function(){
-        if(!ended) return; // drain can be called many times, we only care when it's after data is done coming in
-        cbDone(error);
-    };
-    req.on("end",function(){
-        ended = true;
-        q.push(""); // this triggers the drain if there was no data, GOTCHA
-    });
+  var ended = false;
+  var q = async.queue(function(chunk, cb){
+    if (chunk === "") return cb();
+    var js;
+    try { js = JSON.parse(chunk); } catch (E) { return cb(); }
+    cbEach(js, cb);
+  },1);
+  var error;
+  var req = request.get({uri:url}, function(err){
+    if(err) error = err;
+    ended = true;
+    q.push(""); // this triggers the drain if there was no data, GOTCHA
+  });
+  var buff = "";
+  req.on("data",function(data){
+    buff += data.toString();
+    var chunks = buff.split('\n');
+    buff = chunks.pop(); // if was end \n, == '', if mid-stream it'll be a not-yet-complete chunk of json
+    chunks.forEach(q.push);
+  });
+  q.drain = function(){
+    if(!ended) return; // drain can be called many times, we only care when it's after data is done coming in
+    cbDone(error);
+  };
+  req.on("end",function(){
+    ended = true;
+    q.push(""); // this triggers the drain if there was no data, GOTCHA
+  });
 };
 
 
@@ -237,114 +237,135 @@ exports.streamFromUrl = function(url, cbEach, cbDone) {
  * @callback - function(err, success) that takes the respective strings for failure and success.
  */
 exports.fetchAndResizeImageURL = function (sourceUrl, rawFile, destFile, callback) {
-    request.get({uri: sourceUrl, encoding: 'binary'}, function (err, resp, body) {
-        if (err) return callback("Unable to download avatar from source URL: " + err);
+  request.get({uri: sourceUrl, encoding: 'binary'}, function (err, resp, body) {
+    if (err) return callback("Unable to download avatar from source URL: " + err);
 
-        fs.writeFile(rawFile, body, 'binary', function (err) {
-            if (err) return callback("Unable to save downloaded raw avatar: " + err);
+    fs.writeFile(rawFile, body, 'binary', function (err) {
+      if (err) return callback("Unable to save downloaded raw avatar: " + err);
 
-            im.resize({srcPath : rawFile
-                     , dstPath : destFile
-                     , width   : 48
-                     , height  : 48}
-                    , function (err, stdout, stderr) {
-                          if (err) return callback('Unable to convert avatar to 48x48 PNG: ' + err);
+      im.resize({srcPath : rawFile
+        , dstPath : destFile
+        , width   : 48
+        , height  : 48}
+        , function (err, stdout, stderr) {
+          if (err) return callback('Unable to convert avatar to 48x48 PNG: ' + err);
 
-                          return callback(null, 'avatar uploaded');
-                      });
+          return callback(null, 'avatar uploaded');
         });
     });
+  });
 };
 
 function idrsToServices(dict) {
-    var profileMap = {};
-    for (var idr in dict) {
-        var service = url.parse(idr).host;
-        if (profileMap[service]) {
-            profileMap[service].push(dict[idr]);
-        }
-        else {
-            profileMap[service] = [dict[idr]];
-        }
+  var profileMap = {};
+  for (var idr in dict) {
+    var service = url.parse(idr).host;
+    if (profileMap[service]) {
+      profileMap[service].push(dict[idr]);
     }
-    return profileMap;
+    else {
+      profileMap[service] = [dict[idr]];
+    }
+  }
+  return profileMap;
 }
 
 exports.avatarUrlFromMap = function (storagePath, lockerBase, callback) {
-    // always override if a local avatar exists
-    if (path.existsSync(path.join(storagePath, 'avatar.png'))) return callback(null, 'avatar.png');
+  // always override if a local avatar exists
+  if (path.existsSync(path.join(storagePath, 'avatar.png'))) return callback(null, 'avatar.png');
 
-    request.get({url:lockerBase + '/map/profiles'}, function (err, res, body) {
-        if (err) return callback(err);
+  request.get({url:lockerBase + '/map/profiles'}, function (err, res, body) {
+    if (err) return callback(err);
 
-        var profiles;
-        try {
-            profiles = JSON.parse(body);
-        }
-        catch (E) {
-            return callback(E);
-        }
+    var profiles;
+    try {
+      profiles = JSON.parse(body);
+    }
+    catch (E) {
+      return callback(E);
+    }
 
-        var profileMap = idrsToServices(profiles);
-        if (profileMap.twitter)    return callback(null, profileMap.twitter[0].profile_image_url_https);
-        if (profileMap.facebook)   return callback(null, 'http://graph.facebook.com/' + profileMap.facebook[0].username + '/picture');
-        if (profileMap.github)     return callback(null, profileMap.github[0].avatar_url);
-        if (profileMap.foursquare) return callback(null, profileMap.foursquare[0].photo);
-        if (profileMap.instagram)  return callback(null, profileMap.instagram[0].profile_picture);
-        if (profileMap.lastfm) {
-            var lastImages = profileMap.lastfm[0].image;
-            for (var i in lastImages) {
-                if (lastImages[i].size === 'small') return callback(null, lastImages[i]['#text']);
-            }
-        }
+    var profileMap = idrsToServices(profiles);
+    if (profileMap.twitter)    return callback(null, profileMap.twitter[0].profile_image_url_https);
+    if (profileMap.facebook)   return callback(null, 'http://graph.facebook.com/' + profileMap.facebook[0].username + '/picture');
+    if (profileMap.github)     return callback(null, profileMap.github[0].avatar_url);
+    if (profileMap.foursquare) return callback(null, profileMap.foursquare[0].photo);
+    if (profileMap.instagram)  return callback(null, profileMap.instagram[0].profile_picture);
+    if (profileMap.lastfm) {
+      var lastImages = profileMap.lastfm[0].image;
+      for (var i in lastImages) {
+        if (lastImages[i].size === 'small') return callback(null, lastImages[i]['#text']);
+      }
+    }
 
-        return callback('no avatar available');
-    });
+    return callback('no avatar available');
+  });
+};
+
+exports.parseAuthor = function(js) {
+  if (!js.author) return;
+  js.author = exports.strip(js.author);
+
+  if (js.author.indexOf('@') !== -1) {
+    var match = js.author.match(/(.*)\s*<(.*)>/);
+    if (match) {
+      js.authorName  = exports.strip(match[1]);
+      js.authorEmail = exports.strip(match[2]);
+    } else {
+      js.authorEmail = js.author;
+    }
+  } else {
+    js.authorName = js.author;
+  }
+};
+
+exports.strip = function(str) {
+  return str.replace(/^\s*|\s*$/g, '');
 };
 
 // creates an idr, type://network/context?id=account#id
 // context and account are optional
 exports.idrNew = function(type, network, id, context, account)
 {
-    var r = {slashes:true};
-    r.host = network;
-    r.pathname = (context) ? context : '/';
-    if(account) r.query = {id: account.toString()};
-    r.protocol = type;
-    if(id) r.hash = id.toString();
-    return url.format(r);
+  var r = {slashes:true};
+  r.host = network;
+  r.pathname = (context) ? context : '/';
+  if(account) r.query = {id: account.toString()};
+  r.protocol = type;
+  if(id) r.hash = id.toString();
+  return url.format(r);
 };
 /*
-IDR
+   IDR
 
-A simple way to store a rich extensible id structure as a parseable/serializeable string key, examples:
+   A simple way to store a rich extensible id structure as a parseable/serializeable string key, examples:
 
-require('url').parse('tweet://twitter/mention?id=jeremie#103976138702983168',true)
-{ protocol: 'tweet:',
-  slashes: true,
-  host: 'twitter',
-  hostname: 'twitter',
-  href: 'tweet://twitter/mention?id=jeremie#103976138702983168',
-  hash: '#103976138702983168',
-  search: '?id=jeremie',
-  query: { id: 'jeremie' },
-  pathname: '/mention' }
+   require('url').parse('tweet://twitter/mention?id=jeremie#103976138702983168',true)
+   { protocol: 'tweet:',
+   slashes: true,
+   host: 'twitter',
+   hostname: 'twitter',
+   href: 'tweet://twitter/mention?id=jeremie#103976138702983168',
+   hash: '#103976138702983168',
+   search: '?id=jeremie',
+   query: { id: 'jeremie' },
+   pathname: '/mention' }
 
-require('url').parse('post://facebook/wall?id=630347951#630347951_10150351352017952',true)
-{ protocol: 'post:',
-  slashes: true,
-  host: 'facebook',
-  hostname: 'facebook',
-  href: 'post://facebook/wall?id=630347951#630347951_10150351352017952',
-  hash: '#630347951_10150351352017952',
-  search: '?id=630347951',
-  query: { id: '630347951' },
-  pathname: '/wall' }
+   require('url').parse('post://facebook/wall?id=630347951#630347951_10150351352017952',true)
+   { protocol: 'post:',
+   slashes: true,
+   host: 'facebook',
+   hostname: 'facebook',
+   href: 'post://facebook/wall?id=630347951#630347951_10150351352017952',
+   hash: '#630347951_10150351352017952',
+   search: '?id=630347951',
+   query: { id: '630347951' },
+   pathname: '/wall' }
 
-IDR - TL;DR
+   IDR - TL;DR
 
-There are an innumerable amount of things that need to be "addressed" within the locker, and not just externally, but strong internal references to the actual local storage identifiers as well.  These addressible entities are not simple GUIDs either, they have a critical set of metadata that makes up their identity, most importantly the originating network, the type of entity it is on that network, and the unique identifier assigned to it by that network.  Often equally important is the context in which it was discovered from that network, the common example being a tweet, from twitter, encountered as a mention.  Other locally important attributes sometimes need to be tracked as well, such as the account id that the entity originated from.
+   There are an innumerable amount of things that need to be "addressed" within the locker, and not just externally, but strong internal references to the actual local storage identifiers as well.  These addressible entities are not simple GUIDs either, they have a critical set of metadata that makes up their identity, most importantly the originating network, the type of entity it is on that network, and the unique identifier assigned to it by that network.  Often equally important is the context in which it was discovered from that network, the common example being a tweet, from twitter, encountered as a mention.  Other locally important attributes sometimes need to be tracked as well, such as the account id that the entity originated from.
 
-All of these attributes are required to uniquely resolve a reference to an entity to the actual data, either locally (requiring the context and account bits) or globally (just the type, network, and id bits).  While programmatically each of these is independently important, as identifiers they need to be stored in a consistent way as a unique string for simple KV lookups/matching.  There is a standard and built-in library perfect for this job, URLs! They're also very familiar to read and the tools handle all the encoding, parsing, etc.
+   All of these attributes are required to uniquely resolve a reference to an entity to the actual data, either locally (requiring the context and account bits) or globally (just the type, network, and id bits).  While programmatically each of these is independently important, as identifiers they need to be stored in a consistent way as a unique string for simple KV lookups/matching.  There is a standard and built-in library perfect for this job, URLs! They're also very familiar to read and the tools handle all the encoding, parsing, etc.
 
 */

@@ -55,8 +55,8 @@ exports.init = function (sman, reg, callback) {
         installs.push(lconfig.ui);
         if(lconfig.ui.indexOf(':') != -1) lconfig.ui = lconfig.ui.substr(0,lconfig.ui.indexOf(':')); // only use name hereafter
     }
-    if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app) });
-    if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll) });
+    if(lconfig.apps) lconfig.apps.forEach(function(app){ installs.push(app); });
+    if(lconfig.collections) lconfig.collections.forEach(function(coll){ installs.push(coll); });
     async.forEachSeries(installs, function(id, cb){
         var arg = {};
         // allow a configurable name:path/to/it value for local installs
@@ -71,22 +71,22 @@ exports.init = function (sman, reg, callback) {
         if(serviceMap[id]) return cb();
         registry.install(arg, cb);
     }, callback);
-}
+};
 
 // return whole map or just one service from it
 exports.map = function(id) {
     if(id) return serviceMap[id];
     return serviceMap;
-}
+};
 
 // a way to signal that a specific service's data has changed and should be saved back to it's me.json
 exports.mapDirty = function(id) {
     if(!serviceMap[id]) return;
     // this could use a timer to just save once after a few second delay, if something is saving a lot quickly
-    var dir = path.join(lconfig.lockerDir, lconfig.me, id)
+    var dir = path.join(lconfig.lockerDir, lconfig.me, id);
     if(!path.existsSync(dir)) fs.mkdirSync(dir,0755);
     lutil.atomicWriteFileSync(path.join(dir, 'me.json'), JSON.stringify(serviceMap[id], null, 4));
-}
+};
 
 /**
 * Returns an array of the services that provide the specified types
@@ -117,7 +117,7 @@ exports.providers = function(types) {
         }
     }
     return services;
-}
+};
 
 
 // update or install this file into the map
@@ -173,7 +173,7 @@ exports.mapUpsert = function (file) {
     cleanLoad(js);
     levents.fireEvent('service://me/#'+js.handle, 'new', js);
     return js;
-}
+};
 
 // clean up any me json before loading into map
 cleanLoad = function(js)
@@ -182,10 +182,11 @@ cleanLoad = function(js)
     delete js.starting; // or starting
     js.uri = lconfig.lockerBase+"/Me/"+js.id+"/";
     js.externalUri = lconfig.externalBase+"/Me/"+js.id+"/";
+    lutil.parseAuthor(js);
     if(!js.version) js.version = 1;
     js.loaded = Date.now();
     exports.mapReload(js.id);
-}
+};
 
 // make sure this service's necessaries are loaded into the rest of the system
 exports.mapReload = function(id)
@@ -206,7 +207,7 @@ exports.mapReload = function(id)
         }
     }
     exports.mapDirty(js.id);
-}
+};
 
 
 //! Spawn a service instance
@@ -270,7 +271,7 @@ exports.spawn = function(serviceId, callback) {
         processInformation.mongo = {
             host: lconfig.mongo.host,
             port: lconfig.mongo.port
-        }
+        };
         processInformation.mongo.collections = svc.mongoCollections;
     }
 
@@ -367,7 +368,7 @@ exports.spawn = function(serviceId, callback) {
     svc.startingPid = app.pid;
     svc.last = Date.now();
     setTimeout(function() { quiesce(svc); }, lconfig.quiesce);
-}
+};
 
 function quiesce(svc)
 {
@@ -403,7 +404,7 @@ exports.shutdown = function(cb) {
         }
     }
     checkForShutdown();
-}
+};
 
 
 /* nothing uses this and it seems dangerously destructive
@@ -438,7 +439,7 @@ exports.uninstall = function(serviceId, callback) {
 */
 exports.isRunning = function(serviceId) {
     return serviceMap[serviceId] && serviceMap[serviceId].pid;
-}
+};
 
 function checkForShutdown() {
     if (!shuttingDown) return;
