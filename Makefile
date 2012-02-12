@@ -45,5 +45,6 @@ test-bindist: $(DISTFILE)
 
 clean:
 	rm -f "$(DISTFILE)" build.json tests/build.json
+	rm -rf node_modules
 
 .PHONY: build npm_modules build.json
