@@ -533,6 +533,8 @@ function adduser (username, password, email, cb) {
 // given a connector package in the registry, install it, and get the auth url for it to return
 function authIsAwesome(req, res) {
     var id = req.params.id;
+    var js = serviceManager.map(id);
+    if(js) return authRedir(js, req, res); // short circuit if already done
     if(!verify(regIndex[id]))
     {
         logger.error("package verification failed trying to auth "+id);
@@ -542,19 +544,25 @@ function authIsAwesome(req, res) {
         if(err) return res.send(err, 500);
         var js = serviceManager.map(id);
         if(!js) return res.send("failed to install :(", 500);
-        try {
-            var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
-        }catch(E){
-            return res.send(E, 500);
-        }
-        // oauth2 types redirect
-        if(authModule.authUrl) {
-            var url = authModule.authUrl + "&client_id=" + apiKeys[id].appKey + "&redirect_uri=" + lconfig.externalBase + "/auth/" + id + "/auth";
-            return res.redirect(url);
-        }
-        // everything else is pass-through (custom, oauth1, etc)
-        authIsAuth(req, res);
+        return authRedir(js, req, res);
     });
+}
+
+// helper for Awesome
+function authRedir(js, req, res)
+{
+    try {
+        var authModule = require(path.join(lconfig.lockerDir, js.srcdir, 'auth.js'));
+    }catch(E){
+        return res.send(E, 500);
+    }
+    // oauth2 types redirect
+    if(authModule.authUrl) {
+        var url = authModule.authUrl + "&client_id=" + apiKeys[js.id].appKey + "&redirect_uri=" + lconfig.externalBase + "/auth/" + js.id + "/auth";
+        return res.redirect(url);
+    }
+    // everything else is pass-through (custom, oauth1, etc)
+    authIsAuth(req, res);
 }
 
 // handle actual auth api requests or callbacks, much conflation to keep /auth/foo/auth consistent everywhere!
