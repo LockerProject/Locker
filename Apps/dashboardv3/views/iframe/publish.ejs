@@ -11,6 +11,13 @@ var hasError = false;
         $("#publishedInfo .action-button").click(function() {
             window.parent.location.hash = "";
         });
+        $("#forceSync").click(function() {
+            // mehnimal
+            $("#forceSync").text("checking!");
+            $.getJSON("/synclets/github/run?id=repos&force=true", function() {
+                window.location.reload();
+            });
+        });
         $("#submitPublish").click(function() {
             $("#submitPublish").attr("disabled", "disabled").text("PUBLISHING...");
             $("#publishedInfo a.issueLink").show();
@@ -55,6 +62,40 @@ console.log(info);
     <content class="body">
       <p class='publishInfo'>
         Confirm the information in the fields below, then click "Publish to registry" to submit the app.  Once you've submitted your app, we create an issue on Github to track it.
+        <p><br />
+          This copy of the app was last modified at <%
+// this is gooey, sorry :(
+var at;
+if(github && github.config && github.config.cached) for(var k in github.config.cached) {
+  if(k.toLowerCase().replace("/","-") == id.toLowerCase()) at = github.config.cached[k];
+}
+function ago(time){
+    diff = (((new Date()).getTime() - time) / 1000),
+    day_diff = Math.floor(diff / 86400);
+
+  if ( isNaN(day_diff) || day_diff < 0)
+    return;
+
+  return day_diff == 0 && (
+      diff < 60 && "just now" ||
+      diff < 120 && "1 minute ago" ||
+      diff < 3600 && Math.floor( diff / 60 ) + " minutes ago" ||
+      diff < 7200 && "1 hour ago" ||
+      diff < 86400 && Math.floor( diff / 3600 ) + " hours ago") ||
+    day_diff == 1 && "Yesterday" ||
+    day_diff < 7 && day_diff + " days ago" ||
+    day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago"
+    || Math.floor( day_diff / 30 ) + " months ago";
+}
+if(at)
+{
+  at = ago((new Date(Date.parse(at.substr(0,at.indexOf("Z"))))).getTime());
+}else{
+  at = "unknown";
+}
+// I no good w/ css!
+%><span style="font-weight:bold"><%= at %></span>, <a href="#" id="forceSync" style="text-decoration:underline">check for updates</a>.
+        </p>
       </p>
         <ul class="publish-list">
           <li><p>1. App Name

@@ -171,7 +171,7 @@ var renderDevelop = function(req, res) {
 };
 
 var renderPublish = function(req, res) {
-    getMyGithubApps(function(apps) {
+    getMyGithubApps(function(apps, map) {
         if(!apps[req.param("app")]) return res.send('invalid app id of '+req.param("app"), 400);
         var pkg = {};
         try {
@@ -184,7 +184,9 @@ var renderPublish = function(req, res) {
         console.dir(pkg);
         res.render('iframe/publish', {
             layout: false,
-            app: pkg
+            app: pkg,
+            id: req.param("app"),
+            github: map["github"]
         });
     });
 };
@@ -403,7 +405,7 @@ var getMyGithubApps = function(callback) {
                 apps[appInfo.id] = appInfo;
             }
         }
-        callback(apps);
+        callback(apps, map);
     });
 };
 
