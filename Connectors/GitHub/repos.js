@@ -41,9 +41,13 @@ exports.syncRepos = function(cached, callback) {
                     if(err || !pkg) return cb();
                     try {
                         pkg = JSON.parse(pkg);
-                    } catch(E) { return cb(); } // this is going to be really hard to catch, but what can we do from here to let someone know? console.error?
+                    } catch(E) {
+                        console.error("error parsing "+repo.id+" package.json: ",E);
+                        return cb();
+                    }
                     var repository = pkg.repository;
-                    if(!(repository && (repository.static == "true" || repository.static == true) && repository.type == "app")) return cb();
+                    // only require a title
+                    if(!repository || !repository.title) return cb();
                     // ok, we've got an app, make sure settings are valid
                     request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", headers:auth.headers, json:true}, function(err, resp, tree) {
                         if(err || !tree || !tree.tree) return cb();
