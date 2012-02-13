@@ -225,6 +225,7 @@ button[disabled] {
   height: 93%;
 }
 
+
 #appHeader {
   #appTitle {
     color: @blue;
@@ -239,8 +240,25 @@ button[disabled] {
     vertical-align: middle;
     margin-top: -7px;
   }
+  #uparrow-container {
+    width:0px;
+    height:0px;
+    display:inline-block;
+    position:relative;
+    #uparrow {
+      position:relative;
+      float:left;
+      top:30px;
+    }
+  }
   .action-button {
     color:white !important;
+  }
+  
+  #noneConnected {
+    color: @red;
+    margin-top:90px;
+    font-size: 20px;
   }
 }
 

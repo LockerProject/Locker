@@ -50,41 +50,30 @@ var loadApp = function(info) {
     $('.app-details').hide();
     $('#appHeader').hide();
     if (specialApps[app]) {
-        $("#appFrame")[0].contentWindow.location.replace(specialApps[app] + '?params=' + info.params);
+        setFrame(specialApps[app] + '?params=' + info.params);
     } else if (info.topSection === "Settings") {
-        if (info.subSection === "Connections") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-connectors');
-        } else if (info.subSection === "AccountInformation") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-account');
-        } else if (info.subSection === "APIKey") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/settings-api');
-        } else {
-            alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
-        }
+        if (info.subSection === "Connections") setFrame('/dashboard/settings-connectors');
+        else if (info.subSection === "AccountInformation") setFrame('/dashboard/settings-account');
+        else if (info.subSection === "APIKey") setFrame('/dashboard/settings-api');
+        else alert("CAN YOOOOO SMELL WHAT THE ROCK IS COOOKING?");
     } else if (app === "Publish") {
-        $("#appFrame")[0].contentWindow.location.replace('publish?app=' + info.params.app);
+        setFrame('publish?app=' + info.params.app);
     } else if (info.topSection === "Develop") {
-        if (info.subSection === "BuildAnApp") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-buildapp');
-        } else if (info.subSection === "ApiExplorer") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-apiexplorer');
-        } else if (info.subSection === "Publishing") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-publishing');
-        } else if (info.subSection === "ExampleApps") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-exampleapps');
-        } else if (info.subSection === "ChatWithTheTeam") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-chatwiththeteam');
-        } else if (info.subSection === "TemplatesIcons") {
-            $("#appFrame")[0].contentWindow.location.replace('/dashboard/develop-templatesicons');
-        }
+        if (info.subSection === "BuildAnApp") setFrame('/dashboard/develop-buildapp');
+        else if (info.subSection === "ApiExplorer") setFrame('/dashboard/develop-apiexplorer');
+        else if (info.subSection === "Publishing") setFrame('/dashboard/develop-publishing');
+        else if (info.subSection === "ExampleApps") setFrame('/dashboard/develop-exampleapps');
+        else if (info.subSection === "ChatWithTheTeam") setFrame('/dashboard/develop-chatwiththeteam');
+        else if (info.subSection === "TemplatesIcons") setFrame('/dashboard/develop-templatesicons');
     } else if (app === "connect") {
-        $("#appFrame")[0].contentWindow.location.replace('/dashboard/connect');
+        setFrame('/dashboard/connect');
     } else {
         handleApp(app);
     }
 
     $('.iframeLink[data-id="' + info.app + '"]').parent('p').siblings().show();
 };
+
 
 var syncletInstalled = function(provider) {
     if (provider === 'github') {
@@ -111,6 +100,9 @@ var syncletInstalled = function(provider) {
         // \n's are for spacing, gross, but true
         unConnectedList.append('\n\n\n').append(link.find('img').addClass('installed'));
         link.remove();
+        registry.getMyConnectors(function() {
+            loadDiv(window.location.hash.substring(1));
+        }, true); //clear the cache and reload the connected connectors list
     }
 };
 
@@ -122,19 +114,27 @@ handlers.Settings = loadApp;
 handlers.viewAll = loadApp;
 handlers.publish = loadApp;
 
+function setFrame(path) {
+    $("#appFrame")[0].contentWindow.location.replace(path);
+}
 
 function handleApp(appName) {
     $.get('clickapp/' + appName, function(e) {});
     doAppHeader(appName);
-    $("#appFrame")[0].contentWindow.location.replace('/Me/' + appName);
+    getAppAndConnectedServices(appName, function(err, app, connected) {
+        if(app.uses && app.uses.services && (!connected || connected.length < 1)) {
+            $("#appFrame").hide();
+        } else {    
+            $("#appFrame").show();
+            setFrame('/Me/' + appName);
+        }
+    });
 }
 
 function doAppHeader(appName) {
     registry.getMap(function(err, map) {
         if(err || !map[appName]) return callback(err, map);
         var app = map[appName];
-        // this {repository: app} stuff is because the map flattens the things in the repository field
-        // up to the top level, but these registry functions expect them to be inside of repository
         registry.getConnectedServices(app.uses, function(connected) {
             registry.getUnConnectedServices(app.uses, function(unconnected) {
                 registry.getMyAuthoredApps(function(myAuthoredApps) {
@@ -151,6 +151,16 @@ function doAppHeader(appName) {
                     });
                 });
             });
+        });
+    });
+}
+
+function getAppAndConnectedServices(appName, callback) {
+    registry.getMap(function(err, map) {
+        if(err || !map[appName]) return callback(err, map);
+        var app = map[appName];
+        registry.getConnectedServices(app.uses, function(connected) {
+            callback(undefined, app, connected);
         });
     });
 }
