@@ -101,7 +101,8 @@ var syncletInstalled = function(provider) {
         unConnectedList.append('\n\n\n').append(link.find('img').addClass('installed'));
         link.remove();
         registry.getMyConnectors(function() {
-            loadDiv(window.location.hash.substring(1));
+            // if none of the required services were connected prior to this one, reload
+            if(connectedCount === 0) loadDiv(window.location.hash.substring(1));
         }, true); //clear the cache and reload the connected connectors list
     }
 };
@@ -118,11 +119,13 @@ function setFrame(path) {
     $("#appFrame")[0].contentWindow.location.replace(path);
 }
 
+var connectedCount = 0;
 function handleApp(appName) {
     $.get('clickapp/' + appName, function(e) {});
     doAppHeader(appName);
     getAppAndConnectedServices(appName, function(err, app, connected) {
-        if(app.uses && app.uses.services && (!connected || connected.length < 1)) {
+        connectedCount = connected.length;
+        if(app.uses && app.uses.services && !(connectedCount > 0)) {
             $("#appFrame").hide();
         } else {    
             $("#appFrame").show();
