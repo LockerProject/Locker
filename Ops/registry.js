@@ -93,17 +93,31 @@ exports.app = function(app)
         res.send(exports.getApps());
     });
     app.get("/registry/connectors", function(req, res) {
-        var connectors = [];
+        var connectors = {};
+        // get all connectors from the registry
         Object.keys(regIndex).forEach(function(key) {
             if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
                 // not all connectors need auth keys!
-                if((regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") && !regIndex[key].repository.hidden) connectors.push(regIndex[key]);
+                if((regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") && !regIndex[key].repository.hidden) connectors[key] = regIndex[key];
                 // require keys now
-                if(apiKeys[key]) connectors.push(regIndex[key]);
+                if(apiKeys[key]) connectors[key] = regIndex[key];
+            }
+        });
+        // annoyingly, some might be local only
+        Object.keys(serviceManager.map()).forEach(function(key) {
+            var svc = serviceManager.map(key);
+            if(svc.type != "connector") return;
+            if(connectors[key]) return;
+            if(apiKeys[key]) {
+                // spoof a repository field to be consistent
+                connectors[key] = lutil.extend(true, {}, svc);
+                connectors[key].repository = lutil.extend(true, {}, svc);
             }
         });
         // TODO: STREAM!
-        res.send(connectors);
+        var arr = [];
+        Object.keys(connectors).forEach(function(k){arr.push(connectors[k])});
+        res.send(arr);
     });
     app.get('/registry/all', function(req, res) {
         res.send(exports.getRegistry());
@@ -141,7 +155,7 @@ exports.app = function(app)
 function publishPackage(req, res) {
     logger.info("registry publishing "+req.params.id);
     var id = req.params.id;
-    var svc = serviceManager.map()[id];
+    var svc = serviceManager.map(id);
     if(!svc || !svc.srcdir) return res.send("not found in map", 400);
     var dir = svc.srcdir;
     if(!dir || dir.indexOf('Me/github/') != 0) return res.send("package path not valid", 400);
@@ -275,7 +289,7 @@ exports.sync = function(callback, force)
         // replace in-mem representation
         if(force) regIndex = {}; // cleanse!
         // new updates from the registry, update our local mirror
-        async.forEachSeries(Object.keys(body), function(pkg, cb){
+        async.forEachLimit(Object.keys(body), 8, function(pkg, cb){
             if(!body[pkg].versions) return cb();
             checkSigned(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
         }, function(){
@@ -434,7 +448,7 @@ exports.publish = function(arg, callback) {
                         delete require.cache[isynclet]; // don't keep the copy in ram!
                         issues.sync(pi, function(err, js){
                             if(err) return callback(err);
-                            console.error(js);
+                            logger.info(js);
                             if(!js || !js.data || !js.data.issue || !js.data.issue[0] || !js.data.issue[0].number) return callback("failed to create issue to track this for publishing, please re-auth github: "+JSON.stringify(js)); // this text triggers a more friendly response in dashboardv3
                             // save pending=issue# to package.json
                             callback(null, updated, js.data.issue[0]);
