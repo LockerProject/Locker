@@ -55,8 +55,6 @@ exports.syncRepos = function(cached, callback) {
                             }
                             if(!pkg.version) pkg.version = "0.0.0";
                             if(!pkg.repository.title) pkg.repository.title = repo.name;
-                            // XXX: hmmm, these next two if statements should never be true since we only sync the repo
-                            // if static == true and type == "app" per line 46 (smurthas)
                             if(!pkg.repository.hasOwnProperty('static')) pkg.repository.static = true;
                             if(!pkg.repository.hasOwnProperty('type')) pkg.repository.type = "app";
                             if(!pkg.repository.hasOwnProperty('update')) pkg.repository.update = "auto";
@@ -82,33 +80,28 @@ function getIDFromUrl(url) {
 }
 
 function getWatchers(repo, callback) {
-    request.get({url:"https://api.github.com/repos/"+repo.id+"/watchers", 
+    request.get({url:"https://api.github.com/repos/"+repo.id+"/watchers",
                  headers:auth.headers, json:true}, callback);
 }
 
-function getPackage(repo, notAppCallback, isAppCallback) {
-    request.get({uri: 'https://raw.github.com/'+repo.id+'/HEAD/package.json', 
+function getPackage(repo, notCallback, isCallback) {
+    request.get({uri: 'https://raw.github.com/'+repo.id+'/HEAD/package.json',
                  headers:auth.headers},  function(err, resp, pkg) {
-        if(resp.statusCode === 404) return notAppCallback();
+        if(resp.statusCode === 404) return notCallback();
         try {
             pkg = JSON.parse(pkg);
-            if(!isApp(pkg)) return notAppCallback();
-        } catch(E) { 
+            if(!pkg.repository || !pkg.repository.title) return notCallback();
+        } catch(E) {
             console.error('for repo ' + repo.id + ', found a package.json, but couldn\'t parse it, or it wasn\'t an app', pkg);
-            return notAppCallback();
+            return notCallback();
         } // this is going to be really hard to catch, but what can we do from here to let someone know?
-        return isAppCallback(pkg);
+        return isCallback(pkg);
     });
 }
 
 function getTree(repo, callback) {
-    request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1", 
+    request.get({uri:"https://api.github.com/repos/" + repo.id + "/git/trees/HEAD?recursive=1",
                  headers:auth.headers, json:true}, callback);
-}
-
-function isApp(pkg) {
-    var repository = pkg.repository;
-    return repository && (repository.static == "true" || repository.static == true) && repository.type == "app";
 }
 
 function syncRepo(repo, tree, callback) {
@@ -145,9 +138,9 @@ function syncRepo(repo, tree, callback) {
 function saveBlob(treeItem, repo, existing, cb) {
     if(treeItem.type !== "blob") return cb();
     if(existing[treeItem.path] === treeItem.sha) return cb(); // no changes
-    request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+treeItem.path, 
-                 encoding: 'binary', 
-                 headers:auth.headers}, 
+    request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+treeItem.path,
+                 encoding: 'binary',
+                 headers:auth.headers},
         function(err, resp, body) {
         if(err || !resp || resp.statusCode !== 200 || body === undefined || body === null) {
             // don't save the sha so it gets retried again
