@@ -558,6 +558,7 @@ function authRedir(js, req, res)
     }
     // oauth2 types redirect
     if(authModule.authUrl) {
+        if(!apiKeys[js.id]) return res.send("missing required api keys", 500);
         var url = authModule.authUrl + "&client_id=" + apiKeys[js.id].appKey + "&redirect_uri=" + lconfig.externalBase + "/auth/" + js.id + "/auth";
         return res.redirect(url);
     }
