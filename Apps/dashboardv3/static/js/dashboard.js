@@ -142,7 +142,7 @@ function doAppHeader(appName) {
             registry.getUnConnectedServices(app.uses, function(unconnected) {
                 registry.getMyAuthoredApps(function(myAuthoredApps) {
                     var mine = myAuthoredApps[appName];
-                    if (mine) app.author = registry.localAuthor;
+                    if (mine) app.author = {name: registry.localAuthor};
                     dust.render('appHeader', {
                       app:app,
                       connected:connected,

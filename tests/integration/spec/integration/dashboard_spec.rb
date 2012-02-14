@@ -2,14 +2,12 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
 describe 'dashboard' do
-  it 'allows people to see the connect page' do
+  it 'allows people to see the EXPLORE page' do
     visit '/'
-    within_frame 'appFrame' do
-      page.should have_content("Nobody Selected")
-    end
+    page.should have_content("Contacts (DEMO)by Singly, Inc. with contacts from { see the code }")
   end
 
-  it 'should allow people to access the develop interface' do
+  it 'should allow people to access the DEVELOP page' do
     visit '/'
     click_link 'Develop'
     within_frame 'appFrame' do

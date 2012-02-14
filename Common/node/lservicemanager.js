@@ -133,12 +133,12 @@ exports.mapUpsert = function (file) {
         var repo = js.repository;
         delete js.repository;
         lutil.extend(true, js, repo);
+        lutil.parseAuthor(js);
         if(!js.handle) throw new Error("no handle");
         js.handle = js.handle.toLowerCase(); // sanity
         // synclets are in their own file, extend them in too
         var sync = path.join(lconfig.lockerDir, path.dirname(file),"synclets.json");
-        if(path.existsSync(sync))
-        {
+        if(path.existsSync(sync)) {
             js = lutil.extend(js, JSON.parse(fs.readFileSync(sync, 'utf8')));
         }
     } catch (E) {

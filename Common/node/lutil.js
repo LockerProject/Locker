@@ -303,19 +303,21 @@ exports.avatarUrlFromMap = function (storagePath, lockerBase, callback) {
 };
 
 exports.parseAuthor = function(js) {
-  if (!js.author) return;
+  if (!js.author || typeof js.author !== 'string') return;
   js.author = exports.strip(js.author);
 
   if (js.author.indexOf('@') !== -1) {
     var match = js.author.match(/(.*)\s*<(.*)>/);
     if (match) {
-      js.authorName  = exports.strip(match[1]);
-      js.authorEmail = exports.strip(match[2]);
+      js.author = {
+        name: exports.strip(match[1]),
+        email: exports.strip(match[2])
+      };
     } else {
-      js.authorEmail = js.author;
+      js.author = {email: js.author};
     }
-  } else {
-    js.authorName = js.author;
+  } else {  
+    js.author = {name: js.author};
   }
 };
 

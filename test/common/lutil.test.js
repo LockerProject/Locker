@@ -155,20 +155,20 @@ describe("lutil", function () {
     it("parses the full name/email format", function() {
       var data = {author : "E. X. Ample <ex@example.com>"};
       lutil.parseAuthor(data);
-      data.authorName.should.equal("E. X. Ample");
-      data.authorEmail.should.equal("ex@example.com");
+      data.author.name.should.equal("E. X. Ample");
+      data.author.email.should.equal("ex@example.com");
     });
 
     it("parses just an email", function() {
       var data = {author: "ex@example.com"};
       lutil.parseAuthor(data);
-      data.authorEmail.should.equal("ex@example.com");
+      data.author.email.should.equal("ex@example.com");
     });
 
     it("parses just a name", function() {
       var data = {author: "E. X. Ample"};
       lutil.parseAuthor(data);
-      data.authorName.should.equal("E. X. Ample");
+      data.author.name.should.equal("E. X. Ample");
     });
   });
 
