@@ -71,9 +71,6 @@ h1 {
 
 input[type=text], input[type=password] {
   width:360px;
-  font-size:18px;
-  padding:5px;
-  border:1px solid #7d7d7d;
   margin:6px 0;
 }
 
