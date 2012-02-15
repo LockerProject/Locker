@@ -125,7 +125,7 @@ function syncRepo(repo, tree, callback) {
         // then the blobs
         var errors = [];
         async.forEachSeries(tree, function(treeItem, cb) {
-            return saveBlob(treeItem, repo, existing, cb);
+            return saveBlob(treeItem, repo, existing, errors, cb);
         }, function(err) {
             fs.writeFile(repo.id+".tree.json", JSON.stringify(tree), function(err) {
                 if(err) errors.push(err);
@@ -135,7 +135,7 @@ function syncRepo(repo, tree, callback) {
     });
 }
 
-function saveBlob(treeItem, repo, existing, cb) {
+function saveBlob(treeItem, repo, existing, errors, cb) {
     if(treeItem.type !== "blob") return cb();
     if(existing[treeItem.path] === treeItem.sha) return cb(); // no changes
     request.get({uri:'https://raw.github.com/'+repo.id+'/HEAD/'+treeItem.path,
