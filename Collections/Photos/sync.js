@@ -32,7 +32,7 @@ exports.gatherPhotos = function(cb) {
     dataStore.clear(function(err) {
         request.get({uri:lconfig.lockerBase + '/Me/search/reindexForType?type=photo'}, function() {
             cb(); // synchro delete, async/background reindex
-            locker.providers(['photo','checkin','tweets'], function(err, services) {
+            locker.providers(['photo','checkin','tweets','post'], function(err, services) {
                 if (!services) return;
                 services.forEach(function(svc) {
                     if(svc.handle === 'photos') return;
@@ -70,6 +70,10 @@ function gatherTwitpic(svcId) {
 
 function gatherFoursquare(svcId) {
     gatherFromUrl(svcId, "/getCurrent/checkin", 'checkin/foursquare');
+}
+
+function gatherTumblr(svcId) {
+    gatherFromUrl(svcId, "/getCurrent/post", 'post/tumblr');
 }
 
 function basicPhotoGatherer(svcId, type, provides) {

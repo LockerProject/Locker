@@ -92,6 +92,31 @@ function processInstagram(svcId, data, cb) {
     saveCommonPhoto(photoInfo, cb);
 }
 
+function processTumblr(svcId, data, cb) {
+    var photoInfo = {};
+
+    // Gotta have a url minimum
+    if (data.type != "photo" || !data.photos || !data.photos[0] || !data.photos[0].original_size || !data.photos[0].original_size.url) {
+        return cb();
+    }
+    var photo = data.photos[0];
+    photoInfo.url = photo.original_size.url;
+    photoInfo.width = photo.original_size.width;
+    photoInfo.height = photo.original_size.height;
+    var ndx = {};
+    if(photo.alt_sizes) photo.alt_sizes.forEach(function(size){
+        ndx[size.height] = size.url;
+    });
+    if (ndx["75"]) photoInfo.thumbnail = ndx["75"];
+    if (data.timestamp) photoInfo.timestamp = data.timestamp*1000;
+    if (data.caption) photoInfo.title = data.caption; // TODO, strip html
+    if (data.post_url) photoInfo.sourceLink = data.post_url;
+
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+
+    saveCommonPhoto(photoInfo, cb);
+}
+
 function getFlickrItem(photoObject, field) {
     return photoObject[field + '_o'] || photoObject[field + '_l'] || photoObject[field + '_z'] ||
            photoObject[field + '_m'] || photoObject[field + '_s'] || photoObject[field + '_t'];
@@ -246,6 +271,7 @@ dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
 dataHandlers["feed/instagram"] = doNothing;
+dataHandlers["post/tumblr"] = processTumblr;
 
 exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;

@@ -25,6 +25,10 @@
         "/events"
       ],
       [
+        "dashboard/tumblr",
+        "/events"
+      ],
+      [
         "tweet/twitter",
         "/events"
       ]
