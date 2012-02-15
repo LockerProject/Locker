@@ -37,7 +37,7 @@ exports.generic = function(data, svcName, callback) {
     if(typeof map.photo === 'function') addToSet.photos = map.photo(data);
     else addToSet.photos = data[map.photo || 'photo'];
     if(!addToSet.photos) delete addToSet.photos;
-    
+
     //addresses
     var address = getNested(data, map.address);
     if(address) {
@@ -91,7 +91,7 @@ exports.generic = function(data, svcName, callback) {
             var emails = addToSet.emails.$each || [addToSet.emails];
             for(var i in emails) or.push({'emails.value':emails[i].value});
         }
-        
+
         var set = setName(name);
         //gender
         var gender = getNested(data, map.gender);
@@ -123,7 +123,7 @@ function getNested(data, key) {
 
 // first try at inserting an object into mongo, only match on the object's id
 function matchExisting(query, set, addToSet, done, noDoc) {
-    collection.findAndModify(query, [['_id','asc']], 
+    collection.findAndModify(query, [['_id','asc']],
                             {$set: set, $addToSet:addToSet},
                             {safe:true, new: true}, function(err, doc) {
                                 if(!doc) noDoc(err)
@@ -133,7 +133,7 @@ function matchExisting(query, set, addToSet, done, noDoc) {
 
 // second try at inserting and object into mongo, match more heuristically (name, etc)
 function upsert(or, push, addToSet, set, callback) {
-    collection.findAndModify({$or:or}, [['_id','asc']], 
+    collection.findAndModify({$or:or}, [['_id','asc']],
                              {$push:push,
                               $addToSet:addToSet,
                               $set:set},

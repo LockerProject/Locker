@@ -31,6 +31,7 @@ var acceptedServices = {
     'contact/gcontacts':1,
     'contact/foursquare':1,
     'contact/instagram':1,
+    'contact/tumblr':1,
     'connection/linkedin':1,
     'contact/github':'following'
 }
