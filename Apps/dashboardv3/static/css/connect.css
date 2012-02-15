@@ -77,15 +77,14 @@ span.action-button {
 }
 
 
-.learnmore-link {
+.learnmore a {
   font-size: 0.8em;
-  cursor: pointer;
 }
 
-.learnmore-copy {
+.learnmore p {
 	display: none;
-	font-size: 0.9em;
 	padding: 15px 0 0 10px;
+	font-size: 0.9em;
 	font-weight: 200;
 	line-height: 1.4em;
 }

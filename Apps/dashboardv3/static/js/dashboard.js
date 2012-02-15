@@ -1,4 +1,3 @@
-var defaultApp = 'contactsviewer';
 var specialApps = {
     "allApps"  : "allApps",
     "connect"  : "connect",
@@ -10,7 +9,7 @@ var loggedIn = true;
 
 $(document).ready(function() {
     $.history.init(function(hash){
-        loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-' + defaultApp);
+        loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore');
     }, { unescape: ",/" });
 
     $('body').delegate('.install', 'click', function(e) {
@@ -125,9 +124,9 @@ function handleApp(appName) {
     doAppHeader(appName);
     getAppAndConnectedServices(appName, function(err, app, connected) {
         connectedCount = connected.length;
-        if(app.uses && app.uses.services && !(connectedCount > 0)) {
+        if(app.uses && app.uses.services && connectedCount === 0) {
             $("#appFrame").hide();
-        } else {    
+        } else {
             $("#appFrame").show();
             setFrame('/Me/' + appName);
         }

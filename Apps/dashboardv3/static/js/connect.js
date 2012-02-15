@@ -1,134 +1,107 @@
-var profileTimeout;
-var hasTwitterOrFacebook = false;
-
 $(function() {
-    // a guard in case any other pages (like develop) load this JS file
-    if (window.parent.location.hash === '#Explore-connect') {
-        $('.nav-section', window.parent.document).fadeOut();
-    }
-
-    $(".oauthLink.action-button").click(function(e) {
-        e.preventDefault();
-        showHiddenConnectors();
-    });
-
-    $('body').delegate('.oauthLink','click', Locker.connectService);
-
-    //updateIfConnected();
-
-    $('#start-exploring-link').click(function(e) {
-        e.preventDefault();
-        parent.window.location.replace('/');
-    });
-
-    $('.synclets-list li input').each(function(index, item) {
-        var that = $(this);
-        if (that.attr('data-provider') === 'twitter' || that.attr('data-provider') === 'facebook') {
-            that.parent().fadeIn();
-            hasTwitterOrFacebook = true;
-        }
-    });
-
-    $('.learnmore-link').click(function(e) {
-      if ($('.learnmore-copy').is(":hidden")) {
-        $(this).hide();
-        $(this).html('Close section');
-        $(this).fadeIn('fast');
-        $('.learnmore-copy').slideToggle('fast');
-      } else {
-        $(this).hide();
-        $(this).html('Learn more about what we do');
-        $(this).fadeIn('fast');
-        $('.learnmore-copy').slideToggle('fast');
-      }
-    });
-
-    // if apikeys doesn't have twitter/facebook, just show everything
-    if (hasTwitterOrFacebook === false) {
-        showAllConnectors();
-    }
+  setUpWelcome();
+  initLearnMore();
+  $('body').delegate('.oauthLink','click', Locker.connectService);
+  $('#start-exploring-link').click(function(e) {
+    e.preventDefault();
+    parent.window.location.replace('/');
+  });
 });
+
+/* This only applies to #Explore-connect, but the JS file may be loaded
+ * elsewhere (TODO: split it up better). If neither Facebook nor Twitter are
+ * available as Connectors (ie, no api key present), we'll just show everything.
+ * Otherwise, ask for Facebook or Twitter first, as they're the most prolific
+ * source of data.
+ */
+var setUpWelcome = function() {
+  if (window.parent.location.hash !== '#Explore-connect') return;
+
+  var hasTwitterOrFacebook = false
+    , hasAuthedOne = false
+    ;
+
+  $('.synclets-list li .action-button').each(function(index, item) {
+    item = $(item);
+    if (['twitter', 'facebook'].indexOf(item.attr('data-provider')) !== -1) {
+      item.closest('li').fadeIn();
+      hasTwitterOrFacebook = true;
+      if (item.hasClass('disabled')) hasAuthedOne = true;
+    }
+  });
+
+  showAuthedState(hasAuthedOne || !hasTwitterOrFacebook);
+};
+
+var initLearnMore = function() {
+  var learnMore = $('.learnmore')
+    , link = $('a', learnMore)
+    , copy = $('p', learnMore)
+    , originalText = link.text();
+
+  link.click(function(e) {
+    e.preventDefault();
+    var text = (copy.is(":hidden")) ? 'Close section' : originalText;
+    link.hide().text(text).fadeIn('fast');
+    copy.slideToggle('fast');
+  });
+};
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
-    $('.oauthLink').each(function(index) {
-        if ($(this).attr('data-provider') === provider) {
-            $(this).removeClass('oauthLink');
-            $(this).addClass('disabled');
-            $(this).val('Connected');
-            $(this).html('Connected');
-        }
-    });
+  $('.oauthLink').each(function(index) {
+    if ($(this).attr('data-provider') === provider) {
+      $(this).removeClass('oauthLink');
+      $(this).addClass('disabled');
+      $(this).val('Connected');
+      $(this).html('Connected');
+    }
+  });
 
-    $('.sidenav-items.synclets.connect', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
-    showHeaderTwo();
-    showAllConnectors();
-    updateUserProfile();
+  $('.sidenav-items.synclets.connect', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
+  showAuthedState(true);
+  updateUserProfile();
 };
 
-var showHiddenConnectors = function() {
-    showHeaderTwo();
-    $(".hideable").fadeIn();
-};
-
-var showAllConnectors = function() {
+var showAuthedState = function(authed) {
+  var navs = $('.nav-section, .sidenav', window.parent.document);
+  if (authed) {
+    navs.fadeIn();
+    $("#main-header-1").hide();
+    $("#main-header-2").show();
     $(".synclets-list li").fadeIn();
+  } else {
+    navs.fadeOut('fast');
+  }
 };
-
-var showHeaderOne = function() {
-    if ($("#main-header-2").is(":visible")) {
-        $("#main-header-2").hide();
-        $("#main-header-1").show();
-    }
-};
-
-var showHeaderTwo = function() {
-    $('.nav-section', window.parent.document).fadeIn();
-
-    if ($("#main-header-1").is(":visible")) {
-        $("#main-header-1").hide();
-        $("#main-header-2").show();
-    }
-};
-
-/*
-var updateIfConnected = function() {
-    if ($('.sidenav-items.synclets.connect img', window.parent.document).length === 0) {
-        $('.nav-section', window.parent.document).fadeOut();
-    } else {
-        $('.nav-section', window.parent.document).fadeIn();
-        showAllConnectors();
-    }
-}*/
-
 
 var updateUserProfile = function() {
+  var username = null;
+  var avatar = null;
 
-    var username = null;
-    var avatar = null;
-
-    var fetchUserProfile = function() {
-        $.get('/synclets/facebook/get_profile', function(body) {
-            if (body.username) {
-                avatar = "http://graph.facebook.com/" + body.username + "/picture";
-                username = body.name;
-            } else {
-                $.get('/synclets/twitter/get_profile', function(body) {
-                    if (body.profile_image_url_https) {
-                        avatar = body.profile_image_url_https;
-                        username = body.name;
-                    }
-                });
-            }
+  var fetchUserProfile = function() {
+    $.get('/synclets/facebook/get_profile', function(body) {
+      if (body.username) {
+        avatar = "http://graph.facebook.com/" + body.username + "/picture";
+        username = body.name;
+      } else {
+        $.get('/synclets/twitter/get_profile', function(body) {
+          if (body.profile_image_url_https) {
+            avatar = body.profile_image_url_https;
+            username = body.name;
+          }
         });
-    };
+      }
+    });
+  };
 
-    profileTimeout = setInterval(function() {
-        fetchUserProfile();
-        if (username !== null) {
-            clearInterval(profileTimeout);
-            $('.avatar', window.parent.document).attr('src', avatar);
-            $('.user-info-name-link', window.parent.document).text(username);
-        }
-    }, 500);
+  var profileTimeout = setInterval(function() {
+    if (username === null) {
+      fetchUserProfile();
+    } else {
+      clearInterval(profileTimeout);
+      $('.avatar', window.parent.document).attr('src', avatar);
+      $('.user-info-name-link', window.parent.document).text(username);
+    }
+  }, 500);
 };
