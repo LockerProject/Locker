@@ -47,7 +47,7 @@ var loadApp = function(info) {
     $('.app-container').hide();
     $('.app-container#iframeContainer').show();
     $('.app-details').hide();
-    $('#appHeader').hide();
+    $('#iframeContainer .app-header').hide();
     if (specialApps[app]) {
         setFrame(specialApps[app] + '?params=' + info.params);
     } else if (info.topSection === "Settings") {
@@ -93,9 +93,9 @@ var syncletInstalled = function(provider) {
         connectedList.append('\n\n\n').append(link.find('img'));
         link.remove();
     }
-    link = $('#appHeader .unconnected-services .oauthLink[data-provider="' + provider + '"]');
+    link = $('#iframeContainer .app-header .unconnected-services .oauthLink[data-provider="' + provider + '"]');
     if(link.length) {
-        var unConnectedList = $('#appHeader .connected-services');
+        var unConnectedList = $('#iframeContainer .app-header .connected-services');
         // \n's are for spacing, gross, but true
         unConnectedList.append('\n\n\n').append(link.find('img').addClass('installed'));
         link.remove();
@@ -121,7 +121,7 @@ function setFrame(path) {
 var connectedCount = 0;
 function handleApp(appName) {
     $.get('clickapp/' + appName, function(e) {});
-    doAppHeader(appName);
+    doAppHeader(appName, '#iframeContainer .app-header');
     getAppAndConnectedServices(appName, function(err, app, connected) {
         connectedCount = connected.length;
         if(app.uses && app.uses.services && connectedCount === 0) {
@@ -130,30 +130,6 @@ function handleApp(appName) {
             $("#appFrame").show();
             setFrame('/Me/' + appName);
         }
-    });
-}
-
-function doAppHeader(appName) {
-    registry.getMap(function(err, map) {
-        if(err || !map[appName]) return callback(err, map);
-        var app = map[appName];
-        registry.getConnectedServices(app.uses, function(connected) {
-            registry.getUnConnectedServices(app.uses, function(unconnected) {
-                registry.getMyAuthoredApps(function(myAuthoredApps) {
-                    var mine = myAuthoredApps[appName];
-                    if (mine) app.author = {name: registry.localAuthor};
-                    dust.render('appHeader', {
-                      app:app,
-                      connected:connected,
-                      unconnected:unconnected,
-                      mine:mine
-                    }, function(err, appHtml) {
-                        $('#appHeader').html(appHtml);
-                        $('#appHeader').show();
-                    });
-                });
-            });
-        });
     });
 }
 
