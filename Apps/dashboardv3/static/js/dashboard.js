@@ -75,35 +75,18 @@ var loadApp = function(info) {
 
 
 var syncletInstalled = function(provider) {
-    if (provider === 'github') {
-        $('.your-apps').show();
-    }
-    var link = $('.sidenav .oauthLink[data-provider="' + provider + '"]');
-    if($('#appDiv').is(':visible')) {
-        link.each(function(index, element) {
-            element = $(element);
-            var nxt = element.next('span');
-            if(!nxt.length) nxt = element.prev('span');
-            nxt.remove();
-            element.remove();
-        });
-    } else {
-        var connectedList = $('.sidenav-items.synclets-connected');
-        // \n's are for spacing, gross, but true
-        connectedList.append('\n\n\n').append(link.find('img'));
-        link.remove();
-    }
-    link = $('#iframeContainer .app-header .unconnected-services .oauthLink[data-provider="' + provider + '"]');
-    if(link.length) {
-        var unConnectedList = $('#iframeContainer .app-header .connected-services');
-        // \n's are for spacing, gross, but true
-        unConnectedList.append('\n\n\n').append(link.find('img').addClass('installed'));
-        link.remove();
-        registry.getMyConnectors(function() {
-            // if none of the required services were connected prior to this one, reload
-            if(connectedCount === 0) loadDiv(window.location.hash.substring(1));
-        }, true); //clear the cache and reload the connected connectors list
-    }
+  if (provider === 'github') $('.your-apps').show();
+  // update connected and unconnected services lists
+  link = $('.unconnected-services .oauthLink[data-provider="' + provider + '"]');
+  if(link.length) {
+    link.each(function(index, element) {
+      element = $(element);
+      var img = element.find('img');
+      var connected = element.parent().parent().find('.connected-services');
+      connected.append('\n\n\n').append(img.addClass('installed'));
+      element.remove();
+    });
+  }
 };
 
 

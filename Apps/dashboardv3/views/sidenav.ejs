@@ -34,7 +34,7 @@
 <div class="sidenav-header">
   <p class='sidenav-header-title'>CONNECT MORE SERVICES</p>
 </div>
-<div class="sidenav-items synclets-unconnected">
+<div class="sidenav-items unconnected-services">
   <% for (var i = 0; i < connectors.length; i++) { %>
     <% if (!connectors[i].authed) { %><a href="/auth/<%=connectors[i].repository.handle %>" data-provider='<%= connectors[i].repository.handle %>'
         data-width='<%=connectors[i].repository.oauthSize.width%>' data-height='<%=connectors[i].repository.oauthSize.height%>' class="oauthLink">
@@ -46,7 +46,7 @@
 <div class="sidenav-header">
   <p class='sidenav-header-title'>YOUR CONNECTED SERVICES</p>
 </div>
-<div class="sidenav-items synclets-connected">
+<div class="sidenav-items connected-services">
   <% for (var i = 0; i < connectors.length; i++) { %>
     <% if (connectors[i].authed) { %><img src="img/icons/32px/<%= connectors[i].repository.handle %>.png"><% } %>
   <% } %>
