@@ -10,47 +10,42 @@ var fs = require('fs')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
   , logger = require("./logger.js");
-  ;
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
-datastore.init = function(callback) {
+datastore.init = function (callback) {
     ldatastore.init('synclets', callback);
-}
+};
 
-datastore.addCollection = function(collectionKey, id, mongoId) {
+datastore.addCollection = function (collectionKey, id, mongoId) {
     ldatastore.addCollection('synclets', collectionKey, id, mongoId);
-}
+};
 
-datastore.removeObject = function(collectionKey, id, ts, callback) {
+datastore.removeObject = function (collectionKey, id, ts, callback) {
     if (typeof(ts) === 'function') {
         ldatastore.removeObject('synclets', collectionKey, id, {timeStamp: Date.now()}, ts);
     } else {
         ldatastore.removeObject('synclets', collectionKey, id, ts, callback);
     }
-}
+};
 
-datastore.addObject = function(collectionKey, obj, ts, callback) {
+datastore.addObject = function (collectionKey, obj, ts, callback) {
     ldatastore.addObject('synclets', collectionKey, obj, ts, callback);
-}
-
-
+};
 
 
 // core syncmanager init function, need to talk to serviceManager
 var serviceManager;
-exports.init = function(sman, callback)
-{
+exports.init = function (sman, callback) {
     serviceManager = sman;
     datastore.init(callback);
-}
+};
 
 var executeable = true;
-exports.setExecuteable = function(e)
-{
+exports.setExecuteable = function (e) {
     executeable = e;
-}
+};
 
-exports.syncNow = function(serviceId, syncletId, post, callback) {
+exports.syncNow = function (serviceId, syncletId, post, callback) {
     if(typeof syncletId == "function")
     {
         callback = syncletId;
@@ -58,7 +53,7 @@ exports.syncNow = function(serviceId, syncletId, post, callback) {
     }
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
-    async.forEachSeries(js.synclets, function(synclet, cb) {
+    async.forEachSeries(js.synclets, function (synclet, cb) {
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -75,7 +70,7 @@ exports.flushTolerance = function(callback, force) {
     async.forEach(Object.keys(map), function(service, cb){ // do all services in parallel
         if(!map[service].synclets) return cb();
         async.forEachSeries(map[service].synclets, function(synclet, cb2) { // do each synclet in series
-            if(!force && (!synclet.tolAt || synclet.tolAt == 0)) return cb2();
+            if (!force && (!synclet.tolAt || synclet.tolAt === 0)) return cb2();
             synclet.tolAt = 0;
             executeSynclet(map[service], synclet, cb2);
         }, cb);
@@ -122,10 +117,9 @@ exports.scheduleRun = function(info, synclet) {
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
     }
     scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
-}
+};
 
-function localError(base, err)
-{
+function localError(base, err) {
     logger.error(base+"\t"+err);
 }
 
@@ -238,7 +232,7 @@ function executeSynclet(info, synclet, callback, force) {
     app.stdin.write(JSON.stringify(info)+"\n"); // Send them the process information
     if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
     delete info.syncletToRun;
-};
+}
 
 function compareIDs (originalConfig, newConfig) {
     var resp = {};
@@ -291,7 +285,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
             callback(err);
         });
     });
-};
+}
 
 function processData (deleteIDs, info, synclet, key, data, callback) {
     // this extra (handy) log breaks the synclet tests somehow??
@@ -302,17 +296,14 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
     var collection = info.id + "_" + key;
 
     if (key.indexOf('/') !== -1) {
-        console.error("DEPRECIATED, dropping! "+key);
+        console.error("DEPRECATED, dropping! "+key);
         return callback();
     }
 
     var mongoId;
-    if(typeof info.mongoId === 'string')
-        mongoId = info.mongoId
-    else if(info.mongoId)
-        mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
-    else
-        mongoId = 'id';
+    if (typeof info.mongoId === 'string') mongoId = info.mongoId;
+    else if (info.mongoId) mongoId = info.mongoId[key + 's'] || info.mongoId[key] || 'id';
+    else mongoId = 'id';
 
     datastore.addCollection(key, info.id, mongoId);
 

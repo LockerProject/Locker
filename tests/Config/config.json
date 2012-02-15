@@ -3,6 +3,7 @@
     "lockerPort" : 8043,
     "me" : "Data",
     "registryUpdate" : false,
+    "requireSigned" : false,
     "ui":"dashboardv3:Apps/dashboardv3",
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],

@@ -16,7 +16,7 @@ var request = require('request'),
                endPoint :            'http://consumer.com/oauth/',
                linkToCreate :        'http://change.me/',
                appIDName :           'App ID',
-               authEndpoint :        'authorize', 
+               authEndpoint :        'authorize',
                appSecretName :       'App Secret',
                promptForUsername :   false,
                accessTokenResponse : 'text',
@@ -32,13 +32,10 @@ exports.options = {};
 
 exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
     options.redirectURI = externalUrl;
-    for (i in exports.options) {
-        options[i] = exports.options[i];
-    }
-    if(exports.isAuthed()) {
-        onCompletedCallback();
-        return;
-    }
+    for (var i in exports.options) options[i] = exports.options[i];
+
+    if (exports.isAuthed()) return onCompletedCallback();
+
     completedCallback = onCompletedCallback;
     app.get('/go', go);
     app.get('/auth', handleAuth);
@@ -47,19 +44,16 @@ exports.authAndRun = function(app, externalUrl, onCompletedCallback) {
 
 exports.isAuthed = function() {
     try {
-        if(!exports.auth)
-            exports.auth = {};
-        
+        if (!exports.auth) exports.auth = {};
+
         // Already have the stuff read
-        if(exports.auth.hasOwnProperty("accessToken"))
-            return true;
+        if (exports.auth.hasOwnProperty("accessToken")) return true;
 
         // Try to read it in
         var authData = JSON.parse(fs.readFileSync('auth.json', 'utf8'));
         exports.auth = authData;
-        if(authData.hasOwnProperty("accessToken")) {
-            return true;
-        }
+
+        if (authData.hasOwnProperty("accessToken")) return true;
     } catch (E) {
         // TODO:  Could actually check the error type here
     }
@@ -68,20 +62,21 @@ exports.isAuthed = function() {
 
 function go(req, res) {
     if(!(exports.auth.appKey && exports.auth.appSecret)) {
+        var prompt;
         if (options.promptForUsername) {
-            var prompt = "Username: <input name='username'><br>";
+            prompt = "Username: <input name='username'><br>";
         } else {
-            var prompt = "";
+            prompt = "";
         }
         res.writeHead(200, { 'Content-Type': 'text/html' });
         var error = "";
         if (req.param('error')) {
             error = '<h1>Got an error while attempting to authenticate : ' + error + "</h1><p>Please reenter your credentials below.</p>";
         }
-        res.end("<html>" + error + "Enter your personal " + options.provider + " app info that will be used to sync your data" + 
+        res.end("<html>" + error + "Enter your personal " + options.provider + " app info that will be used to sync your data" +
                 " (create a new one <a href='" + options.linkToCreate + "' target='_blank'>here</a>" +
                 " using a callback url of " + options.redirectURI + "auth/) " +
-                "<form method='post' action='saveAuth'>" + 
+                "<form method='post' action='saveAuth'>" +
                     prompt +
                     options.appIDName + ": <input name='appKey'><br>" +
                     options.appSecretName + ": <input name='appSecret'><br>" +
@@ -90,12 +85,12 @@ function go(req, res) {
     } else if (exports.isAuthed()) {
         res.redirect(options.redirectURI);
     } else {
-        var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey + 
+        var newUrl = options.endPoint + "/" + options.authEndpoint + '?client_id=' + exports.auth.appKey +
                         '&response_type=code&redirect_uri=' + options.redirectURI + 'auth/';
         util.debug('redirecting to ' + newUrl);
-        if (options.extraParams) {
-            newUrl += "&" + options.extraParams;
-        }
+
+        if (options.extraParams) newUrl += "&" + options.extraParams;
+
         var resp = "<script type='text/javascript'>var left= (screen.width / 2) - (" + options.width + " / 2); var top = (screen.height / 2) - (" + options.height + " / 2); window.open('" + newUrl + "', 'auth', 'menubar=no,toolbar=no,status=no,width=" + options.width + ",height=" + options.height + ",toolbar=no,left=' + left + 'top=' + top);</script>";
         res.end(resp + '<a target=_new href=\'' + newUrl + '\'>Authenticate</a>');
     }
@@ -129,10 +124,8 @@ function handleAuth(req, res) {
 
 function saveAuth(req, res) {
     // res.writeHead(200, {'Content-Type': 'text/html'});
-    if(!req.body.appKey || !req.body.appSecret) {
-        res.end("missing field(s)?");
-        return;
-    }
+    if (!req.body.appKey || !req.body.appSecret) return res.end("missing field(s)?");
+
     exports.auth.username = req.param('username') || '';
     exports.auth.appKey = req.param('appKey');
     exports.auth.appSecret = req.param('appSecret');

@@ -3,6 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 #describe 'home page', :type => :request do
 describe 'dashboard' do
   it 'allows people to see the EXPLORE page' do
+    pending "You can't actually see EXPLORE until you auth a service"
     visit '/'
     page.should have_content("Contacts (DEMO)by Singly, Inc. with contacts from { see the code }")
   end
