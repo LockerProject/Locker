@@ -9,7 +9,7 @@ var loggedIn = true;
 
 $(document).ready(function() {
     $.history.init(function(hash){
-        loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore');
+        loadDiv(window.location.hash.substring(1) || $('.installed-apps a').data('id') || '#Explore-contactsviewer');
     }, { unescape: ",/" });
 
     $('body').delegate('.install', 'click', function(e) {
@@ -104,10 +104,8 @@ function setFrame(path) {
 var connectedCount = 0;
 function handleApp(appName) {
     $.get('clickapp/' + appName, function(e) {});
-    doAppHeader(appName, '#iframeContainer .app-header');
     getAppAndConnectedServices(appName, function(err, app, connected) {
-        connectedCount = connected.length;
-        if(app.uses && app.uses.services && connectedCount === 0) {
+        if(app.uses && app.uses.services && (connected.hasOwnProperty('length') && connected.length === 0)) {
             $("#appFrame").hide();
         } else {
             $("#appFrame").show();
