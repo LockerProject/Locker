@@ -110,7 +110,7 @@ var clickApp = function(req, res) {
 
 var renderApps = function(req, res) {
   uistate.fetchState();
-  getInstalledApps(function(sortedResult) {
+  getInstalledApps(function(err, sortedResult) {
     res.render('iframe/appsList', {
       layout: false,
       apps: sortedResult
