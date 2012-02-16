@@ -62,7 +62,7 @@ var loadApp = function(info) {
         else if (info.subSection === "ApiExplorer") setFrame('/dashboard/develop-apiexplorer');
         else if (info.subSection === "Publishing") setFrame('/dashboard/develop-publishing');
         else if (info.subSection === "ExampleApps") setFrame('/dashboard/develop-exampleapps');
-        else if (info.subSection === "ChatWithTheTeam") setFrame('/dashboard/develop-chatwiththeteam');
+        else if (info.subSection === "Chat") setFrame('/dashboard/develop-chat');
         else if (info.subSection === "TemplatesIcons") setFrame('/dashboard/develop-templatesicons');
     } else if (app === "connect") {
         setFrame('/dashboard/connect');

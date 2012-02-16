@@ -379,8 +379,8 @@ var renderDevelopExampleApps = function(req, res) {
   });
 };
 
-var renderDevelopChatWithTheTeam = function(req, res) {
-  res.render('iframe/develop-chatwiththeteam', {
+var renderDevelopChat = function(req, res) {
+  res.render('iframe/develop-chat', {
     layout: false
   });
 };
@@ -626,7 +626,7 @@ app.get('/develop-buildapp', renderDevelopBuildApp);
 app.get('/develop-apiexplorer', renderDevelopApiExplorer);
 app.get('/develop-publishing', renderDevelopPublishing);
 app.get('/develop-exampleapps', renderDevelopExampleApps);
-app.get('/develop-chatwiththeteam', renderDevelopChatWithTheTeam);
+app.get('/develop-chat', renderDevelopChat);
 app.get('/develop-templatesicons', renderDevelopTemplatesIcons);
 
 app.get('/appGallery', renderAppGallery);
