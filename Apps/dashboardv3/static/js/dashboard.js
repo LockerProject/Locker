@@ -16,6 +16,7 @@ $(document).ready(function() {
         var $e = $(e.currentTarget);
         var id = $e.attr('id');
         $.get('/registry/add/' + id, function() {
+            _kml.push('addapp');
             window.location = 'explore#Explore-' + id;
         });
         return false;
