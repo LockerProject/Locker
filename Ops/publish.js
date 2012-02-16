@@ -1,6 +1,11 @@
 var commander = require('commander');
 var path = require('path');
+
+// npm likes to reset process.title for some reason
+var savedProcessTitle = process.title;
 var npm = require('npm');
+process.title = savedProcessTitle;
+
 var fs = require('fs');
 var request = require('request');
 

@@ -9,7 +9,11 @@
 
 // all of the registry-related interactions
 
+// npm likes to reset process.title for some reason
+var savedProcessTitle = process.title;
 var npm = require('npm');
+process.title = savedProcessTitle;
+
 var fs = require('fs');
 var path = require('path');
 var async = require('async');
