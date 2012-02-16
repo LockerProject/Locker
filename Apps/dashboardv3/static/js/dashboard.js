@@ -104,6 +104,7 @@ function setFrame(path) {
 var connectedCount = 0;
 function handleApp(appName) {
     $.get('clickapp/' + appName, function(e) {});
+    doAppHeader(appName, '#iframeContainer .app-header');
     getAppAndConnectedServices(appName, function(err, app, connected) {
         if(app.uses && app.uses.services && (connected.hasOwnProperty('length') && connected.length === 0)) {
             $("#appFrame").hide();
