@@ -94,7 +94,7 @@ handlers.Explore = loadApp;
 handlers.Develop = loadApp;
 handlers.connect = loadApp;
 handlers.Settings = loadApp;
-handlers.viewAll = loadApp;
+handlers.allApps = loadApp;
 handlers.publish = loadApp;
 
 function setFrame(path) {
