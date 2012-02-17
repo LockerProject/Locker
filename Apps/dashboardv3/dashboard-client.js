@@ -64,8 +64,14 @@ app.configure(function() {
   });
 });
 
+/* When you first install, you need to connect something. /explore and /connect
+ * are the only two pages required to make a connection, so let them pass.
+ * Otherwise, check for connections and perhaps allow other pages to render.
+ */
 function checkInstalled(req, res, next) {
-  if(connectSkip) return next();
+  if(connectSkip || ['/explore', '/connect'].indexOf(req.path) !== -1) {
+    return next();
+  }
   getInstalledConnectors(function(err, installedConnectors) {
     // We ignore github since it's semi special and often presetup connector
     if (needsToConnectMore(installedConnectors)) {
@@ -607,9 +613,12 @@ var sendAvatar = function (req, res) {
   res.sendfile('avatar.png');
 };
 
+// Require at least one connection before you can do anything else
+app.all('*', checkInstalled);
+
 app.get('/clickapp/:app', clickApp);
 app.get('/explore', renderExplore);
-app.get('/', checkInstalled, renderExplore);
+app.get('/', renderExplore);
 
 app.get('/connect', renderConnect);
 

@@ -32,6 +32,18 @@ $(document).ready(function() {
         }
     });
 
+    function promptForConnections() {
+      registry.getMyConnectors(function(connectors) {
+        var count = Object.keys(connectors).length;
+        if (count === 0 || (count === 1 && typeof(connectors.github) !== 'undefined')) {
+          window.location.hash = '#Explore-connect';
+        } else {
+          $('.nav-section, .sidenav').show();
+          showConnectMore();
+        }
+      });
+    }
+
     function showConnectMore() {
         if ($.cookie("firstvisit") !== 'true') return;
         $.cookie("firstvisit", null, {path: '/' });
@@ -40,7 +52,8 @@ $(document).ready(function() {
             modal.close();
         });
     }
-    if (window.location.hash !== '#Explore-connect') showConnectMore();
+
+    if (window.location.hash !== '#Explore-connect') promptForConnections();
 });
 
 var loadApp = function(info) {

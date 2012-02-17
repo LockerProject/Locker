@@ -30,7 +30,7 @@ var setUpWelcome = function() {
     }
   });
 
-  showAuthedState(hasAuthedOne || !hasTwitterOrFacebook);
+  if (hasAuthedOne || !hasTwitterOrFacebook) showAuthedState();
 };
 
 var initLearnMore = function() {
@@ -59,20 +59,16 @@ var syncletInstalled = function(provider) {
   });
 
   $('.sidenav-items.synclets.connect', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
-  showAuthedState(true);
+  if (provider !== 'github') showAuthedState();
   updateUserProfile();
 };
 
-var showAuthedState = function(authed) {
+var showAuthedState = function() {
   var navs = $('.nav-section, .sidenav', window.parent.document);
-  if (authed) {
-    navs.fadeIn();
-    $("#main-header-1").hide();
-    $("#main-header-2").show();
-    $(".synclets-list li").fadeIn();
-  } else {
-    navs.fadeOut('fast');
-  }
+  navs.fadeIn();
+  $("#main-header-1").hide();
+  $("#main-header-2").show();
+  $(".synclets-list li").fadeIn();
 };
 
 var updateUserProfile = function() {
