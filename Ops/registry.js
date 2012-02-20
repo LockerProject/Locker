@@ -87,7 +87,9 @@ exports.app = function (app) {
     app.post('/registry/publish/:id', express.bodyParser(), publishPackage);
 
     app.put("/registry/screenshot/:id", publishScreenshot);
-    app.get("/registry/screenshot/:id", getScreenshot);
+    app.get("/registry/screenshot/:id", function(req, res) {
+        res.redirect(burrowBase + "/registry/" + req.params.id + "/screenshot.png");
+    });
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
@@ -129,23 +131,15 @@ function addApp(req, res) {
             logger.error(req.params.id+" failed: ",err);
             return res.send(err, 500);
         }
-
-    });
-
-    if (!regIndex[req.params.id]) {
-        // if it has already tried to sync, this isn't a real package
-        if (retry === true) return res.send("package " + req.params.id + " not found", 404);
-        logger.info(req.params.id + " not found in local registry cache, re-syncing");
-        return exports.sync(function (err) {
+        if(!verifyPkg(pkg))
+        {
+            logger.error(req.params.id+" not valid ");
+            return res.send("not valid", 500);
+        }
+        exports.install(pkg, function (err) {
             if (err) return res.send(err, 500);
-            // no errors, it should be in regIndex, so just call again
-            return add(req, res, true);
+            res.send(true);
         });
-    }
-    if (!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
-    exports.install({name:req.params.id}, function (err) {
-        if (err) return res.send(err, 500);
-        res.send(true);
     });
 }
 
@@ -226,17 +220,10 @@ function publishScreenshot(req, res) {
     });
 }
 
-function getScreenshot(req, res) {
-    if (!regIndex[req.params.id])
-        res.redirect("/Me/dashboardv3/img/batman.jpg");
-    else
-        res.redirect(burrowBase + "/registry/" + req.params.id + "/screenshot.png");
-}
-
 // verify the validity of a package
-function verify(pkg) {
+function verifyPkg(pkg) {
     if (!pkg) return false;
-    if (lconfig.requireSigned && !pkg.signed) return false;
+    if (!pkg.signed) return false;
     if (!pkg.repository) return false;
     if (pkg.repository.type == 'app') return true;
     if (pkg.repository.type == 'connector') return true;
@@ -272,38 +259,38 @@ exports.sync = function (callback, force) {
         var svc = serviceManager.map(key);
         if(svc.srcdir.indexOf("/node_modules/") == -1) return cb();
         getPackage(key, function(err, pkg){
-            if(err)
-            {
-                logger.error(err);
-                cb(); // dont' stop processing if just one fails
-            }
-            checkSigned(pkg, function(signed){
-                if(!signed) return cb();
-                usePkg(pkg, cb);
-            })
+            if(err || !pkg) logger.error(err); // log is only helpful here, not stopper
+            if(pkg.signed) updatePkg(pkg); // happens async
+            cb();
         });
     }, finish);
 };
 
-// check a specific version if it's signed
+// check a specific version if it's signed, sets pkg.signed=true||false and passes through!
 function checkSigned(pkg, callback) {
-    if (!lconfig.requireSigned) return callback(true); // if no sig required just pass through
+    if(!pkg) return callback("missing package");
+    pkg.signed = false;
+    // if no sig required just pass through
+    if (!lconfig.requireSigned) {
+        pkg.signed = true;
+        return callback(null, pkg);
+    }
     var url = burrowBase + "/registry/" + pkg.name + "/signature-"+pkg.version;
     logger.verbose("fetching "+url);
     request.get({uri:url, json:true, headers:{"Connection":"keep-alive"}}, function (err, resp, body) {
-        if (err || !body || !body.sig) return callback(false);
+        if (err || !body || !body.sig) return callback(null, pkg);
         var data = pkg.dist.shasum + " " + path.basename(pkg.dist.tarball);
         if (!lcrypto.verify(data, body.sig, lconfig.keys)) {
             logger.error(data + " signature failed verification :(");
-            return callback(false);
+            return callback(null, pkg);
         }
         pkg.signed = true;
-        return callback(true);
+        return callback(null, pkg);
     });
 }
 
-// update to this pkg
-function usePkg(pkg, callback) {
+// update to this pkg if it's newer
+function updatePkg(pkg) {
     logger.verbose("new "+pkg.name+" "+pkg.version);
     if (lconfig.registryUpdate === true &&
         serviceManager.map(pkg.name) &&
@@ -323,7 +310,6 @@ function usePkg(pkg, callback) {
     }else{
         logger.verbose("missing or not auto-update");
     }
-    return callback();
 }
 
 // simple wrapper to get any package info from registry
@@ -335,7 +321,7 @@ function getPackage(name, callback) {
         if(err || !res) return callback(err);
         if(!js || js.name != name) return callback("missing body");
         js.installed = (serviceManager.map(name)) ? true : false;
-        return callback(null, js);
+        return checkSigned(pkg, callback);
     });
 };
 
@@ -508,15 +494,18 @@ function authIsAwesome(req, res) {
     var id = req.params.id;
     var js = serviceManager.map(id);
     if (js) return authRedir(js, req, res); // short circuit if already done
-    if (!verify(regIndex[id])) {
-        logger.error("package verification failed trying to auth "+id);
-        return res.send(id+" failed verification :(", 500);
-    }
-    exports.install(id, function (err) {
-        if (err) return res.send(err, 500);
-        var js = serviceManager.map(id);
-        if (!js) return res.send("failed to install :(", 500);
-        return authRedir(js, req, res);
+    getPackage(id, function(err, pkg) {
+        if(err || !verifyPkg(pkg))
+        {
+            logger.error("package verification failed trying to auth "+id+": ",err);
+            return res.send(id+" failed verification :(", 500);
+        }
+        exports.install(pkg, function (err) {
+            if (err) return res.send(err, 500);
+            var js = serviceManager.map(id);
+            if (!js) return res.send("failed to install :(", 500);
+            return authRedir(js, req, res);
+        });
     });
 }
 
