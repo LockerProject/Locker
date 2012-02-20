@@ -26,11 +26,10 @@ var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
-var regIndex = {};
 var syncInterval = 3600000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
-var burrowBase = "burrow.singly.com";
+var burrowBase = "https://burrow.singly.com";
 var serviceManager, syncManager;
 var apiKeys;
 
@@ -45,99 +44,40 @@ exports.init = function (serman, syncman, config, crypto, callback) {
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
-    var home = path.join(lconfig.lockerDir, lconfig.me);
-    process.chdir(home);
     config = {registry:regBase, cache:path.join(home, '.npm')};
     config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
     config.locker_base = lconfig.lockerBase;
+    var home = path.join(lconfig.lockerDir, lconfig.me);
+    process.chdir(home); // for npm
     npm.load(config, function (err) {
+        process.chdir(lconfig.lockerDir); // restore
         if (err) logger.error(err);
-        fs.readFile('registry.json', 'utf8', function (err, reg) {
-            try {
-                if (reg) regIndex = JSON.parse(reg);
-            } catch(E) {
-                logger.error("couldn't parse registry.json: "+E);
-            }
-            exports.sync();
-            process.chdir(lconfig.lockerDir);
-            callback();
-        });
+        exports.sync();
+        callback();
     });
 };
 
 // init web endpoints
 exports.app = function (app) {
-    app.get('/registry/add/:id', add);
+    app.get('/registry/add/:id', addApp);
 
-    function add(req, res, retry) {
-        // if this is the next function, then this isn't a retry
-        if (typeof retry === 'function') retry = false;
-        if (!req.params.id) return res.send('invalid id', 400);
-        logger.info("registry trying to add "+req.params.id);
+// TODO make sure callers understand response format!
+    app.get("/registry/connectors", getConnectors);
 
-        if (!regIndex[req.params.id]) {
-            // if it has already tried to sync, this isn't a real package
-            if (retry === true) return res.send("package " + req.params.id + " not found", 404);
-            logger.info(req.params.id + " not found in local registry cache, re-syncing");
-            return exports.sync(function (err) {
-                if (err) return res.send(err, 500);
-                // no errors, it should be in regIndex, so just call again
-                return add(req, res, true);
-            });
-        }
-        if (!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
-        exports.install({name:req.params.id}, function (err) {
-            if (err) return res.send(err, 500);
-            res.send(true);
-        });
-    }
-
-    app.get('/registry/apps', function (req, res) {
-        res.send(exports.getApps());
-    });
-    app.get("/registry/connectors", function(req, res) {
-        var connectors = {};
-        // get all connectors from the registry
-        Object.keys(regIndex).forEach(function(key) {
-            if (regIndex[key].repository && regIndex[key].repository && regIndex[key].repository.type == "connector") {
-                // not all connectors need auth keys!
-                if((regIndex[key].repository.keys === false || regIndex[key].repository.keys == "false") && !regIndex[key].repository.hidden) connectors[key] = regIndex[key];
-                // require keys now
-                if(apiKeys[key]) connectors[key] = regIndex[key];
-            }
-        });
-        // annoyingly, some might be local only
-        Object.keys(serviceManager.map()).forEach(function(key) {
-            var svc = serviceManager.map(key);
-            if(svc.type != "connector") return;
-            if(connectors[key]) return;
-            if(apiKeys[key]) {
-                // spoof a repository field to be consistent
-                connectors[key] = lutil.extend(true, {}, svc);
-                connectors[key].repository = lutil.extend(true, {}, svc);
-            }
-        });
-        // TODO: STREAM!
-        var arr = [];
-        Object.keys(connectors).forEach(function(k){arr.push(connectors[k])});
-        res.send(arr);
-    });
-    app.get('/registry/all', function (req, res) {
-        res.send(exports.getRegistry());
-    });
     app.get('/registry/app/:id', function (req, res) {
-        var id = req.params.id;
-        if (!regIndex[id]) return res.send("not found", 404);
-
-        var copy = lutil.extend(true, {}, regIndex[id]);
-        copy.installed = (serviceManager.map(k)) ? true : false;
-        res.send(copy);
+        getPackage(req.params.id, function(err, pkg){
+            if(err || !pkg)
+            {
+                logger.error("couldn't get "+req.params.id+": ",err);
+                return res.send(err, 404);
+            }
+            res.send(pkg);
+        });
     });
     app.get('/registry/sync', function (req, res) {
         logger.info("manual registry sync");
         exports.sync(function (err) {
             if (err) return res.send(err, 500);
-
             res.send(true);
         }, req.param('force'));
     });
@@ -149,13 +89,65 @@ exports.app = function (app) {
     app.put("/registry/screenshot/:id", publishScreenshot);
     app.get("/registry/screenshot/:id", getScreenshot);
 
-    app.get('/registry/myApps', exports.getMyApps);
-
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
 
     app.get('/deauth/:id', deauthIsAwesomer);
 };
+
+function getConnectors(req, res) {
+    var connectors = {};
+    // get all connectors from the registry
+    var url = burrowBase + "/registry/_design/connectors/_view/Connectors";
+    request.get({uri:url, json:true}, function(err, res, js){
+        if(js && js.rows) js.rows.forEach(function(conn){
+            // if api key
+            if(apiKeys[conn.id]) connectors[conn.id] = conn.value;
+            // if no key required
+            if(conn.value.keys === false || conn.value.keys == "false") connectors[conn.id] = conn.value;
+        });
+        // annoyingly, some might be local only
+        Object.keys(serviceManager.map()).forEach(function(key) {
+            var svc = serviceManager.map(key);
+            if(svc.type != "connector") return;
+            if(connectors[key]) return;
+            if(apiKeys[key]) connectors[key] = svc;
+        });
+        var arr = [];
+        Object.keys(connectors).forEach(function(k){arr.push(connectors[k])});
+        res.send(arr);
+    });
+}
+
+function addApp(req, res) {
+    // if this is the next function, then this isn't a retry
+    if (!req.params.id) return res.send('invalid id', 400);
+    logger.info("registry trying to add "+req.params.id);
+    getPackage(req.params.id, function(err, pkg){
+        if(err || !pkg)
+        {
+            logger.error(req.params.id+" failed: ",err);
+            return res.send(err, 500);
+        }
+
+    });
+
+    if (!regIndex[req.params.id]) {
+        // if it has already tried to sync, this isn't a real package
+        if (retry === true) return res.send("package " + req.params.id + " not found", 404);
+        logger.info(req.params.id + " not found in local registry cache, re-syncing");
+        return exports.sync(function (err) {
+            if (err) return res.send(err, 500);
+            // no errors, it should be in regIndex, so just call again
+            return add(req, res, true);
+        });
+    }
+    if (!verify(regIndex[req.params.id])) return res.send("invalid package", 500);
+    exports.install({name:req.params.id}, function (err) {
+        if (err) return res.send(err, 500);
+        res.send(true);
+    });
+}
 
 function publishPackage(req, res) {
     logger.info("registry publishing "+req.params.id);
@@ -193,7 +185,7 @@ function publishScreenshot(req, res) {
                 return;
             }
             logger.log("info", "Publising the screenshot for " + req.params.id);
-            request.get({uri:"https://" + burrowBase + "/registry/" + req.params.id, json:true}, function (err, result, body) {
+            request.get({uri:burrowBase + "/registry/" + req.params.id, json:true}, function (err, result, body) {
                 if (err) {
                     logger.log("error", "Tried to publish a screenshot to nonexistent package " + req.params.id);
                     res.send(err, 400);
@@ -201,7 +193,7 @@ function publishScreenshot(req, res) {
                 }
                 var putReq = request.put(
                     {
-                        url:"https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev ,
+                        url:burrowBase + "/registry/" + req.params.id + "/screenshot.png?rev=" + body._rev ,
                         headers:{"Content-Type":"image/png", Authorization:"Basic " + auth._auth, "Content-Length":req.headers["content-length"]},
                         body:buffer
                     },
@@ -238,7 +230,7 @@ function getScreenshot(req, res) {
     if (!regIndex[req.params.id])
         res.redirect("/Me/dashboardv3/img/batman.jpg");
     else
-        res.redirect("https://" + burrowBase + "/registry/" + req.params.id + "/screenshot.png");
+        res.redirect(burrowBase + "/registry/" + req.params.id + "/screenshot.png");
 }
 
 // verify the validity of a package
@@ -252,7 +244,7 @@ function verify(pkg) {
     return false;
 }
 
-// background sync process to fetch/maintain the full package list
+// background sync process to fetch/maintain the full installed package list, auto-update
 var syncCallbacks = [];
 exports.sync = function (callback, force) {
     if (!callback) callback = function (err) {
@@ -265,6 +257,7 @@ exports.sync = function (callback, force) {
 
 
     function finish(err) {
+        if(err) logger.error(err);
         syncTimer = setTimeout(exports.sync, syncInterval);
         syncCallbacks.forEach(function (cb) { cb(err); });
         syncCallbacks = [];
@@ -275,65 +268,50 @@ exports.sync = function (callback, force) {
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
-    var startkey = 0;
-    // get the newest
-    Object.keys(regIndex).forEach(function (k) {
-        if (!regIndex[k].time || !regIndex[k].time.modified) return;
-        var mod = new Date(regIndex[k].time.modified).getTime();
-        if (mod > startkey) startkey = mod;
-    });
-    // look for updated packages newer than the last we've seen
-    startkey++;
-    if (force) startkey = 0; // refresh fully
-    var u = regBase+'/-/all/since?stale=update_after&startkey='+startkey;
-    logger.info("registry update from "+u);
-    request.get({uri:u, json:true}, function (err, resp, body) {
-        if (err || !body || typeof body !== "object" || body === null) return finish("couldn't sync with registry: "+err+" "+body);
-        // replace in-mem representation
-        if (force) regIndex = {}; // cleanse!
-        // new updates from the registry, update our local mirror
-        async.forEachSeries(Object.keys(body), function(pkg, cb){
-            if(!body[pkg].versions) return cb();
-            checkSigned(body[pkg], Object.keys(body[pkg].versions).sort(semver.compare), cb);
-        }, function () {
-            // cache to disk lazily
-            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, 'registry.json'), JSON.stringify(regIndex));
-            finish();
+    async.forEach(Object.keys(serviceManager.map()), function(key, cb) {
+        var svc = serviceManager.map(key);
+        if(svc.srcdir.indexOf("/node_modules/") == -1) return cb();
+        getPackage(key, function(err, pkg){
+            if(err)
+            {
+                logger.error(err);
+                cb(); // dont' stop processing if just one fails
+            }
+            checkSigned(pkg, function(signed){
+                if(!signed) return cb();
+                usePkg(pkg, cb);
+            })
         });
-    });
+    }, finish);
 };
 
-// recursively process vers array, looking for one that is signed, then process that
-function checkSigned(pkg, versions, callback) {
-    if (!versions || versions.length === 0) return callback();
-    if (!lconfig.requireSigned) return usePkg(pkg, pkg["dist-tags"].latest, callback); // if no sig required just pass through
-    var ver = versions.pop(); // try newest
-    var url = "https://" + burrowBase + "/registry/" + pkg.name + "/signature-"+ver;
+// check a specific version if it's signed
+function checkSigned(pkg, callback) {
+    if (!lconfig.requireSigned) return callback(true); // if no sig required just pass through
+    var url = burrowBase + "/registry/" + pkg.name + "/signature-"+pkg.version;
+    logger.verbose("fetching "+url);
     request.get({uri:url, json:true, headers:{"Connection":"keep-alive"}}, function (err, resp, body) {
-        if (err || !body || !body.sig) return checkSigned(pkg, versions, callback);
-        // annoyingly, /-/all is different structure than /packagename!
-        var data = pkg.dist[ver].shasum + " " + path.basename(pkg.dist[ver].tarball);
+        if (err || !body || !body.sig) return callback(false);
+        var data = pkg.dist.shasum + " " + path.basename(pkg.dist.tarball);
         if (!lcrypto.verify(data, body.sig, lconfig.keys)) {
             logger.error(data + " signature failed verification :(");
-            return checkSigned(pkg, versions, callback);
+            return callback(false);
         }
         pkg.signed = true;
-        return usePkg(pkg, ver, callback);
+        return callback(true);
     });
 }
 
-// good version, update!
-function usePkg(pkg, ver, callback) {
-    logger.verbose("new "+pkg.name+" "+ver);
-    pkg.latest = ver;
-    regIndex[pkg.name] = pkg;
+// update to this pkg
+function usePkg(pkg, callback) {
+    logger.verbose("new "+pkg.name+" "+pkg.version);
     if (lconfig.registryUpdate === true &&
         serviceManager.map(pkg.name) &&
         pkg.repository &&
         (pkg.repository.update == 'auto' ||
          pkg.repository.update == 'true' ||
          pkg.repository.update === true) &&
-        semver.lt(serviceManager.map(pkg.name).version, ver)) {
+        semver.lt(serviceManager.map(pkg.name).version, pkg.version)) {
         if (serviceManager.map(pkg.name).srcdir.indexOf("node_modules") == -1) {
             logger.verbose("skipping since local versionis not from the registry");
         } else {
@@ -342,61 +320,32 @@ function usePkg(pkg, ver, callback) {
                 if (err) logger.error(err);
             }); // lazy update
         }
+    }else{
+        logger.verbose("missing or not auto-update");
     }
     return callback();
 }
 
-exports.getRegistry = function () {
-    return regIndex;
-};
-
-exports.getPackage = function (name) {
-    return regIndex[name];
-};
-
-exports.getApps = function () {
-    var apps = {};
-    Object.keys(regIndex).forEach(function (k) {
-        if (!regIndex[k].repository || regIndex[k].repository.type != 'app') return;
-        apps[k] = regIndex[k];
-        apps[k].installed = (serviceManager.map(k)) ? true : false;
-    });
-    return apps;
-};
-
-exports.getMyApps = function (req, res) {
-    github(function (gh) {
-        var apps = {};
-        if (gh && gh.login) {
-            Object.keys(regIndex).forEach(function (k) {
-                var thiz = regIndex[k];
-                if (thiz.repository && thiz.repository.type === 'app' && thiz.name && thiz.name.indexOf(gh.login + '-') === 0) {
-                    apps[k] = thiz;
-                }
-            });
-        }
-        res.send(apps);
+// simple wrapper to get any package info from registry
+function getPackage(name, callback) {
+    var tag = (lconfig.requireSigned) ? "signed" : "latest";
+    var url = regBase + "/" + name + "/" + tag;
+    logger.verbose("fetching "+url);
+    request.get({uri:url, json:true, headers:{"Connection":"keep-alive"}}, function(err, res, js){
+        if(err || !res) return callback(err);
+        if(!js || js.name != name) return callback("missing body");
+        js.installed = (serviceManager.map(name)) ? true : false;
+        return callback(null, js);
     });
 };
 
 // npm wrappers
 exports.install = function (arg, callback) {
-    if (typeof arg === 'string') arg = {name:arg}; // convenience
-    if (!arg || !arg.name) return callback("missing package name");
+    if (!arg || !arg.name || !arg.version) return callback("missing package info");
     var npmarg = [];
 
-    // if not in registry yet, sync to latest!
-    var reg = regIndex[arg.name];
-    if (!reg || !reg.latest) {
-        exports.sync(function () {
-            if (regIndex[arg.name]) return exports.install(arg, callback);
-            return callback("failed to find valid version");
-        });
-        return;
-    }
-
-    if (serviceManager.map(arg.name) && serviceManager.map(arg.name).version == reg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
-    npmarg = [arg.name+'@'+reg.latest];
+    if (serviceManager.map(arg.name) && serviceManager.map(arg.name).version == arg.latest) return callback(null, serviceManager.map(arg.name)); // in the map already
+    npmarg = [arg.name+'@'+arg.version];
     logger.info("installing "+JSON.stringify(npmarg));
     npm.commands.install(npmarg, function (err) {
         if (err) { // some errors appear to be transient
