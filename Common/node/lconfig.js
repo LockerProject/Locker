@@ -36,42 +36,43 @@ exports.load = function(filepath) {
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
     exports.collections = config.collections || [
-        "contacts:Collections/Contacts",
-        "links:Collections/Links",
-        "photos:Collections/Photos",
-        "places:Collections/Places",
-        "search:Collections/Search",
+        'contacts:Collections/Contacts',
+        'links:Collections/Links',
+        'photos:Collections/Photos',
+        'places:Collections/Places',
+        'search:Collections/Search',
+        'profiles:Collections/Profiles'
     ];
     exports.apps = config.apps || [
-        "helloplaces:Apps/HelloPlaces",
-        "linkalatte:Apps/LinkaLatte",
-        "contactsviewer:Apps/MergedContacts",
-        "devdocs:Apps/DevDocs",
-        "photosviewer:Apps/PhotosViewer",
-        "facebook:Connectors/Facebook",
-        "flickr:Connectors/Flickr",
-        "github:Connectors/GitHub",
-        "gcontacts:Connectors/GoogleContacts",
-        "instagram:Connectors/Instagram",
-        "twitter:Connectors/Twitter",
-        "foursquare:Connectors/foursquare",
+        'helloplaces:Apps/HelloPlaces',
+        'linkalatte:Apps/LinkaLatte',
+        'contactsviewer:Apps/MergedContacts',
+        'devdocs:Apps/DevDocs',
+        'photosviewer:Apps/PhotosViewer',
+        'facebook:Connectors/Facebook',
+        'flickr:Connectors/Flickr',
+        'github:Connectors/GitHub',
+        'gcontacts:Connectors/GoogleContacts',
+        'instagram:Connectors/Instagram',
+        'twitter:Connectors/Twitter',
+        'foursquare:Connectors/foursquare'
     ];
     config.mongo = config.mongo || {};
     exports.mongo = {
-        "dataDir": config.mongo.dataDir || "mongodata",
-        "host": config.mongo.host || "localhost",
-        "port": config.mongo.port || 27018,
-        "options": config.mongo.options || ['--nohttpinterface']
+        'dataDir': config.mongo.dataDir || 'mongodata',
+        'host': config.mongo.host || 'localhost',
+        'port': config.mongo.port || 27018,
+        'options': config.mongo.options || ['--nohttpinterface']
     };
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
-    exports.me = config.me || "Me";
+    exports.me = config.me || 'Me';
     // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
     // Right now it is ambiguous, we probably need two different vars
-    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
+    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), '..');
     if(!config.logging) config.logging = {};
     exports.logging =  {
         file: config.logging.file || undefined,
-        level:config.logging.level || "info",
+        level:config.logging.level || 'info',
         maxsize: config.logging.maxsize || 256 * 1024 * 1024, // default max log file size of 64MBB
         console: (config.logging.hasOwnProperty('console')? config.logging.console : true)
     };
@@ -90,13 +91,13 @@ exports.load = function(filepath) {
     exports.dashboard = config.dashboard;
 
     // load trusted public keys
-    var kdir = path.join(path.dirname(filepath), "keys");
+    var kdir = path.join(path.dirname(filepath), 'keys');
     exports.keys = [];
     if(path.existsSync(kdir))
     {
         var keys = fs.readdirSync(kdir);
         keys.forEach(function(key){
-            if(key.indexOf(".pub") == -1) return;
+            if(key.indexOf('.pub') == -1) return;
             exports.keys.push(fs.readFileSync(path.join(kdir, key)).toString());
         });
     }

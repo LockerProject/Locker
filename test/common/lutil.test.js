@@ -29,7 +29,7 @@ describe("lutil", function () {
   });
 
   describe("avatarUrlFromMap", function () {
-    var mapUrl = 'https://me.lvh.me:8443/map/profiles';
+    var mapUrl = 'https://me.lvh.me:8443/Me/profiles/';
 
     beforeEach(function (done) {
       fakeweb.allowNetConnect = false;

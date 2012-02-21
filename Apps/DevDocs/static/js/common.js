@@ -21,7 +21,7 @@ function isGitHubConnected(callback) {
 }
 
 function getGitHubProfile(callback) {
-    $.getJSON("/map/profiles", function(profiles) {
+    $.getJSON("/Me/profiles/", function(profiles) {
         console.error("DEBUG: profiles", profiles);
         for(var i in profiles) if(i.indexOf('contact://github/') === 0) return callback(profiles[i]);
         return callback();
@@ -36,7 +36,7 @@ function pollForGitHubProfile(callback) {
         }, 1000);
     });
 }
-// 
+//
 // function checkForToken(callback) {
 //     if (document.location.host.substr(0,3) != 'me.') return callback();
 //     var host = document.location.host.substr(3);
@@ -44,7 +44,7 @@ function pollForGitHubProfile(callback) {
 //     console.error("DEBUG: url", url);
 //     $.getJSON('https://'+host+'/users/me/apiToken', callback);
 // }
-// 
+//
 // var syncingViewers = false;
 // function syncViewers() {
 //     if(syncingViewers) return;
@@ -78,7 +78,7 @@ $(document).ready(function() {
     //     var host = document.location.host.substr(3);
     //     $("#token").html("baseUrl = 'https://api."+host+"/"+token.apiToken+"';");
     // });
-    // 
+    //
     // if ($.cookie('optin') === "true") {
     //     $("body").append('<script type="text/javascript" charset="utf-8" src="js/ga.js"></script>');
     // }

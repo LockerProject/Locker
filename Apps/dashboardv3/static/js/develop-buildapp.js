@@ -41,7 +41,7 @@ Locker.Develop.BuildAnApp = (function() {
   }
 
   function getGitHubProfile(callback) {
-    $.getJSON('/map/profiles', function(profiles) {
+    $.getJSON('/Me/profiles/', function(profiles) {
       for(var i in profiles) if(i.indexOf('contact://github/') === 0) return callback(profiles[i]);
       return callback();
     });

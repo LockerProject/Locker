@@ -1,9 +1,9 @@
 var fs = require("fs")
-, path = require("path")
-, im = require('imagemagick')
-, url = require("url")
-, async = require("async")
-, request = require("request");
+  , path = require("path")
+  , im = require('imagemagick')
+  , url = require("url")
+  , async = require("async")
+  , request = require("request");
 
 /**
  * Adopted from jquery's extend method. Under the terms of MIT License.
@@ -256,7 +256,7 @@ exports.fetchAndResizeImageURL = function (sourceUrl, rawFile, destFile, callbac
   });
 };
 
-function idrsToServices(dict) {
+exports.idrsToServices = function (dict) {
   var profileMap = {};
   for (var idr in dict) {
     var service = url.parse(idr).host;
@@ -268,13 +268,13 @@ function idrsToServices(dict) {
     }
   }
   return profileMap;
-}
+};
 
 exports.avatarUrlFromMap = function (storagePath, lockerBase, callback) {
   // always override if a local avatar exists
   if (path.existsSync(path.join(storagePath, 'avatar.png'))) return callback(null, 'avatar.png');
 
-  request.get({url:lockerBase + '/map/profiles'}, function (err, res, body) {
+  request.get({url:lockerBase + '/Me/profiles/'}, function (err, res, body) {
     if (err) return callback(err);
 
     var profiles;
@@ -285,7 +285,7 @@ exports.avatarUrlFromMap = function (storagePath, lockerBase, callback) {
       return callback(E);
     }
 
-    var profileMap = idrsToServices(profiles);
+    var profileMap = exports.idrsToServices(profiles);
     if (profileMap.twitter)    return callback(null, profileMap.twitter[0].profile_image_url_https);
     if (profileMap.facebook)   return callback(null, 'http://graph.facebook.com/' + profileMap.facebook[0].username + '/picture');
     if (profileMap.github)     return callback(null, profileMap.github[0].avatar_url);
@@ -316,7 +316,7 @@ exports.parseAuthor = function(js) {
     } else {
       js.author = {email: js.author};
     }
-  } else {  
+  } else {
     js.author = {name: js.author};
   }
 };

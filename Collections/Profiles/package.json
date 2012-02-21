@@ -1,0 +1,65 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "profiles",
+  "description": "Profiles Collection",
+  "version": "0.0.0",
+  "repository": {
+    "title": "Profiles",
+    "run": "node profiles.js",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "handle": "profiles",
+    "provides": [
+      "profile"
+    ],
+    "mongoCollections": [
+      "profile"
+    ],
+    "events": [
+      [
+        "profile/foursquare",
+        "/events"
+      ],
+      [
+        "contact/facebook",
+        "/events"
+      ],
+      [
+        "profile/twitter",
+        "/events"
+      ],
+      [
+        "profile/github",
+        "/events"
+      ],
+      [
+        "profile/instagram",
+        "/events"
+      ],
+      [
+        "profile/gcontacts",
+        "/events"
+      ],
+      [
+        "profile/flickr",
+        "/events"
+      ],
+      [
+        "profile/tumblr",
+        "/events"
+      ],
+      [
+        "profile/linkedin",
+        "/events"
+      ]
+    ],
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
