@@ -47,12 +47,13 @@ exports.init = function (serman, syncman, config, crypto, callback) {
     config = {registry:regBase, cache:path.join(home, '.npm')};
     config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
     config.locker_base = lconfig.lockerBase;
+    config.prefix = config.locker_me;
     var home = path.join(lconfig.lockerDir, lconfig.me);
-    process.chdir(home); // for npm
+//    process.chdir(home); // for npm
     npm.load(config, function (err) {
-        process.chdir(lconfig.lockerDir); // restore
+//        process.chdir(lconfig.lockerDir); // restore
         if (err) logger.error(err);
-        exports.sync();
+        setTimeout(exports.sync,2000);
         callback();
     });
 };
@@ -101,7 +102,7 @@ function getConnectors(req, res) {
     var connectors = {};
     // get all connectors from the registry
     var url = burrowBase + "/registry/_design/connectors/_view/Connectors";
-    request.get({uri:url, json:true}, function(err, res, js){
+    request.get({uri:url, json:true}, function(err, ret, js){
         if(js && js.rows) js.rows.forEach(function(conn){
             // if api key
             if(apiKeys[conn.id]) connectors[conn.id] = conn.value;
@@ -290,7 +291,6 @@ function checkSigned(pkg, callback) {
 
 // update to this pkg if it's newer
 function updatePkg(pkg) {
-    logger.verbose("new "+pkg.name+" "+pkg.version);
     if (lconfig.registryUpdate === true &&
         serviceManager.map(pkg.name) &&
         pkg.repository &&
@@ -307,7 +307,7 @@ function updatePkg(pkg) {
             }); // lazy update
         }
     }else{
-        logger.verbose("missing or not auto-update");
+        logger.verbose("no update for "+pkg.name);
     }
 }
 
