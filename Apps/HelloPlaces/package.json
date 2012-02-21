@@ -14,6 +14,7 @@
       "services": [
         "twitter",
         "foursquare",
+        "gowalla",
         "instagram"
       ],
       "types": [
