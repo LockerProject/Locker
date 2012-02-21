@@ -122,7 +122,6 @@ function getConnectors(req, res) {
 }
 
 function addApp(req, res) {
-    // if this is the next function, then this isn't a retry
     if (!req.params.id) return res.send('invalid id', 400);
     logger.info("registry trying to add "+req.params.id);
     getPackage(req.params.id, function(err, pkg){
@@ -321,7 +320,7 @@ function getPackage(name, callback) {
         if(err || !res) return callback(err);
         if(!js || js.name != name) return callback("missing body");
         js.installed = (serviceManager.map(name)) ? true : false;
-        return checkSigned(pkg, callback);
+        return checkSigned(js, callback);
     });
 };
 
