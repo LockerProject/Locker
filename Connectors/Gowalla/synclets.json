@@ -1,0 +1,31 @@
+{
+    "provides": [
+      "friend/gowalla",
+      "checkin/gowalla",
+      "pin/gowalla"
+    ],
+    "mongoId": {
+        "friends": "url",
+        "checkins": "url",
+        "profile": "url",
+        "pins": "url"
+    },
+    "synclets": [
+        {
+            "name": "friends",
+            "frequency": 86400
+        },
+        {
+            "name": "checkins",
+            "frequency": 86400
+        },
+        {
+            "name": "profile",
+            "frequency": 86400
+        },
+        {
+            "name": "pins",
+            "frequency": 86400
+        }
+    ]
+}
