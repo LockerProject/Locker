@@ -52,7 +52,6 @@ exports.load = function(filepath) {
         "flickr:Connectors/Flickr",
         "github:Connectors/GitHub",
         "gcontacts:Connectors/GoogleContacts",
-        "gowalla:Connectors/Gowalla",
         "instagram:Connectors/Instagram",
         "twitter:Connectors/Twitter",
         "foursquare:Connectors/foursquare",
