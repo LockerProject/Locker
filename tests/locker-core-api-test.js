@@ -71,7 +71,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
                 assert.equal(providers.length, 2);
             })
         .unpath()
-    .undiscuss()
+    .undiscuss();
 
 
 tests.next()
@@ -79,7 +79,7 @@ tests.next()
     .discuss("not spawn an invalid service")
         .get("/spawn-invalid/")
             .expect(404)
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
     // Tests for the proxying
     .path("/Me")
@@ -87,20 +87,20 @@ tests.next()
         .get("testURLCallback/test")
             .expect(200)
             .expect({url:"/test", method:"GET"})
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
     // Tests for the proxying
     .path("/Me")
     .discuss("proxy requests via GET to services")
         .get("invalidServicename/test")
             .expect(404)
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
     .path("/Me")
     .discuss("proxy requests via POST to invalid services")
         .post("invalidServicename/test")
             .expect(404)
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
     .discuss("proxy handles Unicode ")
         .path("/Me/testUnicode/test")
@@ -116,14 +116,7 @@ tests.next()
                     assert.isNotNull(json);
                 })
         .unpath()
-    .undiscuss().unpath()
-tests.next()
-    // Diary storage
-    .path("/core/testURLCallback/diary?" + querystring.stringify({level:2, message:"Test message"}))
-    .discuss("store diary messages")
-        .get()
-            .expect(200)
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
     .path("/core/revision")
     .discuss("returns a revision if git is available")
@@ -133,7 +126,7 @@ tests.next()
                 assert.notEqual(body, "unknown");
             })
         .unpath()
-    .undiscuss().unpath()
+    .undiscuss().unpath();
 tests.next()
 
     // Event basics
@@ -143,28 +136,6 @@ tests.next()
             .expect(200)
     .undiscuss().unpath();
 
-
-// These tests are dependent on the previous tests so we make sure they fire after them
-tests.next()
-    // Test this after the main suite so we're sure the diary POST is done
-    .discuss("retrieve stored diary messages")
-    .path("/diary")
-    .get()
-        .expect(200)
-        .expect("that have full info", function(err, res, body) {
-            var diaryLine = JSON.parse(body)[0];
-            assert.include(diaryLine, "message");
-            assert.include(diaryLine, "level");
-            assert.include(diaryLine, "timestamp");
-        })
-    .undiscuss().unpath()
-
-    // Makes sure the /listen is done first
-    .path("/core/testURLCallback/deafen?" + querystring.stringify({type:"test/event2", cb:"/event"}))
-    .discuss("deafen a listener for an event")
-        .get()
-            .expect(200)
-    .undiscuss().unpath();
 
 // These tests are written in normal Vows
 tests.next().suite.addBatch({
