@@ -10,16 +10,18 @@
     <script src="<%= dashboard.customHostedEndpoint %>"></script>
   </head>
   <body>
-    <content class="body">
-    <div>
-      <input type='text' id="apiToken" name='apiToken' value='' disabled='disabled' class='apiToken' />
+    <div class="token">
+      <input type='text' id="apiToken" name='apiToken' value=''
+             disabled='disabled' class='apiToken' />
+      <div>
+        <input type='button' id='showToken' name='showToken'
+               value='Show API Token'
+        class='showToken' />
+        <input type='button' id='resetToken'name='resetToken'
+               value='Reset API Token'
+        class='resetToken' />
+      </div>
+      <p class="error"></p>
     </div>
-    <div class='apitokens-buttongroup'>
-      <input type='button' id='showToken' name='showToken' value='Show API Token'
-      class='showToken' />
-      <input type='button' id='resetToken'name='resetToken' value='Reset API Token'
-      class='resetToken' />
-    </div>
-    </content>
   </body>
 </html>

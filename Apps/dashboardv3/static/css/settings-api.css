@@ -1,8 +1,14 @@
-input[type=text] {
-  width:440px;
-  margin:6px 0;
+.token {
+  width: 430px;
 }
-
-#save-button {
-  margin-top:20px;
+.token input[type=text] {
+  width:440px;
+  margin: 5px 0;
+}
+.token .error {
+  display: none;
+  margin: 5px 0;
+  padding: 5px 10px;
+  background-color: #933;
+  color: #FFF;
 }
