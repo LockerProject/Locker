@@ -21,6 +21,7 @@ var express = require('express'),
     connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 var request = require('request');
+var async = require('async');
 
 app.get('/state', function(req, res) {
     dataStore.getTotalCount(function(err, countInfo) {
@@ -92,6 +93,41 @@ app.get("/since", function(req, res) {
 app.get('/update', function(req, res) {
     sync.gatherPlaces(req.query.type, function(){
         res.send('Making cookies for temas!');
+    });
+});
+
+// way to force geo lookups for an entire set of places from a source network
+app.get('/geo/:network', function(req, res) {
+    sync.geoCode(req.param('network'), function(err){
+        if(err) logger.error(err);
+        res.send(true);
+    });
+});
+
+// an experimental direct api to get places specifically from one id on one network, and with ?full=true flag to pull in origin via data!
+var cache = {};
+app.get('/from/:network/:from', function(req, res) {
+    if (!req.param("from")) {
+        return res.send([]);
+    }
+
+    var results = [];
+    dataStore.getFrom(req.param("network"), req.param("from"), function(item) {
+        results.push(item);
+    }, function() {
+        if(!req.query.full) return res.send(results);
+        async.forEachSeries(results, function(place, cb){
+            if(cache[place.via]) place.via = cache[place.via];
+            request.get({uri:locker.lockerBase+place.via, json:true}, function(err, res, js){
+                if(js) {
+                    cache[place.via] = js;
+                    place.via = js;
+                }
+                cb();
+            });
+        }, function(){
+            res.send(results);
+        })
     });
 });
 

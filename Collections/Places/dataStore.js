@@ -205,6 +205,19 @@ exports.init = function(mongoCollection, mongo, l, config) {
     logger = require("logger");
 };
 
+exports.updatePlace = function(place, cb)
+{
+    if(!place || !place.id) return cb("missing valid place");
+    var query = [{id:place.id}];
+    delete place._id;
+    collection.findAndModify({$or:query}, [['_id','asc']], {$set:place}, {safe:true, upsert:true, new: true}, function(err, doc) {
+        if (err) return cb(err);
+        updateState();
+        locker.ievent(lutil.idrNew("place","places",doc.id), doc, "update");
+        return cb(undefined, doc);
+    });
+};
+
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 };
@@ -288,6 +301,14 @@ exports.clear = function(callback) {
 
 exports.getSince = function(objId, cbEach, cbDone) {
     findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, collection, cbEach, cbDone);
+};
+
+exports.getNetwork = function(network, cbEach, cbDone) {
+    findWrap({"network":network}, {}, collection, cbEach, cbDone);
+};
+
+exports.getFrom = function(network, from, cbEach, cbDone) {
+    findWrap({"network":network, "fromID":from}, {}, collection, cbEach, cbDone);
 };
 
 exports.getLastObjectID = function(cbDone) {
