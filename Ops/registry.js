@@ -111,7 +111,7 @@ exports.app = function (app) {
             var svc = serviceManager.map(key);
             if(svc.type != "connector") return;
             if(connectors[key]) return;
-            if(apiKeys[key]) {
+            if(svc.keys === false || apiKeys[key]) {
                 // spoof a repository field to be consistent
                 connectors[key] = lutil.extend(true, {}, svc);
                 connectors[key].repository = lutil.extend(true, {}, svc);
