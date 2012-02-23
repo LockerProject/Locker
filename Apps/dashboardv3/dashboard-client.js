@@ -426,11 +426,13 @@ var getMyGithubApps = function(callback) {
 
 var getConnectors = function(callback) {
   locker.mapType("connector", function(err, installedConnectors) {
-    request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
+    request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, connin) {
       var connectors = [];
-      Object.keys(body).map(function(key) {
-        if (body[key].repository.type == "connector") {
-          var connector = body[key];
+      if(connin && lutil.is('Array',connin)) connin.forEach(function(connector) {
+          // change the layout to match old style for UI
+          connector = {repository:connector};
+          connector.name = connector.repository.handle;
+          connectors.push(connector);
           for (var i = 0; i < installedConnectors.length; ++i) {
             if (installedConnectors[i].id === connector.name && installedConnectors[i].authed) {
               connector.authed = true;
@@ -441,8 +443,6 @@ var getConnectors = function(callback) {
             connector.repository.oauthSize = {width:960, height:600};
             console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
           }
-          connectors.push(connector);
-        }
       });
       getCollectionsUsedByConnectors(connectors, callback);
     });
