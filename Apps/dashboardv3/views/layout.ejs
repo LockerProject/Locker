@@ -3,6 +3,16 @@
 <html>
   <head>
     <%- partial('header_partial') %>
+    <script type="text/javascript" src="https://use.typekit.com/znj4adx.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <script type="text/javascript" charset="utf-8" src='common/js/dust-core-0.3.0.min.js'></script>
+    <script type="text/javascript" charset="utf-8" src='common/js/moment.min.js'></script>
+    <script type='text/javascript' charset="utf-8" src='js/jquery.simplemodal.js'></script>
+    <script src='common/js/compiled_templates.js'></script>
+    <script src="common/js/registry.js"></script>
+    <script src="common/js/generators.js"></script>
+    <script src="common/js/page-handlers.js"></script>
+    <script src="js/locker.js"></script>
     <script src="js/dashboard.js"></script>
   </head>
   <body class="app-page">
@@ -14,15 +24,24 @@
       </div>
       <div class="nav-section">
         <div class="nav">
-          <a <% if (page === 'you') { %>class='selected'<% } %> href='you'>YOU</a>
-          <a <% if (page === 'explore') { %>class='selected'<% } %> href='#'>EXPLORE</a>
-          <a <% if (page === 'create') { %>class='selected'<% } %> href='create'>CREATE</A>
+          <a data-id='Explore' href='explore'
+             class="explore <% if (page === 'explore' || page === 'you-connect') { %>blue<% } %>">
+            Explore
+          </a>
+          <a data-id='AppGallery' href='appGallery#AppGallery-Featured'
+             class="gallery <% if (page === 'appGallery') { %>blue<% } %>">
+             App Gallery
+          </a>
+          <a data-id='Develop' href='develop#Develop-BuildAnApp'
+             class="develop <% if (page === 'develop') { %>blue<% } %>">
+             Develop
+          </a>
         </div>
         <% if (dashboard && dashboard.customHostedEndpoint) { %>
           <div class="hosted-nav">
             <a href='<%= dashboard.customLogout %>'>Sign out</a>
-            <a href='<%= dashboard.customSettings %>'>Account Settings</a>
-            <a href='<%= dashboard.customLearnmore || "https://singly.com/learnmore" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
+            <a href='<%= dashboard.customSettings || "settings#Settings-Connections" %>'>Account Settings</a>
+            <a href='<%= dashboard.customLearnmore || "https://singly.com/home.html#About-OurMission" %>'><%= dashboard.customHostedby || "Hosted by Singly" %></a>
           </div>
           <script src="js/hosted.js"></script>
           <script src="<%= dashboard.customHostedEndpoint %>"></script>
@@ -32,8 +51,29 @@
     <aside class="sidenav">
       <%- body %>
     </aside>
-    <iframe id="appFrame"></iframe>
+    <div class="app-container" id="iframeContainer">
+      <div class="app-header"></div>
+      <iframe id="appFrame"></iframe>
+    </div>
+    <div class="app-container" id="appDiv">
+      <section id="AppGallery">
+        <section id="Featured"></section>
+        <section id="Author"></section>
+        <section id="Filter"></section>
+        <section id="Details"></section>
+      </section>
+    </div>
 
+    <div id="connect-more">
+      <span id='close-button'>X</span>
+      <p>
+        When you're ready to connect more services, find them on the left under
+        "Connect More Services".
+      </p>
+      <div class="action">
+        <span class="gotit-button action-button">Got it!</span>
+      </div>
+    </div>
   </body>
 </html>
 

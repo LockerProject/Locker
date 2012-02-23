@@ -1,0 +1,34 @@
+{
+  "author": "Singly, Inc. <nerds@singly.com>",
+  "name": "contactsviewer",
+  "description": "View all of your contacts in one place merged from all services.",
+  "version": "0.0.7",
+  "repository": {
+    "title": "Contacts (DEMO)",
+    "handle": "contactsviewer",
+    "update": true,
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "app",
+    "static": true,
+    "run": "node contacts.js",
+    "uses": {
+      "services": [
+        "facebook",
+        "twitter",
+        "gcontacts",
+        "foursquare",
+        "flickr",
+        "github"
+      ],
+      "types": [
+        "contacts"
+      ]
+    },
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

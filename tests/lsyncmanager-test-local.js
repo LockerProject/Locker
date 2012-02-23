@@ -11,7 +11,6 @@
 * Tests the acutal implementation of the lsyncmanager.
 */
 
-require.paths.push(__dirname + "/../Common/node");
 var vows = require("vows")
   , assert = require("assert")
   , lconfig = require("lconfig")
@@ -23,22 +22,9 @@ var vows = require("vows")
   , colls
   ;
 lconfig.load("Config/config.json");
-var levents = require("levents");
-var realFireEvent = levents.fireEvent;
 
 var syncManager = require("lsyncmanager.js");
 var start;
-/*
-syncManager.eventEmitter.on('testSync/testSynclet', function(event) {
-    events.push(event);
-    eventCount++;
-});
-
-syncManager.eventEmitter.on('eventType/testSynclet', function(event) {
-    nsEvents.push(event);
-    nsEventCount++;
-});
-*/
 
 vows.describe("Synclet Manager").addBatch({
     "has a map of the available synclets" : function() {
@@ -154,12 +140,6 @@ vows.describe("Synclet Manager").addBatch({
         },
         "successfully" : function(err, status) {
             assert.isNull(err);
-        },
-        "and services specifying a positive nextRun time in the past get rescheduled at the next interval time" : function(err, status) {
-            //this is a bit racey
-            var synclet = syncManager.synclets().installed.testSynclet.synclets[0];
-            assert.ok(synclet.nextRun.getTime() > (start + ((synclet.frequency*1000)) * 0.95));
-            assert.ok(synclet.nextRun.getTime() < (Date.now() + ((synclet.frequency*1000)) * 1.05));
         }
     }
 }).addBatch({

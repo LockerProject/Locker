@@ -6,7 +6,7 @@ import oauth2client.client
 import sys
 import logging
 
-sys.path.append("../../Common/python")
+# local
 import lockerfs
 
 def sync(process_info):

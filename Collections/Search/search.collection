@@ -1,9 +1,0 @@
-{
-    "title":"Search",
-    "desc":"Provides an interface to searching your lockers data",
-    "run":"node search.js",
-    "status":"unstable",
-    "handle":"search",
-    "provides":["search"],
-    "events":[["contact/contacts","/events"],["photo/photos","/events"],["link/links","/events"],["place/places","/events"]]
-}

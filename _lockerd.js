@@ -10,7 +10,7 @@
 /* random notes:
 on startup scan all folders
     Apps Collections Connectors - generate lists of "available"
-    Me/* - generate lists of "existing"
+    Me - generate lists of "existing"
 
 when asked, run any existing and return localhost:port
 if first time
@@ -22,258 +22,250 @@ if first time
 var conf = {};
 conf._exit = false;
 exports.alive = false;
-// var npm = require('npm');
-//npm.load(conf, function(er) {
-  //npm.commands.install([], function(err, data) {
-    require.paths.push(__dirname + "/Common/node");
-    var spawn = require('child_process').spawn;
-    var fs = require('fs');
-    var path = require('path');
-    var request = require('request');
-    var async = require('async');
-    var util = require('util');
-    var lutil = require('lutil');
-    require('graceful-fs');
 
 
-    // This lconfig stuff has to come before any other locker modules are loaded!!
-    var lconfig = require('lconfig');
-    lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
-    
-    if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
-        console.error('You must have an apikeys.json file in the Config directory. See the Config/apikeys.json.example file');
-        process.exit(1);
-    }
-    
-    fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
+var spawn = require('child_process').spawn;
+var fs = require('fs');
+var path = require('path');
+var request = require('request');
+var async = require('async');
+var util = require('util');
+var lutil = require('lutil');
+var carrier = require('carrier');
+require('graceful-fs');
 
-    var logger = require("logger");
-    logger.info('proccess id:' + process.pid);
-    var lscheduler = require("lscheduler");
-    var syncManager = require('lsyncmanager');
-    var serviceManager = require("lservicemanager");
-    var pushManager = require(__dirname + "/Common/node/lpushmanager");
-    var mongodb = require('mongodb');
-    var lcrypto = require("lcrypto");
-    var thservice = require(__dirname + "/Ops/thservice.js");
-    var lmongo = require('lmongo');
 
-    if(process.argv.indexOf("offline") >= 0) syncManager.synclets().executeable = false;
+// This lconfig stuff has to come before any other locker modules are loaded!!
+var lconfig = require('lconfig');
+lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
 
-    if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
-        logger.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                    'which if so inclined can be hacked into lockerd.js and added since' +
-                    ' it\'s apparently still not implemented :)\n\n');
-    }
-    var shuttingDown_ = false;
+if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
+    console.error('You must have an apikeys.json file in the Config directory. See the Config/apikeys.json.example file');
+    process.exit(1);
+}
 
-    var mongoProcess;
-    path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
-        if(!exists) {
-            try {
-                //ensure there is a Me dir
-                fs.mkdirSync(lconfig.me, 0755);
-            } catch(err) {
-                if(err.code !== 'EEXIST')
-                    logger.error('err: ' + util.inspect(err));
-            }
-            fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
+fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
+
+var logger = require("logger");
+logger.info('process id:' + process.pid);
+var lscheduler = require("lscheduler");
+var syncManager = require('lsyncmanager');
+var serviceManager = require("lservicemanager");
+var pushManager = require(__dirname + "/Common/node/lpushmanager");
+var mongodb = require('mongodb');
+var lcrypto = require("lcrypto");
+var registry = require(__dirname + "/Ops/registry.js");
+var lmongo = require('lmongo');
+
+if(process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
+
+if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
+    logger.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
+                'which if so inclined can be hacked into lockerd.js and added since' +
+                ' it\'s apparently still not implemented :)\n\n');
+}
+var shuttingDown_ = false;
+
+var mongoProcess;
+path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
+    if(!exists) {
+        try {
+            //ensure there is a Me dir
+            fs.mkdirSync(lconfig.me, 0755);
+        } catch(err) {
+            if(err.code !== 'EEXIST')
+                logger.error('err: ' + util.inspect(err));
         }
-        mongoProcess = spawn('mongod', ['--dbpath', lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
-                                        '--port', lconfig.mongo.port]);
-        mongoProcess.stderr.on('data', function(data) {
-            logger.error('mongod err: ' + data);
-        });
+        fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
+    }
+    var mongoOptions = ['--dbpath',
+      lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
+      '--port', lconfig.mongo.port].concat(lconfig.mongo.options);
 
-        var mongoOutput = "";
-        var mongodExit = function(errorCode) {
-            if(shuttingDown_) return;
-            if(errorCode !== 0) {
-                var db = new mongodb.Db('locker', new mongodb.Server(lconfig.mongo.host, lconfig.mongo.port, {}), {});
-                db.open(function(error, client) {
-                    if(error) {
-                        logger.error('mongod did not start successfully and was not already running ('+errorCode+'), here was the stdout: '+mongoOutput);
-                        shutdown(1);
-                    } else {
-                        logger.error('found a previously running mongodb running on port '+lconfig.mongo.port+' so we will use that');
-                        db.close();
-                        checkKeys();
-                    }
-                });
-            }
-        };
-        mongoProcess.on('exit', mongodExit);
+    mongoProcess = spawn('mongod', mongoOptions);
 
-        // watch for mongo startup
-        var callback = function(data) {
-            mongoOutput += data;
-            if(mongoOutput.match(/ waiting for connections on port/g)) {
-                mongoProcess.stdout.removeListener('data', callback);
-                lmongo.connect(checkKeys);
-           }
-        };
-        mongoProcess.stdout.on('data', callback);
+    var mongoStdout = carrier.carry(mongoProcess.stdout);
+    mongoStdout.on('line', function (line) {
+        logger.info('[mongo] ' + line);
+        if(line.match(/ waiting for connections on port/g)) {
+            lmongo.connect(checkKeys);
+        }
+    });
+    var mongoStderr = carrier.carry(mongoProcess.stderr);
+    mongoStderr.on('line', function (line) {
+        logger.error('[mongo] ' + line);
     });
 
+    mongoProcess.on('exit', function(code, signal) {
+        mongoProcess = null;
+        if (shuttingDown_) {
+            logger.info('mongod exited with code '+code+', signal '+signal);
+        } else {
+            logger.error('mongod exited unexpectedly with code '+code+', signal '+signal);
+        }
+    });
+});
 
-    function checkKeys() {
-        lcrypto.generateSymKey(function(hasKey) {
-            if (!hasKey) {
+
+function checkKeys() {
+    lcrypto.generateSymKey(function(hasKey) {
+        if (!hasKey) {
+            shutdown(1);
+            return;
+        }
+        lcrypto.generatePKKeys(function(hasKeys) {
+            if (!hasKeys) {
                 shutdown(1);
                 return;
             }
-            lcrypto.generatePKKeys(function(hasKeys) {
-                if (!hasKeys) {
-                    shutdown(1);
-                    return;
-                }
-                finishStartup();
-            });
+            runMigrations("preServices", finishStartup);
         });
-    }
+    });
+}
 
-    function finishStartup() {
-        // get current git revision if git is available
-        var gitHead = spawn('git', ['rev-parse', '--verify', 'HEAD']);
-        gitHead.stdout.on('data', function(data) {
-            fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), JSON.stringify(data.toString()));
-        });
+function finishStartup() {
+    // get current git revision if git is available
+    var gitHead = spawn('git', ['rev-parse', '--verify', 'HEAD']);
+    gitHead.stdout.on('data', function(data) {
+        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), JSON.stringify(data.toString()));
+    });
 
-        // look for available things
-        lconfig.scannedDirs.forEach(function(dirToScan) {
-            logger.verbose(dirToScan);
-            var installable = true;
-            if (dirToScan === "Collections") installable = false;
-            try {
-                serviceManager.scanDirectory(dirToScan, installable);
-            } catch (E) {}
-        });
-
-        syncManager.scanDirectory("Connectors");
-
-        // look for existing things
-        serviceManager.findInstalled();
-        pushManager.init();
-
-        var webservice = require(__dirname + "/Ops/webservice.js");
-        // start web server (so we can all start talking)
-        webservice.startService(lconfig.lockerPort, runMigrations);
-        var lockerPortNext = "1"+lconfig.lockerPort;
-        lockerPortNext++;
-    }
-
-    function runMigrations() {
-        var migrations = [];
-        var metaData = {version: 1};
-        try {
-            migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
-            logger.verbose(migrations);
-            metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
-            logger.verbose(metaData);
-        } catch (E) {}
-        if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
-        for (var i = 0; i < migrations.length; i++) {
-            if (migrations[i].substring(0, 13) > metaData.version) {
-                try {
-                    logger.info("running global migration : " + migrations[i]);
-                    migrate = require(path.join(lconfig.lockerDir, "migrations", migrations[i]));
-                    var ret = migrate(lconfig); // prolly needs to be sync and given a callback someday
-                    if (ret) {
-                        // load new file in case it changed, then save version back out
-                        var curMe = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), 'utf8'));
-                        metaData.version = migrations[i].substring(0, 13);
-                        curMe.version = metaData.version;
-                        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(curMe, null, 4));
-                    } else {
-                        // this isn't clean but we have to do something drastic!!!
-                        logger.error("failed to run global migration!");
-                        process.exit(1);
-                    }
-                    // if they returned a string, it's a post-startup callback!
-                    if (typeof ret == 'string')
-                    {
-                        serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
-                    }
-                } catch (E) {
-                    // TODO: do we need to exit here?!?
-                    logger.error("error running global migration : " + migrations[i] + " ---- " + E);
-                }
-            }
-        }
-
-        // if there's any migrations, load synclets and do them but don't let synclets run till done
-        if(serviceManager.serviceMap().migrations.length > 0)
-        {
-            syncManager.synclets().executeable = false;
-            syncManager.findInstalled();
-            async.forEachSeries(serviceManager.serviceMap().migrations,function(call,cb){
-                logger.info('running migration followup for '+call);
-                request.get({uri:call},function(err,res,body){
-                    if(err || !res || res.statusCode != 200)
-                    {
-                        logger.error("failed to run migration, should be bailing hard! "+util.inspect(err)+":"+util.inspect(res)+" trying to hit " + call);
-                        // process.exit(1);
-                    }else{
-                        logger.info("migration success: "+JSON.stringify(body));
-                    }
-                    cb();
+    pushManager.init();
+    var webservice = require(__dirname + "/Ops/webservice.js");
+    // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
+    syncManager.init(serviceManager, function() {
+        registry.init(serviceManager, syncManager, lconfig, lcrypto, function() {
+            serviceManager.init(syncManager, registry, function() {  // this may trigger synclets to start!
+                runMigrations("postServices", function() {
+                    // start web server (so we can all start talking)
+                    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
+                        registry.app(locker); // add it's endpoints
+                        postStartup();
+                    });
                 });
-            },function(){
-                serviceManager.serviceMap().migrations = [];
-                syncManager.synclets().executeable = true;
-                postStartup();
             });
-        }else{
-            syncManager.findInstalled();
-            postStartup();
-        }
-    }
-
-    // scheduling and misc things
-    function postStartup() {
-        thservice.start();
-
-        lscheduler.masterScheduler.loadAndStart();
-
-        logger.info('locker is up and running at ' + lconfig.lockerBase);
-        exports.alive = true;
-    }
-
-    function shutdown(returnCode) {
-        process.stdout.write("\n");
-        shuttingDown_ = true;
-        serviceManager.shutdown(function() {
-            mongoProcess.kill();
-            logger.info("Shutdown complete.");
-            process.exit(returnCode);
         });
+    });
+    var lockerPortNext = "1"+lconfig.lockerPort;
+    lockerPortNext++;
+}
+
+function runMigrations(phase, migrationCB) {
+    var migrations = [];
+    var metaData = {version: 0};
+    try {
+        migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
+        metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
+    } catch (E) {}
+
+    if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
+
+    if (!metaData.version && phase == "preServices") {
+        metaData.version = Number(migrations[migrations.length - 1].substring(0, 13));
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+        return migrationCB();
     }
 
-    process.on("SIGINT", function() {
-        shutdown(0);
-    });
+    async.forEachSeries(migrations, function(migration, cb) {
+        if (Number(migration.substring(0, 13)) <= metaData.version) return cb();
 
-    process.on("SIGTERM", function() {
-        shutdown(0);
-    });
+        try {
+            migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
+            if(typeof migrate !== 'function') return cb();
+            logger.info("running global migration : " + migration + ' for phase ' + phase);
+            migrate(lconfig, function(ret) {
+                if (!ret) {
+                    logger.error("failed to run global migration!");
+                    return shutdown(1);
+                }
+                metaData.version = Number(migration.substring(0, 13));
+                lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json"), JSON.stringify(metaData, null, 4));
+                logger.info("Migration complete for: " + migration);
+                cb();
 
-    process.on('uncaughtException', function(err) {
-        if (shuttingDown_ === true) { process.exit(1); }
-        logger.error(util.inspect(err));
-        if(err && err.stack) logger.error(util.inspect(err.stack));
-        if (lconfig.airbrakeKey) {
-            var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
-            airbrake.notify(err, function(err, url) {
-                if(url) logger.error(url);
-                shutdown(1);
+                /*
+                // XXX: These are synchronous only right now, until we can find a less destructive way to do post startup
+                // if they returned a string, it's a post-startup callback!
+                if (typeof ret == 'string')
+                {
+                    serviceMap.migrations.push(lconfig.lockerBase+"/Me/"+metaData.id+"/"+ret);
+                }
+                */
             });
-        }else{
+        } catch (E) {
+            // TODO: do we need to exit here?!?
+            logger.error("error running global migration : " + migration + " ---- " + E);
             shutdown(1);
         }
+    }, migrationCB);
+}
+
+// scheduling and misc things
+function postStartup() {
+    lscheduler.masterScheduler.loadAndStart();
+    logger.info('locker is up and running at ' + lconfig.lockerBase);
+    exports.alive = true;
+    runMigrations("postStartup", function() {});
+}
+
+function shutdown(returnCode) {
+    shuttingDown_ = true;
+    process.stdout.write("\n");
+    logger.info("Shutting down...");
+    serviceManager.shutdown(function() {
+        cleanupMongo(function() {
+            exit(returnCode);
+        });
     });
+}
 
-    // Export some things so this can be used by other processes, mainly for the test runner
-    exports.shutdown = shutdown;
-//  });
-//});
+function cleanupMongo(cb) {
+    if (!mongoProcess) {
+        cb();
+        return;
+    }
 
+    var gaveUp = false; // make sure we only call the callback once
+    mongoProcess.on('exit', function (code, signal) { if (!gaveUp) { cb(); } });
+
+    mongoProcess.kill();
+
+    var timeout = 5000;
+    setTimeout(function() {
+        gaveUp = true;
+        logger.error('Mongo did not exit after timeout ('+timeout+'ms), giving up');
+        cb();
+    }, timeout);
+}
+
+function exit(returnCode) {
+    logger.info("Shutdown complete", {}, function (err, level, msg, meta) {
+        process.exit(returnCode);
+    });
+}
+
+process.on("SIGINT", function() {
+    shutdown(0);
+});
+
+process.on("SIGTERM", function() {
+    shutdown(0);
+});
+
+process.on('uncaughtException', function(err) {
+    if (shuttingDown_ === true) { process.exit(1); }
+    logger.error(util.inspect(err));
+    if(err && err.stack) logger.error(util.inspect(err.stack));
+    if (lconfig.airbrakeKey) {
+        var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
+        airbrake.notify(err, function(err, url) {
+            if(url) logger.error(url);
+            shutdown(1);
+        });
+    }else{
+        shutdown(1);
+    }
+});
+
+// Export some things so this can be used by other processes, mainly for the test runner
+exports.shutdown = shutdown;

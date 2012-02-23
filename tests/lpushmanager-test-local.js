@@ -11,7 +11,6 @@
 * Tests the acutal implementation of the lsyncmanager.
 */
 
-require.paths.push(__dirname + "/../Common/node");
 var vows = require("vows")
   , assert = require("assert")
   , lconfig = require("lconfig")

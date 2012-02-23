@@ -1,0 +1,25 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "tumblr",
+  "description": "Tumblr Connector",
+  "version": "0.0.4",
+  "repository": {
+    "title": "Tumblr",
+    "handle": "tumblr",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "oauthSize": {
+      "width": 630,
+      "height": 500
+    },
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

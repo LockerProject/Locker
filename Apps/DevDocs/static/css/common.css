@@ -1,28 +1,39 @@
 body {
     background-color: white;
-    margin: 40px;
-    font-size: 1.8em;
-
+    font-size: 24px;
 }
 
-li {
-    margin: 0.8em;
+body > ul {
+  list-style-type: none;
 }
 
-.done {
-    color:#aaa;
-    text-decoration: line-through;
+li p {
+  font-size:16px;
+  margin: 0;
 }
 
-li pre {
+pre.prettyprint {
+  font-size:14px;
     display:inline-block;
     background-color:#F8F8F8;
-    padding:10px;
-    border: 1px solid #CCC;
     border-radius:3px;
+  padding: 10px;
 }
 
 #synced {
     font-size:1.2em;
     display:none;
+}
+
+.hidden {
+  display: none;
+}
+
+h2 {
+  font-size: 24px;
+  margin: 16px 0 6px 0;
+}
+h3 {
+  font-size: 20px;
+  margin: 4px 0;
 }

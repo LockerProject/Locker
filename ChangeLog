@@ -1,0 +1,8 @@
+2012-01-30  Thomas "temas" Muldowney <temas@singly.com
+
+	* Dashboard: 0.0.18
+		* Some more consistent sizing and placement of elements.  Fixes #590
+		* Use a relative last udpated time on the create apps list.  Fixes #581
+		* Make sure the app description shows up on the create list
+	* Ops/registry.js: Correctly show connectors that we do have APIKeys for, even if hidden.  Fixes #615
+	* lconfig: Make sure devdocs is available immediately

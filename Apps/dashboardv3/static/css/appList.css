@@ -2,6 +2,7 @@
   padding: 10px 0px;
   border-bottom: solid 1px #4d4d4d;
   font-size: 18px;
+  display: block;
 }
 
 li.appList {

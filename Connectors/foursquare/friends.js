@@ -13,6 +13,7 @@ var fs = require('fs')
   , contacts = []
   , friendIDs = []
   , photos = []
+  , self
   ;
 
 exports.sync = function(processInfo, cb) {
@@ -23,6 +24,8 @@ exports.sync = function(processInfo, cb) {
         responseObj.config.ids = {contact: friendIDs};
         responseObj.data.contact = contacts;
         responseObj.data.photo = photos;
+        auth.profile = self;
+        responseObj.auth = auth; // save self in auth
         cb(err, responseObj);
     });
 };
@@ -34,7 +37,6 @@ exports.syncFriends = function(callback) {
         } else if(resp && resp.statusCode > 500) { //fail whale
             return callback("500'd");
         }
-        var self;
         try {
             self = JSON.parse(data).response.user;
         }catch(E){

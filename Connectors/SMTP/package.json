@@ -1,0 +1,24 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "smtp",
+  "description": "Email Sender",
+  "version": "0.0.4",
+  "repository": {
+    "title": "Email Sender",
+    "handle": "smtp",
+    "author": "nerds",
+    "update": "auto",
+    "run": "node smtp.js",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "hidden": "true",
+    "static": "false",
+    "keys": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

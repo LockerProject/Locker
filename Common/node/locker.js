@@ -9,7 +9,7 @@
 
 var request = require('request'),
     fs = require("fs"),
-    sys = require('sys'),
+    util = require('util'),
     url = require("url"),
     lstate = require("lstate"),
     lutil = require("lutil"),
@@ -53,9 +53,27 @@ exports.diary = function(message, level) {
     });
 };
 
+// TODO:  time based cache of the service map
 exports.map = function(callback) {
     request.get({url:exports.lockerBase + "/map"}, function(error, res, body) {
         callback(error, body ? JSON.parse(body) : undefined);
+    });
+};
+
+// Return only services with the given type from the map
+exports.mapType = function(type, callback) {
+    request.get({url:exports.lockerBase + "/map", "json":true}, function(err, res, body) {
+        if (err) {
+            callback(err, undefined);
+            return;
+        }
+        var services = []
+        Object.keys(body).forEach(function(key) {
+            if (body[key].type == type) {
+                services.push(body[key]);
+            }
+        });
+        callback(undefined, services);
     });
 };
 
@@ -120,7 +138,7 @@ exports.idrLocal = function(idr)
 exports.listen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };
@@ -128,7 +146,7 @@ exports.listen = function(type, callbackEndpoint, callbackFunction) {
 exports.deafen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/deafen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };

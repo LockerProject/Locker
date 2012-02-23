@@ -7,13 +7,14 @@
 *
 */
 
-var instagram = require('../../Connectors/Instagram/lib.js');
+var instagram = require('./lib.js');
 var self = {};
 
 exports.sync = function(processInfo, cb) {
     instagram.init(processInfo.auth);
     instagram.getSelf({},function(me){ self = me; }, function(err) {
             if (err) console.error(err);
-            cb(err, {data : {profile : [{obj: self}]}});
+            processInfo.auth.profile = self;
+            cb(err, {auth: processInfo.auth, data : {profile : [{obj: self}]}});
     });
 }

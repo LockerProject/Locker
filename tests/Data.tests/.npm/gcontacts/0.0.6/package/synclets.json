@@ -1,0 +1,4 @@
+{
+    "provides":["contact/gcontacts"],
+    "synclets":[{"name": "contacts", "frequency": 600}]
+}

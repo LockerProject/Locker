@@ -21,6 +21,7 @@ exports.load = function(filepath) {
     }
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
+    exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
     exports.lockerPort = config.lockerPort || 8042;
     if(config.externalPort)
         exports.externalPort = config.externalPort;
@@ -29,19 +30,38 @@ exports.load = function(filepath) {
     else
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
+    exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
+    exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
-    exports.scannedDirs = config.scannedDirs || [
-        "Apps",
-        "Collections",
-        "Me/github",
-        "Connectors"
-        ];
-    exports.mongo = config.mongo || {
-        "dataDir": "mongodata",
-        "host": "localhost",
-        "port": 27018
+    exports.collections = config.collections || [
+        "contacts:Collections/Contacts",
+        "links:Collections/Links",
+        "photos:Collections/Photos",
+        "places:Collections/Places",
+        "search:Collections/Search",
+    ];
+    exports.apps = config.apps || [
+        "helloplaces:Apps/HelloPlaces",
+        "linkalatte:Apps/LinkaLatte",
+        "contactsviewer:Apps/MergedContacts",
+        "devdocs:Apps/DevDocs",
+        "photosviewer:Apps/PhotosViewer",
+        "facebook:Connectors/Facebook",
+        "flickr:Connectors/Flickr",
+        "github:Connectors/GitHub",
+        "gcontacts:Connectors/GoogleContacts",
+        "instagram:Connectors/Instagram",
+        "twitter:Connectors/Twitter",
+        "foursquare:Connectors/foursquare",
+    ];
+    config.mongo = config.mongo || {};
+    exports.mongo = {
+        "dataDir": config.mongo.dataDir || "mongodata",
+        "host": config.mongo.host || "localhost",
+        "port": config.mongo.port || 27018,
+        "options": config.mongo.options || ['--nohttpinterface']
     };
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
@@ -61,10 +81,26 @@ exports.load = function(filepath) {
         maxstep: config.tolerance.maxstep || 10, // what is the largest frequency multiplier
         idle: 600 // flush any synclets in tolerance when dashboard activity after this many seconds of none
     };
-    exports.ui = config.ui || 'useui';
+//    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
+    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.quiesce = config.quiesce || 650000;
+
+    config.dashboard = config.dashboard || {};
+    config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
-}
+
+    // load trusted public keys
+    var kdir = path.join(path.dirname(filepath), "keys");
+    exports.keys = [];
+    if(path.existsSync(kdir))
+    {
+        var keys = fs.readdirSync(kdir);
+        keys.forEach(function(key){
+            if(key.indexOf(".pub") == -1) return;
+            exports.keys.push(fs.readFileSync(path.join(kdir, key)).toString());
+        });
+    }
+};
 
 function setBase() {
     exports.lockerBase = 'http://' + exports.lockerHost +

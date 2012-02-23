@@ -1,362 +1,647 @@
 /*
-*
-* Copyright (C) 2011, The Locker Project
-* All rights reserved.
-*
-* Please see the LICENSE file for more information.
-*
-*/
+ *
+ * Copyright (C) 2011, The Locker Project
+ * All rights reserved.
+ *
+ * Please see the LICENSE file for more information.
+ *
+ */
 
 var express = require('express')
   , connect = require('connect')
+  , ejs = require("ejs")
   , locker
   , request = require('request')
-  , lconfig = require(__dirname + '/../../Common/node/lconfig.js')
+  , async = require('async')
+  // TODO:  This should not be used in an app
+  , lconfig = require('lconfig.js')
   , github = false
   , githubLogin = ''
-  , githubapps = {}
   , form = require('connect-form')
-  , uistate = require(__dirname + '/state')
+  , uistate = require(__dirname + '/uistate')
   , profileImage = 'img/default-profile.png'
   , path = require('path')
   , fs = require('fs')
   , im = require('imagemagick')
+  , util = require("util")
+  , lutil = require('lutil')
+  , moment = require("moment")
   , page = ''
-  , cropping = {}
-  , oauthPopupSizes = {foursquare: {height: 540,  width: 960},
-                 github: {height: 1000, width: 1000},
-                 twitter: {width: 630, height: 500},
-                 tumblr: {width: 630, height: 500},
-                 facebook: {width: 980, height: 705},
-                 instagram: {width: 800, height: 500},
-                 flickr: {width: 1000, height: 877}
-                };
+  , connectSkip = false
+  ;
+
+ejs.filters.capitalAll = function(obj) {
+  return obj.map(function(word) {
+    return word.charAt(0).toUpperCase() + word.substr(1);
+  });
+};
 
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
-    lconfig.load('../../Config/config.json');
-    locker = passedLocker;
-    app.listen(listenPort, callback);
+  lconfig.load('../../Config/config.json');
+  locker = passedLocker;
+  app.listen(listenPort, callback);
 };
 
 var app = express.createServer();
 app.use(express.cookieParser());
 
 app.configure(function() {
-    app.set('views', __dirname + '/views');
-    app.set('view engine', 'ejs');
-    app.use(express.bodyParser());
-    app.use(form({ keepExtensions: true }));
-    app.use(express.static(__dirname + '/static'));
-    app.dynamicHelpers({
-        dashboard: function(req, res) {
-            return lconfig.dashboard;
-        },
-        profileImage: function(req, res) {
-            return profileImage;
-        },
-        page: function(req, res) {
+  app.set('views', __dirname + '/views');
+  app.set('view engine', 'ejs');
+  app.use(express.bodyParser());
+  app.use(form({ keepExtensions: true }));
+  app.use(express.static(__dirname + '/static'));
+  app.dynamicHelpers({
+    dashboard: function(req, res) {
+                 return lconfig.dashboard;
+               },
+    profileImage: function(req, res) {
+                    return profileImage;
+                  },
+    page: function(req, res) {
             return page;
-        }
-    });
+          }
+  });
 });
 
+/* When you first install, you need to connect something. /explore and /connect
+ * are the only two pages required to make a connection, so let them pass.
+ * Otherwise, check for connections and perhaps allow other pages to render.
+ */
+function checkInstalled(req, res, next) {
+  if(connectSkip || ['/explore', '/connect'].indexOf(req.path) !== -1) {
+    return next();
+  }
+  getInstalledConnectors(function(err, installedConnectors) {
+    // We ignore github since it's semi special and often presetup connector
+    if (needsToConnectMore(installedConnectors)) {
+      return res.redirect(lconfig.externalBase +
+                          '/dashboard/explore#Explore-connect');
+    } else {
+      connectSkip = true;
+      return next();
+    }
+  });
+}
+
+function needsToConnectMore(installedConnectors) {
+  if (installedConnectors.length === 1)
+    return installedConnectors[0].repository.handle === 'github';
+  return installedConnectors.length === 0;
+}
+
 app.all('*', function(req, res, next) {
-    // hackzzzzzzzzzzzzzzzzz
-    // will replace when we have a reasonable notion of a user's profile
-    request.get({url:locker.lockerBase + "/synclets/facebook/get_profile"}, function(error, res, body) {
-        try {
-            var body = JSON.parse(body);
-            if (body.username) {
-                profileImage = "http://graph.facebook.com/" + body.username + "/picture";
-            }
-        } catch (E) {}
-    });
-    request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
-        try {
-            var body = JSON.parse(body);
-            if (body[0].login) {
-                githubLogin = body[0].login;
-            }
-        } catch (E) {}
-    });
-    next();
+  lutil.avatarUrlFromMap(process.cwd, locker.lockerBase, function (err, url) {
+    if (!err) profileImage = url;
+  });
+  request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
+    try {
+      body = JSON.parse(body);
+      if (body[0].login) {
+        githubLogin = body[0].login;
+      }
+    } catch (E) {}
+  });
+  next();
 });
 
 
 var clickApp = function(req, res) {
-    var clickedApp = req.params.app;
-    if (clickedApp) {
-        uistate.appClicked(clickedApp);
-    }
-    res.end();
-}
+  var clickedApp = req.params.app;
+  if (clickedApp) {
+    uistate.appClicked(clickedApp);
+  }
+  res.end();
+};
 
 var renderApps = function(req, res) {
-    uistate.fetchState();
-    getAppsInfo(null, function(sortedResult) {
-        res.render('iframe/appsList', {
-            layout: false,
-            apps: sortedResult,
-            dashboard: lconfig.dashboard
-        });
-    })
-}
-
-var renderCreate = function(req, res) {
-    page = 'create';
-    getGithubApps(function(apps) {
-        var publishedCount = 0;
-        for (var i = 0; i < apps.length; i++) {
-            if (apps[i].published) {
-                publishedCount++;
-            }
-        }
-        res.render('create', {
-            published: publishedCount,
-            draft: apps.length - publishedCount,
-            apps: apps
-        });
+  uistate.fetchState();
+  getInstalledApps(function(err, sortedResult) {
+    res.render('iframe/appsList', {
+      layout: false,
+      apps: sortedResult
     });
-}
+  });
+};
 
-var handleUpload = function(req, res) {
-    if (req.form) {
-        req.form.complete(function(err, fields, files) {
-            if (err) {
-                res.send('broken', 500);
-            } else {
-                var write = fs.createWriteStream('tempScreenshot');
-                var uploadedFile = fs.createReadStream(files.file.path);
-                write.once('open', function(fd) {
-                    require('util').pump(uploadedFile, write);
-                });
-                res.send('ok');
-            }
-        });
-    } else {
-        res.send('broken', 500);
+var renderSettings = function(req, res) {
+  res.render('settings', {dashboard: lconfig.dashboard});
+};
+
+var renderSettingsConnectors = function(req, res) {
+  getConnectors(function(err, connectors) {
+    var numInstalled = 0;
+    for (var i=0; i<connectors.length; i++) {
+      if (connectors[i].hasOwnProperty('authed')) {
+        numInstalled++;
+      }
     }
-}
+    res.render('iframe/settings-connectors', {
+      layout: false,
+      numInstalled: numInstalled,
+      connectors: connectors
+    });
+  });
+};
+
+var renderSettingsAccountInformation = function(req, res) {
+  res.render('iframe/settings-account', {
+    layout: false,
+    config: {}
+  });
+};
+
+var handleSettings = function (req, res, next) {
+  if (!req.params || !req.params.avi_url) return res.send('missing parameter', 400);
+
+  var rawAvatar = 'raw-avatar';
+  lutil.fetchAndResizeImageURL(
+    req.params.avi_url, 'raw-avatar', 'avatar.png',
+    function (err, success) {
+      if (err) return res.send(err, 500);
+      return res.send(success);
+    }
+  );
+};
+
+var renderSettingsAPIKey = function(req, res) {
+  res.render('iframe/settings-api', {
+    layout: false
+  });
+};
+
+var renderAppGallery = function(req, res) {
+  page = 'appGallery';
+  getConnectors(function(error, connectors) {
+    var c = [];
+    res.render('appGallery', {synclets:connectors});
+  });
+};
+
+var renderDevelop = function(req, res) {
+  page = 'develop';
+  res.render('develop', {});
+};
 
 var renderPublish = function(req, res) {
-    getGithubApps(function(apps) {
-        res.render('iframe/publish', {
-            layout: false,
-            apps: apps
-        });
+  getMyGithubApps(function(apps, map) {
+    if(!apps[req.param("app")]) {
+      return res.send('invalid app id of '+req.param("app"), 400);
+    }
+    var pkg = {};
+    try {
+      console.log("Parsing: " + path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json"));
+      pkg = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "package.json")));
+      if(path.existsSync(path.join(lconfig.lockerDir, apps[req.param("app")].srcdir, "screenshot.png"))) pkg.screenshot = true;
+    } catch (E) {
+      pkg = {};
+    }
+    console.dir(pkg);
+    res.render('iframe/publish', {
+      layout: false,
+      app: pkg,
+      id: req.param("app"),
+      github: map.github
     });
-}
+  });
+};
 
 var submitPublish = function(req, res) {
-    if (req.form) {
-        req.form.complete(function(err, fields, files) {
-            if (fields['x']) {
-                cropping[fields.app] = true;
-            }
-            if (err) res.write(JSON.stringify(err.message));
-            if (fields['new-file'] === 'true') {
-                fs.rename('tempScreenshot', path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), function() {
-                    cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
-                });
-            } else {
-                if (fields['app-screenshot-url']) {
-                    request.get({uri: fields['app-screenshot-url'], encoding: 'binary'}, function(err, resp, body) {
-                        fs.writeFile(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), body, 'binary', function() {
-                            cropImage(path.join(lconfig.lockerDir, githubapps[fields.app].srcdir, 'screenshot'), fields);
-                        });
-                    });
-                }
-            }
-            fields.lastUpdated = Date.now();
-            if (fields['app-publish'] === 'true') {
-                var data = {
-                    desc: fields['app-description']
-                }
-                if (fields['rename-app'] === 'on') {
-                    data.title = fields['app-newname'];
-                }
-                request.post({uri: locker.lockerBase + '/registry/publish/' + fields.app, data: data}, function(err, resp, body) {
-                    res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp(); parent.window.location.reload();</script>');
-                });
-            } else {
-                res.send('<script type="text/javascript">parent.app = "viewAll"; parent.loadApp();</script>');
-            }
-            uistate.saveDraft(fields);
+  if (!req.params.handle) return res.send('missing handle to publish', 404);
+  var handle = req.params.handle;
+  getMyGithubApps(function(apps){
+    if(!apps[handle]) return res.send('no publishable package by the name of '+handle, 400);
+    request.post({uri: locker.lockerBase + '/registry/publish/' + handle, json:true}, function(err, resp, body) {
+      if(err) {
+        console.error('error publishing ' + handle + ', got status code ' + resp.statusCode, err);
+        return res.send(body);
+      }
+      if(resp.statusCode != 200) {
+        console.error('error publishing ' + handle + ', got status code ' + resp.statusCode + ':', body);
+        return res.send(body);
+      }
+      if(!body) {
+        console.error('error publishing ' + handle + ':', body);
+        return res.send(body);
+      }
+      if(body.err) {
+        if(typeof body.err == 'string' && body.err.indexOf("failed to create issue") != -1) {
+          return res.send({err:"Github auth error.", reauth:true});
+        }
+        console.error('error publishing ' + handle + ':', body.err);
+        return res.send(body);
+      }
+      var reloadScript = '<script type="text/javascript">parent.window.location.reload();</script>';
+      // Send the screenshot
+      var filePath = path.join(lconfig.lockerDir, apps[handle].srcdir, 'screenshot.png');
+      var stat = fs.statSync(filePath);
+      var ssPut = request({method:"PUT", uri:locker.lockerBase + "/registry/screenshot/" + handle,
+        headers:{"Content-Type":"image/png"}, body:fs.readFileSync(filePath)}, function(err, result, ssBody) {
+          if (err) {
+            console.log("Error sending screenshot from dashboard: " + err);
+            console.log(err.stack);
+            return res.send({err:"Unable to upload your screenshot."});
+          }
+          res.send(body);
         });
-    } else {
-        res.send(req.body);
-    }
-}
-
-var cropImage = function(file, fields) {
-    if (fields['x']) {
-        im.crop({
-            srcPath: file,
-            dstPath: file,
-            width: fields['w'],
-            height: fields['h'],
-            offset: {x: fields['x'], y: fields['y']}
-        }, function(err, stdout, stderr) {
-            im.resize({
-                srcData: file,
-                dstPath: file,
-                width: 200,
-                height: 200
-            }, function() {
-                cropping[fields.app] = false;
-            });
-        });
-    }
-}
+    });
+  });
+};
 
 var getAppsInfo = function(count, callback) {
-    locker.map(function(err, map) {
-        var result = [];
-        var sortedResult = [];
-        for (var i in map.installed) {
-            if ((map.installed[i].is === 'app' || map.installed[i].type === 'app') && !map.installed[i].hidden) {
-                result.push(map.installed[i]);
-            }
-        }
-        var recentApps = uistate.getNLastUsedApps(count);
-        var added = {};
-        for (var i = 0; i < recentApps.length; i++) {
-            for (var j in result) {
-                if (result[j].id === recentApps[i].name && result[j].static) {
-                    result[j].lastUsed = recentApps[i].lastUsed;
-                    sortedResult.push(result[j]);
-                    added[j] = true;
-                    break;
-                }
-            }
-        }
-        for (var i in result) {
-            if(result[i].static && !added[i]) sortedResult.push(result[i]);
-        }
-        callback(sortedResult);
-    });
-}
+  locker.mapType('app', function(err, map) {
+    var result = map;
+    var sortedResult = [];
 
-var renderYou = function(req, res) {
-    uistate.fetchState();
-    getAppsInfo(8, function(sortedResult) {
-        locker.synclets(function(err, synclets) {
-            for (var i in synclets.installed) {
-                if (i === 'github') { github = true; }
-                synclets.available.some(function(synclet) {
-                    if (synclet.provider === synclets.installed[i].provider) {
-                        synclets.available.splice(synclets.available.indexOf(synclet), 1);
-                    }
-                });
-            }
-            for (var i = 0; i < synclets.available.length; i++) {
-                if (oauthPopupSizes[synclets.available[i].provider]) {
-                    synclets.available[i].oauthSize = oauthPopupSizes[synclets.available[i].provider];
-                } else {
-                    synclets.available[i].oauthSize = {width: 960, height: 600};
-                }
-            }
-            page = 'you';
-            res.render('you', {
-                synclets: synclets,
-                github: github,
-                map: sortedResult
-            });
-        });
-    });
-};
-
-var renderScreenshot = function(req, res) {
-    if (githubapps[req.params.handle]) {
-        if (cropping[req.params.handle]) {
-            return res.sendfile(__dirname + '/static/img/loading6.gif');
+    var recentApps = uistate.getNLastUsedApps(count);
+    var added = {};
+    for (var i = 0; i < recentApps.length; i++) {
+      for (var j in result) {
+        if (result[j].id === recentApps[i].name && result[j].static) {
+          result[j].lastUsed = recentApps[i].lastUsed;
+          sortedResult.push(result[j]);
+          added[result[j].id] = true;
+          break;
         }
-        path.exists(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'), function(exists) {
-            if (exists) {
-                return res.sendfile(path.join(lconfig.lockerDir, githubapps[req.params.handle].srcdir, 'screenshot'));
-            } else {
-                return res.sendfile(__dirname + '/static/img/batman.jpg');
-            }
-        });
-    } else {
-        res.sendfile(__dirname + '/static/img/batman.jpg');
+      }
     }
+    for (i in result) {
+      if(!added[result[i].id] && result[i].title) sortedResult.push(result[i]);
+    }
+
+    callback(sortedResult);
+  });
 };
 
-var renderTempScreenshot = function(req, res) {
-    res.sendfile('tempScreenshot');
-}
+var getAllAppsInfo = function(count, callback) {
+  locker.mapType('app', function(err, map) {
+    var result = [];
+    var sortedResult = [];
 
-var renderAllApps = function(req, res) {
-    getGithubApps(function(apps) {
-        res.render('iframe/allApps', {
-            layout: false,
-            apps: apps,
-            cropping: cropping
-        });
+    var recentApps = uistate.getNLastUsedApps(count);
+    var added = {};
+    for (var i = 0; i < recentApps.length; i++) {
+      for (var j in map) {
+        if (map[j].id === recentApps[i].name && map[j].static) {
+          map[j].lastUsed = recentApps[i].lastUsed;
+          sortedResult.push(map[j]);
+          added[map[j].id] = true;
+          break;
+        }
+      }
+    }
+    for (i in map) {
+      if(!added[map[i].id] && map[i].title) sortedResult.push(map[i]);
+    }
+
+    callback(sortedResult);
+  });
+};
+
+var renderConnect = function(req, res) {
+  getConnectors(function(err, connectors) {
+    var numInstalled = 0;
+    for (var i=0; i<connectors.length; i++) {
+      if (connectors[i].hasOwnProperty('authed')) {
+        numInstalled++;
+      }
+    }
+    res.render('iframe/connect', {
+      layout: false,
+      numInstalled: numInstalled,
+      connectors: connectors,
+      dashboard: lconfig.dashboard
+    });
+  });
+};
+
+var renderExplore = function(req, res) {
+  uistate.fetchState();
+  var firstVisit = false;
+  var page = 'explore';
+
+  getSidebarData(function(sidebarData) {
+    if (req.cookies.firstvisit === 'true' &&
+      sidebarData.installedConnectors.length === 0) {
+      firstVisit = true;
+    }
+
+    if (sidebarData.installedConnectors.length === 0) {
+      page += '-connect';
+    }
+    res.render(page, {
+      connectors: sidebarData.connectors,
+      installedConnectors: sidebarData.installedConnectors,
+      map: sidebarData.installedApps,
+      myMap: sidebarData.myApps,
+      firstVisit: firstVisit
+    });
+  });
+};
+
+var renderAppGallery = function(req, res) {
+  getSidebarData(function(sidebarData) {
+    res.render('appGallery', {
+      connectors: sidebarData.connectors,
+      installedConnectors: sidebarData.installedConnectors,
+      map: sidebarData.installedApps,
+      myMap: sidebarData.myApps
+    });
+  });
+};
+
+var renderDevelop = function(req, res) {
+  getSidebarData(function(sidebarData) {
+    res.render('explore', {
+      connectors: sidebarData.connectors,
+      installedConnectors: sidebarData.installedConnectors,
+      map: sidebarData.installedApps,
+      myMap: sidebarData.myApps
+    });
+  });
+};
+
+var renderDevelopBuildApp = function(req, res) {
+  res.render('iframe/develop-buildapp', {
+    layout: false
+  });
+};
+
+var renderDevelopApiExplorer = function(req, res) {
+  res.render('iframe/develop-apiexplorer', {
+    layout: false
+  });
+};
+
+var renderDevelopPublishing = function(req, res) {
+  res.render('iframe/develop-publishing', {
+    layout: false
+  });
+};
+
+var renderDevelopExampleApps = function(req, res) {
+  res.render('iframe/develop-exampleapps', {
+    layout: false
+  });
+};
+
+var renderDevelopChat = function(req, res) {
+  res.render('iframe/develop-chat', {
+    layout: false
+  });
+};
+
+var renderDevelopTemplatesIcons = function(req, res) {
+  res.render('iframe/develop-templatesicons', {
+    layout: false
+  });
+};
+
+var registryApp = function(req, res) {
+  request.get({uri: locker.lockerBase + '/registry/app/' + req.param('params')}, function(err, resp, body) {
+    var app = JSON.parse(body);
+    res.render('iframe/registryApp', {
+      layout: false,
+      breadcrumb: req.param('breadcrumb'),
+      app: app
+    });
+  });
+};
+
+var getMyGithubApps = function(callback) {
+  var pattern = /^Me\/github/;
+  var apps = {};
+  locker.map(function(err, map) {
+    for (var i in map) {
+      if (pattern.exec(map[i].srcdir)) {
+        var appInfo = map[i];
+        if (!appInfo.title) appInfo.title = "no title";
+        var appId = appInfo.id.toLowerCase();
+        apps[appInfo.id] = appInfo;
+      }
+    }
+    callback(apps, map);
+  });
+};
+
+var getConnectors = function(callback) {
+  locker.mapType("connector", function(err, installedConnectors) {
+    request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, body) {
+      var connectors = [];
+      Object.keys(body).map(function(key) {
+        if (body[key].repository.type == "connector") {
+          var connector = body[key];
+          for (var i = 0; i < installedConnectors.length; ++i) {
+            if (installedConnectors[i].id === connector.name && installedConnectors[i].authed) {
+              connector.authed = true;
+              connector.username = getReadableProfileNameForConnector(installedConnectors[i]);
+            }
+          }
+          if (!connector.repository.oauthSize) {
+            connector.repository.oauthSize = {width:960, height:600};
+            console.error('no oauthSize for connector ' + connector.repository.handle + ', using default of width:960px, height:600px');
+          }
+          connectors.push(connector);
+        }
+      });
+      getCollectionsUsedByConnectors(connectors, callback);
+    });
+  });
+};
+
+var getInstalledConnectors = function(callback) {
+  getConnectors(function(err, connectors) {
+    var installedConnectors = [];
+    for (var i=0; i<connectors.length; i++) {
+      if (connectors[i].hasOwnProperty('authed') && connectors[i].authed === true) {
+        installedConnectors.push(connectors[i]);
+      }
+    }
+    callback(err, installedConnectors);
+  });
+};
+
+var getReadableProfileNameForConnector = function(connector) {
+
+  // TODO: absolutely need to refactor this into the profile collection once we have it done.  Until then, here we are:
+  try {
+    switch(connector.handle){
+      case 'facebook':
+        return connector.auth.profile.username;
+      case 'twitter':
+        return '@' + connector.auth.profile.screen_name;
+      case 'lastfm':
+        return connector.auth.profile.name;
+      case 'flickr': // TODO: flickr connector has empty auth object
+        return '';
+      case 'foursquare':
+        return connector.auth.profile.canonicalUrl.split('/')[3];
+      case 'gcontacts': // TODO: gcontacts connector has empty auth object
+        return '';
+      case 'instagram':
+        return connector.auth.profile.username;
+      case 'pandora': // TODO: pandora connector has empty auth object
+        return '';
+      case 'rdio':
+        return connector.auth.profile.firstName + ' ' + connector.auth.profile.lastName;
+      case 'github':
+        return connector.auth.profile.login;
+      default:
+        return '';
+    }
+  } catch(e) { return ''; }
+};
+
+var getCollectionsUsedByConnectors = function(connectors, callback) {
+
+  function findConnectorInObject(connector) {
+    for(var j in connectors) {
+      if (connectors.hasOwnProperty(j) && connectors[j].name === connector) {
+        return connectors[j];
+      }
+    }
+    return undefined;
+  }
+
+  // we hardwire the collections here with a nasty O(n^2) nested loop, b/c /registry/connectors
+  // doesn't return the "provides" yet.
+  function addProvidesToConnectors(map, collection) {
+    if (map.hasOwnProperty(collection) && map[collection].hasOwnProperty('events') && lutil.is('Array', map[collection].events)) {
+      for (var i=0; i<map[collection].events.length; i++) {
+        var event = map[collection].events[i][0].split('/');
+        var currentConn = findConnectorInObject(event[event.length -1]);
+        if (currentConn !== undefined) {
+          if (!currentConn.hasOwnProperty('provides')) {
+            currentConn.provides = [];
+          }
+          var foundCollection = false;
+          for (var k=0; k<currentConn.provides.length; k++) {
+            if (currentConn.provides[k] === lutil.ucfirst(collection)) {
+              foundCollection = true;
+            }
+          }
+          if (!foundCollection) {
+            currentConn.provides.push(lutil.ucfirst(collection));
+          }
+        }
+      }
+    }
+  }
+
+  locker.map(function(err, map) {
+    if (map === undefined) {
+      return console.error('Map undefined when attempting to get collections in dashboardv3');
+    }
+
+    addProvidesToConnectors(map, 'contacts');
+    addProvidesToConnectors(map, 'photos');
+    addProvidesToConnectors(map, 'links');
+    addProvidesToConnectors(map, 'places');
+
+    callback(err, connectors);
+  });
+};
+
+var getSidebarData = function(callback) {
+  function initIfError(err, data) {
+    if (err) {
+      data = [];
+    }
+  }
+
+  async.parallel({
+    installedAppsData: function(parallelCb) {
+                         getInstalledApps(function(err, result) {
+                           parallelCb(err, result);
+                         });
+                       },
+    myAppsData: function(parallelCb) {
+                  getMyApps(function(err, result) {
+                    parallelCb(err, result);
+                  });
+                },
+    connectorsData: function(parallelCb) {
+                      getConnectors(function(err, result) {
+                        parallelCb(err, result);
+                      });
+                    },
+    installedConnectorsData: function(parallelCb) {
+                               getInstalledConnectors(function(err, result) {
+                                 parallelCb(err, result);
+                               });
+                             }
+  },
+    function(err, results) {
+      return callback({
+        installedApps: results.installedAppsData,
+      myApps: results.myAppsData,
+      connectors: results.connectorsData,
+      installedConnectors: results.installedConnectorsData
+      });
     });
 };
 
-var croppingFinished = function(req, res) {
-    res.send(!cropping[req.params.app]);
-}
+var getFilteredApps = function(filterFn, callback) {
+  locker.mapType('app', function(err, map) {
+    var result = [];
+    var added = {};
+    async.forEach(map, function(app, forEachCb) {
+      if (app.static && filterFn(app)) {
+        result.push(app);
+        added[app.id] = true;
+      }
+      forEachCb();
+    }, function(err) {
+      callback(err, result);
+    });
+  });
+};
+
+var getInstalledApps = function(callback) {
+  return getFilteredApps(function(app) {
+    return app.srcdir.substring(0,9) !== 'Me/github' && app.hidden !== true;
+  }, callback);
+};
+
+var getMyApps = function(callback) {
+  return getFilteredApps(function(app) {
+    return app.srcdir.substring(0,9) === 'Me/github';
+  }, callback);
+};
+
+var sendAvatar = function (req, res) {
+  res.sendfile('avatar.png');
+};
+
+// Require at least one connection before you can do anything else
+app.all('*', checkInstalled);
 
 app.get('/clickapp/:app', clickApp);
-app.get('/you', renderYou);
-app.get('/', renderYou);
+app.get('/explore', renderExplore);
+app.get('/', renderExplore);
+
+app.get('/connect', renderConnect);
+
+app.get('/settings', renderSettings);
+app.get('/settings-connectors', renderSettingsConnectors);
+app.get('/settings-account', renderSettingsAccountInformation);
+app.get('/settings-api', renderSettingsAPIKey);
+app.post('/settings-account', handleSettings);
+
 app.get('/allApps', renderApps);
-app.get('/create', renderCreate);
+
+app.get('/develop', renderDevelop);
+app.get('/develop-buildapp', renderDevelopBuildApp);
+app.get('/develop-apiexplorer', renderDevelopApiExplorer);
+app.get('/develop-publishing', renderDevelopPublishing);
+app.get('/develop-exampleapps', renderDevelopExampleApps);
+app.get('/develop-chat', renderDevelopChat);
+app.get('/develop-templatesicons', renderDevelopTemplatesIcons);
+
+app.get('/appGallery', renderAppGallery);
 
 app.get('/publish', renderPublish);
-app.post('/publish', submitPublish);
+app.get('/publish/:handle', submitPublish);
 
-app.get('/viewAll', renderAllApps);
-
-app.get('/screenshot/:handle', renderScreenshot);
-
-app.post('/publishScreenshot', handleUpload);
-app.get('/tempScreenshot', renderTempScreenshot);
-app.get('/finishedCropping/:app', croppingFinished);
-
-var getGithubApps = function(callback) {
-    uistate.fetchState();
-    var apps = [];
-    githubapps = {};
-    var pattern = /^Me\/github/
-    getRegistryApps(function(myPublishedApps) {
-        locker.map(function(err, map) {
-            for (var i in map.installed) {
-                if (pattern.exec(map.installed[i].srcdir)) {
-                    var appInfo = checkDraftState(map.installed[i]);
-                    var appId = 'app-' + appInfo.id.toLowerCase();
-                    if (myPublishedApps[appId]) {
-                        appInfo.published = myPublishedApps[appId];
-                    }
-                    githubapps[appInfo.id] = appInfo;
-                    apps.push(appInfo);
-                }
-            }
-            callback(apps);
-        });
-    });
-}
-
-var getRegistryApps = function(callback) {
-    request.get({uri: locker.lockerBase + '/registry/myApps'}, function(err, resp, body) {
-        callback(JSON.parse(body));
-    });
-}
-
-var checkDraftState = function(appInfo) {
-    if (uistate.state.draftApps[appInfo.handle]) {
-        appInfo.draft = uistate.state.draftApps[appInfo.handle];
-        if (appInfo.draft['rename-app'] === 'on') {
-            appInfo.title = appInfo.draft['app-newname'];
-        }
-        appInfo.desc = appInfo.draft['app-description'];
-    } else {
-        appInfo.draft = {};
-    }
-    appInfo.lastUpdated = new Date(appInfo.lastUpdated || appInfo.draft.lastUpdated || Date.now());
-    return appInfo;
-}
+app.get('/registryApp', registryApp);
+app.get('/avatar.png', sendAvatar);
