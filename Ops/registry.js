@@ -48,10 +48,7 @@ exports.init = function (serman, syncman, config, crypto, callback) {
     config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
     config.locker_base = lconfig.lockerBase;
     config.prefix = config.locker_me;
-    var home = path.join(lconfig.lockerDir, lconfig.me);
-//    process.chdir(home); // for npm
     npm.load(config, function (err) {
-//        process.chdir(lconfig.lockerDir); // restore
         if (err) logger.error(err);
         setTimeout(exports.sync,2000);
         callback();
@@ -103,7 +100,7 @@ function getConnectors(req, res) {
     // get all connectors from the registry
     var url = burrowBase + "/registry/_design/connectors/_view/Connectors";
     request.get({uri:url, json:true}, function(err, ret, js){
-        if(js && js.rows) js.rows.forEach(function(conn){
+        if(js && js.rows && lutil.is('Array', js.rows)) js.rows.forEach(function(conn){
             // if api key
             if(apiKeys[conn.id]) connectors[conn.id] = conn.value;
             // if no key required

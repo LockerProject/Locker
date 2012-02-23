@@ -428,7 +428,7 @@ var getConnectors = function(callback) {
   locker.mapType("connector", function(err, installedConnectors) {
     request.get({uri:locker.lockerBase + "/registry/connectors", json:true}, function(err, regRes, connin) {
       var connectors = [];
-      connin.forEach(function(connector) {
+      if(connin && lutil.is('Array',connin)) connin.forEach(function(connector) {
           // change the layout to match old style for UI
           connector = {repository:connector};
           connector.name = connector.repository.handle;

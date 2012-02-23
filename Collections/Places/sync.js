@@ -71,3 +71,25 @@ function gatherFromUrl(svcId, type, callback) {
         callback();
     });
 }
+
+// optionally geocode anything in this network
+exports.geoCode = function(network, callback)
+{
+    var todo = [];
+    dataStore.getNetwork(network, function(place){
+        if(!place) return;
+        if(!place.geo || !place.geo.address) todo.push(place);
+    }, function(){
+        async.forEachSeries(todo, function(place, cb){
+            var url = "http://api.geonames.org/findNearestAddressJSON?username=singly&lat="+place.lat+"&lng="+place.lng;
+            logger.verbose(url);
+            request.get({uri:url, json:true}, function(err, res, js){
+                if(err) logger.error(url+" "+err);
+                if(res && res.statusCode != 200) logger.error(url+" code "+res.statusCode);
+                if(!js) js = {};
+                place.geo = js;
+                dataStore.updatePlace(place, cb);
+            });
+        }, callback);
+    });
+}
