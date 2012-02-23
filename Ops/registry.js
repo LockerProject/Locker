@@ -44,8 +44,9 @@ exports.init = function (serman, syncman, config, crypto, callback) {
     try {
         fs.mkdirSync(path.join(lconfig.lockerDir, lconfig.me, "node_modules"), 0755); // ensure a home in the Me space
     } catch(E) {}
-    config = {registry:regBase, cache:path.join(home, '.npm')};
+    config = {registry:regBase};
     config.locker_me = path.join(lconfig.lockerDir, lconfig.me);
+    config.cache = path.join(config.locker_me, '.npm');
     config.locker_base = lconfig.lockerBase;
     config.prefix = config.locker_me;
     npm.load(config, function (err) {
@@ -254,7 +255,7 @@ exports.sync = function (callback, force) {
 
     async.forEach(Object.keys(serviceManager.map()), function(key, cb) {
         var svc = serviceManager.map(key);
-        if(svc.srcdir.indexOf("/node_modules/") == -1) return cb();
+        if(!svc.srcdir || svc.srcdir.indexOf("/node_modules/") == -1) return cb();
         getPackage(key, function(err, pkg){
             if(err || !pkg) logger.error(err); // log is only helpful here, not stopper
             if(pkg.signed) updatePkg(pkg); // happens async
