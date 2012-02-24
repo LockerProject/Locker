@@ -300,7 +300,7 @@ function updatePkg(pkg) {
             logger.verbose("skipping since local versionis not from the registry");
         } else {
             logger.verbose("auto-updating "+pkg.name);
-            exports.install({name:pkg.name}, function (err) {
+            exports.install(pkg, function (err) {
                 if (err) logger.error(err);
             }); // lazy update
         }
