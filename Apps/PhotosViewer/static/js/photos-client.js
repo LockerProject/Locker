@@ -23,13 +23,17 @@ function photoApp() {
     };
 
     var HTMLFromPhotoJSON = function(photos) {
-        var p, title, photoHTML = "";
+        var p, title, url, photoHTML = "";
         // removed for the time being, the query should return time sorted data
         // photos = photos.sort(timeSort);
         for (var i in photos) {
       p = photos[i];
-      title = p.title ? p.title : "Unititled";
-      photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="' + p.url + '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
+      title = p.title ? p.title : "Untitled";
+      url = p.url;
+      if (p.url.substr(0,5) !== 'https') {
+          url = '/Me/photos/image/' + p.id + '?proxy=1';
+      }
+      photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="' + url + '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
   }
         return photoHTML;
     };
