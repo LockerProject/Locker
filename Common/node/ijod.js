@@ -16,9 +16,7 @@ var fs = require('fs');
 var path = require('path');
 var deepCompare = require('./deepCompare');
 var sqlite = require('sqlite-fts');
-var gzbz2 = require("gzbz2");
-var gzip = new gzbz2.Gzip;
-var gunzip = new gzbz2.Gunzip;
+var zlib = require("zlib");
 
 function IJOD(arg, callback) {
     if(!arg || !arg.name) return callback("invalid args");
@@ -50,21 +48,18 @@ IJOD.prototype.addData = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
     arg.id = arg.id.toString(); // safety w/ numbers
     if(!arg.at) arg.at = Date.now();
-    gzip.init();
-    var gzdata = gzip.deflate(new Buffer(JSON.stringify(arg)+"\n"));
-    var gzlast = gzip.end();
+    zlib.deflate(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
+        console.log("going to write length " + gzdata.length);
+        try {
+            fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
+        } catch(E) {
+            return callback(E);
+        }
 
-    try{
-        fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
-        fs.writeSync(this.fda, gzlast, 0, gzlast.length, null);
-    }catch(E){
-        return callback(E);
-    }
-
-    var at = this.len;
-    this.len += gzdata.length;
-    this.len += gzlast.length;
-    this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, this.len-at], callback);
+        var at = this.len;
+        this.len += gzdata.length;
+        this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, this.len-at], callback);
+    });
 }
 
 // adds a deleted record to the ijod and removes from index
@@ -73,21 +68,17 @@ IJOD.prototype.delData = function(arg, callback) {
     arg.id = arg.id.toString(); // safety w/ numbers
     if(!arg.at) arg.at = Date.now();
     arg.type = "delete";
-    gzip.init();
-    var gzdata = gzip.deflate(new Buffer(JSON.stringify(arg)+"\n"));
-    var gzlast = gzip.end();
+    zlib.deflate(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
+        try {
+            fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
+        } catch(E) {
+            return callback(E);
+        }
 
-    try{
-        fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
-        fs.writeSync(this.fda, gzlast, 0, gzlast.length, null);
-    }catch(E){
-        return callback(E);
-    }
-
-    var at = this.len;
-    this.len += gzdata.length;
-    this.len += gzlast.length;
-    this.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+        var at = this.len;
+        this.len += gzdata.length;
+        this.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+    });
 }
 
 // this only calls callback(err, rawstring) once!
@@ -103,9 +94,9 @@ IJOD.prototype.getOne = function(arg, callback) {
         if(!row) return callback();
         var buf = new Buffer(row.len);
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        gunzip.init();
-        var x = gunzip.inflate(buf);
-        return callback(null, arg.raw ? x : stripper(x));
+        zlib.inflate(buf, function(err, data) {
+            return callback(err, arg.raw ? data : stripper(data));
+        });
     });
 }
 
@@ -130,9 +121,9 @@ IJOD.prototype.getAll = function(arg, callback) {
         if(!row) return callback();
         var buf = new Buffer(row.len);
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        gunzip.init();
-        var x = gunzip.inflate(buf);
-        return callback(null, arg.raw ? x : stripper(x));
+        zlib.inflate(buf, function(err, data) {
+            return callback(err, arg.raw ? data : stripper(data));
+        });
     });
 }
 
@@ -207,6 +198,6 @@ IJOD.prototype.reqID = function(req, res)
 // make a string and return only the interior data object!
 function stripper(buf)
 {
-    var s = buf.toString();
+    var s = buf.toString("utf8");
     return s.slice(s.indexOf('{',1),s.lastIndexOf('}',s.length-3)+1); // -3 accounts for }\n
 }

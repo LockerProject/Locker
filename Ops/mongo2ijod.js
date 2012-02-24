@@ -1,5 +1,5 @@
-var gzbz2 = require("gzbz2");
-var sys = require("sys");
+var zlib = require("zlib");
+var sys = require("util");
 var fs = require("fs");
 var lconfig = require(__dirname +"/../Common/node/lconfig");
 lconfig.load(__dirname+"/../Config/config.json");
@@ -7,9 +7,6 @@ var IJOD = require(__dirname+"/../Common/node/ijod").IJOD;
 var async = require("async");
 var spawn = require('child_process').spawn;
 
-
-// Create gzip stream
-var gzip = new gzbz2.Gzip;
 
 var enc = null;
 var name = process.argv[2];
@@ -25,13 +22,15 @@ bootMongo()
 
 var ijods = {};
 var mongo;
-function connect(){
+function connect(cb){
     mongo = new mongodb.Db('locker', new mongodb.Server("127.0.0.1", 27018, {}));
     mongo.open(function(err, p_client) {
         if(err) return console.error(err);
         mongo.collectionNames(function(err, names){
             scan(names, lconfig.lockerDir + '/' + lconfig.me, function(){
                 console.error("done");
+                mongo.close();
+                cb();
             });
         });
 //      mongo.collection(name, setup);
@@ -75,23 +74,21 @@ function scan(names, dir, callback) {
 
 function eacher(collection, id, ij, callback) {
     // Locate all the entries using find
-    var arr = [];
+    var count = 0;
     var at = Date.now();
     collection.find().each(function(err, item) {
         if(!item){
-            console.error("loaded "+arr.length+" items in "+(Date.now() - at));
-            at = Date.now();
-            async.forEachSeries(arr, function(data, cb){
-                ij.addData({id:data[id], data:data},cb)
-            }, function(){
-                console.error("saved in "+(Date.now() - at));
-                callback();
-            });
+            console.error("loaded " + count + " items in "+(Date.now() - at));
+            callback();
             return;
         }
         if(!item[id]) console.error("can't find "+id+" in "+JSON.stringify(item));
-        if(item[id]) arr.push(item);
-        arr.push(item);
+        ++count;
+        ij.addData({id:item[id], data:item}, function(addError) {
+            if (addError) {
+                console.error("Adding to ijod error: " + addError);
+            }
+        });
     });
 };
 
@@ -112,10 +109,18 @@ function bootMongo()
         console.error(mongoOutput);
         if(mongoOutput.match(/ waiting for connections on port/g)) {
             mongoProcess.stdout.removeListener('data', callback);
-            connect();
+            connect(function() {
+                mongoProcess.kill();
+            });
        }
     };
     mongoProcess.stdout.on('data', callback);
+
+    process.on("uncaughtException", function(E) {
+        console.error(E);
+        mongoProcess.kill();
+        process.exit(1);
+    });
 }
 
 
