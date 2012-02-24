@@ -258,7 +258,7 @@ exports.sync = function (callback, force) {
         if(!svc.srcdir || svc.srcdir.indexOf("/node_modules/") == -1) return cb();
         getPackage(key, function(err, pkg){
             if(err || !pkg) logger.error(err); // log is only helpful here, not stopper
-            if(pkg.signed) updatePkg(pkg); // happens async
+            if(pkg && pkg.signed) updatePkg(pkg); // happens async
             cb();
         });
     }, finish);
