@@ -92,7 +92,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoStdout.on('line', function (line) {
         logger.info('[mongo] ' + line);
         if (waitingForMongo && line.indexOf("[initandlisten] waiting for connections on port " + lconfig.mongo.port) >= 0) {
-          mongoReady = false;
+          waitingForMongo = false;
           lmongo.connect(checkKeys);
         }
     });
