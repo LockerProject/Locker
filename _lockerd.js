@@ -57,6 +57,9 @@ var lcrypto = require("lcrypto");
 var registry = require(__dirname + "/Ops/registry.js");
 var lmongo = require('lmongo');
 
+var buildInfo = fs.readFileSync(path.join(lconfig.lockerDir, 'build.json'));
+logger.info("Starting locker with build info:" + buildInfo);
+
 if(process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
 
 if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {

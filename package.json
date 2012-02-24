@@ -14,7 +14,7 @@
         "start": "./locker"
     },
     "dependencies": {
-        "npm":"=1.0.106",
+        "npm":"=1.1.1",
         "connect": "=1.8.5",
         "express": "=2.5.4",
         "async": "=0.1.15",
