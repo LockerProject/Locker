@@ -85,10 +85,12 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     mongoProcess = spawn('mongod', mongoOptions);
 
     var mongoStdout = carrier.carry(mongoProcess.stdout);
+    var waitingForMongo = true;
     mongoStdout.on('line', function (line) {
         logger.info('[mongo] ' + line);
-        if(line.match(/ waiting for connections on port/g)) {
-            lmongo.connect(checkKeys);
+        if (waitingForMongo && line.indexOf("[initandlisten] waiting for connections on port " + lconfig.mongo.port) >= 0) {
+          mongoReady = false;
+          lmongo.connect(checkKeys);
         }
     });
     var mongoStderr = carrier.carry(mongoProcess.stderr);
