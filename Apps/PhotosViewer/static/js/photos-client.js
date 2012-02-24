@@ -28,8 +28,8 @@ function photoApp() {
         // photos = photos.sort(timeSort);
         for (var i in photos) {
       p = photos[i];
-      title = p.title ? p.title : "Unititled";
-      photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="' + p.url + '" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
+      title = p.title ? p.title : "Untitled";
+      photoHTML += '<div class="box"><div id="' + p._id + '" class="photo"><img src="/Me/photos/image/' + p.id + '?proxy=1" style="max-width:300px" /><div class="basic-data">'+title+'</div></div></div>';
   }
         return photoHTML;
     };
