@@ -75,7 +75,7 @@ case "$locker_mode" in
         # Monitor the locker and restart it if it dies
         trap 'kill -TERM $lockerd_pid; wait $lockerd_pid; exit $?' TERM
         while true; do
-            node lockerd.js "$@" &
+            node _lockerd.js "$@" &
             lockerd_pid=$!
 
             if wait $lockerd_pid; then
@@ -90,7 +90,7 @@ case "$locker_mode" in
         ;;
     development|*)
         # Just run it
-        exec node lockerd.js "$@"
+        exec node _lockerd.js "$@"
         ;;
 esac
 
