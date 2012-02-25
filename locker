@@ -84,7 +84,7 @@ monitor() {
         end_time=$(date +%s)
         runtime=$(($end_time - $start_time))
         if [ "$runtime" -lt 10 ]; then
-            echo "locker was only running for $runtime seconds, not respanwing"
+            echo "locker was only running for $runtime seconds, not respawning" >&2
             exit 1
         fi
 
