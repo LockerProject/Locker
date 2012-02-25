@@ -255,7 +255,7 @@ exports.sync = function (callback, force) {
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
-    async.forEach(Object.keys(serviceManager.map()), function(key, cb) {
+    async.forEachSeries(Object.keys(serviceManager.map()), function(key, cb) {
         var svc = serviceManager.map(key);
         if(!svc.srcdir || svc.srcdir.indexOf("/node_modules/") == -1) return cb();
         getPackage(key, function(err, pkg){
