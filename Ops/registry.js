@@ -232,6 +232,7 @@ function verifyPkg(pkg) {
 // background sync process to fetch/maintain the full installed package list, auto-update
 var syncCallbacks = [];
 exports.sync = function (callback, force) {
+    logger.info("registry sync started");
     if (!callback) callback = function (err) {
         if (err) logger.error(err);
     }; // callback is required
@@ -242,6 +243,7 @@ exports.sync = function (callback, force) {
 
 
     function finish(err) {
+        logger.info("registry sync finished");
         if(err) logger.error(err);
         syncTimer = setTimeout(exports.sync, syncInterval);
         syncCallbacks.forEach(function (cb) { cb(err); });
@@ -253,7 +255,7 @@ exports.sync = function (callback, force) {
     // always good to refresh this too!
     apiKeys = JSON.parse(fs.readFileSync(lconfig.lockerDir + "/Config/apikeys.json", 'utf-8'));
 
-    async.forEach(Object.keys(serviceManager.map()), function(key, cb) {
+    async.forEachSeries(Object.keys(serviceManager.map()), function(key, cb) {
         var svc = serviceManager.map(key);
         if(!svc.srcdir || svc.srcdir.indexOf("/node_modules/") == -1) return cb();
         getPackage(key, function(err, pkg){
@@ -300,7 +302,7 @@ function updatePkg(pkg) {
             logger.verbose("skipping since local versionis not from the registry");
         } else {
             logger.verbose("auto-updating "+pkg.name);
-            exports.install({name:pkg.name}, function (err) {
+            exports.install(pkg, function (err) {
                 if (err) logger.error(err);
             }); // lazy update
         }
