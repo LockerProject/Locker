@@ -88,8 +88,9 @@ monitor() {
             exit 1
         fi
 
-        echo "Locker exited unexpectedly, respawning..." >&2
-        sleep 1
+        wait=5
+        echo "Locker exited unexpectedly, respawning in $wait seconds..." >&2
+        sleep $wait
     done
 }
 
