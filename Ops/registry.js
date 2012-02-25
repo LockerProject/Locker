@@ -232,6 +232,7 @@ function verifyPkg(pkg) {
 // background sync process to fetch/maintain the full installed package list, auto-update
 var syncCallbacks = [];
 exports.sync = function (callback, force) {
+    logger.info("registry sync started");
     if (!callback) callback = function (err) {
         if (err) logger.error(err);
     }; // callback is required
@@ -242,6 +243,7 @@ exports.sync = function (callback, force) {
 
 
     function finish(err) {
+        logger.info("registry sync finished");
         if(err) logger.error(err);
         syncTimer = setTimeout(exports.sync, syncInterval);
         syncCallbacks.forEach(function (cb) { cb(err); });
