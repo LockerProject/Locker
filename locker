@@ -75,6 +75,7 @@ case "$locker_mode" in
         # Monitor the locker and restart it if it dies
         trap 'kill -TERM $lockerd_pid; wait $lockerd_pid; exit $?' TERM
         while true; do
+            start_time=$(date +%s)
             node _lockerd.js "$@" &
             lockerd_pid=$!
 
@@ -83,8 +84,14 @@ case "$locker_mode" in
                 exit 0
             fi
 
+            end_time=$(date +%s)
+            runtime=$(($end_time - $start_time))
+            if [ "$runtime" -lt 10 ]; then
+                echo "locker was only running for $runtime seconds, not respanwing"
+                exit 1
+            fi
+
             echo "Locker exited unexpectedly, respawning..." >&2
-            # Limit respawning
             sleep 1
         done
         ;;
