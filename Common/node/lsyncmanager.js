@@ -114,7 +114,7 @@ exports.scheduleRun = function(info, synclet) {
     if(!synclet.nextRun)
     {
         var milliFreq = parseInt(synclet.frequency) * 1000;
-        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
+        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
     }
     scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
 };
