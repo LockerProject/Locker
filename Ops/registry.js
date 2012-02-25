@@ -26,7 +26,7 @@ var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
-var syncInterval = 3600000;
+var syncInterval = 3000000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
 var burrowBase = "https://burrow.singly.com";
