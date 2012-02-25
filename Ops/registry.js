@@ -26,7 +26,6 @@ var querystring = require('querystring');
 var logger;
 var lconfig;
 var lcrypto;
-var syncInterval = 3000000;
 var syncTimer;
 var regBase = 'http://registry.singly.com';
 var burrowBase = "https://burrow.singly.com";
@@ -245,9 +244,10 @@ exports.sync = function (callback, force) {
     function finish(err) {
         logger.info("registry sync finished");
         if(err) logger.error(err);
-        syncTimer = setTimeout(exports.sync, syncInterval);
+        syncTimer = setTimeout(exports.sync, lconfig.registryUpdateInterval);
         syncCallbacks.forEach(function (cb) { cb(err); });
         syncCallbacks = [];
+        logger.info("registry callbacks completed");
     }
 
     if (syncTimer) clearTimeout(syncTimer);
