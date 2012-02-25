@@ -37,7 +37,6 @@ if [ ! -f "$apikeys" ]; then
     exit 1
 fi
 
-# Start the locker
 mongodata=Me/mongodata
 mongolock=$mongodata/mongod.lock
 if [ -s $mongolock ]; then
@@ -65,7 +64,7 @@ fi
 # Extra paths to search for files : separated
 export NODE_PATH=Common/node
 
-# Set defaults based on our runtime mode
+# Start the locker
 case "$locker_mode" in
     production)
         # Tell node to run in production mode
