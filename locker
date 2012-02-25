@@ -37,29 +37,72 @@ if [ ! -f "$apikeys" ]; then
     exit 1
 fi
 
-mongodata=Me/mongodata
-mongolock=$mongodata/mongod.lock
-if [ -s $mongolock ]; then
-    echo "mongod lock file exists: $mongolock..."
-    pid=$(cat "$mongolock")
-    if [ "$locker_mode" = "production" ]; then
-        # Shut it down
-        echo "...shutting it down"
-        kill "$pid"
-    else
-        # Automatically check and repair mongo
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            echo "...and it's still running.  Hopefully that's OK."
+cleanup_mongo() {
+    mongodata=Me/mongodata
+    mongolock=$mongodata/mongod.lock
+    if [ -s $mongolock ]; then
+        echo "mongod lock file exists: $mongolock..."
+        pid=$(cat "$mongolock")
+        if [ "$locker_mode" = "production" ]; then
+            # Shut it down
+            echo "...shutting it down"
+            kill "$pid"
         else
-            echo "...but it's dead.  Cleaning up..."
-            rm -f "$mongolock"
-            if ! mongod --dbpath "$mongodata" --repair; then
-                echo "mongod --repair failed!" >&2
-                exit 1
+            # Automatically check and repair mongo
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                echo "...and it's still running.  Hopefully that's OK."
+            else
+                echo "...but it's dead.  Cleaning up..."
+                rm -f "$mongolock"
+                if ! mongod --dbpath "$mongodata" --repair; then
+                    echo "mongod --repair failed!" >&2
+                    exit 1
+                fi
             fi
         fi
     fi
-fi
+}
+
+monitor() {
+    # Monitor the process and restart it if it dies
+
+    trap shutdown INT TERM
+    while true; do
+        start_time=$(date +%s)
+        # start the command
+        $* &
+        lockerd_pid=$!
+
+        if wait $lockerd_pid; then
+            # Clean shutdown
+            exit 0
+        fi
+
+        # Abnormal exit
+        cleanup_mongo
+
+        end_time=$(date +%s)
+        runtime=$(($end_time - $start_time))
+        if [ "$runtime" -lt 10 ]; then
+            echo "locker was only running for $runtime seconds, not respanwing"
+            exit 1
+        fi
+
+        echo "Locker exited unexpectedly, respawning..." >&2
+        sleep 1
+    done
+}
+
+shutdown() {
+    kill -TERM $lockerd_pid
+    wait $lockerd_pid
+    status=$?
+    echo "locker exited with status $status"
+    cleanup_mongo
+    exit $status
+}
+
+cleanup_mongo
 
 # Extra paths to search for files : separated
 export NODE_PATH=Common/node
@@ -70,29 +113,7 @@ case "$locker_mode" in
         # Tell node to run in production mode
         NODE_ENV=production
         export NODE_ENV
-
-        # Monitor the locker and restart it if it dies
-        trap 'kill -TERM $lockerd_pid; wait $lockerd_pid; exit $?' TERM
-        while true; do
-            start_time=$(date +%s)
-            node _lockerd.js "$@" &
-            lockerd_pid=$!
-
-            if wait $lockerd_pid; then
-                # Clean shutdown
-                exit 0
-            fi
-
-            end_time=$(date +%s)
-            runtime=$(($end_time - $start_time))
-            if [ "$runtime" -lt 10 ]; then
-                echo "locker was only running for $runtime seconds, not respanwing"
-                exit 1
-            fi
-
-            echo "Locker exited unexpectedly, respawning..." >&2
-            sleep 1
-        done
+        monitor node _lockerd.js "$@"
         ;;
     development|*)
         # Just run it
