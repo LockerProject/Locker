@@ -1,1 +1,0 @@
-{"title":"Twitter Account","action":"Connect to a Twitter account","desc":"Collect and sync my data from my Twitter account using the Twitter API and a Twitter 'app' that I create just for myself.","run":"node twitter.js","provides":["contact/twitter","status/twitter"],"srcdir":"Connectors/Twitter","is":"connector","id":"twitter", "uri":"http://localhost:8043/Me/twitter"}

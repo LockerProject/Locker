@@ -1,0 +1,53 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "places",
+  "description": "Places Collection",
+  "version": "0.0.3",
+  "repository": {
+    "title": "Places",
+    "handle": "places",
+    "run": "node places.js",
+    "author": "nerds",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "collection",
+    "provides": [
+      "place"
+    ],
+    "mongoCollections": [
+      "place"
+    ],
+    "events": [
+      [
+        "checkin/foursquare",
+        "/events"
+      ],
+      [
+        "recents/foursquare",
+        "/events"
+      ],
+      [
+        "tweets/twitter",
+        "/events"
+      ],
+      [
+        "timeline/twitter",
+        "/events"
+      ],
+      [
+        "photo://instagram",
+        "/events"
+      ],
+      [
+        "location/glatitude",
+        "/events"
+      ]
+    ],
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

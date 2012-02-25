@@ -66,12 +66,17 @@ if (lconfig.logging.file) {
     transports.push(fileLogger);
 }
 
-module.exports = new (winston.Logger)({"transports":transports});
-var realLog = exports.log;
-exports.log = function(level, msg) {
-    try {
-        realLog.call(module.exports, level, msg.toString('utf8'));
-    } catch (E) {
-        realLog.call(module.logger, level, msg);
+// Help find any areas where we're not logging normal strings
+var fullLogger = new (winston.Logger)({"transports":transports});
+/*
+var __realLog = fullLogger.log;
+fullLogger.log = function(level, msg) {
+    if (typeof(msg) != "string") {
+        var E = new Error;
+        __realLog.call(fullLogger, "error", "A nonstring was passed to the logger and was converted to utf8: " + E.stack);
+        msg = msg.toString("utf8");
     }
-}
+    __realLog.call(fullLogger, level, msg);
+};
+*/
+module.exports = fullLogger

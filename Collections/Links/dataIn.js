@@ -2,25 +2,25 @@ var request = require('request');
 var util = require('./util');
 var async = require('async');
 var wrench = require('wrench');
-var logger = require(__dirname + "/../../Common/node/logger");
 var lutil = require('lutil');
 var oembed = require('./oembed');
 var crypto = require('crypto');
 var url = require('url');
 var debug = false;
 
-var dataStore, locker;
+var dataStore, locker, logger;
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore, s){
+exports.init = function(l, dStore, log){
     dataStore = dStore;
     locker = l;
+    logger = log;
 }
 
 // manually walk and reindex all possible link sources
 exports.reIndex = function(locker,cb) {
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
+        locker.providers(['link/facebook', 'timeline/twitter', 'dashboard/tumblr'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -36,6 +36,10 @@ exports.reIndex = function(locker,cb) {
                         getLinks(getEncounterTwitter, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/timeline', function() {
                             logger.info('twitter done!');
                         });
+                    });
+                } else if(svc.provides.indexOf('dashboard/tumblr') >= 0) {
+                    getLinks(getEncounterTumblr, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/dashboard', function() {
+                        logger.info('tumblr done!');
                     });
                 }
             });
@@ -55,6 +59,8 @@ exports.processEvent = function(event, callback)
         processEncounter(getEncounterFB(event.data),callback);
     }else if(idr.host === "twitter") {
         processEncounter(getEncounterTwitter(event.data),callback);
+    }else if(idr.host === "tumblr") {
+        processEncounter(getEncounterTumblr(event.data),callback);
     }else{
         console.error("unhandled event, shouldn't happen");
         callback();
@@ -202,6 +208,19 @@ function getEncounterTwitter(tweet)
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()
         , via: tweet
+        };
+    return e;
+}
+
+function getEncounterTumblr(post)
+{
+    var e = {id:post.id
+        , network:"tumblr"
+        , text: post.post_url
+        , from: post.blog_name
+        , fromID: post.blog_name
+        , at: new Date(post.date).getTime()
+        , via: post
         };
     return e;
 }

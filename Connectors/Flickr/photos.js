@@ -11,7 +11,7 @@ var extras = 'description,license,date_upload,date_taken,owner_name,icon_server,
              'original_format,last_update,geo,tags,machine_tags,o_dims' +
              'views,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o';
 
-var paging = require(__dirname + '/lib/paging');
+var paging = require('./lib/paging');
 
 var dlPhotos = false;
 
@@ -50,13 +50,13 @@ exports.sync = function(processInfo, callback) {
     try {
         fs.mkdirSync('photos', 0755);
     } catch(err) {
-        if(!(err.code === 'EEXIST' && err.errno === 17)) { // if it's already there, we're good
+        if(err.code !== 'EEXIST') { // if it's already there, we're good
             callback(err);
             return;
         }
     }
-    
-    paging.getPage(processInfo, 'flickr.people.getPhotos', 'photo', PER_PAGE, 
+
+    paging.getPage(processInfo, 'flickr.people.getPhotos', 'photo', PER_PAGE,
                    {extras:extras, user_id:processInfo.auth.user.nsid}, function(config, photosArray) {
         config.lastUpdateTimes = config.lastUpdateTimes || {};
         var data = [];
@@ -69,13 +69,13 @@ exports.sync = function(processInfo, callback) {
                 data.push({obj:photo, timestamp:photo.lastupdate});
             }
         }
-        
-        
+
+
         function done() {
             callback(null, {config: config,
                             data: {photo:data}});
         }
-        
+
         if(dlPhotos) {
             async.forEach(data, function(evtObject, callback) {
                 getPhotoBinaries(evtObject.obj, callback);
@@ -83,6 +83,6 @@ exports.sync = function(processInfo, callback) {
         } else {
             done();
         }
-        
+
     });
 }

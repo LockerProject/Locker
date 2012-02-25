@@ -8,6 +8,7 @@
 */
 
 var app = require('express').createServer(require('connect').bodyParser());
+var url = require("url");
 var locker = require(__dirname + '/../../../Common/node/locker.js');
 var collections;
 
@@ -20,11 +21,12 @@ var events = {};
 app.post('/event', function(req, res) {
     res.writeHead(200);
     res.end();
-    if(req.body.obj.source) {
-        if (!events[req.body.obj.source]) {
-            events[req.body.obj.source] = [];
+    var idr = url.parse(req.body.idr);
+    if(idr && idr.host) {
+        if (!events[idr.host]) {
+            events[idr.host] = [];
         }
-        events[req.body.obj.source].push(req.body);
+        events[idr.host].push(req.body);
     } else {
         console.error(req.body);
     }

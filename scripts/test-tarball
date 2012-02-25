@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+MAKE=${MAKE:-make}
+subdir="$1"
+tarball="$2"
+
+tmpdir=$(mktemp -d)
+trap "rm -rf '$tmpdir'" EXIT
+tar xf "$tarball" -C "$tmpdir"
+cd "$tmpdir/$subdir"
+$MAKE test

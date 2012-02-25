@@ -1,0 +1,104 @@
+body {
+  margin: 40px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 200;
+  margin: 20px 0 6px 0;
+}
+
+h2 {
+  font-size: 24px;
+  margin: 20px 0 6px 0;
+  font-weight:bold;
+}
+
+h3 {
+  font-size: 20px;
+  margin: 14px 0 4px 0;
+  font-weight:bold;
+}
+
+.develop-nav {
+  width: 100%;
+  background: #F2F2F2;
+}
+.develop-nav ul {
+	width: 250px;
+	float: left;
+}
+.develop-nav li {
+  margin: 25px;
+}
+.develop-nav .selected {
+  color: #29ABE2;
+  font-weight: bold;
+}
+
+.description {
+  width: 600px;
+  margin: 20px 0 30px 0;
+  font-size: 20px;
+  color: #666;
+}
+
+#apiexplorer-form {
+  margin: 30px 0 0 0;
+}
+
+li p {
+  font-size: 16px;
+  margin: 0;
+  max-width: 640px;
+}
+
+li li {
+  margin-left: 30px;
+}
+
+pre.prettyprint {
+  font-family: "Courier New";
+  margin: 20px;
+  font-size: 14px;
+  display: inline-block;
+  background-color: #F8F8F8;
+  border-radius: 3px;
+  padding: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+#chatwiththeteam-content p {
+  padding: 10px 0;
+}
+
+#chatwiththeteam-content ul li {
+  padding: 5px 5px 3px;
+  border-bottom: 1px solid #EFEFEF;
+}
+#chatwiththeteam-content span {
+  display: inline-block;
+  width: 100px;
+  margin-right: 20px;
+  text-align: right;
+}
+#templatesicons-content img {
+  float: right;
+}
+#templatesicons-content a {
+  color: #F7931E;
+}
+
+.github-step .connect {
+  margin-top: 10px;
+  padding: 10px 0 10px 40px;
+  background: transparent url('/dashboard/img/icons/32px/github.png') no-repeat left center;
+}
+.github-step .synclet-name {
+  display: inline-block;
+  position: relative;
+  margin-right: 10px;
+}

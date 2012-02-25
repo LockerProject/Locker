@@ -28,7 +28,7 @@ suite.next().suite.addBatch({
                 file : __dirname + '/fixtures/twitter/friends.js' });
             fakeweb.registerUri({uri : 'https://api.twitter.com:443/1/users/lookup.json?path=%2Fusers%2Flookup.json&user_id=1054551&include_entities=true',
                 file : __dirname + '/fixtures/twitter/1054551.js' });
-            fakeweb.registerUri({uri : 'http://a0.twimg.com/profile_images/299352843/Picture_82_normal.png',
+            fakeweb.registerUri({uri : 'http://a0.twimg.com:80/profile_images/299352843/Picture_82_normal.png',
                 file : __dirname + '/fixtures/twitter/1054551.png',
                 contentType : 'image/png' });
             process.chdir('.' + mePath);

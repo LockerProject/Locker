@@ -1,4 +1,4 @@
-var sys = require("sys");
+var util = require("util");
 var events = require("events");
 var crypto = require("crypto");
 var dgram = require("dgram");
@@ -174,7 +174,7 @@ function Switch(bindPort){
     self.on("+end", self.onSignal_end);
 }
 
-sys.inherits(Switch, events.EventEmitter);
+util.inherits(Switch, events.EventEmitter);
 exports.Switch = Switch;
 
 exports.createSwitch = function(bindPort) {

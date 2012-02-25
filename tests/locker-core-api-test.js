@@ -27,42 +27,11 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .path("/map")
         .get()
             .expect(200)
-            .expect("has an available and installed attribute", function(err, res, body) {
+            .expect("has stuff", function(err, res, body) {
                 assert.isNull(err);
                 var map = JSON.parse(body);
-                assert.include(map, "available");
-                assert.include(map, "installed");
+                assert.include(map, "testURLCallback");
                 serviceMap = map;
-            })
-            // These tests don't scale as we develop more parts, test for actual known contents
-            /*
-            .expect("has 18 available services", function(err, res, body) {
-                var map = JSON.parse(body);
-                assert.equal(map.available.length, 18);
-            }).expect("has 16 installed services", function(err, res, body) {
-                var map = JSON.parse(body);
-                var count = 0;
-                for (var key in map.installed) {
-                    if (map.installed.hasOwnProperty(key)) ++count;
-                }
-                assert.equal(count, 16);
-            })
-            */
-            .expect("has the HelloWorld app available", function(err, res, body) {
-                var map = JSON.parse(body);
-                var found = false;
-                for (var x = 0; x < map.available.length; ++x) {
-                    if (map.available[x].srcdir == "Apps/HelloWorld") {
-                        found = true;
-                        break;
-                    }
-                }
-                assert.isTrue(found);
-            })
-            .expect("has the required test services installed", function(err, res, body) {
-                var map = JSON.parse(body);
-                assert.include(map.installed, "testURLCallback");
-                // Add statements here to test for services required to test
             })
     .unpath().undiscuss()
 
@@ -104,41 +73,7 @@ tests.use(lconfig.lockerHost, lconfig.lockerPort)
         .unpath()
     .undiscuss()
 
-    .path("/core/testSvcId/install")
-    .discuss("install an available service")
-        /************
-         * XXX Right now we're relying on the hello world application to exist, maybe we should make a testing app?
-         */
-        .setHeader("Content-Type", "application/json")
-        .discuss("but requires a srcdir attribute")
-            .post({"invalid":"invalid"})
-                .expect(400)
-        .undiscuss()
-        .discuss("and fails on an invalid service")
-            .post({"srcdir":"invalid"})
-                .expect(404)
-        .undiscuss()
-        .discuss("by srcdir attribute")
-            .post({"srcdir":"Apps/HelloWorld"})
-                .expect(200)
-                .expect("and returns the installed service information", function(err, res, body) {
-                    var svcInfo = JSON.parse(body);
-                    assert.include(svcInfo, "id");
-                    assert.include(svcInfo, "uri");
-                })
-                .expect("and has a created instance directory", function(err, res, body) {
-                    var svcInfo = JSON.parse(body);
-                    fs.statSync(lconfig.me + "/" + svcInfo.id + "/me.json").isFile();
-                })
-        .undiscuss()
-    .undiscuss().unpath()
 
-tests.next()
-    .path("/Me")
-    .discuss("spawn a valid service")
-        .get("/spawn-valid/")
-            .expect(200)
-    .undiscuss().unpath()
 tests.next()
     .path("/Me")
     .discuss("not spawn an invalid service")
@@ -194,8 +129,8 @@ tests.next()
     .discuss("returns a revision if git is available")
         .get()
             .expect(200)
-            .expect("didn't get a git cmd not available response", function(err, res, body) {
-                assert.notEqual(body, "git cmd not available!");
+            .expect("didn't get an 'unknown' response", function(err, res, body) {
+                assert.notEqual(body, "unknown");
             })
         .unpath()
     .undiscuss().unpath()

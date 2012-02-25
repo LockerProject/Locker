@@ -1,0 +1,249 @@
+@import "../common/css/common.less";
+
+// dashboard.js is responsible for making these appear
+.nav-section, .sidenav {
+  display: none;
+}
+
+/* styling for the develop page */
+.viewAll.blue:after {
+  content: " \25BC";
+  font-size: .75em;
+}
+
+.viewAll:not(.blue):after {
+  content: " \25B6";
+  font-size: .75em;
+}
+
+.your-apps.your-apps.app-details {
+  margin: 5px 0px 5px 20px;
+  display: none;
+  font-size: 14px;
+  background-color: white;
+  padding: 0px;
+  cursor: pointer;
+}
+
+.published {
+  color: #39b74f;
+}
+
+.in-review {
+  color: #999999;
+}
+
+.drafts {
+  color: #feaecd;
+}
+
+.publishInfo {
+    width:500px;
+}
+
+#publishOverlay {
+    background:rgba(0, 0, 0, 0.5);
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    z-index:9;
+    display:none;
+}
+
+#publishedInfo {
+    position:absolute;
+    display:none;
+    top:100px;
+    left:20px;
+    width:500px;
+    border:2px solid #ddd;
+    font-size:24px;
+    padding:20px;
+    background-color:white;
+    z-index:10;
+    -webkit-box-shadow: 0px 0px 8px 0px black;
+    -moz-box-shadow: 0px 0px 8px 0px black;
+    box-shadow: 0px 0px 8px 0px black;
+
+    .issueLink {
+        background-color:#eee;
+        display:block;
+        margin:10px;
+        text-align:center;
+        color:@orange;
+    }
+
+    .action-button {
+        float:right;
+    }
+}
+
+.publish-list {
+  li {
+    margin-left: 30px;
+    margin-top: 20px;
+
+    p {
+      margin: 7px 0px;
+    }
+  }
+
+  p.indented {
+    max-width:400px;
+    margin-left: 20px;
+    background-color:#eeeeee;
+    padding:4px;
+  }
+
+  p.warning {
+      color:#9f6000;
+      background-color:#feefb3;
+      border:1px solid #9f6000;
+  }
+
+  p.error {
+      color:#d8000c;
+      background-color:#ffbaba;
+      border:1px solid #d8000c;
+  }
+
+  .preview {
+    position: relative;
+    width: 450px;
+    height: 450px;
+    border: solid 1px #999;
+    line-height: 450px;
+    text-align: center;
+    overflow: hidden;
+
+    p {
+      position: absolute;
+      bottom: 0px;
+      text-align: center;
+      color: #000;
+      width: 100%;
+      background-color: rgba(255, 255, 255, .5);
+      margin: 0px;
+      line-height: 20px;
+    }
+  }
+
+  .preview img {
+    max-width: 450px;
+    max-height: 450px;
+    margin-left: auto;
+    margin-right: auto;
+    vertical-align: middle;
+  }
+
+  .app-newname {
+    margin-left: 5px;
+  }
+}
+
+.actions {
+  margin-left: 300px;
+
+  a {
+    margin-right: 40px;
+    font-size: 14px;
+    padding: 0px 2px 1px;
+    border-bottom: solid 1px @orange;
+  }
+}
+
+button.publish {
+  background-color: @orange;
+  color: white;
+  font-size: 18px;
+  border-radius: 4px;
+  border: 0px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+button[disabled] {
+    cursor:not-allowed;
+    opacity:0.4;
+}
+
+.connect .installed {
+  margin: 0 5px 0 0;
+}
+
+.gotit-button {
+  padding: 8px 50px 3px;
+  font-size: 20px;
+}
+
+#firstvisit-overlay {
+  border: solid 1px #AAA;
+  position: fixed;
+  width: 800px;
+  height: 315px;
+  top: 100px;
+  left: 226px;
+  background: white;
+  display: none;
+
+  .content {
+    font-size: 36px;
+    font-weight: 200;
+    margin: 40px;
+    line-height: 1.2em;
+    width: 600px;
+  }
+
+  .action {
+    float: right;
+    margin: 0 30px;
+  }
+}
+
+#appFrame {
+  margin-top:10px;
+  width: 99%;
+  min-width: 840px;
+  height: 93%;
+}
+
+/* Modal */
+#connect-more {
+
+  display: none;
+
+  p {
+    display:block;
+  }
+  section.selected-modal-section {
+    display:block;
+  }
+  #close-button {
+    position:absolute;
+    right:16px;
+    top:10px;
+    font-weight:bold;
+    font-size:24px;
+    cursor:pointer;
+  }
+  #close-this {
+    cursor:pointer;
+    float:right;
+    margin-top:38px;
+  }
+}
+
+#simplemodal-overlay {
+  background-color: #000;
+}
+
+#simplemodal-container {
+  height: 190px;
+  width: 600px;
+  background-color: #FFFFFF;
+  padding: 50px 80px;
+  text-align:center;
+  font-size:32px;
+  font-weight:none;
+}

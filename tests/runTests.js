@@ -1,12 +1,13 @@
 var fs = require("fs");
 var net = require("net");
-require.paths.push(__dirname + "/../Common/node");
-process.env["NODE_PATH"]=__dirname + "/../Common/node"; // for spawn'd nodelings
-var lconfig = require("lconfig");
+var path = require("path");
+process.env["NODE_PATH"] = path.join(__dirname, "..", "Common", "node"); // for spawn'd nodelings
+var lconfig = require(__dirname + "/../Common/node/lconfig");
 lconfig.load("Config/config.json");
 var wrench = require("wrench");
 var runIntegration = true;
 var integrationOnly = false;
+var tty = require('tty');
 
 var runFiles = [];
 var runGroups = [];
@@ -155,14 +156,15 @@ var runTests = function() {
         return runRake();
     }
     if (process.argv.indexOf("-s") > 0) {
+        // Yes, it's really misspelled this way in vows.
         vowsArgument.push("--supress-stdout");
     }
-    if (process.argv.indexOf("-nc") > 0) {
+    if (process.argv.indexOf("-nc") > 0 || !tty.isatty(1)) {
         vowsArgument.push("--nocolor");
     }
 
     var output = '';
-
+    process.chdir(__dirname);
     var vowsProcess = require("child_process").spawn(__dirname + "/../node_modules/vows/bin/vows", vowsArgument.concat(runFiles));
     vowsProcess.stdout.on("data", function(data) {
         if (xunit) output += data;
@@ -176,6 +178,10 @@ var runTests = function() {
             output = output.substring(output.indexOf('<testsuite name="Vows test"'));
             output = output.replace(/^\s+|\s+$/g, '');
             fs.writeFileSync('output.xml', output);
+        }
+        if (code || signal) {
+            // unit tests failed
+            return finished(code, signal);
         }
         if (runIntegration) {
             runRake();

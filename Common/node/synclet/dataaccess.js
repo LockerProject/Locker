@@ -25,6 +25,9 @@ module.exports = function(app) {
                     res.write(JSON.stringify(object)+'\n');
                 }, options);
             }else{
+                // we need to cut it off somewhere as building the objects for 10ks/100ks+ result sets in ram is too much
+                if(!options.limit) options.limit = 20;
+                if(options.limit > 1000) options.limit = 1000;
                 dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
                     if (err) {
                         res.writeHead(500, {'content-type' : 'application/json'});
@@ -37,6 +40,7 @@ module.exports = function(app) {
         });
     });
 
+    // deprecated! 2012-01-12 by jer, pretty sure nothing uses this
     app.get('/synclets/:syncletId/get_profile', function(req, res) {
         lfs.readObjectFromFile(path.join(lconfig.lockerDir, lconfig.me, req.params.syncletId, 'profile.json'), function(userInfo) {
             res.writeHead(200, {"Content-Type":"application/json"});

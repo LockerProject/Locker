@@ -7,7 +7,7 @@
 *
 */
 
-var tw = require('../../Connectors/Twitter/lib.js');
+var tw = require('./lib.js');
 var async = require('async');
 
 exports.sync = function(processInfo, cb) {
@@ -28,7 +28,7 @@ exports.sync = function(processInfo, cb) {
                 },callback);
             },function(err){
                 responseObj.data.related = related;
-                cb(err, responseObj);                
+                cb(err, responseObj);
             });
         });
     });

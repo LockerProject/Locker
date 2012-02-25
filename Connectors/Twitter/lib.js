@@ -10,8 +10,7 @@
 var fs = require('fs'),
     request = require('request'),
     async = require('async'),
-    url = require('url'),
-    sys = require('sys');
+    url = require('url');
 
 
 var tw;
@@ -27,7 +26,7 @@ exports.init = function(theAuth) {
 
 exports.getMe = function(arg, cbEach, cbDone) {
     arg.path = '/account/verify_credentials.json';
-    fs.readFile('twitter_me.json', function(err, data) {
+    fs.readFile('profile.json', function(err, data) {
         var me;
         try {
             if(err) throw "na";
@@ -37,7 +36,7 @@ exports.getMe = function(arg, cbEach, cbDone) {
             return getOne(arg,function(err,me){
                 if(!err)
                 {
-                    fs.writeFile('twitter_me.json', JSON.stringify(me));
+                    fs.writeFile('profile.json', JSON.stringify(me));
                     cbEach(me);
                 }
                 cbDone(err);

@@ -2,55 +2,34 @@ require File.join(File.expand_path(File.dirname(__FILE__)), '../spec_helper.rb')
 
 #describe 'home page', :type => :request do
 describe 'dashboard' do
-  it 'allows people to switch between 4 views' do
+  it 'allows people to see the EXPLORE page' do
+    pending "You can't actually see EXPLORE until you auth a service"
     visit '/'
-    page.should have_css('.iframeLink.blue[data-id="contactsviewer"]')
-    within_frame 'appFrame' do
-      page.should have_content('Jeremie')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"photosv09\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="photosv09"]')
-    within_frame 'appFrame' do
-      page.should have_content('Photos')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"linkalatte\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="linkalatte"]')
-    within_frame 'appFrame' do
-      page.should have_content('Links')
-    end
-    page.execute_script("$('.iframeLink[data-id=\"helloplaces\"]').click()")
-    page.should have_css('.iframeLink.blue[data-id="helloplaces"]')
-    within_frame 'appFrame' do
-      page.should have_content('Places')
-    end
+    page.should have_content("Contacts (DEMO)by Singly, Inc. with contacts from { see the code }")
   end
 
-  it 'should allow people to access the create interface' do
+  it 'should allow people to access the DEVELOP page' do
     visit '/'
-    click_link 'CREATE'
-    page.should have_content('Getting Started')
-  end
-
-  it 'should allow access to api explorer' do
-    visit '/'
-    click_link 'CREATE'
-    click_link 'Getting Started'
+    click_link 'Develop'
     within_frame 'appFrame' do
-      page.should have_content('Make your own viewer!')
-      click_on 'API Explorer'
+      page.should have_content('Build an HTML5 web app')
+    end
+    within_frame 'appFrame' do
+      click_link 'API Explorer'
       page.should have_content('API Explorer')
     end
   end
 
-  it "should allow the user to view all of their apps" do
+  it "should allow account holders to change their settings" do
     visit '/'
-    click_link 'see all'
-    within_frame 'appFrame' do
-      page.should have_content('Hello Links, by Singly, Inc.')
-      page.execute_script("$('li[data-id=\"hellolinks\"]').click()")
-      page.should have_content('This is example of how easy it is to load your links using HTML and jQuery')
-    end
+    click_link 'Account Settings'
+    page.should have_content('ACCOUNT SETTINGS')
   end
 
-
+  it "should default to connecting to services (by default)" do
+    visit '/'
+    click_link 'Account Settings'
+    page.should have_content('ACCOUNT SETTINGS')
+    page.should have_css('.iframeLink.blue[data-id="Settings-Connections"]')
+  end
 end

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="js/locker.js"></script>
+    <script src="js/connect.js"></script>
+    <script type="text/javascript" charset="utf-8">
+      $(function() { $.cookie("firstvisit", true, {path: '/' }); });
+      </script>
+    </head>
+    <body>
+      <div id="main-header-1">
+        <h1>Welcome! Connect services to begin.</h1>
+        <h2>
+          Your <%= dashboard.lockerName %> saves the data from these services
+          for you. It doesn't post to them unless you explicitly ask.
+        </h2>
+        <div class="learnmore">
+          <a href="#" class="orange">
+            Learn more about what your <%= dashboard.lockerName %> does
+          </a>
+          <p>
+            Your <%= dashboard.lockerName %> saves and normalizes your data
+            so that, for instance, your contacts from Twitter, Facebook, Instagram,
+            Flickr, etc. are all combined in your individual account for you. Once
+            you've added data from these services, you'll be able to install apps
+            that let you experience that data in new, cool ways.
+          </p>
+        </div>
+      </div>
+      <h1 id="main-header-2">
+        Great! Connect a few more or
+        <a target="_top" href="/dashboard/explore"
+          class="orange" id="start-exploring-link">
+          start exploring
+        </a>.
+      </h1>
+      <ul class="synclets-list">
+        <% for (var i = 0; i < connectors.length; i++) { %>
+          <% if (!connectors[i].repository.hasOwnProperty('hidden') ||
+                 connectors[i].repository.hidden !== 'true') { %>
+            <li class="featured hideable">
+              <div class="synclet-logoname-container">
+                <img class="synclet-logo"
+                     src="img/icons/32px/<%= connectors[i].name %>.png" alt="" />
+                <span class="synclet-name">
+                  <%= connectors[i].repository.title %>
+                </span>
+              </div>
+              <% if (connectors[i].hasOwnProperty('authed')) { %>
+                <span class="action-button disabled"
+                      data-provider="<%= connectors[i].repository.handle %>">
+                  Connected
+                </span>
+              <% } else { %>
+                <span class="oauthLink action-button"
+                  data-provider="<%= connectors[i].repository.handle %>"
+                  data-width="<%= connectors[i].repository.oauthSize.width %>"
+                  data-height="<%= connectors[i].repository.oauthSize.height %>">
+                  Connect
+                </span>
+              <% } %>
+              <div class="gets-list">
+                Gets: &nbsp;
+                <% if (connectors[i].hasOwnProperty('provides')) {
+                   for (var j=0; j<connectors[i].provides.length; j++) { %>
+                     <%= connectors[i].provides[j] %>
+                     <% if (j < connectors[i].provides.length - 1) { %>
+                       ,
+                     <% } %>
+                   <% } %>
+                <% } %>
+              </div>
+           </li>
+         <% } %>
+       <% } %>
+     </ul>
+   </body>
+ </html>

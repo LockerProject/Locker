@@ -2,37 +2,25 @@
     "lockerHost" : "localhost",
     "lockerPort" : 8043,
     "me" : "Data",
-    "ui":"dashboardv3",
-    "scannedDirs" : ["Apps", "Connectors", "Collections", "Tests"],
+    "registryUpdate" : false,
+    "requireSigned" : false,
+    "ui":"dashboardv3:Apps/dashboardv3",
     "testGroups" : {
         "core" : ["locker-core-api-test.js"],
-        "core-lib" : ["lservicemanager-test-local.js",
-                      "lsyncmanager-test-local.js",
-                      "lconfig-test-local.js",
-                      "lcrypto-test-local.js",
-                      "lutil-test-local.js",
-                      "ijod-test-local.js",
-                      "registry-test-local.js",
-                      "lpquery-test-local.js",
-                      "mongo-test.js",
-                      "lscheduler-test-local.js",
-                      "deepCompare-test.js",
+        "core-lib" : [
                       "lpushmanager-test-local.js"],
-        "client-api" : ["locker-client-test.js"],
         "synclets" : ["synclet-local-foursquare.js",
-                      "synclet-local-github.js",
                       "synclet-local-twitter.js",
                       "synclet-local-facebook.js",
                       "synclet-local-flickr.js",
                       "synclet-local-soundcloud.js",
                       "synclet-local-googleContacts.js"],
-        "collections" : ["collection-contacts-test.js",
-                         "collection-photos-test.js",
-                         "collection-search-test.js",
-                         "collection-places-test.js",
-                         "collection-links-test.js"],
-        "issues" : ["locker-issues-test.js"]
+        "issues" : ["locker-issues-test.js"],
+        "collections" : [
+          "collection-contacts-test.js"
+        ]
     },
+    "apps" : ["photosv09:Apps/photosv0.9", "helloplaces:Apps/HelloPlaces", "linkalatte:Apps/LinkaLatte", "hellolinks:Apps/HelloLinks", "contactsviewer:Apps/MergedContacts", "devdocs:Apps/DevDocs", "foursquare:Connectors/foursquare"],
     "displayUnstable" : true,
     "disabledTests" : [
         "connector-IMAP-test.js"
@@ -41,10 +29,15 @@
         "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
-        "port": 27020
+        "port": 27020,
+        "options": ["--nohttpinterface", "--noprealloc"]
     },
     "logging": {
-        "file":"locker-tests.out",
-        "level": "error"
+        "level": "error",
+        "config": true
+    },
+    "dashboard": {
+        "customLogout"         : "logout",
+        "customHostedEndpoint" : "info"
     }
 }

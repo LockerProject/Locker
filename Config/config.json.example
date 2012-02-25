@@ -1,5 +1,6 @@
 {
     "lockerHost" : "localhost",
+    "lockerListenIP" : "0.0.0.0",
     "lockerPort" : 8042,
     "me" : "Me",
     "scannedDirs" : [
@@ -23,6 +24,7 @@
         "customTitle": "the locker project",
         "customLogout": "https://lvh.me:8443/logout",
         "customHostedEndpoint":"https://lvh.me:8443/users/info",
-        "customHost":"https://lvh.me:8443"
+        "customHost":"https://lvh.me:8443",
+        "customSettings":"https://lvh.me:8443/users/me/settings"
     }
 }

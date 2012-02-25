@@ -10,7 +10,7 @@ var collection;
 var db;
 var locker;
 var lconfig;
-var lutil = require('../../Common/node/lutil');
+var lutil = require('lutil');
 var logger;
 var request = require("request");
 var crypto = require("crypto");
@@ -103,7 +103,7 @@ function processTwitter(svcId, type, data, cb) {
 function processInstagram(svcId, type, data, cb) {
     // Gotta have location/at at minimum
     if (!data || !data.created_time || !data.location || !data.location.latitude || !data.location.longitude) {
-        cb("The Instagram data did not have a location");
+        cb();
         return;
     }
 
@@ -205,6 +205,19 @@ exports.init = function(mongoCollection, mongo, l, config) {
     logger = require("logger");
 };
 
+exports.updatePlace = function(place, cb)
+{
+    if(!place || !place.id) return cb("missing valid place");
+    var query = [{id:place.id}];
+    delete place._id;
+    collection.findAndModify({$or:query}, [['_id','asc']], {$set:place}, {safe:true, upsert:true, new: true}, function(err, doc) {
+        if (err) return cb(err);
+        updateState();
+        locker.ievent(lutil.idrNew("place","places",doc.id), doc, "update");
+        return cb(undefined, doc);
+    });
+};
+
 exports.getTotalCount = function(callback) {
     collection.count(callback);
 };
@@ -247,9 +260,8 @@ exports.addEvent = function(eventBody, callback) {
     var svcId = idr.query["id"];
     var type = idr.pathname.substr(1) + '/' + idr.host
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     handler(svcId, type, eventBody.data, callback);
@@ -260,9 +272,8 @@ exports.addData = function(svcId, type, allData, callback) {
         callback = function() {};
     }
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     // if called with just one item, streaming
@@ -288,6 +299,14 @@ exports.clear = function(callback) {
 
 exports.getSince = function(objId, cbEach, cbDone) {
     findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, collection, cbEach, cbDone);
+};
+
+exports.getNetwork = function(network, cbEach, cbDone) {
+    findWrap({"network":network}, {}, collection, cbEach, cbDone);
+};
+
+exports.getFrom = function(network, from, cbEach, cbDone) {
+    findWrap({"network":network, "fromID":from}, {}, collection, cbEach, cbDone);
 };
 
 exports.getLastObjectID = function(cbDone) {

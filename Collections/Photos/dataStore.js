@@ -10,7 +10,7 @@
 var collection;
 var db;
 var lconfig;
-var lutil = require('../../Common/node/lutil');
+var lutil = require('lutil');
 var logger;
 var request = require("request");
 var crypto = require("crypto");
@@ -86,6 +86,31 @@ function processInstagram(svcId, data, cb) {
     if (data.created_time) photoInfo.timestamp = data.created_time*1000;
     if (data.caption) photoInfo.title = data.caption.text;
     if (data.link) photoInfo.sourceLink = data.link;
+
+    photoInfo.sources = [{service:svcId, id:data.id, data:data}];
+
+    saveCommonPhoto(photoInfo, cb);
+}
+
+function processTumblr(svcId, data, cb) {
+    var photoInfo = {};
+
+    // Gotta have a url minimum
+    if (data.type != "photo" || !data.photos || !data.photos[0] || !data.photos[0].original_size || !data.photos[0].original_size.url) {
+        return cb();
+    }
+    var photo = data.photos[0];
+    photoInfo.url = photo.original_size.url;
+    photoInfo.width = photo.original_size.width;
+    photoInfo.height = photo.original_size.height;
+    var ndx = {};
+    if(photo.alt_sizes) photo.alt_sizes.forEach(function(size){
+        ndx[size.height] = size.url;
+    });
+    if (ndx["75"]) photoInfo.thumbnail = ndx["75"];
+    if (data.timestamp) photoInfo.timestamp = data.timestamp*1000;
+    if (data.caption) photoInfo.title = data.caption; // TODO, strip html
+    if (data.post_url) photoInfo.sourceLink = data.post_url;
 
     photoInfo.sources = [{service:svcId, id:data.id, data:data}];
 
@@ -232,6 +257,10 @@ function createId(url, name) {
     return sha1.digest("hex");
 }
 
+function doNothing(svcId, data, cb) {
+    cb();
+}
+
 
 var dataHandlers = {};
 dataHandlers["timeline/twitter"] = processTwitter;
@@ -241,6 +270,8 @@ dataHandlers["photo/twitpic"] = processTwitPic;
 dataHandlers["photo/facebook"] = processFacebook;
 dataHandlers["photo/flickr"] = processFlickr;
 dataHandlers["photo/instagram"] = processInstagram;
+dataHandlers["feed/instagram"] = doNothing;
+dataHandlers["post/tumblr"] = processTumblr;
 
 exports.init = function(mongoCollection, mongo, l, config) {
     collection = mongoCollection;
@@ -277,9 +308,8 @@ exports.addEvent = function(eventBody, callback) {
     var svcId = idr.query["id"];
     var type = idr.pathname.substr(1) + '/' + idr.host
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     handler(svcId, eventBody.data, callback);
@@ -290,9 +320,8 @@ exports.addData = function(svcId, type, allData, callback) {
         callback = function() {};
     }
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     async.forEachSeries(allData,function(data,cb) {

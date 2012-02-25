@@ -1,0 +1,23 @@
+{
+    "provides" : ["self/rdio"
+                , "following/rdio"
+                , "tracks/rdio"
+                , "activity/rdio"]
+  , "mongoId" : {"update"  : "date"
+               , "contact" : "key"
+               , "track"   : "key"
+               , "self"    : "key"}
+  , "profileIds" : ["key", "url"]
+  , "synclets" : [{"name"      : "self"
+                 , "frequency" : 86400
+                 , "threshold" : 0}
+                , {"name"      : "following"
+                 , "frequency" : 600
+                 , "threshold" : 0}
+                , {"name"      : "collection"
+                 , "frequency" : 3600
+                 , "threshold" : 0}
+                , {"name"      : "activity"
+                 , "frequency" : 3600
+                 , "threshold" : 0}]
+}

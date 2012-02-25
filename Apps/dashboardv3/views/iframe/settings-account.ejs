@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/settings-account.css" />
+    <script src="js/settings.js"></script>
+    <script src="common/js/jquery.validate.min.js"></script>
+    <script src="common/js/jquery.jsonp-2.2.0.min.js"></script>
+    <script src="<%= dashboard.customHostedEndpoint %>"></script>
+    <title>settings iframe</title>
+  </head>
+  <body class="body">
+    <form id="settings-account" action="#">
+      <div id="settings_account_error"></div>
+      <div id="settings_avatar">
+        <p><img class="avatar" alt="your avatar" src="<%= profileImage %>" />
+        This is your current avatar</p>
+        <input type="text" id="avi_url" name="avi_url" placeholder="Paste URL for new avatar" />
+      </div>
+      <div id="settings_name">
+        <input type="text" id="username" name="username" placeholder="Name" />
+      </div>
+      <div>
+        <input type="text" id="email" name="email" placeholder="Email address" />
+      </div>
+      <div id="settings_password">
+        <div>
+          <label for="old_password" id="old_password_label">Current password</label>
+          <input type="password" id="old_password" name="old_password" />
+        </div>
+        <div>
+          <label for="new_password" id="new_password_label">New password</label>
+          <input type="password" id="new_password" name="new_password" />
+        </div>
+      </div>
+      <div id="settings_analytics">
+        <label for="optout" id="optout_label">Opt out of anonymous analytics?</label>
+        <input type="checkbox" name="optout" id="optout" />
+        <br />
+      </div>
+      <div id="settings_analytics_optedout" class="hidden">
+        <p>You've opted out of participating in our anonymized analytics. There is no going back.</p>
+      </div>
+      <div id="save_that_sucker">
+        <input class="action-button" id="save_button" type="submit" value="Save Changes">
+      </div>
+    </form>
+  </body>
+</html>

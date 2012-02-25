@@ -1,0 +1,98 @@
+body {
+  margin: 40px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 200;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 200;
+  margin: 20px 0;
+}
+
+span.action-button {
+  width:200px;
+}
+
+.synclets-list {
+  margin: 40px 0;
+}
+
+.synclets-list li {
+  margin: 17px 0;
+  width: 100%;
+  min-width: 670px;
+}
+
+.synclet-logoname-container {
+  width: 270px;
+  display: inline-block;
+}
+
+.synclet-logo {
+  padding: 0 10px;
+  vertical-align: middle;
+}
+
+.synclet-name {
+  font-size: 22px;
+  font-weight: 200;
+  position: absolute;
+  margin: 5px 0 0 0;
+}
+
+.synclet-username {
+  font-style: italic;
+  display: inline-block;
+  position: absolute;
+  margin: 10px 0 0 10px;
+}
+
+.synclet-disconnect {
+  float: right;
+  margin: 12px 0 0 15px;
+  font-size: 0.8em;
+  text-decoration: underline;
+}
+
+.connect-button {
+  margin: 0;
+  width: 150px;
+  display: inline-block;
+}
+
+.hideable {
+  display: none;
+}
+
+.orange {
+  color: #F7931E;
+}
+
+#main-header-2 {
+  display: none;
+}
+
+
+.learnmore a {
+  font-size: 0.8em;
+}
+
+.learnmore p {
+	display: none;
+	padding: 15px 0 0 10px;
+	font-size: 0.9em;
+	font-weight: 200;
+	line-height: 1.4em;
+}
+
+.gets-list {
+	font-size: 0.9em;
+	font-weight: 200;
+	display: inline-block;
+	position: absolute;
+	margin: 11px 0 0 30px;
+}

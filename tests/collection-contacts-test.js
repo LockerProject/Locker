@@ -40,9 +40,13 @@ suite.next().suite.addBatch({
                 uri: lconfig.lockerBase + '/Me/event-collector/listen/contact' });
             fakeweb.ignoreUri({ uri: lconfig.lockerBase + '/core/contacts/event' });
             fakeweb.registerUri({
-                uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact',
+                uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/foursquare_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/foursquare/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             locker.initClient({workingDirectory:'./' + lconfig.me + '/contacts', lockerUrl:lconfig.lockerBase});
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact"}, function() {
@@ -58,7 +62,6 @@ suite.next().suite.addBatch({
             });
         },
         "successfully" : function(err, resp) {
-            console.dir(resp);
             assert.isNull(err);
             assert.equal(resp, 2);
         }
@@ -80,9 +83,13 @@ suite.next().suite.addBatch({
     "Can pull in the contacts from facebook" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact',
+                uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/facebook_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/facebook/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             contacts.getContacts("facebook", "contact", "facebook", function() {
                 dataStore.getTotalCount(self.callback);
@@ -110,9 +117,13 @@ suite.next().suite.addBatch({
     "Can pull in the contacts from twitter" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact',
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_friends.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             contacts.getContacts("twitter", "contact", "twitter", function() {
                 dataStore.getTotalCount(self.callback);
@@ -140,9 +151,13 @@ suite.next().suite.addBatch({
     "Can successfully merge a contact from twitter + foursquare" : {
         topic : function() {
             fakeweb.registerUri({
-                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact',
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=0',
                 contentType:"application/json",
-                body: JSON.parse(fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json')) });
+                body: fs.readFileSync(__dirname + '/fixtures/contacts/twitter_followers.json') });
+            fakeweb.registerUri({
+                uri: lconfig.lockerBase + '/Me/twitter/getCurrent/contact?limit=500&offset=500',
+                contentType:"application/json",
+                body: []});
             var self = this;
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
             // be going direct to mongo like this in a test
@@ -167,6 +182,7 @@ suite.next().suite.addBatch({
             dataStore.addData("foursquare", JSON.parse(foursquareEvent1).data, this.callback); },
         "is handled properly" : function(err, object) {
             assert.equal(object.name, 'Jacob Mitchell');
+            // assert.equal(object.emai, 'Jacob Mitchell');
         }
     }
 }).addBatch({
@@ -208,7 +224,7 @@ suite.next().suite.addBatch({
             assert.equal(object.accounts.foursquare[0].data.name, 'Jake Mitchell');
             assert.equal(object.name, 'Jeremie Miller');
             assert.equal(object.accounts.github[0].data.name, 'James Burkhart');
-            assert.equal(object.accounts.googleContacts[0].data.name, 'Jeremie Miller');
+            assert.equal(object.accounts.gcontacts[0].data.name, 'Jeremie Miller');
         }
     }
 }).addBatch({

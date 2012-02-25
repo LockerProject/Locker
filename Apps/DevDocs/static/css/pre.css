@@ -70,3 +70,23 @@ span.testExample {
     margin-left:10px;
     color:#aaa;
 }
+
+p {
+  width: 600px;
+}
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul li {
+  padding: 5px 5px 3px;
+  border-bottom: 1px solid #efefef;
+}
+ul li:last-child { border-bottom: none; }
+ul span {
+  display: inline-block;
+  margin-right: 20px;
+  text-align: right;
+}
+

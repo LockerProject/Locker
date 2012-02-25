@@ -1,0 +1,34 @@
+{
+  "author": "Singly, Inc. <nerds@singly.com>",
+  "name": "hellophotos",
+  "description": "A simple way to view your photos.",
+  "version": "0.0.5",
+  "homepage": "https://github.com/LockerProject/locker",
+  "repository": {
+    "type": "app",
+    "title": "Hello Photos",
+    "status": "stable",
+    "static": true,
+    "hidden": true,
+    "handle": "hellophotos",
+    "update": true,
+    "uses": {
+      "services": [
+        "facebook",
+        "twitter",
+        "foursquare",
+        "flickr"
+      ],
+      "types": [
+        "photos"
+      ]
+    },
+    "github": "https://github.com/LockerProject/locker",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

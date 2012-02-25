@@ -9,7 +9,6 @@
 
 var request = require("request");
 var url = require("url");
-require.paths.push(__dirname);
 var lconfig = require("lconfig");
 var serviceManager = require("lservicemanager");
 var logger = require("./logger.js");
@@ -22,7 +21,7 @@ var eventListeners = {};
 var processingQueue = []; // queue of events being processed
 
 exports.addListener = function(type, id, cb) {
-    logger.info("Adding a listener for " + id + cb + " to " + type);
+    logger.verbose("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     // Remove the previous listener for the id
     eventListeners[type] = eventListeners[type].filter(function(entry) {
@@ -117,7 +116,7 @@ function lqueue(lurl)
             if (err || res.statusCode != 200) {
                 logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + lurl + " got " + (err || res.statusCode));
                 logger.verbose(JSON.stringify(curEvent.data));
-                logger.verbose(body);
+                //logger.verbose(body);
                 // TODO: Need to evaluate the logic here, to see if we should retry or other options.
             }
             callback();
