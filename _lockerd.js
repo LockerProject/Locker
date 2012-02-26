@@ -208,7 +208,7 @@ function runMigrations(phase, migrationCB) {
 // scheduling and misc things
 function postStartup() {
     lscheduler.masterScheduler.loadAndStart();
-    logger.info('locker is up and running at ' + lconfig.lockerBase);
+    logger.error('locker is up and running at ' + lconfig.lockerBase);
     exports.alive = true;
     runMigrations("postStartup", function() {});
 }
