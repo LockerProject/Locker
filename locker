@@ -119,11 +119,11 @@ case "$locker_mode" in
         # Tell node to run in production mode
         NODE_ENV=production
         export NODE_ENV
-        monitor node _lockerd.js "$@"
+        monitor node lockerd.js "$@"
         ;;
     development|*)
         # Just run it
-        exec node _lockerd.js "$@"
+        exec node lockerd.js "$@"
         ;;
 esac
 
