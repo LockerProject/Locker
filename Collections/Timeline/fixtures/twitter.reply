@@ -1,0 +1,142 @@
+{
+    "action": "new",
+    "idr": "tweet://twitter/timeline?id=twitter#132147322749599744",
+    "data": {
+        "place": {
+            "country_code": "US",
+            "place_type": "city",
+            "name": "Cascade",
+            "bounding_box": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -91.02358,
+                            42.289324
+                        ],
+                        [
+                            -90.991574,
+                            42.289324
+                        ],
+                        [
+                            -90.991574,
+                            42.308435
+                        ],
+                        [
+                            -91.02358,
+                            42.308435
+                        ]
+                    ]
+                ]
+            },
+            "attributes": {},
+            "full_name": "Cascade, IA",
+            "country": "United States",
+            "url": "http://api.twitter.com/1/geo/id/85905f44ae0575e5.json",
+            "id": "85905f44ae0575e5"
+        },
+        "retweet_count": 0,
+        "in_reply_to_screen_name": "FrancescoC",
+        "created_at": "Thu Nov 03 17:29:11 +0000 2011",
+        "retweeted": false,
+        "in_reply_to_status_id_str": "132133925953875969",
+        "in_reply_to_user_id_str": "15592821",
+        "user": {
+            "time_zone": "Central Time (US & Canada)",
+            "profile_link_color": "0000ff",
+            "protected": false,
+            "default_profile": false,
+            "created_at": "Wed Mar 21 02:44:51 +0000 2007",
+            "profile_image_url_https": "https://si0.twimg.com/profile_images/565991047/jer_normal.jpg",
+            "name": "Jeremie Miller",
+            "geo_enabled": true,
+            "favourites_count": 9,
+            "profile_background_color": "ffffff",
+            "default_profile_image": false,
+            "notifications": null,
+            "profile_background_tile": false,
+            "utc_offset": -21600,
+            "description": "Currently building the Locker Project, TeleHash, and Singly with a focus on personal data + distributed protocols. Helped found Jabber/XMPP, open platforms FTW!",
+            "statuses_count": 891,
+            "following": null,
+            "verified": false,
+            "profile_sidebar_fill_color": "ffffff",
+            "followers_count": 1375,
+            "profile_image_url": "http://a0.twimg.com/profile_images/565991047/jer_normal.jpg",
+            "follow_request_sent": null,
+            "profile_sidebar_border_color": "000000",
+            "location": "Cascade, IA",
+            "is_translator": false,
+            "contributors_enabled": false,
+            "screen_name": "jeremie",
+            "profile_use_background_image": false,
+            "url": "http://jeremie.com/-",
+            "id_str": "1704421",
+            "show_all_inline_media": true,
+            "profile_background_image_url_https": "https://si0.twimg.com/images/themes/theme1/bg.png",
+            "profile_text_color": "000000",
+            "id": 1704421,
+            "listed_count": 141,
+            "lang": "en",
+            "profile_background_image_url": "http://a0.twimg.com/images/themes/theme1/bg.png",
+            "friends_count": 161
+        },
+        "contributors": null,
+        "in_reply_to_status_id": 132133925953875970,
+        "source": "<a href=\"http://twitter.com/#!/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+        "id_str": "132147322749599744",
+        "geo": {
+            "type": "Point",
+            "coordinates": [
+                42.29882394,
+                -91.01307985
+            ]
+        },
+        "favorited": false,
+        "id": 132147322749599740,
+        "entities": {
+            "urls": [],
+            "user_mentions": [
+                {
+                    "name": "Francesco Cesarini",
+                    "indices": [
+                        6,
+                        17
+                    ],
+                    "screen_name": "FrancescoC",
+                    "id_str": "15592821",
+                    "id": 15592821
+                },
+                {
+                    "name": "DizzyD",
+                    "indices": [
+                        34,
+                        41
+                    ],
+                    "screen_name": "dizzyd",
+                    "id_str": "7206052",
+                    "id": 7206052
+                }
+            ],
+            "hashtags": [
+                {
+                    "indices": [
+                        123,
+                        131
+                    ],
+                    "text": "euc2011"
+                }
+            ]
+        },
+        "coordinates": {
+            "type": "Point",
+            "coordinates": [
+                -91.01307985,
+                42.29882394
+            ]
+        },
+        "in_reply_to_user_id": 15592821,
+        "truncated": false,
+        "text": "Nice! @FrancescoC: Congratulating @dizzyd for winning the Erlang User of the year award for giving rebar to the community! #euc2011"
+    }
+}

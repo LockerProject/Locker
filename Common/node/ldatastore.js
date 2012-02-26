@@ -16,6 +16,7 @@ var IJOD = require('ijod').IJOD
   , colls = {}
   , mongoIDs = {}
   ;
+var svcMan = require('lservicemanager');
 
 exports.init = function(owner, callback) {
     if (mongo[owner]) return callback();
@@ -106,8 +107,19 @@ exports.getEachCurrent = function(owner, type, callback, options) {
 exports.getCurrent = function(owner, type, id, callback) {
     if (!(id && (typeof id === 'string' || typeof id === 'number')))  return callback(new Error('bad id:' + id), null);
     var m = getMongo(owner, type, callback);
-    var query = {_id: mongo[owner].db.bson_serializer.ObjectID(id)};
-    m.findOne(query, callback);
+    var or = [];
+    try {
+        or.push({_id: mongo[owner].db.bson_serializer.ObjectID(id)});
+    }catch(E){}
+    var parts = type.split("_");
+    var idname = "id";
+    // BEWARE THE mongoId s appendage WEIRDNESS! #techdebt
+    if(parts.length == 2 && svcMan.map(parts[0]) && svcMan.map(parts[0]).mongoId && svcMan.map(parts[0]).mongoId[parts[1]+'s']) idname = svcMan.map(parts[0]).mongoId[parts[1]+'s'];
+    var id2 = {};
+    id2[idname] = id;
+    or.push(id2);
+    console.error("querying "+JSON.stringify(or));
+    m.findOne({$or: or}, callback);
 }
 
 exports.getCurrentId = function(owner, type, id, callback) {

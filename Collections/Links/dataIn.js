@@ -109,10 +109,11 @@ var encounterQueue = async.queue(function(e, callback) {
         async.forEach(urls,function(u,cb){
             linkMagic(u,function(link){
                 // make sure to pass in a new object, asyncutu
-                dataStore.addEncounter(lutil.extend(true,{orig:u,link:link},e), function(err,doc){
+                dataStore.addEncounter(lutil.extend(true,{orig:u,link:link.link},e), function(err,doc){
                     if(err) return cb(err);
                     dataStore.updateLinkAt(doc.link, doc.at, function(err, obj){
                         if(err) return cb(err);
+                        obj.encounters = [doc]; // include this encounter!
                         locker.ievent(lutil.idrNew("link","links",obj.id),obj,"update"); // let happen independently
                         cb();
                     });
@@ -136,9 +137,10 @@ exports.loadQueue = function() {
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
     // check if the orig url is in any encounter already (that has a full link url)
-    dataStore.checkUrl(origUrl,function(linkUrl){
-        if(linkUrl) return callback(linkUrl); // short circuit!
+    dataStore.checkUrl(origUrl,function(link){
+        if(link) return callback(link); // short circuit!
         // new one, expand it to a full one
+        var linkUrl;
         util.expandUrl({url:origUrl},function(u2){linkUrl=u2},function(){
            // fallback use orig if errrrr
            if(!linkUrl) {
@@ -148,7 +150,7 @@ function linkMagic(origUrl, callback){
            // does this full one already have a link stored?
            dataStore.getLinks({link:linkUrl,limit:1},function(l){link=l},function(err){
               if(link) {
-                  return callback(link.link); // yeah short circuit dos!
+                  return callback(link); // yeah short circuit dos!
               }
               // new link!!!
               link = {link:linkUrl};
@@ -163,11 +165,13 @@ function linkMagic(origUrl, callback){
                           if (!link.at) link.at = Date.now();
                           dataStore.addLink(link,function(err, obj){
                               locker.ievent(lutil.idrNew("link","links",obj.id),obj); // let happen independently
-                              callback(link.link); // TODO: handle when it didn't get stored or is empty better, if even needed
+                              callback(link); // TODO: handle when it didn't get stored or is empty better, if even needed
                               // background fetch oembed and save it on the link if found
                               oembed.fetch({url:link.link, html:html}, function(e){
                                   if(!e) return;
-                                  dataStore.updateLinkEmbed(link.link, e, function(){});
+                                  dataStore.updateLinkEmbed(link.link, e, function(err, obj){
+                                      locker.ievent(lutil.idrNew("link","links",obj.id),obj,"update");
+                                  });
                               });
                           });
                       });
@@ -201,7 +205,7 @@ function getEncounterFB(post)
 function getEncounterTwitter(tweet)
 {
     var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
-    var e = {id:tweet.id
+    var e = {id:tweet.id_str
         , network:"twitter"
         , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""

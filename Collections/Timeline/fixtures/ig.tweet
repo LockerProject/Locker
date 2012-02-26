@@ -1,0 +1,80 @@
+{
+    "action": "new",
+    "idr": "tweet://twitter/timeline?id=twitter#115554837076258816",
+    "data": {
+        "in_reply_to_status_id_str": null,
+        "truncated": false,
+        "in_reply_to_user_id_str": null,
+        "geo": null,
+        "retweet_count": 0,
+        "contributors": null,
+        "coordinates": null,
+        "user": {
+            "statuses_count": 4902,
+            "favourites_count": 111,
+            "protected": false,
+            "profile_text_color": "333333",
+            "profile_image_url": "http://a1.twimg.com/profile_images/31867902/Julian_Missig_1_normal.png",
+            "name": "Julian Missig",
+            "profile_sidebar_fill_color": "A0C5C7",
+            "listed_count": 22,
+            "following": true,
+            "profile_background_tile": false,
+            "utc_offset": -28800,
+            "description": "interaction designer & prototyper",
+            "location": "Redwood City, CA",
+            "contributors_enabled": false,
+            "verified": false,
+            "profile_link_color": "369EAF",
+            "followers_count": 248,
+            "url": null,
+            "profile_sidebar_border_color": "86A4A6",
+            "screen_name": "jmissig",
+            "default_profile_image": false,
+            "notifications": false,
+            "default_profile": false,
+            "show_all_inline_media": false,
+            "geo_enabled": true,
+            "profile_use_background_image": true,
+            "friends_count": 186,
+            "id_str": "9147872",
+            "is_translator": false,
+            "lang": "en",
+            "time_zone": "Pacific Time (US & Canada)",
+            "created_at": "Fri Sep 28 19:19:58 +0000 2007",
+            "profile_background_color": "709397",
+            "id": 9147872,
+            "follow_request_sent": false,
+            "profile_background_image_url_https": "https://si0.twimg.com/images/themes/theme6/bg.gif",
+            "profile_background_image_url": "http://a1.twimg.com/images/themes/theme6/bg.gif",
+            "profile_image_url_https": "https://si0.twimg.com/profile_images/31867902/Julian_Missig_1_normal.png"
+        },
+        "favorited": false,
+        "in_reply_to_screen_name": null,
+        "source": "<a href=\"http://instagr.am\" rel=\"nofollow\">Instagram</a>",
+        "id_str": "115554837076258816",
+        "entities": {
+            "hashtags": [],
+            "urls": [
+                {
+                    "indices": [
+                        14,
+                        34
+                    ],
+                    "url": "http://t.co/PeedUocW",
+                    "display_url": "instagr.am/p/Ne6nr/",
+                    "expanded_url": "http://instagr.am/p/Ne6nr/"
+                }
+            ],
+            "user_mentions": []
+        },
+        "in_reply_to_status_id": null,
+        "id": 115554837076258820,
+        "created_at": "Sun Sep 18 22:36:34 +0000 2011",
+        "possibly_sensitive": false,
+        "place": null,
+        "retweeted": false,
+        "in_reply_to_user_id": null,
+        "text": "Model S ... http://t.co/PeedUocW"
+    }
+}

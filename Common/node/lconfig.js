@@ -10,6 +10,7 @@
 //just a place for lockerd.js to populate config info
 var fs = require('fs');
 var path = require('path');
+var os = require('os');
 
 exports.load = function(filepath) {
     var config = {};
@@ -89,6 +90,8 @@ exports.load = function(filepath) {
     config.dashboard = config.dashboard || {};
     config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
+    exports.workWarn = config.workWarn || os.cpus().length;
+    exports.workStop = config.workStop || os.cpus().length * 3;
 
     // load trusted public keys
     var kdir = path.join(path.dirname(filepath), "keys");

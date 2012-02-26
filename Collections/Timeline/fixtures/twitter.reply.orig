@@ -1,0 +1,174 @@
+{
+    "action": "new",
+    "idr": "tweet://twitter/timeline?id=twitter#132138590636478464",
+    "data": {
+        "place": null,
+        "retweet_count": 41,
+        "in_reply_to_screen_name": null,
+        "created_at": "Thu Nov 03 16:54:29 +0000 2011",
+        "retweeted": false,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id_str": null,
+        "user": {
+            "time_zone": null,
+            "profile_link_color": "2FC2EF",
+            "protected": false,
+            "created_at": "Fri Mar 13 13:15:23 +0000 2009",
+            "profile_image_url_https": "https://si0.twimg.com/profile_images/95456179/cortex_normal.png",
+            "name": "Jon Meredith",
+            "geo_enabled": false,
+            "favourites_count": 1,
+            "profile_background_color": "1A1B1F",
+            "default_profile_image": false,
+            "notifications": false,
+            "profile_background_tile": false,
+            "utc_offset": null,
+            "description": "",
+            "statuses_count": 85,
+            "following": true,
+            "verified": false,
+            "profile_sidebar_fill_color": "252429",
+            "followers_count": 127,
+            "profile_image_url": "http://a0.twimg.com/profile_images/95456179/cortex_normal.png",
+            "follow_request_sent": false,
+            "profile_sidebar_border_color": "181A1E",
+            "location": "Denver, CO, USA",
+            "is_translator": false,
+            "contributors_enabled": false,
+            "screen_name": "jon_meredith",
+            "default_profile": false,
+            "profile_use_background_image": true,
+            "url": null,
+            "id_str": "24168124",
+            "show_all_inline_media": false,
+            "profile_background_image_url_https": "https://si0.twimg.com/images/themes/theme9/bg.gif",
+            "profile_text_color": "666666",
+            "id": 24168124,
+            "listed_count": 12,
+            "lang": "en",
+            "profile_background_image_url": "http://a1.twimg.com/images/themes/theme9/bg.gif",
+            "friends_count": 69
+        },
+        "contributors": null,
+        "retweeted_status": {
+            "place": null,
+            "retweet_count": 41,
+            "in_reply_to_screen_name": null,
+            "created_at": "Thu Nov 03 16:35:57 +0000 2011",
+            "retweeted": false,
+            "in_reply_to_status_id_str": null,
+            "in_reply_to_user_id_str": null,
+            "user": {
+                "time_zone": "London",
+                "profile_link_color": "D02B55",
+                "protected": false,
+                "created_at": "Fri Jul 25 02:14:58 +0000 2008",
+                "profile_image_url_https": "https://si0.twimg.com/profile_images/337579346/francescoJulianCash_normal.jpg",
+                "name": "Francesco Cesarini",
+                "geo_enabled": false,
+                "favourites_count": 16,
+                "profile_background_color": "352726",
+                "default_profile_image": false,
+                "notifications": false,
+                "profile_background_tile": false,
+                "utc_offset": 0,
+                "description": "Founded Erlang Solutions, co-authored Erlang Programming (O'Reilly), part time uncle & godfather and full time pointy haired boss.  ",
+                "statuses_count": 3127,
+                "following": false,
+                "verified": false,
+                "profile_sidebar_fill_color": "99CC33",
+                "followers_count": 1480,
+                "profile_image_url": "http://a1.twimg.com/profile_images/337579346/francescoJulianCash_normal.jpg",
+                "follow_request_sent": false,
+                "profile_sidebar_border_color": "829D5E",
+                "location": "London, United Kingdom",
+                "is_translator": false,
+                "contributors_enabled": false,
+                "screen_name": "FrancescoC",
+                "default_profile": false,
+                "profile_use_background_image": true,
+                "url": "http://www.erlang-solutions.com",
+                "id_str": "15592821",
+                "show_all_inline_media": false,
+                "profile_background_image_url_https": "https://si0.twimg.com/images/themes/theme5/bg.gif",
+                "profile_text_color": "3E4415",
+                "id": 15592821,
+                "listed_count": 122,
+                "lang": "en",
+                "profile_background_image_url": "http://a1.twimg.com/images/themes/theme5/bg.gif",
+                "friends_count": 365
+            },
+            "contributors": null,
+            "in_reply_to_status_id": null,
+            "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+            "id_str": "132133925953875969",
+            "geo": null,
+            "favorited": false,
+            "id": 132133925953875970,
+            "entities": {
+                "urls": [],
+                "user_mentions": [
+                    {
+                        "name": "DizzyD",
+                        "indices": [
+                            15,
+                            22
+                        ],
+                        "screen_name": "dizzyd",
+                        "id_str": "7206052",
+                        "id": 7206052
+                    }
+                ],
+                "hashtags": [
+                    {
+                        "indices": [
+                            121,
+                            129
+                        ],
+                        "text": "euc2011"
+                    }
+                ]
+            },
+            "coordinates": null,
+            "in_reply_to_user_id": null,
+            "truncated": false,
+            "text": "Congratulating @dizzyd for winning the Erlang User of the year award for giving rebar to the community! Well done Dizzy. #euc2011"
+        },
+        "in_reply_to_status_id": null,
+        "source": "web",
+        "id_str": "132138590636478464",
+        "geo": null,
+        "favorited": false,
+        "id": 132138590636478460,
+        "entities": {
+            "urls": [],
+            "user_mentions": [
+                {
+                    "name": "Francesco Cesarini",
+                    "indices": [
+                        3,
+                        14
+                    ],
+                    "screen_name": "FrancescoC",
+                    "id_str": "15592821",
+                    "id": 15592821
+                },
+                {
+                    "name": "DizzyD",
+                    "indices": [
+                        31,
+                        38
+                    ],
+                    "screen_name": "dizzyd",
+                    "id_str": "7206052",
+                    "id": 7206052
+                }
+            ],
+            "hashtags": []
+        },
+        "coordinates": null,
+        "in_reply_to_user_id": null,
+        "truncated": true,
+        "text": "RT @FrancescoC: Congratulating @dizzyd for winning the Erlang User of the year award for giving rebar to the community! Well done Dizzy. ..."
+    }
+}

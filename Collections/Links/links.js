@@ -167,7 +167,6 @@ app.get('/', function(req, res) {
     if(req.query['stream'] == "true")
     {
         res.writeHead(200, {'content-type' : 'application/jsonstream'});
-        options = {}; // exclusive
     }
     dataStore.getLinks(options, function(item) {
         if(req.query['stream'] == "true") return res.write(JSON.stringify(item)+'\n');
@@ -206,6 +205,32 @@ app.get('/', function(req, res) {
         } else {
             return res.send(results);
         }
+    });
+});
+
+// get just encounters raw!
+// expose way to get raw links and encounters
+app.get('/encounters', function(req, res) {
+    var options = {sort:{"_id":-1}};
+    if(!req.query["all"]) options.limit = 20; // default 20 unless all is set
+    if (req.query.limit) {
+        options.limit = parseInt(req.query.limit);
+    }
+    if (req.query.offset) {
+        options.offset = parseInt(req.query.offset);
+    }
+    if(req.query['stream'] == "true")
+    {
+        res.writeHead(200, {'content-type' : 'application/jsonstream'});
+    }
+    var results = [];
+    dataStore.getEncounters(options, function(item) {
+        if(req.query['stream'] == "true") return res.write(JSON.stringify(item)+'\n');
+        results.push(item);
+    }, function(err){
+        if(err) logger.error(err);
+        if(req.query['stream'] == "true") return res.end();
+        return res.send(results);
     });
 });
 

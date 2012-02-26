@@ -1,0 +1,91 @@
+{
+    "action": "new",
+    "idr": "tweet://twitter/timeline?id=twitter#116149996419682304",
+    "data": {
+        "contributors": null,
+        "truncated": false,
+        "geo": null,
+        "favorited": false,
+        "coordinates": null,
+        "user": {
+            "profile_text_color": "393939",
+            "protected": false,
+            "listed_count": 457,
+            "profile_sidebar_fill_color": "e8e8e8",
+            "name": "Alex Rainert",
+            "contributors_enabled": false,
+            "profile_background_tile": true,
+            "profile_image_url_https": "https://si0.twimg.com/profile_images/1331003463/arainert_headshot2_supersm_normal.jpg",
+            "profile_image_url": "http://a0.twimg.com/profile_images/1331003463/arainert_headshot2_supersm_normal.jpg",
+            "default_profile": false,
+            "show_all_inline_media": true,
+            "following": true,
+            "geo_enabled": true,
+            "utc_offset": -18000,
+            "description": "Husband, father & owner of a lovably neurotic vizsla. Obsessed with information, design, emerging tech, sports & food. Head of product at foursquare.",
+            "profile_link_color": "ff4cb4",
+            "location": "Brooklyn, NY",
+            "default_profile_image": false,
+            "verified": false,
+            "profile_sidebar_border_color": "ff4cb4",
+            "statuses_count": 15165,
+            "friends_count": 511,
+            "followers_count": 4717,
+            "url": "http://www.alexrainert.com/",
+            "is_translator": false,
+            "profile_use_background_image": true,
+            "screen_name": "arainert",
+            "follow_request_sent": false,
+            "notifications": false,
+            "profile_background_image_url_https": "https://si0.twimg.com/profile_background_images/17611084/walken_small.jpg",
+            "time_zone": "Eastern Time (US & Canada)",
+            "favourites_count": 68,
+            "profile_background_color": "352726",
+            "lang": "en",
+            "profile_background_image_url": "http://a1.twimg.com/profile_background_images/17611084/walken_small.jpg",
+            "id": 7482,
+            "id_str": "7482",
+            "created_at": "Wed Oct 04 18:33:19 +0000 2006"
+        },
+        "in_reply_to_screen_name": null,
+        "possibly_sensitive": false,
+        "retweeted": false,
+        "in_reply_to_status_id_str": null,
+        "source": "<a href=\"http://twitter.com/tweetbutton\" rel=\"nofollow\">Tweet Button</a>",
+        "entities": {
+            "user_mentions": [
+                {
+                    "name": "SplatF",
+                    "indices": [
+                        93,
+                        100
+                    ],
+                    "screen_name": "splatf",
+                    "id": 174886575,
+                    "id_str": "174886575"
+                }
+            ],
+            "hashtags": [],
+            "urls": [
+                {
+                    "display_url": "splatf.com/2011/09/netfli…",
+                    "indices": [
+                        119,
+                        139
+                    ],
+                    "expanded_url": "http://www.splatf.com/2011/09/netflix-qwikster-facts/",
+                    "url": "http://t.co/ZMu8UkyK"
+                }
+            ]
+        },
+        "in_reply_to_user_id": null,
+        "id": 116149996419682300,
+        "in_reply_to_user_id_str": null,
+        "id_str": "116149996419682304",
+        "place": null,
+        "retweet_count": 0,
+        "in_reply_to_status_id": null,
+        "text": "Dan was the 1st to nail the Google/Motorola news and yesterday he nailed Netflix. Get on the @splatf analysis, people! http://t.co/ZMu8UkyK",
+        "created_at": "Tue Sep 20 14:01:31 +0000 2011"
+    }
+}

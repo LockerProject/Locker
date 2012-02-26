@@ -15,6 +15,15 @@ module.exports = function(app) {
             var options = {};
             if(req.query['limit']) options.limit = parseInt(req.query['limit']);
             if(req.query['offset']) options.skip = parseInt(req.query['offset']);
+            if(req.query["sort"]) {
+                var sorter = {}
+                if(req.query["order"]) {
+                    sorter[req.query["sort"]] = +req.query["order"];
+                } else {
+                    sorter[req.query["sort"]] = 1;
+                }
+                options.sort = sorter;
+            }
 
             if(req.query['stream'] == "true")
             {
@@ -95,7 +104,7 @@ module.exports = function(app) {
                     res.end(JSON.stringify(doc));
                 } else {
                     res.writeHead(404);
-                    res.end();
+                    res.end("not found");
                 }
             });
         });
