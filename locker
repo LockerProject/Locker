@@ -45,8 +45,13 @@ cleanup_mongo() {
         pid=$(cat "$mongolock")
         if [ "$locker_mode" = "production" ]; then
             # Shut it down
-            echo "...shutting it down"
+            echo "Shutting down mongod."
             kill "$pid"
+            while kill -0 "$pid" >/dev/null 2>&1; do
+                echo "Waiting for mongod to exit..."
+                sleep 1
+            done
+            echo "mongod shut down."
         else
             # Automatically check and repair mongo
             if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
