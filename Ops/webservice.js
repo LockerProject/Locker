@@ -28,6 +28,7 @@ var lpquery = require("lpquery");
 var lconfig = require("lconfig");
 var logger = require('logger');
 var async = require('async');
+// require('express-namespace');
 
 var lcrypto = require("lcrypto");
 
@@ -201,6 +202,16 @@ locker.get('/core/:svcId/at', function(req, res) {
     logger.info("scheduled "+ svcId + " " + cb + "  at " + at);
     res.end("true");
 });
+
+var collectionApis = serviceManager.getCollectionApis();
+for(var i in collectionApis) {
+  var oldGet = locker.get;
+  locker.get = function(path, callback) {
+    oldGet('/Me/' + i + path, callback);
+  }
+  collectionApis[i].api(locker, collectionApis[i].lockerInfo);
+  locker.get = oldGet;
+}
 
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)

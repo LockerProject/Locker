@@ -260,20 +260,7 @@ exports.spawn = function(serviceId, callback) {
 
     svc.port = ++lockerPortNext;
     logger.info('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
-    var processInformation = {
-        port: svc.port, // This is just a suggested port
-        sourceDirectory: ((svc.srcdir.charAt(0) == '/') ? svc.srcdir : path.join(lconfig.lockerDir, svc.srcdir)),
-        workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
-        lockerUrl:lconfig.lockerBase,
-        externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
-    };
-    if(svc.mongoCollections) {
-        processInformation.mongo = {
-            host: lconfig.mongo.host,
-            port: lconfig.mongo.port
-        };
-        processInformation.mongo.collections = svc.mongoCollections;
-    }
+    var processInformation = getProcessInformation(svc);
 
     var env = process.env;
     env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
@@ -370,6 +357,24 @@ exports.spawn = function(serviceId, callback) {
     setTimeout(function() { quiesce(svc); }, lconfig.quiesce);
 };
 
+function getProcessInformation(svc) {
+  var processInformation = {
+    port: svc.port, // This is just a suggested port
+    sourceDirectory: ((svc.srcdir.charAt(0) == '/') ? svc.srcdir : path.join(lconfig.lockerDir, svc.srcdir)),
+    workingDirectory: path.join(lconfig.lockerDir, lconfig.me, svc.id), // A path into the me directory
+    lockerUrl: lconfig.lockerBase,
+    externalBase: lconfig.externalBase + '/Me/' + svc.id + '/'
+  };
+  if (svc.mongoCollections) {
+    processInformation.mongo = {
+      host: lconfig.mongo.host,
+      port: lconfig.mongo.port
+    };
+    processInformation.mongo.collections = svc.mongoCollections;
+  }
+  return processInformation;
+}
+
 function quiesce(svc)
 {
     if(!svc) return;
@@ -452,4 +457,21 @@ function checkForShutdown() {
     }
     shuttingDown();
     shuttingDown = null;
+}
+
+exports.getCollectionApis = function() {
+  var collectionApis = {};
+  for(var i in serviceMap) {
+    if(serviceMap[i].type === 'collection') {
+      try {
+        collectionApis[i] = {
+          api: require(path.join(__dirname, '..', '..', serviceMap[i].srcdir, 'api.js')),
+          lockerInfo: getProcessInformation(serviceMap[i])
+        };
+      } catch(err) {
+        console.error("DEBUG: err", err);
+      }
+    }
+  }
+  return collectionApis;
 }
