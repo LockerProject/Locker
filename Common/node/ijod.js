@@ -48,17 +48,18 @@ IJOD.prototype.addData = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
     arg.id = arg.id.toString(); // safety w/ numbers
     if(!arg.at) arg.at = Date.now();
-    zlib.deflate(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
+    var self = this;
+    zlib.gzip(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
         console.log("going to write length " + gzdata.length);
-        try {
-            fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
-        } catch(E) {
-            return callback(E);
-        }
+        fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
+          if (err) {
+            return callback(err);
+          }
 
-        var at = this.len;
-        this.len += gzdata.length;
-        this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, this.len-at], callback);
+          var at = self.len;
+          self.len += gzdata.length;
+          self.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, self.len-at], callback);
+        });
     });
 }
 
@@ -68,16 +69,17 @@ IJOD.prototype.delData = function(arg, callback) {
     arg.id = arg.id.toString(); // safety w/ numbers
     if(!arg.at) arg.at = Date.now();
     arg.type = "delete";
-    zlib.deflate(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
-        try {
-            fs.writeSync(this.fda, gzdata, 0, gzdata.length, null);
-        } catch(E) {
-            return callback(E);
+    var self = this;
+    zlib.gzip(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
+      fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
+        if (err) {
+          return callback(err);
         }
 
-        var at = this.len;
-        this.len += gzdata.length;
-        this.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+        var at = self.len;
+        self.len += gzdata.length;
+        self.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+      });
     });
 }
 
@@ -94,7 +96,7 @@ IJOD.prototype.getOne = function(arg, callback) {
         if(!row) return callback();
         var buf = new Buffer(row.len);
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        zlib.inflate(buf, function(err, data) {
+        zlib.gunzip(buf, function(err, data) {
             return callback(err, arg.raw ? data : stripper(data));
         });
     });
@@ -121,7 +123,7 @@ IJOD.prototype.getAll = function(arg, callback) {
         if(!row) return callback();
         var buf = new Buffer(row.len);
         fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        zlib.inflate(buf, function(err, data) {
+        zlib.gunzip(buf, function(err, data) {
             return callback(err, arg.raw ? data : stripper(data));
         });
     });

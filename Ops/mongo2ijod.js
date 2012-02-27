@@ -87,6 +87,7 @@ function eacher(collection, id, ij, callback) {
         ij.addData({id:item[id], data:item}, function(addError) {
             if (addError) {
                 console.error("Adding to ijod error: " + addError);
+                console.error(addError.stack);
             }
         });
     });
