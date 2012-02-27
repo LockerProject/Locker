@@ -34,7 +34,7 @@ exports.clear = function(callback) {
     });
 }
 
-exports.getTotalLinks = function(callback) {
+exports.getTotalCount = function(callback) {
     linkCollection.count(callback);
 }
 exports.getTotalEncounters = function(callback) {

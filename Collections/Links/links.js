@@ -93,7 +93,6 @@ if (lconfig.airbrakeKey) {
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
-  console.error("DEBUG: links - lockerInfo", lockerInfo);
     lockerInfo = JSON.parse(data);
     locker.initClient(lockerInfo);
     locker.lockerBase = lockerInfo.lockerUrl;

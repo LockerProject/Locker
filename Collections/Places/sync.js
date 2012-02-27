@@ -14,15 +14,16 @@ var locker = require('locker.js');
 var lutil = require('lutil');
 var lconfig;
 var dataStore = require('./dataStore');
+var dataIn = require('./dataIn');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
+exports.init = function(theLockerUrl, mongo, locker, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
     logger = require("logger.js");
-    dataStore.init(mongoCollection, mongo, locker, lconfig);
+    dataStore.init(mongo, locker, lconfig);
     exports.eventEmitter = new EventEmitter();
 };
 
@@ -65,7 +66,7 @@ function gatherFromUrl(svcId, type, callback) {
     var total = 0;
     lutil.streamFromUrl(url, function(js, cb){
         total++;
-        dataStore.addData(svcId, type, js, cb);
+        dataIn.addData(svcId, type, js, cb);
     }, function(){
         logger.info("indexed "+total+" items from "+svcId);
         callback();

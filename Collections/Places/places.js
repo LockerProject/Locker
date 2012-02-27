@@ -13,7 +13,7 @@ var locker = require('locker.js');
 
 var fs = require('fs');
 var sync = require('./sync');
-var dataStore = require("./dataStore");
+var dataIn = require('./dataIn');
 var logger;
 
 var lockerInfo;
@@ -22,73 +22,6 @@ var express = require('express'),
 var app = express.createServer(connect.bodyParser());
 var request = require('request');
 var async = require('async');
-
-app.get('/state', function(req, res) {
-    dataStore.getTotalCount(function(err, countInfo) {
-        if(err) return res.send(err, 500);
-        dataStore.getLastObjectID(function(err, lastObject) {
-            if(err) return res.send(err, 500);
-            var objId = "000000000000000000000000";
-            if (lastObject) objId = lastObject._id.toHexString();
-            var updated = Date.now();
-            try {
-                var js = JSON.parse(fs.readFileSync('state.json'));
-                if(js && js.updated) updated = js.updated;
-            } catch(E) {}
-            res.send({ready:1, count:countInfo, updated:updated, lastId:objId});
-        });
-    });
-});
-
-
-app.get('/', function(req, res) {
-    var fields = {};
-    if (req.query.fields) {
-        try {
-            fields = JSON.parse(req.query.fields);
-        } catch(E) {}
-    }
-    dataStore.getAll(fields, function(err, cursor) {
-        if(!req.query["all"]) cursor.limit(20); // default 20 unless all is set
-        if(req.query["limit"]) cursor.limit(parseInt(req.query["limit"]));
-        if(req.query["offset"]) cursor.skip(parseInt(req.query["offset"]));
-        if(req.query["sort"]) {
-            var sorter = {}
-            if(req.query["order"]) {
-                sorter[req.query["sort"]] = +req.query["order"];
-            } else {
-                sorter[req.query["sort"]] = 1;
-            }
-            cursor.sort(sorter);
-        }
-        if(req.query['stream'] == "true")
-        {
-            res.writeHead(200, {'content-type' : 'application/jsonstream'});
-            cursor.each(function(err, object){
-                if (err) logger.error(err); // only useful here for logging really
-                if (!object) return res.end();
-                res.write(JSON.stringify(object)+'\n');
-            });
-        }else{
-            cursor.toArray(function(err, items) {
-                res.send(items);
-            });
-        }
-    });
-});
-
-app.get("/since", function(req, res) {
-    if (!req.query.id) {
-        return res.send([]);
-    }
-
-    var results = [];
-    dataStore.getSince(req.query.id, function(item) {
-        results.push(item);
-    }, function() {
-        res.send(results);
-    });
-});
 
 app.get('/update', function(req, res) {
     sync.gatherPlaces(req.query.type, function(){
@@ -104,33 +37,6 @@ app.get('/geo/:network', function(req, res) {
     });
 });
 
-// an experimental direct api to get places specifically from one id on one network, and with ?full=true flag to pull in origin via data!
-var cache = {};
-app.get('/from/:network/:from', function(req, res) {
-    if (!req.param("from")) {
-        return res.send([]);
-    }
-
-    var results = [];
-    dataStore.getFrom(req.param("network"), req.param("from"), function(item) {
-        results.push(item);
-    }, function() {
-        if(!req.query.full) return res.send(results);
-        async.forEachSeries(results, function(place, cb){
-            if(cache[place.via]) place.via = cache[place.via];
-            request.get({uri:locker.lockerBase+place.via, json:true}, function(err, res, js){
-                if(js) {
-                    cache[place.via] = js;
-                    place.via = js;
-                }
-                cb();
-            });
-        }, function(){
-            res.send(results);
-        })
-    });
-});
-
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
         logger.error("Invalid event.");
@@ -139,7 +45,7 @@ app.post('/events', function(req, res) {
         return;
     }
 
-    dataStore.addEvent(req.body, function(err, eventObj) {
+    dataIn.addEvent(req.body, function(err, eventObj) {
         if (err) {
             logger.error("Error processing: " + err);
             res.writeHead(500);
@@ -152,16 +58,11 @@ app.post('/events', function(req, res) {
     });
 });
 
-app.get('/id/:id', function(req, res, next) {
-    dataStore.get(req.param('id'), function(err, doc) {
-        res.send(doc);
-    })
-});
-
 
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
+  console.error('places startup');
     lockerInfo = JSON.parse(data);
     locker.initClient(lockerInfo);
     if (!lockerInfo || !lockerInfo['workingDirectory']) {
@@ -173,7 +74,7 @@ process.stdin.on('data', function(data) {
     lconfig.load('../../Config/config.json');
     logger = require("logger.js");
     locker.connectToMongo(function(mongo) {
-        sync.init(lockerInfo.lockerUrl, mongo.collections.place, mongo, locker, lconfig);
+        sync.init(lockerInfo.lockerUrl, mongo, locker, lconfig);
         app.listen(0, function() {
             var returnedInfo = {port: app.address().port};
             process.stdout.write(JSON.stringify(returnedInfo));

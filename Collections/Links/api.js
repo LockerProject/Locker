@@ -11,8 +11,15 @@ module.exports = function(app, lockerInfo) {
 
   locker.initClient(lockerInfo);
 
+  locker.connectToMongo(function(mongo) {
+    // initialize all our libs
+    dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo, logger);
+    // TODO: this is a race condition. The routes will be added before the dataStore is initialized
+    // callback();
+  });
+
   app.get('/state', function(req, res) {
-    dataStore.getTotalLinks(function(err, countInfo) {
+    dataStore.getTotalCount(function(err, countInfo) {
       if(err) return res.send(err, 500);
       dataStore.getLastObjectID(function(err, lastObject) {
         if(err) return res.send(err, 500);
@@ -25,22 +32,6 @@ module.exports = function(app, lockerInfo) {
         } catch(E) {}
         res.send({ready:1, count:countInfo, updated:updated, lastId:objId});
       });
-    });
-  });
-
-
-  app.get('/search', function(req, res) {
-    if (!req.query.q) return res.send([]);
-    var u = url.parse(locker.lockerBase + '/Me/search/query');
-    u.query = req.query;
-    u.query.type = 'link';
-    u.query.sort = 'true'; // default sorted
-    // pretty much just dumb proxy it at this point
-    request({url:url.format(u)}, function(err, resp, body){
-      if(err || !body) return res.send(err, 500);
-      res.writeHead(200, {'content-type' : 'application/json'});
-      res.write(body);
-      res.end();
     });
   });
 
@@ -66,7 +57,6 @@ module.exports = function(app, lockerInfo) {
       });
     });
   });
-
 
   // expose way to get raw links and encounters
   app.get('/', function(req, res) {
@@ -132,15 +122,6 @@ module.exports = function(app, lockerInfo) {
     });
   });
 
-  // expose way to get the list of encounters from a link id
-  app.get('/encounters/:id', function(req, res) {
-    var encounters = [];
-    dataStore.get(req.param('id'), function(err, doc) {
-      if(err || !doc || !doc.link) return res.send(encounters);
-      dataStore.getEncounters({link: doc.link}, function(e){ encounters.push(e); }, function(err){ res.send(encounters); });
-    });
-  });
-
   app.get('/id/:id', function(req, res, next) {
     dataStore.get(req.param('id'), function(err, doc) {
       if(err || !doc) return res.send(err, 500);
@@ -151,11 +132,30 @@ module.exports = function(app, lockerInfo) {
     });
   });
 
-  locker.connectToMongo(function(mongo) {
-    // initialize all our libs
-    dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo, logger);
-    // callback();
+  app.get('/search', function(req, res) {
+    if (!req.query.q) return res.send([]);
+    var u = url.parse(locker.lockerBase + '/Me/search/query');
+    u.query = req.query;
+    u.query.type = 'link';
+    u.query.sort = 'true'; // default sorted
+    // pretty much just dumb proxy it at this point
+    request({url:url.format(u)}, function(err, resp, body){
+      if(err || !body) return res.send(err, 500);
+      res.writeHead(200, {'content-type' : 'application/json'});
+      res.write(body);
+      res.end();
+    });
   });
+
+  // expose way to get the list of encounters from a link id
+  app.get('/encounters/:id', function(req, res) {
+    var encounters = [];
+    dataStore.get(req.param('id'), function(err, doc) {
+      if(err || !doc || !doc.link) return res.send(encounters);
+      dataStore.getEncounters({link: doc.link}, function(e){ encounters.push(e); }, function(err){ res.send(encounters); });
+    });
+  });
+
 }
 
 function isFull(full) {
