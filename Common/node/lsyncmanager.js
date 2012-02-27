@@ -281,7 +281,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
                 if(synclet.tolMax > 0) synclet.tolMax--;
                 synclet.tolAt = synclet.tolMax;
             }
-            logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
+            logger.info("total of "+synclet.added+" added, "+synclet.updated+" updated, "+synclet.deleted+" deleted, and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
             callback(err);
         });
     });
@@ -309,11 +309,8 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
 
     if (deleteIDs && deleteIDs.length > 0 && data) {
         addData(collection, mongoId, data, info, synclet, idr, function(err) {
-            if(err) {
-                callback(err);
-            } else {
-                deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
-            }
+            if (err) return callback(err);
+            deleteData(collection, mongoId, deleteIDs, info, synclet, idr, callback);
         });
     } else if (data && data.length > 0) {
         addData(collection, mongoId, data, info, synclet, idr, callback);
@@ -332,6 +329,16 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callbac
         synclet.deleted++;
         datastore.removeObject(collection, id, {timeStamp: Date.now()}, cb);
     }, 5);
+    // debug stuff
+    var oldProcess = q.process;
+    q.process = function() {
+      var task = q.tasks[0];
+      try {
+        oldProcess();
+      } catch (err) {
+        console.error('ERROR: caught error while processing q on task ', task);
+      }
+    }
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
@@ -368,6 +375,16 @@ function addData (collection, mongoId, data, info, synclet, idr, callback) {
             cb();
         }
     }, 5);
+    // debug stuff
+    var oldProcess = q.process;
+    q.process = function() {
+      var task = q.tasks[0];
+      try {
+        oldProcess();
+      } catch (err) {
+        console.error('ERROR: caught error while processing q on task ', task);
+      }
+    }
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
     q.drain = function() {
         if (errs.length > 0) {

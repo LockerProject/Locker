@@ -122,7 +122,7 @@ if (runFiles.length === 0) {
 }
 
 try {
-    var lockerd = require(__dirname + "/../_lockerd.js");
+    var lockerd = require(__dirname + "/../lockerd.js");
 } catch (E) {
     console.error("Locker did not start correctly, got the error: " + E);
     process.exit(1);

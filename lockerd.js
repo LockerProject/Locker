@@ -215,6 +215,14 @@ function postStartup() {
 }
 
 function shutdown(returnCode) {
+    if (shuttingDown_) {
+        try {
+            console.error("Aieee, shutdown called while already shutting down!  Aborting!");
+        } catch (e) {
+            // we tried...
+        }
+        process.exit(1);
+    }
     shuttingDown_ = true;
     process.stdout.write("\n");
     logger.info("Shutting down...");
@@ -259,17 +267,26 @@ process.on("SIGTERM", function() {
 });
 
 process.on('uncaughtException', function(err) {
-    if (shuttingDown_ === true) { process.exit(1); }
-    logger.error(util.inspect(err));
-    if(err && err.stack) logger.error(util.inspect(err.stack));
-    if (lconfig.airbrakeKey) {
-        var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
-        airbrake.notify(err, function(err, url) {
-            if(url) logger.error(url);
+    try {
+        logger.error(util.inspect(err));
+        if(err && err.stack) logger.error(util.inspect(err.stack));
+        if (lconfig.airbrakeKey) {
+            var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
+            airbrake.notify(err, function(err, url) {
+                if(url) logger.error(url);
+                shutdown(1);
+            });
+        }else{
             shutdown(1);
-        });
-    }else{
-        shutdown(1);
+        }
+    } catch (e) {
+        try {
+            console.error("Caught an exception while handling an uncaught exception!");
+            console.error(e);
+        } catch (e) {
+            // we tried...
+        }
+        process.exit(1);
     }
 });
 
