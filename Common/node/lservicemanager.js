@@ -216,7 +216,8 @@ exports.mapReload = function(id)
     if(js.events) {
         for (var i = 0; i < js.events.length; i++) {
             var ev = js.events[i];
-            levents.addListener(ev[0], js.id, ev[1]);
+            var batching = (ev.length > 2 && ev[2] === true) ? true : false;
+            levents.addListener(ev[0], js.id, ev[1], batching);
         }
     }
     // start em up if they're ready

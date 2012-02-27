@@ -108,17 +108,23 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data){
-        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
-        res.writeHead(500);
-        res.end('bad data');
-        return;
-    }
+  if (req.headers["content-type"] != "application/json" && req.body.length < 0) {
+    console.error("Was expecting JSON batched events.");
+    return res.send(500);
+  }
 
-    // handle asyncadilly
-    dataIn.processEvent(req.body);
-    res.writeHead(200);
-    res.end('ok');
+  // We don't do this async because the internal processing immediately queues it
+  // so we will return fast here.
+  req.body.forEach(function(event) {
+    if (!event.idr || !event.data) {
+      logger.error('5 HUNDO bad data:',JSON.stringify(event));
+      // TODO:  Should we be throwing here?  Or doing something else?  For now we just keep trying others
+    } else {
+      // handle asyncadilly
+      dataIn.processEvent(event);
+    }
+  });
+  res.send(200);
 });
 
 function genericApi(name,f)

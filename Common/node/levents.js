@@ -20,7 +20,7 @@ var path = require('path');
 var eventListeners = {};
 var processingQueue = []; // queue of events being processed
 
-exports.addListener = function(type, id, cb) {
+exports.addListener = function(type, id, cb, batching) {
     logger.verbose("Adding a listener for " + id + cb + " to " + type);
     if (!eventListeners.hasOwnProperty(type)) eventListeners[type] = [];
     // Remove the previous listener for the id
@@ -28,7 +28,7 @@ exports.addListener = function(type, id, cb) {
         if (entry["id"] == id) return false;
         return true;
     });
-    eventListeners[type].push({"id":id, "cb":cb});
+    eventListeners[type].push({"id":id, "cb":cb, "batching":(batching ? true : false)});
 }
 
 exports.removeListener = function(type, id, cb) {
@@ -80,7 +80,11 @@ exports.fireEvent = function(idr, action, obj) {
     };
     listeners.forEach(function(listener){
         var lurl = lconfig.lockerBase + path.join("/Me", listener.id, listener.cb);
-        lqueue(lurl).push(newEventInfo);
+        if (listener.batching) {
+          batchqueue(lurl).push(newEventInfo);
+        } else {
+          lqueue(lurl).push(newEventInfo);
+        }
     });
 }
 
@@ -123,4 +127,41 @@ function lqueue(lurl)
         });
 
     },1);
+}
+function BatchSendQueue(url) {
+  this.url = url;
+  this.items = [];
+  this.running = false;
+  this.push = function(item) {
+    // Every push is added and we see if we can send more
+    this.items.push(item);
+    this.run();
+  };
+  this.run = function() {
+    if (this.running) return;
+
+    this.running = true;
+    var sendingItems = this.items;
+    this.items = [];
+    var self = this;
+    logger.verbose("Sending %d batched events to %s", sendingItems.length, this.url);
+    request({url:this.url, method:"POST", json:sendingItems}, function(err, res, body) {
+      if (err || res.statusCode != 200) {
+        logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + self.url + " got " + (err || res.statusCode));
+      }
+      // If more stuff came in we run again, otherwise push will get it next time
+      if (self.items.length > 0) {
+        process.nextTick(function() {
+          self.run();
+        });
+      } else {
+        self.running = false;
+      }
+    });
+  };
+}
+function batchqueue(lurl) {
+  if (lqueues[lurl]) return lqueues[lurl];
+  lqueues[lurl] = new BatchSendQueue(lurl);
+  return lqueues[lurl];
 }
