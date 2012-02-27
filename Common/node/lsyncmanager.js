@@ -99,7 +99,7 @@ exports.scheduleRun = function(info, synclet) {
     if(!synclet.nextRun)
     {
         var milliFreq = parseInt(synclet.frequency) * 1000;
-        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.1) * milliFreq));
+        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
     }
     scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
 };
@@ -321,7 +321,7 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
         } else {
             callback();
         }
-    })
+    });
 }
 
 function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, callback) {
@@ -332,6 +332,16 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, cal
         synclet.deleted++;
         ij.delData({id:id}, cb);
     }, 5);
+    // debug stuff
+    var oldProcess = q.process;
+    q.process = function() {
+      var task = q.tasks[0];
+      try {
+        oldProcess();
+      } catch (err) {
+        console.error('ERROR: caught error while processing q on task ', task);
+      }
+    }
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
@@ -373,6 +383,16 @@ function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
             cb();
         }
     }, 5);
+    // debug stuff
+    var oldProcess = q.process;
+    q.process = function() {
+      var task = q.tasks[0];
+      try {
+        oldProcess();
+      } catch (err) {
+        console.error('ERROR: caught error while processing q on task ', task);
+      }
+    }
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
     q.drain = function() {
         if (errs.length > 0) {

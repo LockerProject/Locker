@@ -12,11 +12,7 @@ module.exports = function(locker) {
     });
     // get the map of available datasets
     locker.get('/push', function(req, res) {
-        res.writeHead(200, {
-            'Content-Type': 'text/javascript',
-            "Access-Control-Allow-Origin" : "*"
-        });
-        res.end(JSON.stringify(pushManager.datasets));
+        res.send(pushManager.datasets);
     });
 
     // take data and push it into a collection!

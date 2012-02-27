@@ -14,7 +14,7 @@
         "start": "./locker"
     },
     "dependencies": {
-        "npm":"=1.0.106",
+        "npm":"=1.1.1",
         "connect": "=1.8.5",
         "express": "=2.5.4",
         "async": "=0.1.15",
@@ -48,7 +48,6 @@
         "airbrake": "=0.2.2",
         "node-fakeweb": "=0.0.7",
         "ejs": "=0.4.3",
-        "forever": "=0.6.7",
         "graceful-fs": "1.1.2",
         "nodemailer": "=0.2.3",
         "semver": "=1.0.10",

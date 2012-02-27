@@ -119,6 +119,25 @@ exports.providers = function(types) {
     return services;
 };
 
+// lutil.extend is YOUR MOM
+function fuckingMerge(alive, dead)
+{
+    // we have to intelligently merge synclets array!
+    if(dead.synclets){
+        if(!alive.synclets) alive.synclets = [];
+        var ndx = {};
+        for(var i = 0; i < alive.synclets.length; i++) ndx[alive.synclets[i].name] = alive.synclets[i];
+        for(var i = 0; i < dead.synclets.length; i++) {
+            var s = dead.synclets[i];
+            if(ndx[s.name]) Object.keys(s).forEach( function(key){ ndx[s.name][key] = s[key] } );
+            if(!ndx[s.name]) alive.synclets.push(s);
+        }
+    }
+    // everything else dumb copy
+    Object.keys(dead).forEach(function(key){
+        if(key != "synclets") alive[key] = dead[key];
+    });
+}
 
 // update or install this file into the map
 exports.mapUpsert = function (file) {
@@ -139,7 +158,7 @@ exports.mapUpsert = function (file) {
         // synclets are in their own file, extend them in too
         var sync = path.join(lconfig.lockerDir, path.dirname(file),"synclets.json");
         if(path.existsSync(sync)) {
-            js = lutil.extend(js, JSON.parse(fs.readFileSync(sync, 'utf8')));
+            fuckingMerge(js, JSON.parse(fs.readFileSync(sync, 'utf8')));
         }
     } catch (E) {
         logger.error("failed to upsert "+file+" due to "+E);
@@ -154,7 +173,7 @@ exports.mapUpsert = function (file) {
     // if it exists already, merge it in and save it
     if(serviceMap[js.handle]) {
         logger.verbose("updating "+js.handle);
-        serviceMap[js.handle] = lutil.extend(serviceMap[js.handle], js);
+        fuckingMerge(serviceMap[js.handle], js);
         exports.mapReload(js.handle);
         // if it's running and updated, signal it to shutdown so new code/config is run at next request
         if(js.pid) try {

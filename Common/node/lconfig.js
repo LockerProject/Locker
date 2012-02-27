@@ -35,6 +35,7 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     setBase();
+    exports.registryUpdateInterval = config.registryUpdateInterval || 3600;
     exports.collections = config.collections || [
         "contacts:Collections/Contacts",
         "links:Collections/Links",

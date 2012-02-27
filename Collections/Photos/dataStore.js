@@ -308,9 +308,8 @@ exports.addEvent = function(eventBody, callback) {
     var svcId = idr.query["id"];
     var type = idr.pathname.substr(1) + '/' + idr.host
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     handler(svcId, eventBody.data, callback);
@@ -321,9 +320,8 @@ exports.addData = function(svcId, type, allData, callback) {
         callback = function() {};
     }
     var handler = dataHandlers[type];
-    if(!handler)
-    {
-        logger.error("unhandled "+type);
+    if (!handler) {
+        logger.warn("unhandled "+type);
         return callback();
     }
     async.forEachSeries(allData,function(data,cb) {
