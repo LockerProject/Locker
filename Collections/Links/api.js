@@ -7,7 +7,7 @@ var crypto = require('crypto');
 var request = require('request');
 var url = require('url');
 
-module.exports = function(app, lockerInfo, prefix) {
+module.exports = function(app, lockerInfo) {
 
   locker.initClient(lockerInfo);
 

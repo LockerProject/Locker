@@ -205,12 +205,13 @@ locker.get('/core/:svcId/at', function(req, res) {
 
 var collectionApis = serviceManager.getCollectionApis();
 for(var i in collectionApis) {
-  var oldGet = locker.get;
+  locker._oldGet = locker.get;
   locker.get = function(path, callback) {
-    oldGet('/Me/' + i + path, callback);
+    return locker._oldGet('/Me/' + i + path, callback);
   }
   collectionApis[i].api(locker, collectionApis[i].lockerInfo);
-  locker.get = oldGet;
+  locker.get = locker._oldGet;
+  locker._oldGet = undefined;
 }
 
 // ME PROXY

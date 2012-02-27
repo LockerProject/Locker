@@ -480,15 +480,14 @@ function checkForShutdown() {
 
 exports.getCollectionApis = function() {
   var collectionApis = {};
-  for(var i in serviceMap) {
-    if(serviceMap[i].type === 'collection') {
-      try {
+  for (var i in serviceMap) {
+    if (serviceMap[i].type === 'collection') {
+      var modulePath = path.join(__dirname, '..', '..', serviceMap[i].srcdir, 'api.js');
+      if (path.existsSync(modulePath)) {
         collectionApis[i] = {
-          api: require(path.join(__dirname, '..', '..', serviceMap[i].srcdir, 'api.js')),
+          api: require(modulePath),
           lockerInfo: getProcessInformation(serviceMap[i])
         };
-      } catch(err) {
-        console.error("DEBUG: err", err);
       }
     }
   }
