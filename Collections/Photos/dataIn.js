@@ -1,5 +1,6 @@
 var dataStore = require('./dataStore');
 var url = require('url');
+var logger = require('logger');
 var async = require('async');
 
 var dataHandlers = {
