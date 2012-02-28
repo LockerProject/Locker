@@ -21,10 +21,9 @@ var collectionDataStore = new CollectionDataStore();
 
 exports.init = function(mongo, _locker) {
     locker = _locker;
-    var mongoCollection = mongo.collections.place;
+    collection = mongo.collections.place;
     collectionDataStore.init(mongo, 'place', locker);
 
-    collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
 

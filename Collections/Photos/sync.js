@@ -15,11 +15,11 @@ var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
+exports.init = function(theLockerUrl, mongo, locker, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
     logger = require("logger.js");
-    dataStore.init(mongoCollection, mongo, locker, lconfig);
+    dataStore.init(mongo, locker);
     exports.eventEmitter = new EventEmitter();
 }
 
