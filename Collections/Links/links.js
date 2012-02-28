@@ -16,6 +16,7 @@ var fs = require('fs'),
     locker = require('locker.js');
 var async = require("async");
 var crypto = require("crypto");
+var jsonStream = require("express-jsonstream");
 var logger;
 
 
@@ -28,6 +29,8 @@ var lockerInfo;
 var express = require('express'),
     connect = require('connect');
 var app = express.createServer(connect.bodyParser());
+
+app.use(jsonStream());
 
 app.set('views', __dirname);
 
@@ -108,14 +111,9 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-  if (req.headers["content-type"] != "application/json" && req.body.length < 0) {
-    console.error("Was expecting JSON batched events.");
-    return res.send(500);
-  }
-
-  // We don't do this async because the internal processing immediately queues it
-  // so we will return fast here.
-  req.body.forEach(function(event) {
+  req.jsonStream(function(event) {
+    // We don't do this async because the internal processing immediately queues it
+    // so we will return fast here.
     if (!event.idr || !event.data) {
       logger.error('5 HUNDO bad data:',JSON.stringify(event));
       // TODO:  Should we be throwing here?  Or doing something else?  For now we just keep trying others
@@ -123,8 +121,13 @@ app.post('/events', function(req, res) {
       // handle asyncadilly
       dataIn.processEvent(event);
     }
+  }, function(error) {
+    if (error) {
+      res.send(error, 500);
+    }
+    res.send(200);
   });
-  res.send(200);
+
 });
 
 function genericApi(name,f)

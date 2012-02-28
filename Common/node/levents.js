@@ -145,7 +145,7 @@ function BatchSendQueue(url) {
     this.items = [];
     var self = this;
     logger.verbose("Sending %d batched events to %s", sendingItems.length, this.url);
-    request({url:this.url, method:"POST", json:sendingItems}, function(err, res, body) {
+    var request = request({url:this.url, method:"POST", headers:{"content-type":"application/jsonstream"}}, function(err, res, body) {
       if (err || res.statusCode != 200) {
         logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + self.url + " got " + (err || res.statusCode));
       }
@@ -157,6 +157,10 @@ function BatchSendQueue(url) {
       } else {
         self.running = false;
       }
+    });
+    async.forEachSeries(sendingItems, function(item, cb) {
+      request.write(JSON.stringify(item) + "\n");
+      cb();
     });
   };
 }
