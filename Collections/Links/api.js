@@ -13,7 +13,7 @@ module.exports = function(app, lockerInfo) {
 
   locker.connectToMongo(function(mongo) {
     // initialize all our libs
-    dataStore.init(mongo.collections.link, mongo.collections.encounter, mongo.collections.queue, mongo, logger);
+    dataStore.init(mongo, locker);
     // TODO: this is a race condition. The routes will be added before the dataStore is initialized
     // callback();
   });
@@ -59,7 +59,7 @@ module.exports = function(app, lockerInfo) {
   });
 
   // expose way to get raw links and encounters
-  app.get('/', function(req, res) {
+  app.get('', function(req, res) {
     var full = isFull(req.query.full);
     var fullResults = [];
     var results = [];

@@ -17,8 +17,8 @@ var dataIn = require('./dataIn');
 var logger;
 
 var lockerInfo;
-var express = require('express'),
-    connect = require('connect');
+var express = require('express');
+var connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 var request = require('request');
 var async = require('async');
@@ -33,24 +33,20 @@ app.get('/update', function(req, res) {
 app.get('/geo/:network', function(req, res) {
     sync.geoCode(req.param('network'), function(err){
         if(err) logger.error(err);
-        res.send(true);
+        return res.send(true);
     });
 });
 
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
         logger.error("Invalid event.");
-        res.writeHead(500);
-        res.end("Invalid Event");
-        return;
+        return res.send("Invalid Event", 500);
     }
 
     dataIn.addEvent(req.body, function(err, eventObj) {
         if (err) {
             logger.error("Error processing: " + err);
-            res.writeHead(500);
-            res.end(err);
-            return;
+            return res.send(err, 500);
         }
 
         res.writeHead(200);
@@ -62,10 +58,9 @@ app.post('/events', function(req, res) {
 // Process the startup JSON object
 process.stdin.resume();
 process.stdin.on('data', function(data) {
-  console.error('places startup');
     lockerInfo = JSON.parse(data);
     locker.initClient(lockerInfo);
-    if (!lockerInfo || !lockerInfo['workingDirectory']) {
+    if (!lockerInfo || !lockerInfo.workingDirectory) {
         process.stderr.write('Was not passed valid startup information.'+data+'\n');
         process.exit(1);
     }

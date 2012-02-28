@@ -9,27 +9,25 @@
 var collection;
 var db;
 var locker;
-var lconfig;
 var lutil = require('lutil');
-var logger;
 var request = require("request");
 var crypto = require("crypto");
 var async = require("async");
 var url = require("url");
 var fs = require('fs');
 
-var collectionDataStore = require('collectionDataStore')();
+var CollectionDataStore = require('collectionDataStore');
+var collectionDataStore = new CollectionDataStore();
 
-exports.init = function(mongo, l, config) {
+exports.init = function(mongo, _locker) {
+    locker = _locker;
     var mongoCollection = mongo.collections.place;
-    collectionDataStore.init(mongo, 'place', l);
+    collectionDataStore.init(mongo, 'place', locker);
 
     collection = mongoCollection;
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
-    locker = l;
-    lconfig = config;
-    logger = require("logger");
+
 };
 
 // inherit from collectionDataStore
@@ -72,11 +70,11 @@ exports.updatePlace = function(place, cb) {
 
 
 exports.getNetwork = function(network, cbEach, cbDone) {
-    collectionDataStore.findWrap({"network":network}, {}, collection, cbEach, cbDone);
+    collectionDataStore.findWrap({"network":network}, {}, cbEach, cbDone);
 };
 
 exports.getFrom = function(network, from, cbEach, cbDone) {
-    collectionDataStore.findWrap({"network":network, "fromID":from}, {}, collection, cbEach, cbDone);
+    collectionDataStore.findWrap({"network":network, "fromID":from}, {}, cbEach, cbDone);
 };
 
 function createId(hash) {

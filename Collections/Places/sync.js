@@ -23,7 +23,7 @@ exports.init = function(theLockerUrl, mongo, locker, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
     logger = require("logger.js");
-    dataStore.init(mongo, locker, lconfig);
+    dataStore.init(mongo, locker);
     exports.eventEmitter = new EventEmitter();
 };
 

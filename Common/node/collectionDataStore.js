@@ -10,14 +10,13 @@ var fs = require('fs');
 var lutil = require('lutil');
 
 module.exports = function() {
-  var collection, db, logger;
+  var collection, db;
   var client = {};
 
   client.init = function(mongo, collectionName, locker) {
     collection = mongo.collections[collectionName];
     collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
-    logger = require("logger");
   }
 
   client.state = function(callback) {
@@ -36,13 +35,14 @@ module.exports = function() {
       });
     });
   }
+
   client.clear = function() {
     collection.drop.apply(collection, arguments);
-  };
+  }
 
   client.getTotalCount = function() {
     collection.count.apply(collection, arguments);
-  };
+  }
 
   client.getSince = function(objId, cbEach, cbDone) {
     client.findWrap({"_id":{"$gt":new db.bson_serializer.ObjectID(objId)}}, {sort:{_id:-1}}, cbEach, cbDone);
@@ -65,7 +65,7 @@ module.exports = function() {
 
   client.getAll = function(fields, callback) {
     collection.find({}, fields, callback);
-  };
+  }
 
   client.getOne = function(id, callback) {
     collection.find({"id":id}, function(error, cursor) {
@@ -75,7 +75,7 @@ module.exports = function() {
         callback(err, doc);
       });
     });
-  };
+  }
 
   client.findWrap = function(query, options, cbEach, cbDone) {
     var cursor = collection.find(query);

@@ -1,28 +1,26 @@
 var dataStore = require('./dataStore');
 var url = require('url');
 
-var dataHandlers = {};
-dataHandlers["checkin/foursquare"] = processFoursquare;
-dataHandlers["recents/foursquare"] = processFoursquare;
-dataHandlers["tweets/twitter"] = processTwitter;
-dataHandlers["timeline/twitter"] = processTwitter;
-dataHandlers["location/glatitude"] = processGLatitude;
-dataHandlers["photo/instagram"] = processInstagram;
-dataHandlers["feed/instagram"] = processInstagram;
+var dataHandlers = {
+  "checkin/foursquare": processFoursquare,
+  "recents/foursquare": processFoursquare,
+  "tweets/twitter": processTwitter,
+  "timeline/twitter": processTwitter,
+  "location/glatitude": processGLatitude,
+  "photo/instagram": processInstagram,
+  "feed/instagram": processInstagram
+};
 
 
 function processFoursquare(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
-    var loc = (data.venue) ? data.venue.location : data.location; // venueless happens
+    var loc = data.venue ? data.venue.location : data.location; // venueless happens
     if (!loc || !loc.lat || !loc.lng || !data.createdAt) {
-        cb("The 4sq data did not have lat/lng or at: "+JSON.stringify(data));
-        return;
+        return cb("The 4sq data did not have lat/lng or at: "+JSON.stringify(data));
     }
 
     var me = false;
-    if (type === 'checkin/foursquare') {
-        me = true;
-    }
+    if (type === 'checkin/foursquare') me = true;
 
     var placeInfo = {
             me:me,
@@ -54,10 +52,7 @@ function processFoursquare(svcId, type, data, cb) {
 
 function processTwitter(svcId, type, data, cb) {
     // Gotta have geo/at at minimum
-    if (!data.created_at) {
-        cb("The Twitter data did not have created_at");
-        return;
-    }
+    if (!data.created_at) return cb("The Twitter data did not have created_at");
 
     var title = '';
     if (data !== null && data.hasOwnProperty('place') && data.place !== null && data.place.hasOwnProperty('full_name')) {
@@ -66,15 +61,11 @@ function processTwitter(svcId, type, data, cb) {
 
     var ll = firstLL(data.geo) || firstLL(data.coordinates, true) ||
         (data.place !== null && data.place.hasOwnProperty('bounding_box') && computedLL(data.place.bounding_box.coordinates[0]));
-    if (!ll) {
-        // quietly return, as lots of tweets aren't geotagged, so let's just bail
-        return cb();
-    }
+    // quietly return, as lots of tweets aren't geotagged, so let's just bail
+    if (!ll) return cb();
 
     var me = false;
-    if (type === 'tweets/twitter') {
-        me = true;
-    }
+    if (type === 'tweets/twitter') me = true;
 
     var placeInfo = {
             me:me,
@@ -95,14 +86,12 @@ function processTwitter(svcId, type, data, cb) {
 function processInstagram(svcId, type, data, cb) {
     // Gotta have location/at at minimum
     if (!data || !data.created_time || !data.location || !data.location.latitude || !data.location.longitude) {
-        cb();
-        return;
+        return cb();
     }
 
     var me = false;
-    if (type === 'photo/instagram') {
-        me = true; // I think this is probably getting overwritten, fix the right way when we do profiles uniformly
-    }
+    // I think this is probably getting overwritten, fix the right way when we do profiles uniformly
+    if (type === 'photo/instagram') me = true;
 
     var placeInfo = {
             me:me,
@@ -121,21 +110,13 @@ function processInstagram(svcId, type, data, cb) {
 
 function processGLatitude(svcId, type, data, cb) {
     // Gotta have lat/lng/at at minimum
-    if (!data.latitude || !data.longitude) {
-        cb("The Latitude data did not have latitude or longitude");
-        return;
-    }
+    if (!data.latitude || !data.longitude) return cb("The Latitude data did not have latitude or longitude");
 
     var timestamp = parseInt(data.timestampMs, 10);
-    if (isNaN(timestamp)) {
-        cb("The Latitude data did not have a valid timestamp");
-        return;
-    }
+    if (isNaN(timestamp)) return cb("The Latitude data did not have a valid timestamp");
 
     var me = false;
-    if (type === 'location/glatitude') {
-        me = true;
-    }
+    if (type === 'location/glatitude') me = true;
 
     var placeInfo = {
             me:me,
@@ -153,10 +134,7 @@ function processGLatitude(svcId, type, data, cb) {
 
 
 exports.addEvent = function(eventBody, callback) {
-    if (eventBody.action !== "new") {
-        callback(null, {});
-        return;
-    }
+    if (eventBody.action !== "new") return callback(null, {});
     // Run the data processing
     var idr = url.parse(eventBody.idr, true);
     var svcId = idr.query["id"];
@@ -170,22 +148,19 @@ exports.addEvent = function(eventBody, callback) {
 };
 
 exports.addData = function(svcId, type, allData, callback) {
-    if (callback === undefined) {
-        callback = function() {};
-    }
+    if (callback === undefined) callback = function() {};
+
     var handler = dataHandlers[type];
     if (!handler) {
         logger.warn("unhandled "+type);
         return callback();
     }
     // if called with just one item, streaming
-    if(!Array.isArray(allData))
-    {
-        handler(svcId, type, allData, function(e){
+    if(!Array.isArray(allData)) {
+        return handler(svcId, type, allData, function(e){
             if(e) logger.error("error processing: "+e);
             callback();
         });
-        return;
     }
     async.forEachSeries(allData, function(data, cb) {
         handler(svcId, type, data, function(e){
@@ -202,9 +177,7 @@ function firstLL(o, reversed) {
         typeof o[0] == 'number' && typeof o[1] == 'number') {
         return (reversed) ? [o[1],o[0]] : o; // reverse them optionally
     }
-    if (typeof o != 'object') {
-        return null;
-    }
+    if (typeof o != 'object') return null;
     for (var i in o) {
         var ret = firstLL(o[i], reversed);
         if(ret) return ret;
