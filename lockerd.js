@@ -106,7 +106,8 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         if (shuttingDown_) {
             logger.info('mongod exited with code '+code+', signal '+signal);
         } else {
-            logger.error('mongod exited unexpectedly with code '+code+', signal '+signal);
+            logger.error('mongod exited unexpectedly with code '+code+', signal '+signal+', shutting down!');
+            shutdown(1);
         }
     });
 });
