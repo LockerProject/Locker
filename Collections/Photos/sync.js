@@ -22,6 +22,7 @@ exports.init = function(theLockerUrl, mongo, locker, config) {
     logger = require("logger.js");
     dataStore.init(mongo, locker);
     exports.eventEmitter = new EventEmitter();
+    dataIn.init();
 }
 
 var photoGatherers = {

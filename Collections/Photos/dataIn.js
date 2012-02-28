@@ -1,7 +1,8 @@
 var dataStore = require('./dataStore');
 var url = require('url');
-var logger = require('logger');
+var logger, lconfig;
 var async = require('async');
+var request = require('request');
 
 var dataHandlers = {
   "timeline/twitter": processTwitter,
@@ -13,6 +14,12 @@ var dataHandlers = {
   "photo/instagram": processInstagram,
   "feed/instagram": doNothing,
   "post/tumblr": processTumblr
+}
+
+// TODO: tech debt, clean this up with logger and lconfig fixes!
+exports.init = function() {
+  logger = require('logger');
+  lconfig = require('lconfig');
 }
 
 function doNothing(svcId, data, cb) {
