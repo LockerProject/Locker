@@ -15,7 +15,7 @@ module.exports = function() {
 
   client.init = function(mongo, collectionName, locker) {
     collection = mongo.collections[collectionName];
-    collection.ensureIndex({"id":1},{unique:true},function() {});
+    // collection.ensureIndex({"id":1},{unique:true},function() {});
     db = mongo.dbClient;
   }
 

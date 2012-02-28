@@ -39,6 +39,7 @@ exports.addData = function(type, data, cb) {
   // shim to send events, post-add stuff
   if(typeof inserters[type] !== 'function') return cb(new Error('unhandled data type,' + type));
   inserters[type](data, type, function(err, doc) {
+    if(err) return cb(err);
     if(doc && doc._id) {
       var idr = lutil.idrNew('contact', 'contacts', doc._id);
       locker.ievent(idr, doc);

@@ -8,7 +8,7 @@ var assert = require("assert");
 var vows = require("vows");
 var currentDir = process.cwd();
 var fakeweb = require('node-fakeweb');
-var mongoCollections;
+var mongo;
 var svcId = 'contacts';
 
 
@@ -23,7 +23,15 @@ var thecollections = ['contact'];
 var lconfig = require('../Common/node/lconfig');
 lconfig.load("Config/config.json");
 
-var lmongoclient = require('../Common/node/lmongoclient.js')(lconfig.mongo.host, lconfig.mongo.port, svcId, thecollections);
+var instanceInfo = {
+  mongo: {
+    host: lconfig.mongo.host,
+    port: lconfig.mongo.port,
+    collections: thecollections
+  },
+  workingDirectory: './' + lconfig.me + '/contacts',
+  lockerUrl: lconfig.lockerBase
+}
 
 var events = 0;
 var fs = require('fs');
@@ -48,15 +56,15 @@ suite.next().suite.addBatch({
                 contentType:"application/json",
                 body: []});
             var self = this;
-            locker.initClient({workingDirectory:'./' + lconfig.me + '/contacts', lockerUrl:lconfig.lockerBase});
+            locker.initClient(instanceInfo);
             request.get({url:lconfig.lockerBase + "/Me/event-collector/listen/contact"}, function() {
-                lmongoclient.connect(function(mongo) {
-                    mongoCollections = mongo.collections.contact;
-                    contacts.init(lconfig.lockerBase, mongoCollections, mongo, lconfig);
-                    dataStore.init(mongoCollections, mongo);
-                    dataStore.clear();
-                    contacts.getContacts('foursquare', 'contact', 'foursquare', function() {
-                        dataStore.getTotalCount(self.callback);
+                locker.connectToMongo(function(_mongo) {
+                    mongo = _mongo;
+                    contacts.init(lconfig.lockerBase, mongo, locker, lconfig);
+                    dataStore.clear(function() {
+                      contacts.getContacts('foursquare', 'contact', 'foursquare', function(err) {
+                          dataStore.getTotalCount(self.callback);
+                      });
                     });
                 });
             });
@@ -162,10 +170,10 @@ suite.next().suite.addBatch({
             // TODO: this should be using the query language when that's implemented.  Nothing should ever really
             // be going direct to mongo like this in a test
             //
-            mongoCollections.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, function(err, resp) {
+            mongo.collections.contact.findOne({'accounts.foursquare.data.contact.twitter':'ww'}, function(err, resp) {
                 friend = resp;
                 contacts.getContacts("twitter", "contact", "twitter", function() {
-                    mongoCollections.findOne({'accounts.twitter.data.screen_name':'ww'}, self.callback);
+                    mongo.collections.contact.findOne({'accounts.twitter.data.screen_name':'ww'}, self.callback);
                 });
             });
         },
