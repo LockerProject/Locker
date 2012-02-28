@@ -11,6 +11,7 @@ var express   = require('express')
   , connect   = require('connect')
   , request   = require('request')
   , url       = require('url')
+  , path      = require('path')
   , locker    = require('locker')
   , lutil     = require('lutil')
   , logger
@@ -19,7 +20,7 @@ var express   = require('express')
 
 var app = express.createServer(connect.bodyParser());
 
-function fetchmap(callback) {
+function fetchMap(callback) {
   request.get(lockerInfo.lockerUrl + '/map', function (req, res) {
     var map;
     try {
@@ -32,8 +33,8 @@ function fetchmap(callback) {
   });
 }
 
-function fetchprofiles(callback) {
-  fetchmap(function (map) {
+function fetchMappedByIDRs(callback) {
+  fetchMap(function (map) {
     var profiles = {};
 
     for (var key in map) {
@@ -56,27 +57,84 @@ function fetchprofiles(callback) {
   });
 }
 
+function fetchMappedByHandles(callback) {
+  fetchMap(function (map) {
+    var profiles = {};
+
+    for (var key in map) {
+      if (!map[key].auth || !map[key].auth.profile) continue;
+
+      if (profiles[key]) {
+        profiles[key].push(map[key].auth.profile);
+      } else {
+        profiles[key] = [map[key].auth.profile];
+      }
+    }
+    return callback(profiles);
+  });
+}
+
 app.get('/', function (req, res) {
-  fetchprofiles(function (profiles) {
+  fetchMappedByIDRs(function (profiles) {
     return res.send(profiles);
   });
 });
 
 app.get('/handle/:handle', function (req, res, next) {
-  fetchprofiles(function (profiles) {
-    var remapped = lutil.idrsToServices(profiles);
+  fetchMappedByHandles(function (profiles) {
     var handle = req.param('handle');
-    return res.send(remapped[handle]);
+    var profile = profiles[handle];
+    if (!profile) return res.send({}, 404);
+
+    return res.send(profile);
   });
 });
 
-// Process the startup JSON object
+
+/*
+ * Avatars
+ */
+
+app.get('/avatar', function (req, res, next) {
+  // always override if a local avatar exists
+  if (path.existsSync(path.join(lockerInfo.workingDirectory, 'avatar.png'))) return res.send(lockerInfo.externalBase + '/avatar.png');
+
+  fetchMappedByHandles(function (profiles) {
+    if (profiles.twitter)    return res.send(profiles.twitter[0].profile_image_url_https);
+    if (profiles.facebook)   return res.send('http://graph.facebook.com/' + profiles.facebook[0].username + '/picture');
+    if (profiles.github)     return res.send(profiles.github[0].avatar_url);
+    if (profiles.foursquare) return res.send(profiles.foursquare[0].photo);
+    if (profiles.instagram)  return res.send(profiles.instagram[0].profile_picture);
+    if (profiles.lastfm) {
+      var lastImages = profiles.lastfm[0].image;
+      for (var i in lastImages) {
+        if (lastImages[i].size === 'small') return res.send(null, lastImages[i]['#text']);
+      }
+    }
+
+    return res.send('no avatar available', 404);
+  });
+});
+
+app.get('/avatar.png', function (req, res) {
+  if (!path.existsSync(path.join(lockerInfo.workingDirectory, 'avatar.png'))) {
+    return res.send('not found', 404);
+  } else {
+    return res.sendfile(path.join(lockerInfo.workingDirectory, 'avatar.png'));
+  }
+});
+
+
+/*
+ * Startup
+ */
+
 process.stdin.resume();
 process.stdin.on('data', function (data) {
   lockerInfo = JSON.parse(data);
   locker.initClient(lockerInfo);
   if (!lockerInfo || !lockerInfo.workingDirectory) {
-    process.stderr.write('Was not passed valid startup information.'+data+'\n');
+    process.stderr.write('Was not passed valid startup information.' + data + '\n');
     process.exit(1);
   }
   process.chdir(lockerInfo.workingDirectory);
@@ -86,12 +144,9 @@ process.stdin.on('data', function (data) {
   logger = require('logger.js');
 
   locker.connectToMongo(function (mongo) {
-    //sync.init(lockerInfo.lockerUrl, mongo.collections.contact, mongo, lconfig);
     app.listen(0, function () {
       var returnedInfo = {port: app.address().port};
       process.stdout.write(JSON.stringify(returnedInfo));
     });
   });
 });
-
-

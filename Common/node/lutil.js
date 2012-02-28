@@ -238,10 +238,10 @@ exports.streamFromUrl = function(url, cbEach, cbDone) {
  */
 exports.fetchAndResizeImageURL = function (sourceUrl, rawFile, destFile, callback) {
   request.get({uri: sourceUrl, encoding: 'binary'}, function (err, resp, body) {
-    if (err) return callback("Unable to download avatar from source URL: " + err);
+    if (err) return callback('Unable to download avatar from source URL: ' + err);
 
     fs.writeFile(rawFile, body, 'binary', function (err) {
-      if (err) return callback("Unable to save downloaded raw avatar: " + err);
+      if (err) return callback('Unable to save downloaded raw avatar: ' + err);
 
       im.resize({srcPath : rawFile
         , dstPath : destFile
@@ -253,52 +253,6 @@ exports.fetchAndResizeImageURL = function (sourceUrl, rawFile, destFile, callbac
           return callback(null, 'avatar uploaded');
         });
     });
-  });
-};
-
-exports.idrsToServices = function (dict) {
-  var profileMap = {};
-  for (var idr in dict) {
-    var service = url.parse(idr).host;
-    if (profileMap[service]) {
-      profileMap[service].push(dict[idr]);
-    }
-    else {
-      profileMap[service] = [dict[idr]];
-    }
-  }
-  return profileMap;
-};
-
-exports.avatarUrlFromMap = function (storagePath, lockerBase, callback) {
-  // always override if a local avatar exists
-  if (path.existsSync(path.join(storagePath, 'avatar.png'))) return callback(null, 'avatar.png');
-
-  request.get({url:lockerBase + '/Me/profiles/'}, function (err, res, body) {
-    if (err) return callback(err);
-
-    var profiles;
-    try {
-      profiles = JSON.parse(body);
-    }
-    catch (E) {
-      return callback(E);
-    }
-
-    var profileMap = exports.idrsToServices(profiles);
-    if (profileMap.twitter)    return callback(null, profileMap.twitter[0].profile_image_url_https);
-    if (profileMap.facebook)   return callback(null, 'http://graph.facebook.com/' + profileMap.facebook[0].username + '/picture');
-    if (profileMap.github)     return callback(null, profileMap.github[0].avatar_url);
-    if (profileMap.foursquare) return callback(null, profileMap.foursquare[0].photo);
-    if (profileMap.instagram)  return callback(null, profileMap.instagram[0].profile_picture);
-    if (profileMap.lastfm) {
-      var lastImages = profileMap.lastfm[0].image;
-      for (var i in lastImages) {
-        if (lastImages[i].size === 'small') return callback(null, lastImages[i]['#text']);
-      }
-    }
-
-    return callback('no avatar available');
   });
 };
 

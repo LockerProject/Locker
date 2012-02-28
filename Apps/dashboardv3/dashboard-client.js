@@ -91,10 +91,10 @@ function needsToConnectMore(installedConnectors) {
 }
 
 app.all('*', function(req, res, next) {
-  lutil.avatarUrlFromMap(process.cwd, locker.lockerBase, function (err, url) {
+  request.get({url:locker.lockerBase + "/Me/profiles/avatar"}, function (err, res, url) {
     if (!err) profileImage = url;
   });
-  request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function(err, res, body) {
+  request.get({url:locker.lockerBase + "/synclets/github/getCurrent/profile"}, function (err, res, body) {
     try {
       body = JSON.parse(body);
       if (body[0].login) {

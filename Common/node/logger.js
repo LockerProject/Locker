@@ -28,7 +28,7 @@ ModuleConsoleLogger.prototype.log = function(level, msg, meta, callback) {
     }
 
     this.doLog(level, msg, meta, callback);
-}
+};
 
 // This is a copy of the normal file logger so that we can work around a winston bug that spews warnings on too many listeners
 function FileBugLogger(options) {
@@ -61,7 +61,7 @@ if (lconfig.logging.file) {
             } else {
                 realWrite.call(fileLogger.stream, data, "utf8");
             }
-        }
+        };
     });
     transports.push(fileLogger);
 }
@@ -79,4 +79,4 @@ fullLogger.log = function(level, msg) {
     __realLog.call(fullLogger, level, msg);
 };
 */
-module.exports = fullLogger
+module.exports = fullLogger;
