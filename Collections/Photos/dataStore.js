@@ -57,9 +57,10 @@ function createId(url, name) {
 }
 
 
-exports.getTotalCount = collectionDataStore.getTotalCount;
-exports.getAll = collectionDataStore.getAll;
-exports.get = collectionDataStore.get;
+exports.state = collectionDataStore.state;
 exports.clear = collectionDataStore.clear;
-exports.getSince = collectionDataStore.getSince;
+exports.get = collectionDataStore.get;
+exports.getAll = collectionDataStore.getAll;
 exports.getLastObjectID = collectionDataStore.getLastObjectID;
+exports.getTotalCount = collectionDataStore.getTotalCount;
+exports.getSince = collectionDataStore.getSince;

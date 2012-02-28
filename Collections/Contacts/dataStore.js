@@ -10,61 +10,39 @@
 var collection;
 var db;
 var lutil = require('lutil');
-var locker = require('locker');
 var lmongoutil = require('lmongoutil');
 var url = require('url');
 var inserters = require('./inserters');
+var locker;
 
-exports.init = function(mongoCollection, mongo) {
-    collection = mongoCollection;
-    db = mongo.dbClient;
-    inserters.init(collection);
-}
+var CollectionDataStore = require('collectionDataStore');
+var collectionDataStore = new CollectionDataStore();
 
-exports.getTotalCount = function(callback) {
-    collection.count(callback);
-}
-exports.getAll = function(fields, callback) {
-    collection.find({}, fields, callback);
-}
+exports.init = function(mongo, _locker) {
+  locker = _locker;
+  collection = mongo.collections.contact;
+  collectionDataStore.init(mongo, 'contact', locker);
 
-exports.get = function(id, callback) {
-    collection.findOne({_id: new db.bson_serializer.ObjectID(id)}, callback);
+  db = mongo.dbClient;
+  inserters.init(collection);
 }
 
-exports.getSince = function(objId, cbEach, cbDone) {
-    collection.find({'_id':{'$gt':lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}).each(function(err, item) {
-        if (item != null) cbEach(item);
-        else cbDone();
-    });
-}
-
-exports.getLastObjectID = function(cbDone) {
-    collection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
-}
-
-exports.clear = function(callback) {
-    collection.drop(callback);
-}
-
-var writeTimer = false;
-function updateState() {
-    if (writeTimer) clearTimeout(writeTimer);
-    writeTimer = setTimeout(function() {
-        try {
-            lutil.atomicWriteFileSync('state.json', JSON.stringify({updated:Date.now()}));
-        } catch (E) {}
-    }, 5000);
-}
+exports.state = collectionDataStore.state;
+exports.clear = collectionDataStore.clear;
+exports.get = collectionDataStore.get;
+exports.getAll = collectionDataStore.getAll;
+exports.getLastObjectID = collectionDataStore.getLastObjectID;
+exports.getTotalCount = collectionDataStore.getTotalCount;
+exports.getSince = collectionDataStore.getSince;
 
 exports.addData = function(type, data, cb) {
-    // shim to send events, post-add stuff
-    if(typeof inserters[type] === 'function') inserters[type](data, type, function(err, doc) {
-        if(doc && doc._id) {
-            var idr = lutil.idrNew('contact', 'contacts', doc._id);
-            locker.ievent(idr, doc);
-        }
-        cb(err, doc);
-    });
-    else cb(new Error('unhandled data type,' + type));
+  // shim to send events, post-add stuff
+  if(typeof inserters[type] !== 'function') return cb(new Error('unhandled data type,' + type));
+  inserters[type](data, type, function(err, doc) {
+    if(doc && doc._id) {
+      var idr = lutil.idrNew('contact', 'contacts', doc._id);
+      locker.ievent(idr, doc);
+    }
+    cb(err, doc);
+  });
 }
