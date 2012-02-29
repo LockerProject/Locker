@@ -27,13 +27,6 @@ var index = require('./index');
 var sync = require('./sync');
 
 
-app.set('views', __dirname);
-
-
-app.get('/', function(req, res) {
-    res.send("You should use a search interface instead of trying to talk to me directly.");
-});
-
 app.post('/events', function(req, res) {
     if (!req.body.idr || !req.body.data) {
         logger.error("Invalid event.");
@@ -61,46 +54,6 @@ app.get('/reindexForType', function(req, res) {
     logger.info("updating search index for "+req.param("type"));
     sync.gather(req.param("type"), function(){
         return res.send('Partial search reindex started');
-    });
-});
-
-app.get('/query', function(req, res) {
-    var args = {};
-    args.q = lutil.trim(req.param('q'));
-    if (!args.q || args.q.length == 0) {
-        logger.warn('missing or invalid query');
-        return res.send('missing or invalid query');
-    }
-
-    args.limit = 20;
-    if (req.param('type')) args.type = req.param('type');
-    if (req.param('limit')) args.limit = parseInt(req.param('limit'));
-    if (req.param('snippet') == "true") args.snippet = true;
-    if (req.param('sort') == "true") args.sort = true;
-    if (req.param('type')) args.q = "idr:"+req.param('type')+" "+args.q;
-
-    var all = []; // to keep ordering
-    var ndx = {}; // to keep uniqueness
-    logger.info("performing query "+JSON.stringify(args));
-    index.query(args, function(item){
-        if(ndx[item.idr]) return;
-        ndx[item.idr] = item;
-        all.push(item);
-    }, function(err){
-        if(err) logger.error(err);
-        async.forEachSeries(all, function(item, cb){
-            var idr = url.parse(item.idr);
-            if(!idr || !idr.host || !idr.hash) return cb();
-            var u = lockerInfo.lockerUrl + '/Me/' + idr.host + '/id/' + idr.hash.substr(1) + "?full=true";
-            request.get({uri:u, json:true}, function(err, res, body) {
-                if(err) logger.error("failed to get "+u+" - "+err);
-                if(body) item.data = body;
-                cb();
-            });
-        }, function(err){
-            if(err) logger.error(err);
-            res.send(all);
-        });
     });
 });
 

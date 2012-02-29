@@ -10,10 +10,10 @@ var debug = false;
 
 var dataStore, locker, logger;
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore, log){
+exports.init = function(_locker, dStore, log) {
     dataStore = dStore;
-    locker = l;
-    logger = log;
+    locker = _locker;
+    logger = require("logger");
 }
 
 // manually walk and reindex all possible link sources
