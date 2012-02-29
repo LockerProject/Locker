@@ -269,6 +269,7 @@ process.on("SIGTERM", function() {
 
 process.on('uncaughtException', function(err) {
     try {
+        logger.error('Uncaught exception:');
         logger.error(util.inspect(err));
         if(err && err.stack) logger.error(util.inspect(err.stack));
         if (lconfig.airbrakeKey) {
