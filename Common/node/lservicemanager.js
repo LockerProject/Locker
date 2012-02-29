@@ -482,7 +482,7 @@ exports.getCollectionApis = function() {
   var collectionApis = {};
   for (var i in serviceMap) {
     if (serviceMap[i].type === 'collection') {
-      var modulePath = path.join(__dirname, '..', '..', serviceMap[i].srcdir, 'api.js');
+      var modulePath = path.join(lconfig.lockerDir, serviceMap[i].srcdir, 'api.js');
       if (path.existsSync(modulePath)) {
         collectionApis[i] = {
           api: require(modulePath),

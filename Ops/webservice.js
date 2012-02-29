@@ -28,7 +28,6 @@ var lpquery = require("lpquery");
 var lconfig = require("lconfig");
 var logger = require('logger');
 var async = require('async');
-// require('express-namespace');
 
 var lcrypto = require("lcrypto");
 
