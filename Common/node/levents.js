@@ -114,7 +114,7 @@ function lqueue(lurl)
         logger.verbose(lqueues[lurl].length()+": sending "+curEvent.action+" event "+curEvent.idr+" to " + lurl);
         request(httpOpts, function(err, res, body) {
             if (err || res.statusCode != 200) {
-                logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + lurl + " got " + (err || res.statusCode));
+                logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + lurl + " got " + (err || res.statusCode) + ', ' + JSON.stringify(body));
                 logger.verbose(JSON.stringify(curEvent.data));
                 //logger.verbose(body);
                 // TODO: Need to evaluate the logic here, to see if we should retry or other options.

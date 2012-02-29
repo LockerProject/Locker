@@ -202,6 +202,17 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.end("true");
 });
 
+var collectionApis = serviceManager.getCollectionApis();
+for(var i in collectionApis) {
+  locker._oldGet = locker.get;
+  locker.get = function(path, callback) {
+    return locker._oldGet('/Me/' + i + path, callback);
+  }
+  collectionApis[i].api(locker, collectionApis[i].lockerInfo);
+  locker.get = locker._oldGet;
+  locker._oldGet = undefined;
+}
+
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){

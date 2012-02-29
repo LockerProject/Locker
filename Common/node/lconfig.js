@@ -84,7 +84,7 @@ exports.load = function(filepath) {
     };
 //    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
-    exports.quiesce = config.quiesce || 650000;
+    exports.quiesce = (config.quiesce || 650) * 1000;
 
     config.dashboard = config.dashboard || {};
     config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
