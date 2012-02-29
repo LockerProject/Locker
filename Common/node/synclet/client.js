@@ -9,45 +9,20 @@
 
 var fs = require('fs')
   , data = ''
-  , failTimeout = ''
   ;
 
-// Process the startup JSON object
-process.stdin.setEncoding('utf8');
-process.stdin.on("data", function(newData) {
-    // Do the initialization bits
-    data += newData;
-    try {
-        run(JSON.parse(data));
-    } catch (E) {
-        failTimeout = setTimeout(function() { fail(E); }, 15000);
+
+var sync = require(process.cwd() + "/" + run.name + ".js");
+sync.sync(lockerSynclet.info, function(err, returnedInfo) {
+    if (err) {
+        console.error("synclet returned an error: " + JSON.stringify(err));
     }
-});
-
-function run (processInfo) {
-    clearTimeout(failTimeout);
-    var run = processInfo.syncletToRun;
-    process.title += " :: provider=" + processInfo.provider + " synclet=" + processInfo.syncletToRun.name;
-    var sync = require(process.cwd()+"/"+run.name+".js");
-    process.chdir(run.workingDirectory);
-    sync.sync(processInfo, function(err, returnedInfo) {
-        if (err) {
-            console.error("synclet returned an error: "+JSON.stringify(err));
-        }
-        if(!returnedInfo)
-        {
-            fs.writeSync(1, "{}");
-        }else{
-            var output = JSON.stringify(returnedInfo);
-            fs.writeSync(1, output);
-        }
-        process.exit();
-    });
-}
-
-function fail(e) {
-    console.error('synclet parsing of stdin failed - ' + e)
+    if(!returnedInfo)
+    {
+        fs.writeSync(1, "{}");
+    }else{
+        var output = JSON.stringify(returnedInfo);
+        fs.writeSync(1, output);
+    }
     process.exit();
-}
-
-process.stdin.resume();
+});

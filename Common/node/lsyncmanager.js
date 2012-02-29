@@ -10,6 +10,24 @@ var fs = require('fs')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
   , logger = require("./logger.js");
+var vm = require("vm");
+var util = require("util");
+
+var runningContexts = {}; // Map of a synclet to a running context
+
+function LockerInterface(synclet, info) {
+  EventEmitter.call(this);
+  this.synclet = synclet;
+  this.info = info;
+}
+util.inherits(LockerInterface, EventEmitter);
+// Fire an event from the synclet
+LockerInterface.prototype.event(idr, action, obj) {
+}
+// Signals that the synclet context is complete and may be cleaned up
+LockerInterface.prototype.end() {
+  this.emit("end");
+}
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
 datastore.init = function (callback) {
@@ -153,7 +171,7 @@ function executeSynclet(info, synclet, callback, force) {
         return callback();
     }
     // if another synclet is running, come back a little later, don't overlap!
-    if (info.status == 'running') {
+    if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
         logger.verbose("delaying "+synclet.name);
         setTimeout(function() {
             executeSynclet(info, synclet, callback, force);
@@ -162,6 +180,31 @@ function executeSynclet(info, synclet, callback, force) {
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
+
+
+    if (synclet.vm) {
+      // Go ahead and create a context immediately so we get it listed as running and
+      // dont' start mulitple ones
+      var lockerInterface = new LockerInterface(synclet, info);
+      var sandbox = {
+        lockerInterface:lockerInterface
+      };
+      var context = vm.createContext(sandbox);
+      runningContexts[info.id + "/" + synclet.name] = context;
+      // Let's get the code loaded
+      var fname = path.join(info.srcdir, synclet.name + ".js");
+      fs.readFile(fname, function(err, code) {
+        lockerInterface.on("end", function(err) {
+          logger.verbose("Synclet " + synclet.name + " for " + info.id + " is done and being cleaned up.");
+          delete runningContexts[info.id + "/" + synclet.name];
+        });
+        lockerInterface.on("event", function(event) {
+          //processData([], info, synclet, 
+        });
+        vm.runInContext(code, context, fname);
+      });
+      return;
+    }
     var run;
     var env = process.env;
     if (!synclet.run) {
