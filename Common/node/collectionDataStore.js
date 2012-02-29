@@ -78,9 +78,10 @@ module.exports = function() {
   }
 
   client.findWrap = function(query, options, cbEach, cbDone) {
-    var cursor = collection.find(query);
+    var cursor = (options.fields) ? collection.find(query, options) : collection.find(query);
     if (options.sort) cursor.sort(options.sort);
     if (options.limit) cursor.limit(options.limit);
+    if (options.offset) cursor.skip(options.offset);
     cursor.each(function(err, item) {
       if (item === null) return cbDone();
       cbEach(item);
