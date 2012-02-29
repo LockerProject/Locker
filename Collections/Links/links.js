@@ -123,7 +123,7 @@ app.post('/events', function(req, res) {
     }
   }, function(error) {
     if (error) {
-      res.send(error, 500);
+      return res.send(error, 500);
     }
     res.send(200);
   });
