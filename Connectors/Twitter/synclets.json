@@ -17,7 +17,7 @@
     },
     "synclets":[
         {"name": "self", "frequency": 7200},
-        {"name": "friends", "frequency": 3600},
+        {"name": "friends", "frequency": 3600, "vm":true},
         {"name": "tweets", "frequency": 600},
         {"name": "timeline", "frequency": 120},
         {"name": "mentions", "frequency": 600},

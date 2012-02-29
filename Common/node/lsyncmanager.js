@@ -19,14 +19,47 @@ function LockerInterface(synclet, info) {
   EventEmitter.call(this);
   this.synclet = synclet;
   this.info = info;
+  this.processing = false; // If we're processing events
 }
 util.inherits(LockerInterface, EventEmitter);
+LockerInterface.prototype.error = function(message) {
+  logger.error("Error from synclet " + this.synclet.name + "/" + this.info.id + ": " + message);
+};
 // Fire an event from the synclet
-LockerInterface.prototype.event(idr, action, obj) {
+LockerInterface.prototype.event(idr, action, lockerType, obj) {
+  this.events.push({idr:idr, action:action, lockerType:lockerType, obj:obj});
+  this.emit("event");
+  this.processEvents();
+}
+LockerInterface.prototype.processEvents = function() {
+  if (this.processing) return;
+  // Process the events we have
+  this.processing = true;
+  var self = this;
+  var curEvents = this.events;
+  this.events = [];
+  async.forEachSeries(curEvents, function(event, cb) {
+    processData([], self.info, self.synclet, event.lockerType, [event], cb);
+  }, function(error) {
+    self.processing = false;
+    if (self.events.length == 0) {
+      self.emit("drain");
+    } else {
+      process.nextTick(function() {
+        self.processEvents();
+      });
+    }
+  });
 }
 // Signals that the synclet context is complete and may be cleaned up
 LockerInterface.prototype.end() {
-  this.emit("end");
+  if (this.events.length > 0) {
+    this.once("drain", function() {
+      this.emit("end");
+    });
+  } else {
+    this.emit("end");
+  }
 }
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
@@ -183,25 +216,30 @@ function executeSynclet(info, synclet, callback, force) {
 
 
     if (synclet.vm) {
-      // Go ahead and create a context immediately so we get it listed as running and
-      // dont' start mulitple ones
+      // Go ahead and create a context immediately so we get it listed as 
+      // running and dont' start mulitple ones
       var lockerInterface = new LockerInterface(synclet, info);
       var sandbox = {
-        lockerInterface:lockerInterface
+        lockerInterface:lockerInterface,
+        // XXX: This could be a problem later and need a cacheing layer to 
+        // remove anything that they add, but for now we'll allow it 
+        // direct and see the impact
+        require:require 
       };
       var context = vm.createContext(sandbox);
       runningContexts[info.id + "/" + synclet.name] = context;
       // Let's get the code loaded
       var fname = path.join(info.srcdir, synclet.name + ".js");
       fs.readFile(fname, function(err, code) {
-        lockerInterface.on("end", function(err) {
+        lockerInterface.once("end", function(err) {
           logger.verbose("Synclet " + synclet.name + " for " + info.id + " is done and being cleaned up.");
           delete runningContexts[info.id + "/" + synclet.name];
         });
-        lockerInterface.on("event", function(event) {
-          //processData([], info, synclet, 
-        });
-        vm.runInContext(code, context, fname);
+        try {
+          vm.runInContext(code, context, fname);
+        } catch (E) {
+          logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
+        }
       });
       return;
     }
