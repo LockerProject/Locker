@@ -50,23 +50,11 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-  req.jsonStream(function(event) {
-    // We don't do this async because the internal processing immediately queues it
-    // so we will return fast here.
-    if (!event.idr || !event.data) {
-      logger.error('5 HUNDO bad data:',JSON.stringify(event));
-      // TODO:  Should we be throwing here?  Or doing something else?  For now we just keep trying others
-    } else {
-      // handle asyncadilly
-      dataIn.processEvent(event);
-    }
-  }, function(error) {
-    if (error) {
-      return res.send(error, 500);
-    }
-    res.send(200);
+  var q = async.queue(dataIn.processEvent, 1);
+  req.jsonStream(q.push, function(error){
+      if(error) logger.error(error);
+      res.send(200);
   });
-
 });
 
 function genericApi(name,f)

@@ -36,6 +36,8 @@ exports.init = function(mongo, locker) {
     encounterCollection.ensureIndex({"link":1},{background:true},function() {});
     encounterCollection.ensureIndex({"orig":1},{background:true},function() {});
     encounterCollection.ensureIndex({"_hash":1},{background:true},function() {});
+
+    queueCollection.ensureIndex({"idr":1},{unique:true,background:true},function() {});
 }
 
 exports.clear = function(callback) {
@@ -53,11 +55,11 @@ exports.getLastObjectID = linkCDS.getLastObjectID;
 exports.get = linkCDS.get;
 
 exports.enqueue = function(obj, callback) {
-  queueCollection.findAndModify({"text":obj.text}, [['_id','asc']], {$set:{'obj' : obj, 'at' : Date.now()}}, {safe:true, upsert:true, new: true}, callback);
+  queueCollection.findAndModify({"idr":obj.idr}, [['_id','asc']], {$set:obj}, {safe:true, upsert:true, new: true}, callback);
 }
 
 exports.dequeue = function(obj, callback) {
-  queueCollection.remove({"text":obj.text}, callback);
+  queueCollection.remove({"idr":obj.idr}, callback);
 }
 
 exports.fetchQueue = function(callback) {
