@@ -7,11 +7,11 @@
 *
 */
 var path = require("path");
-var tw = require(path.join(lockerInterface.info.srcdir , "lib.js"));
+var tw = require(path.join(lockerInterface.srcdir , "lib.js"));
 
 tw.init(lockerInterface.info.auth);
 tw.getMyFriends({}, function(friend) {
-  lockerInterface.event(idr, "new", "contact", friend);
+  lockerInterface.event("new", "contact", friend);
 }, function(err) {
   if (err) {
     lockerInterface.error(err);

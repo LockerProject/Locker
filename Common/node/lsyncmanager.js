@@ -19,15 +19,18 @@ function LockerInterface(synclet, info) {
   EventEmitter.call(this);
   this.synclet = synclet;
   this.info = info;
+  this.srcdir = path.join(lconfig.lockerDir, info.srcdir);
+  this.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
   this.processing = false; // If we're processing events
+  this.events = [];
 }
 util.inherits(LockerInterface, EventEmitter);
 LockerInterface.prototype.error = function(message) {
   logger.error("Error from synclet " + this.synclet.name + "/" + this.info.id + ": " + message);
 };
 // Fire an event from the synclet
-LockerInterface.prototype.event(idr, action, lockerType, obj) {
-  this.events.push({idr:idr, action:action, lockerType:lockerType, obj:obj});
+LockerInterface.prototype.event = function(action, lockerType, obj) {
+  this.events.push({action:action, lockerType:lockerType, obj:obj});
   this.emit("event");
   this.processEvents();
 }
@@ -52,7 +55,7 @@ LockerInterface.prototype.processEvents = function() {
   });
 }
 // Signals that the synclet context is complete and may be cleaned up
-LockerInterface.prototype.end() {
+LockerInterface.prototype.end = function() {
   if (this.events.length > 0) {
     this.once("drain", function() {
       this.emit("end");
@@ -105,6 +108,10 @@ exports.syncNow = function (serviceId, syncletId, post, callback) {
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
     async.forEachSeries(js.synclets, function (synclet, cb) {
+      if (!synclet) {
+        logger.error("Unknown synclet info in syncNow");
+        cb();
+      }
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -231,14 +238,24 @@ function executeSynclet(info, synclet, callback, force) {
       // Let's get the code loaded
       var fname = path.join(info.srcdir, synclet.name + ".js");
       fs.readFile(fname, function(err, code) {
+        if (err) {
+          logger.error("Unable to load synclet " + synclet.name + "/" + info.id + ": " + err);
+          return callback(err);
+        }
         lockerInterface.once("end", function(err) {
           logger.verbose("Synclet " + synclet.name + " for " + info.id + " is done and being cleaned up.");
           delete runningContexts[info.id + "/" + synclet.name];
+          info.status = synclet.status = 'waiting';
+          exports.scheduleRun(info, synclet);
+          serviceManager.mapDirty(info.id); // save out to disk
+          return callback(err);
         });
         try {
+          synclet.deleted = synclet.added = synclet.updated = 0;
           vm.runInContext(code, context, fname);
         } catch (E) {
           logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
+          return callback(E);
         }
       });
       return;
