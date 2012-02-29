@@ -132,38 +132,40 @@ function BatchSendQueue(url) {
   this.url = url;
   this.items = [];
   this.running = false;
-  this.push = function(item) {
-    // Every push is added and we see if we can send more
-    this.items.push(item);
-    this.run();
-  };
-  this.run = function() {
-    if (this.running) return;
-
-    this.running = true;
-    var sendingItems = this.items;
-    this.items = [];
-    var self = this;
-    logger.verbose("Sending %d batched events to %s", sendingItems.length, this.url);
-    var request = request({url:this.url, method:"POST", headers:{"content-type":"application/jsonstream"}}, function(err, res, body) {
-      if (err || res.statusCode != 200) {
-        logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + self.url + " got " + (err || res.statusCode));
-      }
-      // If more stuff came in we run again, otherwise push will get it next time
-      if (self.items.length > 0) {
-        process.nextTick(function() {
-          self.run();
-        });
-      } else {
-        self.running = false;
-      }
-    });
-    async.forEachSeries(sendingItems, function(item, cb) {
-      request.write(JSON.stringify(item) + "\n");
-      cb();
-    });
-  };
 }
+BatchSendQueue.prototype.push = function(item) {
+  // Every push is added and we see if we can send more
+  this.items.push(item);
+  this.run();
+};
+BatchSendQueue.prototype.run = function() {
+  if (this.running) return;
+
+  this.running = true;
+  var sendingItems = this.items;
+  this.items = [];
+  logger.verbose("Sending " + sendingItems.length + " batched events to " + this.url);
+  var self = this;
+  var req = request({url:this.url, method:"POST", headers:{"content-type":"application/jsonstream"}}, function(err, res, body) {
+    if (err || res.statusCode != 200) {
+      logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + self.url + " got " + (err || res.statusCode));
+    }
+    logger.verbose("Done sending batched events to " + self.url);
+    // If more stuff came in we run again, otherwise push will get it next time
+    self.running = false;
+    if (self.items.length > 0) {
+      process.nextTick(function() {
+        self.run();
+      });
+    }
+  });
+  async.forEachSeries(sendingItems, function(item, sendCb) {
+    req.write(JSON.stringify(item) + "\n");
+    sendCb();
+  }, function() {
+    req.end();
+  });
+};
 function batchqueue(lurl) {
   if (lqueues[lurl]) return lqueues[lurl];
   lqueues[lurl] = new BatchSendQueue(lurl);
