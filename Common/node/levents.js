@@ -136,7 +136,8 @@ function BatchSendQueue(url) {
 BatchSendQueue.prototype.push = function(item) {
   // Every push is added and we see if we can send more
   this.items.push(item);
-  this.run();
+  var self = this;
+  if(!this.running) setTimeout(function(){ self.run(); }, 100); // give a chance to queue up if coming in fast
 };
 BatchSendQueue.prototype.run = function() {
   if (this.running) return;
@@ -148,16 +149,12 @@ BatchSendQueue.prototype.run = function() {
   var self = this;
   var req = request({url:this.url, method:"POST", headers:{"content-type":"application/jsonstream"}}, function(err, res, body) {
     if (err || res.statusCode != 200) {
-      logger.error("There was an error sending " + curEvent.idr + " " + curEvent.action + " to " + self.url + " got " + (err || res.statusCode));
+      logger.error("There was an error sending batched events to " + self.url + " got " + (err || res.statusCode));
     }
     logger.verbose("Done sending batched events to " + self.url);
     // If more stuff came in we run again, otherwise push will get it next time
     self.running = false;
-    if (self.items.length > 0) {
-      process.nextTick(function() {
-        self.run();
-      });
-    }
+    if (self.items.length > 0) setTimeout(function(){ self.run(); }, 100); // breather
   });
   async.forEachSeries(sendingItems, function(item, sendCb) {
     req.write(JSON.stringify(item) + "\n");
