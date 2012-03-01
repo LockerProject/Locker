@@ -8,18 +8,17 @@
 */
 
 var request = require('request');
-var locker = require('locker.js');
+var locker;
 var lconfig;
 var dataStore = require('./dataStore');
 var async = require('async');
 var logger;
-var EventEmitter = require('events').EventEmitter;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, config) {
+exports.init = function(theLockerUrl, mongo, _locker, config) {
     lconfig = config;
+    locker = _locker;
     logger = require('logger.js');
-    dataStore.init(mongoCollection, mongo);
-    exports.eventEmitter = new EventEmitter();
+    dataStore.init(mongo, locker);
 }
 
 // TODO: this can be cleaned up further, the information is mostly captured in dataMap
@@ -83,7 +82,8 @@ function getContacts(type, endpoint, svcID, callback, offset) {
         if(body.length == 0) return callback();
         async.forEachSeries(body, function(contact, cb) {
             dataStore.addData(type, contact, cb);
-        }, function(){
+        }, function(err) {
+            if(err) return callback(err);
             getContacts(type, endpoint, svcID, callback, offset+500);
         });
     });

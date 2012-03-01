@@ -123,7 +123,7 @@ function getNested(data, key) {
 
 // first try at inserting an object into mongo, only match on the object's id
 function matchExisting(query, set, addToSet, done, noDoc) {
-    collection.findAndModify(query, [['_id','asc']],
+    collection.findAndModify(query, [],
                             {$set: set, $addToSet:addToSet},
                             {safe:true, new: true}, function(err, doc) {
                                 if(!doc) noDoc(err)
@@ -133,7 +133,7 @@ function matchExisting(query, set, addToSet, done, noDoc) {
 
 // second try at inserting and object into mongo, match more heuristically (name, etc)
 function upsert(or, push, addToSet, set, callback) {
-    collection.findAndModify({$or:or}, [['_id','asc']],
+    collection.findAndModify({$or:or}, [],
                              {$push:push,
                               $addToSet:addToSet,
                               $set:set},

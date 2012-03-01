@@ -20,39 +20,48 @@
     "events": [
       [
         "contact/foursquare",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/facebook",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/twitter",
-        "/events"
+        "/events",
+        true
       ],
       [
         "following/github",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/instagram",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/gcontacts",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/flickr",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/tumblr",
-        "/events"
+        "/events",
+        true
       ],
       [
         "connection/linkedin",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""

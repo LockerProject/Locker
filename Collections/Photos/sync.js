@@ -11,16 +11,18 @@ var request = require('request');
 var locker = require('locker.js');
 var lconfig;
 var dataStore = require('./dataStore');
+var dataIn = require('./dataIn');
 var lockerUrl;
 var EventEmitter = require('events').EventEmitter;
 var logger;
 
-exports.init = function(theLockerUrl, mongoCollection, mongo, locker, config) {
+exports.init = function(theLockerUrl, mongo, locker, config) {
     lockerUrl = theLockerUrl;
     lconfig = config;
     logger = require("logger.js");
-    dataStore.init(mongoCollection, mongo, locker, lconfig);
+    dataStore.init(mongo, locker);
     exports.eventEmitter = new EventEmitter();
+    dataIn.init();
 }
 
 var photoGatherers = {
@@ -89,7 +91,7 @@ function gatherFromUrl(svcId, url, type) {
         try {
             var arr = JSON.parse(body);
             if (!arr) throw("No data");
-            dataStore.addData(svcId, type, arr);
+            dataIn.addData(svcId, type, arr);
         } catch (E) {
             logger.error("Error processing photos from " + svcId + url + ": " + E);
         }

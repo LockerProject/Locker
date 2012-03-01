@@ -20,31 +20,38 @@
     "events": [
       [
         "tweets/twitter",
-        "/events"
+        "/events",
+        true
       ],
       [
         "checkin/foursquare",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo/facebook",
-        "/events"
+        "/events",
+        true
       ],
       [
         "post/tumblr",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo/twitpic",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo/instagram",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo/flickr",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""

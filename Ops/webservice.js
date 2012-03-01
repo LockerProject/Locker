@@ -202,6 +202,17 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.end("true");
 });
 
+var collectionApis = serviceManager.getCollectionApis();
+for(var i in collectionApis) {
+  locker._oldGet = locker.get;
+  locker.get = function(path, callback) {
+    return locker._oldGet('/Me/' + i + path, callback);
+  }
+  collectionApis[i].api(locker, collectionApis[i].lockerInfo);
+  locker.get = locker._oldGet;
+  locker._oldGet = undefined;
+}
+
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
@@ -374,6 +385,15 @@ locker.get('/core/selftest', function(req, res) {
     });
 });
 
+locker.get('/core/stats', function(req, res) {
+    var stats = {
+        'core' : {
+            'memoryUsage' : process.memoryUsage()
+        }
+    }
+    res.send(JSON.stringify(stats), 200);
+});
+
 // EVENTING
 // anybody can listen into any service's events
 locker.get('/core/:svcId/listen', function(req, res) {
@@ -391,7 +411,9 @@ locker.get('/core/:svcId/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, svcId, cb);
+    var batching = false;
+    if (req.param("batch") === "true" || req.param === true) batching = true;
+    levents.addListener(type, svcId, cb, batching);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
