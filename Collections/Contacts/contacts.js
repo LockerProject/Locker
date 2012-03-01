@@ -15,8 +15,10 @@ var connect = require('connect');
 var url = require('url');
 var sync = require('./sync');
 var dataStore = require('./dataStore');
+var jsonStream = require("express-jsonstream");
 
 var app = express.createServer(connect.bodyParser());
+app.use(jsonStream());
 
 var updating = false;
 app.get('/update', function(req, res) {
@@ -29,13 +31,15 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data) return res.send('bad data', 500);
-    // we don't support these yet
-    if(req.body.action == 'delete') return res.send('skipping');
-    var idr = url.parse(req.body.idr);
-    dataStore.addData(idr.host, req.body.data, function(err, eventObj) {
-        if (err) res.send(err, 500);
-        else res.send('processed event');
+    var q = async.queue(function(event, callback){
+        // we don't support these yet
+        if (!event.idr || !event.data || event.action == 'delete') return callback();
+        var idr = url.parse(event.idr);
+        dataStore.addData(idr.host, event.data, callback);
+    }, 1);
+    req.jsonStream(q.push, function(error){
+        if(error) logger.error(error);
+        res.send(200);
     });
 });
 
