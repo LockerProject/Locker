@@ -142,7 +142,8 @@ function saveBlob(treeItem, repo, existing, errors, cb) {
                  encoding: 'binary',
                  headers:auth.headers},
         function(err, resp, body) {
-        if(err || !resp || resp.statusCode !== 200 || body === undefined || body === null) {
+        if(body === undefined || body === null) body = ''; // 0 length response is undefined, but we want empty string
+        if(err || !resp || resp.statusCode !== 200) {
             // don't save the sha so it gets retried again
             errors.push(repo.id+": error fetching "+repo.id + "/" + treeItem.path+" status code "+(resp ? resp.statusCode : 0)+" body "+body);
             treeItem.sha = "";
