@@ -35,7 +35,7 @@ exports.saveCommonPhoto = function(photoInfo, cb) {
         query.push({name:photoInfo.title});
     }
     if (!photoInfo.id) photoInfo.id = createId(photoInfo.url, photoInfo.name);
-    collection.findAndModify({$or:query}, [['_id','asc']], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
+    collection.findAndModify({$or:query}, [], {$set:photoInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (!err) {
             collectionDataStore.updateState();
             locker.ievent(lutil.idrNew("photo", "photos", doc.id), doc);
