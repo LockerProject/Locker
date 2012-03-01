@@ -387,7 +387,9 @@ locker.get('/core/selftest', function(req, res) {
 
 locker.get('/core/stats', function(req, res) {
     var stats = {
-        'memoryUsage' : process.memoryUsage(),
+        'core' : {
+            'memoryUsage' : process.memoryUsage()
+        }
     }
     res.send(JSON.stringify(stats), 200);
 });
