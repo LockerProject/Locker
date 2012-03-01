@@ -225,13 +225,12 @@ function executeSynclet(info, synclet, callback, force) {
     if (synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as 
       // running and dont' start mulitple ones
-      var lockerInterface = new LockerInterface(synclet, info);
       var sandbox = {
-        lockerInterface:lockerInterface,
         // XXX: This could be a problem later and need a cacheing layer to 
         // remove anything that they add, but for now we'll allow it 
         // direct and see the impact
-        require:require 
+        require:require,
+        exports:{}
       };
       var context = vm.createContext(sandbox);
       runningContexts[info.id + "/" + synclet.name] = context;
@@ -242,22 +241,40 @@ function executeSynclet(info, synclet, callback, force) {
           logger.error("Unable to load synclet " + synclet.name + "/" + info.id + ": " + err);
           return callback(err);
         }
-        lockerInterface.once("end", function(err) {
-          logger.verbose("Synclet " + synclet.name + " for " + info.id + " is done and being cleaned up.");
-          delete runningContexts[info.id + "/" + synclet.name];
-          info.status = synclet.status = 'waiting';
-          exports.scheduleRun(info, synclet);
-          serviceManager.mapDirty(info.id); // save out to disk
-          return callback(err);
-        });
         try {
           synclet.deleted = synclet.added = synclet.updated = 0;
           vm.runInContext(code, context, fname);
+
+          if (!info.config) info.config = {};
+
+          if (!info.fullsrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+          info.syncletToRun = synclet;
+          info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+          info.lockerUrl = lconfig.lockerBase;
+          sandbox.exports.sync(info, function(syncErr, response) {
+            delete runningContexts[info.id + "/" + synclet.name];
+            if (syncErr) {
+              return callback(syncErr);
+            }
+            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
+            info.status = synclet.status = 'processing data';
+            var deleteIDs = compareIDs(info.config, response.config);
+            info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
+            info.config = lutil.extend(true, info.config, response.config);
+            exports.scheduleRun(info, synclet);
+            serviceManager.mapDirty(info.id); // save out to disk
+            processResponse(deleteIDs, info, synclet, response, function(processErr) {
+                info.status = 'waiting';
+                callback(processErr);
+            });
+          });
         } catch (E) {
           logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
           return callback(E);
         }
       });
+      if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
+      delete info.syncletToRun;
       return;
     }
     var run;

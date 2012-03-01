@@ -6,15 +6,24 @@
 * Please see the LICENSE file for more information.
 *
 */
-var path = require("path");
-var tw = require(path.join(lockerInterface.srcdir , "lib.js"));
 
-tw.init(lockerInterface.info.auth);
-tw.getMyFriends({}, function(friend) {
-  lockerInterface.event("new", "contact", friend);
-}, function(err) {
-  if (err) {
-    lockerInterface.error(err);
-  }
-  lockerInterface.end();
-});
+var path = require("path");
+var tw;
+
+var contacts = [];
+exports.sync = function(processInfo, cb) {
+    tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
+    tw.init(processInfo.auth);
+    exports.syncFriends(function(err) {
+        if (err) console.error(err);
+        var responseObj = {data : {}};
+        responseObj.data.contact = contacts;
+        cb(err, responseObj);
+    });
+};
+
+exports.syncFriends = function(callback) {
+    tw.getMyFriends({},function(friend){
+        contacts.push({'obj' : friend, timestamp: new Date(), type : 'new'});
+    },callback);
+}
