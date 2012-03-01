@@ -22,6 +22,8 @@ var connect = require('connect');
 var app = express.createServer(connect.bodyParser());
 var request = require('request');
 var async = require('async');
+var jsonStream = require("express-jsonstream");
+app.use(jsonStream());
 
 app.get('/update', function(req, res) {
     sync.gatherPlaces(req.query.type, function(){
@@ -38,19 +40,10 @@ app.get('/geo/:network', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data) {
-        logger.error("Invalid event.");
-        return res.send("Invalid Event", 500);
-    }
-
-    dataIn.addEvent(req.body, function(err, eventObj) {
-        if (err) {
-            logger.error("Error processing: " + err);
-            return res.send(err, 500);
-        }
-
-        res.writeHead(200);
-        res.end("Event Handled");
+    var q = async.queue(dataIn.addEvent, 1);
+    req.jsonStream(q.push, function(error){
+        if(error) console.error(error);
+        res.send(200);
     });
 });
 
