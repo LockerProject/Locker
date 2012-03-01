@@ -81,11 +81,14 @@ exports.fetchHTML = function(arg, cbEach, cbDone) {
     if(!arg.url) return cbDone("no url");
     // sending blank accept encoding I guess means "none"
     try {
-        request.get({uri:arg.url, headers:{"Accept":"text/html","Accept-Encoding":""}, timeout:5000},function(err,resp,body){
-            if(err || resp.statusCode != 200 || !resp.headers["content-type"] || resp.headers["content-type"].indexOf("text/html") != 0) return cbDone(err);
-            cbEach(body);
-            cbDone();
+      var x = request.get({uri:arg.url, headers:{"Accept":"text/html","Accept-Encoding":""}, timeout:5000},function(err,resp,body){
+        x = undefined;
+        if(err || resp.statusCode != 200 || !resp.headers["content-type"] || resp.headers["content-type"].indexOf("text/html") != 0) return cbDone(err);
+        cbEach(body);
+        cbDone();
       });
+      // worst case, 10 seconds bail
+      setTimeout(function(){}, 10000);
     } catch(E) {
         cbDone(E);
     }
