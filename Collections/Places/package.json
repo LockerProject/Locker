@@ -20,27 +20,33 @@
     "events": [
       [
         "checkin/foursquare",
-        "/events"
+        "/events",
+        true
       ],
       [
         "recents/foursquare",
-        "/events"
+        "/events",
+        true
       ],
       [
         "tweets/twitter",
-        "/events"
+        "/events",
+        true
       ],
       [
         "timeline/twitter",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo://instagram",
-        "/events"
+        "/events",
+        true
       ],
       [
         "location/glatitude",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""

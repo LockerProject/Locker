@@ -13,10 +13,13 @@ var logger;
 var sync = require('./sync');
 var dataStore = require("./dataStore");
 var dataIn = require("./dataIn");
+var async = require('async');
+var jsonStream = require("express-jsonstream");
 
 var express = require('express');
 var connect = require('connect');
 var app = express.createServer(connect.bodyParser());
+app.use(jsonStream());
 
 
 app.get('/update', function(req, res) {
@@ -26,18 +29,10 @@ app.get('/update', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data) {
-        logger.warn("Invalid event.");
-        return res.send("Invalid Event", 500);
-    }
-
-    dataIn.addEvent(req.body, function(err, eventObj) {
-        if (err) {
-            logger.error("Error processing: " + err);
-            return res.send(err, 500);
-        }
-
-        res.send("Event Handled");
+    var q = async.queue(dataIn.addEvent, 1);
+    req.jsonStream(q.push, function(error){
+        if(error) console.error(error);
+        res.send(200);
     });
 });
 

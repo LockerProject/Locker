@@ -411,7 +411,9 @@ locker.get('/core/:svcId/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, svcId, cb);
+    var batching = false;
+    if (req.param("batch") === "true" || req.param === true) batching = true;
+    levents.addListener(type, svcId, cb, batching);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
