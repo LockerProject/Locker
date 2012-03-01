@@ -9,7 +9,9 @@ var fs = require('fs')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
-  , logger = require("./logger.js");
+  , logger = require("./logger.js")
+  , dispatcher = require('./instrument.js').StatsdDispatcher
+  , stats = new dispatcher(lconfig.stats);
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
 datastore.init = function (callback) {
@@ -192,7 +194,10 @@ function executeSynclet(info, synclet, callback, force) {
 
     var tstart;
     app.stdout.on('data',function (data) {
-        if(!tstart) tstart = Date.now();
+        if(!tstart) {
+            tstart = Date.now();
+            stats.increment(info.id + '.' + synclet.name + '.start');
+        }
         dataResponse += data;
     });
 
@@ -209,7 +214,10 @@ function executeSynclet(info, synclet, callback, force) {
             if (callback) callback(E);
             return;
         }
-        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
+        var elapsed = Date.now() - tstart;
+        stats.increment(info.id + '.' + synclet.name + '.stop');
+        stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
