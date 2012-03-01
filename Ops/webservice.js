@@ -385,6 +385,42 @@ locker.get('/core/selftest', function(req, res) {
     });
 });
 
+locker.get('/core/stats', function(req, res) {
+    var stats = {
+        'core' : {
+            'memoryUsage' : process.memoryUsage(),
+        },
+        'serviceManager': {
+            'all' : {
+                'total' : 0,
+                'running' : 0
+            }
+        }
+    }
+
+    var map = serviceManager.map();
+    for (var serviceId in map) {
+        var type = map[serviceId].type;
+        if (typeof(type) === 'undefined')
+            console.log("UNDEFINED: "+serviceId);
+        if (!(type in stats.serviceManager)) {
+            stats.serviceManager[type] = {
+                'total' : 0,
+                'running' : 0
+            }
+        }
+
+        stats.serviceManager.all.total += 1;
+        stats.serviceManager[type].total += 1;
+        if (serviceManager.isRunning(serviceId)) {
+            stats.serviceManager[type].running += 1;
+            stats.serviceManager.all.running += 1;
+        }
+    }
+
+    res.send(JSON.stringify(stats), 200);
+});
+
 // EVENTING
 // anybody can listen into any service's events
 locker.get('/core/:svcId/listen', function(req, res) {
@@ -402,7 +438,9 @@ locker.get('/core/:svcId/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, svcId, cb);
+    var batching = false;
+    if (req.param("batch") === "true" || req.param === true) batching = true;
+    levents.addListener(type, svcId, cb, batching);
     res.writeHead(200);
     res.end("OKTHXBI");
 });

@@ -45,7 +45,7 @@ exports.saveCommonPlace = function(placeInfo, cb) {
     var hash = createId(placeInfo.lat+':'+placeInfo.lng+':'+placeInfo.at);
     var query = [{id:hash}];
     placeInfo.id = hash;
-    collection.findAndModify({$or:query}, [['_id','asc']], {$set:placeInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
+    collection.findAndModify({$or:query}, [], {$set:placeInfo}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (err) {
             return cb(err);
         }
@@ -59,7 +59,7 @@ exports.updatePlace = function(place, cb) {
     if(!place || !place.id) return cb("missing valid place");
     var query = [{id:place.id}];
     delete place._id;
-    collection.findAndModify({$or:query}, [['_id','asc']], {$set:place}, {safe:true, upsert:true, new: true}, function(err, doc) {
+    collection.findAndModify({$or:query}, [], {$set:place}, {safe:true, upsert:true, new: true}, function(err, doc) {
         if (err) return cb(err);
         collectionDataStore.updateState();
         locker.ievent(lutil.idrNew("place","places",doc.id), doc, "update");

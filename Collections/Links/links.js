@@ -16,6 +16,7 @@ var fs = require('fs'),
     locker = require('locker.js');
 var async = require("async");
 var crypto = require("crypto");
+var jsonStream = require("express-jsonstream");
 var logger;
 
 
@@ -28,6 +29,8 @@ var lockerInfo;
 var express = require('express'),
     connect = require('connect');
 var app = express.createServer(connect.bodyParser());
+
+app.use(jsonStream());
 
 app.set('views', __dirname);
 
@@ -47,17 +50,11 @@ app.get('/embed', function(req, res) {
 });
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data){
-        logger.error('5 HUNDO bad data:',JSON.stringify(req.body));
-        res.writeHead(500);
-        res.end('bad data');
-        return;
-    }
-
-    // handle asyncadilly
-    dataIn.processEvent(req.body);
-    res.writeHead(200);
-    res.end('ok');
+  var q = async.queue(dataIn.processEvent, 1);
+  req.jsonStream(q.push, function(error){
+      if(error) logger.error(error);
+      res.send(200);
+  });
 });
 
 function genericApi(name,f)

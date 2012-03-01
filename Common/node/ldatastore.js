@@ -142,7 +142,7 @@ function setCurrent(owner, type, object, callback) {
         var m = getMongo(owner, type, callback);
         var query = {};
         query[mongoIDs[type]] = object[mongoIDs[type]];
-        m.findAndModify(query, [['_id','asc']], object, {upsert:true, safe:true}, function(err, doc) {
+        m.findAndModify(query, [], object, {upsert:true, safe:true}, function(err, doc) {
             if (deepCompare(doc, {})) {
                 m.findOne(query, function(err, newDoc) {
                     callback(err, 'new', newDoc);
