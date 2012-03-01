@@ -20,7 +20,6 @@ StatsdDispatcher.prototype.send = function (msg) {
 
   var socket = dgram.createSocket('udp4');
   var buf = new Buffer(msg);
-  console.log(msg);
   socket.send(buf, 0, buf.length, this.port, this.host, function (err, bytes) {
     if (err) console.error('statsd error: ' + err);
 
