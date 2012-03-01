@@ -25,17 +25,20 @@ var url = require('url');
 var app = express.createServer(connect.bodyParser());
 var index = require('./index');
 var sync = require('./sync');
+var jsonStream = require("express-jsonstream");
+app.use(jsonStream());
 
 
 app.post('/events', function(req, res) {
-    if (!req.body.idr || !req.body.data) {
-        logger.error("Invalid event.");
-        return res.send("Invalid", 500);
-    }
-    var update = (req.body.action == "update") ? true : false;
-    index.index(req.body.idr, req.body.data, update, function(err){
-        if(err) logger.error(err);
-        res.send(true);
+    var q = async.queue(function(event, callback){
+        // we don't support these yet
+        if (!event.idr || !event.data) return callback();
+        var update = (event.action == "update") ? true : false;
+        index.index(event.idr, event.data, update, callback);
+    }, 1);
+    req.jsonStream(q.push, function(error){
+        if(error) console.error(error);
+        res.send(200);
     });
 });
 

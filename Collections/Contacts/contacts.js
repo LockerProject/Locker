@@ -15,6 +15,7 @@ var connect = require('connect');
 var url = require('url');
 var sync = require('./sync');
 var dataStore = require('./dataStore');
+var async = require('async');
 var jsonStream = require("express-jsonstream");
 
 var app = express.createServer(connect.bodyParser());
@@ -38,7 +39,7 @@ app.post('/events', function(req, res) {
         dataStore.addData(idr.host, event.data, callback);
     }, 1);
     req.jsonStream(q.push, function(error){
-        if(error) logger.error(error);
+        if(error) console.error(error);
         res.send(200);
     });
 });

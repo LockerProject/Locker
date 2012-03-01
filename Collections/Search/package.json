@@ -17,19 +17,23 @@
     "events": [
       [
         "contact/contacts",
-        "/events"
+        "/events",
+        true
       ],
       [
         "photo/photos",
-        "/events"
+        "/events",
+        true
       ],
       [
         "link/links",
-        "/events"
+        "/events",
+        true
       ],
       [
         "place/places",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""
