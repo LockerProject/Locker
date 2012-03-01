@@ -141,6 +141,7 @@ BatchSendQueue.prototype.push = function(item) {
 };
 BatchSendQueue.prototype.run = function() {
   if (this.running) return;
+  if (this.items.length == 0) return;
 
   this.running = true;
   var sendingItems = this.items;
