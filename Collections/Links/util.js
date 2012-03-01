@@ -88,7 +88,9 @@ exports.fetchHTML = function(arg, cbEach, cbDone) {
         cbDone();
       });
       // worst case, 10 seconds bail
-      setTimeout(function(){}, 10000);
+      setTimeout(function(){
+          if(x && x.req) x.req.destroy();
+      }, 10000);
     } catch(E) {
         cbDone(E);
     }
