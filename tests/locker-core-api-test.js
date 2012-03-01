@@ -135,6 +135,12 @@ tests.next()
         .unpath()
     .undiscuss().unpath()
 tests.next()
+tests.next()
+    .path("/core/stats")
+    .discuss("return statistics")
+        .get()
+            .expect(200)
+    .undiscuss().unpath()
 
     // Event basics
     .path("/core/testURLCallback/listen?" + querystring.stringify({type:"test/event2", cb:"/event"}))
