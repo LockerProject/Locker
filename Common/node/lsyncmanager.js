@@ -230,6 +230,7 @@ function executeSynclet(info, synclet, callback, force) {
         // remove anything that they add, but for now we'll allow it 
         // direct and see the impact
         require:require,
+        console:console,
         exports:{}
       };
       var context = vm.createContext(sandbox);
