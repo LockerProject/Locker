@@ -385,6 +385,13 @@ locker.get('/core/selftest', function(req, res) {
     });
 });
 
+locker.get('/core/stats', function(req, res) {
+    var stats = {
+        'memoryUsage' : process.memoryUsage(),
+    }
+    res.send(JSON.stringify(stats), 200);
+});
+
 // EVENTING
 // anybody can listen into any service's events
 locker.get('/core/:svcId/listen', function(req, res) {
