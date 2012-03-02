@@ -258,9 +258,10 @@ function executeSynclet(info, synclet, callback, force) {
 
           if (!info.config) info.config = {};
 
-          if (!info.fullsrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+          if (!info.absoluteSrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+          if (!info.workingDirectory) info.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+          synclet.workingDirectory = info.workingDirectory; // legacy?
           info.syncletToRun = synclet;
-          info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
           info.lockerUrl = lconfig.lockerBase;
           sandbox.exports.sync(info, function(syncErr, response) {
             delete runningContexts[info.id + "/" + synclet.name];
