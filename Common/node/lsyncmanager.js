@@ -10,10 +10,16 @@ var fs = require('fs')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
   , logger = require("./logger.js")
+  , os = require('os')
+  , vm = require('vm')
+  , util = require('util')
   , dispatcher = require('./instrument.js').StatsdDispatcher
-  , stats = new dispatcher(lconfig.stats);
-var vm = require("vm");
-var util = require("util");
+  , hostname = os.hostname().split('.')[0];
+
+// TODO: should be abstracted out
+var statsConfig = lconfig.stats;
+statsConfig.prefix += '.' + hostname;
+var stats = new dispatcher(statsConfig);
 
 var runningContexts = {}; // Map of a synclet to a running context
 
