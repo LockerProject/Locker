@@ -13,7 +13,7 @@ var async = require('async');
 
 exports.sync = function(processInfo, cb) {
     tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
-    tw.init(processInfo.auth, processInfo.workingDirectory);
+    tw.init(processInfo.auth, processInfo.workingDirectory, processInfo.absoluteSrcdir);
     var posts = processInfo.syncletToRun.posts;
     var ret = {data: { tweets: [] } };
     if(!Array.isArray(posts) || posts.length == 0) return cb(undefined, ret);
