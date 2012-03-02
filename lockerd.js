@@ -157,6 +157,7 @@ function finishStartup() {
     lockerPortNext++;
 }
 
+var origVer;
 function runMigrations(phase, migrationCB) {
     var migrations = [];
     var metaData = {version: 0};
@@ -164,6 +165,7 @@ function runMigrations(phase, migrationCB) {
         migrations = fs.readdirSync(path.join(lconfig.lockerDir, "/migrations"));
         metaData = JSON.parse(fs.readFileSync(path.join(lconfig.lockerDir, lconfig.me, "state.json")));
     } catch (E) {}
+    if(!origVer) origVer = metaData.version; // persist this across phases on startup
 
     if (migrations.length > 0) migrations = migrations.sort(); // do in order, so versions are saved properly
 
@@ -174,7 +176,7 @@ function runMigrations(phase, migrationCB) {
     }
 
     async.forEachSeries(migrations, function(migration, cb) {
-        if (Number(migration.substring(0, 13)) <= metaData.version) return cb();
+        if (Number(migration.substring(0, 13)) <= origVer) return cb();
 
         try {
             migrate = require(path.join(lconfig.lockerDir, "migrations", migration))[phase];
