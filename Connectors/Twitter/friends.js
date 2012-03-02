@@ -7,13 +7,13 @@
 *
 */
 
-var path = require("path");
+var path = require('path');
 var tw;
 
 var contacts = [];
 exports.sync = function(processInfo, cb) {
     tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
-    tw.init(processInfo.auth);
+    tw.init(processInfo.auth, processInfo.absoluteSrcdir);
     exports.syncFriends(function(err) {
         if (err) console.error(err);
         var responseObj = {data : {}};
