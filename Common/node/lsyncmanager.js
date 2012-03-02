@@ -167,6 +167,7 @@ exports.scheduleRun = function(info, synclet) {
     {
         force = true;
         delete info.config.nextRun;
+        logger.verbose("scheduling "+key+" to run immediately (paging)");
         return process.nextTick(run);
     }
 
@@ -174,7 +175,10 @@ exports.scheduleRun = function(info, synclet) {
     if(synclet.nextRun && typeof synclet.nextRun != "number") delete synclet.nextRun;
 
     // had a schedule and missed it, run it now
-    if(synclet.nextRun && synclet.nextRun <= Date.now()) return process.nextTick(run);
+    if(synclet.nextRun && synclet.nextRun <= Date.now()) {
+        logger.verbose("scheduling "+key+" to run immediately (missed)");
+        return process.nextTick(run);
+    }
 
     // if no schedule, in the future with 10% fuzz
     if(!synclet.nextRun)
@@ -182,7 +186,9 @@ exports.scheduleRun = function(info, synclet) {
         var milliFreq = parseInt(synclet.frequency) * 1000;
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
     }
-    scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
+    var timeout = synclet.nextRun - Date.now();
+    logger.verbose("scheduling "+key+" (freq "+synclet.frequency+") to run in "+(timeout/1000)+"s");
+    scheduled[key] = setTimeout(run, timeout);
 };
 
 function localError(base, err) {
