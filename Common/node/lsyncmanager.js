@@ -10,10 +10,16 @@ var fs = require('fs')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
   , logger = require("./logger.js")
+  , os = require('os')
+  , vm = require('vm')
+  , util = require('util')
   , dispatcher = require('./instrument.js').StatsdDispatcher
-  , stats = new dispatcher(lconfig.stats);
-var vm = require("vm");
-var util = require("util");
+  , hostname = os.hostname().split('.')[0];
+
+// TODO: should be abstracted out
+var statsConfig = lconfig.stats;
+statsConfig.prefix += '.' + hostname;
+var stats = new dispatcher(statsConfig);
 
 var runningContexts = {}; // Map of a synclet to a running context
 
@@ -35,7 +41,7 @@ LockerInterface.prototype.event = function(action, lockerType, obj) {
   this.events.push({action:action, lockerType:lockerType, obj:obj});
   this.emit("event");
   this.processEvents();
-}
+};
 LockerInterface.prototype.processEvents = function() {
   if (this.processing) return;
   // Process the events we have
@@ -47,7 +53,7 @@ LockerInterface.prototype.processEvents = function() {
     processData([], self.info, self.synclet, event.lockerType, [event], cb);
   }, function(error) {
     self.processing = false;
-    if (self.events.length == 0) {
+    if (self.events.length === 0) {
       self.emit("drain");
     } else {
       process.nextTick(function() {
@@ -55,7 +61,7 @@ LockerInterface.prototype.processEvents = function() {
       });
     }
   });
-}
+};
 // Signals that the synclet context is complete and may be cleaned up
 LockerInterface.prototype.end = function() {
   if (this.events.length > 0) {
@@ -65,7 +71,7 @@ LockerInterface.prototype.end = function() {
   } else {
     this.emit("end");
   }
-}
+};
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
 datastore.init = function (callback) {
@@ -263,7 +269,10 @@ function executeSynclet(info, synclet, callback, force) {
               info.status = synclet.status = 'failed';
               return callback(syncErr);
             }
-            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
+            var elapsed = Date.now() - tstart;
+            stats.increment(info.id + '.' + synclet.name + '.stop');
+            stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
             info.status = synclet.status = 'processing data';
             var deleteIDs = compareIDs(info.config, response.config);
             info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
@@ -461,7 +470,7 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, callbac
       } catch (err) {
         console.error('ERROR: caught error while processing q on task ', task);
       }
-    }
+    };
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
@@ -507,7 +516,7 @@ function addData (collection, mongoId, data, info, synclet, idr, callback) {
       } catch (err) {
         console.error('ERROR: caught error while processing q on task ', task);
       }
-    }
+    };
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
     q.drain = function() {
         if (errs.length > 0) {
