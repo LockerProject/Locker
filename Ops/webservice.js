@@ -390,19 +390,13 @@ locker.get('/core/stats', function(req, res) {
         'core' : {
             'memoryUsage' : process.memoryUsage(),
         },
-        'serviceManager': {
-            'all' : {
-                'total' : 0,
-                'running' : 0
-            }
-        }
+        'serviceManager': {}
     }
 
     var map = serviceManager.map();
     for (var serviceId in map) {
         var type = map[serviceId].type;
-        if (typeof(type) === 'undefined')
-            console.log("UNDEFINED: "+serviceId);
+
         if (!(type in stats.serviceManager)) {
             stats.serviceManager[type] = {
                 'total' : 0,
@@ -410,12 +404,9 @@ locker.get('/core/stats', function(req, res) {
             }
         }
 
-        stats.serviceManager.all.total += 1;
         stats.serviceManager[type].total += 1;
-        if (serviceManager.isRunning(serviceId)) {
+        if (serviceManager.isRunning(serviceId))
             stats.serviceManager[type].running += 1;
-            stats.serviceManager.all.running += 1;
-        }
     }
 
     res.send(JSON.stringify(stats), 200);
