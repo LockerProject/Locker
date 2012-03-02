@@ -222,12 +222,12 @@ function executeSynclet(info, synclet, callback, force) {
     info.status = synclet.status = "running";
 
 
-    if (synclet.vm) {
-      // Go ahead and create a context immediately so we get it listed as 
+    if (info.vm || synclet.vm) {
+      // Go ahead and create a context immediately so we get it listed as
       // running and dont' start mulitple ones
       var sandbox = {
-        // XXX: This could be a problem later and need a cacheing layer to 
-        // remove anything that they add, but for now we'll allow it 
+        // XXX: This could be a problem later and need a cacheing layer to
+        // remove anything that they add, but for now we'll allow it
         // direct and see the impact
         require:require,
         console:console,
@@ -255,6 +255,8 @@ function executeSynclet(info, synclet, callback, force) {
           sandbox.exports.sync(info, function(syncErr, response) {
             delete runningContexts[info.id + "/" + synclet.name];
             if (syncErr) {
+              logger.error(synclet.name+" error: "+util.inspect(syncErr));
+              info.status = synclet.status = 'failed';
               return callback(syncErr);
             }
             logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
