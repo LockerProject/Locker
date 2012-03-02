@@ -137,9 +137,13 @@ BatchSendQueue.prototype.push = function(item) {
   // Every push is added and we see if we can send more
   this.items.push(item);
   var self = this;
-  if(!this.running) setTimeout(function(){ self.run(); }, 1000); // give a chance to queue up if coming in fast
+  if(!this.running) {
+      if(this.timer) clearTimeout(this.timer);
+      this.timer = setTimeout(function(){ self.run(); }, 1000); // give a chance to queue up if coming in fast
+  }
 };
 BatchSendQueue.prototype.run = function() {
+  if(this.timer) delete this.timer;
   if (this.running) return;
   if (this.items.length == 0) return;
 

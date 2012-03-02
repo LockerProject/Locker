@@ -222,7 +222,8 @@ function executeSynclet(info, synclet, callback, force) {
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
-
+    var tstart = Date.now();
+    stats.increment(info.id + '.' + synclet.name + '.start');
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -310,12 +311,7 @@ function executeSynclet(info, synclet, callback, force) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
-    var tstart;
     app.stdout.on('data',function (data) {
-        if(!tstart) {
-            tstart = Date.now();
-            stats.increment(info.id + '.' + synclet.name + '.start');
-        }
         dataResponse += data;
     });
 
