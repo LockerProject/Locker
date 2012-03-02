@@ -6,7 +6,8 @@
  * Please see the LICENSE file for more information.
  *
  */
-var dgram = require('dgram');
+var dgram  = require('dgram')
+  , logger = require('./logger.js');
 
 function StatsdDispatcher(config) {
   this.host   = config.host;
@@ -15,7 +16,10 @@ function StatsdDispatcher(config) {
 }
 
 StatsdDispatcher.prototype.send = function (msg) {
-  if (!this.host || !this.port) return;
+  if (!this.host || !this.port) {
+    logger.verbose("statsd dispatcher not configured, not dispatching '" + msg + "'");
+    return;
+  }
   if (this.prefix) msg = this.prefix + '.' + msg;
 
   var socket = dgram.createSocket('udp4');
