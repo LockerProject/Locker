@@ -10,15 +10,16 @@ var fs = require('fs')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
   , logger = require("./logger.js")
-  , os = require('os')
   , vm = require('vm')
   , util = require('util')
-  , dispatcher = require('./instrument.js').StatsdDispatcher
-  , hostname = os.hostname().split('.')[0];
+  , dispatcher = require('./instrument.js').StatsdDispatcher;
 
 // TODO: should be abstracted out
-var statsConfig = lconfig.stats;
-statsConfig.prefix += '.' + hostname;
+var statsConfig = lconfig.stats
+  , hostname = process.env['HOSTNAME'] || 'localhost'
+  , hostBasename = hostname.split('.')[0];
+
+statsConfig.prefix += '.' + hostBasename;
 var stats = new dispatcher(statsConfig);
 
 var runningContexts = {}; // Map of a synclet to a running context
@@ -167,6 +168,7 @@ exports.scheduleRun = function(info, synclet) {
     {
         force = true;
         delete info.config.nextRun;
+        logger.verbose("scheduling "+key+" to run immediately (paging)");
         return process.nextTick(run);
     }
 
@@ -174,7 +176,10 @@ exports.scheduleRun = function(info, synclet) {
     if(synclet.nextRun && typeof synclet.nextRun != "number") delete synclet.nextRun;
 
     // had a schedule and missed it, run it now
-    if(synclet.nextRun && synclet.nextRun <= Date.now()) return process.nextTick(run);
+    if(synclet.nextRun && synclet.nextRun <= Date.now()) {
+        logger.verbose("scheduling "+key+" to run immediately (missed)");
+        return process.nextTick(run);
+    }
 
     // if no schedule, in the future with 10% fuzz
     if(!synclet.nextRun)
@@ -182,7 +187,9 @@ exports.scheduleRun = function(info, synclet) {
         var milliFreq = parseInt(synclet.frequency) * 1000;
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
     }
-    scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
+    var timeout = synclet.nextRun - Date.now();
+    logger.verbose("scheduling "+key+" (freq "+synclet.frequency+") to run in "+(timeout/1000)+"s");
+    scheduled[key] = setTimeout(run, timeout);
 };
 
 function localError(base, err) {
