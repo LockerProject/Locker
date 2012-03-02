@@ -34,6 +34,7 @@ exports.load = function(filepath) {
     exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
+    exports.stats = config.stats || {};
     setBase();
     exports.registryUpdateInterval = config.registryUpdateInterval || 3600;
     exports.collections = config.collections || [
@@ -41,7 +42,7 @@ exports.load = function(filepath) {
         "links:Collections/Links",
         "photos:Collections/Photos",
         "places:Collections/Places",
-        "search:Collections/Search",
+        "search:Collections/Search"
     ];
     exports.apps = config.apps || [
         "helloplaces:Apps/HelloPlaces",
@@ -55,7 +56,7 @@ exports.load = function(filepath) {
         "gcontacts:Connectors/GoogleContacts",
         "instagram:Connectors/Instagram",
         "twitter:Connectors/Twitter",
-        "foursquare:Connectors/foursquare",
+        "foursquare:Connectors/foursquare"
     ];
     config.mongo = config.mongo || {};
     exports.mongo = {
