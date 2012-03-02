@@ -12,7 +12,7 @@ var tw;
 
 exports.sync = function(processInfo, cb) {
     tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
-    tw.init(processInfo.auth, processInfo.absoluteSrcdir);
+    tw.init(processInfo.auth, processInfo.workingDirectory);
     var me;
     var responseObj = {data : {}, config:{}};
     var since=1;

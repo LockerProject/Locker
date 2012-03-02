@@ -12,7 +12,7 @@ var tw;
 
 exports.sync = function(processInfo, cb) {
     tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
-    tw.init(processInfo.auth, processInfo.absoluteSrcdir);
+    tw.init(processInfo.auth, processInfo.workingDirectory);
     var self;
     tw.getMe({}, function(js){ self = js; }, function(err) {
         if (err) return cb(err);
