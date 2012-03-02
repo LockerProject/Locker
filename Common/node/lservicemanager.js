@@ -221,7 +221,7 @@ exports.mapReload = function(id)
         }
     }
     // start em up if they're ready
-    if(js.synclets && js.auth) {
+    if(js.synclets && js.auth && js.authed) {
         for (var j = 0; j < js.synclets.length; j++) {
             syncletManager.scheduleRun(js, js.synclets[j]);
         }

@@ -193,6 +193,7 @@ function executeSynclet(info, synclet, callback, force) {
     };
     if (synclet.status === 'running') return callback('already running');
     delete synclet.nextRun; // cancel any schedule
+    if(!info.auth || !info.authed) return callback("no auth info for "+info.id);
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!force && !executeable) {
