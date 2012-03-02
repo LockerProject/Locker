@@ -12,6 +12,60 @@ var fs = require('fs')
   , logger = require("./logger.js")
   , dispatcher = require('./instrument.js').StatsdDispatcher
   , stats = new dispatcher(lconfig.stats);
+var vm = require("vm");
+var util = require("util");
+
+var runningContexts = {}; // Map of a synclet to a running context
+
+function LockerInterface(synclet, info) {
+  EventEmitter.call(this);
+  this.synclet = synclet;
+  this.info = info;
+  this.srcdir = path.join(lconfig.lockerDir, info.srcdir);
+  this.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+  this.processing = false; // If we're processing events
+  this.events = [];
+}
+util.inherits(LockerInterface, EventEmitter);
+LockerInterface.prototype.error = function(message) {
+  logger.error("Error from synclet " + this.synclet.name + "/" + this.info.id + ": " + message);
+};
+// Fire an event from the synclet
+LockerInterface.prototype.event = function(action, lockerType, obj) {
+  this.events.push({action:action, lockerType:lockerType, obj:obj});
+  this.emit("event");
+  this.processEvents();
+}
+LockerInterface.prototype.processEvents = function() {
+  if (this.processing) return;
+  // Process the events we have
+  this.processing = true;
+  var self = this;
+  var curEvents = this.events;
+  this.events = [];
+  async.forEachSeries(curEvents, function(event, cb) {
+    processData([], self.info, self.synclet, event.lockerType, [event], cb);
+  }, function(error) {
+    self.processing = false;
+    if (self.events.length == 0) {
+      self.emit("drain");
+    } else {
+      process.nextTick(function() {
+        self.processEvents();
+      });
+    }
+  });
+}
+// Signals that the synclet context is complete and may be cleaned up
+LockerInterface.prototype.end = function() {
+  if (this.events.length > 0) {
+    this.once("drain", function() {
+      this.emit("end");
+    });
+  } else {
+    this.emit("end");
+  }
+}
 
 // this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
 datastore.init = function (callback) {
@@ -56,6 +110,10 @@ exports.syncNow = function (serviceId, syncletId, post, callback) {
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
     async.forEachSeries(js.synclets, function (synclet, cb) {
+      if (!synclet) {
+        logger.error("Unknown synclet info in syncNow");
+        cb();
+      }
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -155,7 +213,7 @@ function executeSynclet(info, synclet, callback, force) {
         return callback();
     }
     // if another synclet is running, come back a little later, don't overlap!
-    if (info.status == 'running') {
+    if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
         logger.verbose("delaying "+synclet.name);
         setTimeout(function() {
             executeSynclet(info, synclet, callback, force);
@@ -164,6 +222,67 @@ function executeSynclet(info, synclet, callback, force) {
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
+    var tstart = Date.now();
+    stats.increment(info.id + '.' + synclet.name + '.start');
+
+    if (info.vm || synclet.vm) {
+      // Go ahead and create a context immediately so we get it listed as
+      // running and dont' start mulitple ones
+      var sandbox = {
+        // XXX: This could be a problem later and need a cacheing layer to
+        // remove anything that they add, but for now we'll allow it
+        // direct and see the impact
+        require:require,
+        console:console,
+        exports:{}
+      };
+      var context = vm.createContext(sandbox);
+      runningContexts[info.id + "/" + synclet.name] = context;
+      // Let's get the code loaded
+      var fname = path.join(info.srcdir, synclet.name + ".js");
+      fs.readFile(fname, function(err, code) {
+        if (err) {
+          logger.error("Unable to load synclet " + synclet.name + "/" + info.id + ": " + err);
+          return callback(err);
+        }
+        try {
+          synclet.deleted = synclet.added = synclet.updated = 0;
+          vm.runInContext(code, context, fname);
+
+          if (!info.config) info.config = {};
+
+          if (!info.fullsrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+          info.syncletToRun = synclet;
+          info.syncletToRun.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+          info.lockerUrl = lconfig.lockerBase;
+          sandbox.exports.sync(info, function(syncErr, response) {
+            delete runningContexts[info.id + "/" + synclet.name];
+            if (syncErr) {
+              logger.error(synclet.name+" error: "+util.inspect(syncErr));
+              info.status = synclet.status = 'failed';
+              return callback(syncErr);
+            }
+            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
+            info.status = synclet.status = 'processing data';
+            var deleteIDs = compareIDs(info.config, response.config);
+            info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
+            info.config = lutil.extend(true, info.config, response.config);
+            exports.scheduleRun(info, synclet);
+            serviceManager.mapDirty(info.id); // save out to disk
+            processResponse(deleteIDs, info, synclet, response, function(processErr) {
+                info.status = 'waiting';
+                callback(processErr);
+            });
+          });
+        } catch (E) {
+          logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
+          return callback(E);
+        }
+      });
+      if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
+      delete info.syncletToRun;
+      return;
+    }
     var run;
     var env = process.env;
     if (!synclet.run) {
@@ -192,12 +311,7 @@ function executeSynclet(info, synclet, callback, force) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
-    var tstart;
     app.stdout.on('data',function (data) {
-        if(!tstart) {
-            tstart = Date.now();
-            stats.increment(info.id + '.' + synclet.name + '.start');
-        }
         dataResponse += data;
     });
 
