@@ -244,7 +244,7 @@ exports.sync = function (callback, force) {
     function finish(err) {
         logger.info("registry sync finished");
         if(err) logger.error(err);
-        syncTimer = setTimeout(exports.sync, lconfig.registryUpdateInterval * 1000);
+        syncTimer = setTimeout(exports.sync, lconfig.registryUpdateInterval * (1000 + ((Math.random() - 0.5) * 200)));
         syncCallbacks.forEach(function (cb) { cb(err); });
         syncCallbacks = [];
         logger.info("registry callbacks completed");

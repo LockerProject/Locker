@@ -15,6 +15,7 @@
     "strip" : {
         "contact":["status"]
     },
+    "vm":true,
     "synclets":[
         {"name": "self", "frequency": 7200},
         {"name": "friends", "frequency": 3600},
