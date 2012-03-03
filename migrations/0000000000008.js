@@ -24,8 +24,16 @@ module.exports.postStartup = function(config, callback) {
     fs.stat(path.join(config.lockerDir, config.me, 'twitter'), function(err, stat) {
         if(!stat || (stat && !stat.isDirectory())) return callback(true);
         request.get({uri:config.lockerBase + '/Me/contacts/update'}, function(err, resp, body) {
+            if(err || resp.statusCode !== 200) {
+                logger.error("failed to call contacts update "+(err||resp.statusCode));
+                callback(false);
+            }
             request.get({uri:config.lockerBase + '/Me/twitter/run?id=friends'}, function(err, resp, body) {
-                callback(body);
+                if(err || resp.statusCode !== 200) {
+                    logger.error("failed to call twitter run "+(err||resp.statusCode));
+                    callback(false);
+                }
+                callback(true);
             })
         });
     });
