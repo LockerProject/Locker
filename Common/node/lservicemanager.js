@@ -18,6 +18,15 @@ var wrench = require('wrench');
 var lutil = require(__dirname + "/lutil");
 var logger;
 var async = require('async');
+var dispatcher = require('./instrument.js').StatsdDispatcher;
+
+// TODO: should be abstracted out
+var statsConfig = lconfig.stats
+  , hostname = process.env['HOSTNAME'] || 'localhost'
+  , hostBasename = hostname.split('.')[0];
+
+statsConfig.prefix += '.' + hostBasename;
+var stats = new dispatcher(statsConfig);
 
 var serviceMap = { }; // All of the immediately addressable services in the system
 
@@ -248,7 +257,7 @@ exports.mapReload = function(id) {
 * \encode
 */
 exports.spawn = function(serviceId, callback) {
-    if (!callback) callback = function(){};
+    if (!callback) callback = function () {};
     var svc = serviceMap[serviceId];
     if (!svc) {
         logger.error("Attempting to spawn an unknown service " + serviceId);
@@ -285,6 +294,8 @@ exports.spawn = function(serviceId, callback) {
     var args = run.slice(1);
     logger.verbose("Spawning command '" + command + "'' with args " + JSON.stringify(args) + ", cwd " + processInformation.sourceDirectory + " and processInfo " + JSON.stringify(processInformation));
     var app = spawn(command, args, {cwd: processInformation.sourceDirectory, env:process.env});
+    stats.increment('service.' + serviceId + '.start');
+    stats.increment('service.' + serviceId + '.running');
 
     app.stderr.on('data', function (data) {
         process.stderr.write('[' + svc.id + '] ' + data.toString());
@@ -347,6 +358,8 @@ exports.spawn = function(serviceId, callback) {
 
     app.on('exit', function (code,signal) {
         logger.info(svc.id + " exited with status " + code + ", signal " + signal);
+        stats.increment('service.' + svc.id + '.stop');
+        stats.decrement('service.' + svc.id + '.running');
         var id = svc.id;
         //remove transient fields
         delete svc.pid;
