@@ -238,6 +238,7 @@ function executeSynclet(info, synclet, callback, force) {
     info.status = synclet.status = "running";
     var tstart = Date.now();
     stats.increment(info.id + '.' + synclet.name + '.start');
+    stats.increment(info.id + '.' + synclet.name + '.running');
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -279,6 +280,7 @@ function executeSynclet(info, synclet, callback, force) {
             }
             var elapsed = Date.now() - tstart;
             stats.increment(info.id + '.' + synclet.name + '.stop');
+            stats.decrement(info.id + '.' + synclet.name + '.running');
             stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
             logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
             info.status = synclet.status = 'processing data';
@@ -348,6 +350,7 @@ function executeSynclet(info, synclet, callback, force) {
         }
         var elapsed = Date.now() - tstart;
         stats.increment(info.id + '.' + synclet.name + '.stop');
+        stats.decrement(info.id + '.' + synclet.name + '.running');
         stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
         logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
         info.status = synclet.status = 'processing data';
