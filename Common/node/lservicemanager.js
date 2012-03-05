@@ -45,6 +45,7 @@ exports.init = function (sman, reg, callback) {
         logger.warn('Hostname not set. Stats logging will fall back to localhost.');
         hostBasename = 'localhost';
     } else {
+        logger.verbose('Hostname was set by environment: ' + hostname);
         hostBasename = hostname.split('.')[0];
     }
 
