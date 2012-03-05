@@ -35,7 +35,6 @@ exports.init = function (sman, reg, callback) {
     logger = require('logger');
     logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
-    logger.verbose('Configured stats prefix is ' + lconfig.stats.prefix);
     stats = new dispatcher(lconfig.stats);
 
     syncletManager = sman;
