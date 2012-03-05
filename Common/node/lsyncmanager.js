@@ -14,22 +14,8 @@ var fs = require('fs')
   , util = require('util')
   , dispatcher = require('./instrument.js').StatsdDispatcher;
 
-// TODO: should be abstracted out
-var statsConfig = lconfig.stats
-  , hostname = process.env['HOSTNAME']
-  , hostBasename
-  , prefix = lconfig.stats.prefix;
-
-if (!hostname) {
-    logger.warn('Hostname not set. Stats logging will fall back to localhost.');
-    hostBasename = 'localhost';
-} else {
-    logger.verbose('Hostname was set by environment: ' + hostname);
-    hostBasename = hostname.split('.')[0];
-}
-
-statsConfig.prefix = prefix + '.' + hostBasename;
-var stats = new dispatcher(statsConfig);
+logger.verbose('Configured stats prefix is ' + lconfig.stats.prefix);
+var stats = new dispatcher(lconfig.stats);
 
 var runningContexts = {}; // Map of a synclet to a running context
 
