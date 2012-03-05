@@ -16,10 +16,16 @@ var fs = require('fs')
 
 // TODO: should be abstracted out
 var statsConfig = lconfig.stats
-  , hostname = process.env['HOSTNAME'] || 'localhost'
-  , hostBasename = hostname.split('.')[0];
+  , hostname = process.env['HOSTNAME']
+  , hostBasename = hostname.split('.')[0]
+  , prefix = lconfig.stats.prefix;
 
-statsConfig.prefix += '.' + hostBasename;
+if (!hostname) {
+    logger.warn("Hostname not set, stats logging will fall back to localhost");
+    hostBasename = 'localhost';
+}
+
+statsConfig.prefix = prefix + '.' + hostBasename;
 var stats = new dispatcher(statsConfig);
 
 var runningContexts = {}; // Map of a synclet to a running context
@@ -237,8 +243,8 @@ function executeSynclet(info, synclet, callback, force) {
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var tstart = Date.now();
-    stats.increment(info.id + '.' + synclet.name + '.start');
-    stats.increment(info.id + '.' + synclet.name + '.running');
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.start');
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.running');
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -279,9 +285,9 @@ function executeSynclet(info, synclet, callback, force) {
               return callback(syncErr);
             }
             var elapsed = Date.now() - tstart;
-            stats.increment(info.id + '.' + synclet.name + '.stop');
-            stats.decrement(info.id + '.' + synclet.name + '.running');
-            stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+            stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+            stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
             logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
             info.status = synclet.status = 'processing data';
             var deleteIDs = compareIDs(info.config, response.config);
@@ -349,9 +355,9 @@ function executeSynclet(info, synclet, callback, force) {
             return;
         }
         var elapsed = Date.now() - tstart;
-        stats.increment(info.id + '.' + synclet.name + '.stop');
-        stats.decrement(info.id + '.' + synclet.name + '.running');
-        stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+        stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+        stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
         logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);

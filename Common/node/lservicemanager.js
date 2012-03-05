@@ -22,10 +22,16 @@ var dispatcher = require('./instrument.js').StatsdDispatcher;
 
 // TODO: should be abstracted out
 var statsConfig = lconfig.stats
-  , hostname = process.env['HOSTNAME'] || 'localhost'
-  , hostBasename = hostname.split('.')[0];
+  , hostname = process.env['HOSTNAME']
+  , hostBasename = hostname.split('.')[0]
+  , prefix = lconfig.stats.prefix;
 
-statsConfig.prefix += '.' + hostBasename;
+if (!hostname) {
+    logger.warn("Hostname not set, stats logging will fall back to localhost");
+    hostBasename = 'localhost';
+}
+
+statsConfig.prefix = prefix + '.' + hostBasename;
 var stats = new dispatcher(statsConfig);
 
 var serviceMap = { }; // All of the immediately addressable services in the system
