@@ -21,7 +21,7 @@ var statsConfig = lconfig.stats
   , prefix = lconfig.stats.prefix;
 
 if (!hostname) {
-    logger.warn("Hostname not set, stats logging will fall back to localhost");
+    logger.warn('Hostname not set. Stats logging will fall back to localhost.');
     hostBasename = 'localhost';
 } else {
     hostBasename = hostname.split('.')[0];

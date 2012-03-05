@@ -20,21 +20,7 @@ var logger;
 var async = require('async');
 var dispatcher = require('./instrument.js').StatsdDispatcher;
 
-// TODO: should be abstracted out
-var statsConfig = lconfig.stats
-  , hostname = process.env['HOSTNAME']
-  , hostBasename
-  , prefix = lconfig.stats.prefix;
-
-if (!hostname) {
-    logger.warn("Hostname not set, stats logging will fall back to localhost");
-    hostBasename = 'localhost';
-} else {
-    hostBasename = hostname.split('.')[0];
-}
-
-statsConfig.prefix = prefix + '.' + hostBasename;
-var stats = new dispatcher(statsConfig);
+var stats;
 
 var serviceMap = { }; // All of the immediately addressable services in the system
 
@@ -48,6 +34,23 @@ var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 exports.init = function (sman, reg, callback) {
     logger = require('logger');
     logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
+
+    // TODO: should be abstracted out
+    var statsConfig = lconfig.stats
+      , hostname = process.env['HOSTNAME']
+      , hostBasename
+      , prefix = lconfig.stats.prefix;
+
+    if (!hostname) {
+        logger.warn('Hostname not set. Stats logging will fall back to localhost.');
+        hostBasename = 'localhost';
+    } else {
+        hostBasename = hostname.split('.')[0];
+    }
+
+    statsConfig.prefix = prefix + '.' + hostBasename;
+    stats = new dispatcher(statsConfig);
+
     syncletManager = sman;
     registry = reg;
     var dirs = fs.readdirSync(lconfig.me);
