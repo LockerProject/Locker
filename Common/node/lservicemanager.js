@@ -23,12 +23,14 @@ var dispatcher = require('./instrument.js').StatsdDispatcher;
 // TODO: should be abstracted out
 var statsConfig = lconfig.stats
   , hostname = process.env['HOSTNAME']
-  , hostBasename = hostname.split('.')[0]
+  , hostBasename
   , prefix = lconfig.stats.prefix;
 
 if (!hostname) {
     logger.warn("Hostname not set, stats logging will fall back to localhost");
     hostBasename = 'localhost';
+} else {
+    hostBasename = hostname.split('.')[0];
 }
 
 statsConfig.prefix = prefix + '.' + hostBasename;
