@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# If we were installed via lockerbox, find our dependencies there
+lockerbox_env=../lockerbox_environment.sh
+if [ -f "$lockerbox_env" ]; then
+    . "$lockerbox_env"
+fi
+
 txtrst=$(tput sgr0) # Text reset
 txtred=$(tput setaf 1) # Red
 txtgrn=$(tput setaf 2) # Green

@@ -8,7 +8,65 @@ var fs = require('fs')
   , lutil = require('lutil')
   , EventEmitter = require('events').EventEmitter
   , levents = require(__dirname + '/levents')
-  , logger = require("./logger.js");
+  , logger = require("./logger.js")
+  , vm = require('vm')
+  , util = require('util')
+  , dispatcher = require('./instrument.js').StatsdDispatcher;
+
+logger.verbose('Configured stats prefix is ' + lconfig.stats.prefix);
+var stats = new dispatcher(lconfig.stats);
+
+var runningContexts = {}; // Map of a synclet to a running context
+
+function LockerInterface(synclet, info) {
+  EventEmitter.call(this);
+  this.synclet = synclet;
+  this.info = info;
+  this.srcdir = path.join(lconfig.lockerDir, info.srcdir);
+  this.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+  this.processing = false; // If we're processing events
+  this.events = [];
+}
+util.inherits(LockerInterface, EventEmitter);
+LockerInterface.prototype.error = function(message) {
+  logger.error("Error from synclet " + this.synclet.name + "/" + this.info.id + ": " + message);
+};
+// Fire an event from the synclet
+LockerInterface.prototype.event = function(action, lockerType, obj) {
+  this.events.push({action:action, lockerType:lockerType, obj:obj});
+  this.emit("event");
+  this.processEvents();
+};
+LockerInterface.prototype.processEvents = function() {
+  if (this.processing) return;
+  // Process the events we have
+  this.processing = true;
+  var self = this;
+  var curEvents = this.events;
+  this.events = [];
+  async.forEachSeries(curEvents, function(event, cb) {
+    processData([], self.info, self.synclet, event.lockerType, [event], cb);
+  }, function(error) {
+    self.processing = false;
+    if (self.events.length === 0) {
+      self.emit("drain");
+    } else {
+      process.nextTick(function() {
+        self.processEvents();
+      });
+    }
+  });
+};
+// Signals that the synclet context is complete and may be cleaned up
+LockerInterface.prototype.end = function() {
+  if (this.events.length > 0) {
+    this.once("drain", function() {
+      this.emit("end");
+    });
+  } else {
+    this.emit("end");
+  }
+};
 
 var synclets = {
     available:[],
@@ -39,6 +97,10 @@ exports.syncNow = function (serviceId, syncletId, post, callback) {
     var js = serviceManager.map(serviceId);
     if (!js || !js.synclets) return callback("no synclets like that installed");
     async.forEachSeries(js.synclets, function (synclet, cb) {
+      if (!synclet) {
+        logger.error("Unknown synclet info in syncNow");
+        cb();
+      }
         if(syncletId && synclet.name != syncletId) return cb();
         if(post)
         {
@@ -86,6 +148,7 @@ exports.scheduleRun = function(info, synclet) {
     {
         force = true;
         delete info.config.nextRun;
+        logger.verbose("scheduling "+key+" to run immediately (paging)");
         return process.nextTick(run);
     }
 
@@ -93,7 +156,10 @@ exports.scheduleRun = function(info, synclet) {
     if(synclet.nextRun && typeof synclet.nextRun != "number") delete synclet.nextRun;
 
     // had a schedule and missed it, run it now
-    if(synclet.nextRun && synclet.nextRun <= Date.now()) return process.nextTick(run);
+    if(synclet.nextRun && synclet.nextRun <= Date.now()) {
+        logger.verbose("scheduling "+key+" to run immediately (missed)");
+        return process.nextTick(run);
+    }
 
     // if no schedule, in the future with 10% fuzz
     if(!synclet.nextRun)
@@ -101,7 +167,9 @@ exports.scheduleRun = function(info, synclet) {
         var milliFreq = parseInt(synclet.frequency) * 1000;
         synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
     }
-    scheduled[key] = setTimeout(run, synclet.nextRun - Date.now());
+    var timeout = synclet.nextRun - Date.now();
+    logger.verbose("scheduling "+key+" (freq "+synclet.frequency+") to run in "+(timeout/1000)+"s");
+    scheduled[key] = setTimeout(run, timeout);
 };
 
 function localError(base, err) {
@@ -118,6 +186,7 @@ function executeSynclet(info, synclet, callback, force) {
     };
     if (synclet.status === 'running') return callback('already running');
     delete synclet.nextRun; // cancel any schedule
+    if(!info.auth || !info.authed) return callback("no auth info for "+info.id);
     // we're put on hold from running any for some reason, re-schedule them
     // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
     if (!force && !executeable) {
@@ -138,7 +207,7 @@ function executeSynclet(info, synclet, callback, force) {
         return callback();
     }
     // if another synclet is running, come back a little later, don't overlap!
-    if (info.status == 'running') {
+    if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
         logger.verbose("delaying "+synclet.name);
         setTimeout(function() {
             executeSynclet(info, synclet, callback, force);
@@ -147,6 +216,73 @@ function executeSynclet(info, synclet, callback, force) {
     }
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
+    var tstart = Date.now();
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.start');
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.running');
+
+    if (info.vm || synclet.vm) {
+      // Go ahead and create a context immediately so we get it listed as
+      // running and dont' start mulitple ones
+      var sandbox = {
+        // XXX: This could be a problem later and need a cacheing layer to
+        // remove anything that they add, but for now we'll allow it
+        // direct and see the impact
+        require:require,
+        console:console,
+        exports:{}
+      };
+      var context = vm.createContext(sandbox);
+      runningContexts[info.id + "/" + synclet.name] = context;
+      // Let's get the code loaded
+      var fname = path.join(info.srcdir, synclet.name + ".js");
+      fs.readFile(fname, function(err, code) {
+        if (err) {
+          logger.error("Unable to load synclet " + synclet.name + "/" + info.id + ": " + err);
+          return callback(err);
+        }
+        try {
+          synclet.deleted = synclet.added = synclet.updated = 0;
+          vm.runInContext(code, context, fname);
+
+          if (!info.config) info.config = {};
+
+          if (!info.absoluteSrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+          if (!info.workingDirectory) info.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+          synclet.workingDirectory = info.workingDirectory; // legacy?
+          info.syncletToRun = synclet;
+          info.lockerUrl = lconfig.lockerBase;
+          sandbox.exports.sync(info, function(syncErr, response) {
+            delete runningContexts[info.id + "/" + synclet.name];
+            if (syncErr) {
+              logger.error(synclet.name+" error: "+util.inspect(syncErr));
+              info.status = synclet.status = 'failed';
+              return callback(syncErr);
+            }
+            var elapsed = Date.now() - tstart;
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+            stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+            stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
+            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
+            info.status = synclet.status = 'processing data';
+            var deleteIDs = compareIDs(info.config, response.config);
+            info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
+            info.config = lutil.extend(true, info.config, response.config);
+            exports.scheduleRun(info, synclet);
+            serviceManager.mapDirty(info.id); // save out to disk
+            processResponse(deleteIDs, info, synclet, response, function(processErr) {
+                info.status = 'waiting';
+                callback(processErr);
+            });
+          });
+        } catch (E) {
+          logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
+          return callback(E);
+        }
+      });
+      if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
+      delete info.syncletToRun;
+      return;
+    }
     var run;
     var env = process.env;
     if (!synclet.run) {
@@ -175,9 +311,7 @@ function executeSynclet(info, synclet, callback, force) {
         localError(info.title+" "+synclet.name + " error:",data.toString());
     });
 
-    var tstart;
     app.stdout.on('data',function (data) {
-        if(!tstart) tstart = Date.now();
         dataResponse += data;
     });
 
@@ -194,7 +328,11 @@ function executeSynclet(info, synclet, callback, force) {
             if (callback) callback(E);
             return;
         }
-        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+(Date.now() - tstart));
+        var elapsed = Date.now() - tstart;
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+        stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+        stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
+        logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
         info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
@@ -341,7 +479,7 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, cal
       } catch (err) {
         console.error('ERROR: caught error while processing q on task ', task);
       }
-    }
+    };
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
@@ -392,7 +530,7 @@ function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
       } catch (err) {
         console.error('ERROR: caught error while processing q on task ', task);
       }
-    }
+    };
     data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
     q.drain = function() {
         if (errs.length > 0) {

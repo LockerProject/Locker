@@ -1,7 +1,9 @@
 {
     "lockerHost" : "localhost",
-    "lockerListenIP" : "0.0.0.0",
     "lockerPort" : 8042,
+    "externalHost" : "localhost",
+    "externalPort" : 8042,
+    "lockerListenIP" : "0.0.0.0",
     "me" : "Me",
     "scannedDirs" : [
         "Apps",
@@ -18,6 +20,10 @@
         "console": true,
         "file": "locker.out",
         "maxsize": 33554432
+    },
+    "stats" : {
+        "host" : "statsd.example.com",
+        "port" : 8125
     },
     "dashboard" : {
         "customLogo": "tlp_logo.png",
