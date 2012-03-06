@@ -16,7 +16,7 @@ exports.load = function(filepath) {
     try {
         config = JSON.parse(fs.readFileSync(filepath));
     } catch(err) {
-        if(err.code !== 'EBADF')
+        if(err.code !== 'EBADF' && err.code !== 'ENOENT')
             throw err;
     }
     exports.lockerHost = config.lockerHost || 'localhost';
