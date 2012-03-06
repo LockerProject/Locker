@@ -409,6 +409,10 @@ locker.get('/core/stats', function(req, res) {
             stats.serviceManager[type].running += 1;
     }
 
+    // serviceManager never reports that a connector is running
+    if ('connector' in stats.serviceManager)
+        delete stats.serviceManager.connector['running'];
+
     res.send(JSON.stringify(stats), 200);
 });
 

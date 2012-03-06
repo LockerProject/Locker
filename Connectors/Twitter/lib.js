@@ -17,10 +17,10 @@ var tw;
 var auth;
 var base;
 
-exports.init = function(theAuth, theBase) {
+exports.init = function(theAuth, theBase, srcdir) {
     auth = theAuth;
     base = theBase;
-    tw = require(path.join(base,'twitter_client'))(auth.consumerKey, auth.consumerSecret);
+    tw = require(path.join(srcdir,'twitter_client'))(auth.consumerKey, auth.consumerSecret);
     try {
         fs.mkdirSync(path.join(base,'friends'), 0755);
     } catch(e) {};

@@ -1,7 +1,9 @@
 {
     "lockerHost" : "localhost",
-    "lockerListenIP" : "0.0.0.0",
     "lockerPort" : 8042,
+    "externalHost" : "localhost",
+    "externalPort" : 8042,
+    "lockerListenIP" : "0.0.0.0",
     "me" : "Me",
     "scannedDirs" : [
         "Apps",
