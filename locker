@@ -23,10 +23,9 @@ while true; do
     esac
 done
 
-# If we were installed via lockerbox, find our dependencies there
-lockerbox_env=../lockerbox_environment.sh
-if [ -f "$lockerbox_env" ]; then
-    . "$lockerbox_env"
+# If our dependencies are installed in deps, find them there
+if [ -f deps/environment.sh ]; then
+    . deps/environment.sh
 fi
 
 # Make sure we have some API keys, otherwise we can't do much
