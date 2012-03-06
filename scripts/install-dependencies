@@ -116,7 +116,7 @@ check_for Git git 'git --version'
 check_for Python python 'python -V' 2.6
 
 mkdir -p ${prefix}/build
-pushd ${prefix}/build
+cd ${prefix}/build
 
 if ! check_for Node.js node 'node -v' 0.6.0
 then
@@ -128,10 +128,10 @@ then
     download "${NODE_DOWNLOAD}"
     tar zxf "$(basename "${NODE_DOWNLOAD}")"
 
-    (cd $(basename "${NODE_DOWNLOAD}" .tar.gz);
-    ./configure --prefix="${prefix}/local";
-    make;
-    make install)
+    cd $(basename "${NODE_DOWNLOAD}" .tar.gz)
+    ./configure --prefix="${prefix}/local"
+    make
+    make install
 
     echo "Installed node.js into ${prefix}"
 fi
@@ -213,3 +213,5 @@ then
         exit 1
     fi
 fi
+
+rm -rf "${prefix}/build"
