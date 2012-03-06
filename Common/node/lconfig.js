@@ -13,12 +13,9 @@ var path = require('path');
 
 exports.load = function(filepath) {
     var config = {};
-    try {
+    if (path.existsSync(filepath))
         config = JSON.parse(fs.readFileSync(filepath));
-    } catch(err) {
-        if(err.code !== 'EBADF')
-            throw err;
-    }
+
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
