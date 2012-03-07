@@ -93,16 +93,7 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
         logger.info('[mongo] ' + line);
         if (waitingForMongo && line.indexOf("[initandlisten] waiting for connections on port " + lconfig.mongo.port) >= 0) {
           waitingForMongo = false;
-          return lmongo.connect(checkKeys);
-        }
-
-        var mongoMemoryReport = /[clientcursormon] mem \(MB\) res:(\d+) virt:(\d+) mapped:(\d+)/;
-        var match = line.match(mongoMemoryReport);
-        if (match) {
-            var mongoRSS = parseInt(match[1]),
-                mongoVirt = parseInt(match[2]),
-                mongoMapped = parseInt(match[3]);
-            console.log("Mongo res: "+mongoRSS+", virt: "+mongoVirt+", mapped: "+mongoMapped);
+          lmongo.connect(checkKeys);
         }
     });
     var mongoStderr = carrier.carry(mongoProcess.stderr);
