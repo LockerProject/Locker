@@ -21,7 +21,7 @@ check_for() {
 
     if which $command >/dev/null 2>&1; then
         # It's installed
-        version=$($get_version 2>&1 | grep -o -E [-0-9.]\{1,\} | head -n 1)
+        version=$($get_version 2>/dev/null | grep -o -E [-0-9.]\{1,\} | head -n 1)
         if [ -n "$version" ]; then
             echo "$name version $version found."
 
