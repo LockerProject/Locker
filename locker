@@ -23,10 +23,8 @@ while true; do
     esac
 done
 
-# If our dependencies are installed in deps, find them there
-if [ -f deps/environment.sh ]; then
-    . deps/environment.sh
-fi
+# If our dependencies are installed in the source tree, find them there
+. scripts/use-deps.sh
 
 # Make sure we have some API keys, otherwise we can't do much
 apikeys=Config/apikeys.json
