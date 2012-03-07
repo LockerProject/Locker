@@ -19,9 +19,7 @@ deps:
 	./scripts/install-dependencies deps
 
 checkdeps:
-	@if ./scripts/check-dependencies; then \
-		echo "All good!"; \
-	else \
+	@if ! ./scripts/check-dependencies; then \
 		echo Some dependencies are missing.  Try running "make deps" to install them.; \
 		exit 1; \
 	fi

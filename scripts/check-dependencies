@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# If we were installed via lockerbox, find our dependencies there
-lockerbox_env=../lockerbox_environment.sh
-if [ -f "$lockerbox_env" ]; then
-    . "$lockerbox_env"
+set -e
+
+# If our deps were installed into the tree, find them there
+if [ -f "deps/environment.sh" ]; then
+    . deps/environment.sh
 fi
 
 txtrst=$(tput sgr0) # Text reset
@@ -44,3 +45,5 @@ check_for mongoDB mongod "mongod --version" 1.8.0
 if [ "$1" = "--vows" ] ; then
     check_for Vows vows "vows --version" 0.5.8
 fi
+
+echo "All good!"
