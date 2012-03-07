@@ -29,7 +29,7 @@ Then:
     
     cd lockerbox/Locker
     make
-    node lockerd.js
+    ./locker
 
 now open [http://localhost:8042/](http://localhost:8042/) in your browser!
 
