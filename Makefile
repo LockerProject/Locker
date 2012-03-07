@@ -26,9 +26,6 @@ checkdeps:
 		echo Some dependencies are missing.  Try running "make deps" to install them.; \
 		exit 1; \
 	fi
-	@if [ ! -d Apps/dashboardv3/static/common/.git ]; then \
-		echo "Please run git submodule update --init"; exit 1; \
-	fi
 
 build: checkdeps npm_modules build.json
 	@. scripts/use-deps.sh && \
