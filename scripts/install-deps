@@ -104,7 +104,8 @@ else
         echo "Usage: install-dependencies <install prefix>"
     fi
     mkdir -p "${prefix}"
-    prefix=$(readlink -f "$prefix")
+    # canonicalize (MacOS doesn't have readlink -f)
+    prefix=$(cd "$prefix"; pwd)
 
     envscript="${prefix}/environment.sh"
     cat > "${envscript}" <<MRBARGLES
