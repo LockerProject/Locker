@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="stylesheet/less" type="text/less" href="common/css/common.less">
+    <link rel="stylesheet/less" type="text/less" href="css/connect.css">
+    <link rel="stylesheet" type="text/css" href="common/prettify/prettify.css">
+    <script type="text/javascript" src="js/common.js"></script>
+    <script src="common/prettify/prettify.js" type="text/javascript"></script>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" type="text/css" href="css/develop.css" />
+    <script src="js/develop.js"></script>
+    <script src="js/develop-buildapp.js"></script>
+    <script src="js/connect.js"></script>
+  </head>
+  <body>
+    <div>
+      <h1>Build an App!</h1>
+      <%- partial('iframe/developnav_partial') %>
+      <p class="description">
+        Build an HTML5 web app that uses your personal data from APIs like
+        Facebook, Twitter, and Instagram without having to write any server-side
+        code.
+      </p>
+    </div>
+
+    <ul>
+      <li id='connect-github' class='github-step hidden'>
+        <h2>Step 0: Connect GitHub</h2>
+        <p>
+          GitHub is used for automatically syncing apps you build to you Singly account, from there you will be
+          able to publish them to the App Gallery
+        </p>
+        <div class="connect">
+          <span class="synclet-name">GitHub</span>
+          <span class="oauthLink action-button" data-provider="github" data-width="1000" data-height="1000">Connect</span>
+          <div class="gets-list">Gets: &nbsp;Contacts</div>
+        </div>
+      </li>
+
+      <li>
+        <h2>Step 1: Build Your App</h2>
+        <ul>
+          <li><h3>Create a new repo on your local machine</h3>
+            <p>
+              (for help with this, check out
+              <a class="orange" target="_blank" href="http://help.github.com/create-a-repo/">
+                GitHub's excellent doc
+              </a>)
+            </p>
+          </li>
+
+          <li><h3>Add an index.html file</h3>
+            <p>For now, just put something simple and fun in there to make sure everything is working:</p>
+<pre class="prettyprint">&lt;html&gt;
+&lt;head&gt;
+  &lt;style&gt;
+  img {
+    /* upside down! */
+    -webkit-transform: rotate(180deg);
+    -moz-transform: rotate(180deg);
+    max-width:300px;
+    max-height:300px;
+  }
+  &lt;/style&gt;
+  &lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"&gt;&lt;/script&gt;
+  &lt;script src="https://singly.com/js/api.js" type="text/javascript"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript"&gt;
+    $(function() {
+      var client = new APIClient();
+      // get some photos
+      client.getJSON('/Me/photos', {limit: 10}, function(photos) {
+        console.log('found ' + photos.length + ' photos');
+        // add them to the DOM
+        for(var i in photos) {
+          console.log('photo #' + i, photos[i]);
+          $('body').append('&lt;img src="' + photos[i].url + '"&gt;');
+        }
+      });
+    });
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+          </li>
+
+          <li><h3>Open index.html in a browser &mdash; will ask you for your Singly API key, enter it &mdash; it works!</h3>
+            <p>It probably looks really ugly, but that's where you come in &mdash; <a class="orange iframeLink" href="develop#Develop-ApiExplorer">take it from here!</a></p>
+          </li>
+        </ul>
+      </li>
+
+      <li><h2>Step 2: Prepare to publish</h2>
+        <p>
+          Once you are ready to publish your app (or at least see it in your Singly account), you will need to add
+          a package file and push your work to GitHub &mdash; it will sync from GitHub to your Singly account automatically.
+        </p>
+        <ul>
+          <li><h3>Add a package.json file</h3>
+            <p>
+              The package.json file in the root directory of your app specifies some basic info about your app.
+              Minimally, you need at least these fields populated:
+            </p>
+<pre class="prettyprint">
+{
+  "description": "See all my photos, but upside down!",
+  "repository": {
+    "title": "Upside Down Photos",
+    "uses": {
+      "types": [ "photos" ],
+      "services": [ "facebook", "twitter", "foursquare", "instagram" ]
+    }
+  }
+}
+</pre>
+            <p>Without those fields populated, your app will not be synced to your Singly account. For more info
+               about the package.json file, see the
+               <a class="orange iframeLink" href="/Me/devdocs/package.html">
+                 package.json documentation
+               </a>.
+            </p>
+          </li>
+          <li><h3>Add a screenshot</h3>
+            <p>Take a screenshot and put it in the root directory of your app as screenshot.png</p>
+          </li>
+          <li><h3>Push to GitHub:</h3>
+            <p>Commit your changes and push to GitHub.</p>
+            <pre class="prettyprint">git add  .<br>git commit -m 'ready to go'<br>git push origin master</pre>
+            <p>Your app will be synced to your Singly account automatically.</p>
+          </li>
+        </ul>
+      </li>
+      <li><h2>Step 3: Publish your app to the Singly App Gallery!</h2>
+        <p>
+          Once your app is synced to your Singly account, it will show up in the "Your Apps" section in the top
+          left hand corner of the screen. Click on the app, make sure everything is working, and then click the
+          PUBLISH button in the app header.
+        </p>
+        <br>
+        <p>
+          For more info, see the
+           <a class="orange iframeLink" href="develop#Develop-Publishing">
+             full publishing documentation
+           </a>.
+         </p>
+      </li>
+    </ul>
+  </body>
+</html>

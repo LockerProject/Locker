@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "soundcloud",
   "description": "Soundcloud Connector",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "title": "Soundcloud",
     "handle": "soundcloud",
@@ -11,6 +11,7 @@
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
     "static": "false",
+    "hidden": true,
     "url": ""
   },
   "engines": {

@@ -7,11 +7,13 @@
 *
 */
 
-var tw = require('./lib.js');
+var path = require('path');
+var tw;
 var async = require('async');
 
 exports.sync = function(processInfo, cb) {
-    tw.init(processInfo.auth);
+    tw = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
+    tw.init(processInfo.auth, processInfo.workingDirectory, processInfo.absoluteSrcdir);
     var me;
     var responseObj = {data : {}};
     tw.getMe({},function(js){me=js}, function(err){

@@ -1,12 +1,32 @@
-BUILD_NUMBER?=git-$(shell git rev-parse --short --default HEAD)
+export GIT_REVISION?=$(shell git rev-parse --short --default HEAD)
+# if not provided by Jenkins, then just use the gitrev
+export BUILD_NUMBER?=git-$(GIT_REVISION)
+
+TESTS = $(shell find test -name "*.test.js")
+MOCHA = ./node_modules/.bin/mocha
+RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
+DEFAULT_OPTS = --growl --timeout 500
 
 all: build
 
-build:
-	npm install
-	echo "\"$(BUILD_NUMBER)\"" |tee build.json tests/build.json
+build: npm_modules build.json
+	./Apps/dashboardv3/static/common/templates/compile.sh
 
-test: build
+npm_modules:
+	npm install
+
+# the test suite pretends that tests/ is the top of the source tree,
+# so drop a copy there too
+build.json:
+	echo '{ "build" : "$(BUILD_NUMBER)", "gitrev" : "$(GIT_REVISION)" }' \
+	| tee $@ tests/$@
+
+test: oldtest newtest
+
+newtest: build
+	@$(RUNALL) $(DEFAULT_OPTS)
+
+oldtest: build
 	cd tests && \
 	env NODE_PATH="$(PWD)/Common/node" \
 	node ./runTests.js
@@ -24,7 +44,7 @@ test-bindist: $(DISTFILE)
 	./scripts/test-tarball "$(SUBDIR)" "$<"
 
 clean:
-	echo "Surely you must be joking."
-	exit 1
+	rm -f "$(DISTFILE)" build.json tests/build.json
+	rm -rf node_modules
 
-.PHONY: build
+.PHONY: build npm_modules build.json

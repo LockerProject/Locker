@@ -1,0 +1,23 @@
+<link rel="stylesheet" href="css/connect.css">
+<div id="connectors-list">
+  <ul class="synclets-list">
+    {#authedConnectors}
+      <li class="featured hideable"><img class="synclet-logo" src="img/icons/32px/{.handle}.png" /><span class="synclet-name">{.title}</span>
+      <a href="/auth/{.handle}" class="oauthLink"
+         data-provider="{.handle}"
+         data-width="{.oauthSize.width}"
+         data-height="{.oauthSize.height}">
+           <img class="connect-button" src="img/connected.png" />
+      </a></li>
+    {/authedConnectors}
+    {#otherConnectors}
+      <li class="featured hideable"><img class="synclet-logo" src="img/icons/32px/{.handle}.png" /><span class="synclet-name">{.title}</span>
+      <a href="/auth/{.handle}" class="oauthLink"
+         data-provider="{.handle}"
+         data-width="{.oauthSize.width}"
+         data-height="{.oauthSize.height}">
+         <img class="connect-button" src="img/connect.png" />
+      </a></li>
+    {/otherConnectors}
+  </ul>
+</div>

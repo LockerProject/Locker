@@ -150,6 +150,9 @@ $(function() {
                 if(contact.accounts.instagram) {
                     newContact.set({instagram: contact.accounts.instagram[0]});
                 }
+                if(contact.accounts.tumblr) {
+                    newContact.set({tumblr: contact.accounts.tumblr[0]});
+                }
                 if(contact.accounts.flickr) {
                     newContact.set({flickr: contact.accounts.flickr[0]});
                 }
@@ -237,7 +240,7 @@ $(function() {
             that.loading = true;
             var baseURL = baseUrl + '/query/getContact';
             var fields = "['_id','addresses','emails','name','phoneNumbers','photos','accounts.facebook.data.link'," +
-                         "'accounts.foursquare.data.id','accounts.github.data.login','accounts.instagram.data.username','accounts.twitter.data.screen_name'," +
+                         "'accounts.foursquare.data.id','accounts.github.data.login','accounts.instagram.data.username','accounts.tumblr.data.url','accounts.tumblr.data.title','accounts.twitter.data.screen_name'," +
                          "'accounts.flickr.data.username','accounts.flickr.data.nsid']";
             var sort = '\'{"firstnamesort":1}\'';
             var terms = "[firstnamesort:\"a\"+]";
@@ -345,6 +348,15 @@ $(function() {
                 $('.flickrSection').show();
             } else {
                 $('.flickrSection').hide();
+            }
+            // tumblr
+            if (contact.accounts.tumblr && contact.accounts.tumblr[0].data) {
+                var tumblr = contact.accounts.tumblr[0].data;
+                $('.tumblrHandle').attr('href', tumblr.url);
+                $('.tumblrHandle').text(tumblr.title);
+                $('.tumblrSection').show();
+            } else {
+                $('.tumblrSection').hide();
             }
             // location
             var loc = this.getLocation(contact);
@@ -489,6 +501,7 @@ $(function() {
             contactTemplate += '    <% if (typeof(foursquare) != "undefined" && typeof(foursquare.data.id) != "undefined") { %><a href="http://foursquare.com/user/<%= foursquare.data.id %>" class="social_link foursquare" target="_blank">Foursquare Profile</a><% } %>';
             contactTemplate += '    <% if (typeof(github) != "undefined" && typeof(github.data.login) != "undefined") { %><a href="http://github.com/<%= github.data.login %>" class="social_link github" target="_blank">GitHub Profile</a><% } %>';
             contactTemplate += '    <% if (typeof(instagram) != "undefined" && typeof(instagram.data.username) != "undefined") { %><a href="http://listagr.am/n/<%= instagram.data.username %>" class="social_link instagram" target="_blank">Instagram Pics</a><% } %>';
+            contactTemplate += '    <% if (typeof(tumblr) != "undefined" && typeof(tumblr.data.url) != "undefined") { %><a href="<%= tumblr.data.url %>" class="social_link tumblr" target="_blank"><%= tumblr.data.url %></a><% } %>';
             contactTemplate += '  </div>';
             contactTemplate += '</li>';
 

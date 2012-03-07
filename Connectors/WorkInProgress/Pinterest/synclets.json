@@ -1,0 +1,11 @@
+{
+    "types" : {
+        "feed":"photo"
+    },
+    "synclets":[
+        {"name": "me", "frequency": 3600},
+        {"name": "home", "frequency": 600},
+        {"name": "following", "frequency": 3600},
+        {"name": "boards", "frequency": 3200}
+    ]
+}

@@ -1,5 +1,10 @@
 @import "../common/css/common.less";
 
+// dashboard.js is responsible for making these appear
+.nav-section, .sidenav {
+  display: none;
+}
+
 /* styling for the develop page */
 .viewAll.blue:after {
   content: " \25BC";
@@ -32,6 +37,49 @@
   color: #feaecd;
 }
 
+.publishInfo {
+    width:500px;
+}
+
+#publishOverlay {
+    background:rgba(0, 0, 0, 0.5);
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    z-index:9;
+    display:none;
+}
+
+#publishedInfo {
+    position:absolute;
+    display:none;
+    top:100px;
+    left:20px;
+    width:500px;
+    border:2px solid #ddd;
+    font-size:24px;
+    padding:20px;
+    background-color:white;
+    z-index:10;
+    -webkit-box-shadow: 0px 0px 8px 0px black;
+    -moz-box-shadow: 0px 0px 8px 0px black;
+    box-shadow: 0px 0px 8px 0px black;
+
+    .issueLink {
+        background-color:#eee;
+        display:block;
+        margin:10px;
+        text-align:center;
+        color:@orange;
+    }
+
+    .action-button {
+        float:right;
+    }
+}
+
 .publish-list {
   li {
     margin-left: 30px;
@@ -42,18 +90,23 @@
     }
   }
 
-  select {
-    margin-left: 8px;
-    min-width: 200px;
-  }
-
-  input[type="text"] {
-    height: 20px;
-    width: 200px;
-  }
-
   p.indented {
-    margin-left: 50px;
+    max-width:400px;
+    margin-left: 20px;
+    background-color:#eeeeee;
+    padding:4px;
+  }
+
+  p.warning {
+      color:#9f6000;
+      background-color:#feefb3;
+      border:1px solid #9f6000;
+  }
+
+  p.error {
+      color:#d8000c;
+      background-color:#ffbaba;
+      border:1px solid #d8000c;
   }
 
   .preview {
@@ -77,18 +130,7 @@
     }
   }
 
-  .preview.jcrop {
-    text-align: left;
-  }
-
-  .jcrop-holder {
-    vertical-align: middle;
-    position: absolute !important;
-    top: 50%;
-    left: 50%;
-  }
-
-  .preview:not(.jcrop) img {
+  .preview img {
     max-width: 450px;
     max-height: 450px;
     margin-left: auto;
@@ -121,6 +163,10 @@ button.publish {
   padding: 5px 10px;
   cursor: pointer;
 }
+button[disabled] {
+    cursor:not-allowed;
+    opacity:0.4;
+}
 
 .connect .installed {
   margin: 0 5px 0 0;
@@ -129,16 +175,6 @@ button.publish {
 .gotit-button {
   padding: 8px 50px 3px;
   font-size: 20px;
-}
-
-button.publish {
-  background-color: #F7931E;
-  color: white;
-  font-size: 18px;
-  border-radius: 4px;
-  border: 0px;
-  padding: 5px 10px;
-  cursor: pointer;
 }
 
 #firstvisit-overlay {
@@ -165,35 +201,15 @@ button.publish {
   }
 }
 
-
-
 #appFrame {
   margin-top:10px;
   width: 99%;
+  min-width: 840px;
   height: 93%;
 }
 
-#appHeader {
-  #appTitle {
-    color: @blue;
-    font-size: 24px;
-    margin-right: 10px;
-  }
-  .appServices {
-    margin-left: 10px;
-    margin-right: 10px;
-  }
-  img {
-    vertical-align: middle;
-    margin-top: -7px;
-  }
-  .action-button {
-    color:white !important;
-  }
-}
-
 /* Modal */
-#basic-modal-content {
+#connect-more {
 
   display: none;
 

@@ -22,11 +22,18 @@
     "events": [
       [
         "post/facebook",
-        "/events"
+        "/events",
+        true
+      ],
+      [
+        "dashboard/tumblr",
+        "/events",
+        true
       ],
       [
         "tweet/twitter",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""

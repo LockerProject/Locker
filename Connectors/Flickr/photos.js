@@ -50,7 +50,7 @@ exports.sync = function(processInfo, callback) {
     try {
         fs.mkdirSync('photos', 0755);
     } catch(err) {
-        if(!(err.code === 'EEXIST' && err.errno === 17)) { // if it's already there, we're good
+        if(err.code !== 'EEXIST') { // if it's already there, we're good
             callback(err);
             return;
         }

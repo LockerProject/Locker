@@ -467,6 +467,11 @@ a.instagram
   background: url('../img/social-icons/24px/instagram.png');
 }
 
+a.tumblr
+{
+  background: url('../img/social-icons/24px/tumblr.png');
+}
+
 /*
 #newHeader
 {

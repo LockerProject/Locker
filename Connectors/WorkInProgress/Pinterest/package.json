@@ -1,0 +1,17 @@
+{
+  "author": "Singly <nerds@singly.com>",
+  "name": "pinterest",
+  "description": "Pinterest",
+  "version": "0.0.0",
+  "repository": {
+    "title": "Pinterest",
+    "handle": "pinterest",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "oauthSize": {
+        "width": 800,
+        "height": 500
+    }
+  }
+}

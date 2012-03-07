@@ -14,10 +14,10 @@
     <content class="body">
       <ul>
         <% for (var i = 0; i < apps.length; i++) { %>
-          <li class="appList" data-id='<%= apps[i].id %>'>
+          <li class="appList" data-id='Explore-<%= apps[i].id %>'>
             <p>
-              <%= apps[i].title %>, by <%= apps[i].author || "Singly, Inc." %> <span class="pipe">|</span>
-              <a class="orange" href="<%= apps[i].github || "https://www.github.com/LockerProject/Locker" %>">view code on GitHub</a>
+              <%= apps[i].title %>, by <%= apps[i].author && apps[i].author.name ? apps[i].author.name : "Singly, Inc." %> <span class="pipe">|</span>
+              <a class="orange" href="<%= apps[i].url || "https://github.com/LockerProject/Locker" %>">view code on GitHub</a>
             </p>
             <% if (apps[i].lastUsed) { %>
               <p class="date">

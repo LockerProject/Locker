@@ -1,0 +1,875 @@
+{
+    "apis": [
+    {
+        "path": "/Me/photos/state",
+        "description": "Meta info about the current state of the Photos collection",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "photosState",
+            "summary": "Meta info about the current state of the Photos collection",
+            "responseClass": "state"
+        }
+        ]
+    },
+    {
+        "path": "/Me/photos/since",
+        "description": "Get the photos that have been added to the collection after a specific photo.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "photosSince",
+            "summary": "Get the photo that have been added to the collection after a specific photo.",
+            "responseClass": "photo",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The exclusive lower bound _id. Result array is all photos added after that one.",
+                "dataType": "string",
+                "paramType": "query",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/photos/",
+        "description": "Paginate through all collected photos.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "photosPaginate",
+            "summary": "Paginate through all collected photos.",
+            "responseClass": "photo",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of photos to return.",
+                "dataType": "number",
+                "default": 10,
+                "paramType": "query"
+            },
+            {
+                "name": "offset",
+                "description": "The number to offset into the photos collection and begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/photos/image/{id}",
+        "description": "Redirect to the actual photo data based on a photo's _id. Useful for downloading the photo itself or presenting it in the UI.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "photosRedirect",
+            "summary": "Redirect to the actual photo data based on a photo's _id. Useful for downloading the photo itself or presenting it in the UI.",
+            "responseClass": "[Image]",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of a photo object to redirect to.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/photos/id/{id}",
+        "description": "Get the collected information about a single photo.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "photosGet",
+            "summary": "Get the collected informat about a single photo.",
+            "responseClass": "photo",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id from a photo to retrieve.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a photo object returned from the /Me/photos/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+
+
+    {
+        "path": "/Me/contacts/state",
+        "description": "Meta info about the current state of the Contacts collection.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "contactsState",
+            "summary": "Meta info about the current state of the Contacts collection.",
+            "responseClass": "state"
+        }
+        ]
+    },
+    {
+        "path": "/Me/contacts/since",
+        "description": "Get the contacts that have been added to the collection after a specific contact.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "contactsSince",
+            "summary": "Get the contacts that have been added to the collection after a specific contact.",
+            "responseClass": "contact",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The exclusive lower bound _id. Result array is all contacts added after that one.",
+                "dataType": "string",
+                "paramType": "query",
+                "example": "found in a contact object return from the /Me/contacts/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/contacts/",
+        "description": "Paginate through all collected contacts.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "contactsPaginate",
+            "summary": "Paginate through all collected contacts.",
+            "responseClass": "contact",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of contacts to return",
+                "dataType": "number",
+                "paramType": "query",
+                "default": 10
+            },
+            {
+                "name": "offset",
+                "description": "The offset into the contacts collection to begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/contacts/id/{id}",
+        "description": "Get the collected information about a single contact, by _id.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "contactsGet",
+            "summary": "Get the collected information about a single contact.",
+            "responseClass": "contact",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of the contact.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a contact object returned from the /Me/contacts/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/state",
+        "description": "Meta info about the current state of the Links collection",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "summary": "Meta info about the current state of the Links collection",
+            "responseClass": "state"
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/search",
+        "description": "Full-text search of all links",
+        "operations": [
+        {
+            "parameters": [
+            {
+                "name": "q",
+                "description": "The search string",
+                "dataType": "string",
+                "paramType": "query"
+            }
+            ],
+            "httpMethod": "GET",
+            "notes": "The query searches against the link, author, related contacts, title, and full page contents.  Most of the <a href='http://lucene.apache.org/java/2_3_2/queryparsersyntax.html'>Lucene query syntax</a> is available.",
+            "nickname": "linksSearch",
+            "summary": "Search all links",
+            "responseClass": "link"
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/",
+        "description": "Paginate through all collected links.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "linksPaginate",
+            "summary": "Paginate through all collected links.",
+            "responseClass": "link",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of links to return.",
+                "dataType": "number",
+                "default": 10,
+                "paramType": "query"
+            },
+            {
+                "name": "offset",
+                "description": "The offset into the links collection to begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            },
+            {
+                "name": "fields",
+                "description": "The subset of fields to return.",
+                "dataType": "string",
+                "paramType": "query",
+                "example": "{\"embed.type\":1}"
+            },
+            {
+                "name": "full",
+                "description": "When true the complete encounters array is included in the result.",
+                "dataType": "boolean",
+                "paramType": "query",
+                "options": [true, false]
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/id/{id}",
+        "description": "Get the link information for a specific link.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "linksGet",
+            "summary": "Get the link information for a specific link.",
+            "responseClass": "link",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of the link object to return.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/encounters/{id}",
+        "description": "Get information about where a link was originally extracted from (a tweet, a Facebook wall post, etc).",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "linksGetEncounters",
+            "summary": "Get the link information for a specific link.",
+            "responseClass": "encounter",
+            "notes": "A single link can have many encounters.  Encounters contain the information from the original sources such as tweets or Facebook wall posts.",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The url of the link.  This is the fully expanded url when possible.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/links/since",
+        "description": "Get the links that have been added to the collection after a specific link.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "linksSince",
+            "summary": "Get the links that have been added to the collection after a specific link.",
+            "responseClass": "link",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The exclusive lower bound _id. Result array is all links added after that one.",
+                "dataType": "string",
+                "paramType": "query",
+                "example": "found in a link object returned from the /Me/links/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+
+    {
+        "path": "/Me/places/state",
+        "description": "Meta info about the current state of the Places collection",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesState",
+            "summary": "Meta info about the current state of the Places collection",
+            "responseClass": "state"
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/since",
+        "description": "Get the places that have been added to the collection after a specific place.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesSince",
+            "summary": "Get the places that have been added to the collection after a specific place.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The exclusive lower bound _id. Result array is all places added after that one.",
+                "dataType": "string",
+                "paramType": "query",
+                "example": "found in a place object returned from the /Me/places/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/",
+        "description": "Paginate through all collected places.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesPaginate",
+            "summary": "Paginate through all collected places.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of places to return",
+                "dataType": "number",
+                "paramType": "query",
+                "default": 10
+            },
+            {
+                "name": "offset",
+                "description": "The offset into the places collection to begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/Me/places/id/{id}",
+        "description": "Get the collected information about a single place.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "placesGet",
+            "summary": "Get the collected information about a single place.",
+            "responseClass": "place",
+            "parameters": [
+            {
+                "name": "id",
+                "description": "The _id of the place.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a place object returned from the /Me/places/ endpoint"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/push",
+        "description": "Discover which types of external datasets have been established.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "push",
+            "summary": "Find which datasets have been added via the push API.",
+            "responseClass": "pushMap"
+        }
+        ]
+    },
+    {
+        "path": "/map",
+        "description": "Retrieve information about the available and installed services",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "coreMap",
+            "summary": "Retrieve information about the available and installed services",
+            "responseClass": "serviceMap"
+        }
+        ]
+    },
+    {
+        "path": "/providers",
+        "description": "Find services that provide the given types.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "coreProviders",
+            "summary": "Find services that provide the given types.",
+            "parameters": [
+            {
+                "name": "types",
+                "description": "A single, or comma separated list, of service types that are being searched for.",
+                "dataType": "string",
+                "paramType": "query",
+                "default": "contact"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/query/get{dataSet}",
+        "description": "Query data.  This endpoint should not be used for trying to just get all data out of a collection, that's what the collection endpoints are for.  When utilizing the query API, you must specify both a type and at least one query parameter.<br><h3>Examples</h3>Get all contact data for a person with a certain Facebook ID:<br><br><code><a href='/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]' target='_blank'>/query/getContact?terms=[accounts.facebook.data.id:\"643796567\"]</a></code><br><br>Get 5 photos with a height greater than 480 pixels, sorted by created date, newest to oldest:<br><br><code><a href=\"/query/getPhoto?terms=[width:480+]&limit=5&sort='{&quot;timestamp&quot;:-1}'\" target='_blank'>/query/getPhoto?terms=[width:480+]&limit=5&sort='{\"timestamp\":-1}'</a></code><br><br>Get only the url, thumb url, title and twitter username (if present) fields from the Photos collection (and return only the first 5):<br><br><code><a href=\"/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]\" target='_blank'>/query/getPhoto?limit=5&fields=[title:1,url:1,thumbnail:1,sources.data.user.screen_name:1]</a></code><br><br>",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "coreQuery",
+            "summary": "Query collection data.",
+            "parameters": [
+            {
+                "name": "dataSet",
+                "description": "The data type to query.  Currently supported are Photo, Contact, Place, and Link.",
+                "dataType": "string",
+                "paramType": "path",
+                "options": ["Photo", "Contact", "Link", "Place"]
+            },
+            {
+                "name": "terms",
+                "description": "The actual query to be performed.<h3>Syntax</h3>The syntax uses a JSON like notation that always begins as an array.  The fields can be checked by writing them in a json notation of field:value.  The field name can use dot notation to access nested objects. The value can be a quoted string, a number, or a boolean true/false.Strings may be quoted with either &quot; or &apos;. Multiple terms can be checked by separating them with a comma just like a JSON array:<br><br> <code>terms=[field:&quot;value&quot;, field2:11, field3:false]</code><br><br>  Multiple terms are treated as an AND statement - in order to preform an OR search the terms that will be ORed are put in parenthesis and separated by OR statements. For example:<br><br>  <code>terms=[(field:value OR field2:value)]</code><br><br>  AND is also available when necessary, following the same rules as the OR operator. The value can also contain comparison operators.  Currently supported operators are:<ul><li><span class='operator'>+</span> greater than</li><li><span class='operator'>+.</span> greater than or equal</li><li><span class='operator'>-</span> less than</li><li><span class='operator'>-.</span> less than or equal</li><li><span class='operator'>!=</span> not equal</li></ul>For example: <br><br><code>terms=[field:10+.]</code><br><br> searches for fields with a value of 10 or greater.",
+                "dataType": "string",
+                "paramType": "query"
+            },
+            {
+                "name": "limit",
+                "description": "The maximum number of results to return.",
+                "dataType": "number",
+                "paramType": "query"
+            },
+            {
+                "name": "offset",
+                "description": "The number of entries to offset the returned data set to.",
+                "dataType": "number",
+                "paramType": "query"
+            },
+            {
+                "name": "sort",
+                "description": "The field to sort the results on.  Uses a mongo style syntax of <code>'{&quot;sortField&quot;:1}'</code>.  Note that it must be quoted.",
+                "dataType": "string",
+                "paramType": "query"
+            },
+            {
+                "name": "fields",
+                "description": "The fields to return as an array of <code>fieldName:1</code> to include themThe field name can use dot notation to access nested objects, e.g. <code>[sources.data.user:1]</code>. Exclusion is not currently possible. Useful for speeding up queries and reducing payload.",
+                "dataType": "string",
+                "paramType": "query"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/push/{dataSet}",
+        "description": "Push data in.  This is the method for pushing arbitrary data in.  The dataSet specified in the URL is the bucket that will contain all of this data.  All data that's posted to this endpoint needs to follow a specific format to ensure that it's processed correctly, and should be a JSON-formatted object.  That object should contain 2 top level properties, 'data' and 'config'.  Either can be omitted.  The full description of how each of those 2 fields are processed are below, but let's walk through a few examples.<br><h3>Examples</h3>We'll start by pushing in a very simple object first.  All objects <b>must</b> contain an <b>id</b> field.<br><pre>{\"data\" : [ {\"obj\" : {\"id\" : 1, \"someData\" : \"object #1\"}, \"timestamp\" : 1312325283581 } ] }</pre>Adding a second object is just as simple:<br><pre>{\"data\" : [ {\"obj\" : {\"id\" : 2, \"someData\" : \"object #2\"}, \"timestamp\" : 1312325283582 } ] }</pre>Now, if you'd like to make a few changes to existing data, simply repost it with different values, such as this:<br><pre>{\"data\" : [ {\"obj\" : {\"id\" : 1, \"someData\" : \"object #100\"}, \"timestamp\" : 1312325283777 } ] }</pre>If you were to query your new dataset now, you'd get back 2 objects.  If you decide you don't want that first object anymore, there's a few ways you can delete it.  The first is posting a full list of all the expected IDs, and having the datastore sort it out.  That would be done like this:<br><pre>{\"config\" : { \"ids\" : [1] } }</pre>This would remove our object with ID#2 from the system.  You're also free to post objects that contain both config and data values, and they will both be processed accordingly.  Another, more straight forward way to remove data is as follows:<br><pre>{\"data\" : [ {\"obj\" : {\"id\" : 1}, \"type\" : \"delete\", \"timestamp\" : 1312325283777 } ] }",
+        "operations": [
+        {
+            "httpMethod": "POST",
+            "nickname": "coreQuery",
+            "summary": "Push data in.",
+            "parameters": [
+            {
+                "name": "dataSet",
+                "description": "The name of the bucket to contain the data being pushed in.",
+                "dataType": "string",
+                "paramType": "query"
+            },
+            {
+                "name": "config",
+                "description": "This object contains config data for the dataset.  Currently the only thing supported here is 'ids' which is a list of ids that should exist in the system.  Any ID not specified in this list will be removed from the system.",
+                "dataType": "array",
+                "paramType": "post"
+            },
+            {
+                "name": "data",
+                "description": "This an array of objects that should be added to the system.<h3>Syntax</h3>Each object in the array can have 3 top level properties.  The 3 accepted properties are: <ul><li>'<b>obj</b>': This contains a JSON representation of whatever data you're adding to the system.</li><li>'<b>timestamp</b>': This is the timestamp for the creation of the object.  If omitted, the time will be set to now.</li><li>'<b>type</b>': This is only really necessary if the type is 'delete', which will cause the system to remove whatever ID is specified in the object.",
+                "dataType": "array",
+                "paramType": "post"
+            }
+            ]
+        }
+        ]
+    },
+    {
+        "path": "/push/{dataSet}/{id}",
+        "description": "Query for a specific item in your dataset.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "corePushQuery",
+            "summary": "Query back one of the records that you've inserted into the system.",
+            "parameters": [
+            {
+                "name": "dataSet",
+                "description": "The dataSet you'd like to query.",
+                "dataType": "string",
+                "paramType": "path"
+            },
+            {
+                "name": "id",
+                "description": "The id of the object you've added to the system.",
+                "dataType": "string",
+                "paramType": "path",
+                "example": "found in a {dataSet} object returned from the /Me/{dataSet}/getCurrent endpoint"
+            }
+            ]
+
+        }
+        ]
+    },
+    {
+        "path": "/push/{dataSet}/getCurrent",
+        "description": "Query for the set of items in your dataset.",
+        "operations": [
+        {
+            "httpMethod": "GET",
+            "nickname": "corePushQuery",
+            "summary": "Grab records back out of your dataset.",
+            "parameters": [
+            {
+                "name": "limit",
+                "description": "The maximum number of objects to return.",
+                "dataType": "number",
+                "default": 10,
+                "paramType": "query"
+            },
+            {
+                "name": "offset",
+                "description": "The number to offset into your dataset and begin the returned data from.",
+                "dataType": "number",
+                "paramType": "query"
+            },
+            {
+                "name": "dataSet",
+                "description": "The dataSet you'd like to query.",
+                "dataType": "string",
+                "paramType": "path"
+            }
+            ]
+
+        }
+        ]
+
+    }
+    ],
+    "models": [
+    {
+        "name": "state",
+        "responseClass": {
+            "id": "state",
+            "properties": {
+                "ready": {
+                    "type": "boolean",
+                    "description": "true or 1 when the collection is ready to be interacted with (has data)."
+                },
+                "count": {
+                    "type": "number",
+                    "description": "The number of items in the collection."
+                },
+                "updated": {
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, that the collection was last updated."
+                },
+                "lastId": {
+                    "type": "string",
+                    "description": "The _id of the object last added to the collection. This is useful in conjunction with the /since endpoint."
+                }
+            }
+        }
+    },
+    {
+        "name": "encounter",
+        "responseClass": {
+            "id": "encounter",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "A unique identifier for this encounter."
+                },
+                "_hash": {
+                    "type": "string",
+                    "description": "A recreate-able, unique identifier based on the data."
+                },
+                "at": {
+                    "type": "number",
+                    "description": "The time, in milliseconds, that this encounter occurred."
+                },
+                "from": {
+                    "type": "string",
+                    "description": "The name of the contact this encounter came from."
+                },
+                "fromID": {
+                    "type": "string",
+                    "description": "The id, relative to the source service, of the contact that this encounter was from."
+                },
+                "id": {
+                    "type": "string",
+                    "description": "An identifier for the encounter."
+                },
+                "link": {
+                    "type": "string",
+                    "description": "The full expanded URL that this encounter is related to."
+                },
+                "network": {
+                    "type": "string",
+                    "description": "The remote network that this encounter came from."
+                },
+                "orig": {
+                    "type": "string",
+                    "description": "The original form that this URL was encounterd.  This could be a shortened URL."
+                },
+                "text": {
+                    "type": "string",
+                    "description": "The original text where this link was found."
+                },
+                "via": {
+                    "type": "object",
+                    "description": "A service event that this encounter was found in."
+                }
+            }
+        }
+    },
+    {
+        "name": "link",
+        "responseClass": {
+            "id": "link",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "An auto-generated unique identifier for this link."
+                },
+                "link": {
+                    "type": "string",
+                    "description": "The URL of the link"
+                },
+                "at": {
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, that the first encounter of this link was created."
+                },
+                "embed": {
+                    "type": "object",
+                    "description": "An object of oembed related information to create an embedded view of the link."
+                },
+                "favicon": {
+                    "type": "string",
+                    "description": "The URL of the favicon of the linked site."
+                },
+                "text": {
+                    "type": "string",
+                    "description": "The text of the page behind the link."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title of the page behind the link."
+                },
+                "encounters": {
+                    "type": "array",
+                    "description": "An array of different \"encounters\" the person has had with a link - e.g. via a tweet and a Facebook post. Only returned if full == true."
+                }
+            }
+        }
+    },
+    {
+        "name": "photo",
+        "responseClass": {
+            "id": "photo",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "An auto-generated unique identifier for this photo."
+                },
+                "height": {
+                    "type": "number",
+                    "description": "Height of the photo in pixels."
+                },
+                "id": {
+                    "type": "string",
+                    "description": "An internal reference id."
+                },
+                "sourceLink": {
+                    "type": "string",
+                    "description": "A URL of an entity in which a link to the photo was originally encountered, e.g. a link to a tweet or a Facebook post that contained a link to the photo."
+                },
+                "sources": {
+                    "type": "array",
+                    "description": "An array of the services where this photo was encountered, e.g. a Facebook post or a tweet."
+                },
+                "thumbnail": {
+                    "type": "string",
+                    "description": "A URL to a thumbnail version of the photo."
+                },
+                "timestamp": {
+                    "type": "number",
+                    "description": "The time, in milliseconds since the epoch, of when the photo was created."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title of the photo."
+                },
+                "url": {
+                    "type": "string",
+                    "description": "The URL to the raw photo data."
+                },
+                "width": {
+                    "type": "number",
+                    "description": "The width of the photo in pixels."
+                }
+            }
+        }
+    },
+    {
+        "name": "contact",
+        "responseClass": {
+            "id": "contact",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "An auto-generated unique identifier for this contact."
+                },
+                "accounts": {
+                    "type": "object",
+                    "description": "An object of all the raw accounts that were collected together for this contact (Twitter, Facebook, etc)."
+                },
+                "addresses": {
+                    "type": "array",
+                    "description": "An array of the street addresses this contact has stored."
+                },
+                "firstnamesort": {
+                    "type": "string",
+                    "description": "A helper field to support first name sorting."
+                },
+                "lastnamesort": {
+                    "type": "string",
+                    "description": "A helper field to support last name sorting."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The full name of this contact."
+                },
+                "nicknames": {
+                    "type": "array",
+                    "description": "An array of all the nicknames this contact is known by."
+                },
+                "photos": {
+                    "type": "array",
+                    "description": "An array of all of the profile photos associated with this contact."
+                }
+            }
+        }
+    },
+    {
+        "name": "place",
+        "responseClass": {
+            "id": "place",
+            "properties": {
+                "_id": {
+                    "type": "string",
+                    "description": "An auto-generated unique identifier for this place."
+                },
+                "at": {
+                    "type": "string",
+                    "description": "The date that this place was created."
+                },
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier for this place from the original source, e.g. Foursquare's id value."
+                },
+                "lat": {
+                    "type": "number",
+                    "description": "The latitude."
+                },
+                "lng": {
+                    "type": "number",
+                    "description": "The longitude."
+                },
+                "me": {
+                    "type": "boolean",
+                    "description": "Marked true if this place is something created by you, as opposed to your friends - i.e. is this my checkin or a friend's?."
+                },
+                "network": {
+                    "type": "string",
+                    "description": "The name of the network or source where this place record came from, e.g. foursquare."
+                },
+                "path": {
+                    "type": "boolean",
+                    "description": "Marked true if this place record is part of a path of places, such as a GPS breadcrumb path.  For example, Google Latitude is a path, Foursquare is not."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The name of the location for this place (if available)."
+                },
+                "via": {
+                    "type": "string",
+                    "description": "The relative URL for retrieving original object."
+                }
+            }
+        }
+    },
+    {
+        "name": "serviceMap",
+        "responseClass": {
+            "id": "serviceMap",
+            "properties": {
+                "Set": {
+                    "type": "Set",
+                    "description": "A set of all things available in the locker."
+                }
+            }
+        }
+    },
+    {
+        "name": "pushMap",
+        "responseClass": {
+            "id": "pushMap",
+            "properties": {
+                "Set": {
+                    "type": "Set",
+                    "description": "A set of datasets that have been pushed in.  You will receive an object with a key for each dataset with a value of true."
+                }
+            }
+        }
+    }
+    ],
+    "basePath": "http://localhost:8042",
+    "swaggerVersion": "1.0",
+    "apiVersion": "0.1"
+}

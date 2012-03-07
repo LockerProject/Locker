@@ -43,6 +43,13 @@ exports.instagram = {
     nickname: 'username'
 };
 
+exports.tumblr = {
+    id: 'name',
+    name: 'title',
+    photo: 'avatar',
+    nickname: 'name'
+};
+
 exports.linkedin = {
     name: function(data) {
         return data.firstName + ' ' + data.lastName;

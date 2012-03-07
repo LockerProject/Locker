@@ -202,27 +202,36 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.end("true");
 });
 
+var collectionApis = serviceManager.getCollectionApis();
+for(var i in collectionApis) {
+  locker._oldGet = locker.get;
+  locker.get = function(path, callback) {
+    return locker._oldGet('/Me/' + i + path, callback);
+  }
+  collectionApis[i].api(locker, collectionApis[i].lockerInfo);
+  locker.get = locker._oldGet;
+  locker._oldGet = undefined;
+}
+
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
     // ensure the ending slash - i.e. /Me/foo ==>> /Me/foo/
     if(!req.params[1]) {
-        var url = "/Me/" + req.params[0];
-        if (!req.params[1]) {
-            url += "/"
-        } else {
-            url += req.params[1];
-        }
+        var handle = req.params[0];
+        var service = serviceManager.map(handle);
+        //rebuild the url with a / after the /Me/<handle>
+        var url = "/Me/" + handle + "/";
         var qs = querystring.stringify(req.query);
-        if (qs.length > 0) {
-            url += "?" + qs
+        if (qs.length > 0) url += "?" + qs;
+        if(service && service.type === 'app') {
+            res.header("Location", url);
+            return res.send(302);
         }
-        res.header("Location", url);
-        res.send(302);
-    } else {
-        logger.verbose("GET proxy of " + req.originalUrl);
-        proxyRequest('GET', req, res, next);
+        req.url = url;
     }
+    logger.verbose("GET proxy of " + req.originalUrl);
+    proxyRequest('GET', req, res, next);
 });
 
 // all posts just pass
@@ -266,7 +275,7 @@ function proxyRequest(method, req, res, next) {
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
         var fileUrl = url.parse(ppath);
-        if(fileUrl.pathname.indexOf("..") >= 0)
+        if(fileUrl.pathname.indexOf("/..") >= 0)
         { // extra sanity check
             return res.send(404);
         }
@@ -349,7 +358,7 @@ locker.get("/diary", function(req, res) {
 
 locker.get('/core/revision', function(req, res) {
     fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
-        console.log(err);
+        if (err) return logger.error(err);
         if (doc) res.send(JSON.parse(doc));
         else res.send("unknown");
     });
@@ -376,6 +385,33 @@ locker.get('/core/selftest', function(req, res) {
     });
 });
 
+locker.get('/core/stats', function(req, res) {
+    var stats = {
+        'core' : {
+            'memoryUsage' : process.memoryUsage(),
+        },
+        'serviceManager': {}
+    }
+
+    var map = serviceManager.map();
+    for (var serviceId in map) {
+        var type = map[serviceId].type;
+
+        if (!(type in stats.serviceManager)) {
+            stats.serviceManager[type] = {
+                'total' : 0,
+                'running' : 0
+            }
+        }
+
+        stats.serviceManager[type].total += 1;
+        if (serviceManager.isRunning(serviceId))
+            stats.serviceManager[type].running += 1;
+    }
+
+    res.send(JSON.stringify(stats), 200);
+});
+
 // EVENTING
 // anybody can listen into any service's events
 locker.get('/core/:svcId/listen', function(req, res) {
@@ -393,7 +429,9 @@ locker.get('/core/:svcId/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, svcId, cb);
+    var batching = false;
+    if (req.param("batch") === "true" || req.param === true) batching = true;
+    levents.addListener(type, svcId, cb, batching);
     res.writeHead(200);
     res.end("OKTHXBI");
 });

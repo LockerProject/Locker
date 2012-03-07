@@ -1,110 +1,103 @@
-$.cookie("firstvisit", true, {path: '/' });
-
-var profileTimeout;
-var hasTwitterOrFacebook = false;
-
 $(function() {
-    $(".connect-button-link").click(function(e) {
-        e.preventDefault();
-        showHiddenConnectors();
-    });
-
-    //copied from dashboard.js
-    $('body').delegate('.oauthLink','click', function(e) {
-        var that = $(this);
-        if (that.is(':disabled') || that.hasClass('disabled')) return false;
-        var options = "width=" + that.data('width') + ",height=" + that.data('height') + ",status=no,scrollbars=no,resizable=no";
-        var popup = window.open(that.attr('href'), "account", options);
-        popup.focus();
-        return false;
-    });
-
-    if ($('.sidenav-items synclets-connected', window.parent.document).length > 0) {
-        showAllConnectors();
-    }
-
-    $('#start-exploring-link').click(function(e) {
-        e.preventDefault();
-        parent.window.location.replace('/');
-    });
-
-    $('.synclets-list li a').each(function(index, item) {
-        var that = $(this);
-        if (that.attr('data-provider') === 'twitter' || that.attr('data-provider') === 'facebook') {
-            that.parent().fadeIn();
-            hasTwitterOrFacebook = true;
-        }
-    });
-
-    // if apikeys doens't have twitter/facebook, just show everything
-    if (hasTwitterOrFacebook === false) {
-        showAllConnectors();
-    }
+  setUpWelcome();
+  initLearnMore();
+  $('body').delegate('.oauthLink','click', Locker.connectService);
+  $('#start-exploring-link').click(function(e) {
+    e.preventDefault();
+    parent.window.location.replace('/');
+  });
 });
+
+/* This only applies to #Explore-connect, but the JS file may be loaded
+ * elsewhere (TODO: split it up better). If neither Facebook nor Twitter are
+ * available as Connectors (ie, no api key present), we'll just show everything.
+ * Otherwise, ask for Facebook or Twitter first, as they're the most prolific
+ * source of data.
+ */
+var setUpWelcome = function() {
+  if (window.parent.location.hash !== '#Explore-connect') return;
+
+  var hasTwitterOrFacebook = false
+    , hasAuthedOne = false
+    ;
+
+  $('.synclets-list li .action-button').each(function(index, item) {
+    item = $(item);
+    if (['twitter', 'facebook'].indexOf(item.attr('data-provider')) !== -1) {
+      item.closest('li').fadeIn();
+      hasTwitterOrFacebook = true;
+      if (item.hasClass('disabled')) hasAuthedOne = true;
+    }
+  });
+
+  if (hasAuthedOne || !hasTwitterOrFacebook) showAuthedState();
+};
+
+var initLearnMore = function() {
+  var learnMore = $('.learnmore')
+    , link = $('a', learnMore)
+    , copy = $('p', learnMore)
+    , originalText = link.text();
+
+  link.click(function(e) {
+    e.preventDefault();
+    var text = (copy.is(":hidden")) ? 'Close section' : originalText;
+    link.hide().text(text).fadeIn('fast');
+    copy.slideToggle('fast');
+  });
+};
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
-    var dataProvider = '[data-provider=' + provider + ']';
-    var newIcon = $('<img>', {src: 'img/icons/32px/' + provider + '.png'});
-    $('.oauthLink' + dataProvider).text('Connected').addClass('disabled');
-    $('.synclets-connected', window.parent.document).append(newIcon);
-    $('.synclets-unconnected a' + dataProvider, window.parent.document).remove();
-    showHeaderTwo();
-    showAllConnectors();
-    updateUserProfile();
-};
-
-var showHiddenConnectors = function() {
-    showHeaderTwo();
-    $(".hideable").fadeIn();
-};
-
-var showHeaderOne = function() {
-    if ($("#main-header-2").is(":visible")) {
-        $("#main-header-2").hide();
-        $("#main-header-1").show();
+  $('.oauthLink').each(function(index) {
+    if ($(this).attr('data-provider') === provider) {
+      $(this).removeClass('oauthLink');
+      $(this).addClass('disabled');
+      $(this).val('Connected');
+      $(this).html('Connected');
     }
+  });
+
+  $('.sidenav-items.synclets.connect', window.parent.document).append("<img src='img/icons/32px/"+provider+".png'>");
+  if (provider !== 'github') showAuthedState();
+  updateUserProfile();
 };
 
-var showHeaderTwo = function() {
-    if ($("#main-header-1").is(":visible")) {
-        $("#main-header-1").hide();
-        $("#main-header-2").show();
-    }
-};
-
-var showAllConnectors = function() {
-    $(".synclets-list li").fadeIn();
+var showAuthedState = function() {
+  var navs = $('.nav-section, .sidenav', window.parent.document);
+  navs.fadeIn();
+  $("#main-header-1").hide();
+  $("#main-header-2").show();
+  $(".synclets-list li").fadeIn();
 };
 
 var updateUserProfile = function() {
+  var username = null;
+  var avatar = null;
 
-    var username = null;
-    var avatar = null;
-
-    var fetchUserProfile = function() {
-        $.get('/synclets/facebook/get_profile', function(body) {
-            if (body.username) {
-                avatar = "http://graph.facebook.com/" + body.username + "/picture";
-                username = body.name;
-            } else {
-                $.get('/synclets/twitter/get_profile', function(body) {
-                    if (body.profile_image_url_https) {
-                        avatar = body.profile_image_url_https;
-                        username = body.name;
-                    }
-                });
-            }
+  var fetchUserProfile = function() {
+    $.get('/synclets/facebook/get_profile', function(body) {
+      if (body.username) {
+        avatar = "http://graph.facebook.com/" + body.username + "/picture";
+        username = body.name;
+      } else {
+        $.get('/synclets/twitter/get_profile', function(body) {
+          if (body.profile_image_url_https) {
+            avatar = body.profile_image_url_https;
+            username = body.name;
+          }
         });
-    };
+      }
+    });
+  };
 
-    profileTimeout = setInterval(function() {
-        fetchUserProfile();
-        if (username !== null) {
-            clearInterval(profileTimeout);
-            $('.avatar', window.parent.document).attr('src', avatar);
-            $('.user-info-name-link', window.parent.document).text(username);
-        }
-    }, 500);
+  var profileTimeout = setInterval(function() {
+    if (username === null) {
+      fetchUserProfile();
+    } else {
+      clearInterval(profileTimeout);
+      $('.avatar', window.parent.document).attr('src', avatar);
+      $('.user-info-name-link', window.parent.document).text(username);
+    }
+  }, 500);
 };
-

@@ -32,22 +32,24 @@ exports.load = function(filepath) {
         exports.externalPort = exports.lockerPort;
     exports.externalSecure = config.externalSecure;
     exports.registryUpdate = config.hasOwnProperty('registryUpdate') ? config.registryUpdate : true;
-    exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : false;
+    exports.requireSigned = config.hasOwnProperty('requireSigned') ? config.requireSigned : true;
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
+    exports.stats = config.stats || {};
     setBase();
+    exports.registryUpdateInterval = config.registryUpdateInterval || 3600;
     exports.collections = config.collections || [
         "contacts:Collections/Contacts",
         "links:Collections/Links",
         "photos:Collections/Photos",
         "places:Collections/Places",
-        "search:Collections/Search",
+        "search:Collections/Search"
     ];
     exports.apps = config.apps || [
-        "devdocs:Apps/DevDocs",
         "helloplaces:Apps/HelloPlaces",
         "linkalatte:Apps/LinkaLatte",
         "contactsviewer:Apps/MergedContacts",
+        "devdocs:Apps/DevDocs",
         "photosviewer:Apps/PhotosViewer",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
@@ -55,7 +57,7 @@ exports.load = function(filepath) {
         "gcontacts:Connectors/GoogleContacts",
         "instagram:Connectors/Instagram",
         "twitter:Connectors/Twitter",
-        "foursquare:Connectors/foursquare",
+        "foursquare:Connectors/foursquare"
     ];
     config.mongo = config.mongo || {};
     exports.mongo = {
@@ -84,7 +86,10 @@ exports.load = function(filepath) {
     };
 //    exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
     exports.ui = config.ui || 'dashboardv3:Apps/dashboardv3';
-    exports.quiesce = config.quiesce || 650000;
+    exports.quiesce = (config.quiesce || 650) * 1000;
+
+    config.dashboard = config.dashboard || {};
+    config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
     exports.workWarn = config.workWarn || os.cpus().length;
     exports.workStop = config.workStop || os.cpus().length * 3;
@@ -97,11 +102,10 @@ exports.load = function(filepath) {
         var keys = fs.readdirSync(kdir);
         keys.forEach(function(key){
             if(key.indexOf(".pub") == -1) return;
-            exports.keys.push(fs.readFileSync(path.join(kdir, key)));
+            exports.keys.push(fs.readFileSync(path.join(kdir, key)).toString());
         });
     }
-
-}
+};
 
 function setBase() {
     exports.lockerBase = 'http://' + exports.lockerHost +
