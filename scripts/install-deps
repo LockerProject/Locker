@@ -22,31 +22,35 @@ check_for() {
     if which $command >/dev/null 2>&1; then
         # It's installed
         version=$($get_version 2>&1 | grep -o -E [-0-9.]\{1,\} | head -n 1)
-        echo "$name version $version found."
+        if [ -n "$version" ]; then
+            echo "$name version $version found."
 
-        if [ -n "$min_version" ]; then
-            if ! perl -e 'exit 1 unless v'$version' ge v'$min_version
-            then
-                echo "$1 version $version found (>=$min_version required)"
-                return 1
-            fi
-
-            if [ -n "$max_version" ]; then
-                if ! perl -e 'exit 1 unless v'$version' lt v'$max_version
+            if [ -n "$min_version" ]; then
+                if ! perl -e 'exit 1 unless v'$version' ge v'$min_version
                 then
-                    echo "$1 version $version found (<$max_version required)"
+                    echo "$1 version $version found (>=$min_version required)"
                     return 1
                 fi
-            fi
-        fi
 
-        return 0
-    else
-        min="${min_version:-(none)}"
-        max="${max_version:-(none)}"
-        echo "$name not found (want version >= $min and < $max)"
-        return 1
+                if [ -n "$max_version" ]; then
+                    if ! perl -e 'exit 1 unless v'$version' lt v'$max_version
+                    then
+                        echo "$1 version $version found (<$max_version required)"
+                        return 1
+                    fi
+                fi
+            fi
+
+            return 0
+        fi
+        # fall through
     fi
+
+    # not found
+    min="${min_version:-(none)}"
+    max="${max_version:-(none)}"
+    echo "$name not found (want version >= $min and < $max)"
+    return 1
 }
 
 # check_for_pkg_config name pkg_config_name [minimum_version [optional]]
