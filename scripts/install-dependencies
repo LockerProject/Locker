@@ -41,9 +41,12 @@ check_for() {
         fi
 
         return 0
+    else
+        min="${min_version:-(none)}"
+        max="${max_version:-(none)}"
+        echo "$name not found (want version >= $min and < $max)"
+        return 1
     fi
-
-    return 1
 }
 
 # check_for_pkg_config name pkg_config_name [minimum_version [optional]]
@@ -93,15 +96,18 @@ download () {
 
 #### Main script
 
-prefix="$1"
-if [ ! -n "$prefix" ]; then
-    echo "Usage: install-dependencies <install prefix>"
-fi
-mkdir -p "${prefix}"
-prefix=$(readlink -f "$prefix")
+if [ "$1" = "--check-only" ]; then
+    check_only=true
+else
+    prefix="$1"
+    if [ ! -n "$prefix" ]; then
+        echo "Usage: install-dependencies <install prefix>"
+    fi
+    mkdir -p "${prefix}"
+    prefix=$(readlink -f "$prefix")
 
-envscript="${prefix}/environment.sh"
-cat > "${envscript}" <<MRBARGLES
+    envscript="${prefix}/environment.sh"
+    cat > "${envscript}" <<MRBARGLES
 export PATH="${prefix}/local/bin":${PATH}
 export NODE_PATH="${prefix}/local/lib/node_modules":${NODE_PATH}
 export PKG_CONFIG_PATH="${prefix}/local/lib/pkgconfig":${PKG_CONFIG_PATH}
@@ -110,21 +116,23 @@ export LD_LIBRARY_PATH="${prefix}/local/lib"
 export LIBRARY_PATH="${prefix}/local/lib"
 MRBARGLES
 
-. "${envscript}"
+    . "${envscript}"
+
+    mkdir -p ${prefix}/build
+    cd ${prefix}/build
+fi
 
 check_for Git git 'git --version'
 check_for Python python 'python -V' 2.6
 
-mkdir -p ${prefix}/build
-cd ${prefix}/build
-
 if ! check_for Node.js node 'node -v' 0.6.0
 then
+    if [ "$check_only" = true ]; then exit 1; fi
+
     echo ""
     echo "You don't seem to have node.js installed."
     echo "I will download, build, and install it locally."
     echo -n "This could take quite some time!"
-    sleep 1 ; printf "." ; sleep 1 ; printf "." ; sleep 1 ; printf "." ; sleep 1
     download "${NODE_DOWNLOAD}"
     tar zxf "$(basename "${NODE_DOWNLOAD}")"
 
@@ -136,11 +144,13 @@ then
     echo "Installed node.js into ${prefix}"
 fi
 
-cd "${prefix}/build"
 if ! check_for npm npm "npm -v" 1
 then
+    if [ "$check_only" = true ]; then exit 1; fi
+
     echo ""
     echo "About to download and install locally npm."
+    cd "${prefix}/build"
     download "${NPM_DOWNLOAD}"
     if cat "$(basename ${NPM_DOWNLOAD})" | clean=no sh
     then
@@ -153,14 +163,18 @@ fi
 
 if [ ! -e "${prefix}/local/bin/activate" ]
 then
+    if [ "$check_only" = true ]; then exit 1; fi
+
     if ! check_for virtualenv virtualenv "virtualenv --version" 1.4
     then
+        if [ "$check_only" = true ]; then exit 1; fi
+
         echo ""
         echo "About to download virtualenv.py."
         download "${VIRTUALENV_DOWNLOAD}"
     fi
 
-    if python -m virtualenv --no-site-packages "${prefix}/local"
+    if [ "$check_only" != true ] && python -m virtualenv --no-site-packages "${prefix}/local"
     then
         echo "Set up virtual Python environment."
     else
@@ -169,15 +183,10 @@ then
     fi
 fi
 
-if . "${prefix}/local/bin/activate"
-then
-    echo "Activated virtual Python environment."
-else
-    echo "Failed to activate virtual Python environment." >&2
-fi
-
 if ! check_for mongoDB mongod "mongod --version" 1.8.0
 then
+    if [ "$check_only" = true ]; then exit 1; fi
+
     OS=`uname -s`
     case "${OS}" in
         Linux)
@@ -214,4 +223,6 @@ then
     fi
 fi
 
-rm -rf "${prefix}/build"
+if [ "$check_only" != true ]; then
+    rm -rf "${prefix}/build"
+fi
