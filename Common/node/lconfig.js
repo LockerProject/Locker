@@ -35,6 +35,15 @@ exports.load = function(filepath) {
     exports.externalPath = config.externalPath || '';
     exports.airbrakeKey = config.airbrakeKey || undefined;
     exports.stats = config.stats || {};
+    if (exports.stats.prefix) {
+        var hostname = process.env['HOSTNAME']
+          , hostBasename;
+
+        if (!hostname) hostBasename = 'localhost';
+        else hostBasename = hostname.split('.')[0];
+
+        exports.stats.prefix += '.' + hostBasename;
+    }
     setBase();
     exports.registryUpdateInterval = config.registryUpdateInterval || 3600;
     exports.collections = config.collections || [

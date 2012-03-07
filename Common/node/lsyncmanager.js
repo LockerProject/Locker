@@ -12,15 +12,8 @@ var fs = require('fs')
   , logger = require("./logger.js")
   , vm = require('vm')
   , util = require('util')
-  , dispatcher = require('./instrument.js').StatsdDispatcher;
-
-// TODO: should be abstracted out
-var statsConfig = lconfig.stats
-  , hostname = process.env['HOSTNAME'] || 'localhost'
-  , hostBasename = hostname.split('.')[0];
-
-statsConfig.prefix += '.' + hostBasename;
-var stats = new dispatcher(statsConfig);
+  , dispatcher = require('./instrument.js').StatsdDispatcher
+  , stats = new dispatcher(lconfig.stats);
 
 var runningContexts = {}; // Map of a synclet to a running context
 
@@ -237,7 +230,8 @@ function executeSynclet(info, synclet, callback, force) {
     logger.info("Synclet "+synclet.name+" starting for "+info.id);
     info.status = synclet.status = "running";
     var tstart = Date.now();
-    stats.increment(info.id + '.' + synclet.name + '.start');
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.start');
+    stats.increment('synclet.' + info.id + '.' + synclet.name + '.running');
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -278,8 +272,9 @@ function executeSynclet(info, synclet, callback, force) {
               return callback(syncErr);
             }
             var elapsed = Date.now() - tstart;
-            stats.increment(info.id + '.' + synclet.name + '.stop');
-            stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+            stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+            stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
             logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
             info.status = synclet.status = 'processing data';
             var deleteIDs = compareIDs(info.config, response.config);
@@ -347,8 +342,9 @@ function executeSynclet(info, synclet, callback, force) {
             return;
         }
         var elapsed = Date.now() - tstart;
-        stats.increment(info.id + '.' + synclet.name + '.stop');
-        stats.timing(info.id + '.' + synclet.name + '.timing', elapsed);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+        stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+        stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
         logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
         info.status = synclet.status = 'processing data';
         var deleteIDs = compareIDs(info.config, response.config);
@@ -413,14 +409,17 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
             // here we roughly compromise a multiplier up or down based on the threshold being met
             var threshold = synclet.threshold || lconfig.tolerance.threshold;
             var total = synclet.deleted + synclet.added + synclet.updated;
-            if(total < threshold)
-            {
+            if (total < threshold) {
                 if(synclet.tolMax < lconfig.tolerance.maxstep) synclet.tolMax++; // max 10x scheduled
                 synclet.tolAt = synclet.tolMax;
-            }else{
+            } else {
                 if(synclet.tolMax > 0) synclet.tolMax--;
                 synclet.tolAt = synclet.tolMax;
             }
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.added',   synclet.added);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.updated', synclet.updated);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.deleted', synclet.deleted);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.length);
             logger.info("total of "+synclet.added+" added, "+synclet.updated+" updated, "+synclet.deleted+" deleted, and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
             callback(err);
         });
