@@ -62,11 +62,6 @@ logger.info("Starting locker with build info:" + buildInfo);
 
 if(process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
 
-if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
-    logger.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                'which if so inclined can be hacked into lockerd.js and added since' +
-                ' it\'s apparently still not implemented :)\n\n');
-}
 var shuttingDown_ = false;
 
 var mongoProcess;

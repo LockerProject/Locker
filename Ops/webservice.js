@@ -51,6 +51,22 @@ var locker = express.createServer(
         }
     },
     connect.cookieParser(),
+    // what is public and what is not
+    function(req, res, next) {
+        var OK = false;
+        var AUTH = false;
+        if(req.connection.remoteAddress == '127.0.0.1') OK = true;
+        if(req.headers.host && req.headers.host.indexOf('lvh.me') == 0) OK = false; // easy way to test public view on localhost
+        if(req.headers.secret == lconfig.authSecret) OK = true; // for a config-authorized blanket external request
+        if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin) OK = true; // auth'd
+        if (req.url.substring(0, 6) == '/auth/') OK = true; // authing requests allowed
+        if (req.url == '/') OK = true; // root is ok
+        if (req.url.substring(0, 11) == '/dashboard/') OK = true; // anything dashboard is legit
+        if(OK) return next();
+//        if(!req.cookies.foo) res.cookie('foo', Math.random(), { expires: new Date(Date.now() + 60000), httpOnly: false });
+        logger.warn('unauthed request from '+req.connection.remoteAddress+' to '+req.url+' redirected to /');
+        res.redirect(lconfig.externalBase + '/');
+    },
     connect.session({key:'locker.project.id', secret : "locker"})
 );
 
@@ -513,6 +529,7 @@ locker.all("/socket.io*", function(req, res) {
 });
 
 locker.get('/', function(req, res) {
+    if()
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 

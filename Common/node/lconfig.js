@@ -16,7 +16,7 @@ exports.load = function(filepath) {
     if (path.existsSync(filepath))
         config = JSON.parse(fs.readFileSync(filepath));
 
-    exports.lockerHost = config.lockerHost || 'localhost';
+    exports.lockerHost = '127.0.0.1'; // authentication requires 'internal' processes bind+connect to localhost
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
     exports.lockerPort = config.lockerPort || 8042;
@@ -98,6 +98,12 @@ exports.load = function(filepath) {
     config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
     exports.mail = config.mail;
+    exports.authSecret = config.authSecret;
+    try {
+        if(path.existsSync(path.join(exports.me,'login.json'))) exports.authLogin = JSON.parse(fs.readFileSync(path.join(kdir, key)).toString());
+    }catch(E){
+        console.error("couldn't parse login.json! ",E);
+    }
 
     // load trusted public keys
     var kdir = path.join(path.dirname(filepath), "keys");
