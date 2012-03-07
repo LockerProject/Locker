@@ -16,18 +16,21 @@ all: checkdeps build
 	@echo "Once running, visit http://localhost:8042 in your web browser."
 
 deps:
-	./scripts/install-dependencies deps
+	./scripts/install-deps deps
 
 checkdeps:
-	@if ! ./scripts/install-dependencies --check-only; then \
+	@. scripts/use-deps.sh && \
+	if ! ./scripts/install-deps --check-only; then \
 		echo Some dependencies are missing.  Try running "make deps" to install them.; \
 		exit 1; \
 	fi
 
 build: checkdeps npm_modules build.json
+	@. scripts/use-deps.sh && \
 	./Apps/dashboardv3/static/common/templates/compile.sh
 
 npm_modules:
+	@. scripts/use-deps.sh && \
 	npm install
 
 # the test suite pretends that tests/ is the top of the source tree,

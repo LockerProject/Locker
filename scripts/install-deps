@@ -1,0 +1,206 @@
+#!/bin/bash
+
+set -e
+
+#### Config
+
+NODE_DOWNLOAD='http://nodejs.org/dist/v0.6.10/node-v0.6.10.tar.gz'
+NPM_DOWNLOAD='http://npmjs.org/install.sh'
+VIRTUALENV_DOWNLOAD='http://github.com/pypa/virtualenv/raw/develop/virtualenv.py'
+MONGODB_DOWNLOAD='http://fastdl.mongodb.org/OS/mongodb-OS-ARCH-2.0.0.tgz'
+
+#### Helper functions
+
+# check_for name exec_name version_command [minimum_version]
+check_for() {
+    name="$1"
+    command="$2"
+    get_version="$3"
+    min_version="$4"
+    max_version="$5"
+
+    if which $command >/dev/null 2>&1; then
+        # It's installed
+        version=$($get_version 2>&1 | grep -o -E [-0-9.]\{1,\} | head -n 1)
+        echo "$name version $version found."
+
+        if [ -n "$min_version" ]; then
+            if ! perl -e 'exit 1 unless v'$version' ge v'$min_version
+            then
+                echo "$1 version $version found (>=$min_version required)"
+                return 1
+            fi
+
+            if [ -n "$max_version" ]; then
+                if ! perl -e 'exit 1 unless v'$version' lt v'$max_version
+                then
+                    echo "$1 version $version found (<$max_version required)"
+                    return 1
+                fi
+            fi
+        fi
+
+        return 0
+    else
+        min="${min_version:-(none)}"
+        max="${max_version:-(none)}"
+        echo "$name not found (want version >= $min and < $max)"
+        return 1
+    fi
+}
+
+# check_for_pkg_config name pkg_config_name [minimum_version [optional]]
+check_for_pkg_config() {
+    name="$1"
+    pkg_config_name="$2"
+    min_version="$3"
+
+    if ! which pkg-config >/dev/null 2>&1; then
+        echo "pkg-config is not installed: assuming $name is not present either"
+        return 1
+    fi
+
+    if ! pkg-config --exists "$pkg_config_name"
+    then
+        echo "$name not found!" >&2
+        return 1
+    fi
+    version="$(pkg-config --modversion "$pkg_config_name")"
+    echo "${name} version ${version} found."
+
+    [ -z "$min_version" ] && return 0
+    if pkg-config --atleast-version="$min_version" "$pkg_config_name"
+    then
+        return 0
+    else
+        echo "$name version $min_version or greater required!" >&2
+        return 1
+    fi
+}
+
+download () {
+    base="$(basename $1)"
+    if [ -f ${base} ]
+    then
+        echo "$1 already downloaded."
+    else
+        if wget "$1" 2>/dev/null || curl -L -o ${base} "$1"
+        then
+            echo "Downloaded $1."
+        else
+            echo "Download of $1 failed!" >&2
+            exit 1
+        fi
+    fi
+}
+
+#### Main script
+
+if [ "$1" = "--check-only" ]; then
+    check_only=true
+else
+    prefix="$1"
+    if [ ! -n "$prefix" ]; then
+        echo "Usage: install-dependencies <install prefix>"
+    fi
+    mkdir -p "${prefix}"
+    prefix=$(readlink -f "$prefix")
+
+    envscript="${prefix}/environment.sh"
+    cat > "${envscript}" <<MRBARGLES
+export PATH="${prefix}/local/bin":${PATH}
+export NODE_PATH="${prefix}/local/lib/node_modules":${NODE_PATH}
+export PKG_CONFIG_PATH="${prefix}/local/lib/pkgconfig":${PKG_CONFIG_PATH}
+export CXXFLAGS="-I${prefix}/local/include"
+export LD_LIBRARY_PATH="${prefix}/local/lib"
+export LIBRARY_PATH="${prefix}/local/lib"
+MRBARGLES
+
+    . "${envscript}"
+
+    mkdir -p ${prefix}/build
+    cd ${prefix}/build
+fi
+
+check_for Git git 'git --version'
+#check_for Python python 'python -V' 2.6
+
+if ! check_for Node.js node 'node -v' 0.6.0
+then
+    if [ "$check_only" = true ]; then exit 1; fi
+
+    echo ""
+    echo "You don't seem to have node.js installed."
+    echo "I will download, build, and install it locally."
+    echo -n "This could take quite some time!"
+    download "${NODE_DOWNLOAD}"
+    tar zxf "$(basename "${NODE_DOWNLOAD}")"
+
+    cd $(basename "${NODE_DOWNLOAD}" .tar.gz)
+    ./configure --prefix="${prefix}/local"
+    make
+    make install
+
+    echo "Installed node.js into ${prefix}"
+fi
+
+if ! check_for npm npm "npm -v" 1
+then
+    if [ "$check_only" = true ]; then exit 1; fi
+
+    echo ""
+    echo "About to download and install locally npm."
+    cd "${prefix}/build"
+    download "${NPM_DOWNLOAD}"
+    if cat "$(basename ${NPM_DOWNLOAD})" | clean=no sh
+    then
+        echo "Installed npm into ${prefix}"
+    else
+        echo "Failed to install npm into ${prefix}" >&2
+        exit 1
+    fi
+fi
+
+if ! check_for mongoDB mongod "mongod --version" 1.8.0
+then
+    if [ "$check_only" = true ]; then exit 1; fi
+
+    OS=`uname -s`
+    case "${OS}" in
+        Linux)
+            OS=linux
+            ;;
+        Darwin)
+            OS=osx
+            ;;
+        *)
+            echo "Don't recognize OS ${OS}" >&2
+            exit 1
+    esac
+    BITS=`getconf LONG_BIT`
+    ARCH='x86_64'
+    if [ "${BITS}" -ne 64 ]
+    then
+        ARCH="i386"
+        if [ "${OS}" != "osx" ]
+        then
+            ARCH="i686"
+        fi
+    fi
+    echo ""
+    echo "Downloading and installing locally mongoDB"
+    MONGODB_DOWNLOAD=$(echo ${MONGODB_DOWNLOAD} | sed -e "s/OS/${OS}/g" -e "s/ARCH/${ARCH}/g")
+    download "${MONGODB_DOWNLOAD}"
+    if tar zxf $(basename "${MONGODB_DOWNLOAD}") &&
+        cp $(basename "${MONGODB_DOWNLOAD}" .tgz)/bin/* "${prefix}/local/bin"
+    then
+        echo "Installed local mongoDB."
+    else
+        echo "Failed to install local mongoDB." >&2
+        exit 1
+    fi
+fi
+
+if [ "$check_only" != true ]; then
+    rm -rf "${prefix}/build"
+fi
