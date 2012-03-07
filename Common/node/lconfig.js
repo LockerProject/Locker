@@ -59,6 +59,7 @@ exports.load = function(filepath) {
         "contactsviewer:Apps/MergedContacts",
         "devdocs:Apps/DevDocs",
         "photosviewer:Apps/PhotosViewer",
+        "smtp:Connectors/SMTP",
         "facebook:Connectors/Facebook",
         "flickr:Connectors/Flickr",
         "github:Connectors/GitHub",
@@ -99,6 +100,7 @@ exports.load = function(filepath) {
     config.dashboard = config.dashboard || {};
     config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
+    exports.mail = config.mail;
 
     // load trusted public keys
     var kdir = path.join(path.dirname(filepath), "keys");
