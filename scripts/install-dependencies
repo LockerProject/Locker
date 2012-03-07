@@ -123,7 +123,7 @@ MRBARGLES
 fi
 
 check_for Git git 'git --version'
-check_for Python python 'python -V' 2.6
+#check_for Python python 'python -V' 2.6
 
 if ! check_for Node.js node 'node -v' 0.6.0
 then
@@ -157,28 +157,6 @@ then
         echo "Installed npm into ${prefix}"
     else
         echo "Failed to install npm into ${prefix}" >&2
-        exit 1
-    fi
-fi
-
-if [ ! -e "${prefix}/local/bin/activate" ]
-then
-    if [ "$check_only" = true ]; then exit 1; fi
-
-    if ! check_for virtualenv virtualenv "virtualenv --version" 1.4
-    then
-        if [ "$check_only" = true ]; then exit 1; fi
-
-        echo ""
-        echo "About to download virtualenv.py."
-        download "${VIRTUALENV_DOWNLOAD}"
-    fi
-
-    if [ "$check_only" != true ] && python -m virtualenv --no-site-packages "${prefix}/local"
-    then
-        echo "Set up virtual Python environment."
-    else
-        echo "Failed to set up virtual Python environment." >&2
         exit 1
     fi
 fi
