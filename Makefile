@@ -17,6 +17,8 @@ all: checkdeps build
 
 deps:
 	./scripts/install-deps deps
+	@echo
+	@echo "Go ahead and run 'make'"
 
 checkdeps:
 	@. scripts/use-deps.sh && \
