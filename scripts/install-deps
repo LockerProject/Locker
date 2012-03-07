@@ -130,7 +130,7 @@ fi
 check_for Git git 'git --version'
 #check_for Python python 'python -V' 2.6
 
-if ! check_for Node.js node 'node -v' 0.6.0
+if ! check_for Node.js node 'node -v' 0.6.0 0.7.0
 then
     if [ "$check_only" = true ]; then exit 1; fi
 
