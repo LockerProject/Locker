@@ -132,7 +132,7 @@ then
     echo ""
     echo "You don't seem to have node.js installed."
     echo "I will download, build, and install it locally."
-    echo -n "This could take quite some time!"
+    echo "This could take quite some time!"
     download "${NODE_DOWNLOAD}"
     tar zxf "$(basename "${NODE_DOWNLOAD}")"
 
