@@ -101,7 +101,7 @@ exports.load = function(filepath) {
     exports.homeApp = config.homeApp;
     exports.authSecret = config.authSecret;
     try {
-        if(path.existsSync(path.join(exports.me,'login.json'))) exports.authLogin = JSON.parse(fs.readFileSync(path.join(kdir, key)).toString());
+        if(path.existsSync(path.join(exports.me,'login.json'))) exports.authLogin = JSON.parse(fs.readFileSync(path.join(exports.me,'login.json')).toString());
     }catch(E){
         console.error("couldn't parse login.json! ",E);
     }

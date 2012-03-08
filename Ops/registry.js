@@ -492,6 +492,11 @@ function adduser (username, password, email, cb) {
 function authIsAwesome(req, res) {
     var id = req.params.id;
     var js = serviceManager.map(id);
+    // if not logged in, and there is stored login info, this is a "re-connect" login whitelist
+    if (req.headers.authed == "false" && lconfig.authLogin) {
+        if(js && js.authed) return authRedir(js, req, res);
+        return res.send("no login found with this service");
+    }
     if (js) return authRedir(js, req, res); // short circuit if already done
     getPackage(id, function(err, pkg) {
         if(err || !verifyPkg(pkg))
@@ -547,10 +552,10 @@ function authIsAuth(req, res) {
 
         // rest require apikeys
         if (!apiKeys[id] && js.keys !== false && js.keys != "false") return res.send("missing required api keys", 500);
-
+        console.error("entering");
         if (typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function (err, auth) {
             if (err) return res.send(err, 500);
-            finishAuth(js, auth, res);
+            finishAuth(js, auth, req, res);
         }, req, res);
     } catch (E) {
         return res.send(E, 500);
@@ -569,14 +574,14 @@ function authIsAuth(req, res) {
         grant_type: authModule.grantType,
         code: code
     };
-    req = {method: method, url: authModule.endPoint};
+    req2 = {method: method, url: authModule.endPoint};
     if (method == 'POST') {
-        req.body = querystring.stringify(postData);
-        req.headers = {'Content-Type' : 'application/x-www-form-urlencoded'};
+        req2.body = querystring.stringify(postData);
+        req2.headers = {'Content-Type' : 'application/x-www-form-urlencoded'};
     } else {
-        req.url += '/access_token?' + querystring.stringify(postData);
+        req2.url += '/access_token?' + querystring.stringify(postData);
     }
-    request(req, function (err, resp, body) {
+    request(req2, function (err, resp, body) {
         try {
             body = JSON.parse(body);
         } catch(err) {
@@ -587,27 +592,31 @@ function authIsAuth(req, res) {
         if (typeof authModule.authComplete == 'function') {
             return authModule.authComplete(auth, function (err, auth) {
                 if (err) return res.send(err, 500);
-                finishAuth(js, auth, res);
+                finishAuth(js, auth, req, res);
             });
         }
-        finishAuth(js, auth, res);
+        finishAuth(js, auth, req, res);
     });
 }
 
 // save out auth and kick-start synclets, plus respond
-function finishAuth(js, auth, res) {
+function finishAuth(js, auth, req, res) {
     logger.info("authorized "+js.id);
     js.auth = auth;
     if(!js.authed) js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
     serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function () {}); // force immediate sync too
-    if(!lconfig.authLogin)
+    // login or first auth, set+save cookie
+    console.error(JSON.stringify(req.headers));
+    if(req.headers.authed != "true")
     {
-        // write out Me/login.json with hash
-        // load into lconfig
+        logger.error("logging in");
+        lconfig.authLogin = {};
+        lconfig.authLogin.cookie = crypto.createHash("sha1").update(Math.random().toString()).digest("hex");
+        fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'login.json'), JSON.stringify(lconfig.authLogin));
     }
-    res.cookie('lockerlogin', Math.random(), { expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
+    res.cookie('lockerlogin', lconfig.authLogin.cookie, { path: '/', expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
 

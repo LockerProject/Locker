@@ -74,7 +74,8 @@ function isAuthed(req)
 {
     var authed = false;
     if(req.headers.secret && req.headers.secret == lconfig.authSecret) authed = true; // for a config-authorized blanket external request
-    if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin) authed = true; // browser auth'd
+    if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin.cookie) authed = true; // browser auth'd
+    console.error("COOKIES "+JSON.stringify(req.cookies));
     req.headers.authed = (authed) ? "true" : "false"; // set special header for any subsequent or proxied request
     return authed;
 }
