@@ -16,7 +16,7 @@ exports.load = function(filepath) {
     if (path.existsSync(filepath))
         config = JSON.parse(fs.readFileSync(filepath));
 
-    exports.lockerHost = '127.0.0.1'; // authentication requires 'internal' processes bind+connect to localhost
+    exports.lockerHost = 'localhost'; // authentication requires 'internal' processes bind+connect to localhost
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
     exports.lockerPort = config.lockerPort || 8042;

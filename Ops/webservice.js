@@ -75,7 +75,6 @@ function isAuthed(req)
     var authed = false;
     if(req.headers.secret && req.headers.secret == lconfig.authSecret) authed = true; // for a config-authorized blanket external request
     if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin.cookie) authed = true; // browser auth'd
-    console.error("COOKIES "+JSON.stringify(req.cookies));
     req.headers.authed = (authed) ? "true" : "false"; // set special header for any subsequent or proxied request
     return authed;
 }
@@ -545,7 +544,6 @@ locker.all("/socket.io*", function(req, res) {
 
 locker.get('/', function(req, res) {
     var homeApp = req.headers.homeapp || lconfig.homeApp;
-    console.error("homeapp "+homeApp);
     if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
     // internally process this request now
     req.url = '/Me/' + homeApp + req.url;
