@@ -49,6 +49,7 @@ var initLearnMore = function() {
 
 // this one is called only when going through a first-time connection
 var syncletInstalled = function(provider) {
+    if(window.location.pathname.indexOf("login")) return window.location.replace('/dashboard/');
   $('.oauthLink').each(function(index) {
     if ($(this).attr('data-provider') === provider) {
       $(this).removeClass('oauthLink');

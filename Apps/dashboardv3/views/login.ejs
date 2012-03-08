@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <%- partial('header_partial') %>
+    <link rel="stylesheet" href="css/connect.css" />
+    <script src="js/locker.js"></script>
+    <script src="js/connect.js"></script>
+    </head>
+    <body>
+      <div id="main-header-1">
+        <h1>Welcome! Choose a service to login with.</h1>
+      </div>
+      <ul class="synclets-list">
+        <% for (var i = 0; i < connectors.length; i++) { %>
+          <% if (!connectors[i].repository.hasOwnProperty('hidden') ||
+                 connectors[i].repository.hidden !== 'true') { %>
+            <li class="featured hideable">
+              <div class="synclet-logoname-container">
+                <img class="synclet-logo"
+                     src="img/icons/32px/<%= connectors[i].name %>.png" alt="" />
+                <span class="synclet-name">
+                  <%= connectors[i].repository.title %>
+                </span>
+              </div>
+                <span class="oauthLink action-button"
+                  data-provider="<%= connectors[i].repository.handle %>"
+                  data-width="<%= connectors[i].repository.oauthSize.width %>"
+                  data-height="<%= connectors[i].repository.oauthSize.height %>">
+                  Login
+                </span>
+           </li>
+         <% } %>
+       <% } %>
+     </ul>
+   </body>
+ </html>

@@ -50,7 +50,7 @@ app.configure(function() {
   app.set('view engine', 'ejs');
   app.use(express.bodyParser());
   app.use(form({ keepExtensions: true }));
-  app.use(express.static(__dirname + '/static'));
+  app.use(express.static(__dirname + '/static', { maxAge: (24*3600*1000) }));
   app.dynamicHelpers({
     dashboard: function(req, res) {
                  return lconfig.dashboard;
@@ -69,12 +69,19 @@ app.configure(function() {
  * Otherwise, check for connections and perhaps allow other pages to render.
  */
 function checkInstalled(req, res, next) {
-  if(connectSkip || ['/explore', '/connect'].indexOf(req.path) !== -1) {
+  if(connectSkip || ['/explore', '/connect', '/login'].indexOf(req.path) !== -1) {
     return next();
+  }
+  console.error(path.join(lconfig.lockerDir, lconfig.me, 'login.json'));
+  if(req.headers.authed != "true")
+  {
+      if(path.existsSync(path.join(lconfig.lockerDir, lconfig.me, 'login.json')))
+        return res.redirect(lconfig.externalBase + '/dashboard/login#Explore-connect');
+    return res.redirect(lconfig.externalBase + '/dashboard/connect#Explore-connect');
   }
   getInstalledConnectors(function(err, installedConnectors) {
     // We ignore github since it's semi special and often presetup connector
-    if (req.headers.authed !== "true" || needsToConnectMore(installedConnectors)) {
+    if (needsToConnectMore(installedConnectors)) {
       return res.redirect(lconfig.externalBase +
                           '/dashboard/explore#Explore-connect');
     } else {
@@ -309,6 +316,17 @@ var renderConnect = function(req, res) {
     res.render('iframe/connect', {
       layout: false,
       numInstalled: numInstalled,
+      connectors: connectors,
+      dashboard: lconfig.dashboard
+    });
+  });
+};
+
+var renderLogin = function(req, res) {
+  getConnectors(function(err, connectors) {
+    res.render('login', {
+      layout: false,
+      numInstalled: 0,
       connectors: connectors,
       dashboard: lconfig.dashboard
     });
@@ -621,6 +639,7 @@ app.get('/explore', renderExplore);
 app.get('/', renderExplore);
 
 app.get('/connect', renderConnect);
+app.get('/login', renderLogin);
 
 app.get('/settings', renderSettings);
 app.get('/settings-connectors', renderSettingsConnectors);
