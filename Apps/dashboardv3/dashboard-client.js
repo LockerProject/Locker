@@ -74,7 +74,7 @@ function checkInstalled(req, res, next) {
   }
   getInstalledConnectors(function(err, installedConnectors) {
     // We ignore github since it's semi special and often presetup connector
-    if (needsToConnectMore(installedConnectors)) {
+    if (req.headers.authed !== "true" || needsToConnectMore(installedConnectors)) {
       return res.redirect(lconfig.externalBase +
                           '/dashboard/explore#Explore-connect');
     } else {

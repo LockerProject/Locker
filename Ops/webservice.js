@@ -57,23 +57,37 @@ var locker = express.createServer(
         var AUTH = false;
         if(req.connection.remoteAddress == '127.0.0.1') OK = true;
         if(req.headers.host && req.headers.host.indexOf('lvh.me') == 0) OK = false; // easy way to test public view on localhost
-        if(req.headers.secret == lconfig.authSecret) OK = true; // for a config-authorized blanket external request
-        if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin) OK = true; // auth'd
+        if(isAuthed(req)) OK = true;
+        if (req.url == '/core/stats' || req.url == '/core/selftest' || req.url == '/core/revision') OK = true; // allow these public for now (but should use authSecret)
         if (req.url.substring(0, 6) == '/auth/') OK = true; // authing requests allowed
         if (req.url == '/') OK = true; // root is ok
         if (req.url.substring(0, 11) == '/dashboard/') OK = true; // anything dashboard is legit
         if(OK) return next();
-//        if(!req.cookies.foo) res.cookie('foo', Math.random(), { expires: new Date(Date.now() + 60000), httpOnly: false });
-        logger.warn('unauthed request from '+req.connection.remoteAddress+' to '+req.url+' redirected to /');
-        res.redirect(lconfig.externalBase + '/');
+        logger.warn('unauthed request from '+req.connection.remoteAddress+' to '+req.url);
+        res.send(401);
     },
     connect.session({key:'locker.project.id', secret : "locker"})
 );
 
+// specificly, is this an externally auth'd request
+function isAuthed(req)
+{
+    var authed = false;
+    if(req.headers.secret && req.headers.secret == lconfig.authSecret) authed = true; // for a config-authorized blanket external request
+    if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin) authed = true; // browser auth'd
+    req.headers.authed = (authed) ? "true" : "false"; // set special header for any subsequent or proxied request
+    return authed;
+}
 
 var listeners = new Object(); // listeners for events
 
 var DEFAULT_QUERY_LIMIT = 20;
+
+// util to see if browser is auth'd
+locker.get('/core/authed', function(req, res) {
+    res.send(isAuthed(req));
+});
+
 
 // return the known map of our world
 locker.get('/map', function(req, res) {
@@ -295,7 +309,7 @@ function proxyRequest(method, req, res, next) {
         { // extra sanity check
             return res.send(404);
         }
-
+        if(fileUrl.pathname == '/' && req.headers.authed !== "true") fileUrl.pathname = "/public.html";
         fs.stat(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname), function(err, stats) {
             if (!err && (stats.isFile() || stats.isDirectory())) {
                 res.sendfile(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
@@ -529,8 +543,12 @@ locker.all("/socket.io*", function(req, res) {
 });
 
 locker.get('/', function(req, res) {
-    if()
-    res.redirect(lconfig.externalBase + '/dashboard/');
+    var homeApp = req.headers.homeapp || lconfig.homeApp;
+    console.error("homeapp "+homeApp);
+    if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
+    // internally process this request now
+    req.url = '/Me/' + homeApp + req.url;
+    proxyRequest(req.method, req, res);
 });
 
 require('./webservice-push')(locker);

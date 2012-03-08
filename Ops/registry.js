@@ -598,10 +598,16 @@ function authIsAuth(req, res) {
 function finishAuth(js, auth, res) {
     logger.info("authorized "+js.id);
     js.auth = auth;
-    js.authed = Date.now();
+    if(!js.authed) js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
     serviceManager.mapUpsert(path.join(js.srcdir,'package.json'));
     syncManager.syncNow(js.id, function () {}); // force immediate sync too
+    if(!lconfig.authLogin)
+    {
+        // write out Me/login.json with hash
+        // load into lconfig
+    }
+    res.cookie('lockerlogin', Math.random(), { expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
 

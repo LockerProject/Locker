@@ -98,6 +98,7 @@ exports.load = function(filepath) {
     config.dashboard.lockerName = config.dashboard.customLockerName || 'locker';
     exports.dashboard = config.dashboard;
     exports.mail = config.mail;
+    exports.homeApp = config.homeApp;
     exports.authSecret = config.authSecret;
     try {
         if(path.existsSync(path.join(exports.me,'login.json'))) exports.authLogin = JSON.parse(fs.readFileSync(path.join(kdir, key)).toString());
