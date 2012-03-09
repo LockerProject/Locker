@@ -16,7 +16,7 @@ var lfs = require('lfs');
 var lutil = require('lutil');
 var request = require('request');
 var nodemailer = require('nodemailer');
-var lcrypto = require('lcrypto');
+var lcrypto;
 
 var me;
 var auth=false;
@@ -94,6 +94,9 @@ stdin.on('data', function (chunk) {
     processInfo = JSON.parse(chunk);
     locker.initClient(processInfo);
     process.chdir(processInfo.workingDirectory);
+    var lconfig = require('lconfig');
+    lconfig.load('../../Config/config.json');
+    lcrypto = require('lcrypto');
     me = lfs.loadMeData();
     lcrypto.loadKeys(function(){
         try {
@@ -105,6 +108,10 @@ stdin.on('data', function (chunk) {
             }
         }catch(e){
         };
+        if(lconfig.mail && lconfig.mail.hasOwnProperty('host'))
+        {
+            nodemailer.SMTP = auth = lconfig.mail;
+        }
         app.listen(processInfo.port,function() {
             var returnedInfo = {};
             console.log(JSON.stringify(returnedInfo));

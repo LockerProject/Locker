@@ -11,10 +11,8 @@ var fs = require('fs')
   , logger = require("./logger.js")
   , vm = require('vm')
   , util = require('util')
-  , dispatcher = require('./instrument.js').StatsdDispatcher;
-
-logger.verbose('Configured stats prefix is ' + lconfig.stats.prefix);
-var stats = new dispatcher(lconfig.stats);
+  , dispatcher = require('./instrument.js').StatsdDispatcher
+  , stats = new dispatcher(lconfig.stats);
 
 var runningContexts = {}; // Map of a synclet to a running context
 
@@ -413,14 +411,18 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         // here we roughly compromise a multiplier up or down based on the threshold being met
         var threshold = synclet.threshold || lconfig.tolerance.threshold;
         var total = synclet.deleted + synclet.added + synclet.updated;
-        if(total < threshold)
+        if (total < threshold)
         {
             if(synclet.tolMax < lconfig.tolerance.maxstep) synclet.tolMax++; // max 10x scheduled
             synclet.tolAt = synclet.tolMax;
-        }else{
+        } else {
             if(synclet.tolMax > 0) synclet.tolMax--;
             synclet.tolAt = synclet.tolMax;
         }
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.added',   synclet.added);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.updated', synclet.updated);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.deleted', synclet.deleted);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.length);
         logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
         callback(err);
     });

@@ -7,12 +7,32 @@ MOCHA = ./node_modules/.bin/mocha
 RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
 DEFAULT_OPTS = --growl --timeout 500
 
-all: build
+all: checkdeps build
+	@echo
+	@echo "Looks like everything worked!"
+	@echo "Get some API keys (https://github.com/LockerProject/Locker/wiki/GettingAPIKeys) and then try running:"
+	@echo "./locker"
+	@echo
+	@echo "Once running, visit http://localhost:8042 in your web browser."
 
-build: npm_modules build.json
+deps:
+	./scripts/install-deps deps
+	@echo
+	@echo "Go ahead and run 'make'"
+
+checkdeps:
+	@. scripts/use-deps.sh && \
+	if ! ./scripts/install-deps --check-only; then \
+		echo Some dependencies are missing.  Try running "make deps" to install them.; \
+		exit 1; \
+	fi
+
+build: checkdeps npm_modules build.json
+	@. scripts/use-deps.sh && \
 	./Apps/dashboardv3/static/common/templates/compile.sh
 
 npm_modules:
+	@. scripts/use-deps.sh && \
 	npm install
 
 # the test suite pretends that tests/ is the top of the source tree,
@@ -47,4 +67,4 @@ clean:
 	rm -f "$(DISTFILE)" build.json tests/build.json
 	rm -rf node_modules
 
-.PHONY: build npm_modules build.json
+.PHONY: build npm_modules build.json deps

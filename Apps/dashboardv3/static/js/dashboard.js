@@ -23,6 +23,28 @@ $(document).ready(function() {
     });
 
     $('body').delegate('.oauthLink','click', Locker.connectService);
+    $('body').delegate('.sync-button', 'click', function(evt) {
+      evt.preventDefault();
+      var button = $(this);
+      var provider = button.data('provider');
+      if (button.hasClass('disabled')) return;
+      button.addClass('disabled').text('Synching');
+
+      var ellipsis = setInterval(function() {
+        var text = button.text();
+        if (/\.{3}$/.test(text)) text = text.replace(/\.*$/, '');
+        else text += '.';
+        button.text(text);
+      }, 500);
+
+      Locker.syncService(provider, {id: 'repos'}, function(success) {
+        clearInterval(ellipsis);
+        button.text(success ? 'Synched!' : 'Failed').css({
+          'padding-left': 0,
+          'text-align': 'center'
+        });
+      });
+    });
 
     $('.your-apps').click(function() {
         $('.blue').removeClass('blue');
