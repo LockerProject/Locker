@@ -470,10 +470,8 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
                 }
             });
         } else if (data && data.length > 0) {
-          //ij.startAddTransaction()
           addData(collection, mongoId, data, info, synclet, idr, ij, function(err) {
             callback();
-            //ij.commitAddTransaction(callback);
           });
         } else if (deleteIDs && deleteIDs.length > 0) {
             deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
@@ -506,68 +504,45 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, cal
 }
 
 function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
-    var errs = [];
-    var entries = data.map(function(item) { 
+  var errs = [];
+  // Take out the deletes
+  var deletes = data.filter(function(item) {
+    var object = (item.obj) ? item : {obj: item};
+    if (object.obj && object.type === "delete") {
+      return true;
+    }
+    return false;
+  });
+  // TODO The deletes
+  async.forEachSeries(deletes, function(item, cb) {
+    var r = url.parse(idr);
+    r.hash = object.obj[mongoId].toString();
+    levents.fireEvent(url.format(r), 'delete');
+    synclet.deleted++;
+    ij.delData({id:object.obj[mongoId]}, cb);
+  }, function(err) {
+    // Now we'll batch process the rest as adds
+    var entries = data.filter(function(item) {
+      var object = (item.obj) ? item : {obj: item};
+      if (object.obj && object.type === "delete") {
+        return false;
+      }
+      return true; 
+    });
+    entries = entries.map(function(item) { 
       var object = (item.obj) ? item : {obj: item};
       return {id:object.obj[mongoId], data:object.obj};
     });
-    return ij.batchSmartAdd(entries, callback);
-
-    var q = async.queue(function(item, cb) {
-        var object = (item.obj) ? item : {obj: item};
-        if (object.obj) {
-            if(object.obj[mongoId] === null || object.obj[mongoId] === undefined) {
-                localError(info.title + ' ' + url.format(idr), "missing primary key (" + mongoId + ") value: "+JSON.stringify(object.obj));
-                errs.push({"message":"no value for primary key", "obj": object.obj});
-                return cb();
-            }
-            var r = url.parse(idr);
-            r.hash = object.obj[mongoId].toString();
-            if (object.type === 'delete') {
-                levents.fireEvent(url.format(r), 'delete');
-                synclet.deleted++;
-                ij.delData({id:object.obj[mongoId]}, cb);
-            } else {
-                var source = r.pathname.substring(1);
-                if(info.strip && info.strip[source])
-                { // if there's strip options, remove some things from the raw object
-                    for (var i in info.strip[source]) {
-                        var key = info.strip[source][i];
-                        delete object[key];
-                    }
-                }
-                var start = Date.now();
-                ij.smartAdd({id:object.obj[mongoId], data:object.obj}, function(err, type) {
-                  console.log("Did add in %d", (Date.now() - start));
-                    if (type === 'same') return cb();
-                    if (type === 'new') synclet.added++;
-                    if (type === 'update') synclet.updated++;
-                    //levents.fireEvent(url.format(r), type, object.obj);
-                    return cb();
-                });
-            }
-        } else {
-            cb();
-        }
-    }, 5);
-    // debug stuff
-    var oldProcess = q.process;
-    q.process = function() {
-      var task = q.tasks[0];
-      try {
-        oldProcess();
-      } catch (err) {
-        console.error('ERROR: caught error while processing q on task ', task);
-      }
-    };
-    data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
-    q.drain = function() {
-        if (errs.length > 0) {
-            callback(errs);
-        } else {
-            callback();
-        }
-    };
+    ij.batchSmartAdd(entries, function() {
+      // TODO:  Return some stats from batch add for added and updated
+      entries.forEach(function(item) {
+        var r = url.parse(idr);
+        r.hash = item.toString();
+        levents.fireEvent(url.format(r), "new", item.data);
+      });
+      callback();
+    });
+  });
 }
 
 
