@@ -76,21 +76,22 @@ function eacher(collection, id, ij, callback) {
     // Locate all the entries using find
     var count = 0;
     var at = Date.now();
-    ij.startAddTransaction();
-    collection.find().each(function(err, item) {
-        if(!item){
-            console.error("loaded " + count + " items in "+(Date.now() - at));
-            ij.commitAddTransaction(callback);
-            return;
-        }
-        if(!item[id]) console.error("can't find "+id+" in "+JSON.stringify(item));
-        ++count;
-        ij.addData({id:item[id], data:item}, function(addError) {
-            if (addError) {
-                console.error("Adding to ijod error: " + addError);
-                console.error(addError.stack);
-            }
-        });
+    ij.startAddTransaction(function() {
+      collection.find().each(function(err, item) {
+          if(!item){
+              console.error("loaded " + count + " items in "+(Date.now() - at));
+              ij.commitAddTransaction(callback);
+              return;
+          }
+          if(!item[id]) console.error("can't find "+id+" in "+JSON.stringify(item));
+          ++count;
+          ij.addData({id:item[id], data:item}, function(addError) {
+              if (addError) {
+                  console.error("Adding to ijod error: " + addError);
+                  console.error(addError.stack);
+              }
+          });
+      });
     });
 };
 

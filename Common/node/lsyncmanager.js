@@ -219,22 +219,24 @@ function executeSynclet(info, synclet, callback, force) {
     var tstart = Date.now();
     stats.increment('synclet.' + info.id + '.' + synclet.name + '.start');
     stats.increment('synclet.' + info.id + '.' + synclet.name + '.running');
+    // This is super handy for testing.
+    /*
     var fname = path.join("tmp", info.id + "-" + synclet.name + ".json");
     if (path.existsSync(fname)) {
-      console.trace();
       var resp = JSON.parse(fs.readFileSync(fname));
       var startTime = Date.now();
-      console.log("Start response processing");
+      console.log("Start response processing for %s", (info.id + "/" + synclet.name));
       processResponse({}, info, synclet, resp, function(processErr) {
         process.stdin.on("data", function(data) {
           console.log(data.toString());
         });
-        console.log("Response Processing Done %d", (Date.now() - startTime));
+        console.log("Response Processing Done for %s in %d", (info.id + "/" + synclet.name), (Date.now() - startTime));
         info.status = 'waiting';
         callback(processErr);
       });
       return;
     }
+    */
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -468,7 +470,11 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
                 }
             });
         } else if (data && data.length > 0) {
-            addData(collection, mongoId, data, info, synclet, idr, ij, callback);
+          //ij.startAddTransaction()
+          addData(collection, mongoId, data, info, synclet, idr, ij, function(err) {
+            callback();
+            //ij.commitAddTransaction(callback);
+          });
         } else if (deleteIDs && deleteIDs.length > 0) {
             deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
         } else {
@@ -501,6 +507,12 @@ function deleteData (collection, mongoId, deleteIds, info, synclet, idr, ij, cal
 
 function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
     var errs = [];
+    var entries = data.map(function(item) { 
+      var object = (item.obj) ? item : {obj: item};
+      return {id:object.obj[mongoId], data:object.obj};
+    });
+    return ij.batchSmartAdd(entries, callback);
+
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
         if (object.obj) {
@@ -524,11 +536,13 @@ function addData (collection, mongoId, data, info, synclet, idr, ij, callback) {
                         delete object[key];
                     }
                 }
+                var start = Date.now();
                 ij.smartAdd({id:object.obj[mongoId], data:object.obj}, function(err, type) {
+                  console.log("Did add in %d", (Date.now() - start));
                     if (type === 'same') return cb();
                     if (type === 'new') synclet.added++;
                     if (type === 'update') synclet.updated++;
-                    levents.fireEvent(url.format(r), type, object.obj);
+                    //levents.fireEvent(url.format(r), type, object.obj);
                     return cb();
                 });
             }

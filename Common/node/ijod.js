@@ -18,10 +18,13 @@ var deepCompare = require('./deepCompare');
 var sqlite = require('sqlite-fts');
 var zlib = require("compress-buffer");
 var lutil = require("lutil");
+var async = require("async");
+var mmh3 = require("murmurhash3");
 
 function IJOD(arg, callback) {
     if(!arg || !arg.name) return callback("invalid args");
     var self = this;
+  this.transactionItems = null;
     self.name = arg.name;
     self.gzname = arg.name + '.json.gz';
     self.dbname = arg.name + '.db';
@@ -36,7 +39,7 @@ function IJOD(arg, callback) {
     self.db = new sqlite.Database();
     self.db.open(self.dbname, function (err) {
         if(err) return callback(err);
-        self.db.executeScript("CREATE TABLE IF NOT EXISTS ijod (id TEXT PRIMARY KEY, at INTEGER, len INTEGER);",function (err) {
+        self.db.executeScript("CREATE TABLE IF NOT EXISTS ijod (id TEXT PRIMARY KEY, at INTEGER, len INTEGER, hash TEXT);",function (err) {
             if(err) return callback(err);
             callback(null, self);
         });
@@ -44,8 +47,10 @@ function IJOD(arg, callback) {
 }
 exports.IJOD = IJOD;
 
-IJOD.prototype.startAddTransaction = function() {
+IJOD.prototype.startAddTransaction = function(cbDone) {
+  if (this.transactionItems) return cbDone();
   this.transactionItems = [];
+  this.db.execute("BEGIN TRANSACTION", function(error, rows) { cbDone(); });
 };
 
 IJOD.prototype.commitAddTransaction = function(cbDone) {
@@ -69,35 +74,27 @@ IJOD.prototype.commitAddTransaction = function(cbDone) {
       } else if (written != totalSize) {
         console.error("Only %d written of %d bytes to IJOD", written, totalSize);
       }
-      return cbDone();
+      self.db.execute("COMMIT TRANSACTION", function(error, rows) { cbDone() });
     });
   });
 }
-
-IJOD.prototype.updateIndex = function(id, gzlen, cbDone) {
-  var at = this.len;
-  this.len += gzlen;
-  this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [id, at, this.len-at], cbDone);
-};
 
 // takes arg of at least an id and data, callback(err) when done
 IJOD.prototype.addData = function(arg, callback) {
   if(!arg || !arg.id) return callback("invalid arg");
   arg.id = arg.id.toString(); // safety w/ numbers
+  var tmpJson = JSON.stringify(arg);
+  var hash = mmh3.murmur32HexSync(tmpJson);
   if(!arg.at) arg.at = Date.now();
   var self = this;
-  var gzdata = zlib.compress(new Buffer(JSON.stringify(arg)+"\n"));
-  if (this.transactionItems) {
-    this.transactionItems.push(gzdata);
-    this.updateIndex(arg.id, gzdata.length, callback);
-  } else {
-    fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
-      if (err) {
-        return callback(err);
-      }
-      self.updateIndex(arg.id, gzdata.length, callback);
-    });
-  }
+  this.startAddTransaction(function() {
+    var tmpJson = JSON.stringify(arg);
+    var gzdata = zlib.compress(new Buffer(tmpJson+"\n"));
+    self.transactionItems.push(gzdata);
+    var at = self.len;
+    self.len += gzdata.length;
+    self.db.execute("REPLACE INTO ijod VALUES (?, ?, ?, ?)", [arg.id, at, self.len-at, hash], callback);
+  });
 }
 
 // adds a deleted record to the ijod and removes from index
@@ -132,7 +129,7 @@ IJOD.prototype.getOne = function(arg, callback) {
     if(!row) return callback();
     var buf = new Buffer(row.len);
     fs.readSync(self.fdr, buf, 0, row.len, row.at);
-    var data = zlib.decompress(buf);
+    var data = zlib.uncompress(buf);
     return callback(err, arg.raw ? data : stripper(data));
   });
 }
@@ -169,7 +166,9 @@ IJOD.prototype.smartAdd = function(arg, callback) {
     if(!arg || !arg.id) return callback("invalid arg");
     arg.id = arg.id.toString(); // safety w/ numbers
     var self = this;
+    var start = Date.now();
     self.getOne(arg, function(err, existing){
+      console.log("getOne in %d", (Date.now() - start));
         if(err) return callback(err);
         // first check if it's new
         if(!existing)
@@ -192,6 +191,56 @@ IJOD.prototype.smartAdd = function(arg, callback) {
         })
     });
 }
+
+IJOD.prototype.batchSmartAdd = function(entries, callback) {
+  console.log("Batch smart add %d entries", entries.length);
+  var t = Date.now();
+  var self = this;
+  var script = ["CREATE TEMP TABLE IF NOT EXISTS batchSmartAdd (id TEXT)", "DELETE FROM batchSmartAdd", "BEGIN TRANSACTION"].join(";") + ";";
+  self.db.executeScript(script, function(error, rows) {
+    self.db.prepare("INSERT INTO batchSmartAdd VALUES (?)", function(error, stmt) {
+      async.forEachSeries(entries, function(entry, cb) {
+        if (!entry) return cb();
+        stmt.bind(1, entry.id, function(err) {
+          stmt.step(function(error, row) {
+            stmt.reset();
+            cb();
+          });
+        });
+      }, function(error) {
+        self.db.execute("COMMIT TRANSACTION", function(error, rows) {
+          stmt.finalize(function(error) {
+            self.db.execute("SELECT id,hash FROM ijod WHERE ijod.id IN (SELECT id FROM batchSmartAdd)", function(error, rows) {
+              var knownIds = {};
+              rows = rows || [];
+              rows.forEach(function(row) { 
+                knownIds[row.id] = row.hash;
+              });
+              self.startAddTransaction(function() {
+                async.forEachSeries(entries, function(entry, cb) {
+                  if (!entry) return cb();
+                  if (knownIds[entry.id]) {
+                    // See if we need to update
+                    entry.id = entry.id.toString(); // safety w/ numbers
+                    var hash = mmh3.murmur32HexSync(JSON.stringify(entry));
+                    // If the id and hashes match it's the same!
+                    if (hash == knownIds[entry.id]) {
+                      return cb();
+                    }
+                  } 
+                  self.addData(entry, cb);
+                }, function(error) {
+                  self.commitAddTransaction(callback);
+                  console.log("Batch done: %d", (Date.now() - t));
+                });
+              })
+            });
+          });
+        });
+      });
+    });
+  });
+};
 
 // utilities to respond to a web request, shared between synclets and push
 IJOD.prototype.reqCurrent = function(req, res)
