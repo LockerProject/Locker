@@ -3,6 +3,20 @@
   <p class="sidenav-header-link"><a href="allApps" data-id="allApps" class="orange iframeLink">see all</a></p>
 </div>
 <div class="installed-apps sidenav-items">
+  <%
+    var hasGithub = false;
+    for (var i = 0; i < connectors.length; i++) {
+      if (connectors[i].repository.handle === 'github' && connectors[i].authed) {
+        hasGithub = true;
+        break
+      }
+    }
+  %>
+  <% if (hasGithub) { %>
+    <a href="#" class="sync-button action-button" data-provider="github">
+      Sync GitHub
+    </a>
+  <% } %>
   <ul>
     <% for (var i = 0; i < myMap.length; i++) { %>
       <li>
@@ -10,9 +24,9 @@
       </li>
     <% } %>
   </ul>
-<% if (myMap.length === 0) { %>
-  <p><a class="orange" href="develop#Develop-BuildAnApp">Build an App!</a></p>
-<% } %>
+  <% if (myMap.length === 0) { %>
+    <p><a class="orange" href="develop#Develop-BuildAnApp">Build an App!</a></p>
+  <% } %>
 </div>
 
 <div class="sidenav-header">
