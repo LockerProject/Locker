@@ -254,9 +254,6 @@ locker.post('/post/:id/:synclet', function(req, res) {
     });
 });
 
-// all synclet getCurrent, id, etc stuff
-require('synclet/dataaccess')(locker);
-
 function proxyRequest(method, req, res, next) {
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;

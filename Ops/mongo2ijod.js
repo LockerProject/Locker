@@ -1,4 +1,3 @@
-var zlib = require("zlib");
 var sys = require("util");
 var fs = require("fs");
 var lconfig = require(__dirname +"/../Common/node/lconfig");
@@ -6,6 +5,7 @@ lconfig.load(__dirname+"/../Config/config.json");
 var IJOD = require(__dirname+"/../Common/node/ijod").IJOD;
 var async = require("async");
 var spawn = require('child_process').spawn;
+var lutil = require("lutil");
 
 
 var enc = null;
@@ -41,7 +41,7 @@ function connect(cb){
 function scan(names, dir, callback) {
     console.error("scanning "+dir);
     var files = fs.readdirSync(dir);
-    async.forEachSeries(files, function(file, cb){
+    lutil.forEachSeries(files, function(file, cb){
         var fullPath = dir + '/' + file;
         var stats = fs.statSync(fullPath);
         if(!stats.isDirectory()) return cb();
@@ -49,7 +49,7 @@ function scan(names, dir, callback) {
             if(!stats || !stats.isFile()) return cb();
             var me = JSON.parse(fs.readFileSync(fullPath+"/me.json"));
             if(!me) return cb();
-            async.forEachSeries(names, function(nameo, cb2){
+            lutil.forEachSeries(names, function(nameo, cb2){
                 var name = nameo.name;
                 var pfix = "locker.asynclets_"+me.id+"_";
                 if(name.indexOf(pfix) == -1) return cb2();
@@ -76,10 +76,11 @@ function eacher(collection, id, ij, callback) {
     // Locate all the entries using find
     var count = 0;
     var at = Date.now();
+    ij.startAddTransaction();
     collection.find().each(function(err, item) {
         if(!item){
             console.error("loaded " + count + " items in "+(Date.now() - at));
-            callback();
+            ij.commitAddTransaction(callback);
             return;
         }
         if(!item[id]) console.error("can't find "+id+" in "+JSON.stringify(item));

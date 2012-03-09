@@ -16,7 +16,8 @@ var fs = require('fs');
 var path = require('path');
 var deepCompare = require('./deepCompare');
 var sqlite = require('sqlite-fts');
-var zlib = require("zlib");
+var zlib = require("compress-buffer");
+var lutil = require("lutil");
 
 function IJOD(arg, callback) {
     if(!arg || !arg.name) return callback("invalid args");
@@ -43,90 +44,123 @@ function IJOD(arg, callback) {
 }
 exports.IJOD = IJOD;
 
+IJOD.prototype.startAddTransaction = function() {
+  this.transactionItems = [];
+};
+
+IJOD.prototype.commitAddTransaction = function(cbDone) {
+  if (!this.transactionItems || this.transactionItems.length == 0) return cbDone();
+  console.log("Commiting %d items", this.transactionItems.length);
+  var totalSize = this.transactionItems.reduce(function(prev, cur, idx, arr) { return prev + arr[idx].length; }, 0);
+  var writeBuffer = new Buffer(totalSize);
+  var idx = 0;
+  var self = this;
+  lutil.forEachSeries(self.transactionItems, function(item, cb) {
+    item.copy(writeBuffer, idx);
+    idx += item.length;
+    cb();
+  }, function(err) {
+    fs.write(self.fda, writeBuffer, 0, writeBuffer.length, null, function(err, written, buffer) {
+      // We end the transaction
+      writeBuffer = null;
+      self.transactionItems = null;
+      if (err) {
+        console.error("Error writing to IJOD: %e", err);
+      } else if (written != totalSize) {
+        console.error("Only %d written of %d bytes to IJOD", written, totalSize);
+      }
+      return cbDone();
+    });
+  });
+}
+
+IJOD.prototype.updateIndex = function(id, gzlen, cbDone) {
+  var at = this.len;
+  this.len += gzlen;
+  this.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [id, at, this.len-at], cbDone);
+};
+
 // takes arg of at least an id and data, callback(err) when done
 IJOD.prototype.addData = function(arg, callback) {
-    if(!arg || !arg.id) return callback("invalid arg");
-    arg.id = arg.id.toString(); // safety w/ numbers
-    if(!arg.at) arg.at = Date.now();
-    var self = this;
-    zlib.gzip(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
-        console.log("going to write length " + gzdata.length);
-        fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
-          if (err) {
-            return callback(err);
-          }
-
-          var at = self.len;
-          self.len += gzdata.length;
-          self.db.execute("REPLACE INTO ijod VALUES (?, ?, ?)", [arg.id, at, self.len-at], callback);
-        });
+  if(!arg || !arg.id) return callback("invalid arg");
+  arg.id = arg.id.toString(); // safety w/ numbers
+  if(!arg.at) arg.at = Date.now();
+  var self = this;
+  var gzdata = zlib.compress(new Buffer(JSON.stringify(arg)+"\n"));
+  if (this.transactionItems) {
+    this.transactionItems.push(gzdata);
+    this.updateIndex(arg.id, gzdata.length, callback);
+  } else {
+    fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
+      if (err) {
+        return callback(err);
+      }
+      self.updateIndex(arg.id, gzdata.length, callback);
     });
+  }
 }
 
 // adds a deleted record to the ijod and removes from index
 IJOD.prototype.delData = function(arg, callback) {
-    if(!arg || !arg.id) return callback("invalid arg");
-    arg.id = arg.id.toString(); // safety w/ numbers
-    if(!arg.at) arg.at = Date.now();
-    arg.type = "delete";
-    var self = this;
-    zlib.gzip(new Buffer(JSON.stringify(arg)+"\n"), function(err, gzdata) {
-      fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
-        if (err) {
-          return callback(err);
-        }
+  if(!arg || !arg.id) return callback("invalid arg");
+  arg.id = arg.id.toString(); // safety w/ numbers
+  if(!arg.at) arg.at = Date.now();
+  arg.type = "delete";
+  var self = this;
+  var gzdata = zlib.compress(new Buffer(JSON.stringify(arg)+"\n"));
+  fs.write(self.fda, gzdata, 0, gzdata.length, null, function(err, written, buffer) {
+    if (err) {
+      return callback(err);
+    }
 
-        var at = self.len;
-        self.len += gzdata.length;
-        self.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
-      });
-    });
+    var at = self.len;
+    self.len += gzdata.length;
+    self.db.execute("DELETE FROM ijod WHERE id = ?", [arg.id], callback);
+  });
 }
 
 // this only calls callback(err, rawstring) once!
 IJOD.prototype.getOne = function(arg, callback) {
-    if(!arg || !arg.id) return callback("invalid arg");
-    arg.id = arg.id.toString(); // safety w/ numbers
-    var self = this;
-    var did = false;
-    self.db.query("SELECT at,len FROM ijod WHERE id = ? LIMIT 1", [arg.id], function(err, row){
-        if(did) return; // only call callback ones
-        did = true;
-        if(err) return callback(err);
-        if(!row) return callback();
-        var buf = new Buffer(row.len);
-        fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        zlib.gunzip(buf, function(err, data) {
-            return callback(err, arg.raw ? data : stripper(data));
-        });
-    });
+  if(!arg || !arg.id) return callback("invalid arg");
+  arg.id = arg.id.toString(); // safety w/ numbers
+  var self = this;
+  var did = false;
+  self.db.query("SELECT at,len FROM ijod WHERE id = ? LIMIT 1", [arg.id], function(err, row){
+    if(did) return; // only call callback ones
+    did = true;
+    if(err) return callback(err);
+    if(!row) return callback();
+    var buf = new Buffer(row.len);
+    fs.readSync(self.fdr, buf, 0, row.len, row.at);
+    var data = zlib.decompress(buf);
+    return callback(err, arg.raw ? data : stripper(data));
+  });
 }
 
 // will call callback(err, rawstring) continuously until rawstring==undefined
 IJOD.prototype.getAll = function(arg, callback) {
-    if(!arg) return callback("invalid arg");
-    var params = [];
-    var sql = "SELECT at,len FROM ijod ";
-    if(arg.limit)
-    {
-        sql += " LIMIT ?";
-        params.push(parseInt(arg.limit));
-    }
-    if(arg.offset)
-    {
-        sql += " OFFSET ?";
-        params.push(parseInt(arg.offset));
-    }
-    var self = this;
-    self.db.query(sql, params, function(err, row){
-        if(err) return callback(err);
-        if(!row) return callback();
-        var buf = new Buffer(row.len);
-        fs.readSync(self.fdr, buf, 0, row.len, row.at);
-        zlib.gunzip(buf, function(err, data) {
-            return callback(err, arg.raw ? data : stripper(data));
-        });
-    });
+  if(!arg) return callback("invalid arg");
+  var params = [];
+  var sql = "SELECT at,len FROM ijod ";
+  if(arg.limit)
+  {
+    sql += " LIMIT ?";
+    params.push(parseInt(arg.limit));
+  }
+  if(arg.offset)
+  {
+    sql += " OFFSET ?";
+    params.push(parseInt(arg.offset));
+  }
+  var self = this;
+  self.db.query(sql, params, function(err, row){
+    if(err) return callback(err);
+    if(!row) return callback();
+    var buf = new Buffer(row.len);
+    fs.readSync(self.fdr, buf, 0, row.len, row.at);
+    var data = zlib.decompress(buf);
+    return callback(err, arg.raw ? data : stripper(data));
+  });
 }
 
 // takes a new object and checks first if it exists

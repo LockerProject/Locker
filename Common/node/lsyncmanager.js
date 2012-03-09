@@ -80,7 +80,7 @@ var synclets = {
 var serviceManager;
 exports.init = function (sman, callback) {
     serviceManager = sman;
-    datastore.init(callback);
+    callback();
 };
 
 var executeable = true;
@@ -219,6 +219,22 @@ function executeSynclet(info, synclet, callback, force) {
     var tstart = Date.now();
     stats.increment('synclet.' + info.id + '.' + synclet.name + '.start');
     stats.increment('synclet.' + info.id + '.' + synclet.name + '.running');
+    var fname = path.join("tmp", info.id + "-" + synclet.name + ".json");
+    if (path.existsSync(fname)) {
+      console.trace();
+      var resp = JSON.parse(fs.readFileSync(fname));
+      var startTime = Date.now();
+      console.log("Start response processing");
+      processResponse({}, info, synclet, resp, function(processErr) {
+        process.stdin.on("data", function(data) {
+          console.log(data.toString());
+        });
+        console.log("Response Processing Done %d", (Date.now() - startTime));
+        info.status = 'waiting';
+        callback(processErr);
+      });
+      return;
+    }
 
     if (info.vm || synclet.vm) {
       // Go ahead and create a context immediately so we get it listed as
@@ -377,7 +393,6 @@ function compareIDs (originalConfig, newConfig) {
 
 function processResponse(deleteIDs, info, synclet, response, callback) {
     synclet.status = 'waiting';
-    checkStatus(info);
 
     var dataKeys = [];
     if (typeof(response.data) === 'string') {
