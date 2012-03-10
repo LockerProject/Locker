@@ -24,15 +24,11 @@ StatsdDispatcher.prototype.send = function (msg) {
 
   var socket = dgram.createSocket('udp4');
   var buf = new Buffer(msg);
-  try {
-    socket.send(buf, 0, buf.length, this.port, this.host, function (err, bytes) {
-      if (err) logger.error('statsd error: ' + err);
+  socket.send(buf, 0, buf.length, this.port, this.host, function (err, bytes) {
+    if (err) console.error('statsd error: ' + err);
 
-      socket.close();
-    });
-  } catch (err) {
-    logger.error('statsd exception: ' + err);
-  }
+    socket.close();
+  });
 };
 
 StatsdDispatcher.prototype.increment = function (key, value, rate) {
