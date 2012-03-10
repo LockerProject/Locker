@@ -16,19 +16,23 @@ function StatsdDispatcher(config) {
 }
 
 StatsdDispatcher.prototype.send = function (msg) {
-  if (!this.host || !this.port) {
+  var host   = this.host
+    , port   = this.port
+    , prefix = this.prefix;
+
+  if (!(host && port)) {
     logger.verbose("statsd dispatcher not configured, not dispatching '" + msg + "'");
     return;
   }
-  if (this.prefix) msg = this.prefix + '.' + msg;
+
+  if (prefix) msg = prefix + '.' + msg;
+  var buf = new Buffer(msg);
 
   var socket = dgram.createSocket('udp4');
-  var buf = new Buffer(msg);
-  socket.send(buf, 0, buf.length, this.port, this.host, function (err, bytes) {
-    if (err) console.error('statsd error: ' + err);
-
-    socket.close();
+  socket.on('error', function (err) {
+    logger.error('statsd event delivery error for ' + host + ': ' + err);
   });
+  socket.send(buf, 0, buf.length, port, host);
 };
 
 StatsdDispatcher.prototype.increment = function (key, value, rate) {
