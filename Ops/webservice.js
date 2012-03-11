@@ -51,17 +51,24 @@ var locker = express.createServer(
         }
     },
     connect.cookieParser(),
-    // what is public and what is not
+    // a blacklist of what requires auth
     function(req, res, next) {
-        var OK = false;
-        var AUTH = false;
-        if(req.connection.remoteAddress == '127.0.0.1') OK = true;
-        if(req.headers.host && req.headers.host.indexOf('lvh.me') == 0) OK = false; // easy way to test public view on localhost
-        if(isAuthed(req)) OK = true;
-        if (req.url == '/core/stats' || req.url == '/core/selftest' || req.url == '/core/revision') OK = true; // allow these public for now (but should use authSecret)
-        if (req.url.substring(0, 6) == '/auth/') OK = true; // authing requests allowed
-        if (req.url == '/') OK = true; // root is ok
-        if (req.url.substring(0, 11) == '/dashboard/') OK = true; // anything dashboard is legit
+        // fast path blanked allowed
+        if (isAuthed) return next(); // authed is awesome
+        if(req.connection.remoteAddress == '127.0.0.1') return next(); // localhost is where internal requests come from
+
+        // blacklist anything needing auth
+        var OK = true;
+        if (req.url.substring(0, 4) == '/Me/') OK = false;
+        // some core urls must be auth'd
+        if (req.url.substring(0, 6) == '/core/' && (req.url.indexOf('/listen') > 0 || req.url.indexOf('/deafen') > 0 || req.url.indexOf('/event') > 0 || req.url.indexOf('/at') > 0)) OK = false;
+        if (req.url == '/map' || req.url == '/map/profile' || req.url == '/map/upsert') OK = false; // no map!
+        if (req.url == '/providers' || req.url == '/provides') OK = false; // these should be depreciated soon
+        if (req.url == '/encrypt' || req.url == '/decrypto') OK = false; // these should be moved, core? even exposed?
+        if (req.url.substring(0, 7) == '/query/') OK = false; // no go sireo, depreciated?
+        if (req.url.substring(0, 10) == '/synclets/') OK = false; // legacy, /Me/:connect maps to it
+
+        // boop!
         if(OK) return next();
         logger.warn('unauthed request from '+req.connection.remoteAddress+' to '+req.url);
         res.send(401);
@@ -278,7 +285,7 @@ locker.get('/synclets/:id/run', function(req, res) {
 });
 
 // this will pass the post body to the synclet and run it immediately
-locker.post('/post/:id/:synclet', function(req, res) {
+locker.post('/Me/:id/post/:synclet', function(req, res) {
     syncManager.syncNow(req.params.id, req.params.synclet, req.body, function() {
         res.send(true);
     });
@@ -338,53 +345,6 @@ function proxyRequest(method, req, res, next) {
     }
     logger.silly("Proxy complete");
 };
-
-// DIARY
-// Publish a user visible message
-locker.get("/core/:svcId/diary", function(req, res) {
-    var level = req.param("level") || 0;
-    var message = req.param("message");
-    var svcId = req.params.svcId;
-
-    var now = new Date;
-    try {
-        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
-            if (err && err.errno != process.EEXIST) logger.error("Error creating diary: " + err);
-        });
-    } catch (E) {
-        // Why do I still have to catch when it has an error callback?!
-    }
-    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
-            var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
-            lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
-            res.writeHead(200);
-            res.end("{}");
-        })
-    });
-});
-
-// Retrieve the current days diary or the given range
-locker.get("/diary", function(req, res) {
-    var now = new Date;
-    var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
-    res.writeHead(200, {
-        "Content-Type": "text/javascript",
-        "Access-Control-Allow-Origin" : "*"
-    });
-    fs.readFile(fullPath, function(err, file) {
-        if (err) {
-            res.write("[]");
-            res.end();
-            return;
-        }
-        var rawLines   = file.toString().trim().split("\n");
-        var diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
-        res.write(JSON.stringify(diaryLines), "binary");
-        res.end();
-    });
-    res.write
-});
 
 locker.get('/core/revision', function(req, res) {
     fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
@@ -515,7 +475,7 @@ locker.post('/core/:svcId/event', function(req, res) {
 });
 
 // manually flush any waiting synclets, useful for debugging/testing
-locker.get('/flush', function(req, res) {
+locker.get('/synclets/flush', function(req, res) {
     res.send(true);
     syncManager.flushTolerance(function(err){
         if(err) logger.error("got error when flushing synclets: "+err);
