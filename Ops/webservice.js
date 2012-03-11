@@ -542,7 +542,8 @@ locker.all("/socket.io*", function(req, res) {
     proxyRequest(req.method, req, res);
 });
 
-locker.get('/', function(req, res) {
+// everything else to the homeapp if one
+locker.get('/*', function(req, res) {
     var homeApp = req.headers.homeapp || lconfig.homeApp;
     if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
     // internally process this request now

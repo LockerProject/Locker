@@ -601,7 +601,16 @@ function authIsAuth(req, res) {
 
 // save out auth and kick-start synclets, plus respond
 function finishAuth(js, auth, req, res) {
-    logger.info("authorized "+js.id);
+    logger.info("auth validating "+js.id);
+    // if this is a login, and the new auth doesn't match, NO NO NO bad
+    if(req.headers.authed != "true" && js.auth)
+    {
+        if(js.id != 'facebook' || js.id != 'twitter') return res.end("must log in with facebook or twitter for now",500);
+        // TODO, should probably run the self synclet and compare ids, if tokens change for a valid auth?
+        if(js.id == 'facebook' && js.auth.accessToken != auth.accessToken) return res.end("your active facebook login didn't match the previous one :(",500);
+        if(js.id == 'twitter' && js.auth.token.oauth_token != auth.token.oauth_token) return res.end("your active twitter login didn't match the previous one :(",500);
+    }
+    logger.info("authorizing "+js.id);
     js.auth = auth;
     if(!js.authed) js.authed = Date.now();
     // upsert it again now that it's auth'd, significant!
