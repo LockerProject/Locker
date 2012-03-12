@@ -65,8 +65,11 @@ var locker = express.createServer(
         if (req.url == '/map' || req.url == '/map/profile' || req.url == '/map/upsert') OK = false; // no map!
         if (req.url == '/providers' || req.url == '/provides') OK = false; // these should be depreciated soon
         if (req.url == '/encrypt' || req.url == '/decrypto') OK = false; // these should be moved, core? even exposed?
+        if (req.url.substring(0, 6) == '/push/') OK = false; // maybe move this to /Me/push ?
         if (req.url.substring(0, 7) == '/query/') OK = false; // no go sireo, depreciated?
         if (req.url.substring(0, 10) == '/synclets/') OK = false; // legacy, /Me/:connect maps to it
+        if (req.url.substring(0, 10) == '/registry/') OK = false; 
+        if (req.url.substring(0, 8) == '/deauth/') OK = false;
 
         // boop!
         if(OK) return next();
@@ -502,16 +505,21 @@ locker.all("/socket.io*", function(req, res) {
     proxyRequest(req.method, req, res);
 });
 
+require('./webservice-push')(locker);
+
 // everything else to the homeapp if one
-locker.get('/*', function(req, res) {
+locker.get('/*', function(req, res, next) {
+    // is there a better way to do a catch-all? some things get registered after this:
+    if (req.url.substring(0, 10) == '/registry/') return next();
+    if (req.url.substring(0, 6) == '/auth/') return next();
+    if (req.url.substring(0, 8) == '/deauth/') return next();
+    
     var homeApp = req.headers.homeapp || lconfig.homeApp;
     if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
     // internally process this request now
     req.url = '/Me/' + homeApp + req.url;
     proxyRequest(req.method, req, res);
 });
-
-require('./webservice-push')(locker);
 
 
 function proxied(method, svc, ppath, req, res, buffer) {
