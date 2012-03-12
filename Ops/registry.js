@@ -93,6 +93,7 @@ exports.app = function (app) {
     app.get('/auth/:id/auth', authIsAuth);
 
     app.get('/deauth/:id', deauthIsAwesomer);
+    app.get('/deauth', deauthIsLogout);
 };
 
 function getConnectors(req, res) {
@@ -552,7 +553,6 @@ function authIsAuth(req, res) {
 
         // rest require apikeys
         if (!apiKeys[id] && js.keys !== false && js.keys != "false") return res.send("missing required api keys", 500);
-        console.error("entering");
         if (typeof authModule.handler == 'function') return authModule.handler(host, apiKeys[id], function (err, auth) {
             if (err) return res.send(err, 500);
             finishAuth(js, auth, req, res);
@@ -627,6 +627,12 @@ function finishAuth(js, auth, req, res) {
     }
     res.cookie('lockerlogin', lconfig.authLogin.cookie, { path: '/', expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
     res.end("<script type='text/javascript'>  window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
+}
+
+// simple logout
+function deauthIsLogout(req, res) {
+    res.cookie('lockerlogin', '', { path: '/', expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
+    res.redirect(lconfig.externalBase+'/?cachebuster='+Math.random());
 }
 
 function deauthIsAwesomer(req, res) {

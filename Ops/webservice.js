@@ -54,7 +54,7 @@ var locker = express.createServer(
     // a blacklist of what requires auth
     function(req, res, next) {
         // fast path blanked allowed
-        if (isAuthed) return next(); // authed is awesome
+        if (isAuthed(req)) return next(); // authed is awesome
         if(req.connection.remoteAddress == '127.0.0.1') return next(); // localhost is where internal requests come from
 
         // blacklist anything needing auth
@@ -69,7 +69,7 @@ var locker = express.createServer(
         if (req.url.substring(0, 7) == '/query/') OK = false; // no go sireo, depreciated?
         if (req.url.substring(0, 10) == '/synclets/') OK = false; // legacy, /Me/:connect maps to it
         if (req.url.substring(0, 10) == '/registry/') OK = false; 
-        if (req.url.substring(0, 8) == '/deauth/') OK = false;
+        if (req.url.substring(0, 7) == '/deauth') OK = false;
 
         // boop!
         if(OK) return next();
@@ -507,21 +507,6 @@ locker.all("/socket.io*", function(req, res) {
 
 require('./webservice-push')(locker);
 
-// everything else to the homeapp if one
-locker.get('/*', function(req, res, next) {
-    // is there a better way to do a catch-all? some things get registered after this:
-    if (req.url.substring(0, 10) == '/registry/') return next();
-    if (req.url.substring(0, 6) == '/auth/') return next();
-    if (req.url.substring(0, 8) == '/deauth/') return next();
-    
-    var homeApp = req.headers.homeapp || lconfig.homeApp;
-    if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
-    // internally process this request now
-    req.url = '/Me/' + homeApp + req.url;
-    proxyRequest(req.method, req, res);
-});
-
-
 function proxied(method, svc, ppath, req, res, buffer) {
     svc.last = Date.now();
     if(ppath.substr(0,1) != "/") ppath = "/"+ppath;
@@ -532,6 +517,17 @@ function proxied(method, svc, ppath, req, res, buffer) {
       port: url.parse(svc.uriLocal).port,
       buffer: buffer
     });
+}
+
+// everything else to the homeapp if one
+exports.rootListener = function() {
+    locker.get('/*', function(req, res, next) {
+        var homeApp = req.headers.homeapp || lconfig.homeApp;
+        if(!homeApp || !serviceManager.map(homeApp)) return res.redirect(lconfig.externalBase + '/dashboard/');
+        // internally process this request now
+        req.url = '/Me/' + homeApp + req.url;
+        proxyRequest(req.method, req, res);
+    });    
 }
 
 exports.startService = function(port, ip, cb) {

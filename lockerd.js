@@ -142,6 +142,7 @@ function finishStartup() {
                     var webservice = require(__dirname + "/Ops/webservice.js");
                     webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
                         registry.app(locker); // add it's endpoints
+                        webservice.rootListener(); // the catch-all
                         postStartup();
                     });
                 });
