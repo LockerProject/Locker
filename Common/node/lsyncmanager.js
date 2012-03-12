@@ -146,7 +146,6 @@ exports.scheduleRun = function(info, synclet) {
     if (!synclet.frequency) return;
 
     var key = info.id + "-" + synclet.name;
-    logger.verbose("scheduling "+key);
     if(scheduled[key]) clearTimeout(scheduled[key]); // remove any existing timer
 
     // run from a clean state
