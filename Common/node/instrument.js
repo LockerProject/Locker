@@ -32,7 +32,11 @@ StatsdDispatcher.prototype.send = function (msg) {
   socket.on('error', function (err) {
     logger.error('statsd event delivery error for ' + host + ': ' + err);
   });
-  socket.send(buf, 0, buf.length, port, host);
+  socket.send(buf, 0, buf.length, port, host, function (err, bytes) {
+    if (err) logger.err('statsd send error: ' + err);
+
+    socket.close();
+  });
 };
 
 StatsdDispatcher.prototype.increment = function (key, value, rate) {
