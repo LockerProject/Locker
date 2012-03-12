@@ -11,10 +11,12 @@ var extras = 'description,license,date_upload,date_taken,owner_name,icon_server,
              'original_format,last_update,geo,tags,machine_tags,o_dims' +
              'views,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o';
 
-var paging = require('./lib/paging');
+var paging;
+var base;
 
 var dlPhotos = false;
 
+var path = require("path");
 var fs = require('fs'),
     request = require('request'),
     async = require('async');
@@ -35,7 +37,7 @@ function getPhotoBinary(url, filename, callback) {
     request.get({uri:url, encoding:'binary'}, function(err, resp, body) {
         var contentType = resp.headers['content-type'];
         var extension = contentType.substring(contentType.lastIndexOf('/') + 1);
-        fs.writeFile('photos/' + filename + "." + extension, body, 'binary', callback);
+        fs.writeFile(path.join(base, 'photos', filename + "." + extension), body, 'binary', callback);
     });
 }
 
@@ -45,10 +47,12 @@ function getPhotoBinaries(photoObject, callback) {
     });
 }
 
-var PER_PAGE = 50; //maximum of 500, but rate limit ~ 1/sec, so no need to increase
+var PER_PAGE = 500; //maximum of 500, but rate limit ~ 1/sec, so no need to increase
 exports.sync = function(processInfo, callback) {
+  base = processInfo.workingDirectory;
+  paging = require(path.join(processInfo.absoluteSrcdir, 'lib', 'paging.js'));
     try {
-        fs.mkdirSync('photos', 0755);
+        fs.mkdirSync(path.join(base, 'photos'), 0755);
     } catch(err) {
         if(err.code !== 'EEXIST') { // if it's already there, we're good
             callback(err);
@@ -57,23 +61,20 @@ exports.sync = function(processInfo, callback) {
     }
 
     paging.getPage(processInfo, 'flickr.people.getPhotos', 'photo', PER_PAGE,
-                   {extras:extras, user_id:processInfo.auth.user.nsid}, function(config, photosArray) {
-        config.lastUpdateTimes = config.lastUpdateTimes || {};
+                   {extras:extras, user_id:processInfo.auth.user.nsid, min_upload_date:(processInfo.config.last_checked_date || 0)}, function(config, photosArray) {
+        // If we're on the last page of a real result go ahead and update
+        if (config.paging.totalPages < 0) {
+          config.last_checked_date = Date.now();
+        }
         var data = [];
         for(var i in photosArray) {
-            var photo = photosArray[i];
-            if(!config.lastUpdateTimes[photo.id] ||                    // new OR
-                config.lastUpdateTimes[photo.id] < photo.lastupdate) { // update
-                config.lastUpdateTimes[photo.id] = photo.lastupdate;
-                //queue get photo
-                data.push({obj:photo, timestamp:photo.lastupdate});
-            }
+          var photo = photosArray[i];
+          //queue get photo
+          data.push({obj:photo, timestamp:photo.lastupdate});
         }
 
-
         function done() {
-            callback(null, {config: config,
-                            data: {photo:data}});
+            callback(null, {config: config, data: {photo:data}});
         }
 
         if(dlPhotos) {
