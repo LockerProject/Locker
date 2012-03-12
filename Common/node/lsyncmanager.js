@@ -162,7 +162,7 @@ exports.scheduleRun = function(info, synclet) {
         force = true;
         delete info.config.nextRun;
         logger.verbose("scheduling "+key+" to run immediately (paging)");
-        return process.nextTick(run);
+        return setTimeout(run, 2000);
     }
 
     // validation check
