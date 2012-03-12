@@ -513,6 +513,7 @@ locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
+require("./webservice-synclets")(locker);
 require('./webservice-push')(locker);
 
 

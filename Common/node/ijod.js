@@ -155,7 +155,7 @@ IJOD.prototype.getAll = function(arg, callback) {
     if(!row) return callback();
     var buf = new Buffer(row.len);
     fs.readSync(self.fdr, buf, 0, row.len, row.at);
-    var data = zlib.decompress(buf);
+    var data = zlib.uncompress(buf);
     return callback(err, arg.raw ? data : stripper(data));
   });
 }
