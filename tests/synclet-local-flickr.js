@@ -39,7 +39,7 @@ suite.next().suite.addBatch({
         },
         "and handles paging": function(err, response) {
             assert.isNull(err);
-            assert.equal(response.config.paging.lastPage, 1);
+            assert.equal(response.config.paging["contact"].lastPage, 1);
             assert.equal(response.config.nextRun, -1);
 
         }
@@ -49,7 +49,7 @@ suite.next().suite.addBatch({
             topic: function() {
                 fakeweb.allowNetConnect = false;
                 fakeweb.registerUri({
-                    uri : 'http://api.flickr.com:80/services/rest/?api_sig=666ef2dbe415b963939ef113e551918b&api_key=sdf&auth_token=qwert&extras=description,license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dimsviews,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o&format=json&method=flickr.people.getPhotos&min_upload_date=0&nojsoncallback=1&page=2&per_page=500&user_id=12345678@N00',
+                    uri : 'http://api.flickr.com:80/services/rest/?api_sig=d5f12fd8355652478c1b9ca3df6042e2&api_key=sdf&auth_token=qwert&extras=description,license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dimsviews,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o&format=json&method=flickr.people.getPhotos&min_upload_date=0&nojsoncallback=1&page=1&per_page=500&user_id=12345678@N00',
                     file : __dirname + '/fixtures/flickr/photos_1.json' });
                 fakeweb.registerUri({
                     uri : 'http://farm5.static.flickr.com/4072/4921264930_022f68c6d9_s.jpg',

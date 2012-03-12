@@ -419,7 +419,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
             stats.increment('synclet.' + info.id + '.' + synclet.name + '.added',   synclet.added);
             stats.increment('synclet.' + info.id + '.' + synclet.name + '.updated', synclet.updated);
             stats.increment('synclet.' + info.id + '.' + synclet.name + '.deleted', synclet.deleted);
-            stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  response.data[key].data.length);
+            stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.reduce(function(prev, cur, idx, arr) { console.log(cur); return prev + response.data[cur].length; }, 0));
             logger.info("total of "+synclet.added+" added, "+synclet.updated+" updated, "+synclet.deleted+" deleted, and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
             callback(err);
         });
