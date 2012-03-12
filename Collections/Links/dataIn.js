@@ -136,7 +136,7 @@ exports.loadQueue = function() {
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
     // check if the orig url is in any encounter already (that has a full link url)
-    logger.verbose("linkmagic "+origUrl);
+    logger.verbose("processing link: "+origUrl);
     dataStore.checkUrl(origUrl,function(linkUrl){
         if(linkUrl) return callback(linkUrl); // short circuit!
         // new one, expand it to a full one
