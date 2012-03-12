@@ -51,6 +51,7 @@ var PER_PAGE = 500; //maximum of 500, but rate limit ~ 1/sec, so no need to incr
 exports.sync = function(processInfo, callback) {
   base = processInfo.workingDirectory;
   paging = require(path.join(processInfo.absoluteSrcdir, 'lib', 'paging.js'));
+  if (dlPhotos) {
     try {
         fs.mkdirSync(path.join(base, 'photos'), 0755);
     } catch(err) {
@@ -59,7 +60,9 @@ exports.sync = function(processInfo, callback) {
             return;
         }
     }
+  }
 
+  if (!processInfo.config) processInfo.config = {};
     paging.getPage(processInfo, 'flickr.people.getPhotos', 'photo', PER_PAGE,
                    {extras:extras, user_id:processInfo.auth.user.nsid, min_upload_date:(processInfo.config.last_checked_date || 0)}, function(config, photosArray) {
         // If we're on the last page of a real result go ahead and update

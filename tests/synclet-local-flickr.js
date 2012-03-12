@@ -6,6 +6,7 @@ var RESTeasy = require('api-easy');
 var vows = require("vows");
 var suite = RESTeasy.describe("Flickr Synclet");
 var fs = require('fs');
+var path = require("path");
 var curDir = process.cwd();
 
 process.setMaxListeners(0);
@@ -15,12 +16,15 @@ process.on('uncaughtException',function(error){
 
 var mePath = '/Data/flickr';
 
+console.log(curDir);
 var pinfo = JSON.parse(fs.readFileSync(__dirname + mePath + '/me.json'));
+pinfo.config = {};
+pinfo.absoluteSrcdir = path.resolve("Connectors/Flickr");
+pinfo.workingDirectory =  mePath;
 
 suite.next().suite.addBatch({
     "Can get contacts" : {
         topic: function() {
-            process.chdir(curDir + mePath);
             fakeweb.allowNetConnect = false;
             fakeweb.registerUri({
                 uri : 'http://api.flickr.com:80/services/rest/?api_sig=eb6c6301baa8ce6c94f0c55dd27f987b&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=1&per_page=1000',
@@ -45,7 +49,7 @@ suite.next().suite.addBatch({
             topic: function() {
                 fakeweb.allowNetConnect = false;
                 fakeweb.registerUri({
-                    uri : 'http://api.flickr.com:80/services/rest/?api_sig=2d9379eaa4d89a1b0703156f34cdd891&api_key=sdf&auth_token=qwert&extras=description,license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dimsviews,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o&format=json&method=flickr.people.getPhotos&nojsoncallback=1&page=1&per_page=50&user_id=12345678@N00',
+                    uri : 'http://api.flickr.com:80/services/rest/?api_sig=666ef2dbe415b963939ef113e551918b&api_key=sdf&auth_token=qwert&extras=description,license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dimsviews,media,path_alias,url_sq,url_t,url_s,url_m,url_z,url_l,url_o&format=json&method=flickr.people.getPhotos&min_upload_date=0&nojsoncallback=1&page=2&per_page=500&user_id=12345678@N00',
                     file : __dirname + '/fixtures/flickr/photos_1.json' });
                 fakeweb.registerUri({
                     uri : 'http://farm5.static.flickr.com/4072/4921264930_022f68c6d9_s.jpg',
@@ -72,14 +76,5 @@ suite.next().suite.addBatch({
                 assert.equal(response.data.photo[0].obj.lastupdate, '1282612259');
             }
         }
-}).addBatch({
-    "cleanup" : {
-        topic: [],
-        "after itself": function(topic) {
-            process.chdir(curDir);
-            assert.equal(process.cwd(), curDir);
-        }
-    }
 })
-
 suite.export(module);
