@@ -435,7 +435,9 @@ function getIJOD(id, key, create, callback) {
     // only load if one exists or create flag is set
     fs.stat(name+".db", function(err, stat){
         if(!stat && !create) return callback();
-        synclets.ijods[name] = new IJOD({name:name}, function(err, ij){
+        var ij = new IJOD({name:name})
+        synclets.ijods[name] = ij;
+        ij.open(function(err){
             if(err) logger.error(err);
             return callback(ij);
         });

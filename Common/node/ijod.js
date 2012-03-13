@@ -21,29 +21,37 @@ var lutil = require("lutil");
 var async = require("async");
 var mmh3 = require("murmurhash3");
 
-function IJOD(arg, callback) {
-    if(!arg || !arg.name) return callback("invalid args");
-    var self = this;
+function IJOD(arg) {
+  if(!arg || !arg.name) throw new Error("invalid args");
+  var self = this;
   this.transactionItems = null;
-    self.name = arg.name;
-    self.gzname = arg.name + '.json.gz';
-    self.dbname = arg.name + '.db';
-    try{
-        self.fda = fs.openSync(self.gzname, 'a');
-        self.fdr = fs.openSync(self.gzname, 'r');
-        var stat = fs.fstatSync(self.fdr);
-        self.len = stat.size;
-    }catch(E){
-        return callback(E);
-    }
-    self.db = new sqlite.Database();
-    self.db.open(self.dbname, function (err) {
-        if(err) return callback(err);
-        self.db.executeScript("CREATE TABLE IF NOT EXISTS ijod (id TEXT PRIMARY KEY, at INTEGER, len INTEGER, hash TEXT);",function (err) {
-            if(err) return callback(err);
-            callback(null, self);
-        });
+  self.name = arg.name;
+  self.gzname = arg.name + '.json.gz';
+  self.dbname = arg.name + '.db';
+};
+IJOD.prototype.open = function(callback) {
+  var self = this;
+  try {
+    self.fda = fs.openSync(self.gzname, 'a');
+    self.fdr = fs.openSync(self.gzname, 'r');
+    var stat = fs.fstatSync(self.fdr);
+    self.len = stat.size;
+  } catch(E) {
+    return callback(E);
+  }
+  self.db = new sqlite.Database();
+  self.db.open(self.dbname, function (err) {
+    if(err) return callback(err);
+    self.db.executeScript("CREATE TABLE IF NOT EXISTS ijod (id TEXT PRIMARY KEY, at INTEGER, len INTEGER, hash TEXT);",function (err) {
+      if(err) return callback(err);
+      callback(null, self);
     });
+  });
+};
+IJOD.prototype.close = function(callback) {
+  fs.closeSync(this.fda);
+  fs.closeSync(this.fdr);
+  this.db.close(callback);
 }
 exports.IJOD = IJOD;
 
@@ -168,7 +176,7 @@ IJOD.prototype.smartAdd = function(arg, callback) {
     var self = this;
     var start = Date.now();
     self.getOne(arg, function(err, existing){
-      console.log("getOne in %d", (Date.now() - start));
+      //console.log("getOne in %d", (Date.now() - start));
         if(err) return callback(err);
         // first check if it's new
         if(!existing)
