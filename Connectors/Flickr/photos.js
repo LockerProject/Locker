@@ -67,7 +67,7 @@ exports.sync = function(processInfo, callback) {
                    {extras:extras, user_id:processInfo.auth.user.nsid, min_upload_date:(processInfo.config.last_checked_date || 0)}, function(config, photosArray) {
         // If we're on the last page of a real result go ahead and update
         if (config && config.paging && config.paging["photo"] && config.paging["photo"].totalPages < 0) {
-          config.last_checked_date = Date.now() / 1000;
+          config.last_checked_date = parseInt(Date.now() / 1000);
         }
         var data = [];
         for(var i in photosArray) {
