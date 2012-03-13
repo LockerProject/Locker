@@ -505,10 +505,6 @@ locker.all("/socket.io*", function(req, res) {
     proxyRequest(req.method, req, res);
 });
 
-locker.get('/', function(req, res) {
-    res.redirect(lconfig.externalBase + '/dashboard/');
-});
-
 require('./webservice-push')(locker);
 
 function proxied(method, svc, ppath, req, res, buffer) {
