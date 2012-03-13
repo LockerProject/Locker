@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "flickr",
   "description": "Flickr Connector",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "repository": {
     "title": "Flickr",
     "handle": "flickr",

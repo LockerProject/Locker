@@ -131,7 +131,6 @@ exports.scheduleRun = function(info, synclet) {
     if (!synclet.frequency) return;
 
     var key = info.id + "-" + synclet.name;
-    logger.verbose("scheduling "+key);
     if(scheduled[key]) clearTimeout(scheduled[key]); // remove any existing timer
 
     // run from a clean state
@@ -147,7 +146,7 @@ exports.scheduleRun = function(info, synclet) {
         force = true;
         delete info.config.nextRun;
         logger.verbose("scheduling "+key+" to run immediately (paging)");
-        return process.nextTick(run);
+        return setTimeout(run, 2000);
     }
 
     // validation check
@@ -422,7 +421,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.added',   synclet.added);
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.updated', synclet.updated);
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.deleted', synclet.deleted);
-        stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.length);
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.reduce(function(prev, cur, idx, arr) { console.log(cur); return prev + response.data[cur].length; }, 0));
         logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
         callback(err);
     });

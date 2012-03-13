@@ -11,6 +11,8 @@ var request = require('request');
 
 var username = 'nerds';
 var email = 'nerds@singly.com';
+
+// XXX - please add a comment here explaining the difference
 var regBase = 'http://registry.singly.com';
 var burrowBase = "burrow.singly.com";
 

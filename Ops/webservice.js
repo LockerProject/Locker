@@ -230,13 +230,13 @@ locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
         }
         req.url = url;
     }
-    logger.verbose("GET proxy of " + req.originalUrl);
+    logger.silly("GET proxy of " + req.originalUrl);
     proxyRequest('GET', req, res, next);
 });
 
 // all posts just pass
 locker.post('/Me/*', function(req,res, next){
-    logger.verbose("POST proxy of " + req.originalUrl);
+    logger.silly("POST proxy of " + req.originalUrl);
     proxyRequest('POST', req, res, next);
 });
 
