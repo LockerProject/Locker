@@ -2,6 +2,12 @@ var request = require('request')
   , url     = require('url')
   , crypto  = require('crypto');
 
+
+function is(type, obj) {
+  var clas = Object.prototype.toString.call(obj).slice(8, -1);
+  return obj !== undefined && obj !== null && clas === type;
+}
+  
 /*
  * http://www.last.fm/api/webauth
  */
@@ -37,6 +43,14 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
     // Using config as a shared namespace requires care -- grab *only* the namespace you
     // need, or race conditions will cause properties to get stomped during simultaneous
     // synclet runs.
+  var syncName;
+  if (is("Array", synclet)) {
+    syncName = synclet[1];
+    synclet = synclet[0];
+  } else {
+    syncName = synclet.toLowerCase();
+  }
+
     var config = {paging : {}};
     if (processInfo.config && processInfo.config.paging && processInfo.config.paging[synclet]) {
         config.paging[synclet] = processInfo.config.paging[synclet];
@@ -66,8 +80,24 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
 
                         if (js.error) return cb(js.message);
 
+                        var page = config.paging[synclet].page;
+                        var totalPages = 0;
+                        var totalCount = 0;
+                        if (js[syncName] && js[syncName]["@attr"] && js[syncName]["@attr"].totalPages) {
+                          totalPages = js[syncName]["@attr"].totalPages;
+                          totalCount = js[syncName]["@attr"].total;
+                        } else if (js[syncName] && js[syncName].totalPages) {
+                          totalPages = js[syncName].totalPages;
+                          totalCount = js[syncName].total;
+                        } else {
+                          return cb("Unknown total pages");
+                        }
+
+                        config.paging[synclet].totalPages = totalPages;
+                        config.paging[synclet].totalCount = totalCount;
+
                         var objList = extractor(js);
-                        if (objList.length < perPage) {
+                        if (page >= totalPages) {
                             config.paging[synclet].page = 1;
                             config.nextRun = 0;
                         }
@@ -106,6 +136,7 @@ exports.getFriends = function (processInfo, friendHandler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
+                      if (!js || !js.friends || !js.friends.user) return [];
                       return js.friends.user;
                   }
                 , function (err, config, friends) {
@@ -139,16 +170,20 @@ exports.getLibrary = function (processInfo, trackHandler, cb) {
     );
 };
 
-exports.getScrobbles = function (processInfo, scrobbler, cb) {
+exports.getScrobbles = function (processInfo, params, scrobbler, cb) {
     var PAGESIZE = 200;
 
-    exports.paged('scrobbles'
+    exports.paged(['scrobbles', "recenttracks"]
                 , 'user.getRecentTracks'
-                , {}
+                , params
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      return (js && js.recenttracks) ? js.recenttracks.track : [];
+                    if (js && js.recenttracks && js.recenttracks.track) {
+                      return js.recenttracks.track
+                    } else {
+                      return [];
+                    }
                   }
                 , function (err, config, scrobbles) {
                       if (err)  return cb(err);
@@ -169,7 +204,7 @@ exports.getLovedTracks = function (processInfo, loveHandles, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      return (js && js.lovedtracks) ? js.lovedtracks.track : [];
+                      return (js && js.lovedtracks && js.lovedtracks.track) ? js.lovedtracks.track : [];
                   }
                 , function (err, config, loved) {
                       if (err)  return cb(err);

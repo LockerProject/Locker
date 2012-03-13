@@ -7,12 +7,12 @@
  *
  */
 
-var path   = require('path')
-  , lastfm = require(path.join(__dirname, 'lib.js'));
+var path   = require('path');
 
 exports.sync = function (processInfo, cb) {
     var info = {};
 
+    var lastfm = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
     lastfm.getInfo(processInfo
                  , function (me) {
                        info = me;
