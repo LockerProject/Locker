@@ -24,8 +24,8 @@ exports.init = function(mongo, _locker) {
     collection = mongo.collections.photo;
     collectionDataStore.init(mongo, 'photo', locker);
 
-    collection.ensureIndex({url:1});
-    collection.ensureIndex({name:1});
+    collection.ensureIndex({url:1}, {background:true}, function() {});
+    collection.ensureIndex({name:1}, {background:true}, function() {});
 
     db = mongo.dbClient;
     logger = require("logger");

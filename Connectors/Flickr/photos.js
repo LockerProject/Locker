@@ -64,7 +64,11 @@ exports.sync = function(processInfo, callback) {
 
   if (!processInfo.config) processInfo.config = {};
     paging.getPage(processInfo, 'flickr.people.getPhotos', 'photo', PER_PAGE,
-                   {extras:extras, user_id:processInfo.auth.user.nsid, min_upload_date:(processInfo.config.last_checked_date || 0)}, function(config, photosArray) {
+                   {extras:extras, user_id:processInfo.auth.user.nsid, min_upload_date:(processInfo.config.last_checked_date || 0)}, function(err, config, photosArray) {
+        if (err) {
+          return callback(err);
+        }
+
         // If we're on the last page of a real result go ahead and update
         if (config && config.paging && config.paging["photo"] && config.paging["photo"].totalPages < 0) {
           config.last_checked_date = parseInt(Date.now() / 1000);

@@ -41,7 +41,6 @@ suite.next().suite.addBatch({
             assert.isNull(err);
             assert.equal(response.config.paging["contact"].lastPage, 1);
             assert.equal(response.config.nextRun, -1);
-
         }
     }
 }).addBatch({
@@ -76,5 +75,19 @@ suite.next().suite.addBatch({
                 assert.equal(response.data.photo[0].obj.lastupdate, '1282612259');
             }
         }
-})
+}).addBatch({
+  "Error responses": {
+    topic:function() {
+      pinfo.config = {paging:{contact:{lastPage:50}}};
+      fakeweb.allowNetConnect = false;
+      fakeweb.registerUri({
+        uri : 'http://api.flickr.com:80/services/rest/?api_sig=38a0193a7ae1fd2b2d379fc2a12ffc12&api_key=sdf&auth_token=qwert&format=json&method=flickr.contacts.getList&nojsoncallback=1&page=51&per_page=1000',
+        file:__dirname + "/fixtures/flickr/bad.json" });
+      contacts.sync(pinfo, this.callback) },
+    "are handled properly": function(err, topic) {
+      assert.equal(err, "Missing signature")
+      err = null;
+    }
+  }
+});
 suite.export(module);
