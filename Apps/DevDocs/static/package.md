@@ -45,7 +45,7 @@ To better describe what data an app needs in order to be useful, the uses field 
 
 Add any helpful or required services to the `repository.uses.services` array.
 
-If any collections are used, add them to the `repository.uses.rypes` array.
+If any collections are used, add them to the `repository.uses.types` array.
 
 By default the `author` is set to your github information when you publish, but you can override it here too.
 
