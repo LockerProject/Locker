@@ -292,7 +292,7 @@ exports.getShouts = function (processInfo, shoutListener, cb) {
                     var stopPaging = false;
                     if (!config.lastSeen) config.lastSeen = 0;
                     for (var i = 0; i < shouts.length; ++i) {
-                      if ((Date.parse(shouts[i].date).getTime()/1000) <= config.lastSeen) {
+                      if ((Date.parse(shouts[i].date)/1000) <= config.lastSeen) {
                         stopPaging = true;
                         config.lastSeen = parseInt(Date.now() / 1000);
                         break;
