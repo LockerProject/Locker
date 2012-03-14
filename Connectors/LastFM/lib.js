@@ -90,7 +90,9 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
                           totalPages = js[syncName].totalPages;
                           totalCount = js[syncName].total;
                         } else {
-                          return cb("Unknown total pages");
+                          console.error("Skipping a misformed page of data");
+                          config.paging[synclet].page = page + 1;
+                          return cb(null, []);
                         }
 
                         config.paging[synclet].totalPages = totalPages;

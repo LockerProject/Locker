@@ -241,6 +241,7 @@ function executeSynclet(info, synclet, callback, force) {
         // direct and see the impact
         require:require,
         console:console,
+        logger:logger,
         exports:{}
       };
       var context = vm.createContext(sandbox);
