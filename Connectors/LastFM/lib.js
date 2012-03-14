@@ -96,8 +96,10 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
                         config.paging[synclet].totalPages = totalPages;
                         config.paging[synclet].totalCount = totalCount;
 
-                        var objList = extractor(js);
-                        if (page >= totalPages) {
+                        var extractedInfo = extractor(js, config.paging[synclet]);
+                        var stopPaging = extractedInfo.stopPaging;
+                        var objList = extractedInfo.objects;
+                        if (page >= totalPages || stopPaging === true) {
                             config.paging[synclet].page = 1;
                             config.nextRun = 0;
                         }
@@ -136,8 +138,11 @@ exports.getFriends = function (processInfo, friendHandler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      if (!js || !js.friends || !js.friends.user) return [];
-                      return js.friends.user;
+                    var ret = {objects:[], stopPaging:false};
+                      if (js && js.friends && js.friends.user) {
+                        ret.objects = js.friends.user;
+                      }
+                      return ret;
                   }
                 , function (err, config, friends) {
                       if (err)  return cb(err);
@@ -158,7 +163,8 @@ exports.getLibrary = function (processInfo, trackHandler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      return (js && js.tracks) ? js.tracks.track : [];
+                      var tracks = (js && js.tracks) ? js.tracks.track : [];
+                      return {objects:tracks, stopPaging:false};
                   }
                 , function (err, config, tracks) {
                       if (err)  return cb(err);
@@ -179,11 +185,11 @@ exports.getScrobbles = function (processInfo, params, scrobbler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
+                  var tracks = []
                     if (js && js.recenttracks && js.recenttracks.track) {
-                      return js.recenttracks.track
-                    } else {
-                      return [];
+                      tracks = js.recenttracks.track;
                     }
+                    return {objects:tracks, stopPaging:false};
                   }
                 , function (err, config, scrobbles) {
                       if (err)  return cb(err);
@@ -203,12 +209,26 @@ exports.getLovedTracks = function (processInfo, loveHandles, cb) {
                 , {}
                 , processInfo
                 , PAGESIZE
-                , function (js) {
-                      return (js && js.lovedtracks && js.lovedtracks.track) ? js.lovedtracks.track : [];
+                , function (js, config) {
+                    var tracks = (js && js.lovedtracks && js.lovedtracks.track) ? js.lovedtracks.track : [];
+                    var stopPaging = false;
+                    if (!config.lastSeen) config.lastSeen = 0;
+                    for (var i = 0; i < tracks.length; ++i) {
+                      if (parseInt(tracks[i].date.uts) <= config.lastSeen) {
+                        stopPaging = true;
+                        config.lastSeen = parseInt(Date.now() / 1000);
+                        break;
+                      }
+                    }
+                    return {objects:tracks, stopPaging:stopPaging};
                   }
                 , function (err, config, loved) {
                       if (err)  return cb(err);
 
+                      // If we're done paging update the lastSeen to current
+                      if (config.nextRun >= 0) {
+                        config.paging["lovedTracks"].lastSeen = parseInt(Date.now() / 1000);
+                      }
                       for (var i = 0; i < loved.length; i += 1) loveHandles(loved[i]);
 
                       cb(null, config);
@@ -225,7 +245,8 @@ exports.getBannedTracks = function (processInfo, hateBreeder, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      return (js && js.bannedtracks) ? js.bannedtracks.track : [];
+                      var tracks = (js && js.bannedtracks) ? js.bannedtracks.track : [];
+                      return {objects:tracks, stopPaging:false};
                   }
                 , function (err, config, banned) {
                       if (err)  return cb(err);
@@ -266,12 +287,25 @@ exports.getShouts = function (processInfo, shoutListener, cb) {
                 , {}
                 , processInfo
                 , PAGESIZE
-                , function (js) {
-                      return (js && js.shouts) ? js.shouts.shout : [];
+                , function (js, config) {
+                    var shouts = (js && js.shouts) ? js.shouts.shout : [];
+                    var stopPaging = false;
+                    if (!config.lastSeen) config.lastSeen = 0;
+                    for (var i = 0; i < shouts.length; ++i) {
+                      if ((Date.parse(shouts[i].date).getTime()/1000) <= config.lastSeen) {
+                        stopPaging = true;
+                        config.lastSeen = parseInt(Date.now() / 1000);
+                        break;
+                      }
+                    }
+                    return {objects:shouts, stopPaging:stopPaging};
                   }
                 , function (err, config, shouts) {
                       if (err)  return cb(err);
 
+                      if (config.nextRun >= 0) {
+                        config.paging["shouts"].lastSeen = parseInt(Date.now() / 1000);
+                      }
                       for (var i = 0; i < shouts.length; i += 1) shoutListener(shouts[i]);
 
                       cb(null, config);
