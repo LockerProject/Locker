@@ -90,10 +90,10 @@ function processEncounter(e, cb)
     dataStore.enqueue(e, function() {
         cb(); // return after we know it's queued
         encounterQueue.push(e, function(arg){
-            logger.verbose("QUEUE SIZe: "+encounterQueue.length());
+            logger.verbose("Links queue length: "+encounterQueue.length());
         });
     });
-    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("Links queue length: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
@@ -127,7 +127,7 @@ exports.loadQueue = function() {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
             encounterQueue.push(docs[i], function(arg) {
-                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
+                logger.verbose("Links queue length: " + encounterQueue.length());
             });
         }
     });
@@ -136,7 +136,7 @@ exports.loadQueue = function() {
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
     // check if the orig url is in any encounter already (that has a full link url)
-    logger.verbose("linkmagic "+origUrl);
+    logger.verbose("processing link: "+origUrl);
     dataStore.checkUrl(origUrl,function(linkUrl){
         if(linkUrl) return callback(linkUrl); // short circuit!
         // new one, expand it to a full one
