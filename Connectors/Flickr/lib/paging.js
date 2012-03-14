@@ -24,14 +24,15 @@ exports.getPage = function(processInfo, endpoint, type, perPage, params, callbac
             var json = JSON.parse(body);
             var page;
             var pages;
+            if (json.stat && json.stat == "fail") {
+              return callback(json.message);
+            }
             try {
               page = parseInt(json[type_s].page);
               pages = parseInt(json[type_s].pages);
             } catch (E) {
-              console.error("Error processing json: " + E);
-              // Make sure we do that page again
-              page = config.paging[type].lastPage;
-              pages = page + 1;
+              console.error("Error processing json: %s from %s", E, body);
+              return callback("Error processing the json");
             }
             if(page > pages) { //whoa whoa whoa, bad news bears, page should never be greater than pages
                 // seems like there is a possiblity of pages === 0 if there are no photos
@@ -48,7 +49,7 @@ exports.getPage = function(processInfo, endpoint, type, perPage, params, callbac
                 config.paging[type].totalPages = pages;
                 config.nextRun = -1;
             }
-            callback(config, json[type_s][type]);
+            callback(null, config, json[type_s][type]);
         }
     });
 }
