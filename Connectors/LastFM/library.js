@@ -12,9 +12,6 @@ var path   = require('path');
 exports.sync = function (processInfo, cb) {
     var tracks = [];
 
-    // Disabled for now, until we can find a better request pattern
-    return cb(null, {config:{nextRun:99999999999}, data:{track:[]}});
-    /*
     var lastfm = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
     lastfm.getLibrary(processInfo
                     , function (track) {
@@ -31,5 +28,4 @@ exports.sync = function (processInfo, cb) {
                           }
                       }
     );
-    */
 };
