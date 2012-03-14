@@ -34,6 +34,8 @@ var lcrypto = require("lcrypto");
 var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
 
+var airbrake;
+
 var locker = express.createServer(
     // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
     function(req, res, next) {
@@ -356,6 +358,10 @@ locker.get("/diary", function(req, res) {
     res.write
 });
 
+locker.get('/core/error', function(req, res) {
+    throw new Error("Hmm...This is a REAL job for STUPENDOUS MAN!");
+});
+
 locker.get('/core/revision', function(req, res) {
     fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
         if (err) return logger.error(err);
@@ -516,6 +522,16 @@ locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
+locker.error(function(err, req, res, next){
+    if(err.stack) logger.error(err.stack);
+    if (airbrake) {
+        airbrake.notify(err, function(err, url) {
+            if (url) logger.error(url);
+        });
+    }
+    res.send("Something went wrong.", 500);
+});
+
 require('./webservice-push')(locker);
 
 
@@ -530,6 +546,10 @@ function proxied(method, svc, ppath, req, res, buffer) {
       buffer: buffer
     });
 }
+
+locker.initAirbrake = function(key) {
+    airbrake = require('airbrake').createClient(key);
+};
 
 exports.startService = function(port, ip, cb) {
     locker.listen(port, ip, function(){
