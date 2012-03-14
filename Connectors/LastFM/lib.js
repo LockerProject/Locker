@@ -92,7 +92,7 @@ exports.paged = function (synclet, method, params, processInfo, perPage, extract
                         } else {
                           console.error("Skipping a misformed page of data");
                           config.paging[synclet].page = page + 1;
-                          return cb(null, []);
+                          return cb(null, config, []);
                         }
 
                         config.paging[synclet].totalPages = totalPages;
