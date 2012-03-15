@@ -93,13 +93,16 @@ function eacher(collection, id, ij, callback) {
   var at = Date.now();
   var cursor = collection.find();
   ij.startAddTransaction(function() {
-    var item;
+    // Setting this to true just to start
+    var item = true;
     async.until(
-      function() { return !item;},
+      function() { return item == undefined;},
       function(stepCb) {
         cursor.nextObject(function(err, cur) {
           item = cur;
-          if (!item) return stepCb();
+          if (!item) {
+            return stepCb();
+          }
           if (!item[id]) {
             console.error("can't find "+id+" in "+JSON.stringify(item));
             return stepCb("Could not find " + id);
@@ -111,6 +114,7 @@ function eacher(collection, id, ij, callback) {
               console.error(addError.stack);
               return callback(addError);
             }
+            stepCb();
           });
         });
       },
