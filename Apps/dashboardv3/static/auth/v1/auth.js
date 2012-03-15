@@ -2,8 +2,7 @@
 
     $.singly = function(options) {
         options.appName = options.appName || 'Sample app';
-        options.baseHost = options.baseHost || 'http://localhost:8042';
-        options.baseUrl = options.baseUrl || options.baseHost + '/dashboard/auth/v1/';
+        options.baseUrl = options.baseUrl || '/dashboard/auth/v1/';
 
         $('<link rel="stylesheet" type="text/css" href="' + options.baseUrl + 'auth.css">').appendTo('head');
         $('<div id="SINGLY-auth-container"></div>').prependTo('body').load(options.baseUrl + 'auth.html', function() {
@@ -17,15 +16,16 @@
                 showConnectPane();
             });
 
-            $("#SINGLY-login-facebook").on('click', function(e) {
-                // TODO: auth with FB
-
-                showSaveAccessPane();
+            $("#SINGLY-connect-facebook").on('click', function(e) {
+                connectService($(this));
+                e.preventDefault();
+                //showSaveAccessPane();
             });
 
-            $("#SINGLY-login-twitter").on('click', function(e) {
-                // TODO: auth with Twitter
-                showSaveAccessPane();
+            $("#SINGLY-connect-twitter").on('click', function(e) {
+                connectService($(this));
+                e.preventDefault();
+                //showSaveAccessPane();
             });
 
             $("#SINGLY-save-preview-button").on('click', function(e) {
@@ -54,21 +54,21 @@
 
             function showLoggedInPane() {
                 hidePanes();
-                $("#SINGLY-myaccount-link").attr('href', options.baseHost + '/dashboard/settings#Settings-AccountInformation');
+                $("#SINGLY-myaccount-link").attr('href', '/dashboard/settings#Settings-AccountInformation');
                 $("#SINGLY-loggedin-pane").show();
             };
 
             function showPreviewPane() {
                 hidePanes();
-                $("#SINGLY-or-signin-link").attr('href', options.baseHost + '/login?redir=' + window.location.href);
+                $("#SINGLY-or-signin-link").attr('href', '/login?redir=' + window.location.href);
                 $("#SINGLY-preview-pane").fadeIn('fast');
             };
 
             function showConnectPane() {
                 hidePanes();
                 $("#SINGLY-connect-pane-headline").html('Connect services to preview ' + options.appName + '*');
-                $("#SINGLY-connect-facebook").attr('href', options.baseHost + '/auth/facebook');
-                $("#SINGLY-connect-twitter").attr('href', options.baseHost + '/auth/twitter');
+                $("#SINGLY-connect-facebook").attr('href', '/auth/facebook');
+                $("#SINGLY-connect-twitter").attr('href', '/auth/twitter');
                 $("#SINGLY-connect-pane").fadeIn('fast');
             };
 
@@ -84,7 +84,7 @@
 
             function hidePanes(callback) {
                 $(".SINGLY-pane").fadeOut('fast');
-            }
+            };
 
             function isLoggedIn() {
                 var pairs = document.cookie.split('; ');
@@ -95,7 +95,19 @@
                     }
                 }
                 return false;
-            }
+            };
+            
+            function connectService(element) {
+                e.preventDefault();
+                var options =
+                    'width='   + element.data('width')  +
+                    ',height=' + element.data('height') +
+                    ',status=no,scrollbars=no,resizable=no';
+                var popup = window.open('/auth/' + element.data('provider'),
+                                        'account', options);
+                popup.focus();
+                return false;
+            };    
         });
     }
 })(jQuery);
