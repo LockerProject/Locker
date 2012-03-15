@@ -68,7 +68,7 @@ var locker = express.createServer(
         if (req.url.substring(0, 6) == '/push/') OK = false; // maybe move this to /Me/push ?
         if (req.url.substring(0, 7) == '/query/') OK = false; // no go sireo, depreciated?
         if (req.url.substring(0, 10) == '/synclets/') OK = false; // legacy, /Me/:connect maps to it
-        if (req.url.substring(0, 10) == '/registry/') OK = false; 
+        if (req.url.substring(0, 10) == '/registry/') OK = false;
         if (req.url.substring(0, 7) == '/deauth') OK = false;
 
         // boop!
@@ -527,7 +527,7 @@ exports.rootListener = function() {
         // internally process this request now
         req.url = '/Me/' + homeApp + req.url;
         proxyRequest(req.method, req, res);
-    });    
+    });
 }
 
 exports.startService = function(port, ip, cb) {
