@@ -626,7 +626,7 @@ function finishAuth(js, auth, req, res) {
         fs.writeFileSync(path.join(lconfig.lockerDir, lconfig.me, 'login.json'), JSON.stringify(lconfig.authLogin));
     }
     res.cookie('lockerlogin', lconfig.authLogin.cookie, { path: '/', expires: new Date(Date.now() + (30 * 24 * 3600 * 1000)), httpOnly: false });
-    res.end("<script type='text/javascript'>  window.opener.syncletInstalled && window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
+    res.end("<script type='text/javascript'> window.opener.syncletInstalled('" + js.id + "'); window.close(); </script>");
 }
 
 // simple logout

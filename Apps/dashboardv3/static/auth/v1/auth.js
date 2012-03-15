@@ -2,7 +2,7 @@
 
     $.singly = function(options) {
         options.appName = options.appName || 'Sample app';
-        options.baseUrl = options.baseUrl || '/dashboard/auth/v1/';
+        options.baseUrl = '/dashboard/auth/v1/';
 
         $('<link rel="stylesheet" type="text/css" href="' + options.baseUrl + 'auth.css">').appendTo('head');
         $('<div id="SINGLY-auth-container"></div>').prependTo('body').load(options.baseUrl + 'auth.html', function() {
@@ -17,18 +17,23 @@
             });
 
             $("#SINGLY-connect-facebook").on('click', function(e) {
-                connectService($(this));
                 e.preventDefault();
+                connectService($(this));
                 //showSaveAccessPane();
             });
 
             $("#SINGLY-connect-twitter").on('click', function(e) {
-                connectService($(this));
                 e.preventDefault();
+                connectService($(this));
                 //showSaveAccessPane();
             });
 
-            $("#SINGLY-save-preview-button").on('click', function(e) {
+            $("#SINGLY-temp-savepreview").on('click', function(e) {
+                // TODO: save preview account and send e-mail
+                showSaveAccessPane();
+            });
+
+            $("#SINGLY-temp-connectmore").on('click', function(e) {
                 // TODO: save preview account and send e-mail
                 showConnectMorePane();
             });
@@ -50,7 +55,6 @@
                     opacity: 0.5
                 }, 200);
             });
-
 
             function showLoggedInPane() {
                 hidePanes();
@@ -96,9 +100,8 @@
                 }
                 return false;
             };
-            
+
             function connectService(element) {
-                e.preventDefault();
                 var options =
                     'width='   + element.data('width')  +
                     ',height=' + element.data('height') +
@@ -106,8 +109,11 @@
                 var popup = window.open('/auth/' + element.data('provider'),
                                         'account', options);
                 popup.focus();
-                return false;
-            };    
+            };
         });
     }
 })(jQuery);
+
+syncletInstalled = function(synclet) {
+    window.location.reload();
+}
