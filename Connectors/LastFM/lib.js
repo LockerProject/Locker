@@ -216,7 +216,7 @@ exports.getLovedTracks = function (processInfo, loveHandles, cb) {
                     var stopPaging = false;
                     if (!config.lastSeen) config.lastSeen = 0;
                     for (var i = 0; i < tracks.length; ++i) {
-                      if (parseInt(tracks[i].date.uts) <= config.lastSeen) {
+                      if (tracks[i] && tracks[i].date && tracks[i].date.uts && parseInt(tracks[i].date.uts) <= config.lastSeen) {
                         stopPaging = true;
                         config.lastSeen = parseInt(Date.now() / 1000);
                         break;
