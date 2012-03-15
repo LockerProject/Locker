@@ -165,7 +165,7 @@ exports.getLibrary = function (processInfo, trackHandler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      var tracks = (js && js.tracks) ? js.tracks.track : [];
+                      var tracks = (js && js.tracks && js.tracks.track) ? js.tracks.track : [];
                       return {objects:tracks, stopPaging:false};
                   }
                 , function (err, config, tracks) {
@@ -187,7 +187,7 @@ exports.getScrobbles = function (processInfo, params, scrobbler, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                  var tracks = []
+                    var tracks = [];
                     if (js && js.recenttracks && js.recenttracks.track) {
                       tracks = js.recenttracks.track;
                     }
@@ -247,7 +247,7 @@ exports.getBannedTracks = function (processInfo, hateBreeder, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js) {
-                      var tracks = (js && js.bannedtracks) ? js.bannedtracks.track : [];
+                      var tracks = (js && js.bannedtracks && js.bannedtracks.track) ? js.bannedtracks.track : [];
                       return {objects:tracks, stopPaging:false};
                   }
                 , function (err, config, banned) {
