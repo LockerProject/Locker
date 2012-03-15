@@ -2,7 +2,7 @@
 
     $.singly = function(options) {
         options.appName = options.appName || 'Sample app';
-        options.baseUrl = options.baseUrl || '/dashboard/auth/v1/';
+        options.baseUrl = '/dashboard/auth/v1/';
 
         $('<link rel="stylesheet" type="text/css" href="' + options.baseUrl + 'auth.css">').appendTo('head');
         $('<div id="SINGLY-auth-container"></div>').prependTo('body').load(options.baseUrl + 'auth.html', function() {
@@ -98,7 +98,6 @@
             };
             
             function connectService(element) {
-                e.preventDefault();
                 var options =
                     'width='   + element.data('width')  +
                     ',height=' + element.data('height') +
@@ -106,8 +105,11 @@
                 var popup = window.open('/auth/' + element.data('provider'),
                                         'account', options);
                 popup.focus();
-                return false;
             };    
         });
     }
 })(jQuery);
+
+syncletInstalled = function(synclet) {
+    window.location.reload();
+}
