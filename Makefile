@@ -7,7 +7,7 @@ MOCHA = ./node_modules/.bin/mocha
 RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
 DEFAULT_OPTS = --growl --timeout 500
 
-all: checkdeps build
+all: check_submodules checkdeps build
 	@echo
 	@echo "Looks like everything worked!"
 	@echo "Get some API keys (https://github.com/LockerProject/Locker/wiki/GettingAPIKeys) and then try running:"
@@ -19,6 +19,12 @@ deps:
 	./scripts/install-deps deps
 	@echo
 	@echo "Go ahead and run 'make'"
+
+check_submodules:
+	@if [ -d ./.git -a -f ./.gitmodules -a ! -d ./Apps/dashboardv3/static/common/.git ]; then \
+		echo "Initializing submodules..."; \
+		git submodule update --init; \
+	fi
 
 checkdeps:
 	@. scripts/use-deps.sh && \

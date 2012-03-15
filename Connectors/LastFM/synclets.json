@@ -1,13 +1,14 @@
 {
-    "provides" : ["info/lastfm"
+  "provides" : ["info/lastfm"
                 , "friends/lastfm"
                 , "scrobbles/lastfm"
                 , "loved/lastfm"
                 , "banned/lastfm"
                 , "tracks/lastfm"
-                , "shouts/lastfm"]
-  , "profileIds" : ["id", "name"]
-  , "synclets" : [{"name"      : "info"
+                , "shouts/lastfm"],
+  "profileIds" : ["id", "name"],
+  "vm":true,
+  "synclets" : [{"name"      : "info"
                   ,"frequency" : 86400}
                  ,{"name"      : "friends"
                   ,"frequency" : 3600}
@@ -20,6 +21,6 @@
                  ,{"name"      : "library"
                   ,"frequency" : 86400}
                  ,{"name"      : "shouts"
-                  ,"frequency" : 3600}]
-  , "mongoId" : {"shout" : "date"}
+                  ,"frequency" : 3600}],
+  "mongoId" : {"shout" : "date"}
 }

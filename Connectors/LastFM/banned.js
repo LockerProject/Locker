@@ -7,12 +7,12 @@
  *
  */
 
-var path   = require('path')
-  , lastfm = require(path.join(__dirname, 'lib.js'));
+var path   = require('path');
 
 exports.sync = function (processInfo, cb) {
     var banned = [];
 
+    var lastfm = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
     lastfm.getBannedTracks(processInfo
                          , function (track) {
                                track.id = track.date.uts;

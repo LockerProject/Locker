@@ -21,7 +21,7 @@ StatsdDispatcher.prototype.send = function (msg) {
     , prefix = this.prefix;
 
   if (!(host && port)) {
-    logger.verbose("statsd dispatcher not configured, not dispatching '" + msg + "'");
+    logger.silly("statsd dispatcher not configured, not dispatching '" + msg + "'");
     return;
   }
 

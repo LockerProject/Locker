@@ -63,7 +63,8 @@ exports.load = function(filepath) {
         "gcontacts:Connectors/GoogleContacts",
         "instagram:Connectors/Instagram",
         "twitter:Connectors/Twitter",
-        "foursquare:Connectors/foursquare"
+        "foursquare:Connectors/foursquare",
+        "lastfm:Connectors/LastFM"
     ];
     config.mongo = config.mongo || {};
     exports.mongo = {
