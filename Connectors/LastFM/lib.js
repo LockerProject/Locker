@@ -7,7 +7,7 @@ function is(type, obj) {
   var clas = Object.prototype.toString.call(obj).slice(8, -1);
   return obj !== undefined && obj !== null && clas === type;
 }
-  
+
 /*
  * http://www.last.fm/api/webauth
  */
@@ -290,7 +290,7 @@ exports.getShouts = function (processInfo, shoutListener, cb) {
                 , processInfo
                 , PAGESIZE
                 , function (js, config) {
-                    var shouts = (js && js.shouts) ? js.shouts.shout : [];
+                    var shouts = (js && js.shouts && js.shouts.shout) ? js.shouts.shout : [];
                     var stopPaging = false;
                     if (!config.lastSeen) config.lastSeen = 0;
                     for (var i = 0; i < shouts.length; ++i) {
