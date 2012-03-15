@@ -23,7 +23,7 @@ exports.sync = function (processInfo, cb) {
     params.from = processInfo.config.lastplayed;
   }
   lastfm.getScrobbles(processInfo, params, function (play) {
-    play.id = play.date.uts;
+    if (play && play.date && play.date.uts) play.id = play.date.uts;
     scrobbles.push(play);
   }, function (err, config) {
     if (err) {
