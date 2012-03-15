@@ -27,26 +27,17 @@ exports.init = function(theAuth, theBase, srcdir) {
 };
 
 exports.getMe = function(arg, cbEach, cbDone) {
+    if(auth.profile && auth.profile.screen_name) {
+      cbEach(auth.profile);
+      return cbDone();
+    }
     arg.path = '/account/verify_credentials.json';
-    fs.readFile(path.join(base,'profile.json'), function(err, data) {
-        var me;
-        try {
-            if(err) throw "na";
-            me = JSON.parse(data);
-            if(!me || !me.screen_name) throw "bad data";
-        } catch (E) {
-            return getOne(arg,function(err,me){
-                if(!err)
-                {
-                    fs.writeFile(path.join(base,'profile.json'), JSON.stringify(me));
-                    cbEach(me);
-                }
-                cbDone(err);
-            });
-        }
-        // do these outside the try/catch incase they throw, then there'd be doubling, bad
+    return getOne(arg,function(err,me){
+      if(!err) {
+        fs.writeFile(path.join(base,'profile.json'), JSON.stringify(me));
         cbEach(me);
-        cbDone();
+      }
+      cbDone(err);
     });
 }
 
