@@ -49,6 +49,13 @@ IJOD.prototype.open = function(callback) {
   });
 };
 IJOD.prototype.close = function(callback) {
+  if (this.closed) {
+    console.error("Double close in IJOD");
+    var E = new Error("double close");
+    console.log(E.stack);
+    return callback();
+  }
+  this.closed = true;
   fs.closeSync(this.fda);
   fs.closeSync(this.fdr);
   this.db.close(callback);

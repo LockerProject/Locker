@@ -32,7 +32,8 @@ var async = require('async');
 var util = require('util');
 var lutil = require('lutil');
 var carrier = require('carrier');
-require('graceful-fs');
+// TODO:  Reconsider enabling this, but realistically we should be managing this ourselves.
+// require('graceful-fs');
 
 
 // This lconfig stuff has to come before any other locker modules are loaded!!
