@@ -100,13 +100,10 @@ TOARCHIVE=`mktemp "$TMPDIR/$PROGRAM.toarchive.XXXXXX"`
 OUT_FILE=$OLD_PWD # assume "this directory" without a name change by default
 SEPARATE=0
 
-TAR=`which gnutar`
+TAR=`which gnutar || which tar || echo ""`
 if [ -z $TAR ]; then
-  TAR=`which tar`
-  if [ -z $TAR ]; then
-    echo "Unable to find a valid tar program."
-    exit 1;
-  fi
+  echo "Unable to find a valid tar program."
+  exit 1;
 fi
 
 FORMAT=tar
