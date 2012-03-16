@@ -1,6 +1,6 @@
 {
     "lockerHost" : "localhost",
-    "lockerPort" : 8043,
+    "lockerPort" : 0,
     "me" : "Data",
     "registryUpdate" : false,
     "requireSigned" : false,
@@ -28,7 +28,7 @@
         "console":false,
         "dataDir": "mongoTest",
         "host": "localhost",
-        "port": 27020,
+        "port": 0,
         "options": ["--nohttpinterface", "--noprealloc", "--nojournal"]
     },
     "logging": {
