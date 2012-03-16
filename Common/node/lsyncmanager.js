@@ -251,50 +251,49 @@ function executeSynclet(info, synclet, callback, force) {
       runningContexts[info.id + "/" + synclet.name] = context;
       // Let's get the code loaded
       var fname = path.join(info.srcdir, synclet.name + ".js");
-      fs.readFile(fname, function(err, code) {
-        if (err) {
+      try {
+        var code = fs.readFileSync(fname);
+        if (!code) {
           logger.error("Unable to load synclet " + synclet.name + "/" + info.id + ": " + err);
           return callback(err);
         }
-        try {
-          synclet.deleted = synclet.added = synclet.updated = 0;
-          vm.runInContext(code, context, fname);
+        synclet.deleted = synclet.added = synclet.updated = 0;
+        vm.runInContext(code, context, fname);
 
-          if (!info.config) info.config = {};
+        if (!info.config) info.config = {};
 
-          if (!info.absoluteSrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
-          if (!info.workingDirectory) info.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
-          synclet.workingDirectory = info.workingDirectory; // legacy?
-          info.syncletToRun = synclet;
-          info.lockerUrl = lconfig.lockerBase;
-          sandbox.exports.sync(info, function(syncErr, response) {
-            delete runningContexts[info.id + "/" + synclet.name];
-            if (syncErr) {
-              logger.error(synclet.name+" error: "+util.inspect(syncErr));
-              info.status = synclet.status = 'failed';
-              return callback(syncErr);
-            }
-            var elapsed = Date.now() - tstart;
-            stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
-            stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
-            stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
-            logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
-            info.status = synclet.status = 'processing data';
-            var deleteIDs = compareIDs(info.config, response.config);
-            info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
-            info.config = lutil.extend(true, info.config, response.config);
-            exports.scheduleRun(info, synclet);
-            serviceManager.mapDirty(info.id); // save out to disk
-            processResponse(deleteIDs, info, synclet, response, function(processErr) {
-                info.status = 'waiting';
-                callback(processErr);
-            });
+        if (!info.absoluteSrcdir) info.absoluteSrcdir = path.join(lconfig.lockerDir, info.srcdir);
+        if (!info.workingDirectory) info.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
+        synclet.workingDirectory = info.workingDirectory; // legacy?
+        info.syncletToRun = synclet;
+        info.lockerUrl = lconfig.lockerBase;
+        sandbox.exports.sync(info, function(syncErr, response) {
+          delete runningContexts[info.id + "/" + synclet.name];
+          if (syncErr) {
+            logger.error(synclet.name+" error: "+util.inspect(syncErr));
+            info.status = synclet.status = 'failed';
+            return callback(syncErr);
+          }
+          var elapsed = Date.now() - tstart;
+          stats.increment('synclet.' + info.id + '.' + synclet.name + '.stop');
+          stats.decrement('synclet.' + info.id + '.' + synclet.name + '.running');
+          stats.timing('synclet.' + info.id + '.' + synclet.name + '.timing', elapsed);
+          logger.info("Synclet "+synclet.name+" finished for "+info.id+" timing "+elapsed);
+          info.status = synclet.status = 'processing data';
+          var deleteIDs = compareIDs(info.config, response.config);
+          info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
+          info.config = lutil.extend(true, info.config, response.config);
+          exports.scheduleRun(info, synclet);
+          serviceManager.mapDirty(info.id); // save out to disk
+          processResponse(deleteIDs, info, synclet, response, function(processErr) {
+            info.status = 'waiting';
+            callback(processErr);
           });
-        } catch (E) {
-          logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
-          return callback(E);
-        }
-      });
+        });
+      } catch (E) {
+        logger.error("Error running " + synclet.name + "/" + info.id + " in a vm context: " + E);
+        return callback(E);
+      }
       if(synclet.posts) synclet.posts = []; // they're serialized, empty the queue
       delete info.syncletToRun;
       return;
