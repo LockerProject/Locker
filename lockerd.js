@@ -146,6 +146,7 @@ function finishStartup() {
                     // start web server (so we can all start talking)
                     var webservice = require(__dirname + "/Ops/webservice.js");
                     webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
+                        if (lconfig.airbrakeKey) locker.initAirbrake(lconfig.airbrakeKey);
                         registry.app(locker); // add it's endpoints
                         postStartup();
                     });
