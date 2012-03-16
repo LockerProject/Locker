@@ -63,7 +63,7 @@ IJOD.prototype.startAddTransaction = function(cbDone) {
 
 IJOD.prototype.commitAddTransaction = function(cbDone) {
   if (!this.transactionItems || this.transactionItems.length == 0) return cbDone();
-  console.log("Commiting %d items", this.transactionItems.length);
+  //console.log("Commiting %d items", this.transactionItems.length);
   var totalSize = this.transactionItems.reduce(function(prev, cur, idx, arr) { return prev + arr[idx].length; }, 0);
   var writeBuffer = new Buffer(totalSize);
   var idx = 0;
@@ -201,7 +201,7 @@ IJOD.prototype.smartAdd = function(arg, callback) {
 }
 
 IJOD.prototype.batchSmartAdd = function(entries, callback) {
-  console.log("Batch smart add %d entries", entries.length);
+  //console.log("Batch smart add %d entries", entries.length);
   var t = Date.now();
   var self = this;
   var script = ["CREATE TEMP TABLE IF NOT EXISTS batchSmartAdd (id TEXT)", "DELETE FROM batchSmartAdd", "BEGIN TRANSACTION"].join(";") + ";";
@@ -239,7 +239,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
                   self.addData(entry, cb);
                 }, function(error) {
                   self.commitAddTransaction(callback);
-                  console.log("Batch done: %d", (Date.now() - t));
+                  //console.log("Batch done: %d", (Date.now() - t));
                 });
               })
             });

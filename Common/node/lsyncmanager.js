@@ -442,8 +442,17 @@ function getIJOD(id, key, create, callback) {
         });
     });
 }
-
 exports.getIJOD = getIJOD;
+
+function closeIJOD(id, key, callback) {
+  var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
+  if (synclets.ijods[name]) {
+    synclets.ijods[name].close(callback);
+  } else {
+    callback();
+  }
+}
+exports.closeIJOD = closeIJOD;
 
 function processData (deleteIDs, info, synclet, key, data, callback) {
     // this extra (handy) log breaks the synclet tests somehow??
@@ -464,22 +473,27 @@ function processData (deleteIDs, info, synclet, key, data, callback) {
     else mongoId = 'id';
 
     getIJOD(info.id, key, true, function(ij){
+      function finish(err) {
+        closeIJOD(info.id, key, function() {
+          return callback(err);
+        });
+      }
         if (deleteIDs && deleteIDs.length > 0 && data) {
             addData(collection, mongoId, data, info, synclet, idr, ij, function(err) {
                 if(err) {
-                    callback(err);
+                    finish(err);
                 } else {
-                    deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
+                    deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, finish);
                 }
             });
         } else if (data && data.length > 0) {
           addData(collection, mongoId, data, info, synclet, idr, ij, function(err) {
-            callback();
+            finish();
           });
         } else if (deleteIDs && deleteIDs.length > 0) {
-            deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, callback);
+            deleteData(collection, mongoId, deleteIDs, info, synclet, idr, ij, finish);
         } else {
-            callback();
+            finish();
         }
     });
 }
