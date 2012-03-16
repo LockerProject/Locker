@@ -28,8 +28,8 @@ stdin.resume();
 function start(processInfo) {
     process.chdir(processInfo.workingDirectory);
     var extBase = processInfo.externalBase.substring(0, processInfo.externalBase.indexOf('/Me/useui'));
-    require('./dashboard-client')(locker, extBase, processInfo.port, function() {
-        process.stdout.write(JSON.stringify({port: processInfo.port}));
+    require('./dashboard-client')(locker, extBase, 0, function(port) {
+        process.stdout.write(JSON.stringify({port: port}));
     });
 }
 
