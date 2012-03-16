@@ -100,9 +100,9 @@ IJOD.prototype.commitAddTransaction = function(cbDone) {
 * This is safe to call without a transaction started.
 */
 IJOD.prototype.abortAddTransaction = function(cbDone) {
-  if (!self.transactionItems) return cbDone();
-  self.transactionItems = null;
-  self.db.execute("ROLLBACK TRANSACTION", function(error, rows) { cbDone(); });
+  if (!this.transactionItems) return cbDone();
+  this.transactionItems = null;
+  this.db.execute("ROLLBACK TRANSACTION", function(error, rows) { cbDone(); });
 };
 
 // takes arg of at least an id and data, callback(err) when done
