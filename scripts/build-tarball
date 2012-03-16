@@ -5,7 +5,7 @@ set -e
 subdir="$1"
 out="$2"
 top="$PWD"
-builddir="$(mktemp -d tmp.build)"
+builddir="$(mktemp -d)"
 
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
@@ -15,9 +15,15 @@ trap "rm -rf \"$builddir\"" EXIT
 # fetch a clean copy of the code from git
 echo "Fetching code..."
 # This doesn't work anymore with submodules.  I hate submodules.
-scripts/git-archive-all.sh
-tar -x -f Locker.tar -C "$builddir/$subdir"
-rm Locker.tar
+git archive HEAD | tar -x -C "$builddir/$subdir"
+git submodule foreach --quiet 'echo $path' | while read submodule; do
+    dest="$builddir/$subdir/$submodule"
+    mkdir -p "$dest"
+    (cd "$submodule" &&
+     echo "Submodule $submodule at revision" $(git rev-parse HEAD) &&
+     git archive HEAD | tar -x -C "$dest"
+    )
+done
 
 make -C "$builddir/$subdir"
 mkdir -p "$builddir/$subdir/Me"
