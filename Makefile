@@ -87,9 +87,14 @@ $(DISTFILE): submodules
 	./scripts/build-tarball "$(SUBDIR)" "$@"
 
 # create a ready-to-run tarball, and then run tests on the contents
-# (this is the rule that Jenkins runs -mdz 2012-02-04)
 test-bindist: $(DISTFILE)
 	./scripts/test-tarball "$(SUBDIR)" "$<"
+
+# this is the rule that Jenkins runs as of 2012-03-16
+jenkins:
+	LOCKER_MONGO_PORT=$(shell bash -c 'echo $$((27018 + $$RANDOM % 100))') \
+	echo $$LOCKER_MONGO_PORT
+	xvfb-run -a --server-args="-screen 0 1280x960x24" $(MAKE) test-bindist
 
 clean:
 	rm -f "$(DISTFILE)" "$(TEMPLATE_OUTPUT)" build.json tests/build.json
