@@ -231,7 +231,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
   }
 
   function handleError(msg) {
-    console.error("Error: %s", msg);
+    console.error("Batch smart add error: %s", msg);
     self.abortAddTransaction(function() {
       setTimeout(function() {
         self.batchSmartAdd(entries, callback);
@@ -246,14 +246,15 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
       async.forEachSeries(entries, function(entry, cb) {
         if (!entry) return cb();
         stmt.bind(1, entry.id, function(err) {
-          if (err) return handleError(err);
+          if (err) return cb(err);
           stmt.step(function(error, row) {
-            if (error) return handleError(error);
+            if (error) return cb(error);
             stmt.reset();
             cb();
           });
         });
       }, function(error) {
+        if (error) return handleError(error);
         self.db.execute("COMMIT TRANSACTION", function(error, rows) {
           if (error) return handleError(error);
           stmt.finalize(function(error) {

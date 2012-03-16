@@ -84,13 +84,14 @@ vows.describe("Push Manager").addBatch({
 }).addBatch({
     "Querying the data API returns the data" : {
         topic: function() {
-            request.get({uri : "http://localhost:8043/push/testing/getCurrent"}, this.callback)
+            request.get({uri : "http://localhost:8043/push/testing/getCurrent?stream=true"}, this.callback)
         },
         "from testSync" : function(err, resp, body) {
-            var data = JSON.parse(body);
-            obj = data[0];
-            assert.equal(data[0].id, 500);
-            assert.equal(data[0].someData, 'BAM');
+            var parts = body.split("\n");
+            var data = JSON.parse(parts[0]);
+            obj = data;
+            assert.equal(data.id, 500);
+            assert.equal(data.someData, 'BAM');
         }
     }
 }).addBatch({

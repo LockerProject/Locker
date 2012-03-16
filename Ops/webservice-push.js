@@ -27,6 +27,7 @@ module.exports = function(locker) {
     });
 
     locker.get('/push/:dataset/getCurrent', function(req, res) {
+      console.log("push current for %s", req.params.dataset);
         pushManager.getIJOD(req.params.dataset, false, function(ijod) {
             if(!ijod) return res.send("not found",404);
             ijod.reqCurrent(req, res);

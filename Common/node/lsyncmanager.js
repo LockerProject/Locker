@@ -421,7 +421,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.added',   synclet.added);
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.updated', synclet.updated);
         stats.increment('synclet.' + info.id + '.' + synclet.name + '.deleted', synclet.deleted);
-        stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.reduce(function(prev, cur, idx, arr) { console.log(cur); return prev + response.data[cur].length; }, 0));
+        stats.increment('synclet.' + info.id + '.' + synclet.name + '.length',  dataKeys.reduce(function(prev, cur, idx, arr) { return prev + response.data[cur].length; }, 0));
         logger.info("total of "+synclet.added+"+"+synclet.updated+"+"+synclet.deleted+" and threshold "+threshold+" so setting tolerance to "+synclet.tolMax);
         callback(err);
     });
@@ -430,6 +430,7 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 // simple async friendly wrapper
 function getIJOD(id, key, create, callback) {
     var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
+  console.log("Open IJOD %s", name);
     if(synclets.ijods[name]) return callback(synclets.ijods[name]);
     // only load if one exists or create flag is set
     fs.stat(name+".db", function(err, stat){
@@ -446,6 +447,7 @@ exports.getIJOD = getIJOD;
 
 function closeIJOD(id, key, callback) {
   var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
+  console.log("Close IJOD %s", name);
   if (synclets.ijods[name]) {
     synclets.ijods[name].close(callback);
   } else {

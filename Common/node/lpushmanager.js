@@ -52,7 +52,9 @@ function getIJOD(dataset, create, callback) {
     // only load if one exists or create flag is set
     fs.stat(name+".db", function(err, stat){
         if(!stat && !create) return callback();
-        config.ijods[dataset] = new IJOD({name:name}, function(err, ij){
+        var ij = new IJOD({name:name})
+        config.ijods[dataset] = ij;
+        ij.open(function(err) {
             if(err) logger.error(err);
             return callback(ij);
         });
@@ -83,6 +85,7 @@ function processData (deleteIDs, data, dataset, callback) {
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
                               JSON.stringify(config, null, 4));
     }
+    // TODO:  Explicitly close
     getIJOD(dataset, true, function(ijod){
         if (deleteIDs && deleteIDs.length > 0 && data) {
             addData(dataset, data, ijod, function(err) {
@@ -136,13 +139,15 @@ function addData (dataset, data, ijod, callback) {
         } else {
             cb();
         }
-    }, 5);
-    data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
+    }, 1);
+    ijod.startAddTransaction(function(err) {
+      data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
+    });
     q.drain = function() {
         if (errs.length > 0) {
-            callback(errs);
+            ijod.abortAddTransaction(function() { callback(errs); });
         } else {
-            callback();
+            ijod.commitAddTransaction(callback);
         }
     };
 }
