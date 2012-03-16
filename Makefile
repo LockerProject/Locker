@@ -92,8 +92,6 @@ test-bindist: $(DISTFILE)
 
 # this is the rule that Jenkins runs as of 2012-03-16
 jenkins:
-	LOCKER_MONGO_PORT=$(shell bash -c 'echo $$((27018 + $$RANDOM % 100))') \
-	echo $$LOCKER_MONGO_PORT
 	xvfb-run -a --server-args="-screen 0 1280x960x24" $(MAKE) test-bindist
 
 clean:
