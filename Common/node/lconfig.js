@@ -83,9 +83,9 @@ exports.load = function(filepath) {
 
     // If the port specified is zero, then choose a random one
     if (exports.mongo.port === 0) {
-        exports.mongo.port = 27017 + Math.floor(Math.random()*100);
+        exports.mongo.port = 27018 + Math.floor(Math.random()*100);
     } else if (!exports.mongo.port) {
-        exports.mongo.port = 27017;
+        exports.mongo.port = 27018;
     }
 
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
