@@ -5,7 +5,7 @@ set -e
 subdir="$1"
 out="$2"
 top="$PWD"
-builddir="$(mktemp -d tmp.build)"
+builddir="$(mktemp -d tmp.build-XXX)"
 
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
