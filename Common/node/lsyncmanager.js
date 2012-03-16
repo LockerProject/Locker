@@ -158,7 +158,7 @@ exports.scheduleRun = function(info, synclet) {
         return process.nextTick(run);
     }
 
-    // if no schedule, in the future with 10% fuzz
+    // if not scheduled yet, schedule it to run in the future
     if(!synclet.nextRun)
     {
         var milliFreq = parseInt(synclet.frequency) * 1000;

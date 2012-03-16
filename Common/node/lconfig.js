@@ -70,7 +70,7 @@ exports.load = function(filepath) {
     exports.mongo = {
         "dataDir": config.mongo.dataDir || "mongodata",
         "host": config.mongo.host || "localhost",
-        "port": config.mongo.port || 27018,
+        "port": parseInt(process.env.LOCKER_MONGO_PORT) || config.mongo.port || 27018,
         "options": config.mongo.options || ['--nohttpinterface']
     };
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
