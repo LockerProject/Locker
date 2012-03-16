@@ -29,7 +29,7 @@
         "dataDir": "mongoTest",
         "host": "localhost",
         "port": 27020,
-        "options": ["--nohttpinterface", "--noprealloc"]
+        "options": ["--nohttpinterface", "--noprealloc", "--nojournal"]
     },
     "logging": {
         "level": "error",
