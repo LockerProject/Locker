@@ -1,8 +1,8 @@
 var fs = require('fs');
-var lfs = require('../../Common/node/lfs.js');
+var lfs = require('lfs.js');
 var EventEmitter = require('events').EventEmitter;
 var crypto = require("crypto");
-var locker = require('../../Common/node/locker.js');
+var locker = require('locker.js');
 var request = require('request');
 var url = require('url');
 
