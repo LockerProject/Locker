@@ -82,10 +82,21 @@ IJOD.prototype.commitAddTransaction = function(cbDone) {
       } else if (written != totalSize) {
         console.error("Only %d written of %d bytes to IJOD", written, totalSize);
       }
-      self.db.execute("COMMIT TRANSACTION", function(error, rows) { cbDone() });
+      self.db.execute("COMMIT TRANSACTION", function(error, rows) { cbDone(); });
     });
   });
-}
+};
+
+/// Abort a pending add transaction
+/**
+* Any pending write chunks are destroyed and the database transaction is rolled back.
+* This is safe to call without a transaction started.
+*/
+IJOD.prototype.abortAddTransaction = function(cbDone) {
+  if (!self.transactionItems) return cbDone();
+  self.transactionItems = null;
+  self.db.execute("ROLLBACK TRANSACTION", function(error, rows) { cbDone(); });
+};
 
 // takes arg of at least an id and data, callback(err) when done
 IJOD.prototype.addData = function(arg, callback) {
@@ -204,21 +215,43 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
   //console.log("Batch smart add %d entries", entries.length);
   var t = Date.now();
   var self = this;
+  // TODO: We have 5 attempts to write and then we blow up, we need something smarter to do with this data
+  self.batchAttempt = self.batchAttempt || 0;
+  if (++self.batchAttempt > 5) {
+    self.batchAttempt = 0;
+    console.error("Out of attempts trying to batchSmartAdd, blowing up");
+    throw new Error("Unable to batchSmartAdd");
+  }
+
+  function handleError(msg) {
+    console.error("Error: %s", msg);
+    self.abortAddTransaction(function() {
+      setTimeout(function() {
+        self.batchSmartAdd(entries, callback);
+      }, 500);
+    });
+  }
+
   var script = ["CREATE TEMP TABLE IF NOT EXISTS batchSmartAdd (id TEXT)", "DELETE FROM batchSmartAdd", "BEGIN TRANSACTION"].join(";") + ";";
   self.db.executeScript(script, function(error, rows) {
     self.db.prepare("INSERT INTO batchSmartAdd VALUES (?)", function(error, stmt) {
+      if (error) return handleError(error);
       async.forEachSeries(entries, function(entry, cb) {
         if (!entry) return cb();
         stmt.bind(1, entry.id, function(err) {
+          if (err) return handleError(err);
           stmt.step(function(error, row) {
+            if (error) return handleError(error);
             stmt.reset();
             cb();
           });
         });
       }, function(error) {
         self.db.execute("COMMIT TRANSACTION", function(error, rows) {
+          if (error) return handleError(error);
           stmt.finalize(function(error) {
             self.db.execute("SELECT id,hash FROM ijod WHERE ijod.id IN (SELECT id FROM batchSmartAdd)", function(error, rows) {
+              if (error) return handleError(error);
               var knownIds = {};
               rows = rows || [];
               rows.forEach(function(row) { 
@@ -238,6 +271,8 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
                   } 
                   self.addData(entry, cb);
                 }, function(error) {
+                  if (error) return handleError(error);
+                  self.batchAttempt = 0;
                   self.commitAddTransaction(callback);
                   //console.log("Batch done: %d", (Date.now() - t));
                 });
