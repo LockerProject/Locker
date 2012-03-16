@@ -5,7 +5,7 @@ set -e
 subdir="$1"
 out="$2"
 top="$PWD"
-builddir="$(mktemp -d)"
+builddir="$(mktemp -d -t lockerbuild)"
 
 rm -rf "$builddir"
 mkdir -p "$builddir/$subdir"
