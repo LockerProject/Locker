@@ -29,7 +29,7 @@ exports.init = function(theAuth, theBase, srcdir) {
 exports.getMe = function(arg, cbEach, cbDone) {
     if(auth.profile && auth.profile.screen_name) {
       cbEach(auth.profile);
-      return cbDone();
+      return process.nextTick(cbDone);
     }
     arg.path = '/account/verify_credentials.json';
     return getOne(arg,function(err,me){
