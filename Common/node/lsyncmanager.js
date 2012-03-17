@@ -220,7 +220,7 @@ function executeSynclet(info, synclet, callback, force) {
     }
     // if another synclet is running, come back a little later, don't overlap!
     if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
-        logger.verbose("delaying "+synclet.name);
+        logger.verbose("delaying " + info.id + "/" + synclet.name);
         setTimeout(function() {
             executeSynclet(info, synclet, callback, force);
         }, 10000);
