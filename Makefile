@@ -33,19 +33,12 @@ check_deps:
 	fi
 
 # get Locker ready to run
-build: check_deps npm_modules templates build.json
+build: check_deps npm_modules templates build.json common
 .PHONY: build
 
-TEMPLATE_DIR=Apps/dashboardv3/static/common/templates
-TEMPLATES=$(wildcard $(TEMPLATE_DIR)/*.html)
-TEMPLATE_OUTPUT=$(TEMPLATE_DIR)/compiled_templates.json
-
-# compile templates
-templates: $(TEMPLATE_OUTPUT)
-
-$(TEMPLATE_OUTPUT): $(TEMPLATES)
+common:
 	@. scripts/use-deps.sh && \
-	./Apps/dashboardv3/static/common/templates/compile.sh
+	make -C Apps/dashboardv3/static/common
 
 # install node dependencies via npm
 npm_modules:
