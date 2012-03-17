@@ -33,7 +33,7 @@ check_deps:
 	fi
 
 # get Locker ready to run
-build: check_deps npm_modules templates build.json common
+build: check_deps npm_modules build.json common
 .PHONY: build
 
 common:
