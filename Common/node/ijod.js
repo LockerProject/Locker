@@ -232,6 +232,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
 
   function handleError(msg) {
     console.error("Batch smart add error: %s", msg);
+    console.trace();
     self.abortAddTransaction(function() {
       setTimeout(function() {
         self.batchSmartAdd(entries, callback);
@@ -241,6 +242,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
 
   var script = ["CREATE TEMP TABLE IF NOT EXISTS batchSmartAdd (id TEXT)", "DELETE FROM batchSmartAdd", "BEGIN TRANSACTION"].join(";") + ";";
   self.db.executeScript(script, function(error, rows) {
+    if (error) return handleError(error);
     self.db.prepare("INSERT INTO batchSmartAdd VALUES (?)", function(error, stmt) {
       if (error) return handleError(error);
       async.forEachSeries(entries, function(entry, cb) {

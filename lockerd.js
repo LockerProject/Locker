@@ -140,20 +140,23 @@ function finishStartup() {
     pushManager.init();
 
     // ordering sensitive, as synclet manager is inert during init, servicemanager's init will call into syncletmanager
+    // Dear lord this massive waterfall is so scary
     syncManager.init(serviceManager, function() {
-        registry.init(serviceManager, syncManager, lconfig, lcrypto, function() {
-            serviceManager.init(syncManager, registry, function() {  // this may trigger synclets to start!
-                runMigrations("postServices", function() {
-                    // start web server (so we can all start talking)
-                    var webservice = require(__dirname + "/Ops/webservice.js");
-                    webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
-                        if (lconfig.airbrakeKey) locker.initAirbrake(lconfig.airbrakeKey);
-                        registry.app(locker); // add it's endpoints
-                        postStartup();
-                    });
-                });
+      registry.init(serviceManager, syncManager, lconfig, lcrypto, function() {
+        serviceManager.init(registry, function() {  // this may trigger synclets to start!
+          syncManager.scheduleAll(function() {
+            runMigrations("postServices", function() {
+              // start web server (so we can all start talking)
+              var webservice = require(__dirname + "/Ops/webservice.js");
+              webservice.startService(lconfig.lockerPort, lconfig.lockerListenIP, function(locker) {
+                if (lconfig.airbrakeKey) locker.initAirbrake(lconfig.airbrakeKey);
+                registry.app(locker); // add it's endpoints
+                postStartup();
+              });
             });
+          });
         });
+      });
     });
     var lockerPortNext = "1"+lconfig.lockerPort;
     lockerPortNext++;

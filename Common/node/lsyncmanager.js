@@ -14,65 +14,107 @@ var fs = require('fs')
   , dispatcher = require('./instrument.js').StatsdDispatcher
   , stats = new dispatcher(lconfig.stats);
 
+var PAGIN_TIMING = 2000; // 2s gap in paging
+
 var runningContexts = {}; // Map of a synclet to a running context
 
-function LockerInterface(synclet, info) {
-  EventEmitter.call(this);
-  this.synclet = synclet;
-  this.info = info;
-  this.srcdir = path.join(lconfig.lockerDir, info.srcdir);
-  this.workingDirectory = path.join(lconfig.lockerDir, lconfig.me, info.id);
-  this.processing = false; // If we're processing events
-  this.events = [];
+function SyncletManager()
+{
+  this.scheduled = {};
+  this.offlineMode = false;
 }
-util.inherits(LockerInterface, EventEmitter);
-LockerInterface.prototype.error = function(message) {
-  logger.error("Error from synclet " + this.synclet.name + "/" + this.info.id + ": " + message);
-};
-// Fire an event from the synclet
-LockerInterface.prototype.event = function(action, lockerType, obj) {
-  this.events.push({action:action, lockerType:lockerType, obj:obj});
-  this.emit("event");
-  this.processEvents();
-};
-LockerInterface.prototype.processEvents = function() {
-  if (this.processing) return;
-  // Process the events we have
-  this.processing = true;
-  var self = this;
-  var curEvents = this.events;
-  this.events = [];
-  async.forEachSeries(curEvents, function(event, cb) {
-    processData([], self.info, self.synclet, event.lockerType, [event], cb);
-  }, function(error) {
-    self.processing = false;
-    if (self.events.length === 0) {
-      self.emit("drain");
-    } else {
-      process.nextTick(function() {
-        self.processEvents();
-      });
+/// Schedule a synclet to run
+/**
+* timeToRun is optional.  In this case the next run time is calculated 
+* based on normal frequency and tolerance methods.
+*/
+SyncletManager.prototype.schedule = function(connectorInfo, syncletInfo, timeToRun) {
+  var key = this.getKey(connectorInfo, syncletInfo);
+  // Let's get back to a clean slate on this synclet
+  if (this.scheduled[key]) {
+    logger.debug(key + " was already scheduled.");
+    this.cleanup(connectorInfo, syncletInfo);
+  }
+  syncletInfo.status = "waiting";
+  if (!syncletInfo.frequency) return;
+
+  // In offline mode things may only be ran directly with runAndReschedule
+  if (this.offlineMode) return;
+ 
+  // validation check
+  if(syncletInfo.nextRun && typeof syncletInfo.nextRun != "number") delete syncletInfo.nextRun;
+
+  if (timeToRun === undefined) {
+    // had a schedule and missed it, run it now
+    if(syncletInfo.nextRun && syncletInfo.nextRun <= Date.now()) {
+      logger.verbose("scheduling " + key + " to run immediately (missed)");
+      timeToRun = 0;
+    } else if (!syncletInfo.nextRun) {
+      // if not scheduled yet, schedule it to run in the future
+      var milliFreq = parseInt(syncletInfo.frequency) * 1000;
+      syncletInfo.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
+      timeToRun = syncletInfo.nextRun - Date.now();
     }
-  });
+  }
+
+  logger.verbose("scheduling " + key + " (freq " + syncletInfo.frequency + "s) to run in " + (timeToRun / 1000) + "s");
+  var self = this;
+  this.scheduled[key] = setTimeout(function() {
+    self.runAndReschedule(connectorInfo, syncletInfo);
+  }, timeToRun);
 };
-// Signals that the synclet context is complete and may be cleaned up
-LockerInterface.prototype.end = function() {
-  if (this.events.length > 0) {
-    this.once("drain", function() {
-      this.emit("end");
-    });
-  } else {
-    this.emit("end");
+/// Remove the synclet from scheduled and cleanup all other state, does not reset it to run again
+SyncletManager.prototype.cleanup = function(connectorInfo, syncletInfo) {
+  var key = this.getKey(connectorInfo, syncletInfo);
+  if (this.scheduled[key]) {
+    clearTimeout(this.scheduled[key]); // remove any existing timer
+    delete this.scheduled[key];
   }
 };
-
-var synclets = {
-    available:[],
-    installed:{},
-    ijods:{},
-    executeable:true
+/// Run the synclet and then attempt to reschedule it
+SyncletManager.prototype.runAndReschedule = function(connectorInfo, syncletInfo, callback) {
+  //TODO:  Ensure that we only run one per connector at a time.
+  delete syncletInfo.nextRun; // We're going to run and get a new time, so reset
+  this.cleanup(connectorInfo, syncletInfo);
+  var self = this;
+  // Tolerance isn't done yet, we'll come back
+  if (!this.checkToleranceReady(connectorInfo, syncletInfo)) {
+    return self.schedule(connectorInfo, syncletInfo);
+  }
+  executeSynclet(connectorInfo, syncletInfo, function(error) {
+    var nextRunTime = undefined;
+    if (connectorInfo.config && connectorInfo.config.nextRun < 0) {
+      // This wants to page so we'll schedule it for anther run in just a short gap.
+      nextRunTime = PAGING_TIMING;
+    }
+    // Make sure we reschedule this before we return anything else
+    self.schedule(connectorInfo, syncletInfo, nextRunTime);
+    if (callback) return callback(error);
+  });
+};
+/// Return true if the tolerance is ready for us to actually run
+SyncletManager.prototype.checkToleranceReady = function(connectorInfo, syncletInfo) {
+  // Make sure the baseline is there
+  if (syncletInfo.tolMax === undefined) {
+    syncletInfo.tolAt = 0;
+    syncletInfo.tolMax = 0;
+  }
+  // if we can have tolerance, try again later
+  if(syncletInfo.tolAt > 0) {
+    syncletInfo.tolAt--;
+    logger.verbose("tolerance now at " + syncletInfo.tolAt + " synclet " + syncletInfo.name + " for " + connectorInfo.id);
+    return false;
+  }
+  return true;
+};
+// This trivial helper function just makes sure we're consistent and we can change it easly
+SyncletManager.prototype.getKey = function(connectorInfo, syncletInfo) {
+  return connectorInfo.id + "-" + syncletInfo.name;
 };
 
+syncletManager = new SyncletManager();
+
+var ijods = {};
 
 // core syncmanager init function, need to talk to serviceManager
 var serviceManager;
@@ -86,87 +128,65 @@ exports.setExecuteable = function (e) {
     executeable = e;
 };
 
+// Run a connector or a specific synclet right now
 exports.syncNow = function (serviceId, syncletId, post, callback) {
-    if(typeof syncletId == "function")
-    {
-        callback = syncletId;
-        syncletId = false;
+  if(typeof syncletId == "function") {
+    callback = syncletId;
+    syncletId = false;
+  }
+
+  var js = serviceManager.map(serviceId);
+  if (!js || !js.synclets) return callback("no synclets like that installed");
+  async.forEachSeries(js.synclets, function (synclet, cb) {
+    if (!synclet) {
+      logger.error("Unknown synclet info in syncNow");
+      return cb();
     }
-    var js = serviceManager.map(serviceId);
-    if (!js || !js.synclets) return callback("no synclets like that installed");
-    async.forEachSeries(js.synclets, function (synclet, cb) {
-      if (!synclet) {
-        logger.error("Unknown synclet info in syncNow");
-        cb();
-      }
-        if(syncletId && synclet.name != syncletId) return cb();
-        if(post)
-        {
-            if(!Array.isArray(synclet.posts)) synclet.posts = [];
-            synclet.posts.push(post);
-        }
-        executeSynclet(js, synclet, cb, true);
-    }, callback);
+    // If they requested a specific synclet we'll skip everything but that one
+    if(syncletId && synclet.name != syncletId) return cb();
+    if(post) {
+      if(!Array.isArray(synclet.posts)) synclet.posts = [];
+      synclet.posts.push(post);
+    }
+    syncletManager.runAndReschedule(js, synclet, cb);
+  }, callback);
 };
 
 // run all synclets that have a tolerance and reset them
 exports.flushTolerance = function(callback, force) {
-    var map = serviceManager.map();
-    async.forEach(Object.keys(map), function(service, cb){ // do all services in parallel
-        if(!map[service].synclets) return cb();
-        async.forEachSeries(map[service].synclets, function(synclet, cb2) { // do each synclet in series
-            if (!force && (!synclet.tolAt || synclet.tolAt === 0)) return cb2();
-            synclet.tolAt = 0;
-            executeSynclet(map[service], synclet, cb2);
-        }, cb);
-    }, callback);
+  // TODO:  This now has an implied force, is that correct, why wouldn't you want this to force?
+  var map = serviceManager.map();
+  async.forEach(Object.keys(map), function(service, cb){ // do all services in parallel
+    // We only want services with synclets
+    if(!map[service].synclets) return cb();
+    async.forEachSeries(map[service].synclets, function(synclet, cb2) { // do each synclet in series
+      synclet.tolAt = 0;
+      syncletManager.runAndReschedule(map[service], synclet, cb2);
+    }, cb);
+  }, callback);
 };
 
 /**
 * Add a timeout to run a synclet
+* DEPRECATE:  Use the syncletManager.schedule directly
 */
-var scheduled = {};
 exports.scheduleRun = function(info, synclet) {
-    synclet.status = "waiting";
-    if (!synclet.frequency) return;
+  logger.warn("Deprecated use of scheduleRun");
+  console.trace();
+  syncletManager.schedule(info, synclet);
+};
 
-    var key = info.id + "-" + synclet.name;
-    if(scheduled[key]) clearTimeout(scheduled[key]); // remove any existing timer
-
-    // run from a clean state
-    var force = false;
-    function run() {
-        delete scheduled[key];
-        executeSynclet(info, synclet, function(){}, force);
-    }
-
-    // the synclet is paging and needs to run again immediately, forcefully
-    if(info.config && info.config.nextRun === -1)
-    {
-        force = true;
-        delete info.config.nextRun;
-        logger.verbose("scheduling "+key+" to run immediately (paging)");
-        return setTimeout(run, 2000);
-    }
-
-    // validation check
-    if(synclet.nextRun && typeof synclet.nextRun != "number") delete synclet.nextRun;
-
-    // had a schedule and missed it, run it now
-    if(synclet.nextRun && synclet.nextRun <= Date.now()) {
-        logger.verbose("scheduling "+key+" to run immediately (missed)");
-        return process.nextTick(run);
-    }
-
-    // if not scheduled yet, schedule it to run in the future
-    if(!synclet.nextRun)
-    {
-        var milliFreq = parseInt(synclet.frequency) * 1000;
-        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
-    }
-    var timeout = synclet.nextRun - Date.now();
-    logger.verbose("scheduling "+key+" (freq "+synclet.frequency+") to run in "+(timeout/1000)+"s");
-    scheduled[key] = setTimeout(run, timeout);
+// Find al the synclets and get their initial scheduling done
+exports.scheduleAll = function(callback) {
+  var map = serviceManager.map();
+  async.forEach(Object.keys(map), function(service, cb){ // do all services in parallel
+    // We only want services with synclets
+    if(!map[service].synclets) return cb();
+    async.forEach(map[service].synclets, function(synclet, cb2) { // do each synclet in series
+      syncletManager.schedule(map[service], synclet);
+      cb2();
+    }, cb);
+  }, callback);
 };
 
 function localError(base, err) {
@@ -176,38 +196,18 @@ function localError(base, err) {
 /**
 * Executes a synclet
 */
-function executeSynclet(info, synclet, callback, force) {
+function executeSynclet(info, synclet, callback) {
     if(!callback) callback = function(err){
         if(err) return logger.error(err);
         logger.debug("finished processing "+synclet.name);
     };
     if (synclet.status === 'running') return callback('already running');
-    delete synclet.nextRun; // cancel any schedule
     if(!info.auth || !info.authed) return callback("no auth info for "+info.id);
-    // we're put on hold from running any for some reason, re-schedule them
-    // this is a workaround for making synclets available in the map separate from scheduling them which could be done better
-    if (!force && !executeable) {
-        setTimeout(function() {
-            executeSynclet(info, synclet, callback);
-        }, 1000);
-        return;
-    }
-    if(!synclet.tolMax) {
-        synclet.tolAt = 0;
-        synclet.tolMax = 0;
-    }
-    // if we can have tolerance, try again later
-    if(!force && synclet.tolAt > 0) {
-        synclet.tolAt--;
-        logger.verbose("tolerance now at "+synclet.tolAt+" synclet "+synclet.name+" for "+info.id);
-        exports.scheduleRun(info, synclet);
-        return callback();
-    }
     // if another synclet is running, come back a little later, don't overlap!
     if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
         logger.verbose("delaying "+synclet.name);
         setTimeout(function() {
-            executeSynclet(info, synclet, callback, force);
+            executeSynclet(info, synclet, callback);
         }, 10000);
         return;
     }
@@ -283,7 +283,7 @@ function executeSynclet(info, synclet, callback, force) {
           var deleteIDs = compareIDs(info.config, response.config);
           info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
           info.config = lutil.extend(true, info.config, response.config);
-          exports.scheduleRun(info, synclet);
+          //exports.scheduleRun(info, synclet);
           serviceManager.mapDirty(info.id); // save out to disk
           processResponse(deleteIDs, info, synclet, response, function(processErr) {
             info.status = 'waiting';
@@ -352,7 +352,7 @@ function executeSynclet(info, synclet, callback, force) {
         var deleteIDs = compareIDs(info.config, response.config);
         info.auth = lutil.extend(true, info.auth, response.auth); // for refresh tokens and profiles
         info.config = lutil.extend(true, info.config, response.config);
-        exports.scheduleRun(info, synclet);
+        //exports.scheduleRun(info, synclet);
         serviceManager.mapDirty(info.id); // save out to disk
         processResponse(deleteIDs, info, synclet, response, function(err){
             info.status = 'waiting';
@@ -430,13 +430,13 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
 // simple async friendly wrapper
 function getIJOD(id, key, create, callback) {
     var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
-  console.log("Open IJOD %s", name);
-    if(synclets.ijods[name]) return callback(synclets.ijods[name]);
+    //console.log("Open IJOD %s", name);
+    if(ijods[name]) return callback(ijods[name]);
     // only load if one exists or create flag is set
     fs.stat(name+".db", function(err, stat){
         if(!stat && !create) return callback();
         var ij = new IJOD({name:name})
-        synclets.ijods[name] = ij;
+        ijods[name] = ij;
         ij.open(function(err){
             if(err) logger.error(err);
             return callback(ij);
@@ -447,9 +447,12 @@ exports.getIJOD = getIJOD;
 
 function closeIJOD(id, key, callback) {
   var name = path.join(lconfig.lockerDir, lconfig.me, id, key);
-  console.log("Close IJOD %s", name);
-  if (synclets.ijods[name]) {
-    synclets.ijods[name].close(callback);
+  //console.log("Close IJOD %s", name);
+  if (ijods[name]) {
+    ijods[name].close(function(error) {
+      delete ijods[name];
+      callback();
+    });
   } else {
     callback();
   }
