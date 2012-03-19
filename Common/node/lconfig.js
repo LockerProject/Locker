@@ -100,6 +100,7 @@ exports.load = function(filepath) {
     exports.mail = config.mail;
     exports.homeApp = config.homeApp;
     exports.authSecret = config.authSecret;
+    exports.authedAlways = config.authedAlways || false;
     try {
         if(path.existsSync(path.join(exports.me,'login.json'))) exports.authLogin = JSON.parse(fs.readFileSync(path.join(exports.me,'login.json')).toString());
     }catch(E){

@@ -82,7 +82,7 @@ var locker = express.createServer(
 // specificly, is this an externally auth'd request
 function isAuthed(req)
 {
-    var authed = false;
+    var authed = lconfig.authedAlways; // configuration can say always-logged-in
     if(req.headers.secret && req.headers.secret == lconfig.authSecret) authed = true; // for a config-authorized blanket external request
     if(lconfig.authLogin && req.cookies.lockerlogin == lconfig.authLogin.cookie) authed = true; // browser auth'd
     req.headers.authed = (authed) ? "true" : "false"; // set special header for any subsequent or proxied request
