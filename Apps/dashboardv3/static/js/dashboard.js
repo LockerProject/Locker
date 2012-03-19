@@ -6,6 +6,7 @@ var specialApps = {
 };
 var defaultSubSections = {};
 var loggedIn = true;
+var _gaq = _gaq || [];
 
 $(document).ready(function() {
     $.history.init(function(hash){
