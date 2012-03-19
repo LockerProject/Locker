@@ -67,7 +67,7 @@ exports.mapType = function(type, callback) {
             callback(err, undefined);
             return;
         }
-        var services = [];
+        var services = []
         Object.keys(body).forEach(function(key) {
             if (body[key].type == type) {
                 services.push(body[key]);
