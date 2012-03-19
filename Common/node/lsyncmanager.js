@@ -173,7 +173,7 @@ exports.scheduleRun = function(info, synclet) {
         return process.nextTick(run);
     }
 
-    // if no schedule, in the future with 10% fuzz
+    // if not scheduled yet, schedule it to run in the future
     if(!synclet.nextRun)
     {
         var milliFreq = parseInt(synclet.frequency) * 1000;
@@ -220,7 +220,7 @@ function executeSynclet(info, synclet, callback, force) {
     }
     // if another synclet is running, come back a little later, don't overlap!
     if (info.status == 'running' || runningContexts[info.id + "/" + synclet.name]) {
-        logger.verbose("delaying "+synclet.name);
+        logger.verbose("delaying " + info.id + "/" + synclet.name);
         setTimeout(function() {
             executeSynclet(info, synclet, callback, force);
         }, 10000);

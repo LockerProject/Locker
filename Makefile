@@ -2,12 +2,7 @@ export GIT_REVISION?=$(shell git rev-parse --short --default HEAD)
 # if not provided by Jenkins, then just use the gitrev
 export BUILD_NUMBER?=git-$(GIT_REVISION)
 
-TESTS = $(shell find test -name "*.test.js")
-MOCHA = ./node_modules/.bin/mocha
-RUNALL = env INTEGRAL_CONFIG=test/config.json $(MOCHA) $(TESTS)
-DEFAULT_OPTS = --growl --timeout 500
-
-all: submodules checkdeps build
+all: submodules build
 	@echo
 	@echo "Looks like everything worked!"
 	@echo "Get some API keys (https://github.com/LockerProject/Locker/wiki/GettingAPIKeys) and then try running:"
@@ -15,43 +10,61 @@ all: submodules checkdeps build
 	@echo
 	@echo "Once running, visit http://localhost:8042 in your web browser."
 
+# install system level dependencies into deps/
 deps:
 	./scripts/install-deps deps
 	@echo
 	@echo "Go ahead and run 'make'"
+.PHONY: deps
 
+# if building from git, make sure that the submodules are checked out
 submodules:
 	@if [ -d ./.git -a -f ./.gitmodules -a ! -d ./Apps/dashboardv3/static/common/.git ]; then \
 		echo "Initializing submodules..."; \
 		git submodule update --init; \
 	fi
 
-checkdeps:
+# check if system level dependencies are installed
+check_deps:
 	@. scripts/use-deps.sh && \
 	if ! ./scripts/install-deps --check-only; then \
 		echo Some dependencies are missing.  Try running "make deps" to install them.; \
 		exit 1; \
 	fi
 
-build: checkdeps npm_modules build.json
-	@. scripts/use-deps.sh && \
-	./Apps/dashboardv3/static/common/templates/compile.sh
+# get Locker ready to run
+build: check_deps npm_modules build.json common
+.PHONY: build
 
+common:
+	@. scripts/use-deps.sh && \
+	make -C Apps/dashboardv3/static/common
+
+# install node dependencies via npm
 npm_modules:
 	@. scripts/use-deps.sh && \
 	npm install
+.PHONY: npm_modules
 
+# build.json allows Locker to report its build number and git revision at runtime
 # the test suite pretends that tests/ is the top of the source tree,
 # so drop a copy there too
 build.json:
 	echo '{ "build" : "$(BUILD_NUMBER)", "gitrev" : "$(GIT_REVISION)" }' \
 	| tee $@ tests/$@
+.PHONY: build.json
 
+# run all of the tests
 test: oldtest newtest
 
+# new style mocha tests
+MOCHA = ./node_modules/.bin/mocha
+MOCHA_TESTS = $(shell find test -name "*.test.js")
 newtest: build
-	@$(RUNALL) $(DEFAULT_OPTS)
+	@env INTEGRAL_CONFIG=test/config.json \
+	$(MOCHA) --growl --timeout 500 $(MOCHA_TESTS)
 
+# old style vows tests
 oldtest: build
 	cd tests && \
 	env NODE_PATH="$(PWD)/Common/node" \
@@ -60,17 +73,20 @@ oldtest: build
 SUBDIR=locker-$(BUILD_NUMBER)
 DISTFILE=$(SUBDIR).tar.gz
 
+# create a ready-to-run tarball with a complete build inside
 bindist: $(DISTFILE)
 
 $(DISTFILE): submodules
 	./scripts/build-tarball "$(SUBDIR)" "$@"
 
-# This is the rule that Jenkins runs -mdz 2012-02-04
+# create a ready-to-run tarball, and then run tests on the contents
 test-bindist: $(DISTFILE)
 	./scripts/test-tarball "$(SUBDIR)" "$<"
 
-clean:
-	rm -f "$(DISTFILE)" build.json tests/build.json
-	rm -rf node_modules
+# this is the rule that Jenkins runs as of 2012-03-16
+jenkins:
+	xvfb-run -a --server-args="-screen 0 1280x960x24" $(MAKE) test-bindist
 
-.PHONY: build npm_modules build.json deps
+clean:
+	rm -f "$(DISTFILE)" "$(TEMPLATE_OUTPUT)" build.json tests/build.json
+	rm -rf node_modules

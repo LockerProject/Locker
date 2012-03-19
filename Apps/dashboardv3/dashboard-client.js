@@ -39,7 +39,7 @@ ejs.filters.capitalAll = function(obj) {
 module.exports = function(passedLocker, passedExternalBase, listenPort, callback) {
   lconfig.load('../../Config/config.json');
   locker = passedLocker;
-  app.listen(listenPort, callback);
+  app.listen(listenPort, function(){ callback(app.address().port); }); // pass back port actually used in case it was 0
 };
 
 var app = express.createServer();

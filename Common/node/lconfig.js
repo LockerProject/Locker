@@ -19,7 +19,14 @@ exports.load = function(filepath) {
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
     exports.lockerListenIP = config.lockerListenIP || '0.0.0.0';
-    exports.lockerPort = config.lockerPort || 8042;
+
+    exports.lockerPort = config.lockerPort;
+    if (exports.lockerPort === 0) {
+        exports.lockerPort = 8042 + Math.floor(Math.random()*100);
+    } else if (!exports.lockerPort) {
+        exports.lockerPort = 8042;
+    }
+
     if(config.externalPort)
         exports.externalPort = config.externalPort;
     else if(config.externalSecure)
@@ -70,9 +77,17 @@ exports.load = function(filepath) {
     exports.mongo = {
         "dataDir": config.mongo.dataDir || "mongodata",
         "host": config.mongo.host || "localhost",
-        "port": config.mongo.port || 27018,
+        "port": config.mongo.port, // default set below
         "options": config.mongo.options || ['--nohttpinterface']
     };
+
+    // If the port specified is zero, then choose a random one
+    if (exports.mongo.port === 0) {
+        exports.mongo.port = 27018 + Math.floor(Math.random()*100);
+    } else if (!exports.mongo.port) {
+        exports.mongo.port = 27018;
+    }
+
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
     exports.me = config.me || "Me";
     // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
