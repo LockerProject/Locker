@@ -52,7 +52,7 @@ $(function() {
       $(".prettyprint").show();
       $("#testResultImage").hide();
       $.getJSON(path, function(testData) {
-        console.log("Full length is " + testData.length)
+        console.log("Full length is " + testData.length);
         var hasMore = false;
         if (testData.length && testData.length > 20) {
 
@@ -185,7 +185,7 @@ $(function() {
     });
     $.each(data.apis, function(key, value) {
       var path = data.apis[key].path;
-      $("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"))
+      $("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"));
     });
     $.each(data.models, function(key, value) {
       models[value.name] = value;
