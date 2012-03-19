@@ -78,7 +78,7 @@ locker.get('/map/profiles', function(req, res) {
         if(!map[key].auth || !map[key].auth.profile) continue;
         var idr = { slashes: true, pathname: '/', host: key };
         // the type could be named something service-specific, usually 'contact' tho
-        idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
+        idr.protocol = (map[key].types && map[key].types.contact) ? map[key].types.contact : 'contact';
         // generate idrs from profiles, some services have both numeric and username (or more?)!
         var ids = map[key].profileIds || ['id'];
         for(var i in ids) {
@@ -277,8 +277,7 @@ function proxyRequest(method, req, res, next) {
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
         var fileUrl = url.parse(ppath);
-        if(fileUrl.pathname.indexOf("/..") >= 0)
-        { // extra sanity check
+        if(fileUrl.pathname.indexOf("/..") >= 0) { // extra sanity check
             return res.send(404);
         }
 
@@ -320,14 +319,14 @@ locker.get("/core/:svcId/diary", function(req, res) {
 
     var now = new Date();
     try {
-        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
+        fs.mkdirSync(lconfig.me + "/diary", '0700', function(err) {
             if (err && err.errno != process.EEXIST) logger.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
-    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), '0700', function(err) {
+        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), '0700', function(err) {
             var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
@@ -355,7 +354,6 @@ locker.get("/diary", function(req, res) {
         res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
-    res.write();
 });
 
 locker.get('/core/error', function(req, res) {
@@ -417,7 +415,7 @@ locker.get('/core/stats', function(req, res) {
 
     // serviceManager never reports that a connector is running
     if ('connector' in stats.serviceManager)
-        delete stats.serviceManager.connector['running'];
+        delete stats.serviceManager.connector.running;
 
     res.send(JSON.stringify(stats), 200);
 });
