@@ -7,6 +7,10 @@ $(function() {
   $("#testButton").click(function(e) {
     var path = curAPI.path;
     console.log("Start path " + path);
+
+    // log the event to google analytics
+    window.parent._gaq.push(['_trackEvent', 'Locker', 'Run API Explorer', curAPI.path]);
+
     var queryParams = "";
     if (curAPI.operations[0].parameters) {
       $.each(curAPI.operations[0].parameters, function(key, val) {
@@ -194,6 +198,7 @@ $(function() {
   });
 });
 
+window.parent._gaq.push(['_trackEvent', 'Locker', 'View API Explorer']);
 
 $.ajaxSetup({
     xhrFields: {
