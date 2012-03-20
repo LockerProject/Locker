@@ -89,4 +89,5 @@ jenkins:
 
 clean:
 	rm -f "$(DISTFILE)" "$(TEMPLATE_OUTPUT)" build.json tests/build.json
+	rm -f "locker-git-*.tar.gz"
 	rm -rf node_modules

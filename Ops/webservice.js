@@ -57,7 +57,7 @@ var locker = express.createServer(
 );
 
 
-var listeners = new Object(); // listeners for events
+var listeners = {}; // listeners for events
 
 var DEFAULT_QUERY_LIMIT = 20;
 
@@ -78,7 +78,7 @@ locker.get('/map/profiles', function(req, res) {
         if(!map[key].auth || !map[key].auth.profile) continue;
         var idr = { slashes: true, pathname: '/', host: key };
         // the type could be named something service-specific, usually 'contact' tho
-        idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
+        idr.protocol = (map[key].types && map[key].types.contact) ? map[key].types.contact : 'contact';
         // generate idrs from profiles, some services have both numeric and username (or more?)!
         var ids = map[key].profileIds || ['id'];
         for(var i in ids) {
@@ -135,13 +135,13 @@ locker.get("/query/:query", function(req, res) {
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
         var providers = serviceManager.map();
-        var provider = undefined;
+        var provider;
         for (var key in providers) {
             if (providers.hasOwnProperty(key) && providers[key].provides && providers[key].provides.indexOf(query.collection) >= 0 )
                 provider = providers[key];
         }
 
-        if (provider == undefined) {
+        if (provider === undefined) {
             res.writeHead(404);
             res.end(query.collection + " not found to query");
             return;
@@ -197,7 +197,7 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    var at = new Date;
+    var at = new Date();
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
     logger.info("scheduled "+ svcId + " " + cb + "  at " + at);
@@ -209,7 +209,7 @@ for(var i in collectionApis) {
   locker._oldGet = locker.get;
   locker.get = function(path, callback) {
     return locker._oldGet('/Me/' + i + path, callback);
-  }
+  };
   collectionApis[i].api(locker, collectionApis[i].lockerInfo);
   locker.get = locker._oldGet;
   locker._oldGet = undefined;
@@ -277,8 +277,7 @@ function proxyRequest(method, req, res, next) {
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
         var fileUrl = url.parse(ppath);
-        if(fileUrl.pathname.indexOf("/..") >= 0)
-        { // extra sanity check
+        if(fileUrl.pathname.indexOf("/..") >= 0) { // extra sanity check
             return res.send(404);
         }
 
@@ -290,7 +289,7 @@ function proxyRequest(method, req, res, next) {
                     if (!err && (stats.isFile() || stats.isDirectory())) {
                         res.sendfile(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                     } else {
-                        logger.warn("Could not find " + path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname))
+                        logger.warn("Could not find " + path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                         res.send(404);
                     }
                 });
@@ -309,7 +308,7 @@ function proxyRequest(method, req, res, next) {
         }
     }
     logger.silly("Proxy complete");
-};
+}
 
 // DIARY
 // Publish a user visible message
@@ -318,27 +317,27 @@ locker.get("/core/:svcId/diary", function(req, res) {
     var message = req.param("message");
     var svcId = req.params.svcId;
 
-    var now = new Date;
+    var now = new Date();
     try {
-        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
+        fs.mkdirSync(lconfig.me + "/diary", '0700', function(err) {
             if (err && err.errno != process.EEXIST) logger.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
-    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), '0700', function(err) {
+        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), '0700', function(err) {
             var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
             res.end("{}");
-        })
+        });
     });
 });
 
 // Retrieve the current days diary or the given range
 locker.get("/diary", function(req, res) {
-    var now = new Date;
+    var now = new Date();
     var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
@@ -351,11 +350,10 @@ locker.get("/diary", function(req, res) {
             return;
         }
         var rawLines   = file.toString().trim().split("\n");
-        var diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        var diaryLines = rawLines.map(function(line) { return JSON.parse(line); });
         res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
-    res.write
 });
 
 locker.get('/core/error', function(req, res) {
@@ -380,7 +378,7 @@ locker.get('/core/selftest', function(req, res) {
                     callback(null, { 'Me/*' : files });
                 }
             });
-        },
+        }
     ],
     function(err, results) {
         if (err) {
@@ -394,10 +392,10 @@ locker.get('/core/selftest', function(req, res) {
 locker.get('/core/stats', function(req, res) {
     var stats = {
         'core' : {
-            'memoryUsage' : process.memoryUsage(),
+            'memoryUsage' : process.memoryUsage()
         },
         'serviceManager': {}
-    }
+    };
 
     var map = serviceManager.map();
     for (var serviceId in map) {
@@ -407,7 +405,7 @@ locker.get('/core/stats', function(req, res) {
             stats.serviceManager[type] = {
                 'total' : 0,
                 'running' : 0
-            }
+            };
         }
 
         stats.serviceManager[type].total += 1;
@@ -417,7 +415,7 @@ locker.get('/core/stats', function(req, res) {
 
     // serviceManager never reports that a connector is running
     if ('connector' in stats.serviceManager)
-        delete stats.serviceManager.connector['running'];
+        delete stats.serviceManager.connector.running;
 
     res.send(JSON.stringify(stats), 200);
 });
@@ -555,4 +553,4 @@ exports.startService = function(port, ip, cb) {
     locker.listen(port, ip, function(){
         cb(locker);
     });
-}
+};
