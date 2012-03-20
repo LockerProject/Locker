@@ -206,6 +206,15 @@ then
     fi
 fi
 
+if ! check_for ImageMagick convert "convert --version" 6.0
+then
+    if [ "$check_only" = true ]; then exit 1; fi
+
+    echo "You need ImageMagick, but this script doesn't know how to install it for you." >&2
+    echo "Please install it and try again."
+    exit 1
+fi
+
 if [ "$check_only" != true ]; then
     rm -rf "${prefix}/build"
 fi
