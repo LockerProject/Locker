@@ -44,6 +44,7 @@ app.get('/update', function (req, res) {
 
 // simple oembed util internal api
 app.get('/embed', function (req, res) {
+    if (!dataIn.process) return res.send({});
     oembed.fetch({url:req.query.url}, function (e) {
         if(e) return res.send(e);
         res.send({});
