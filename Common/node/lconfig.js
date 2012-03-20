@@ -14,9 +14,16 @@ var path = require('path');
 exports.load = function(filepath) {
     if (exports.loaded) return;
 
+    // allow overriding
+    var configPath = filepath;
+    if (process.env.LOCKER_CONFIG) {
+      console.error('env override set, config path is', process.env.LOCKER_CONFIG);
+      configPath = path.join(process.env.LOCKER_CONFIG, 'config.json');
+    }
+
     var config = {};
-    if (path.existsSync(filepath))
-        config = JSON.parse(fs.readFileSync(filepath));
+    if (path.existsSync(configPath))
+        config = JSON.parse(fs.readFileSync(configPath));
 
     exports.lockerHost = config.lockerHost || 'localhost';
     exports.externalHost = config.externalHost || 'localhost';
@@ -42,7 +49,7 @@ exports.load = function(filepath) {
     exports.airbrakeKey = config.airbrakeKey || undefined;
     exports.stats = config.stats || {};
     if (exports.stats.prefix) {
-        var hostname = process.env['HOSTNAME']
+        var hostname = process.env.HOSTNAME
           , hostBasename;
 
         if (!hostname) hostBasename = 'localhost';
@@ -91,10 +98,30 @@ exports.load = function(filepath) {
     }
 
     // FIXME: me should get resolved into an absolute path, but much of the code base uses it relatively.
-    exports.me = config.me || "Me";
-    // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
-    // Right now it is ambiguous, we probably need two different vars
-    exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
+    //
+    // allow overriding (for testing)
+    if (process.env.LOCKER_ME) {
+      console.error('env override set, Me path is', process.env.LOCKER_ME);
+      exports.me = process.env.LOCKER_ME;
+    }
+    else if (config.me) {
+      exports.me = config.me;
+    }
+    else {
+      exports.me = 'Me';
+    }
+
+    // allow overriding (for testing)
+    if (process.env.LOCKER_ROOT) {
+      console.error('env override set, locker root is', process.env.LOCKER_ROOT);
+      exports.lockerDir = process.env.LOCKER_ROOT;
+    }
+    else {
+      // FIXME: is lockerDir the root of the code/git repo? or the dir that it starts running from?
+      // Right now it is ambiguous, we probably need two different vars
+      exports.lockerDir = path.join(path.dirname(path.resolve(filepath)), "..");
+    }
+
     if(!config.logging) config.logging = {};
     exports.logging =  {
         file: config.logging.file || undefined,
