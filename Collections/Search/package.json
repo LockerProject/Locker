@@ -16,22 +16,7 @@
     ],
     "events": [
       [
-        "contact/contacts",
-        "/events",
-        true
-      ],
-      [
-        "photo/photos",
-        "/events",
-        true
-      ],
-      [
-        "link/links",
-        "/events",
-        true
-      ],
-      [
-        "place/places",
+        "null/contacts",
         "/events",
         true
       ]
