@@ -1,5 +1,6 @@
-var path = require('path')
-  , temp = require('temp')
+var path   = require('path')
+  , temp   = require('temp')
+  , wrench = require('wrench')
   ;
 
 var lconfig
@@ -51,9 +52,14 @@ exports.lockerificate = function (done) {
 
 exports.delockerificate = function (done) {
   if (locker) {
-    locker.shutdown(0);
+    locker.shutdown(0, function (returnCode) {
+      if (returnCode !== 0) return done('nonzero shutdown code returned during shutdown: ' + returnCode);
+      else return done();
+    });
   }
-  return done();
+  else {
+    return done();
+  }
 };
 
 exports.bootstrap = function (done) {
@@ -61,5 +67,16 @@ exports.bootstrap = function (done) {
 };
 
 exports.shutdown = function (done) {
-  exports.delockerificate(done);
+  exports.delockerificate(function (err) {
+    if (err) return done(err);
+
+    try {
+      wrench.rmdirSyncRecursive(process.env.LOCKER_ME, false);
+    }
+    catch (err) {
+      return done(err);
+    }
+
+    return done();
+  });
 };

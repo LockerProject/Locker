@@ -231,11 +231,12 @@ function postStartup() {
     runMigrations("postStartup", function() {});
 }
 
-function shutdown(returnCode) {
-    if (shuttingDown_) {
+function shutdown(returnCode, callback) {
+    if (shuttingDown_ && returnCode !== 0) {
         try {
-            console.error("Aieee, shutdown called while already shutting down!  Aborting!");
-        } catch (e) {
+            console.error("Aieee! Shutdown called while already shutting down! Panicking!");
+        }
+        catch (e) {
             // we tried...
         }
         process.exit(1);
@@ -243,9 +244,14 @@ function shutdown(returnCode) {
     shuttingDown_ = true;
     process.stdout.write("\n");
     logger.info("Shutting down...");
-    serviceManager.shutdown(function() {
-        cleanupMongo(function() {
-            exit(returnCode);
+    serviceManager.shutdown(function () {
+        cleanupMongo(function () {
+            if (callback) {
+                return callback(returnCode);
+            }
+            else {
+                return exit(returnCode);
+            }
         });
     });
 }
