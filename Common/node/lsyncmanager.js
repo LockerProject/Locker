@@ -14,7 +14,7 @@ var fs = require('fs')
   , dispatcher = require('./instrument.js').StatsdDispatcher
   , stats = new dispatcher(lconfig.stats);
 
-var PAGIN_TIMING = 2000; // 2s gap in paging
+var PAGING_TIMING = 2000; // 2s gap in paging
 
 var runningContexts = {}; // Map of a synclet to a running context
 
