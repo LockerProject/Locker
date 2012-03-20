@@ -1,0 +1,42 @@
+{
+    "lockerHost" : "localhost",
+    "lockerPort" : 8043,
+    "me" : "Data",
+    "registryUpdate" : false,
+    "requireSigned" : false,
+    "ui":"dashboardv3:Apps/dashboardv3",
+    "testGroups" : {
+        "core" : ["locker-core-api-test.js"],
+        "core-lib" : [
+                      "lpushmanager-test-local.js"],
+        "synclets" : ["synclet-local-foursquare.js",
+                      "synclet-local-facebook.js",
+                      "synclet-local-flickr.js",
+                      "synclet-local-soundcloud.js",
+                      "synclet-local-googleContacts.js"],
+        "issues" : ["locker-issues-test.js"],
+        "collections" : [
+          "collection-contacts-test.js"
+        ]
+    },
+    "apps" : ["photosv09:Apps/photosv0.9", "helloplaces:Apps/HelloPlaces", "linkalatte:Apps/LinkaLatte", "hellolinks:Apps/HelloLinks", "contactsviewer:Apps/MergedContacts", "devdocs:Apps/DevDocs", "foursquare:Connectors/foursquare"],
+    "displayUnstable" : true,
+    "disabledTests" : [
+        "connector-IMAP-test.js"
+    ],
+    "mongo" : {
+        "console":false,
+        "dataDir": "mongoTest",
+        "host": "localhost",
+        "port": 27020,
+        "options": ["--nohttpinterface", "--noprealloc", "--nojournal"]
+    },
+    "logging": {
+        "level": "error",
+        "config": true
+    },
+    "dashboard": {
+        "customLogout"         : "logout",
+        "customHostedEndpoint" : "info"
+    }
+}

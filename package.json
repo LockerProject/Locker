@@ -58,6 +58,8 @@
         "imagemagick": "https://github.com/lpatters/node-imagemagick/tarball/master",
         "moment": "=1.3.0",
         "mkdirp": "0.3.0",
+        "zombie": ">=0.12.15",
+        "temp": ">=0.4.0",
 
 
         "hashish": "=0.0.4",

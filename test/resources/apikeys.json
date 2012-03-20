@@ -1,0 +1,26 @@
+{
+    "twitter":{
+        "consumerKey":"daKey",
+        "consumerSecret":"daPassword"
+    },
+    "testSynclet":{
+        "consumerKey":"daKey",
+        "consumerSecret":"daPassword"
+    },
+    "foursquare" : {
+        "appKey" : "4sq-appkey",
+        "appSecret" : "4sq-appsecret"
+    },
+    "github" : {
+        "appKey" : "gh-appkey",
+        "appSecret" : "gh-appsecret"
+    },
+    "facebook" : {
+        "appKey" : "fb-appkey",
+        "appSecret" : "fb-appsecret"
+    },
+    "gcontacts" : {
+        "appKey" : "gc-appkey",
+        "appSecret" : "gc-appsecret"
+    }
+}
