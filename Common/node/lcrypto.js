@@ -14,6 +14,7 @@ var lconfig = require('lconfig');
 var logger = require('logger');
 
 var idKey,idKeyPub,symKey;
+var openssl;
 
 exports.generateSymKey = function(cb) {
     path.exists(lconfig.me + "/symKey", function(exists) {
@@ -21,7 +22,7 @@ exports.generateSymKey = function(cb) {
             symKey = fs.readFileSync(lconfig.me + "/symKey", "utf8");
             cb(true);
         } else {
-            var openssl = spawn("openssl", ["rand", "-out", lconfig.me + "/symKey", "24"]);
+            openssl = spawn("openssl", ["rand", "-out", lconfig.me + "/symKey", "24"]);
             openssl.on("exit", function(code) {
                 var ret = true;
                 if (code !== 0) {
