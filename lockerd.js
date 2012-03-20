@@ -37,14 +37,27 @@ require('graceful-fs');
 
 // This lconfig stuff has to come before any other locker modules are loaded!!
 var lconfig = require('lconfig');
-lconfig.load((process.argv[2] == '--config'? process.argv[3] : 'Config/config.json'));
+var configDir = process.env.LOCKER_CONFIG || 'Config';
+if (!lconfig.loaded) {
+    var configFile;
+    if (process.argv[2] === '--config') {
+        configFile = process.argv[3];
+    }
+    else {
+        configFile = path.join(configDir, 'Config');
+    }
+    lconfig.load(configFile);
+}
+else {
+    console.warn("Locker config already loaded, me is set to", lconfig.me);
+}
 
-if(!path.existsSync(path.join(lconfig.lockerDir, 'Config', 'apikeys.json'))) {
+if (!path.existsSync(path.join(configDir, 'apikeys.json'))) {
     console.error('You must have an apikeys.json file in the Config directory. See the Config/apikeys.json.example file');
     process.exit(1);
 }
 
-fs.writeFileSync(__dirname + '/Logs/locker.pid', "" + process.pid);
+fs.writeFileSync(path.join(lconfig.lockerdir, 'Logs', 'locker.pid'), "" + process.pid);
 
 var logger = require("logger");
 logger.info('process id:' + process.pid);
@@ -60,11 +73,11 @@ var lmongo = require('lmongo');
 var buildInfo = fs.readFileSync(path.join(lconfig.lockerDir, 'build.json'));
 logger.info("Starting locker with build info:" + buildInfo);
 
-if(process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
+if (process.argv.indexOf("offline") >= 0) syncManager.setExecuteable(false);
 
-if(lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
-    logger.warn('if I\'m running on a public IP I needs to have password protection,' + // uniquely self (de?)referential? lolz!
-                'which if so inclined can be hacked into lockerd.js and added since' +
+if (lconfig.lockerHost != "localhost" && lconfig.lockerHost != "127.0.0.1") {
+    logger.warn('If I\'m running on a public IP, I need to have password protection,' + // uniquely self (de?)referential? lolz!
+                'which if so inclined can be hacked into lockerd.js and added, since' +
                 ' it\'s apparently still not implemented :)\n\n');
 }
 var shuttingDown_ = false;
@@ -74,12 +87,12 @@ path.exists(lconfig.me + '/' + lconfig.mongo.dataDir, function(exists) {
     if(!exists) {
         try {
             //ensure there is a Me dir
-            fs.mkdirSync(lconfig.me, 0755);
+            fs.mkdirSync(lconfig.me, '0755');
         } catch(err) {
             if(err.code !== 'EEXIST')
                 logger.error('err: ' + util.inspect(err));
         }
-        fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, 0755);
+        fs.mkdirSync(lconfig.me + '/' + lconfig.mongo.dataDir, '0755');
     }
     var mongoOptions = ['--dbpath',
       lconfig.lockerDir + '/' + lconfig.me + '/' + lconfig.mongo.dataDir,
