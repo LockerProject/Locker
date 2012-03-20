@@ -39,7 +39,11 @@ $(function () {
     });
   });
 
-  $('body').delegate('.oauthLink','click', Locker.connectService);
+  $('.synclets-list').delegate('.oauthLink','click', function(evt) {
+    // Google custom event for tracking when new services are created
+    window.parent._gaq.push(['_trackEvent', 'Locker', 'Add Service', $(evt.currentTarget).data('provider')]);
+    Locker.connectService(evt);
+  });
 
   $('body').delegate('input[name=optout]', 'click', function (e) {
     $('#settings_analytics').addClass('hidden');
