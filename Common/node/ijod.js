@@ -65,6 +65,7 @@ exports.IJOD = IJOD;
 IJOD.prototype.startAddTransaction = function(cbDone) {
   if (this.transactionItems) return cbDone();
   this.transactionItems = [];
+  console.log("****************************** BEGIN TRANSACTION in normal");
   this.db.execute("BEGIN TRANSACTION", function(error, rows) { cbDone(); });
 };
 
@@ -89,6 +90,7 @@ IJOD.prototype.commitAddTransaction = function(cbDone) {
       } else if (written != totalSize) {
         console.error("Only %d written of %d bytes to IJOD", written, totalSize);
       }
+      console.log("****************************** COMMIT TRANSACTION in normal");
       self.db.execute("COMMIT TRANSACTION", function(error, rows) { cbDone(); });
     });
   });
@@ -241,6 +243,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
   }
 
   var script = ["CREATE TEMP TABLE IF NOT EXISTS batchSmartAdd (id TEXT)", "DELETE FROM batchSmartAdd", "BEGIN TRANSACTION"].join(";") + ";";
+  console.log("****************************** BEGIN TRANSACTION in batch");
   self.db.executeScript(script, function(error, rows) {
     if (error) return handleError(error);
     self.db.prepare("INSERT INTO batchSmartAdd VALUES (?)", function(error, stmt) {
@@ -257,6 +260,7 @@ IJOD.prototype.batchSmartAdd = function(entries, callback) {
         });
       }, function(error) {
         if (error) return handleError(error);
+        console.log("****************************** COMMIT TRANSACTION in batch");
         self.db.execute("COMMIT TRANSACTION", function(error, rows) {
           if (error) return handleError(error);
           stmt.finalize(function(error) {
