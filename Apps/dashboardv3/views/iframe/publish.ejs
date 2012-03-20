@@ -8,6 +8,10 @@ var hasError = false;
     <%- partial('header_partial') %>
     <script type='text/javascript'>
       $(function() {
+
+        // trigger a analytics event when the page loads
+        window.parent._gaq.push(['_trackEvent', 'Locker', 'View Publish Page', '<%= app.name %>']);
+
         $("#publishedInfo .action-button").click(function() {
             window.parent.location.hash = "";
         });
@@ -27,6 +31,9 @@ var hasError = false;
             $("#publishedInfo").show();
             $("#publishOverlay").width($("body").width()).height($("body").height()).show();
             $("body").scrollTop(0);
+
+            // trigger an analytics event when attempting to publish
+            window.parent._gaq.push(['_trackEvent', 'Locker', 'Publish App', '<%= app.name %>']);
             $.getJSON("publish/<%= app.name %>", function(info) {
 console.log(info);
                 $("#publishedInfo .action-button").show();

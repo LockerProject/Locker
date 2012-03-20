@@ -7,6 +7,10 @@ $(function() {
   $("#testButton").click(function(e) {
     var path = curAPI.path;
     console.log("Start path " + path);
+
+    // log the event to google analytics
+    window.parent._gaq.push(['_trackEvent', 'Locker', 'Run API Explorer', curAPI.path]);
+
     var queryParams = "";
     if (curAPI.operations[0].parameters) {
       $.each(curAPI.operations[0].parameters, function(key, val) {
@@ -52,7 +56,7 @@ $(function() {
       $(".prettyprint").show();
       $("#testResultImage").hide();
       $.getJSON(path, function(testData) {
-        console.log("Full length is " + testData.length)
+        console.log("Full length is " + testData.length);
         var hasMore = false;
         if (testData.length && testData.length > 20) {
 
@@ -185,7 +189,7 @@ $(function() {
     });
     $.each(data.apis, function(key, value) {
       var path = data.apis[key].path;
-      $("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"))
+      $("<option>", {value:path}).text(path).data(value).appendTo($("#curMethod"));
     });
     $.each(data.models, function(key, value) {
       models[value.name] = value;
@@ -194,6 +198,7 @@ $(function() {
   });
 });
 
+window.parent._gaq.push(['_trackEvent', 'Locker', 'View API Explorer']);
 
 $.ajaxSetup({
     xhrFields: {

@@ -8,4 +8,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script src="js/jquery.cookie.js"></script>
 <script src='common/js/jquery.history.js'></script>
+
+<% if (dashboard && dashboard.customHostedEndpoint) { %>
+  <script src="js/hosted.js"></script>
+<% } %>
+
 <script src="js/locker.js"></script>
