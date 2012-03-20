@@ -15,8 +15,8 @@ var request = require("request");
 var lconfig = require('lconfig');
 var path = require('path');
 
-SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
-SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
+var SCHEDULE_ACTION_DIRECT = 0; // Live direct callbacks, not savable
+var SCHEDULE_ACTION_URI = 1; // Indirect service URIs, savable
 
 exports.Scheduler = function() {
     this.scheduledActions = [];
@@ -30,7 +30,7 @@ exports.Scheduler.prototype.loadAndStart = function() {
             self.scheduleURL(new Date(action.at), action.serviceId, action.url);
         });
     });
-}
+};
 
 exports.Scheduler.prototype.savePending = function() {
     var data = "";
@@ -40,7 +40,7 @@ exports.Scheduler.prototype.savePending = function() {
         }
     }
     fs.writeFileSync(this.filename, data);
-}
+};
 
 exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackURL) {
     if(callbackURL.substr(0,1) != "/") callbackURL = "/"+callbackURL; // be flexible in what you take
@@ -52,7 +52,7 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
     };
     this.scheduledActions.push(trackingInfo);
     if (typeof(atTime) == "number") {
-        runTime = new Date;
+        runTime = new Date();
         runTime.setTime(runTime.getTime() + atTime);
         atTime = runTime;
     }
@@ -78,11 +78,11 @@ exports.Scheduler.prototype.scheduleURL = function(atTime, serviceID, callbackUR
             }
         }
     }, milliseconds);
-}
+};
 
 exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
     if (typeof(atTime) == "number") {
-        runTime = new Date;
+        runTime = new Date();
         runTime.setTime(runTime.getTime() + atTime);
         atTime = runTime;
     }
@@ -93,13 +93,13 @@ exports.Scheduler.prototype.scheduleInternal = function(atTime, callback) {
     };
     var self = this;
     this.scheduledActions.push(trackingInfo);
-    var now = new Date;
+    var now = new Date();
     setTimeout(function() {
         self.scheduledActions.splice(self.scheduledActions.indexOf(trackingInfo));
         self.savePending();
         trackingInfo.cb();
     }, trackingInfo.at.getTime() - now.getTime());
-}
+};
 
 /**
 * Register a callback for a given time
@@ -123,7 +123,7 @@ exports.Scheduler.prototype.at = function() {
         console.error("Invalid scheduler call.");
     }
     this.savePending();
-}
+};
 
-exports.masterScheduler = new exports.Scheduler;
+exports.masterScheduler = new exports.Scheduler();
 
