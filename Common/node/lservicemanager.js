@@ -276,21 +276,20 @@ exports.spawn = function(serviceId, callback) {
         svc.starting = [callback];
     }
 
-    run = svc.run.split(" "); // node foo.js
+    var run = svc.run.split(" "); // node foo.js
 
     svc.port = ++lockerPortNext;
     logger.info('spawning into: ' + path.join(lconfig.lockerDir, lconfig.me, svc.id));
     var processInformation = getProcessInformation(svc);
 
-    var env = process.env;
-    env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
-    env["PATH"] += ":" + processInformation.sourceDirectory;
+    process.env.NODE_PATH = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
+    process.env.PATH += ":" + processInformation.sourceDirectory;
 
     var tstart = Date.now();
     var command = run[0];
     var args = run.slice(1);
     logger.verbose("Spawning command '" + command + "'' with args " + JSON.stringify(args) + ", cwd " + processInformation.sourceDirectory + " and processInfo " + JSON.stringify(processInformation));
-    var app = spawn(command, args, {cwd: processInformation.sourceDirectory, env:process.env});
+    var app = spawn(command, args, {cwd : processInformation.sourceDirectory, env : process.env});
     stats.increment('service.' + serviceId + '.start');
     stats.increment('service.' + serviceId + '.running');
 

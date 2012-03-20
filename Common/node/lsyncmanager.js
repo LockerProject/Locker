@@ -176,8 +176,8 @@ exports.scheduleRun = function(info, synclet) {
     // if not scheduled yet, schedule it to run in the future
     if(!synclet.nextRun)
     {
-        var milliFreq = parseInt(synclet.frequency) * 1000;
-        synclet.nextRun = parseInt(Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq)); // 50% fuzz added or subtracted
+        var milliFreq = parseInt(synclet.frequency, 10) * 1000;
+        synclet.nextRun = Date.now() + milliFreq + (((Math.random() - 0.5) * 0.5) * milliFreq); // 50% fuzz added or subtracted
     }
     var timeout = synclet.nextRun - Date.now();
     logger.verbose("scheduling "+key+" (freq "+synclet.frequency+") to run in "+(timeout/1000)+"s");
@@ -296,21 +296,20 @@ function executeSynclet(info, synclet, callback, force) {
       return;
     }
     var run;
-    var env = process.env;
     if (!synclet.run) {
-        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
+        process.env.NODE_PATH = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", lconfig.lockerDir + "/Common/node/synclet/client.js"];
     } else if (synclet.run.substr(-3) == ".py") {
-        env["PYTHONPATH"] = path.join(lconfig.lockerDir, 'Common', 'python');
+        process.env.PYTHONPATH = path.join(lconfig.lockerDir, 'Common', 'python');
         run = ["python", lconfig.lockerDir + "/Common/python/synclet/client.py"];
     } else {
-        env["NODE_PATH"] = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
+        process.env.NODE_PATH = path.join(lconfig.lockerDir, 'Common', 'node') + ":" + path.join(lconfig.lockerDir, "node_modules");
         run = ["node", path.join(lconfig.lockerDir, info.srcdir, synclet.run)];
     }
 
     var dataResponse = '';
     var cwd = (info.srcdir.charAt(0) == '/') ? info.srcdir : path.join(lconfig.lockerDir, info.srcdir);
-    var app = spawn(run.shift(), run, {cwd: cwd, env:env});
+    var app = spawn(run.shift(), run, {cwd : cwd, env : process.env});
 
     // edge case backup, max 30 min runtime by default
     var timer = setTimeout(function(){
@@ -379,8 +378,8 @@ function compareIDs (originalConfig, newConfig) {
             var seenIDs = {};
             resp[i] = [];
             for (var j = 0; j < newSet.length; j++) seenIDs[newSet[j]] = true;
-            for (var j = 0; j < oldSet.length; j++) {
-                if (!seenIDs[oldSet[j]]) resp[i].push(oldSet[j]);
+            for (var k = 0; k < oldSet.length; k++) {
+                if (!seenIDs[oldSet[k]]) resp[i].push(oldSet[k]);
             }
         }
     }
@@ -399,8 +398,8 @@ function processResponse(deleteIDs, info, synclet, response, callback) {
             if(!Array.isArray(response.data[i])) continue;
             dataKeys.push(i);
         }
-        for (var i in deleteIDs) {
-            if (!dataKeys[i]) dataKeys.push(i);
+        for (var j in deleteIDs) {
+            if (!dataKeys[j]) dataKeys.push(j);
         }
         synclet.deleted = synclet.added = synclet.updated = 0;
         async.forEach(dataKeys, function(key, cb) { processData(deleteIDs[key], info, synclet, key, response.data[key], cb); }, function(err){
