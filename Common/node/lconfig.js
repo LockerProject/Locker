@@ -12,6 +12,8 @@ var fs = require('fs');
 var path = require('path');
 
 exports.load = function(filepath) {
+    if (exports.loaded) return;
+
     var config = {};
     if (path.existsSync(filepath))
         config = JSON.parse(fs.readFileSync(filepath));
@@ -126,6 +128,7 @@ exports.load = function(filepath) {
             exports.keys.push(fs.readFileSync(path.join(kdir, key)).toString());
         });
     }
+    exports.loaded = true;
 };
 
 function setBase() {
