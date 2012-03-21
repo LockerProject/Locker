@@ -1,0 +1,5 @@
+{
+  "synclets": [
+    { "name": "sleep", "frequency": 86400, "threshold": 0 }
+  ]
+}
