@@ -1,7 +1,7 @@
 var should = require('should')
-, lutil = require("../../Common/node/lutil.js")
-, path = require('path')
-, fakeweb = require('node-fakeweb');
+  , lutil = require("../../Common/node/lutil.js")
+  , path = require('path')
+  , fakeweb = require('node-fakeweb');
 
 describe("lutil", function () {
   describe("fetchAndResizeImageURL", function () {
