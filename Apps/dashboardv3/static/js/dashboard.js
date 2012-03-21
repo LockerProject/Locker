@@ -6,6 +6,7 @@ var specialApps = {
 };
 var defaultSubSections = {};
 var loggedIn = true;
+var _gaq = _gaq || [];
 
 $(document).ready(function() {
     $.history.init(function(hash){
@@ -22,9 +23,16 @@ $(document).ready(function() {
         return false;
     });
 
-    $('body').delegate('.oauthLink','click', Locker.connectService);
+    $('.unconnected-services').delegate('.oauthLink','click', function(evt) {
+      // Google custom event for tracking when new services are created
+      window.parent._gaq.push(['_trackEvent', 'Locker', 'Add Service', $(evt.currentTarget).data('provider')]);
+      Locker.connectService(evt);
+    });
+
     $('body').delegate('.sync-button', 'click', function(evt) {
       evt.preventDefault();
+      // Google custom event for syncing github
+      _gaq.push(['_trackEvent', 'Locker', 'Sync Github']);
       var button = $(this);
       var provider = button.data('provider');
       if (button.hasClass('disabled')) return;

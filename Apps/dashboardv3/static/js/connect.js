@@ -1,7 +1,14 @@
 $(function() {
   setUpWelcome();
   initLearnMore();
-  $('body').delegate('.oauthLink','click', Locker.connectService);
+
+  $('body').delegate('.oauthLink','click', function(evt) {
+    // Google custom event for tracking when new services are created
+    var provider = $(evt.currentTarget).data('provider');
+    window.parent._gaq.push(['_trackEvent', 'Locker', 'Add Service', provider]);
+    Locker.connectService(evt);
+  });
+
   $('#start-exploring-link').click(function(e) {
     e.preventDefault();
     parent.window.location.replace('/');
