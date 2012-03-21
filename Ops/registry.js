@@ -91,6 +91,7 @@ exports.app = function (app) {
 
     app.get('/auth/:id', authIsAwesome);
     app.get('/auth/:id/auth', authIsAuth);
+    app.post('/auth/:id/auth', express.bodyParser(), authIsAuth);
 
     app.get('/deauth/:id', deauthIsAwesomer);
 };
