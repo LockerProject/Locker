@@ -1,0 +1,8 @@
+{
+  "mongoId": {
+    "history": "id"
+  },
+  "synclets": [
+    { "name": "history", "frequency": 86400, "threshold": 0 }
+  ]
+}

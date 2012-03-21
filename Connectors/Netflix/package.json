@@ -1,0 +1,21 @@
+{
+  "author": "Beau Gunderson <beau@beaugunderson.com>",
+  "name": "netflix",
+  "description": "Netflix",
+  "version": "0.2.3",
+  "repository": {
+    "title": "Netflix",
+    "handle": "netflix",
+    "author": "Beau Gunderson <beau@beaugunderson.com>",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
