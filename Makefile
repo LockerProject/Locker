@@ -61,14 +61,20 @@ test: oldtest newtest
 MOCHA = ./node_modules/.bin/mocha
 MOCHA_TESTS = $(shell find test -name "*.test.js")
 newtest: build
-	@env INTEGRAL_CONFIG=test/config.json \
-	$(MOCHA) --growl --timeout 500 $(MOCHA_TESTS)
+	@env INTEGRAL_CONFIG=test/config.json NODE_PATH="$(PWD)/Common/node" \
+	$(MOCHA) $(MOCHA_TESTS)
 
 # old style vows tests
 oldtest: build
 	cd tests && \
 	env NODE_PATH="$(PWD)/Common/node" \
 	node ./runTests.js
+
+# phantom tests
+PHANTOM_TESTS = $(shell find test -name "*.phantom.js")
+phantomtest: build
+	@env NODE_PATH="$(PWD)/Common/node" \
+	$(MOCHA) $(PHANTOM_TESTS)
 
 SUBDIR=locker-$(BUILD_NUMBER)
 DISTFILE=$(SUBDIR).tar.gz

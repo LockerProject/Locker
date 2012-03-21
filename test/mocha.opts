@@ -1,0 +1,4 @@
+--growl
+--timeout 10000
+--no-colors
+--reporter spec
