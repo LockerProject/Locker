@@ -1,0 +1,10 @@
+{
+  "mongoId": {
+    "scale": "grpid",
+    "pressure": "grpid"
+  },
+  "synclets": [
+    { "name": "scale", "frequency": 43200, "threshold": 0 },
+    { "name": "pressure", "frequency": 43200, "threshold": 0 }
+  ]
+}
