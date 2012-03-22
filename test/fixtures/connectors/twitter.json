@@ -1,0 +1,13 @@
+{
+    "title": "Twitter Account",
+    "action": "Connect to a Twitter account",
+    "desc": "Collect and sync my data from my Twitter account using the Twitter API and a Twitter 'app' that I create just for myself.",
+    "run": "node twitter.js",
+    "srcdir": "Connectors/Twitter",
+    "id": "twitter-1",
+    "provider":"twitter",
+    "synclets":[{"name": "friends", "frequency": 360000},{"name": "timeline", "frequency": 360000},{"name": "tweets", "frequency": 360000},{"name": "mentions", "frequency": 360000}],
+    "auth":{"consumerKey":"key","consumerSecret":"secret","token":{"oauth_token":"token","oauth_token_secret":"toksec"}},
+    "type": "connector",
+    "authed": 1332363644656
+}

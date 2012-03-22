@@ -1,6 +1,8 @@
 var path   = require('path')
   , temp   = require('temp')
   , wrench = require('wrench')
+  , fs     = require('fs')
+  , util   = require('util')
   ;
 
 var lconfig
@@ -20,6 +22,7 @@ exports.configurate = function () {
                                        suffix : '.test'});
 
     lconfig = require(path.join(__dirname, '..', '..', 'Common', 'node', 'lconfig.js'));
+    lconfig.load(path.join(process.env.LOCKER_CONFIG, 'config.json'));
   }
 
   return lconfig;
@@ -27,8 +30,10 @@ exports.configurate = function () {
 
 function waitOnLocker(done) {
   if (locker && locker.alive) {
+    console.error('locker started!');
     return done();
   } else {
+    console.error('locker waiting...');
     setTimeout(function () { waitOnLocker(done); }, 250);
   }
 }
@@ -37,7 +42,6 @@ exports.lockerificate = function (done) {
   exports.configurate();
   if (!locker) {
     try {
-      console.error('process.env.NODE_PATH is', process.env.NODE_PATH);
       console.error("loading locker!");
       locker = require(path.join(__dirname, '..', '..', 'lockerd.js'));
       console.error("locker loaded!");
@@ -60,6 +64,68 @@ exports.delockerificate = function (done) {
   else {
     return done();
   }
+};
+
+// Node is a funny ol' thing
+function cp(source, destination, callback) {
+  return util.pump(fs.createReadStream(source), fs.createWriteStream(destination), callback);
+}
+
+exports.copyToMe = function (me, name, done) {
+  var source = path.join(__dirname, '..', 'fixtures', 'connectors', name + '.json');
+  var destdir = path.join(me, name);
+  var destination = path.join(destdir, 'me.json');
+
+  path.exists(destdir, function (exists) {
+    if (!exists) {
+      fs.mkdir(destdir, function (err) {
+        if (err) return done(err);
+
+        return cp(source, destination, done);
+      });
+    }
+    else {
+      return cp(source, destination, done);
+    }
+  });
+};
+
+exports.withMe = function (callback) {
+  var config = exports.configurate();
+  path.exists(config.me, function (exists) {
+    if (!exists) {
+      console.error('making Me directory', config.me);
+      fs.mkdir(config.me, function (err) {
+        if (err) return callback(err);
+
+        return callback(null, config.me);
+      });
+    }
+    else {
+      return callback(null, config.me);
+    }
+  });
+};
+
+exports.fakeout = function (name, done) {
+  console.error('faking configuration for', name);
+  exports.withMe(function (err, me) {
+    if (err) return done(err);
+
+    exports.copyToMe(me, name, done);
+  });
+};
+
+exports.fakeTwitter = function (done) {
+  exports.fakeout('twitter', done);
+};
+
+exports.fakeFacebook = function (done) {
+  exports.fakeout('facebook', done);
+};
+
+exports.fakeGithub = function (done) {
+  exports.fakeout('github', done);
 };
 
 exports.bootstrap = function (done) {
