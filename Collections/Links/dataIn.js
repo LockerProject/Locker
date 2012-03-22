@@ -9,6 +9,9 @@ var url = require('url');
 var debug = false;
 
 var dataStore, locker, logger;
+
+exports.process = false;
+
 // internally we need these for happy fun stuff
 exports.init = function(_locker, dStore, log) {
     dataStore = dStore;
@@ -97,6 +100,7 @@ function processEncounter(e, cb)
 }
 
 var encounterQueue = async.queue(function(e, callback) {
+    if (!exports.process) return callback();
     // immediately dequeue in case processing makes something go wrong
     dataStore.dequeue(e);
     // do all the dirty work to store a new encounter
@@ -123,6 +127,7 @@ var encounterQueue = async.queue(function(e, callback) {
 }, 5);
 
 exports.loadQueue = function() {
+    if (!exports.process) return;
     dataStore.fetchQueue(function(err, docs) {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
