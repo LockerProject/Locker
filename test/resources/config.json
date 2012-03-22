@@ -34,9 +34,5 @@
     "logging": {
         "level": "error",
         "config": true
-    },
-    "dashboard": {
-        "customLogout"         : "logout",
-        "customHostedEndpoint" : "info"
     }
 }
