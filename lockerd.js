@@ -289,30 +289,32 @@ process.on("SIGTERM", function() {
     shutdown(0);
 });
 
-process.on('uncaughtException', function(err) {
+if (!process.env.LOCKER_TEST) {
+  process.on('uncaughtException', function(err) {
     try {
-        logger.error('Uncaught exception:');
-        logger.error(util.inspect(err));
-        if(err && err.stack) logger.error(util.inspect(err.stack));
-        if (lconfig.airbrakeKey) {
-            var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
-            airbrake.notify(err, function(err, url) {
-                if(url) logger.error(url);
-                shutdown(1);
-            });
-        }else{
-            shutdown(1);
-        }
+      logger.error('Uncaught exception:');
+      logger.error(util.inspect(err));
+      if (err && err.stack) logger.error(util.inspect(err.stack));
+      if (lconfig.airbrakeKey) {
+        var airbrake = require('airbrake').createClient(lconfig.airbrakeKey);
+        airbrake.notify(err, function(err, url) {
+          if (url) logger.error(url);
+          shutdown(1);
+        });
+      } else {
+        shutdown(1);
+      }
     } catch (e) {
-        try {
-            console.error("Caught an exception while handling an uncaught exception!");
-            console.error(e);
-        } catch (e) {
-            // we tried...
-        }
-        process.exit(1);
+      try {
+        console.error("Caught an exception while handling an uncaught exception!");
+        console.error(e);
+      } catch (e) {
+        // we tried...
+      }
+      process.exit(1);
     }
-});
+  });
+}
 
 // Export some things so this can be used by other processes, mainly for the test runner
 exports.shutdown = shutdown;

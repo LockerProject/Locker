@@ -16,6 +16,7 @@ exports.configurate = function () {
 
     process.env.NODE_PATH = path.join(__dirname, '..', '..', 'Common', 'node');
 
+    process.env.LOCKER_TEST = "oh yeah";
     process.env.LOCKER_ROOT = path.join(__dirname, '..', '..');
     process.env.LOCKER_CONFIG = path.join(__dirname, '..', 'resources');
     process.env.LOCKER_ME = temp.path({prefix : 'Me.',
