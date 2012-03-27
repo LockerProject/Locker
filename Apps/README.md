@@ -4,7 +4,7 @@
 
 ## How do apps work?
 
-Apps can live inside or outside the Locker. They can be anything from a tiny utility related to a specific type of data, to a full blown platrom within themselves.
+Apps can live inside or outside the Locker. They can be anything from a tiny utility related to a specific type of data, to a full blown platform within themselves.
 
 If you would like to discuss app design and development further, come visit us on irc.freenode.net on #lockerproject.
 
