@@ -23,6 +23,6 @@ $(document).ready(function() {
   });
 
   $('li').click(function() {
-    window.parent.loadApp($(this).data('id'));
+    window.parent.loadDiv($(this).data('id'));
   });
 });

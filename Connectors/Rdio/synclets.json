@@ -1,13 +1,13 @@
 {
-    "provides" : ["profile/rdio"
+    "provides" : ["self/rdio"
                 , "following/rdio"
                 , "tracks/rdio"
                 , "activity/rdio"]
   , "mongoId" : {"update"  : "date"
                , "contact" : "key"
                , "track"   : "key"
-               , "profile" : "key"}
-  , "profileIds" : ["key", "username"]
+               , "self"    : "key"}
+  , "profileIds" : ["key", "url"]
   , "synclets" : [{"name"      : "self"
                  , "frequency" : 86400
                  , "threshold" : 0}

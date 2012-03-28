@@ -1,11 +1,18 @@
 var commander = require('commander');
 var path = require('path');
+
+// npm likes to reset process.title for some reason
+var savedProcessTitle = process.title;
 var npm = require('npm');
+process.title = savedProcessTitle;
+
 var fs = require('fs');
 var request = require('request');
 
 var username = 'nerds';
 var email = 'nerds@singly.com';
+
+// XXX - please add a comment here explaining the difference
 var regBase = 'http://registry.singly.com';
 var burrowBase = "burrow.singly.com";
 

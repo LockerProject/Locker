@@ -12,7 +12,7 @@ try {
 
 }
 var base = path.dirname(__dirname) + "/"; // parent of Ops and trailing slash
-var full = path.join(process.cwd(),"package.json");
+var full = path.join(process.argv[2] || process.cwd(),"package.json");
 var local = full.replace(base, "");
 console.log("upserting "+local);
 request.post({url:lconfig.lockerBase+'/map/upsert?manifest='+local}, function(err, resp) {

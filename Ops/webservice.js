@@ -18,7 +18,6 @@ var syncManager = require('lsyncmanager');
 var express = require('express');
 var connect = require('connect');
 var request = require('request');
-var sys = require('sys');
 var path = require('path');
 var fs = require("fs");
 var url = require('url');
@@ -34,6 +33,8 @@ var lcrypto = require("lcrypto");
 
 var proxy = new httpProxy.RoutingProxy();
 var scheduler = lscheduler.masterScheduler;
+
+var airbrake;
 
 var locker = express.createServer(
     // we only use bodyParser to create .params for callbacks from services, connect should have a better way to do this
@@ -56,7 +57,7 @@ var locker = express.createServer(
 );
 
 
-var listeners = new Object(); // listeners for events
+var listeners = {}; // listeners for events
 
 var DEFAULT_QUERY_LIMIT = 20;
 
@@ -73,19 +74,20 @@ locker.get('/map', function(req, res) {
 locker.get('/map/profiles', function(req, res) {
     var profiles = {};
     var map = serviceManager.map();
-    Object.keys(map).forEach(function(key){
-        if(!map[key].auth || !map[key].auth.profile) return;
+    for(var key in map) {
+        if(!map[key].auth || !map[key].auth.profile) continue;
         var idr = { slashes: true, pathname: '/', host: key };
         // the type could be named something service-specific, usually 'contact' tho
-        idr.protocol = (map[key].types && map[key].types['contact']) ? map[key].types['contact'] : 'contact';
+        idr.protocol = (map[key].types && map[key].types.contact) ? map[key].types.contact : 'contact';
         // generate idrs from profiles, some services have both numeric and username (or more?)!
         var ids = map[key].profileIds || ['id'];
-        ids.forEach(function(id){
-            if(!map[key].auth.profile[id]) return;
+        for(var i in ids) {
+            var id = ids[i];
+            if(!map[key].auth.profile[id]) continue;
             idr.hash = map[key].auth.profile[id];
             profiles[url.format(idr)] = map[key].auth.profile;
-        });
-    });
+        }
+    }
     res.send(profiles);
 });
 
@@ -133,13 +135,13 @@ locker.get("/query/:query", function(req, res) {
     try {
         var query = lpquery.buildMongoQuery(lpquery.parse(data));
         var providers = serviceManager.map();
-        var provider = undefined;
+        var provider;
         for (var key in providers) {
             if (providers.hasOwnProperty(key) && providers[key].provides && providers[key].provides.indexOf(query.collection) >= 0 )
                 provider = providers[key];
         }
 
-        if (provider == undefined) {
+        if (provider === undefined) {
             res.writeHead(404);
             res.end(query.collection + " not found to query");
             return;
@@ -195,44 +197,54 @@ locker.get('/core/:svcId/at', function(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
-    var at = new Date;
+    var at = new Date();
     at.setTime(seconds * 1000);
     scheduler.at(at, svcId, cb);
     logger.info("scheduled "+ svcId + " " + cb + "  at " + at);
     res.end("true");
 });
 
+var collectionApis = serviceManager.getCollectionApis();
+for(var i in collectionApis) {
+  locker._oldGet = locker.get;
+  locker.get = function(path, callback) {
+    return locker._oldGet('/Me/' + i + path, callback);
+  };
+  collectionApis[i].api(locker, collectionApis[i].lockerInfo);
+  locker.get = locker._oldGet;
+  locker._oldGet = undefined;
+}
+
 // ME PROXY
 // all of the requests to something installed (proxy them, moar future-safe)
 locker.get(/^\/Me\/([^\/]*)(\/?.*)?\/?/, function(req,res, next){
     // ensure the ending slash - i.e. /Me/foo ==>> /Me/foo/
     if(!req.params[1]) {
-        var url = "/Me/" + req.params[0];
-        if (!req.params[1]) {
-            url += "/"
-        } else {
-            url += req.params[1];
-        }
+        var handle = req.params[0];
+        var service = serviceManager.map(handle);
+        //rebuild the url with a / after the /Me/<handle>
+        var url = "/Me/" + handle + "/";
         var qs = querystring.stringify(req.query);
-        if (qs.length > 0) {
-            url += "?" + qs
+        if (qs.length > 0) url += "?" + qs;
+        if(service && service.type === 'app') {
+            res.header("Location", url);
+            return res.send(302);
         }
-        res.header("Location", url);
-        res.send(302);
-    } else {
-        logger.verbose("GET proxy of " + req.originalUrl);
-        proxyRequest('GET', req, res, next);
+        req.url = url;
     }
+    logger.silly("GET proxy of " + req.originalUrl);
+    proxyRequest('GET', req, res, next);
 });
 
 // all posts just pass
 locker.post('/Me/*', function(req,res, next){
-    logger.verbose("POST proxy of " + req.originalUrl);
+    logger.silly("POST proxy of " + req.originalUrl);
     proxyRequest('POST', req, res, next);
 });
 
 locker.get('/synclets/:id/run', function(req, res) {
-    syncManager.syncNow(req.params.id, req.query.id, false, function() {
+    syncManager.syncNow(req.params.id, req.query.id, false, function(err) {
+        if(err) return res.send(err, 500);
         res.send(true);
     });
 });
@@ -264,28 +276,26 @@ function proxyRequest(method, req, res, next) {
     }
     if (info.static === true || info.static === "true") {
         // This is a static file we'll try and serve it directly
-        logger.verbose("Checking " + req.url);
         var fileUrl = url.parse(ppath);
-        if(fileUrl.pathname.indexOf("..") >= 0)
-        { // extra sanity check
+        if(fileUrl.pathname.indexOf("/..") >= 0) { // extra sanity check
             return res.send(404);
         }
 
-        fs.stat(path.join(info.srcdir, "static", fileUrl.pathname), function(err, stats) {
+        fs.stat(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname), function(err, stats) {
             if (!err && (stats.isFile() || stats.isDirectory())) {
-                res.sendfile(path.join(info.srcdir, "static", fileUrl.pathname));
+                res.sendfile(path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
             } else {
-                fs.stat(path.join(info.srcdir, fileUrl.pathname), function(err, stats) {
+                fs.stat(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname), function(err, stats) {
                     if (!err && (stats.isFile() || stats.isDirectory())) {
-                        res.sendfile(path.join(info.srcdir, fileUrl.pathname));
+                        res.sendfile(path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                     } else {
-                        logger.warn("Could not find " + path.join(info.srcdir, fileUrl.pathname))
+                        logger.warn("Could not find " + path.join(lconfig.lockerDir, info.srcdir, fileUrl.pathname));
                         res.send(404);
                     }
                 });
             }
         });
-        logger.verbose("Sent static file " + path.join(info.srcdir, "static", fileUrl.pathname));
+        logger.silly("Sent static file " + path.join(lconfig.lockerDir, info.srcdir, "static", fileUrl.pathname));
     } else {
         if (!serviceManager.isRunning(id)) {
             logger.info("Having to spawn " + id);
@@ -297,8 +307,8 @@ function proxyRequest(method, req, res, next) {
             proxied(method, info, ppath, req, res);
         }
     }
-    logger.verbose("Proxy complete");
-};
+    logger.silly("Proxy complete");
+}
 
 // DIARY
 // Publish a user visible message
@@ -307,27 +317,27 @@ locker.get("/core/:svcId/diary", function(req, res) {
     var message = req.param("message");
     var svcId = req.params.svcId;
 
-    var now = new Date;
+    var now = new Date();
     try {
-        fs.mkdirSync(lconfig.me + "/diary", 0700, function(err) {
+        fs.mkdirSync(lconfig.me + "/diary", '0700', function(err) {
             if (err && err.errno != process.EEXIST) logger.error("Error creating diary: " + err);
         });
     } catch (E) {
         // Why do I still have to catch when it has an error callback?!
     }
-    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), 0700, function(err) {
-        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), 0700, function(err) {
+    fs.mkdir(lconfig.me + "/diary/" + now.getFullYear(), '0700', function(err) {
+        fs.mkdir(lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth(), '0700', function(err) {
             var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
             lfs.appendObjectsToFile(fullPath, [{"timestamp":now, "level":level, "message":message, "service":svcId}]);
             res.writeHead(200);
             res.end("{}");
-        })
+        });
     });
 });
 
 // Retrieve the current days diary or the given range
 locker.get("/diary", function(req, res) {
-    var now = new Date;
+    var now = new Date();
     var fullPath = lconfig.me + "/diary/" + now.getFullYear() + "/" + now.getMonth() + "/" + now.getDate() + ".json";
     res.writeHead(200, {
         "Content-Type": "text/javascript",
@@ -340,17 +350,21 @@ locker.get("/diary", function(req, res) {
             return;
         }
         var rawLines   = file.toString().trim().split("\n");
-        var diaryLines = rawLines.map(function(line) { return JSON.parse(line) });
+        var diaryLines = rawLines.map(function(line) { return JSON.parse(line); });
         res.write(JSON.stringify(diaryLines), "binary");
         res.end();
     });
-    res.write
+});
+
+locker.get('/core/error', function(req, res) {
+    throw new Error("Hmm...This is a REAL job for STUPENDOUS MAN!");
 });
 
 locker.get('/core/revision', function(req, res) {
-    fs.readFile(path.join(lconfig.lockerDir, lconfig.me, 'gitrev.json'), function(err, doc) {
+    fs.readFile(path.join(lconfig.lockerDir, 'build.json'), function(err, doc) {
+        if (err) return logger.error(err);
         if (doc) res.send(JSON.parse(doc));
-        else res.send("git cmd not available!");
+        else res.send("unknown");
     });
 });
 
@@ -364,7 +378,7 @@ locker.get('/core/selftest', function(req, res) {
                     callback(null, { 'Me/*' : files });
                 }
             });
-        },
+        }
     ],
     function(err, results) {
         if (err) {
@@ -373,6 +387,37 @@ locker.get('/core/selftest', function(req, res) {
             res.send(JSON.stringify(results), 200);
         }
     });
+});
+
+locker.get('/core/stats', function(req, res) {
+    var stats = {
+        'core' : {
+            'memoryUsage' : process.memoryUsage()
+        },
+        'serviceManager': {}
+    };
+
+    var map = serviceManager.map();
+    for (var serviceId in map) {
+        var type = map[serviceId].type;
+
+        if (!(type in stats.serviceManager)) {
+            stats.serviceManager[type] = {
+                'total' : 0,
+                'running' : 0
+            };
+        }
+
+        stats.serviceManager[type].total += 1;
+        if (serviceManager.isRunning(serviceId))
+            stats.serviceManager[type].running += 1;
+    }
+
+    // serviceManager never reports that a connector is running
+    if ('connector' in stats.serviceManager)
+        delete stats.serviceManager.connector.running;
+
+    res.send(JSON.stringify(stats), 200);
 });
 
 // EVENTING
@@ -392,7 +437,9 @@ locker.get('/core/:svcId/listen', function(req, res) {
         return;
     }
     if(cb.substr(0,1) != "/") cb = '/'+cb; // ensure it's a root path
-    levents.addListener(type, svcId, cb);
+    var batching = false;
+    if (req.param("batch") === "true" || req.param === true) batching = true;
+    levents.addListener(type, svcId, cb, batching);
     res.writeHead(200);
     res.end("OKTHXBI");
 });
@@ -473,6 +520,16 @@ locker.get('/', function(req, res) {
     res.redirect(lconfig.externalBase + '/dashboard/');
 });
 
+locker.error(function(err, req, res, next){
+    if(err.stack) logger.error(err.stack);
+    if (airbrake) {
+        airbrake.notify(err, function(err, url) {
+            if (url) logger.error(url);
+        });
+    }
+    res.send("Something went wrong.", 500);
+});
+
 require('./webservice-push')(locker);
 
 
@@ -488,8 +545,12 @@ function proxied(method, svc, ppath, req, res, buffer) {
     });
 }
 
+locker.initAirbrake = function(key) {
+    airbrake = require('airbrake').createClient(key);
+};
+
 exports.startService = function(port, ip, cb) {
     locker.listen(port, ip, function(){
         cb(locker);
     });
-}
+};

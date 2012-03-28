@@ -28,9 +28,8 @@ When that successfully completes, add lockerbox/local/bin to your path:
 Then:
     
     cd lockerbox/Locker
-    #check to make sure everything worked
-    ./checkEnv.sh
-    node lockerd.js
+    make
+    ./locker
 
 now open [http://localhost:8042/](http://localhost:8042/) in your browser!
 

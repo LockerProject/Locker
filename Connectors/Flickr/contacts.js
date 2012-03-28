@@ -7,13 +7,18 @@
 *
 */
 
-var paging = require('./lib/paging');
+var path = require("path");
 
 var PER_PAGE = 1000;
 exports.sync = function(processInfo, callback) {
-    paging.getPage(processInfo, 'flickr.contacts.getList', 'contact', PER_PAGE, {}, function(config, contactsArray) {
-        for(var i in contactsArray)
-            contactsArray[i] = {obj:contactsArray[i], timestamp:config.lastUpdate, type:'new'};
-        callback(null, {config: config, data: {contact:contactsArray}});
-    });
+  var paging = require(path.join(processInfo.absoluteSrcdir, 'lib', 'paging.js'));
+  paging.getPage(processInfo, 'flickr.contacts.getList', 'contact', PER_PAGE, {}, function(err, config, contactsArray) {
+    if (err) {
+      return callback(err);
+    }
+    for(var i in contactsArray) {
+      contactsArray[i] = {obj:contactsArray[i], timestamp:config.lastUpdate, type:'new'};
+    }
+    callback(null, {config: config, data: {contact:contactsArray}});
+  });
 }

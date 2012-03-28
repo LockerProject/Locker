@@ -129,12 +129,18 @@ tests.next()
     .discuss("returns a revision if git is available")
         .get()
             .expect(200)
-            .expect("didn't get a git cmd not available response", function(err, res, body) {
-                assert.notEqual(body, "git cmd not available!");
+            .expect("didn't get an 'unknown' response", function(err, res, body) {
+                assert.notEqual(body, "unknown");
             })
         .unpath()
     .undiscuss().unpath()
 tests.next()
+tests.next()
+    .path("/core/stats")
+    .discuss("return statistics")
+        .get()
+            .expect(200)
+    .undiscuss().unpath()
 
     // Event basics
     .path("/core/testURLCallback/listen?" + querystring.stringify({type:"test/event2", cb:"/event"}))

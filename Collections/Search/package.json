@@ -16,20 +16,9 @@
     ],
     "events": [
       [
-        "contact/contacts",
-        "/events"
-      ],
-      [
-        "photo/photos",
-        "/events"
-      ],
-      [
-        "link/links",
-        "/events"
-      ],
-      [
-        "place/places",
-        "/events"
+        "null/contacts",
+        "/events",
+        true
       ]
     ],
     "url": ""

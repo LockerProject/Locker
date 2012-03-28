@@ -10,47 +10,60 @@ var logger;
 var fs = require('fs');
 var lutil = require('lutil');
 var lmongoutil = require("lmongoutil");
+var CollectionDataStore = require('collectionDataStore');
 
 // in the future we'll probably need a visitCollection too
 var linkCollection, encounterCollection, queueCollection, db;
+var linkCDS = new CollectionDataStore();
+var encounterCDS = new CollectionDataStore();
+var queueCDS = new CollectionDataStore();
 
-exports.init = function(lCollection, eCollection, qCollection, mongo, logger) {
+exports.init = function(mongo, locker) {
     db = mongo.dbClient;
-    linkCollection = lCollection;
+    logger = require("logger");
+
+    linkCDS.init(mongo, 'link', locker);
+    encounterCDS.init(mongo, 'encounter', locker);
+    queueCDS.init(mongo, 'queue', locker);
+
+    linkCollection = mongo.collections.link;
+    encounterCollection = mongo.collections.encounter;
+    queueCollection = mongo.collections.queue;
+
     linkCollection.ensureIndex({"link":1},{unique:true},function() {});
     linkCollection.ensureIndex({"id":1},{unique:true},function() {});
-    encounterCollection = eCollection;
+
     encounterCollection.ensureIndex({"link":1},{background:true},function() {});
     encounterCollection.ensureIndex({"orig":1},{background:true},function() {});
     encounterCollection.ensureIndex({"_hash":1},{background:true},function() {});
-    queueCollection = qCollection;
+
+    queueCollection.ensureIndex({"idr":1},{unique:true,background:true},function() {});
 }
 
 exports.clear = function(callback) {
-    linkCollection.drop(function() {
-        encounterCollection.drop(function() {
-            queueCollection.drop(callback);
-        });
+  linkCDS.clear(function() {
+    encounterCDS.clear(function() {
+      queueCDS.clear(callback);
     });
+  });
 }
 
-exports.getTotalLinks = function(callback) {
-    linkCollection.count(callback);
-}
-exports.getTotalEncounters = function(callback) {
-    encounterCollection.count(callback);
-}
+exports.getTotalCount = linkCDS.getTotalCount;
+exports.getTotalEncounters = encounterCDS.getTotalCount;
+exports.getSince = linkCDS.getSince;
+exports.getLastObjectID = linkCDS.getLastObjectID;
+exports.get = linkCDS.get;
 
 exports.enqueue = function(obj, callback) {
-    queueCollection.findAndModify({"text":obj.text}, [['_id','asc']], {$set:{'obj' : obj, 'at' : Date.now()}}, {safe:true, upsert:true, new: true}, callback);
+  queueCollection.findAndModify({"idr":obj.idr}, [], {$set:obj}, {safe:true, upsert:true, new: true}, callback);
 }
 
 exports.dequeue = function(obj, callback) {
-    queueCollection.remove({"text":obj.text}, callback);
+  queueCollection.remove({"idr":obj.idr}, callback);
 }
 
 exports.fetchQueue = function(callback) {
-    queueCollection.find().sort({at: -1}).toArray(callback);
+  queueCollection.find().sort({at: -1}).toArray(callback);
 }
 
 // handy to check all the original urls we've seen to know if we already have a link expanded/done
@@ -70,14 +83,14 @@ exports.getLinks = function(arg, cbEach, cbDone) {
     if(workaround == false)
     { // this is the strangest thing, temp workaround till https://github.com/christkv/node-mongodb-native/issues/447
         workaround = true;
-        findWrap({},{limit:1},linkCollection,function(){},function(){
+        linkCDS.findWrap({},{limit:1},function(){},function(){
             exports.getLinks(arg, cbEach, cbDone);
         });
         return;
     }
     var f = (arg.link)?{link:arg.link}:{};
     delete arg.id;
-    findWrap(f,arg,linkCollection,cbEach,cbDone);
+    linkCDS.findWrap(f,arg,cbEach,cbDone);
 }
 
 exports.getFullLink = function(id, cbDone) {
@@ -92,71 +105,24 @@ exports.getEncounters = function(arg, cbEach, cbDone) {
     delete arg.id;
     delete arg.network;
     delete arg.link;
-    findWrap(f,arg,encounterCollection,cbEach,cbDone)
+    encounterCDS.findWrap(f,arg,cbEach,cbDone)
 }
 
-exports.getSince = function(objId, cbEach, cbDone) {
-    findWrap({"_id":{"$gt":lmongoutil.ObjectID(objId)}}, {sort:{_id:-1}}, linkCollection, cbEach, cbDone);
-}
-
-exports.getLastObjectID = function(cbDone) {
-    linkCollection.find({}, {fields:{_id:1}, limit:1, sort:{_id:-1}}).nextObject(cbDone);
-}
-
-exports.get = function(id, callback) {
-    var or = []
-    try {
-        or.push({_id:new db.bson_serializer.ObjectID(id)});
-    }catch(E){}
-    or.push({id:id});
-    linkCollection.findOne({$or:or}, callback);
-}
-
-function findWrap(a,b,c,cbEach,cbDone){
-    var cursor = (b.fields) ? c.find(a, b) : c.find(a);
-    if (b.sort) cursor.sort(b.sort);
-    if (b.limit) cursor.limit(b.limit);
-    if (b.offset) cursor.skip(b.offset);
-//    cursor.count(function(err,c){console.error("COUNT "+c)});
-    var total = 0;
-    cursor.each(function(err, item) {
-        if (item != null) {
-            total++;
-            cbEach(item);
-        } else {
-//            cursor.count(function(err,c){console.error("TOTAL "+total+" COUNT "+c)});
-            cbDone();
-        }
-    });
-}
-
-var writeTimer = false;
-function updateState()
-{
-    if (writeTimer) {
-        clearTimeout(writeTimer);
-    }
-    writeTimer = setTimeout(function() {
-        try {
-            lutil.atomicWriteFileSync("state.json", JSON.stringify({updated:Date.now()}));
-        } catch (E) {}
-    }, 5000);
-}
 
 // insert new (fully normalized) link, ignore or replace if it already exists?
 // {link:"http://foo.com/bar", title:"Foo", text:"Foo bar is delicious.", favicon:"http://foo.com/favicon.ico"}
 exports.addLink = function(link, callback) {
 //    logger.verbose("addLink: "+JSON.stringify(link));
-    linkCollection.findAndModify({"link":link.link}, [['_id','asc']], {$set:link}, {safe:true, upsert:true, new: true}, callback);
-    updateState();
+    linkCollection.findAndModify({"link":link.link}, [], {$set:link}, {safe:true, upsert:true, new: true}, callback);
+    linkCDS.updateState();
 }
 
 exports.updateLinkAt = function(link, at, callback) {
-    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"at":at}}, {safe:true, upsert:false, new:true}, callback);
+    linkCollection.findAndModify({"link":link}, [], {$set:{"at":at}}, {safe:true, upsert:false, new:true}, callback);
 }
 
 exports.updateLinkEmbed = function(link, embed, callback) {
-    linkCollection.findAndModify({"link":link}, [['_id', 'asc']], {$set:{"embed":embed}}, {safe:true, upsert:false, new:false}, callback);
+    linkCollection.findAndModify({"link":link}, [], {$set:{"embed":embed}}, {safe:true, upsert:false, new:false}, callback);
 }
 
 // insert new encounter, replace any existing
@@ -167,7 +133,7 @@ exports.addEncounter = function(encounter, callback) {
     var _hash = encounter.network + ":" + encounter.id + ":" + encounter.link;
     encounter["_hash"] = _hash;
     var options = {safe:true, upsert:true, new: true};
-    encounterCollection.findAndModify({"_hash":_hash}, [['_id','asc']], {$set:encounter}, options, function(err, doc) {
+    encounterCollection.findAndModify({"_hash":_hash}, [], {$set:encounter}, options, function(err, doc) {
         if (!doc) return callback(err);
         delete doc["_hash"];
         callback(err, doc);

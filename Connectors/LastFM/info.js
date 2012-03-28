@@ -7,15 +7,15 @@
  *
  */
 
-var path   = require('path')
-  , lastfm = require(path.join(__dirname, 'lib.js'));
+var path   = require('path');
 
 exports.sync = function (processInfo, cb) {
-    var info = [];
+    var info = {};
 
+    var lastfm = require(path.join(processInfo.absoluteSrcdir, 'lib.js'));
     lastfm.getInfo(processInfo
                  , function (me) {
-                       info = [me];
+                       info = me;
                    }
                  , function (err) {
                        if (err) {
@@ -24,7 +24,7 @@ exports.sync = function (processInfo, cb) {
                        }
                        else {
                            processInfo.auth.profile = info;
-                           cb(null, {data : {info : info}, auth: processInfo.auth});
+                           cb(null, {data : {info : [info]}, auth: processInfo.auth});
                        }
                    }
     );

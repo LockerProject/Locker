@@ -1,0 +1,21 @@
+{
+  "author": "Beau Gunderson <beau@beaugunderson.com>",
+  "name": "zeo",
+  "description": "Zeo",
+  "version": "0.1.2",
+  "repository": {
+    "title": "Zeo",
+    "handle": "zeo",
+    "author": "Beau Gunderson <beau@beaugunderson.com>",
+    "update": "auto",
+    "github": "https://github.com/LockerProject/Locker",
+    "type": "connector",
+    "static": "false",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=0.4.9"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

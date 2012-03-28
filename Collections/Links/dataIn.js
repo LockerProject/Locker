@@ -9,18 +9,21 @@ var url = require('url');
 var debug = false;
 
 var dataStore, locker, logger;
+
+exports.process = false;
+
 // internally we need these for happy fun stuff
-exports.init = function(l, dStore, log){
+exports.init = function(_locker, dStore, log) {
     dataStore = dStore;
-    locker = l;
-    logger = log;
+    locker = _locker;
+    logger = require("logger");
 }
 
 // manually walk and reindex all possible link sources
 exports.reIndex = function(locker,cb) {
     dataStore.clear(function(){
         cb(); // synchro delete, async/background reindex
-        locker.providers(['link/facebook', 'timeline/twitter'], function(err, services) {
+        locker.providers(['link/facebook', 'timeline/twitter', 'dashboard/tumblr'], function(err, services) {
             if (!services) return;
             services.forEach(function(svc) {
                 if(svc.provides.indexOf('link/facebook') >= 0) {
@@ -37,6 +40,10 @@ exports.reIndex = function(locker,cb) {
                             logger.info('twitter done!');
                         });
                     });
+                } else if(svc.provides.indexOf('dashboard/tumblr') >= 0) {
+                    getLinks(getEncounterTumblr, locker.lockerBase + '/Me/' + svc.id + '/getCurrent/dashboard', function() {
+                        logger.info('tumblr done!');
+                    });
                 }
             });
         });
@@ -52,11 +59,13 @@ exports.processEvent = function(event, callback)
     var idr = url.parse(event.idr);
     if(idr.host === "facebook")
     {
-        processEncounter(getEncounterFB(event.data),callback);
+        processEncounter(getEncounterFB(event),callback);
     }else if(idr.host === "twitter") {
-        processEncounter(getEncounterTwitter(event.data),callback);
+        processEncounter(getEncounterTwitter(event),callback);
+    }else if(idr.host === "tumblr") {
+        processEncounter(getEncounterTumblr(event),callback);
     }else{
-        console.error("unhandled event, shouldn't happen");
+        logger.error(idr.host+" unhandled event, shouldn't happen");
         callback();
     }
 }
@@ -82,15 +91,16 @@ function getLinks(getter, lurl, callback) {
 function processEncounter(e, cb)
 {
     dataStore.enqueue(e, function() {
+        cb(); // return after we know it's queued
         encounterQueue.push(e, function(arg){
-            logger.verbose("QUEUE SIZE: "+encounterQueue.length());
-            cb();
+            logger.verbose("Links queue length: "+encounterQueue.length());
         });
     });
-    logger.verbose("QUEUE SIZE: "+encounterQueue.length());
+    logger.verbose("Links queue length: "+encounterQueue.length());
 }
 
 var encounterQueue = async.queue(function(e, callback) {
+    if (!exports.process) return callback();
     // immediately dequeue in case processing makes something go wrong
     dataStore.dequeue(e);
     // do all the dirty work to store a new encounter
@@ -117,11 +127,12 @@ var encounterQueue = async.queue(function(e, callback) {
 }, 5);
 
 exports.loadQueue = function() {
+    if (!exports.process) return;
     dataStore.fetchQueue(function(err, docs) {
         if(!docs) return;
         for (var i = 0; i < docs.length; i++) {
-            encounterQueue.push(docs[i].obj, function(arg) {
-                logger.verbose("QUEUE SIZE: " + encounterQueue.length());
+            encounterQueue.push(docs[i], function(arg) {
+                logger.verbose("Links queue length: " + encounterQueue.length());
             });
         }
     });
@@ -130,6 +141,7 @@ exports.loadQueue = function() {
 // given a raw url, result in a fully stored qualified link (cb's full link url)
 function linkMagic(origUrl, callback){
     // check if the orig url is in any encounter already (that has a full link url)
+    logger.verbose("processing link: "+origUrl);
     dataStore.checkUrl(origUrl,function(linkUrl){
         if(linkUrl) return callback(linkUrl); // short circuit!
         // new one, expand it to a full one
@@ -173,8 +185,9 @@ function linkMagic(origUrl, callback){
 }
 
 // TODO split out text we look for links in from text we want to index!
-function getEncounterFB(post)
+function getEncounterFB(event)
 {
+    var post = event.data;
     var text = [];
     if(post.name) text.push(post.name);
     if(post.message) text.push(post.message);
@@ -182,6 +195,7 @@ function getEncounterFB(post)
     if(!post.message && post.caption) text.push(post.caption); // stab my eyes out, wtf facebook
     // todo: handle comments?
     var e = {id:post.id
+        , idr:event.idr
         , network:"facebook"
         , text: text.join(" ")
         , from: post.from.name
@@ -192,16 +206,33 @@ function getEncounterFB(post)
     return e;
 }
 
-function getEncounterTwitter(tweet)
+function getEncounterTwitter(event)
 {
+    var tweet = event.data;
     var txt = (tweet.retweeted_status && tweet.retweeted_status.text) ? tweet.retweeted_status.text : tweet.text;
     var e = {id:tweet.id
+        , idr:event.idr
         , network:"twitter"
         , text: txt + " " + tweet.user.screen_name
         , from: (tweet.user)?tweet.user.name:""
         , fromID: (tweet.user)?tweet.user.id:""
         , at: new Date(tweet.created_at).getTime()
         , via: tweet
+        };
+    return e;
+}
+
+function getEncounterTumblr(event)
+{
+    var post = event.data;
+    var e = {id:post.id
+        , idr:event.idr
+        , network:"tumblr"
+        , text: post.post_url
+        , from: post.blog_name
+        , fromID: post.blog_name
+        , at: new Date(post.date).getTime()
+        , via: post
         };
     return e;
 }

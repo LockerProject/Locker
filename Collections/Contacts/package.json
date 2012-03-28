@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "contacts",
   "description": "Contacts Collection",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": {
     "title": "Contacts",
     "run": "node contacts.js",
@@ -20,39 +20,48 @@
     "events": [
       [
         "contact/foursquare",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/facebook",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/twitter",
-        "/events"
+        "/events",
+        true
       ],
       [
         "following/github",
-        "/events"
-      ],
-      [
-        "contact/tumblr",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/instagram",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/gcontacts",
-        "/events"
+        "/events",
+        true
       ],
       [
         "contact/flickr",
-        "/events"
+        "/events",
+        true
+      ],
+      [
+        "contact/tumblr",
+        "/events",
+        true
       ],
       [
         "connection/linkedin",
-        "/events"
+        "/events",
+        true
       ]
     ],
     "url": ""

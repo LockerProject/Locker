@@ -1,0 +1,100 @@
+h1 {
+  font-size: 36px;
+  font-weight: 200;
+}
+
+.synclets-list {
+  margin: 40px 0;
+}
+
+.synclets-list li {
+  margin: 15px 0;
+  width: 400px;
+}
+
+.synclet-logo {
+  padding: 0 10px;
+}
+
+.synclet-name {
+  font-size: 22px;
+  font-weight: 200;
+}
+
+.connect-button {
+  float: right;
+  margin: 10px 0 0 0;
+}
+
+.hideable {
+  display: none;
+}
+
+.orange {
+  color: #F7931E;
+}
+
+#main-header-2 {
+  display: none;
+}
+
+#settings_avatar img {
+  margin-right:20px;
+  vertical-align:middle;
+}
+
+#settings_avatar p {
+  margin-top:20px;
+  margin-bottom:10px;
+}
+
+#settings_name {
+  margin-top:20px;
+}
+
+#settings_analytics {
+  width:368px;
+  text-align:right;
+  margin-top:20px;
+}
+
+#settings_analytics_optedout {
+  width:368px;
+  text-align:left;
+  margin-top:20px;
+}
+
+#save_that_sucker {
+  width:368px;
+  text-align:right;
+}
+
+input[type=text], input[type=password] {
+  width:360px;
+  margin:6px 0;
+}
+
+input[type=text].disabled {
+  border:1px solid #bfbfbf;
+}
+
+input[type=file].disabled {
+  color: #bfbfbf;
+}
+
+#settings_password {
+  margin-top:20px;
+}
+
+#settings_password div {
+  margin-right:20px;
+  display:inline-block;
+}
+
+#settings_password label, #settings_password input {
+  display:block;
+}
+
+#save_button {
+  margin-top:20px;
+}

@@ -31,7 +31,7 @@
         "apiKey": "sdf",
         "apiSecret": "asf"
     },
-    "srcdir": "Me/node_modules/flickr",
+    "srcdir": "Connectors/Flickr",
     "id": "flickr",
     "provider": "flickr",
     "handle": "flickr",

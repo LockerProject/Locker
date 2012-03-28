@@ -25,6 +25,9 @@ module.exports = function(app) {
                     res.write(JSON.stringify(object)+'\n');
                 }, options);
             }else{
+                // we need to cut it off somewhere as building the objects for 10ks/100ks+ result sets in ram is too much
+                if(!options.limit) options.limit = 20;
+                if(options.limit > 1000) options.limit = 1000;
                 dataStore.getAllCurrent('synclets', req.params.syncletId + "_" + req.params.type, function(err, objects) {
                     if (err) {
                         res.writeHead(500, {'content-type' : 'application/json'});

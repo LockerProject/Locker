@@ -2,7 +2,7 @@
   "author": "Singly <nerds@singly.com>",
   "name": "gplus",
   "description": "Google+ Connector",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": {
     "title": "Google+",
     "handle": "gplus",
@@ -10,6 +10,7 @@
     "update": "auto",
     "github": "https://github.com/LockerProject/Locker",
     "type": "connector",
+    "hidden": true,
     "static": "false",
     "url": ""
   },

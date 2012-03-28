@@ -10,42 +10,34 @@
 var fs = require('fs'),
     request = require('request'),
     async = require('async'),
-    url = require('url'),
-    sys = require('sys');
-
+    url = require('url');
+var path = require('path');
 
 var tw;
 var auth;
+var base;
 
-exports.init = function(theAuth) {
+exports.init = function(theAuth, theBase, srcdir) {
     auth = theAuth;
-    tw = require('./twitter_client')(auth.consumerKey, auth.consumerSecret);
+    base = theBase;
+    tw = require(path.join(srcdir,'twitter_client'))(auth.consumerKey, auth.consumerSecret);
     try {
-        fs.mkdirSync('friends', 0755);
+        fs.mkdirSync(path.join(base,'friends'), 0755);
     } catch(e) {};
 };
 
 exports.getMe = function(arg, cbEach, cbDone) {
+    if(auth.profile && auth.profile.screen_name) {
+      cbEach(auth.profile);
+      return process.nextTick(cbDone);
+    }
     arg.path = '/account/verify_credentials.json';
-    fs.readFile('profile.json', function(err, data) {
-        var me;
-        try {
-            if(err) throw "na";
-            me = JSON.parse(data);
-            if(!me || !me.screen_name) throw "bad data";
-        } catch (E) {
-            return getOne(arg,function(err,me){
-                if(!err)
-                {
-                    fs.writeFile('profile.json', JSON.stringify(me));
-                    cbEach(me);
-                }
-                cbDone(err);
-            });
-        }
-        // do these outside the try/catch incase they throw, then there'd be doubling, bad
+    return getOne(arg,function(err,me){
+      if(!err) {
+        fs.writeFile(path.join(base,'profile.json'), JSON.stringify(me));
         cbEach(me);
-        cbDone();
+      }
+      cbDone(err);
     });
 }
 
@@ -63,18 +55,18 @@ exports.getMyFriends = function(arg, cbEach, cbDone) {
                 // load orig if any
                 var orig;
                 try {
-                    orig = JSON.parse(fs.readFileSync('friends/'+friend.id_str+'.json'));
+                    orig = JSON.parse(fs.readFileSync(path.join(base,'friends/'+friend.id_str+'.json')));
                 }catch(E){}
                 // background cache pic if it's new or changed
                 if(!orig || orig.profile_image_url != friend.profile_image_url)
                 {
                     request.get({uri:friend.profile_image_url, encoding:'binary'}, function(err, resp, body) {
                         var photoExt = friend.profile_image_url.substring(friend.profile_image_url.lastIndexOf('.'));
-                        fs.writeFile('friends/' + friend.id_str + photoExt, body, 'binary');
+                        fs.writeFile(path.join(base,'friends/' + friend.id_str + photoExt, body, 'binary'));
                     });
                 }
                 // background cache data
-                fs.writeFile('friends/'+friend.id_str+'.json', JSON.stringify(friend));
+                fs.writeFile(path.join(base,'friends/'+friend.id_str+'.json', JSON.stringify(friend)));
                 cbEach(friend);
             },cbDone);
         });

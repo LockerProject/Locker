@@ -9,7 +9,7 @@
 
 var request = require('request'),
     fs = require("fs"),
-    sys = require('sys'),
+    util = require('util'),
     url = require("url"),
     lstate = require("lstate"),
     lutil = require("lutil"),
@@ -67,7 +67,7 @@ exports.mapType = function(type, callback) {
             callback(err, undefined);
             return;
         }
-        var services = []
+        var services = [];
         Object.keys(body).forEach(function(key) {
             if (body[key].type == type) {
                 services.push(body[key]);
@@ -129,16 +129,17 @@ exports.idrLocal = function(idr)
  * Sign up to be notified of events
  * type - the MIME-style type of the object (e.g. photo/flickr, message/IMAP, or link/firefox)
  * callback - the URL path at the listener to callback to
+ * batching - true if the endpoint allows for event batching
  *
  * for example, if our id is "foo" and we want to get a ping at "/photoListener"
  * for photos from a flickr connector with id "bar", our call would look like this:
  *
  * listen("photo/flickr", "/photoListener");
  */
-exports.listen = function(type, callbackEndpoint, callbackFunction) {
-    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
+exports.listen = function(type, callbackEndpoint, callbackFunction, batching) {
+    request.get({url:baseServiceUrl + '/listen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint, batch:batching})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };
@@ -146,7 +147,7 @@ exports.listen = function(type, callbackEndpoint, callbackFunction) {
 exports.deafen = function(type, callbackEndpoint, callbackFunction) {
     request.get({url:baseServiceUrl + '/deafen?' + querystring.stringify({'type':type, 'cb':callbackEndpoint})},
     function(error, response, body) {
-        if(error) sys.debug(error);
+        if(error) util.debug(error);
         if(callbackFunction) callbackFunction(error);
     });
 };
