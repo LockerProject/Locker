@@ -1,20 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"http"
 	"io"
-	"json"
+	"launchpad.net/mgo"
+	"launchpad.net/mgo/bson"
 	"log"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
-	"url"
-	"launchpad.net/gobson/bson"
-	"launchpad.net/mgo"
 )
 
 const (
@@ -90,7 +90,7 @@ func loadConfig() *ProcessInfo {
 
 func mongoSession(pi *ProcessInfo) *mgo.Session {
 	config := pi.Mongo
-	session, err := mgo.Mongo(config.Host + ":" + strconv.Itoa(config.Port))
+	session, err := mgo.Dial(config.Host + ":" + strconv.Itoa(config.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +99,7 @@ func mongoSession(pi *ProcessInfo) *mgo.Session {
 }
 
 func getDB(session *mgo.Session) mgo.Database {
-	return session.DB(lockerDbName)
+	return *session.DB(lockerDbName)
 }
 
 func state(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
@@ -120,27 +120,27 @@ func state(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
 		}
 
 		// Need to find out what constitutes "ready"; hardcoded for now
-		json.NewEncoder(w).Encode(CollectionState{1, count, time.Seconds(), last.Id.Hex()})
+		json.NewEncoder(w).Encode(CollectionState{1, count, time.Now().Unix(), last.Id.Hex()})
 	}
 }
 
 func resetCollection(db *mgo.Database, collection string, config *ProcessInfo) {
 	db.C(collection).DropCollection()
 	if _, err := http.Get(config.LockerUrl + "/Me/search/reindexForType?type=music"); err != nil {
-		log.Println("Search reset error: " + err.String())
+		log.Println("Search reset error: " + err.Error())
 	}
 }
 
 func addLastfmTrack(collection *mgo.Collection, track *lastfmTrack) {
 	ids := make([]CandidateId, 1)
 	ids[0] = CandidateId{Type: "lastfm", Id: track.URL}
-	duration, err := strconv.Atoi64(track.Duration)
+	duration, err := strconv.ParseInt(track.Duration, 10, 64)
 	if err != nil {
 		log.Println("Unable to convert duration to integer value.", track.Duration)
 	}
 
 	if err := collection.Insert(Track{IdBundle: ids, Name: track.Name, Artist: track.Artist.Name, Duration: duration}); err != nil {
-		log.Println("Unable to insert into MongoDB: ", err.String())
+		log.Println("Unable to insert into MongoDB: ", err.Error())
 	}
 }
 
@@ -183,7 +183,7 @@ func pullTracks(collection *mgo.Collection, config *ProcessInfo, source string) 
 func syncTracks(db *mgo.Database, config *ProcessInfo) {
 	collection := db.C(trackCollectionName)
 	for _, source := range trackSources {
-		go pullTracks(&collection, config, source)
+		go pullTracks(collection, config, source)
 	}
 }
 
@@ -232,7 +232,7 @@ func main() {
 	db := getDB(session)
 	defer session.Close()
 
-	listener, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa64(config.Port)))
+	listener, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.FormatInt(config.Port, 10)))
 	if err != nil {
 		panic(err)
 	}
@@ -244,7 +244,7 @@ func main() {
 			panic(err)
 		}
 
-		portnum, err := strconv.Atoi64(port)
+		portnum, err := strconv.ParseInt(port, 10, 64)
 		if err != nil {
 			panic(err)
 		}
