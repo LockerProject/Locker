@@ -209,10 +209,17 @@ fi
 if ! check_for ImageMagick convert "convert --version" 6.0
 then
     if [ "$check_only" = true ]; then exit 1; fi
-
-    echo "You need ImageMagick, but this script doesn't know how to install it for you." >&2
-    echo "Please install it and try again."
-    exit 1
+    
+	echo ""
+    echo "Installing ImageMagick, please input the password, if asked."
+	sudo apt-get install imagemagick    
+    if check_for ImageMagick convert "convert --version" 6.0    
+    then
+        echo "Installed ImageMagick."
+    else
+        echo "Failed to install ImageMagick." >&2
+        exit 1
+    fi  
 fi
 
 if [ "$check_only" != true ]; then
