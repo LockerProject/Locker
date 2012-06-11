@@ -212,14 +212,15 @@ then
     
     echo ""
     echo "Installing ImageMagick, please input the password, if asked."
-	sudo apt-get install imagemagick    
+    sudo apt-get install imagemagick    
+    
     if check_for ImageMagick convert "convert --version" 6.0    
     then
         echo "Installed ImageMagick."
     else
         echo "Failed to install ImageMagick." >&2
         exit 1
-    fi  
+    fi
 fi
 
 if [ "$check_only" != true ]; then
