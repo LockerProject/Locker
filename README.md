@@ -27,11 +27,19 @@ Then install dependencies (this may take a little while):
     make deps
     make
 
-Then run the locker:
-    
+Before you run you'll need to setup the services that you are going to connect to.  Follow the directions to 
+[Get API Keys](GettingAPIKeys).
+
+To turn on the locker run:
+
     ./locker
 
 now open [http://localhost:8042/](http://localhost:8042/) in your browser!
+
+To get started using the system, navigate to the 'Services' menu item, select an account to connect, and follow the instructions to start using that connector with your locker.
+
+If you have any problems, come ask us in [IRC](http://webchat.freenode.net/?channels=lockerproject), take a look at the [troubleshooting page](https://github.com/LockerProject/Locker/wiki/Troubleshooting-faq). If you solve any problems for yourself, please add your learnings!
+
 
 ### The Detailed Way
 
