@@ -1,3 +1,8 @@
+# &raquo;This project is unmaintained&laquo;
+
+Singly has shifted development to [Hallway](https://github.com/Singly/hallway), a multi-tenant, hosted version of the Locker. If you are interested in continuing the project, get in touch with the [developers list](http://bit.ly/singly-dev-list).
+
+
 Locker - the "me" platform [![Build Status](https://secure.travis-ci.org/LockerProject/Locker.png)](http://travis-ci.org/LockerProject/Locker)
 ======================
 
@@ -5,7 +10,7 @@ This is an open source project that helps me collect all of my personal data, fr
 
 [Background Video](http://www.youtube.com/watch?v=pTNO5npNq28)
 
-STATUS: eager-developer-friendly only at this point, we're working hard to make it usable for early adopters very soon, keep an eye on [@lockerproject](http://twitter.com/lockerproject) and [@jeremie](http://twitter.com/jeremie) for progress, and come hang out with us on freenode IRC in [#lockerproject](http://webchat.freenode.net/?channels=lockerproject).
+STATUS: Inactive.
 
 We also have a [mailing list](http://bit.ly/singly-dev-list) setup.  Join and say hello!
 
