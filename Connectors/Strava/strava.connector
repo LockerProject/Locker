@@ -1,0 +1,9 @@
+{
+    "title":"Strava connector",
+    "action":"Retrieve cycling data from Strava.com",
+    "desc":"Retrieve cycling data from Strava.com",
+    "run":"node strava.js",
+    "status":"unstable",
+	"handle":"strava",
+    "provides":["store/strava"]
+}
