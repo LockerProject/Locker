@@ -1,37 +1,17 @@
 var fs = require('fs')
   , path = require('path')
   , lconfig = require("lconfig")
-  , ldatastore = require('ldatastore')
-  , datastore = {}
+  , logger = require("logger")
   , async = require('async')
   , datasets = {}
   , levents = require('levents')
   , lutil = require('lutil')
+  , IJOD = require('ijod').IJOD
   , config = {}
   ;
 
 
-// this works, but feels like it should be a cleaner abstraction layer on top of the datastore instead of this garbage
-datastore.init = function(callback) {
-    ldatastore.init('push', callback);
-}
-
-datastore.addCollection = function(dataset) {
-    ldatastore.addCollection('push', dataset, 'push', 'id');
-}
-
-datastore.removeObject = function(dataset, id, ts, callback) {
-    if (typeof(ts) === 'function') {
-        ldatastore.removeObject('push', 'push_' + dataset, id, {timeStamp: Date.now()}, ts);
-    } else {
-        ldatastore.removeObject('push', 'push_' + dataset, id, ts, callback);
-    }
-}
-
-datastore.addObject = function(dataset, obj, ts, callback) {
-    ldatastore.addObject('push', 'push_' + dataset, obj, ts, callback);
-}
-
+config.ijods = {};
 config.datasets = {};
 module.exports.datasets = config.datasets;
 
@@ -45,27 +25,42 @@ module.exports.init = function () {
 }
 
 module.exports.acceptData = function(dataset, response, callback) {
-    datastore.init(function() {
-        var deletedIDs = {};
-        if (response.config) {
-            if (config[dataset]) {
-                deletedIDs = compareIDs(config[dataset], response.config);
-            } else {
-                config[dataset] = {};
-            }
-            lutil.extend(true, config[dataset], response.config);
-            lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
-                              JSON.stringify(config, null, 4));
+    var deletedIDs = {};
+    if (response.config) {
+        if (config[dataset]) {
+            deletedIDs = compareIDs(config[dataset], response.config);
+        } else {
+            config[dataset] = {};
         }
-        if (typeof(response.data) === 'string') {
-            return callback('data is in a wacked out format');
-        }
-        if (dataset.length === 0) {
-            return callback();
-        }
-        processData(deletedIDs, response.data, dataset, callback);
+        lutil.extend(true, config[dataset], response.config);
+        lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
+                          JSON.stringify(config, null, 4));
+    }
+    if (typeof(response.data) === 'string') {
+        return callback('data is in a wacked out format');
+    }
+    if (dataset.length === 0) {
+        return callback();
+    }
+    processData(deletedIDs, response.data, dataset, callback);
+}
+
+// simple async friendly wrapper
+function getIJOD(dataset, create, callback) {
+    if(config.ijods[dataset]) return callback(config.ijods[dataset]);
+    var name = path.join(lconfig.lockerDir, lconfig.me, "push", dataset);
+    // only load if one exists or create flag is set
+    fs.stat(name+".db", function(err, stat){
+        if(!stat && !create) return callback();
+        var ij = new IJOD({name:name})
+        config.ijods[dataset] = ij;
+        ij.open(function(err) {
+            if(err) logger.error(err);
+            return callback(ij);
+        });
     });
 }
+module.exports.getIJOD = getIJOD;
 
 // copy copy copy
 function compareIDs (originalConfig, newConfig) {
@@ -90,35 +85,36 @@ function processData (deleteIDs, data, dataset, callback) {
         lutil.atomicWriteFileSync(path.join(lconfig.lockerDir, lconfig.me, "push", 'push_config.json'),
                               JSON.stringify(config, null, 4));
     }
-    datastore.addCollection(dataset);
-
-    if (deleteIDs && deleteIDs.length > 0 && data) {
-        addData(dataset, data, function(err) {
-            if(err) {
-                callback(err);
-            } else {
-                deleteData(dataset, deleteIDs, callback);
-            }
-        });
-    } else if (data && data.length > 0) {
-        addData(dataset, data, callback);
-    } else if (deleteIDs && deleteIDs.length > 0) {
-        deleteData(dataset, deleteIDs, callback);
-    } else {
-        callback();
-    }
+    // TODO:  Explicitly close
+    getIJOD(dataset, true, function(ijod){
+        if (deleteIDs && deleteIDs.length > 0 && data) {
+            addData(dataset, data, ijod, function(err) {
+                if(err) {
+                    callback(err);
+                } else {
+                    deleteData(dataset, deleteIDs, ijod, callback);
+                }
+            });
+        } else if (data && data.length > 0) {
+            addData(dataset, data, ijod, callback);
+        } else if (deleteIDs && deleteIDs.length > 0) {
+            deleteData(dataset, deleteIDs, ijod, callback);
+        } else {
+            callback();
+        }
+    });
 }
 
-function deleteData (dataset, deleteIds, callback) {
+function deleteData (dataset, deleteIds, ijod, callback) {
     var q = async.queue(function(id, cb) {
         levents.fireEvent(lutil.idrNew(dataset, 'push', id), 'delete');
-        datastore.removeObject(dataset, id, cb);
+        ijod.delData({id:id}, cb);
     }, 5);
     deleteIds.forEach(q.push);
     q.drain = callback;
 }
 
-function addData (dataset, data, callback) {
+function addData (dataset, data, ijod, callback) {
     var errs = [];
     var q = async.queue(function(item, cb) {
         var object = (item.obj) ? item : {obj: item};
@@ -129,24 +125,29 @@ function addData (dataset, data, callback) {
             }
             if (object.type === 'delete') {
                 levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), 'delete');
-                datastore.removeObject(dataset, object.obj["id"], {timeStamp: object.timestamp}, cb);
+                ijod.delData({id:object.obj["id"]}, cb);
             } else {
-                datastore.addObject(dataset, object.obj, {timeStamp: object.timestamp}, function(err, type, doc) {
-                    if (type === 'same') return cb();
-                    levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), type, doc);
+                var arg = {id:object.obj.id, data:object.obj};
+                if(object.timestamp) arg.at = object.timestamp;
+                ijod.smartAdd(arg, function(err, type) {
+                    if(err) logger.error(err);
+                    if (!type || type === 'same') return cb();
+                    levents.fireEvent(lutil.idrNew(dataset, 'push', object.obj.id), type, object.obj);
                     return cb();
                 });
             }
         } else {
             cb();
         }
-    }, 5);
-    data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
+    }, 1);
+    ijod.startAddTransaction(function(err) {
+      data.forEach(function(d){ q.push(d, errs.push); }); // hehe fun
+    });
     q.drain = function() {
         if (errs.length > 0) {
-            callback(errs);
+            ijod.abortAddTransaction(function() { callback(errs); });
         } else {
-            callback();
+            ijod.commitAddTransaction(callback);
         }
     };
 }

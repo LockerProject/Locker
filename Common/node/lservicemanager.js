@@ -25,19 +25,18 @@ var stats;
 var serviceMap = { }; // All of the immediately addressable services in the system
 
 var shuttingDown = null;
-var syncletManager, registry;
+var registry;
 var lockerPortNext = parseInt("1" + lconfig.lockerPort, 10);
 
 /**
 * Scans the Me directory for instaled services
 */
-exports.init = function (sman, reg, callback) {
+exports.init = function (reg, callback) {
     logger = require('logger');
     logger.info('lservicemanager lockerPortNext = ' + lockerPortNext);
 
     stats = new dispatcher(lconfig.stats);
 
-    syncletManager = sman;
     registry = reg;
     var dirs = fs.readdirSync(lconfig.me);
     for (var i = 0; i < dirs.length; i++) {
@@ -218,12 +217,6 @@ exports.mapReload = function(id) {
             var ev = js.events[i];
             var batching = (ev.length > 2 && ev[2] === true) ? true : false;
             levents.addListener(ev[0], js.id, ev[1], batching);
-        }
-    }
-    // start em up if they're ready
-    if (js.synclets && js.auth && js.authed) {
-        for (var j = 0; j < js.synclets.length; j++) {
-            syncletManager.scheduleRun(js, js.synclets[j]);
         }
     }
     exports.mapDirty(js.id);

@@ -230,6 +230,23 @@ exports.streamFromUrl = function(url, cbEach, cbDone) {
 };
 
 
+/// An async forEachSeries
+/**
+* The async implementation can explode the stack, this version will not.
+*/
+exports.forEachSeries = function(items, cbEach, cbDone) {
+  function runOne(idx) {
+    idx = idx || 0;
+    if (idx >= items.length) return cbDone();
+    cbEach(items[idx], function(err) {
+      if (err) return cbDone(err)
+      process.nextTick(function() {
+        runOne(idx + 1);
+      });
+    });
+  }
+  runOne();
+}
 /*
  * @sourceUrl - URL of the avatar you want to fetch
  * @rawfile - where you want the raw downloaded data stored

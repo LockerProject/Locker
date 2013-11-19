@@ -256,9 +256,6 @@ locker.post('/post/:id/:synclet', function(req, res) {
     });
 });
 
-// all synclet getCurrent, id, etc stuff
-require('synclet/dataaccess')(locker);
-
 function proxyRequest(method, req, res, next) {
     var slashIndex = req.url.indexOf("/", 4);
     if (slashIndex < 0) slashIndex = req.url.length;
@@ -530,6 +527,7 @@ locker.error(function(err, req, res, next){
     res.send("Something went wrong.", 500);
 });
 
+require("./webservice-synclets")(locker);
 require('./webservice-push')(locker);
 
 
