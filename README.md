@@ -19,24 +19,30 @@ We also have a [mailing list](http://bit.ly/singly-dev-list) setup.  Join and sa
 
 ### The Fast Way
 
-Lockerbox (by [pib](https://www.github.com/pib)) is a straightforward way to get all the high-level dependencies installed at once. It will make a single directory called lockerbox and get everything set up inside of there.
+Get the locker source code:
 
-    curl https://raw.github.com/LockerProject/lockerbox/master/lockerbox.sh > lockerbox.sh
-    chmod 0755 lockerbox.sh
-    ./lockerbox.sh
+    git clone https://github.com/LockerProject/Locker.git
+    cd Locker
+    git submodule update --init
 
-When that successfully completes, add lockerbox/local/bin to your path:
+Then install dependencies (this may take a little while):
 
-    echo 'export PATH=$PATH:'`pwd`/lockerbox/local/bin >> ~/.profile
-    source ~/.profile
-
-Then:
-    
-    cd lockerbox/Locker
+    apt-get install imagemagick
+    npm install
+    make deps
     make
+
+Before you run you'll need to setup the services that you are going to connect to.  Follow the directions to 
+[Get API Keys](GettingAPIKeys).
+
+To turn on the locker run:
+
     ./locker
 
 now open [http://localhost:8042/](http://localhost:8042/) in your browser!
+
+To get started using the system, navigate to the 'Services' menu item, select an account to connect, and follow the instructions to start using that connector with your locker.
+
 
 ### The Detailed Way
 
