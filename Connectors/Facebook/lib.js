@@ -122,6 +122,8 @@ var profile;
 exports.getProfile = function(cbDone) {
     if(!profile) {
         try {
+            //Problem: if an error occurred, the profile.json will have error message,
+            //the correct profile will not be retrieved and a cycle of error is created.
             profile = JSON.parse(fs.readFileSync('profile.json'));
             return cbDone(null, profile);
         } catch (err) {}
@@ -129,9 +131,10 @@ exports.getProfile = function(cbDone) {
     if(!profile) {
         request.get({uri:'https://graph.facebook.com/me?access_token=' + auth.accessToken + '&fields='+allUserFields, json:true},
         function(err, resp, profile) {
-            fs.writeFile('profile.json', JSON.stringify(profile), function(err) {
-                cbDone(err, profile);
-            });
+            if(profile.id) //Solution: if an error occurred, the profile.json will not be created.
+                fs.writeFile('profile.json', JSON.stringify(profile), function(err) {
+                    cbDone(err, profile);
+                });
         });
     } else {
         cbDone(null, profile);
